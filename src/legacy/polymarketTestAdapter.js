@@ -22,6 +22,7 @@ export async function getTicksForBacktest(db, { from, to, underlying = 'BTC', in
     from,
     to: toExclusiveForLegacyInclusiveRange(to),
     limit,
+    validBacktestRows: true,
   });
   return rows.map((row, index) => toLegacyBacktestTick(row, { index, bookDepth }));
 }
@@ -44,6 +45,7 @@ export async function getTicksForBacktestBatch(db, {
     to: toExclusiveForLegacyInclusiveRange(to),
     limit,
     offset,
+    validBacktestRows: true,
   });
   return rows.map((row, index) => toLegacyBacktestTick(row, { index: offset + index, bookDepth }));
 }

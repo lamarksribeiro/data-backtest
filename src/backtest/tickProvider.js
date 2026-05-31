@@ -19,6 +19,7 @@ export class DuckDbTickProvider {
         ...request,
         limit: batchSize,
         offset,
+        validBacktestRows: true,
       });
       const batch = rows.map((row, index) => toLegacyBacktestTick(row, {
         index: offset + index,

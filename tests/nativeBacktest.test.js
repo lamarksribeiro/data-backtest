@@ -20,7 +20,7 @@ test('native edge-sniper-v2 backtest runs from manifest backtest_ticks parquet',
         tempPath: path.join(dir, 'lake', '.tmp', 'backtest_ticks.parquet'),
         finalPath: parquetPath,
         bookDepth: 2,
-        rows: Array.from({ length: 12 }, (_, index) => makeBacktestTickRow(`2026-05-31T00:00:${String(index).padStart(2, '0')}.000Z`, 100 + index)),
+        rows: Array.from({ length: 12 }, (_, index) => makeBacktestTickRow(`2026-05-31T00:00:${String(index).padStart(2, '0')}.000Z`, 73400 + index)),
       });
       upsertManifestPartition(db, {
         dataset: 'backtest_ticks',
@@ -69,7 +69,7 @@ function makeBacktestTickRow(ts, underlyingPrice) {
     eventEnd: '2026-05-31T00:05:00.000Z',
     ts,
     underlyingPrice,
-    priceToBeat: 99,
+    priceToBeat: underlyingPrice,
     upPrice: 0.51,
     downPrice: 0.49,
     upBestBid: 0.5,

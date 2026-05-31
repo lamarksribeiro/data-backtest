@@ -21,9 +21,10 @@ test('polymarket-test adapter returns legacy tick shape from backtest_ticks parq
         finalPath: parquetPath,
         bookDepth: 2,
         rows: [
-          makeBacktestTickRow('2026-05-31T00:00:01.000Z', 100),
-          makeBacktestTickRow('2026-05-31T00:00:02.000Z', 101),
-          makeBacktestTickRow('2026-05-31T00:00:03.000Z', 102),
+          { ...makeBacktestTickRow('2026-05-31T00:00:00.500Z', 73400), priceToBeat: null },
+          makeBacktestTickRow('2026-05-31T00:00:01.000Z', 73400),
+          makeBacktestTickRow('2026-05-31T00:00:02.000Z', 73401),
+          makeBacktestTickRow('2026-05-31T00:00:03.000Z', 73402),
         ],
       });
       upsertManifestPartition(db, {
@@ -33,7 +34,7 @@ test('polymarket-test adapter returns legacy tick shape from backtest_ticks parq
         bookDepth: 2,
         dt: '2026-05-31',
         activePath: toPortablePath(parquetPath),
-        rows: 3,
+        rows: 4,
         status: 'valid',
       });
 
@@ -41,8 +42,8 @@ test('polymarket-test adapter returns legacy tick shape from backtest_ticks parq
       const rows = await adapter.getTicksForBacktest('2026-05-31T00:00:00.000Z', '2026-05-31T00:00:02.000Z', { limit: 10 });
 
       assert.equal(rows.length, 2);
-      assert.equal(rows[0].btc_price, 100);
-      assert.equal(rows[0].price_to_beat, 99);
+      assert.equal(rows[0].btc_price, 73400);
+      assert.equal(rows[0].price_to_beat, 73300);
       assert.equal(rows[0].up_best_ask, 0.52);
       assert.equal(rows[0].up_best_bid, 0.5);
       assert.deepEqual(JSON.parse(rows[0].up_book_asks), [
@@ -69,9 +70,9 @@ test('polymarket-test adapter yields legacy batches with stable synthetic ids', 
         finalPath: parquetPath,
         bookDepth: 1,
         rows: [
-          makeBacktestTickRow('2026-05-31T00:00:01.000Z', 100),
-          makeBacktestTickRow('2026-05-31T00:00:02.000Z', 101),
-          makeBacktestTickRow('2026-05-31T00:00:03.000Z', 102),
+          makeBacktestTickRow('2026-05-31T00:00:01.000Z', 73400),
+          makeBacktestTickRow('2026-05-31T00:00:02.000Z', 73401),
+          makeBacktestTickRow('2026-05-31T00:00:03.000Z', 73402),
         ],
       });
       upsertManifestPartition(db, {
@@ -117,7 +118,7 @@ function makeBacktestTickRow(ts, underlyingPrice) {
     eventEnd: '2026-05-31T00:05:00.000Z',
     ts,
     underlyingPrice,
-    priceToBeat: 99,
+    priceToBeat: 73300,
     upPrice: 0.51,
     downPrice: 0.49,
     upBestBid: 0.1,

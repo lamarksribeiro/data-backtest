@@ -9,11 +9,16 @@ export async function queryTicks(db, request) {
   }
   const availability = requireDatasetAvailability(db, { ...request, dataset });
   const tsColumn = 'ts';
+  const qualityClause = request.validBacktestRows ? `
+      AND underlying_price IS NOT NULL
+      AND price_to_beat IS NOT NULL
+      AND price_to_beat > 1000` : '';
   const sql = `
     SELECT *
     FROM read_parquet(${parquetList(availability.files)})
     WHERE CAST(${tsColumn} AS TIMESTAMP) >= CAST(${quotedString(new Date(request.from).toISOString())} AS TIMESTAMP)
       AND CAST(${tsColumn} AS TIMESTAMP) < CAST(${quotedString(new Date(request.to).toISOString())} AS TIMESTAMP)
+      ${qualityClause}
     ORDER BY CAST(${tsColumn} AS TIMESTAMP) ASC, condition_id ASC
     LIMIT ${safeLimit(request.limit)}
     OFFSET ${safeOffset(request.offset)}
