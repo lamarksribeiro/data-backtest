@@ -40,8 +40,11 @@ Implementado o início da Fase 2:
 - Query layer DuckDB que lê Parquet apenas pelos `active_path` válidos do manifest.
 - Checagem de disponibilidade no modo estrito antes de consultar ticks/candles.
 - CLI para consultar disponibilidade, ticks e candles.
+- Resolução dos modos `strict` e `prepare` para uma futura execução de backtest.
+- Plano de preparação com comandos de sync quando faltarem partições.
+- Adapter inicial para consumir `backtest_ticks` com shape compatível com `polymarket-test`.
 
-Próxima etapa do plano: modos `strict`/`prepare` para orquestrar execução de backtests sobre a query layer.
+Próxima etapa do plano: migrar um lab legado e validar paridade usando a query layer.
 
 ## Configuração
 
@@ -85,8 +88,10 @@ npm run sync:backfill-books -- --from 2026-05-01 --to 2026-05-02 --underlying BT
 npm run sync:backfill-backtest-ticks -- --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --dry-run
 npm run sync:backfill-ohlc -- --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --resolution 1m --dry-run
 npm run query:availability -- --dataset backtest_ticks --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10
+npm run query:resolve -- --mode prepare --dataset backtest_ticks --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10
 npm run query:ticks -- --dataset backtest_ticks --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --limit 10
 npm run query:candles -- --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --resolution 1m --limit 10
+npm run legacy:smoke -- --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --limit 10
 npm run manifest:mark-stale -- --underlying BTC --interval 5m --dt 2026-05-31 --reason "repair-gap"
 npm test
 ```
@@ -104,6 +109,34 @@ npm test
 `sync:backfill-ohlc` lê apenas partições `scalars` válidas do manifest e gera candles derivados. Use `--resolution 1s,5s,1m,5m` ou omita para gerar todas as resoluções.
 
 `query:availability`, `query:ticks` e `query:candles` nunca fazem glob no diretório do lakehouse. Eles resolvem a lista de arquivos exclusivamente pelo manifest e bloqueiam a consulta se houver partição ausente, `stale`, `invalid` ou sem `active_path`.
+
+`query:resolve` aplica o modo de dados. Em `strict`, informa bloqueio quando falta Parquet válido. Em `prepare`, retorna um plano com os comandos de sync necessários antes do backtest.
+
+`legacy:smoke` usa o adapter `src/legacy/polymarketTestAdapter.js` para retornar um batch no formato esperado pelo `polymarket-test`: `btc_price`, `price_to_beat`, best bid/ask e books JSON (`up_book_asks`, `up_book_bids`, `down_book_asks`, `down_book_bids`).
+
+## Adapter legado
+
+Para migrar labs do `polymarket-test`, crie o adapter com o state DB aberto e use as assinaturas equivalentes:
+
+```js
+import { createPolymarketTestAdapter } from './src/legacy/polymarketTestAdapter.js';
+
+const adapter = createPolymarketTestAdapter(db, { underlying: 'BTC', interval: '5m', bookDepth: 10 });
+const rows = await adapter.getTicksForBacktest(from, to, { limit: 100000 });
+
+for await (const batch of adapter.getTicksForBacktestBatches(from, to, 1000)) {
+  // batch tem o shape legado esperado pelos labs.
+}
+```
+
+Primeiro alvo legado com source opt-in: `polymarket-test/scripts/tune-bs-lead.js`.
+
+```bash
+cd ../polymarket-test
+npm run tune:bs-lead:lakehouse -- --from 2026-05-01 --to 2026-05-02 --book-depth 10
+```
+
+Sem `--data-source lakehouse`, o script continua usando Postgres.
 
 ## Projetos relacionados
 

@@ -17,7 +17,9 @@ import {
 import { exportBacktestTicksPartition, exportBooksPartition, listBookPartitions } from './sync/bookDatasets.js';
 import { exportOhlcFromScalarsPartition, listValidScalarManifestPartitions, normalizeOhlcResolutions } from './sync/ohlc.js';
 import { checkDatasetAvailability } from './query/availability.js';
+import { resolveDataRequest } from './query/dataMode.js';
 import { queryCandles, queryTicks } from './query/duckdbQuery.js';
+import { getTicksForBacktestBatch } from './legacy/polymarketTestAdapter.js';
 
 function parseArgs(argv) {
   const [command = 'help', ...rest] = argv;
@@ -56,8 +58,10 @@ Commands:
   manifest:stats  Prints manifest aggregate counts
   manifest:mark-stale Marks a scalars partition stale locally
   query:availability Checks manifest availability for strict queries
+  query:resolve Resolves strict/prepare mode for a dataset request
   query:ticks Reads scalars/backtest_ticks through DuckDB using manifest active_path
   query:candles Reads OHLC candles through DuckDB using manifest active_path
+  legacy:smoke Reads one polymarket-test compatible backtest batch
   sync:partitions Lists sealed source partitions available for sync
   sync:backfill   Exports sealed scalars partitions to Parquet
   sync:backfill-books Exports raw books partitions to Parquet
@@ -75,7 +79,9 @@ Sync examples:
   node src/cli.js sync:incremental --lookback-days 2 --underlying BTC --interval 5m
   node src/cli.js sync:reconcile-scalars --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --dry-run
   node src/cli.js query:availability --dataset backtest_ticks --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10
+  node src/cli.js query:resolve --mode prepare --dataset backtest_ticks --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10
   node src/cli.js query:ticks --dataset backtest_ticks --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --limit 10
+  node src/cli.js legacy:smoke --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --limit 10
 `);
 }
 
@@ -169,6 +175,15 @@ async function main() {
       return;
     }
 
+    if (command === 'query:resolve') {
+      const range = toRange(flags);
+      const dataset = flags.dataset ? String(flags.dataset) : 'backtest_ticks';
+      const request = buildQueryRequest(flags, range, dataset);
+      const mode = flags.mode ? String(flags.mode) : config.backtestDataMode;
+      printJson(resolveDataRequest(db, request, mode));
+      return;
+    }
+
     if (command === 'query:ticks') {
       const range = toRange(flags);
       const dataset = flags.dataset ? String(flags.dataset) : 'backtest_ticks';
@@ -181,6 +196,19 @@ async function main() {
       const range = toRange(flags);
       const request = buildQueryRequest(flags, range, 'ohlc');
       printJson({ rows: await queryCandles(db, request) });
+      return;
+    }
+
+    if (command === 'legacy:smoke') {
+      const range = toRange(flags);
+      const rows = await getTicksForBacktestBatch(db, {
+        ...range,
+        underlying: requiredFlag(flags, 'underlying').toUpperCase(),
+        interval: requiredFlag(flags, 'interval'),
+        bookDepth: optionalIntFlag(flags, 'book-depth') ?? config.backtestBookDepth,
+        limit: optionalIntFlag(flags, 'limit') ?? 10,
+      });
+      printJson({ rows_count: rows.length, first_row: rows[0] ?? null });
       return;
     }
 

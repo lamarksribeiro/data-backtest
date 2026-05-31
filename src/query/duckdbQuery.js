@@ -16,6 +16,7 @@ export async function queryTicks(db, request) {
       AND CAST(${tsColumn} AS TIMESTAMP) < CAST(${quotedString(new Date(request.to).toISOString())} AS TIMESTAMP)
     ORDER BY CAST(${tsColumn} AS TIMESTAMP) ASC, condition_id ASC
     LIMIT ${safeLimit(request.limit)}
+    OFFSET ${safeOffset(request.offset)}
   `;
 
   return runDuckQuery(sql);
@@ -30,6 +31,7 @@ export async function queryCandles(db, request) {
       AND CAST(bucket_ts AS TIMESTAMP) < CAST(${quotedString(new Date(request.to).toISOString())} AS TIMESTAMP)
     ORDER BY CAST(bucket_ts AS TIMESTAMP) ASC, condition_id ASC
     LIMIT ${safeLimit(request.limit)}
+    OFFSET ${safeOffset(request.offset)}
   `;
 
   return runDuckQuery(sql);
@@ -55,6 +57,11 @@ function parquetList(files) {
 function safeLimit(value) {
   const parsed = Number.parseInt(String(value ?? 1000), 10);
   return Math.min(Math.max(Number.isFinite(parsed) ? parsed : 1000, 1), 100000);
+}
+
+function safeOffset(value) {
+  const parsed = Number.parseInt(String(value ?? 0), 10);
+  return Math.max(Number.isFinite(parsed) ? parsed : 0, 0);
 }
 
 function jsonSafeRow(row) {
