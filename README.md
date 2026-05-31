@@ -7,6 +7,7 @@ O Postgres continua como fonte de verdade operacional; o lakehouse é derivado, 
 ## Documentação
 
 - [Arquitetura e plano de implementação](docs/arquitetura-lakehouse-backtest.md)
+- [Paridade Edge Sniper V2](docs/paridade-edge-sniper-v2.md)
 
 ## Status atual
 
