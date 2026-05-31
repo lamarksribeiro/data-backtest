@@ -15,6 +15,9 @@ import {
   reconcileScalarsPartition,
 } from './sync/scalars.js';
 import { exportBacktestTicksPartition, exportBooksPartition, listBookPartitions } from './sync/bookDatasets.js';
+import { exportOhlcFromScalarsPartition, listValidScalarManifestPartitions, normalizeOhlcResolutions } from './sync/ohlc.js';
+import { checkDatasetAvailability } from './query/availability.js';
+import { queryCandles, queryTicks } from './query/duckdbQuery.js';
 
 function parseArgs(argv) {
   const [command = 'help', ...rest] = argv;
@@ -52,10 +55,14 @@ Commands:
   manifest:list   Lists manifest partitions
   manifest:stats  Prints manifest aggregate counts
   manifest:mark-stale Marks a scalars partition stale locally
+  query:availability Checks manifest availability for strict queries
+  query:ticks Reads scalars/backtest_ticks through DuckDB using manifest active_path
+  query:candles Reads OHLC candles through DuckDB using manifest active_path
   sync:partitions Lists sealed source partitions available for sync
   sync:backfill   Exports sealed scalars partitions to Parquet
   sync:backfill-books Exports raw books partitions to Parquet
   sync:backfill-backtest-ticks Exports flattened backtest tick partitions to Parquet
+  sync:backfill-ohlc Exports OHLC candles from valid scalars Parquet
   sync:incremental Exports recent sealed scalars partitions using SYNC_MARGIN_MINUTES
   sync:reconcile-scalars Recomputes source fingerprints and marks changed scalars stale
 
@@ -64,8 +71,11 @@ Sync examples:
   node src/cli.js sync:backfill --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --dry-run
   node src/cli.js sync:backfill-books --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --dry-run
   node src/cli.js sync:backfill-backtest-ticks --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --dry-run
+  node src/cli.js sync:backfill-ohlc --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --resolution 1m --dry-run
   node src/cli.js sync:incremental --lookback-days 2 --underlying BTC --interval 5m
   node src/cli.js sync:reconcile-scalars --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --dry-run
+  node src/cli.js query:availability --dataset backtest_ticks --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10
+  node src/cli.js query:ticks --dataset backtest_ticks --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --limit 10
 `);
 }
 
@@ -148,6 +158,29 @@ async function main() {
       };
       const result = markScalarsPartitionStale(db, partition, flags.reason ? String(flags.reason) : 'manual stale mark');
       printJson({ partition, ...result });
+      return;
+    }
+
+    if (command === 'query:availability') {
+      const range = toRange(flags);
+      const dataset = flags.dataset ? String(flags.dataset) : 'backtest_ticks';
+      const request = buildQueryRequest(flags, range, dataset);
+      printJson(checkDatasetAvailability(db, request));
+      return;
+    }
+
+    if (command === 'query:ticks') {
+      const range = toRange(flags);
+      const dataset = flags.dataset ? String(flags.dataset) : 'backtest_ticks';
+      const request = buildQueryRequest(flags, range, dataset);
+      printJson({ rows: await queryTicks(db, request) });
+      return;
+    }
+
+    if (command === 'query:candles') {
+      const range = toRange(flags);
+      const request = buildQueryRequest(flags, range, 'ohlc');
+      printJson({ rows: await queryCandles(db, request) });
       return;
     }
 
@@ -239,6 +272,32 @@ async function main() {
       return;
     }
 
+    if (command === 'sync:backfill-ohlc') {
+      const range = toRange(flags);
+      const scalarPartitions = listValidScalarManifestPartitions(db, {
+        ...range,
+        underlying: flags.underlying ? String(flags.underlying).toUpperCase() : null,
+        interval: flags.interval ? String(flags.interval) : null,
+        limit: optionalIntFlag(flags, 'limit'),
+      });
+      const resolutions = normalizeOhlcResolutions(flags.resolution || 'all');
+      const results = [];
+      for (const scalarPartition of scalarPartitions) {
+        for (const resolution of resolutions) {
+          results.push(await exportOhlcFromScalarsPartition({
+            config,
+            db,
+            scalarPartition,
+            resolution,
+            dryRun: optionalBoolFlag(flags, 'dry-run'),
+            rebuild: optionalBoolFlag(flags, 'rebuild'),
+          }));
+        }
+      }
+      printJson({ partitions: results });
+      return;
+    }
+
     if (command === 'sync:incremental') {
       const lookbackDays = optionalIntFlag(flags, 'lookback-days') ?? 2;
       const range = incrementalRange({
@@ -305,6 +364,21 @@ async function main() {
   } finally {
     closeStateDatabase(db);
   }
+}
+
+function buildQueryRequest(flags, range, dataset) {
+  const request = {
+    dataset,
+    from: range.from,
+    to: range.to,
+    underlying: requiredFlag(flags, 'underlying').toUpperCase(),
+    interval: requiredFlag(flags, 'interval'),
+    limit: optionalIntFlag(flags, 'limit') ?? 1000,
+  };
+
+  if (dataset === 'backtest_ticks') request.bookDepth = optionalIntFlag(flags, 'book-depth') ?? loadConfig().backtestBookDepth;
+  if (dataset === 'ohlc') request.resolution = requiredFlag(flags, 'resolution');
+  return request;
 }
 
 main().catch((err) => {

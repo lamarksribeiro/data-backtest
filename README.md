@@ -35,8 +35,13 @@ Implementado o início da Fase 2:
 - Export de `books` bruto para Parquet ZSTD.
 - Export de `backtest_ticks` com book top-N flattenado para colunas numéricas.
 - Checksums específicos para `books` e `backtest_ticks`.
+- Export de `ohlc` a partir de partições `scalars` válidas.
+- OHLC por resolução: `1s`, `5s`, `1m`, `5m`.
+- Query layer DuckDB que lê Parquet apenas pelos `active_path` válidos do manifest.
+- Checagem de disponibilidade no modo estrito antes de consultar ticks/candles.
+- CLI para consultar disponibilidade, ticks e candles.
 
-Ainda não há export de `ohlc`.
+Próxima etapa do plano: modos `strict`/`prepare` para orquestrar execução de backtests sobre a query layer.
 
 ## Configuração
 
@@ -78,6 +83,10 @@ npm run sync:incremental -- --lookback-days 2 --underlying BTC --interval 5m --d
 npm run sync:reconcile-scalars -- --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --dry-run
 npm run sync:backfill-books -- --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --dry-run
 npm run sync:backfill-backtest-ticks -- --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --dry-run
+npm run sync:backfill-ohlc -- --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --resolution 1m --dry-run
+npm run query:availability -- --dataset backtest_ticks --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10
+npm run query:ticks -- --dataset backtest_ticks --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --limit 10
+npm run query:candles -- --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --resolution 1m --limit 10
 npm run manifest:mark-stale -- --underlying BTC --interval 5m --dt 2026-05-31 --reason "repair-gap"
 npm test
 ```
@@ -91,6 +100,10 @@ npm test
 `sync:reconcile-scalars` recalcula o fingerprint da origem e marca partições como `stale` quando detectar divergência. Use com `--dry-run` primeiro.
 
 `sync:backfill-books` grava o book bruto como JSON em Parquet. `sync:backfill-backtest-ticks` grava scalars + book top-N flattenado; use `--book-depth N` ou `BACKTEST_BOOK_DEPTH`.
+
+`sync:backfill-ohlc` lê apenas partições `scalars` válidas do manifest e gera candles derivados. Use `--resolution 1s,5s,1m,5m` ou omita para gerar todas as resoluções.
+
+`query:availability`, `query:ticks` e `query:candles` nunca fazem glob no diretório do lakehouse. Eles resolvem a lista de arquivos exclusivamente pelo manifest e bloqueiam a consulta se houver partição ausente, `stale`, `invalid` ou sem `active_path`.
 
 ## Projetos relacionados
 

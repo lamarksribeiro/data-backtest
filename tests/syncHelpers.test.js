@@ -8,9 +8,10 @@ import { loadConfig } from '../src/config.js';
 import { buildFinalParquetPath, buildTempParquetPath, toPortablePath } from '../src/lake/paths.js';
 import { openStateDatabase, closeStateDatabase } from '../src/state/sqlite.js';
 import { upsertManifestPartition } from '../src/state/manifest.js';
-import { writeBacktestTicksParquet, writeBooksParquet, writeScalarsParquet } from '../src/sync/duckdbParquet.js';
+import { resolutionToIntervalSql, writeBacktestTicksParquet, writeBooksParquet, writeOhlcParquetFromScalars, writeScalarsParquet } from '../src/sync/duckdbParquet.js';
 import { createBacktestTicksRowsChecksum, createBooksRowsChecksum, createScalarRowsChecksum, createSourceFingerprint } from '../src/sync/fingerprint.js';
 import { flattenBookTick, parseBookLevels } from '../src/sync/bookFlatten.js';
+import { normalizeOhlcResolutions } from '../src/sync/ohlc.js';
 import { incrementalRange, markScalarsPartitionStale, shouldProcessScalarsPartition } from '../src/sync/scalars.js';
 import { intervalFromMarketType, marketTypeFromInterval } from '../src/source/postgres.js';
 
@@ -198,6 +199,49 @@ test('duckdb writers create books and backtest_ticks parquet files', async () =>
       bookDepth: 2,
     });
     assert.ok((await stat(backtestFinal)).size > 0);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('duckdb writer creates ohlc parquet from scalars parquet', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-ohlc-parquet-'));
+  try {
+    const scalarsPath = path.join(dir, 'scalars', 'part-test.parquet');
+    await writeScalarsParquet({
+      tempPath: path.join(dir, '.tmp', 'scalars.parquet'),
+      finalPath: scalarsPath,
+      rows: [
+        {
+          marketId: 'market-1', underlying: 'BTC', interval: '5m', conditionId: 'condition-1',
+          eventStart: '2026-05-31T00:00:00.000Z', eventEnd: '2026-05-31T00:05:00.000Z', ts: '2026-05-31T00:00:01.000Z',
+          underlyingPrice: 100, priceToBeat: 99, upPrice: 0.51, downPrice: 0.49,
+          upBestBid: 0.50, upBestAsk: 0.52, downBestBid: 0.48, downBestAsk: 0.50,
+          coverage: 1, degraded: false,
+        },
+        {
+          marketId: 'market-1', underlying: 'BTC', interval: '5m', conditionId: 'condition-1',
+          eventStart: '2026-05-31T00:00:00.000Z', eventEnd: '2026-05-31T00:05:00.000Z', ts: '2026-05-31T00:00:02.000Z',
+          underlyingPrice: 101, priceToBeat: 99, upPrice: 0.52, downPrice: 0.48,
+          upBestBid: 0.51, upBestAsk: 0.53, downBestBid: 0.47, downBestAsk: 0.49,
+          coverage: 1, degraded: false,
+        },
+      ],
+    });
+
+    const ohlcPath = path.join(dir, 'ohlc', 'part-test.parquet');
+    const stats = await writeOhlcParquetFromScalars({
+      scalarPath: scalarsPath,
+      tempPath: path.join(dir, '.tmp', 'ohlc.parquet'),
+      finalPath: ohlcPath,
+      resolution: '1s',
+    });
+
+    assert.ok((await stat(ohlcPath)).size > 0);
+    assert.equal(stats.rows, 2);
+    assert.equal(resolutionToIntervalSql('5m'), '5 minutes');
+    assert.deepEqual(normalizeOhlcResolutions('1s,1m'), ['1s', '1m']);
+    assert.throws(() => normalizeOhlcResolutions('2m'), /Unsupported OHLC resolution/);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
