@@ -1,4 +1,5 @@
-import { getTicksForBacktestBatch } from '../legacy/polymarketTestAdapter.js';
+import { toLegacyBacktestTick } from '../legacy/polymarketTestAdapter.js';
+import { queryTicks } from '../query/duckdbQuery.js';
 
 const DEFAULT_BATCH_SIZE = 5000;
 
@@ -12,12 +13,17 @@ export class DuckDbTickProvider {
     const batchSize = normalizeBatchSize(request.batchSize ?? request.limit ?? DEFAULT_BATCH_SIZE);
     let offset = 0;
     while (true) {
-      const batch = await getTicksForBacktestBatch(this.db, {
+      const rows = await queryTicks(this.db, {
+        dataset: 'backtest_ticks',
         ...this.defaults,
         ...request,
         limit: batchSize,
         offset,
       });
+      const batch = rows.map((row, index) => toLegacyBacktestTick(row, {
+        index: offset + index,
+        bookDepth: this.defaults.bookDepth ?? request.bookDepth ?? 10,
+      }));
       if (!batch.length) break;
       yield batch;
       offset += batch.length;
