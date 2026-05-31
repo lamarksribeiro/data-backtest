@@ -152,7 +152,7 @@ test('duckdb writer creates scalars parquet file', async () => {
     assert.equal(info.isFile(), true);
     assert.ok(info.size > 0);
   } finally {
-    await rm(dir, { recursive: true, force: true });
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
   }
 });
 
@@ -200,7 +200,7 @@ test('duckdb writers create books and backtest_ticks parquet files', async () =>
     });
     assert.ok((await stat(backtestFinal)).size > 0);
   } finally {
-    await rm(dir, { recursive: true, force: true });
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
   }
 });
 
@@ -243,7 +243,7 @@ test('duckdb writer creates ohlc parquet from scalars parquet', async () => {
     assert.deepEqual(normalizeOhlcResolutions('1s,1m'), ['1s', '1m']);
     assert.throws(() => normalizeOhlcResolutions('2m'), /Unsupported OHLC resolution/);
   } finally {
-    await rm(dir, { recursive: true, force: true });
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
   }
 });
 
@@ -299,7 +299,7 @@ test('incremental processing skips valid and protects needs_review', async () =>
       closeStateDatabase(db);
     }
   } finally {
-    await rm(dir, { recursive: true, force: true });
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
   }
 });
 
@@ -333,6 +333,6 @@ test('marking scalars stale cascades to derived ohlc partition', async () => {
       closeStateDatabase(db);
     }
   } finally {
-    await rm(dir, { recursive: true, force: true });
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
   }
 });

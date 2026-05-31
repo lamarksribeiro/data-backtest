@@ -32,7 +32,7 @@ test('strict mode resolves ready when all partitions are valid', async () => {
       closeStateDatabase(db);
     }
   } finally {
-    await rm(dir, { recursive: true, force: true });
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
   }
 });
 
@@ -60,7 +60,7 @@ test('prepare mode returns sync plan for missing backtest_ticks partitions', asy
       closeStateDatabase(db);
     }
   } finally {
-    await rm(dir, { recursive: true, force: true });
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
   }
 });
 
@@ -88,7 +88,7 @@ test('prepare mode returns scalar prerequisite for missing ohlc partitions', asy
       closeStateDatabase(db);
     }
   } finally {
-    await rm(dir, { recursive: true, force: true });
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
   }
 });
 

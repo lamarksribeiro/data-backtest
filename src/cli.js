@@ -20,6 +20,7 @@ import { checkDatasetAvailability } from './query/availability.js';
 import { resolveDataRequest } from './query/dataMode.js';
 import { queryCandles, queryTicks } from './query/duckdbQuery.js';
 import { getTicksForBacktestBatch } from './legacy/polymarketTestAdapter.js';
+import { runBacktest } from './backtest/engine.js';
 
 function parseArgs(argv) {
   const [command = 'help', ...rest] = argv;
@@ -62,6 +63,7 @@ Commands:
   query:ticks Reads scalars/backtest_ticks through DuckDB using manifest active_path
   query:candles Reads OHLC candles through DuckDB using manifest active_path
   legacy:smoke Reads one polymarket-test compatible backtest batch
+  backtest:run Runs a native data-backtest strategy over lakehouse ticks
   sync:partitions Lists sealed source partitions available for sync
   sync:backfill   Exports sealed scalars partitions to Parquet
   sync:backfill-books Exports raw books partitions to Parquet
@@ -82,6 +84,7 @@ Sync examples:
   node src/cli.js query:resolve --mode prepare --dataset backtest_ticks --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10
   node src/cli.js query:ticks --dataset backtest_ticks --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --limit 10
   node src/cli.js legacy:smoke --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --limit 10
+  node src/cli.js backtest:run --strategy edge-sniper-v2 --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --batch-size 5000
 `);
 }
 
@@ -209,6 +212,21 @@ async function main() {
         limit: optionalIntFlag(flags, 'limit') ?? 10,
       });
       printJson({ rows_count: rows.length, first_row: rows[0] ?? null });
+      return;
+    }
+
+    if (command === 'backtest:run') {
+      const range = toRange(flags);
+      const result = await runBacktest(db, {
+        ...range,
+        strategy: flags.strategy ? String(flags.strategy) : 'edge-sniper-v2',
+        underlying: requiredFlag(flags, 'underlying').toUpperCase(),
+        interval: requiredFlag(flags, 'interval'),
+        bookDepth: optionalIntFlag(flags, 'book-depth') ?? config.backtestBookDepth,
+        batchSize: optionalIntFlag(flags, 'batch-size') ?? optionalIntFlag(flags, 'limit') ?? 5000,
+        params: parseJsonFlag(flags, 'params') ?? {},
+      });
+      printJson(result);
       return;
     }
 
@@ -407,6 +425,15 @@ function buildQueryRequest(flags, range, dataset) {
   if (dataset === 'backtest_ticks') request.bookDepth = optionalIntFlag(flags, 'book-depth') ?? loadConfig().backtestBookDepth;
   if (dataset === 'ohlc') request.resolution = requiredFlag(flags, 'resolution');
   return request;
+}
+
+function parseJsonFlag(flags, key) {
+  if (flags[key] == null || flags[key] === true) return null;
+  try {
+    return JSON.parse(String(flags[key]));
+  } catch (error) {
+    throw new Error(`--${key} must be valid JSON: ${error.message}`);
+  }
 }
 
 main().catch((err) => {

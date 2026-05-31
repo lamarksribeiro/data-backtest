@@ -65,7 +65,7 @@ test('manifest initializes in SQLite WAL and upserts partition', async () => {
       closeStateDatabase(db);
     }
   } finally {
-    await rm(dir, { recursive: true, force: true });
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
   }
 });
 
@@ -76,6 +76,6 @@ test('lake storage check creates expected writable layout', async () => {
     assert.equal(result.ok, true);
     assert.equal(result.lake_root, path.join(dir, 'lake'));
   } finally {
-    await rm(dir, { recursive: true, force: true });
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
   }
 });

@@ -43,8 +43,10 @@ Implementado o início da Fase 2:
 - Resolução dos modos `strict` e `prepare` para uma futura execução de backtest.
 - Plano de preparação com comandos de sync quando faltarem partições.
 - Adapter inicial para consumir `backtest_ticks` com shape compatível com `polymarket-test`.
+- Runner nativo de backtest no `data-backtest` com `DuckDbTickProvider` em batches.
+- Estratégia inicial nativa: `edge-sniper-v2`, usando `backtest_ticks` do lakehouse.
 
-Próxima etapa do plano: migrar um lab legado e validar paridade usando a query layer.
+Próxima etapa do plano: validar paridade do `edge-sniper-v2` nativo contra o legado e avançar para API/UI do `data-backtest`.
 
 ## Configuração
 
@@ -92,6 +94,7 @@ npm run query:resolve -- --mode prepare --dataset backtest_ticks --from 2026-05-
 npm run query:ticks -- --dataset backtest_ticks --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --limit 10
 npm run query:candles -- --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --resolution 1m --limit 10
 npm run legacy:smoke -- --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --limit 10
+npm run backtest:run -- --strategy edge-sniper-v2 --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --batch-size 5000
 npm run manifest:mark-stale -- --underlying BTC --interval 5m --dt 2026-05-31 --reason "repair-gap"
 npm test
 ```
@@ -113,6 +116,14 @@ npm test
 `query:resolve` aplica o modo de dados. Em `strict`, informa bloqueio quando falta Parquet válido. Em `prepare`, retorna um plano com os comandos de sync necessários antes do backtest.
 
 `legacy:smoke` usa o adapter `src/legacy/polymarketTestAdapter.js` para retornar um batch no formato esperado pelo `polymarket-test`: `btc_price`, `price_to_beat`, best bid/ask e books JSON (`up_book_asks`, `up_book_bids`, `down_book_asks`, `down_book_bids`).
+
+`backtest:run` executa estratégias nativas dentro do `data-backtest`. O primeiro alvo é `edge-sniper-v2`, que não depende de série temporal Binance externa; ele usa BTC/price-to-beat/preços UP/DOWN/best bid-ask/books já presentes no dataset `backtest_ticks`.
+
+Parâmetros da estratégia podem ser passados como JSON:
+
+```bash
+npm run backtest:run -- --strategy edge-sniper-v2 --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --params '{"minDistanceAbs":40,"maxOrderValue":10}'
+```
 
 ## Adapter legado
 

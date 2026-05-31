@@ -45,7 +45,7 @@ test('availability resolves valid active_path and reports missing partitions', a
       closeStateDatabase(db);
     }
   } finally {
-    await rm(dir, { recursive: true, force: true });
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
   }
 });
 
@@ -89,7 +89,7 @@ test('queryTicks reads only manifest active_path parquet files', async () => {
       closeStateDatabase(db);
     }
   } finally {
-    await rm(dir, { recursive: true, force: true });
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
   }
 });
 
@@ -138,7 +138,7 @@ test('queryCandles reads OHLC partitions resolved by resolution', async () => {
       closeStateDatabase(db);
     }
   } finally {
-    await rm(dir, { recursive: true, force: true });
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
   }
 });
 

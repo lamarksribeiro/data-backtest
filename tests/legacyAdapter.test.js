@@ -54,7 +54,7 @@ test('polymarket-test adapter returns legacy tick shape from backtest_ticks parq
       closeStateDatabase(db);
     }
   } finally {
-    await rm(dir, { recursive: true, force: true });
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
   }
 });
 
@@ -103,7 +103,7 @@ test('polymarket-test adapter yields legacy batches with stable synthetic ids', 
       closeStateDatabase(db);
     }
   } finally {
-    await rm(dir, { recursive: true, force: true });
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
   }
 });
 

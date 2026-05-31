@@ -17,6 +17,7 @@
     "query:ticks": "node src/cli.js query:ticks",
     "query:candles": "node src/cli.js query:candles",
     "legacy:smoke": "node src/cli.js legacy:smoke",
+    "backtest:run": "node src/cli.js backtest:run",
     "sync:partitions": "node src/cli.js sync:partitions",
     "sync:backfill": "node src/cli.js sync:backfill",
     "sync:backfill-books": "node src/cli.js sync:backfill-books",
