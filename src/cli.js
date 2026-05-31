@@ -1,0 +1,313 @@
+#!/usr/bin/env node
+import 'dotenv/config';
+
+import { loadConfig } from './config.js';
+import { openStateDatabase, closeStateDatabase } from './state/sqlite.js';
+import { listManifest, manifestStats } from './state/manifest.js';
+import { checkLakeStorage } from './lake/storage.js';
+import { getHealth } from './health.js';
+import { closeSourcePool, createSourcePool } from './source/postgres.js';
+import {
+  exportScalarsPartition,
+  incrementalRange,
+  listScalarPartitions,
+  markScalarsPartitionStale,
+  reconcileScalarsPartition,
+} from './sync/scalars.js';
+import { exportBacktestTicksPartition, exportBooksPartition, listBookPartitions } from './sync/bookDatasets.js';
+
+function parseArgs(argv) {
+  const [command = 'help', ...rest] = argv;
+  const flags = {};
+  for (let i = 0; i < rest.length; i += 1) {
+    const arg = rest[i];
+    if (!arg.startsWith('--')) continue;
+    const key = arg.slice(2);
+    const next = rest[i + 1];
+    if (!next || next.startsWith('--')) {
+      flags[key] = true;
+      continue;
+    }
+    flags[key] = next;
+    i += 1;
+  }
+  return { command, flags };
+}
+
+function printJson(value) {
+  console.log(JSON.stringify(value, null, 2));
+}
+
+function printHelp() {
+  console.log(`data-backtest CLI
+
+Usage:
+  npm run health
+  npm run storage:check
+  npm run manifest:list -- --status valid --limit 50
+
+Commands:
+  health          Checks state DB, manifest and lake storage
+  storage:check   Ensures lake folders exist and are writable
+  manifest:list   Lists manifest partitions
+  manifest:stats  Prints manifest aggregate counts
+  manifest:mark-stale Marks a scalars partition stale locally
+  sync:partitions Lists sealed source partitions available for sync
+  sync:backfill   Exports sealed scalars partitions to Parquet
+  sync:backfill-books Exports raw books partitions to Parquet
+  sync:backfill-backtest-ticks Exports flattened backtest tick partitions to Parquet
+  sync:incremental Exports recent sealed scalars partitions using SYNC_MARGIN_MINUTES
+  sync:reconcile-scalars Recomputes source fingerprints and marks changed scalars stale
+
+Sync examples:
+  node src/cli.js sync:partitions --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m
+  node src/cli.js sync:backfill --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --dry-run
+  node src/cli.js sync:backfill-books --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --dry-run
+  node src/cli.js sync:backfill-backtest-ticks --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --dry-run
+  node src/cli.js sync:incremental --lookback-days 2 --underlying BTC --interval 5m
+  node src/cli.js sync:reconcile-scalars --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --dry-run
+`);
+}
+
+function requiredFlag(flags, key) {
+  const value = flags[key];
+  if (!value || value === true) throw new Error(`--${key} is required`);
+  return String(value);
+}
+
+function optionalIntFlag(flags, key) {
+  if (flags[key] == null || flags[key] === true) return null;
+  const value = Number.parseInt(String(flags[key]), 10);
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+function optionalBoolFlag(flags, key) {
+  return Boolean(flags[key]);
+}
+
+function toRange(flags) {
+  const from = parseDateStart(requiredFlag(flags, 'from'));
+  const to = parseDateEnd(requiredFlag(flags, 'to'));
+  if (to <= from) throw new Error('--to must be after --from');
+  return { from: from.toISOString(), to: to.toISOString() };
+}
+
+function parseDateStart(value) {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return new Date(`${value}T00:00:00.000Z`);
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) throw new Error(`Invalid date: ${value}`);
+  return date;
+}
+
+function parseDateEnd(value) {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return new Date(`${value}T00:00:00.000Z`);
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) throw new Error(`Invalid date: ${value}`);
+  return date;
+}
+
+async function main() {
+  const { command, flags } = parseArgs(process.argv.slice(2));
+  if (command === 'help' || command === '--help' || command === '-h') {
+    printHelp();
+    return;
+  }
+
+  const config = loadConfig();
+  const db = openStateDatabase(config.stateDbPath);
+
+  try {
+    if (command === 'health') {
+      printJson(await getHealth(config, db));
+      return;
+    }
+
+    if (command === 'storage:check') {
+      printJson(await checkLakeStorage(config.lakeRoot));
+      return;
+    }
+
+    if (command === 'manifest:list') {
+      printJson({ partitions: listManifest(db, flags) });
+      return;
+    }
+
+    if (command === 'manifest:stats') {
+      printJson(manifestStats(db));
+      return;
+    }
+
+    if (command === 'manifest:mark-stale') {
+      const dataset = flags.dataset ? String(flags.dataset) : 'scalars';
+      if (dataset !== 'scalars') throw new Error('manifest:mark-stale currently supports dataset=scalars only');
+      const partition = {
+        marketId: flags['market-id'] ? String(flags['market-id']) : null,
+        underlying: requiredFlag(flags, 'underlying').toUpperCase(),
+        interval: requiredFlag(flags, 'interval'),
+        dt: requiredFlag(flags, 'dt'),
+      };
+      const result = markScalarsPartitionStale(db, partition, flags.reason ? String(flags.reason) : 'manual stale mark');
+      printJson({ partition, ...result });
+      return;
+    }
+
+    if (command === 'sync:partitions') {
+      const range = toRange(flags);
+      const pool = createSourcePool(config);
+      try {
+        const partitions = await listScalarPartitions(pool, {
+          ...range,
+          underlying: flags.underlying ? String(flags.underlying).toUpperCase() : null,
+          interval: flags.interval ? String(flags.interval) : null,
+          limit: optionalIntFlag(flags, 'limit'),
+        });
+        printJson({ partitions });
+      } finally {
+        await closeSourcePool(pool);
+      }
+      return;
+    }
+
+    if (command === 'sync:backfill') {
+      const range = toRange(flags);
+      const pool = createSourcePool(config);
+      try {
+        const partitions = await listScalarPartitions(pool, {
+          ...range,
+          underlying: flags.underlying ? String(flags.underlying).toUpperCase() : null,
+          interval: flags.interval ? String(flags.interval) : null,
+          limit: optionalIntFlag(flags, 'limit'),
+        });
+        const results = [];
+        for (const partition of partitions) {
+          results.push(await exportScalarsPartition({
+            config,
+            db,
+            pool,
+            partition,
+            dryRun: Boolean(flags['dry-run']),
+            rebuild: Boolean(flags.rebuild),
+            allowNeedsReview: Boolean(flags['allow-needs-review']),
+          }));
+        }
+        printJson({ partitions: results });
+      } finally {
+        await closeSourcePool(pool);
+      }
+      return;
+    }
+
+    if (command === 'sync:backfill-books' || command === 'sync:backfill-backtest-ticks') {
+      const range = toRange(flags);
+      const pool = createSourcePool(config);
+      try {
+        const partitions = await listBookPartitions(pool, {
+          ...range,
+          underlying: flags.underlying ? String(flags.underlying).toUpperCase() : null,
+          interval: flags.interval ? String(flags.interval) : null,
+          limit: optionalIntFlag(flags, 'limit'),
+        });
+        const results = [];
+        for (const partition of partitions) {
+          if (command === 'sync:backfill-books') {
+            results.push(await exportBooksPartition({
+              config,
+              db,
+              pool,
+              partition,
+              dryRun: optionalBoolFlag(flags, 'dry-run'),
+              rebuild: optionalBoolFlag(flags, 'rebuild'),
+              allowNeedsReview: optionalBoolFlag(flags, 'allow-needs-review'),
+            }));
+          } else {
+            results.push(await exportBacktestTicksPartition({
+              config,
+              db,
+              pool,
+              partition,
+              dryRun: optionalBoolFlag(flags, 'dry-run'),
+              rebuild: optionalBoolFlag(flags, 'rebuild'),
+              allowNeedsReview: optionalBoolFlag(flags, 'allow-needs-review'),
+              bookDepth: optionalIntFlag(flags, 'book-depth') ?? config.backtestBookDepth,
+            }));
+          }
+        }
+        printJson({ partitions: results });
+      } finally {
+        await closeSourcePool(pool);
+      }
+      return;
+    }
+
+    if (command === 'sync:incremental') {
+      const lookbackDays = optionalIntFlag(flags, 'lookback-days') ?? 2;
+      const range = incrementalRange({
+        lookbackDays,
+        marginMinutes: config.syncMarginMinutes,
+        from: flags.from && flags.from !== true ? String(flags.from) : null,
+        to: flags.to && flags.to !== true ? String(flags.to) : null,
+      });
+      const pool = createSourcePool(config);
+      try {
+        const partitions = await listScalarPartitions(pool, {
+          ...range,
+          underlying: flags.underlying ? String(flags.underlying).toUpperCase() : null,
+          interval: flags.interval ? String(flags.interval) : null,
+          limit: optionalIntFlag(flags, 'limit'),
+        });
+        const results = [];
+        for (const partition of partitions) {
+          results.push(await exportScalarsPartition({
+            config,
+            db,
+            pool,
+            partition,
+            dryRun: optionalBoolFlag(flags, 'dry-run'),
+            rebuild: optionalBoolFlag(flags, 'rebuild'),
+            allowNeedsReview: optionalBoolFlag(flags, 'allow-needs-review'),
+          }));
+        }
+        printJson({ range, partitions: results });
+      } finally {
+        await closeSourcePool(pool);
+      }
+      return;
+    }
+
+    if (command === 'sync:reconcile-scalars') {
+      const range = toRange(flags);
+      const pool = createSourcePool(config);
+      try {
+        const partitions = await listScalarPartitions(pool, {
+          ...range,
+          underlying: flags.underlying ? String(flags.underlying).toUpperCase() : null,
+          interval: flags.interval ? String(flags.interval) : null,
+          limit: optionalIntFlag(flags, 'limit'),
+        });
+        const results = [];
+        for (const partition of partitions) {
+          results.push(await reconcileScalarsPartition({
+            db,
+            pool,
+            partition,
+            markStale: !optionalBoolFlag(flags, 'dry-run'),
+          }));
+        }
+        printJson({ partitions: results });
+      } finally {
+        await closeSourcePool(pool);
+      }
+      return;
+    }
+
+    printHelp();
+    process.exitCode = 1;
+  } finally {
+    closeStateDatabase(db);
+  }
+}
+
+main().catch((err) => {
+  console.error(err.stack || err.message || String(err));
+  process.exitCode = 1;
+});
