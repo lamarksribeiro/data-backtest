@@ -18,6 +18,7 @@ O Postgres continua sendo a fonte de verdade enquanto os dados estao na janela o
 - Exclusao do Postgres deve ser opcional, auditavel e condicionada a validacao do lakehouse.
 - Opcao padrao deve ser retencao indefinida.
 - Estrategias devem usar uma query layer unica, independente da origem fisica dos dados.
+- A query layer deve nascer generica para servir backtests, labs e futuro `data-robot`.
 - Lakehouse deve ser reconstruivel a partir do Postgres enquanto os dados ainda existirem nele ou a partir de backups.
 
 ## Arquitetura Alvo
@@ -83,15 +84,18 @@ Layout:
   books/
   backtest_ticks/
   ohlc/
-  features/
-  manifests/
+  features/   (reservado para datasets de features derivadas; fase futura)
+  manifests/  (snapshots exportados do manifest para portabilidade/rebuild; a fonte de verdade do manifest vive no SQLite em /state)
+  .tmp/       (areas temporarias de escrita antes da publicacao atomica)
 ```
+
+A fonte de verdade do manifest e o SQLite em `STATE_DB_PATH` (`/state`). O diretorio `/lake/manifests/` guarda apenas copias exportadas para permitir reconstruir o estado junto com os Parquet (ex.: ao restaurar um snapshot do disco).
 
 ## Datasets Parquet
 
 ### `scalars`
 
-Dataset leve para filtros, previews, OHLC e estrategias que nao precisam de profundidade completa.
+Dataset leve para filtros, previews, OHLC, verificacoes rapidas e estrategias que nao precisam de profundidade completa.
 
 Colunas:
 
@@ -118,12 +122,12 @@ degraded
 Layout:
 
 ```text
-/lake/scalars/underlying=BTC/interval=5m/dt=2026-05-31/part-000.parquet
+/lake/scalars/underlying=BTC/interval=5m/dt=2026-05-31/part-<run-id>.parquet
 ```
 
 ### `books`
 
-Dataset com book completo, separado por ser pesado.
+Dataset com book completo, separado por ser pesado. Deve ser mantido por decisao explicita enquanto houver espaco, porque serve como arquivo analitico completo e permite reprocessar `backtest_ticks` com outro `book_depth` sem voltar ao Postgres.
 
 Colunas iniciais:
 
@@ -143,7 +147,7 @@ down_book_bids
 Layout:
 
 ```text
-/lake/books/underlying=BTC/interval=5m/dt=2026-05-31/part-000.parquet
+/lake/books/underlying=BTC/interval=5m/dt=2026-05-31/part-<run-id>.parquet
 ```
 
 ### `backtest_ticks`
@@ -174,8 +178,12 @@ down_bid_sz_1
 Layout:
 
 ```text
-/lake/backtest_ticks/underlying=BTC/interval=5m/book_depth=10/dt=2026-05-31/part-000.parquet
+/lake/backtest_ticks/underlying=BTC/interval=5m/book_depth=10/dt=2026-05-31/part-<run-id>.parquet
 ```
+
+Decisao de storage: manter `scalars`, `books` e `backtest_ticks` no primeiro desenho. Isso aumenta escrita e armazenamento, mas reduz CPU nos backtests, acelera previews/OHLC e preserva book completo para reconstrucoes. Se o espaco virar gargalo, `books` pode virar dataset sob demanda depois.
+
+Precisao numerica: exportar precos como `DOUBLE` inicialmente, alinhado ao legado que usa `parseFloat`. Usar `DECIMAL` so se uma estrategia exigir paridade decimal exata.
 
 ### `ohlc`
 
@@ -193,14 +201,16 @@ Resolucoes:
 Layout:
 
 ```text
-/lake/ohlc/resolution=1s/underlying=BTC/interval=5m/dt=2026-05-31/part-000.parquet
+/lake/ohlc/resolution=1s/underlying=BTC/interval=5m/dt=2026-05-31/part-<run-id>.parquet
 ```
 
-## Manifest
+## State Store E Manifest
 
 O manifest controla quais particoes foram materializadas e validadas.
 
-Pode comecar como SQLite ou DuckDB local em:
+O state store deve ser SQLite em modo WAL, porque havera multiplos processos lendo e escrevendo metadados: sync, API e workers de backtest. DuckDB deve ser usado como engine de query sobre Parquet, nao como banco concorrente de estado.
+
+Caminho:
 
 ```text
 /state/data-backtest.db
@@ -215,18 +225,35 @@ dataset
 market_id
 underlying
 interval
+resolution nullable
+book_depth nullable
 dt
-path
+active_path
+run_id
 rows
 events_count
 min_ts
 max_ts
 coverage_min
 has_degraded
+source_tick_count
+source_condition_count
+source_quality_recorded_at_max
+source_fingerprint
 status
 created_at
 verified_at
 error
+```
+
+Campos importantes:
+
+```text
+active_path = arquivo versionado atualmente publicado para leitura
+run_id = identificador da geracao do arquivo ativo
+resolution = usado por OHLC; nulo para scalars/books/backtest_ticks
+book_depth = usado por backtest_ticks; nulo para outros datasets
+source_fingerprint = carimbo da origem usado para detectar stale
 ```
 
 Status:
@@ -237,6 +264,7 @@ pending
 writing
 valid
 invalid
+needs_review
 rebuilding
 stale
 ```
@@ -249,11 +277,74 @@ pending = particao identificada e aguardando processamento
 writing = escrita em andamento em arquivo temporario
 valid = particao pronta, validada e liberada para backtest
 invalid = tentativa falhou ou a validacao nao bateu
+needs_review = divergencia operacional exige decisao antes de liberar
 rebuilding = particao valida sendo reconstruida explicitamente
 stale = origem mudou depois da materializacao e exige rebuild
 ```
 
 O backtest deve consultar o manifest antes de executar. O caminho normal de execucao e sempre DuckDB + Parquet validado.
+
+O query layer nao deve usar glob bruto como fonte de verdade, porque um rebuild pode deixar arquivos antigos e novos no mesmo diretorio. Ele deve resolver a lista de arquivos pelo manifest e ler apenas `active_path` de particoes `valid`.
+
+Arquivos Parquet devem ser versionados por geracao:
+
+```text
+/lake/backtest_ticks/underlying=BTC/interval=5m/book_depth=10/dt=2026-05-31/part-<run-id>.parquet
+```
+
+A publicacao e atomica no nivel do manifest:
+
+```text
+1. Escrever part-<new-run-id>.parquet em path temporario.
+2. Validar arquivo novo.
+3. Mover para o diretorio final.
+4. Atualizar `active_path` no SQLite em uma transacao.
+5. Backtests novos passam a ler o arquivo novo; os antigos seguem com a lista resolvida no inicio do run.
+```
+
+## Invalidacao E Stale
+
+Scripts de manutencao do `data-colector`, como `db:backfill-ptb` e `db:repair-gap`, podem alterar ticks/eventos ja arquivados. Isso deve marcar o lakehouse como `stale`, caso contrario o Parquet diverge em silencio do Postgres.
+
+Regras:
+
+```text
+1. Cada particao/evento materializado grava um `source_fingerprint`.
+2. O fingerprint deve incluir contagem real de ticks, quantidade de condition_id, max(event_quality.recorded_at) e um checksum de valores das colunas mutaveis (ex.: price_to_beat, precos).
+3. Scripts de reparo/backfill devem chamar endpoint dedicado para marcar eventos/particoes afetadas como stale.
+4. O sync deve reprocessar particoes stale antes de publica-las novamente como valid.
+5. Backtest em modo strict deve bloquear particoes stale.
+6. Stale/rebuild de uma particao fonte deve cascatear para todos os datasets derivados dela: scalars -> ohlc; books -> backtest_ticks; mudanca na origem (ticks no Postgres) -> scalars, books, backtest_ticks e ohlc do periodo.
+```
+
+Atencao a reparos do tipo UPDATE: `db:backfill-ptb` preenche `price_to_beat` em linhas existentes sem mudar a contagem nem, necessariamente, `event_quality.recorded_at`. Um fingerprint baseado apenas em contagem + `recorded_at` nao detecta esse caso. Por isso o fingerprint inclui checksum de valores (regra 2) e os scripts de reparo/backfill devem chamar o endpoint de stale (regra 3) como defesa primaria.
+
+Rede de seguranca - job de reconciliacao: um job periodico deve recalcular o `source_fingerprint` de particoes recentes e marcar `stale` quando houver drift, garantindo a correcao mesmo que algum script de manutencao (ou alteracao manual via SQL) nao tenha chamado o endpoint.
+
+Endpoint dedicado sugerido no `data-colector`:
+
+```text
+POST /api/admin/archive/stale
+body: { condition_ids: string[], reason: string, source: string }
+```
+
+Esse endpoint deve exigir API key de escopo estreito, dedicada ao `data-backtest`/manutencao, e registrar `audit_log`.
+
+## Validacao De Paridade
+
+`event_quality.ticks_recorded` e um indicador importante, mas nao deve ser a unica fonte de verdade de contagem. Ele pode divergir por `ON CONFLICT DO NOTHING`, inserts tardios ou reparos.
+
+Validacao obrigatoria por particao:
+
+```text
+contagem real exportada por evento
+contagem real total exportada
+quantidade de condition_id distintos
+min_ts e max_ts
+comparacao informativa com event_quality.ticks_recorded
+```
+
+`ticks_recorded` deve ser tratado como valor esperado operacional. Se divergir, registrar alerta e marcar a particao como `invalid` ou `needs_review`, conforme tolerancia configurada. Para liberar backtest oficial, a contagem real por evento no Parquet deve bater com a contagem real consultada no Postgres no momento do export.
 
 ## Politica De Disponibilidade Dos Dados
 
@@ -310,6 +401,8 @@ rows_scalars
 rows_books
 rows_backtest_ticks
 manifest_path
+source_fingerprint
+stale_reason
 archived_at
 verified_at
 created_at
@@ -317,6 +410,16 @@ updated_at
 ```
 
 A retencao so pode excluir dados do Postgres quando o evento estiver validado.
+
+Status devem aceitar pelo menos:
+
+```text
+pending
+valid
+invalid
+needs_review
+stale
+```
 
 ## Retencao Configuravel Do Postgres
 
@@ -403,10 +506,11 @@ Ultimo erro
 3. event_quality registra cobertura.
 4. data-backtest identifica eventos selados.
 5. data-backtest gera scalars, books, backtest_ticks e ohlc.
-6. data-backtest valida contagem contra event_quality.ticks_recorded.
-7. data-backtest grava manifest local.
-8. data-backtest informa event_archive_status no data-colector.
-9. RetentionJob passa a considerar o evento elegivel.
+6. data-backtest valida contagem real por evento, condition_ids, min_ts, max_ts e compara com event_quality.ticks_recorded.
+7. data-backtest grava manifest local com source_fingerprint.
+8. data-backtest publica active_path atomicamente no manifest.
+9. data-backtest informa event_archive_status no data-colector.
+10. RetentionJob passa a considerar o evento elegivel.
 ```
 
 ## Backfill Historico Inicial
@@ -440,13 +544,13 @@ Fluxo por dia/mercado/intervalo:
 Arquivos temporarios:
 
 ```text
-/lake/.tmp/<dataset>/<run-id>/part-000.parquet
+/lake/.tmp/<dataset>/<run-id>/part-<run-id>.parquet
 ```
 
 Path final somente depois da validacao:
 
 ```text
-/lake/<dataset>/underlying=BTC/interval=5m/dt=2026-05-31/part-000.parquet
+/lake/<dataset>/underlying=BTC/interval=5m/dt=2026-05-31/part-<run-id>.parquet
 ```
 
 Se o processo cair no meio, particoes `writing` ou `invalid` devem ser reprocessadas na proxima execucao. Particoes `valid` devem ser ignoradas, exceto quando o comando pedir `--rebuild`.
@@ -478,6 +582,27 @@ O paralelismo deve comecar baixo para nao pressionar o Postgres. Se houver repli
 9. Registra auditoria.
 ```
 
+Observacao sobre liberacao real de espaco: `DELETE` por `condition_id` remove linhas, mas pode gerar bloat e nao devolver espaco ao sistema operacional imediatamente. Como `ticks` e particionada por mes, a forma mais efetiva de liberar espaco e `DROP PARTITION`, quando todos os eventos daquela particao estiverem arquivados e fora da janela quente.
+
+Politica recomendada:
+
+```text
+MVP = dry-run + delete em lotes apenas para seguranca funcional
+Producao madura = preferir DROP PARTITION inteira quando a particao estiver 100% arquivada
+Futuro = avaliar particionamento semanal/diario se a granularidade mensal for grande demais
+```
+
+Antes de qualquer `DROP PARTITION`, exigir:
+
+```text
+todos os eventos da particao com archive valid
+nenhuma particao lakehouse stale/invalid no periodo
+backup/snapshot confirmado
+dry-run aprovado na UI
+confirmacao forte do operador
+audit_log completo
+```
+
 ## Fases De Implementacao
 
 ### Fase 0: Decisoes E Preparacao
@@ -496,9 +621,12 @@ O paralelismo deve comecar baixo para nao pressionar o Postgres. Se houver repli
 - [ ] Criar estrutura inicial do `data-backtest`.
 - [ ] Criar configuracao `LAKE_ROOT`.
 - [ ] Criar configuracao `STATE_DB_PATH`.
-- [ ] Criar banco local de estado.
+- [ ] Criar banco local de estado em SQLite.
+- [ ] Habilitar SQLite WAL para suportar API, sync e workers concorrentes.
 - [ ] Criar tabela `lake_manifest`.
-- [ ] Implementar status `missing`, `pending`, `writing`, `valid`, `invalid`, `rebuilding` e `stale`.
+- [ ] Adicionar colunas `resolution`, `book_depth`, `active_path`, `run_id` e `source_fingerprint` no manifest.
+- [ ] Implementar status `missing`, `pending`, `writing`, `valid`, `invalid`, `needs_review`, `rebuilding` e `stale`.
+- [ ] Implementar publicacao atomica de `active_path` em transacao.
 - [ ] Criar utilitario para resolver paths Hive partitioned.
 - [ ] Criar healthcheck verificando acesso a `/lake`.
 - [ ] Criar comando CLI para listar manifest.
@@ -511,12 +639,18 @@ O paralelismo deve comecar baixo para nao pressionar o Postgres. Se houver repli
 - [ ] Criar comando `sync backfill --from --to --underlying --interval`.
 - [ ] Criar export diario de `scalars`.
 - [ ] Escrever primeiro em `/lake/.tmp` e mover para o path final apenas apos validacao.
+- [ ] Nomear arquivos como `part-<run-id>.parquet`.
 - [ ] Escrever Parquet ZSTD com DuckDB.
 - [ ] Registrar particao em `lake_manifest`.
-- [ ] Validar `rows == sum(event_quality.ticks_recorded)`.
+- [ ] Validar contagem real total consultada no Postgres no momento do export.
+- [ ] Validar contagem real por evento.
+- [ ] Comparar `event_quality.ticks_recorded` como valor esperado operacional e registrar divergencias.
 - [ ] Validar quantidade de eventos, `min_ts` e `max_ts`.
+- [ ] Calcular e persistir `source_fingerprint` por particao/evento, incluindo checksum de valores mutaveis (price_to_beat, precos), nao so contagens.
+- [ ] Implementar cascata de invalidacao: stale/rebuild da fonte propaga para datasets derivados (scalars->ohlc; books->backtest_ticks).
 - [ ] Ignorar particoes `valid` em execucoes repetidas.
 - [ ] Reprocessar particoes `writing` e `invalid`.
+- [ ] Reprocessar particoes `stale`.
 - [ ] Suportar rebuild de particao diaria.
 - [ ] Suportar dry-run do sync.
 - [ ] Implementar sync incremental com margem configuravel apos `event_quality`.
@@ -539,6 +673,7 @@ O paralelismo deve comecar baixo para nao pressionar o Postgres. Se houver repli
 - [ ] Criar geracao de candles 5s.
 - [ ] Criar geracao de candles 1m.
 - [ ] Criar geracao de candles 5m.
+- [ ] Registrar cada resolucao de OHLC no manifest usando a coluna `resolution`.
 - [ ] Criar query layer para candles.
 - [ ] Substituir preview de grafico por OHLC onde aplicavel.
 - [ ] Validar candles contra ticks brutos.
@@ -550,6 +685,8 @@ O paralelismo deve comecar baixo para nao pressionar o Postgres. Se houver repli
 - [ ] Criar `PostgresTickProvider` para fallback.
 - [ ] Criar `HybridTickProvider` futuro para live-tail.
 - [ ] Criar verificador de disponibilidade no manifest antes de iniciar backtest.
+- [ ] Resolver arquivos por `active_path` no manifest, nunca por glob bruto.
+- [ ] Congelar a lista de arquivos no inicio do run para evitar troca durante rebuild.
 - [ ] Implementar modo `strict` para bloquear execucao se faltar Parquet validado.
 - [ ] Implementar modo `prepare` para enfileirar sync/rebuild antes de rodar.
 - [ ] Restringir modo `hybrid` a debug/desenvolvimento.
@@ -564,6 +701,7 @@ O paralelismo deve comecar baixo para nao pressionar o Postgres. Se houver repli
 
 - [ ] Mapear `getTicksForBacktestBatches` do `polymarket-test`.
 - [ ] Criar adapter compativel no `data-backtest`.
+- [ ] Garantir que o `TickProvider` seja generico o suficiente para futuro `data-robot`.
 - [ ] Migrar um lab simples para a query layer nova.
 - [ ] Migrar `edgeSniper` como primeiro golden test.
 - [ ] Comparar resultado antigo vs novo.
@@ -574,8 +712,11 @@ O paralelismo deve comecar baixo para nao pressionar o Postgres. Se houver repli
 
 - [ ] Criar migracao `event_archive_status`.
 - [ ] Criar endpoint admin para receber status de arquivamento.
-- [ ] Validar autenticacao administrativa/API key server-side.
+- [ ] Validar autenticacao por API key de escopo estreito, dedicada a archive/sync.
 - [ ] Criar endpoint de consulta por periodo.
+- [ ] Criar endpoint dedicado para marcar eventos/particoes como `stale`.
+- [ ] Atualizar scripts de reparo/backfill do `data-colector` para marcar eventos afetados como `stale`.
+- [ ] Criar job de reconciliacao periodica que recalcula `source_fingerprint` de particoes recentes e marca `stale` em caso de drift (rede de seguranca).
 - [ ] Criar auditoria para atualizacoes de arquivamento.
 - [ ] Atualizar `data-backtest` para publicar status validado.
 - [ ] Criar testes de integracao.
@@ -625,6 +766,10 @@ O paralelismo deve comecar baixo para nao pressionar o Postgres. Se houver repli
 - [ ] Registrar quantidade apagada por evento.
 - [ ] Registrar espaco estimado liberado.
 - [ ] Registrar erros por evento sem abortar tudo.
+- [ ] Implementar dry-run para identificar particoes Postgres 100% arquivadas.
+- [ ] Priorizar `DROP PARTITION` para liberacao real de espaco quando seguro.
+- [ ] Manter delete em lotes apenas como alternativa operacional quando `DROP PARTITION` nao for aplicavel.
+- [ ] Exigir backup/snapshot e confirmacao forte antes de `DROP PARTITION`.
 - [ ] Adicionar metricas no health.
 - [ ] Testar com dry-run.
 - [ ] Habilitar execucao real somente apos validacao.
@@ -642,7 +787,9 @@ O paralelismo deve comecar baixo para nao pressionar o Postgres. Se houver repli
 - [ ] Documentar rebuild do lakehouse.
 - [ ] Documentar limpeza manual segura.
 
-### Fase 12: Live-Tail Futuro
+### Fase 12: Opcional - Live-Tail Futuro
+
+Nao bloqueia o MVP. Fazer apenas se for necessario backtest/replay ate os ultimos minutos ainda nao materializados.
 
 - [ ] Implementar view DuckDB com Parquet selado.
 - [ ] Adicionar uniao com Postgres recente.
@@ -651,7 +798,9 @@ O paralelismo deve comecar baixo para nao pressionar o Postgres. Se houver repli
 - [ ] Medir impacto no Postgres.
 - [ ] Tornar opcional por configuracao.
 
-### Fase 13: Split Vertical Futuro No Data-Colector
+### Fase 13: Opcional - Split Vertical Futuro No Data-Colector
+
+Nao bloqueia o MVP. Fazer apenas se o Postgres continuar sofrendo com heap/TOAST/cache depois do lakehouse e da retencao segura.
 
 - [ ] Criar tabela `tick_books`.
 - [ ] Criar view `ticks_full`.
@@ -667,7 +816,14 @@ O paralelismo deve comecar baixo para nao pressionar o Postgres. Se houver repli
 - [ ] O coletor continua gravando sem alteracao de performance perceptivel nas fases iniciais.
 - [ ] O `data-backtest` gera Parquet para pelo menos um dia completo de BTC 5m.
 - [ ] O backfill historico consegue retomar apos falha sem duplicar particoes validas.
-- [ ] A contagem do Parquet bate com `event_quality.ticks_recorded`.
+- [ ] A contagem real do Parquet bate com a contagem real consultada no Postgres no momento do export.
+- [ ] Divergencia entre contagem real e `event_quality.ticks_recorded` gera alerta e impede liberacao automatica quando ultrapassar tolerancia configurada.
+- [ ] Reparo de gap ou backfill de PTB em evento arquivado marca a particao como `stale` e forca rebuild.
+- [ ] Backfill de PTB (UPDATE sem mudar contagem) e detectado via checksum de valores no `source_fingerprint`.
+- [ ] Stale/rebuild de uma particao fonte cascateia para os datasets derivados (ohlc, backtest_ticks).
+- [ ] Job de reconciliacao detecta drift e marca `stale` mesmo sem chamada explicita ao endpoint.
+- [ ] O query layer le arquivos resolvidos pelo manifest, nao por glob bruto.
+- [ ] Rebuild troca `active_path` atomicamente sem expor arquivo parcial para backtests.
 - [ ] Particoes ausentes ou invalidas bloqueiam backtest no modo `strict`.
 - [ ] O modo `prepare` enfileira sync/rebuild e so roda depois da validacao.
 - [ ] O DuckDB le o range com performance superior ao Postgres.
@@ -676,6 +832,7 @@ O paralelismo deve comecar baixo para nao pressionar o Postgres. Se houver repli
 - [ ] Nenhum dado e apagado sem evento arquivado e validado.
 - [ ] A tela permite configurar retencao e dry-run.
 - [ ] Toda exclusao gera auditoria.
+- [ ] Fluxo de retencao identifica quando uma particao Postgres inteira pode ser removida com `DROP PARTITION`.
 - [ ] O lakehouse pode ser reconstruido por particao.
 
 ## Riscos E Mitigacoes
@@ -686,23 +843,33 @@ O paralelismo deve comecar baixo para nao pressionar o Postgres. Se houver repli
 | Parquet com JSON lento | Criar `backtest_ticks` flattenado |
 | Sync competir com coleta | Usar read-only pool baixo ou replica |
 | Exclusao acidental | Default indefinido, dry-run, confirmacao forte e exigencia de archive |
-| Divergencia entre Postgres e Parquet | Manifest, contagem, min/max ts e golden tests |
+| Divergencia silenciosa apos reparo/backfill | Source fingerprint, status `stale` e rebuild obrigatorio |
+| UPDATE que nao muda contagem (ex.: backfill PTB) | Checksum de valores no fingerprint + chamada ao endpoint stale + job de reconciliacao |
+| Dataset derivado desatualizado apos rebuild da fonte | Cascata de invalidacao scalars->ohlc e books->backtest_ticks |
+| Divergencia entre Postgres e Parquet | Contagem real por evento, condition_ids, min/max ts e golden tests |
+| DuckDB ler arquivo parcial durante rebuild | Arquivos versionados e resolucao por `active_path` no manifest |
+| Travamento do state store | SQLite WAL para metadados e DuckDB apenas para query Parquet |
 | Lakehouse corrompido | Rebuild por particao a partir do Postgres ou backup |
 | Backtest rodar com dados incompletos | Modo `strict` como padrao e bloqueio por manifest |
 | Backfill historico demorar muito | Processar por dia/mercado, retomar de checkpoint e aumentar paralelismo aos poucos |
+| DELETE nao liberar espaco real no Postgres | Preferir `DROP PARTITION` quando a particao estiver 100% arquivada |
 | Complexidade excessiva | Entregar scalars primeiro, depois books, depois retencao real |
 
 ## Ordem Recomendada De Execucao
 
 1. Criar `data-backtest` com estado, manifest e escrita em `/lake`.
-2. Implementar backfill historico de `scalars` por dia a partir de `event_quality`.
-3. Implementar sync incremental para manter o lakehouse atualizado apos o backfill.
-4. Exportar `books` e `backtest_ticks`.
-5. Criar query layer DuckDB com checagem de disponibilidade por manifest.
-6. Implementar modos `strict` e `prepare`.
-7. Migrar um lab legado e validar paridade.
-8. Criar `event_archive_status`.
-9. Criar configuracao e tela de retencao.
-10. Ativar dry-run de retencao.
-11. Ativar exclusao real somente apos validacao operacional.
-12. Avaliar live-tail e split vertical depois.
+2. Implementar SQLite WAL, manifest versionado e resolucao por `active_path`.
+3. Implementar backfill historico de `scalars` por dia a partir de `event_quality`.
+4. Implementar validacao real por evento e `source_fingerprint`.
+5. Implementar sync incremental para manter o lakehouse atualizado apos o backfill.
+6. Implementar invalidacao `stale` (com cascata para derivados e job de reconciliacao) para reparos/backfills.
+7. Exportar `books` e `backtest_ticks`.
+8. Criar query layer DuckDB com checagem de disponibilidade por manifest.
+9. Implementar modos `strict` e `prepare`.
+10. Migrar um lab legado e validar paridade.
+11. Criar `event_archive_status`.
+12. Criar configuracao e tela de retencao.
+13. Ativar dry-run de retencao.
+14. Ativar exclusao real somente apos validacao operacional.
+15. Avaliar `DROP PARTITION` para liberar espaco real.
+16. Avaliar live-tail e split vertical depois.
