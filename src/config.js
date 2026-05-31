@@ -18,6 +18,8 @@ export function loadConfig(env = process.env) {
     stateDbPath: resolvePath(env.STATE_DB_PATH, './state/data-backtest.db'),
     backtestDataMode,
     dataCollectorDatabaseUrl: env.DATA_COLLECTOR_DATABASE_URL || env.SOURCE_DATABASE_URL || '',
+    dataCollectorApiUrl: env.DATA_COLLECTOR_API_URL || '',
+    dataCollectorArchiveApiKey: env.DATA_COLLECTOR_ARCHIVE_API_KEY || '',
     syncBatchSize: Math.max(Number.parseInt(String(env.SYNC_BATCH_SIZE || '50000'), 10) || 50000, 1),
     syncStatementTimeoutMs: Math.max(Number.parseInt(String(env.SYNC_STATEMENT_TIMEOUT_MS || '120000'), 10) || 120000, 1000),
     syncMarginMinutes: Math.max(Number.parseInt(String(env.SYNC_MARGIN_MINUTES || '2'), 10) || 2, 0),

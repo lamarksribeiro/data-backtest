@@ -7,6 +7,7 @@ import { countTicksByEvent, getPartitionEvents, getTicksWithBooksForEvents, list
 import { flattenBookTick } from './bookFlatten.js';
 import { writeBacktestTicksParquet, writeBooksParquet } from './duckdbParquet.js';
 import { createBacktestTicksRowsChecksum, createBooksRowsChecksum, createRunId, createSourceFingerprint } from './fingerprint.js';
+import { publishPartitionArchiveStatus } from '../source/archiveApi.js';
 
 export async function listBookPartitions(pool, opts) {
   return listSealedScalarPartitions(pool, opts);
@@ -174,7 +175,7 @@ async function exportBookDatasetPartition({
 
     await rm(path.dirname(tempPath), { recursive: true, force: true });
 
-    return {
+    const exportResult = {
       partition,
       activePath: toPortablePath(finalPath),
       rows: actualRows,
@@ -183,6 +184,15 @@ async function exportBookDatasetPartition({
       status,
       sourceFingerprint,
     };
+    if (dataset === 'backtest_ticks') {
+      exportResult.archivePublish = await publishPartitionArchiveStatus({
+        config,
+        partition,
+        events,
+        exportResult,
+      });
+    }
+    return exportResult;
   } catch (err) {
     await mkdir(path.dirname(tempPath), { recursive: true });
     upsertManifestPartition(db, {

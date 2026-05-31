@@ -14,19 +14,72 @@ import { flattenBookTick, parseBookLevels } from '../src/sync/bookFlatten.js';
 import { normalizeOhlcResolutions } from '../src/sync/ohlc.js';
 import { incrementalRange, markScalarsPartitionStale, shouldProcessScalarsPartition } from '../src/sync/scalars.js';
 import { intervalFromMarketType, marketTypeFromInterval } from '../src/source/postgres.js';
+import { canPublishArchiveStatus, publishPartitionArchiveStatus } from '../src/source/archiveApi.js';
 
 test('config loads sync defaults and validates data mode', () => {
   const config = loadConfig({
     LAKE_ROOT: './custom-lake',
     STATE_DB_PATH: './custom-state/db.sqlite',
     BACKTEST_DATA_MODE: 'prepare',
+    DATA_COLLECTOR_API_URL: 'http://collector.local',
+    DATA_COLLECTOR_ARCHIVE_API_KEY: 'archive-key',
   });
 
   assert.equal(config.backtestDataMode, 'prepare');
+  assert.equal(config.dataCollectorApiUrl, 'http://collector.local');
+  assert.equal(config.dataCollectorArchiveApiKey, 'archive-key');
   assert.equal(config.syncBatchSize, 50000);
   assert.equal(config.syncStatementTimeoutMs, 120000);
   assert.equal(config.syncMarginMinutes, 2);
   assert.throws(() => loadConfig({ BACKTEST_DATA_MODE: 'invalid' }), /Invalid BACKTEST_DATA_MODE/);
+});
+
+test('archive status publishing posts one valid status per event when configured', async () => {
+  const calls = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url, options) => {
+    calls.push({ url, options, body: JSON.parse(options.body) });
+    return { ok: true, json: async () => ({ ok: true }) };
+  };
+  try {
+    const config = { dataCollectorApiUrl: 'http://collector.local/', dataCollectorArchiveApiKey: 'archive-key' };
+    assert.equal(canPublishArchiveStatus(config), true);
+    const result = await publishPartitionArchiveStatus({
+      config,
+      partition: { marketId: 'market-1', dt: '2026-05-31', bookDepth: 10 },
+      events: [
+        { conditionId: 'condition-1', eventStart: '2026-05-31T00:00:00.000Z', eventEnd: '2026-05-31T00:05:00.000Z' },
+        { conditionId: 'condition-2', eventStart: '2026-05-31T00:05:00.000Z', eventEnd: '2026-05-31T00:10:00.000Z' },
+      ],
+      exportResult: {
+        status: 'valid',
+        rows: 1200,
+        expectedRows: 1200,
+        activePath: '/lake/backtest_ticks/part.parquet',
+        sourceFingerprint: 'fingerprint',
+      },
+    });
+
+    assert.deepEqual(result, { skipped: false, published: 2 });
+    assert.equal(calls.length, 2);
+    assert.equal(calls[0].url, 'http://collector.local/api/archive/status');
+    assert.equal(calls[0].options.headers['x-api-key'], 'archive-key');
+    assert.equal(calls[0].body.status, 'valid');
+    assert.equal(calls[0].body.datasets.backtest_ticks.rows, 1200);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('archive status publishing is skipped without API config', async () => {
+  assert.equal(canPublishArchiveStatus({}), false);
+  const result = await publishPartitionArchiveStatus({
+    config: {},
+    partition: {},
+    events: [],
+    exportResult: { status: 'valid' },
+  });
+  assert.equal(result.skipped, true);
 });
 
 test('lake paths use versioned parquet filenames', () => {
