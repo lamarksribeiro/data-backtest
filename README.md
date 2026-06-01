@@ -58,6 +58,8 @@ LAKE_ROOT=./lake
 STATE_DB_PATH=./state/data-backtest.db
 BACKTEST_DATA_MODE=strict
 BACKTEST_BOOK_DEPTH=10
+DATA_COLLECTOR_API_URL=http://localhost:3000
+DATA_COLLECTOR_ARCHIVE_API_KEY=
 ```
 
 No Coolify, os valores esperados são:
@@ -106,7 +108,7 @@ npm test
 
 `sync:incremental` usa `event_quality.event_end < now - SYNC_MARGIN_MINUTES` para evitar materializar eventos ainda instáveis. Use `--rebuild` para forçar rebuild de partições e `--allow-needs-review` apenas quando uma divergência já tiver sido analisada.
 
-`sync:reconcile-scalars` recalcula o fingerprint da origem e marca partições como `stale` quando detectar divergência. Use com `--dry-run` primeiro.
+`sync:reconcile-scalars` recalcula o fingerprint da origem e marca partições como `stale` quando detectar divergência. Quando `DATA_COLLECTOR_API_URL` e `DATA_COLLECTOR_ARCHIVE_API_KEY` estiverem configurados, também marca os eventos arquivados como `stale` na API do `data-colector`. Use com `--dry-run` primeiro.
 
 `sync:backfill-books` grava o book bruto como JSON em Parquet. `sync:backfill-backtest-ticks` grava scalars + book top-N flattenado; use `--book-depth N` ou `BACKTEST_BOOK_DEPTH`.
 

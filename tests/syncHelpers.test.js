@@ -14,7 +14,7 @@ import { flattenBookTick, parseBookLevels } from '../src/sync/bookFlatten.js';
 import { normalizeOhlcResolutions } from '../src/sync/ohlc.js';
 import { incrementalRange, markScalarsPartitionStale, shouldProcessScalarsPartition } from '../src/sync/scalars.js';
 import { intervalFromMarketType, marketTypeFromInterval } from '../src/source/postgres.js';
-import { canPublishArchiveStatus, publishPartitionArchiveStatus } from '../src/source/archiveApi.js';
+import { canPublishArchiveStatus, markPartitionArchiveStatusStale, publishPartitionArchiveStatus } from '../src/source/archiveApi.js';
 
 test('config loads sync defaults and validates data mode', () => {
   const config = loadConfig({
@@ -80,6 +80,34 @@ test('archive status publishing is skipped without API config', async () => {
     exportResult: { status: 'valid' },
   });
   assert.equal(result.skipped, true);
+});
+
+test('archive status stale marking posts condition ids in chunks', async () => {
+  const calls = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url, options) => {
+    calls.push({ url, options, body: JSON.parse(options.body) });
+    return { ok: true, json: async () => ({ changed: 2 }) };
+  };
+  try {
+    const config = { dataCollectorApiUrl: 'http://collector.local/', dataCollectorArchiveApiKey: 'archive-key' };
+    const events = Array.from({ length: 501 }, (_, index) => ({ conditionId: `condition-${index}` }));
+    const result = await markPartitionArchiveStatusStale({
+      config,
+      partition: { marketId: 'market-1' },
+      events,
+      reason: 'source changed',
+    });
+
+    assert.deepEqual(result, { skipped: false, changed: 4, requests: 2 });
+    assert.equal(calls[0].url, 'http://collector.local/api/archive/status/stale');
+    assert.equal(calls[0].options.headers['x-api-key'], 'archive-key');
+    assert.equal(calls[0].body.market_id, 'market-1');
+    assert.equal(calls[0].body.condition_ids.length, 500);
+    assert.equal(calls[1].body.condition_ids.length, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 
 test('lake paths use versioned parquet filenames', () => {

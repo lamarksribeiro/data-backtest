@@ -392,6 +392,7 @@ async function main() {
         const results = [];
         for (const partition of partitions) {
           results.push(await reconcileScalarsPartition({
+            config,
             db,
             pool,
             partition,

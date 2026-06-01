@@ -4,6 +4,7 @@ import path from 'node:path';
 import { buildFinalParquetPath, buildTempParquetPath, toPortablePath } from '../lake/paths.js';
 import { markDerivedStaleForScalars, markManifestPartitionStale, upsertManifestPartition } from '../state/manifest.js';
 import { countTicksByEvent, getPartitionEvents, getScalarTicksForEvents, listSealedScalarPartitions } from '../source/postgres.js';
+import { markPartitionArchiveStatusStale } from '../source/archiveApi.js';
 import { createRunId, createScalarRowsChecksum, createSourceFingerprint } from './fingerprint.js';
 import { writeScalarsParquet } from './duckdbParquet.js';
 
@@ -57,7 +58,7 @@ export async function buildScalarsSourceFingerprint(pool, partition) {
   return { rows, events, eventsWithCounts, valueChecksum, sourceFingerprint };
 }
 
-export async function reconcileScalarsPartition({ db, pool, partition, markStale = true }) {
+export async function reconcileScalarsPartition({ config, db, pool, partition, markStale = true }) {
   const existing = getScalarsManifestStatus(db, partition);
   if (!existing.status || existing.status === 'missing') {
     return { partition, status: 'missing', stale: false, reason: 'not_in_manifest' };
@@ -65,8 +66,15 @@ export async function reconcileScalarsPartition({ db, pool, partition, markStale
 
   const source = await buildScalarsSourceFingerprint(pool, partition);
   const stale = existing.source_fingerprint !== source.sourceFingerprint;
+  let archiveStale = null;
   if (stale && markStale) {
     markScalarsPartitionStale(db, partition, 'source fingerprint changed during reconcile');
+    archiveStale = await markPartitionArchiveStatusStale({
+      config,
+      partition,
+      events: source.events,
+      reason: 'source fingerprint changed during reconcile',
+    });
   }
 
   return {
@@ -76,6 +84,7 @@ export async function reconcileScalarsPartition({ db, pool, partition, markStale
     currentFingerprint: source.sourceFingerprint,
     rows: source.rows,
     stale,
+    archiveStale,
   };
 }
 
