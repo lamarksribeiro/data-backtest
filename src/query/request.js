@@ -1,0 +1,53 @@
+export function parseDateStart(value) {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return new Date(`${value}T00:00:00.000Z`);
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) throw new Error(`Invalid date: ${value}`);
+  return date;
+}
+
+export function parseDateEnd(value) {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return new Date(`${value}T00:00:00.000Z`);
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) throw new Error(`Invalid date: ${value}`);
+  return date;
+}
+
+export function rangeFromParams(params) {
+  const fromRaw = requiredParam(params, 'from');
+  const toRaw = requiredParam(params, 'to');
+  const from = parseDateStart(fromRaw);
+  const to = parseDateEnd(toRaw);
+  if (to <= from) throw new Error('to must be after from');
+  return { from: from.toISOString(), to: to.toISOString() };
+}
+
+export function datasetRequestFromParams(params, config) {
+  const range = rangeFromParams(params);
+  const dataset = String(params.get('dataset') || 'backtest_ticks');
+  const request = {
+    dataset,
+    from: range.from,
+    to: range.to,
+    underlying: requiredParam(params, 'underlying').toUpperCase(),
+    interval: requiredParam(params, 'interval'),
+    limit: positiveIntParam(params, 'limit') ?? 1000,
+  };
+
+  if (dataset === 'backtest_ticks') request.bookDepth = positiveIntParam(params, 'book_depth') ?? positiveIntParam(params, 'book-depth') ?? config.backtestBookDepth;
+  if (dataset === 'ohlc') request.resolution = requiredParam(params, 'resolution');
+  return request;
+}
+
+export function requiredParam(params, key) {
+  const value = params.get(key);
+  if (!value) throw new Error(`${key} is required`);
+  return value;
+}
+
+export function positiveIntParam(params, key) {
+  const value = params.get(key);
+  if (value == null || value === '') return null;
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) throw new Error(`${key} must be a positive integer`);
+  return parsed;
+}

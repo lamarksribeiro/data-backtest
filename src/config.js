@@ -24,6 +24,7 @@ export function loadConfig(env = process.env) {
     syncStatementTimeoutMs: Math.max(Number.parseInt(String(env.SYNC_STATEMENT_TIMEOUT_MS || '120000'), 10) || 120000, 1000),
     syncMarginMinutes: Math.max(Number.parseInt(String(env.SYNC_MARGIN_MINUTES || '2'), 10) || 2, 0),
     backtestBookDepth: Math.max(Number.parseInt(String(env.BACKTEST_BOOK_DEPTH || '10'), 10) || 10, 1),
+    apiPort: Math.max(Number.parseInt(String(env.DATA_BACKTEST_PORT || env.PORT || '3100'), 10) || 3100, 1),
   };
 }
 

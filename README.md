@@ -83,6 +83,7 @@ volumes:
 
 ```bash
 npm run health
+npm run api
 npm run storage:check
 npm run manifest:list
 npm run sync:partitions -- --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m
@@ -103,6 +104,14 @@ npm test
 ```
 
 `npm run health` inicializa o banco local de estado, garante o layout básico do lakehouse e retorna estatísticas do manifest.
+
+`npm run api` sobe a API HTTP do `data-backtest` em `DATA_BACKTEST_PORT` (default `3100`). Endpoints iniciais: `GET /healthz`, `GET /api/manifest`, `GET /api/availability` e `GET /api/prepare`.
+
+Exemplo de disponibilidade via API:
+
+```bash
+curl "http://localhost:3100/api/prepare?dataset=backtest_ticks&from=2026-05-01&to=2026-05-02&underlying=BTC&interval=5m&book_depth=10"
+```
 
 `sync:backfill` exige `DATA_COLLECTOR_DATABASE_URL` e grava apenas o dataset `scalars` nesta fase.
 
