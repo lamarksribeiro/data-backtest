@@ -38,6 +38,15 @@ test('data-backtest API exposes health, availability and prepare plan', async ()
       assert.equal(health.status, 'ok');
       assert.equal(health.manifest.by_status.valid, 1);
 
+      const page = await fetch(`${baseUrl}/`);
+      assert.equal(page.status, 200);
+      assert.match(page.headers.get('content-type'), /text\/html/);
+      assert.match(await page.text(), /Preparacao de dados/);
+
+      const script = await fetch(`${baseUrl}/app.js`);
+      assert.equal(script.status, 200);
+      assert.match(script.headers.get('content-type'), /javascript/);
+
       const availability = await getJson(`${baseUrl}/api/availability?dataset=backtest_ticks&from=2026-05-31&to=2026-06-02&underlying=BTC&interval=5m&book_depth=10`);
       assert.equal(availability.availability.ok, false);
       assert.deepEqual(availability.availability.missing, ['2026-06-01']);

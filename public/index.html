@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GoldenLens Data Backtest</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">GoldenLens Lakehouse</p>
+        <h1>Preparacao de dados para backtest</h1>
+        <p class="sub">Consulte o manifest, veja particoes ausentes e copie o plano de sync antes de rodar estrategias.</p>
+      </div>
+      <div id="health" class="pill">Conectando...</div>
+    </header>
+
+    <section class="card">
+      <form id="prepare-form" class="form">
+        <label>Dataset
+          <select name="dataset">
+            <option value="backtest_ticks">backtest_ticks</option>
+            <option value="scalars">scalars</option>
+            <option value="books">books</option>
+            <option value="ohlc">ohlc</option>
+          </select>
+        </label>
+        <label>From
+          <input name="from" type="date" required>
+        </label>
+        <label>To
+          <input name="to" type="date" required>
+        </label>
+        <label>Underlying
+          <input name="underlying" value="BTC" required>
+        </label>
+        <label>Interval
+          <input name="interval" value="5m" required>
+        </label>
+        <label>Book depth
+          <input name="book_depth" type="number" min="1" value="10">
+        </label>
+        <label>Resolution
+          <select name="resolution">
+            <option value="1m">1m</option>
+            <option value="1s">1s</option>
+            <option value="5s">5s</option>
+            <option value="5m">5m</option>
+          </select>
+        </label>
+        <button type="submit">Verificar disponibilidade</button>
+      </form>
+    </section>
+
+    <section id="result" class="result"></section>
+  </main>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

@@ -105,7 +105,7 @@ npm test
 
 `npm run health` inicializa o banco local de estado, garante o layout básico do lakehouse e retorna estatísticas do manifest.
 
-`npm run api` sobe a API HTTP do `data-backtest` em `DATA_BACKTEST_PORT` (default `3100`). Endpoints iniciais: `GET /healthz`, `GET /api/manifest`, `GET /api/availability` e `GET /api/prepare`.
+`npm run api` sobe a API HTTP do `data-backtest` em `DATA_BACKTEST_PORT` (default `3100`) e serve uma UI minima em `http://localhost:3100`. Endpoints iniciais: `GET /healthz`, `GET /api/manifest`, `GET /api/availability` e `GET /api/prepare`.
 
 Exemplo de disponibilidade via API:
 
