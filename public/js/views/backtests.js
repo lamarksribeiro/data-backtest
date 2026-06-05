@@ -1,4 +1,5 @@
 import { el, mount, emptyState } from '../utils/dom.js';
+import { fieldLabelWithHelp } from '../utils/fieldHelp.js';
 import { loadContext, saveContext } from '../utils/context.js';
 import { escapeHtml, formatPnl } from '../utils/format.js';
 import { loadStrategyOptions, renderStrategySelect, backtestPayloadFromPick } from '../utils/strategyPicker.js';
@@ -26,9 +27,11 @@ export async function renderBacktests(ctx) {
           el('div', { id: 'strategy-pick-wrap' }),
         ]),
         el('label', { class: 'field' }, [
-          el('span', { class: 'field__label' }, 'Batch size'),
+          fieldLabelWithHelp(
+            'Batch size',
+            'Tamanho do lote de ticks lidos por vez. Afeta performance/memória, não a lógica da estratégia.',
+          ),
           el('input', { class: 'field__input', type: 'number', name: 'batch_size', min: '1', value: formCtx.batch_size }),
-          el('span', { class: 'field__hint' }, 'Tamanho do lote de ticks lidos por vez. Afeta performance/memória, não a lógica da estratégia.'),
         ]),
         el('div', { class: 'form-actions' }, [
           el('button', { class: 'btn btn--primary', type: 'submit', disabled: !strategyOptions.length }, 'Executar'),
