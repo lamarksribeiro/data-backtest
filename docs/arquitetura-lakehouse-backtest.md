@@ -20,6 +20,26 @@ O Postgres continua sendo a fonte de verdade enquanto os dados estao na janela o
 - Estrategias devem usar uma query layer unica, independente da origem fisica dos dados.
 - A query layer deve nascer generica para servir backtests, labs e futuro `data-robot`.
 - Lakehouse deve ser reconstruivel a partir do Postgres enquanto os dados ainda existirem nele ou a partir de backups.
+- O engine de backtest nao deve ficar preso a uma estrategia hardcoded. `edge-sniper-v2` e o golden test inicial; a arquitetura alvo deve permitir estrategias editaveis, salvas, versionadas e executadas pelo proprio sistema.
+
+## Strategy Lab Programavel
+
+Este documento foca no lakehouse, sync, manifest, query layer e retencao segura.
+
+A arquitetura detalhada para editor de estrategias, linguagem simples, blocos/funcoes reutilizaveis, traces por evento e visualizacao de execucao esta em:
+
+```text
+docs/arquitetura-editor-estrategias.md
+```
+
+Resumo da decisao:
+
+- `edge-sniper-v2` continua como primeiro golden test nativo.
+- O modelo final nao e criar uma nova classe hardcoded para cada estrategia.
+- Estrategias devem ser documentos salvos no `data-backtest`.
+- O usuario deve poder editar codigo em uma linguagem simples/controlada.
+- Blocos devem ser funcoes reutilizaveis documentadas, usadas dentro desse codigo.
+- Runs devem salvar resultado agregado e trace por evento para explicar cada decisao.
 
 ## Arquitetura Alvo
 
@@ -756,6 +776,21 @@ audit_log completo
 - [ ] Adicionar acao `Reprocessar invalidos`.
 - [ ] Bloquear execucao normal no modo `strict` quando faltar Parquet.
 - [ ] Exibir progresso do sync/rebuild antes da execucao do backtest.
+
+### Fase 9.2: Strategy Lab Programavel
+
+- [ ] Criar tabelas `strategy_definitions` e `strategy_versions`.
+- [ ] Criar CRUD de estrategias pela API.
+- [ ] Criar editor de codigo na UI.
+- [ ] Definir linguagem controlada `GLS v1` ou equivalente.
+- [ ] Criar parser/validador inicial.
+- [ ] Criar biblioteca padrao de blocos/funcoes (`market`, `prices`, `book`, `signals`, `risk`, `time`).
+- [ ] Criar runtime seguro para executar estrategia salva sobre `DuckDbTickProvider`.
+- [ ] Persistir `strategy_id` e `strategy_version_id` em `backtest_runs`.
+- [ ] Registrar trace por evento: ordens, marks, logs, metricas e motivo das decisoes.
+- [ ] Criar tela de resultado com resumo do run e event explorer.
+- [ ] Migrar `edge-sniper-v2` para estrategia editavel e comparar contra o nativo.
+- [ ] Manter `edge-sniper-v2` nativo como golden test ate a versao editavel ter paridade.
 
 ### Fase 10: Exclusao Segura Do Postgres
 
