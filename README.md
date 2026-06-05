@@ -105,13 +105,15 @@ npm test
 
 `npm run health` inicializa o banco local de estado, garante o layout básico do lakehouse e retorna estatísticas do manifest.
 
-`npm run api` sobe a API HTTP do `data-backtest` em `DATA_BACKTEST_PORT` (default `3100`) e serve uma UI minima em `http://localhost:3100`. Endpoints iniciais: `GET /healthz`, `GET /api/manifest`, `GET /api/availability` e `GET /api/prepare`.
+`npm run api` sobe a API HTTP do `data-backtest` em `DATA_BACKTEST_PORT` (default `3100`) e serve uma UI minima em `http://localhost:3100`. Endpoints iniciais: `GET /healthz`, `GET /api/manifest`, `GET /api/availability`, `GET /api/prepare`, `POST /api/prepare/run`, `GET /api/prepare/jobs` e `GET /api/prepare/jobs/:id`.
 
 Exemplo de disponibilidade via API:
 
 ```bash
 curl "http://localhost:3100/api/prepare?dataset=backtest_ticks&from=2026-05-01&to=2026-05-02&underlying=BTC&interval=5m&book_depth=10"
 ```
+
+Jobs de preparação rodam serialmente e ficam registrados no SQLite em `prepare_jobs`. A UI cria jobs em `dry-run` por padrão; desmarque somente quando quiser executar o sync real contra `DATA_COLLECTOR_DATABASE_URL`.
 
 `sync:backfill` exige `DATA_COLLECTOR_DATABASE_URL` e grava apenas o dataset `scalars` nesta fase.
 

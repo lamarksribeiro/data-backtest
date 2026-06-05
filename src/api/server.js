@@ -5,9 +5,11 @@ import { fileURLToPath } from 'node:url';
 
 import { getHealth } from '../health.js';
 import { listManifest, manifestStats } from '../state/manifest.js';
+import { getPrepareJob, listPrepareJobs } from '../state/prepareJobs.js';
 import { checkDatasetAvailability } from '../query/availability.js';
 import { resolveDataRequest } from '../query/dataMode.js';
-import { datasetRequestFromParams } from '../query/request.js';
+import { datasetRequestFromObject, datasetRequestFromParams } from '../query/request.js';
+import { createPrepareJobRunner } from '../prepare/runner.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = path.resolve(__dirname, '../../public');
@@ -17,7 +19,7 @@ const STATIC_TYPES = new Map([
   ['.js', 'text/javascript; charset=utf-8'],
 ]);
 
-export function createApiHandler({ config, db }) {
+export function createApiHandler({ config, db, prepareRunner = createPrepareJobRunner({ config, db }) }) {
   return async function handleRequest(req, res) {
     try {
       const url = new URL(req.url || '/', 'http://localhost');
@@ -41,6 +43,26 @@ export function createApiHandler({ config, db }) {
         const request = datasetRequestFromParams(url.searchParams, config);
         const mode = url.searchParams.get('mode') || 'prepare';
         return sendJson(res, 200, { result: resolveDataRequest(db, request, mode) });
+      }
+      if (req.method === 'GET' && url.pathname === '/api/prepare/jobs') {
+        return sendJson(res, 200, { jobs: listPrepareJobs(db, { limit: url.searchParams.get('limit') }) });
+      }
+      if (req.method === 'GET' && url.pathname.startsWith('/api/prepare/jobs/')) {
+        const id = Number.parseInt(url.pathname.split('/').at(-1), 10);
+        const job = Number.isFinite(id) ? getPrepareJob(db, id) : null;
+        return job
+          ? sendJson(res, 200, { job })
+          : sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Job not found' } });
+      }
+      if (req.method === 'POST' && url.pathname === '/api/prepare/run') {
+        const body = await readJson(req);
+        const request = datasetRequestFromObject(body.request || body, config);
+        const job = prepareRunner.enqueue({
+          request,
+          mode: body.mode || 'prepare',
+          dryRun: body.dry_run !== false,
+        });
+        return sendJson(res, 202, { job });
       }
       if (req.method === 'GET') {
         const staticResponse = await tryServeStatic(url.pathname, res);
@@ -86,7 +108,15 @@ function sendJson(res, status, payload) {
   res.end(body);
 }
 
+async function readJson(req) {
+  const chunks = [];
+  for await (const chunk of req) chunks.push(chunk);
+  if (!chunks.length) return {};
+  return JSON.parse(Buffer.concat(chunks).toString('utf8'));
+}
+
 function statusForError(err) {
-  if (/required|Invalid|must be|Unsupported/.test(err.message || '')) return 400;
+  if (err instanceof SyntaxError) return 400;
+  if (/required|Invalid|must be|Unsupported|JSON/.test(err.message || '')) return 400;
   return 500;
 }

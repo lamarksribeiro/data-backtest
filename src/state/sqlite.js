@@ -45,6 +45,22 @@ CREATE UNIQUE INDEX IF NOT EXISTS lake_manifest_partition_uidx ON lake_manifest(
   COALESCE(book_depth, -1),
   dt
 );
+
+CREATE TABLE IF NOT EXISTS prepare_jobs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  status TEXT NOT NULL DEFAULT 'queued' CHECK (status IN ('queued', 'running', 'completed', 'failed')),
+  mode TEXT NOT NULL DEFAULT 'prepare',
+  dry_run INTEGER NOT NULL DEFAULT 1,
+  request_json TEXT NOT NULL,
+  plan_json TEXT NOT NULL,
+  result_json TEXT,
+  error TEXT,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  started_at TEXT,
+  completed_at TEXT
+);
+
+CREATE INDEX IF NOT EXISTS prepare_jobs_status_idx ON prepare_jobs(status, created_at);
 `;
 
 export function openStateDatabase(stateDbPath) {

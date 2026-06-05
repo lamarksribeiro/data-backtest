@@ -5,6 +5,7 @@ import os from 'node:os';
 import { mkdtemp, rm } from 'node:fs/promises';
 
 import { createApiServer } from '../src/api/server.js';
+import { createPrepareJobRunner } from '../src/prepare/runner.js';
 import { openStateDatabase, closeStateDatabase } from '../src/state/sqlite.js';
 import { upsertManifestPartition } from '../src/state/manifest.js';
 
@@ -91,8 +92,66 @@ test('data-backtest API returns 400 for invalid requests', async () => {
   }
 });
 
+test('data-backtest API creates and completes prepare jobs', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-api-job-'));
+  let server = null;
+  try {
+    const config = {
+      lakeRoot: path.join(dir, 'lake'),
+      stateDbPath: path.join(dir, 'state.db'),
+      backtestDataMode: 'strict',
+      backtestBookDepth: 10,
+    };
+    const db = openStateDatabase(config.stateDbPath);
+    try {
+      const prepareRunner = createPrepareJobRunner({
+        config,
+        db,
+        executeActions: async ({ actions, dryRun }) => actions.map((action) => ({ command: action.command, dryRun })),
+      });
+      server = createApiServer({ config, db, prepareRunner });
+      await new Promise((resolve) => server.listen(0, resolve));
+      const baseUrl = `http://127.0.0.1:${server.address().port}`;
+
+      const created = await postJson(`${baseUrl}/api/prepare/run`, {
+        request: {
+          dataset: 'backtest_ticks',
+          from: '2026-05-31',
+          to: '2026-06-01',
+          underlying: 'BTC',
+          interval: '5m',
+          book_depth: 10,
+        },
+        dry_run: true,
+      }, 202);
+      assert.equal(created.job.status, 'queued');
+
+      await prepareRunner.waitForIdle();
+      const completed = await getJson(`${baseUrl}/api/prepare/jobs/${created.job.id}`);
+      assert.equal(completed.job.status, 'completed');
+      assert.equal(completed.job.result.actions[0].command, 'sync:backfill-backtest-ticks');
+      assert.equal(completed.job.result.actions[0].dryRun, true);
+    } finally {
+      if (server) await new Promise((resolve) => server.close(resolve));
+      closeStateDatabase(db);
+    }
+  } finally {
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
+  }
+});
+
 async function getJson(url) {
   const res = await fetch(url);
   assert.equal(res.status, 200);
+  return res.json();
+}
+
+async function postJson(url, body, expectedStatus = 200) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  assert.equal(res.status, expectedStatus);
   return res.json();
 }

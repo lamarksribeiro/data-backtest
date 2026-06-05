@@ -4,10 +4,12 @@ import 'dotenv/config';
 import { loadConfig } from './config.js';
 import { openStateDatabase, closeStateDatabase } from './state/sqlite.js';
 import { createApiServer } from './api/server.js';
+import { createPrepareJobRunner } from './prepare/runner.js';
 
 const config = loadConfig();
 const db = openStateDatabase(config.stateDbPath);
-const server = createApiServer({ config, db });
+const prepareRunner = createPrepareJobRunner({ config, db });
+const server = createApiServer({ config, db, prepareRunner });
 
 server.listen(config.apiPort, () => {
   console.log(JSON.stringify({ ok: true, port: config.apiPort }));

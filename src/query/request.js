@@ -38,6 +38,14 @@ export function datasetRequestFromParams(params, config) {
   return request;
 }
 
+export function datasetRequestFromObject(input, config) {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(input || {})) {
+    if (value != null) params.set(key, String(value));
+  }
+  return datasetRequestFromParams(params, config);
+}
+
 export function requiredParam(params, key) {
   const value = params.get(key);
   if (!value) throw new Error(`${key} is required`);
