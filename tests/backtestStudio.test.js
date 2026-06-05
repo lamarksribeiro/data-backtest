@@ -16,6 +16,7 @@ import { listEventTraces } from '../src/backtestStudio/state/eventTraces.js';
 import {
   createStrategy,
   createStrategyVersion,
+  deleteStrategy,
   listStrategies,
   updateStrategy,
   validateStrategySource,
@@ -129,6 +130,8 @@ test('backtest studio API exposes run detail, events and chart-data', async () =
       assert.equal(events.events[0].result, 'no_entry');
 
       const eventDetail = await getJson(`${baseUrl}/api/backtest/runs/${run.id}/events/${events.events[0].id}`);
+      assert.equal(eventDetail.event.condition_id, 'condition-1');
+      assert.equal(eventDetail.event.result, 'no_entry');
       assert.ok(eventDetail.event.summary);
       assert.ok(Array.isArray(eventDetail.event.orders));
       assert.ok(Array.isArray(eventDetail.event.logs));
@@ -188,6 +191,11 @@ test('strategy CRUD API creates definitions and versions', async () => {
       assert.equal(updated.status, 'validated');
       assert.equal(listStrategies(db).length, 1);
 
+      const tempStrategy = createStrategy(db, { slug: 'delete-me', name: 'Delete Me' });
+      createStrategyVersion(db, tempStrategy.id, { source_code: 'strategy "Delete Me" {}' });
+      assert.equal(deleteStrategy(db, tempStrategy.id).slug, 'delete-me');
+      assert.equal(listStrategies(db).length, 1);
+
       server = createApiServer({ config, db, authService });
       await new Promise((resolve) => server.listen(0, resolve));
       const baseUrl = `http://127.0.0.1:${server.address().port}`;
@@ -219,6 +227,11 @@ test('strategy CRUD API creates definitions and versions', async () => {
         source_code: 'invalid',
       });
       assert.equal(validation.validation.ok, false);
+
+      const apiDelete = await deleteJson(`${baseUrl}/api/strategies/${created.strategy.id}`);
+      assert.equal(apiDelete.deleted, true);
+      const listedAfterDelete = await getJson(`${baseUrl}/api/strategies`);
+      assert.equal(listedAfterDelete.strategies.some((item) => item.id === created.strategy.id), false);
 
       const minimal = validateStrategySource({ source_code: 'strategy "X" {}' });
       assert.equal(minimal.ok, true);
@@ -334,6 +347,12 @@ async function patchJson(url, body, expectedStatus = 200) {
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(body),
   });
+  assert.equal(res.status, expectedStatus);
+  return res.json();
+}
+
+async function deleteJson(url, expectedStatus = 200) {
+  const res = await fetch(url, { method: 'DELETE' });
   assert.equal(res.status, expectedStatus);
   return res.json();
 }

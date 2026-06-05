@@ -39,6 +39,44 @@ export function renderEventChart(canvas, chartData) {
           pointRadius: 0,
           borderWidth: 1.5,
         },
+        {
+          label: 'UP price',
+          data: (series.upPrice || []).map((point) => point.value),
+          borderColor: '#22c55e',
+          tension: 0.12,
+          pointRadius: 0,
+          borderWidth: 1,
+          yAxisID: 'odds',
+          hidden: true,
+        },
+        {
+          label: 'DOWN price',
+          data: (series.downPrice || []).map((point) => point.value),
+          borderColor: '#fb7185',
+          tension: 0.12,
+          pointRadius: 0,
+          borderWidth: 1,
+          yAxisID: 'odds',
+          hidden: true,
+        },
+        {
+          label: 'Bid lado',
+          data: (series.bid || []).map((point) => point.value),
+          borderColor: '#14b8a6',
+          tension: 0.12,
+          pointRadius: 0,
+          borderWidth: 1,
+          yAxisID: 'odds',
+        },
+        {
+          label: 'Ask lado',
+          data: (series.ask || []).map((point) => point.value),
+          borderColor: '#f97316',
+          tension: 0.12,
+          pointRadius: 0,
+          borderWidth: 1,
+          yAxisID: 'odds',
+        },
       ],
     },
     options: {
@@ -52,9 +90,50 @@ export function renderEventChart(canvas, chartData) {
       scales: {
         x: { ticks: { color: '#91a4bd', maxTicksLimit: 8 }, grid: { color: 'rgba(36, 48, 68, 0.6)' } },
         y: { ticks: { color: '#91a4bd' }, grid: { color: 'rgba(36, 48, 68, 0.6)' } },
+        odds: {
+          position: 'right',
+          min: 0,
+          max: 1,
+          ticks: { color: '#91a4bd' },
+          grid: { drawOnChartArea: false },
+        },
       },
     },
     plugins: [markerPointPlugin(markers, series.underlying || [])],
+  });
+}
+
+export function renderEquityChart(canvas, equity = []) {
+  destroyActiveChart();
+  if (!canvas || !window.Chart || !Array.isArray(equity) || !equity.length) return;
+
+  activeChart = new window.Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: equity.map((point) => formatChartLabel(point.ts)),
+      datasets: [{
+        label: 'Equity / PnL acumulado',
+        data: equity.map((point) => Number(point.pnl ?? point.value ?? 0)),
+        borderColor: '#f97316',
+        backgroundColor: 'rgba(249, 115, 22, 0.14)',
+        fill: true,
+        tension: 0.18,
+        pointRadius: equity.length > 80 ? 0 : 2,
+        borderWidth: 2,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#91a4bd' } },
+      },
+      scales: {
+        x: { ticks: { color: '#91a4bd', maxTicksLimit: 8 }, grid: { color: 'rgba(36, 48, 68, 0.6)' } },
+        y: { ticks: { color: '#91a4bd' }, grid: { color: 'rgba(36, 48, 68, 0.6)' } },
+      },
+    },
   });
 }
 

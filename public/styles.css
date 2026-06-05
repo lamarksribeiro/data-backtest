@@ -3066,6 +3066,7 @@ details.advanced[open] { padding-bottom: 16px; }
   height: 320px;
   min-height: 240px;
 }
+.chart-wrap--equity { height: 280px; }
 
 .code-block,
 .snapshot-pre {
@@ -3119,3 +3120,12 @@ details.advanced[open] { padding-bottom: 16px; }
   min-height: 360px;
   margin-top: 10px;
 }
+.CodeMirror.cm-s-material-darker {
+  background: #10151f;
+  color: #eef2ff;
+}
+.CodeMirror.cm-s-material-darker .CodeMirror-gutters {
+  background: #0b111b;
+  border-right: 1px solid var(--border);
+}
+.CodeMirror.cm-s-material-darker .CodeMirror-linenumber { color: #64748b; }

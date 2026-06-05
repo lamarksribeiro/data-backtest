@@ -365,7 +365,7 @@ Response:
 }
 ```
 
-## Backtest API Futura Do Backtest Studio
+## Backtest API Do Backtest Studio
 
 ### `GET /api/backtest/runs/:id`
 
@@ -420,6 +420,17 @@ Response:
 ```json
 {
   "event": {
+    "id": 1,
+    "run_id": 1,
+    "condition_id": "...",
+    "event_start": "...",
+    "event_end": "...",
+    "side": "UP",
+    "entries_count": 1,
+    "exits_count": 1,
+    "final_pnl": 2.4,
+    "result": "win",
+    "reason": "take_profit",
     "summary": {},
     "orders": [],
     "marks": [],
@@ -457,7 +468,7 @@ Response:
 }
 ```
 
-## Strategy API Futura
+## Strategy API
 
 ### `GET /api/strategies`
 
@@ -512,6 +523,19 @@ Campos permitidos:
   "description": "...",
   "status": "validated",
   "tags": ["btc", "5m"]
+}
+```
+
+### `DELETE /api/strategies/:id`
+
+Remove a definicao e todas as versoes salvas da estrategia. Runs antigos continuam preservados em `backtest_runs`, porque guardam snapshot da versao executada.
+
+Response:
+
+```json
+{
+  "deleted": true,
+  "strategy": {}
 }
 ```
 

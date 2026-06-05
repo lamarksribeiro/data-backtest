@@ -43,6 +43,22 @@ export function updateStrategy(db, id, patch = {}) {
   return getStrategy(db, id);
 }
 
+export function deleteStrategy(db, id) {
+  const current = getStrategy(db, id);
+  if (!current) return null;
+
+  db.exec('BEGIN');
+  try {
+    db.prepare('DELETE FROM strategy_versions WHERE strategy_id = ?').run(id);
+    db.prepare('DELETE FROM strategy_definitions WHERE id = ?').run(id);
+    db.exec('COMMIT');
+  } catch (err) {
+    db.exec('ROLLBACK');
+    throw err;
+  }
+  return current;
+}
+
 export function listStrategyVersions(db, strategyId) {
   return db.prepare(`
     SELECT * FROM strategy_versions

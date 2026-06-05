@@ -1,4 +1,4 @@
-import { el, mount } from '../utils/dom.js';
+import { el, mount, emptyState } from '../utils/dom.js';
 import { escapeHtml, formatPnl, shortId, resultBadgeClass } from '../utils/format.js';
 import { destroyActiveChart, renderEventChart } from '../utils/chart.js';
 
@@ -43,8 +43,10 @@ export async function renderEventDetail(ctx, params) {
       el('span', { class: 'badge badge--idle' }, `${event.exits_count ?? 0} saídas`),
     ]),
     el('section', { class: 'card chart-card' }, [
-      el('h2', { class: 'card__title' }, 'BTC vs PTB'),
-      el('div', { class: 'chart-wrap' }, el('canvas', { id: 'event-chart' })),
+      el('h2', { class: 'card__title' }, 'BTC vs PTB e odds'),
+      chartData?.series
+        ? el('div', { class: 'chart-wrap' }, el('canvas', { id: 'event-chart' }))
+        : emptyState('Sem serie de grafico para este evento. Verifique se o periodo do run ainda existe no lakehouse.'),
     ]),
     el('section', { class: 'card' }, [
       el('h2', { class: 'card__title' }, 'Ordens & marks'),

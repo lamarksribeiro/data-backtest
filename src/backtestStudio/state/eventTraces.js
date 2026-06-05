@@ -101,7 +101,8 @@ function normalizeEventsFromResult(runId, result) {
     const closedAt = event.closedAt ? new Date(event.closedAt).toISOString() : eventEnd;
     const orders = Array.isArray(event.orders) ? event.orders : [];
     const exits = Array.isArray(event.exits) ? event.exits : [];
-    const logs = globalLog.filter((entry) => {
+    const eventLogs = Array.isArray(event.logs) ? event.logs : [];
+    const logs = eventLogs.length ? eventLogs : globalLog.filter((entry) => {
       const ts = new Date(entry.ts).getTime();
       return ts >= new Date(eventStart).getTime() && ts <= new Date(closedAt).getTime();
     });
@@ -153,6 +154,7 @@ function deriveEventResult(event) {
 }
 
 function buildEventMetrics(event) {
+  if (event.metrics && typeof event.metrics === 'object') return event.metrics;
   const metrics = {};
   if (event.diagnostics) {
     for (const [key, value] of Object.entries(event.diagnostics)) {

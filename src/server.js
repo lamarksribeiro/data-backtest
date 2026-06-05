@@ -6,6 +6,7 @@ import { openStateDatabase, closeStateDatabase } from './state/sqlite.js';
 import { createApiServer } from './api/server.js';
 import { createPrepareJobRunner } from './prepare/runner.js';
 import { createAuthService } from './auth/authService.js';
+import { seedEdgeSniperV2Strategy } from './backtestStudio/gls/seedStrategies.js';
 
 const config = loadConfig();
 if (!config.TEST_MODE && !config.SESSION_SECRET) {
@@ -13,6 +14,7 @@ if (!config.TEST_MODE && !config.SESSION_SECRET) {
 }
 
 const db = openStateDatabase(config.stateDbPath);
+seedEdgeSniperV2Strategy(db);
 const authService = createAuthService({ db, config });
 if (!config.TEST_MODE) {
   const bootstrapped = await authService.bootstrapAdmin();

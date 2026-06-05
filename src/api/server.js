@@ -17,6 +17,7 @@ import { getChartData, getEventTrace, listEventTraces } from '../backtestStudio/
 import {
   createStrategy,
   createStrategyVersion,
+  deleteStrategy,
   getStrategy,
   getStrategyVersion,
   listStrategies as listSavedStrategies,
@@ -185,6 +186,12 @@ export function createApiHandler(deps) {
           const strategy = updateStrategy(db, strategyRoute.strategyId, body);
           return strategy
             ? sendJson(res, 200, { strategy })
+            : sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Strategy not found' } });
+        }
+        if (req.method === 'DELETE' && strategyRoute.kind === 'detail') {
+          const strategy = deleteStrategy(db, strategyRoute.strategyId);
+          return strategy
+            ? sendJson(res, 200, { deleted: true, strategy })
             : sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Strategy not found' } });
         }
         if (req.method === 'GET' && strategyRoute.kind === 'versions') {
@@ -463,11 +470,5 @@ function matchStrategyRoute(pathname) {
 }
 
 function toEventDetailResponse(event) {
-  return {
-    summary: event.summary,
-    orders: event.orders,
-    marks: event.marks,
-    logs: event.logs,
-    metrics: event.metrics,
-  };
+  return event;
 }

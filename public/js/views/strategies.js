@@ -120,6 +120,7 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
       el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => validateStrategyEditor(ctx) }, 'Validar'),
       el('button', { class: 'btn btn--primary btn--sm', type: 'button', onclick: () => saveStrategyVersion(ctx, strategyId) }, 'Salvar versão'),
       el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => runStrategyBacktest(ctx, strategyId) }, 'Executar backtest'),
+      el('button', { class: 'btn btn--danger btn--sm', type: 'button', onclick: () => deleteStrategyFlow(ctx, strategy) }, 'Apagar'),
     ]),
     el('label', { class: 'field' }, [
       el('span', { class: 'field__label' }, 'Versão'),
@@ -151,7 +152,7 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
 
   state.editor = window.CodeMirror.fromTextArea(document.getElementById('strategy-source'), {
     mode: 'javascript',
-    theme: 'default',
+    theme: 'material-darker',
     lineNumbers: true,
     lineWrapping: true,
   });
@@ -216,6 +217,28 @@ async function createStrategyFlow(ctx) {
   state.selectedId = created.data.strategy.id;
   ctx.navigate(`strategies/${state.selectedId}`);
   await renderStrategies(ctx, { id: state.selectedId });
+}
+
+async function deleteStrategyFlow(ctx, strategy) {
+  const ok = await confirmDialog({
+    title: 'Apagar estratégia',
+    message: `Apagar "${strategy.name}" e todas as versões salvas?`,
+    detail: 'Runs antigos permanecem no histórico com o snapshot já gravado.',
+    confirmLabel: 'Apagar',
+    tone: 'danger',
+  });
+  if (!ok) return;
+
+  const res = await ctx.api.delete(`/api/strategies/${strategy.id}`);
+  if (!res.ok) {
+    ctx.toast.err(res.error?.message || 'Falha ao apagar estratégia');
+    return;
+  }
+  ctx.toast.ok('Estratégia apagada');
+  state.selectedId = null;
+  state.selectedVersionId = null;
+  ctx.navigate('strategies');
+  await renderStrategies(ctx);
 }
 
 async function runStrategyBacktest(ctx, strategyId) {

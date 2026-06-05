@@ -54,16 +54,25 @@ Quando `strategy_definitions`/`strategy_versions` e o runtime GLS existirem, rem
 
 ## Status De Implementacao
 
+Status revisado em 2026-06-05: a implementacao MVP do Backtest Studio ja existe no codigo. A tabela abaixo substitui o snapshot historico que marcava todas as fases como pendentes.
+
 | Fase | Status |
 |---|---|
-| Pre-B1 (traces + endpoints + explorer basico) | pendente |
-| B1 Persistencia de estrategias | pendente |
-| B2 Editor UI | pendente |
-| B3 Validador GLS | pendente |
-| B4 Runtime GLS | pendente |
-| B5 Execucao sobre lakehouse | pendente |
-| B6 Visualizacao | pendente |
-| B7 Migracao edge-sniper | pendente |
+| Pre-B1 (traces + endpoints + explorer basico) | concluido |
+| B1 Persistencia de estrategias | concluido |
+| B2 Editor UI | concluido |
+| B3 Validador GLS | concluido |
+| B4 Runtime GLS | concluido |
+| B5 Execucao sobre lakehouse | concluido |
+| B6 Visualizacao | concluido |
+| B7 Migracao edge-sniper | concluido como seed GLS |
+
+### Lacunas Reais Ainda Abertas
+
+- Validacao operacional L8 em producao/Coolify, incluindo smoke, backup e restore dos volumes `/lake` e `/state`.
+- L5 continua parcial: `PostgresTickProvider`, `HybridTickProvider` e `streamEvents` ainda nao foram implementados.
+- O editor GLS e funcional, mas ainda e MVP: nao ha autocomplete rico, diff entre versoes, comparador de runs ou otimizador de parametros.
+- O runtime GLS e propositalmente pequeno e seguro; JavaScript livre, imports, rede, filesystem e async continuam fora do escopo.
 
 Hoje, runs nativos ja persistem `events`, `equity` e `log` dentro de `backtest_runs.result_json`. O pre-B1 normaliza isso em `backtest_event_traces` e expoe endpoints de detalhe antes do CRUD de estrategias.
 
