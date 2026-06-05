@@ -4,10 +4,10 @@
 
 Implementar uma arquitetura dual-store para o ecossistema GoldenLens:
 
-- `data-colector`: fonte oficial OLTP, escrita confiavel, retencao operacional e API administrativa.
-- `data-backtest`: lakehouse OLAP com Parquet/DuckDB, backtests rapidos, estrategias em blocos, UI visual e retencao segura do historico.
+- `data-colector`: fonte oficial OLTP, escrita confiavel, retencao operacional opcional e API administrativa.
+- `data-backtest`: lakehouse OLAP com Parquet/DuckDB, backtests rapidos, estrategias em blocos, UI visual e arquivamento validado do historico.
 
-O Postgres continua sendo a fonte de verdade enquanto os dados estao na janela operacional. O lakehouse e derivado, validado e reconstruivel. Depois da validacao, dados antigos podem ser removidos do Postgres conforme configuracao administrativa.
+O Postgres continua sendo a fonte de verdade operacional. O lakehouse e derivado, validado e reconstruivel. A remocao de dados antigos do Postgres nao e objetivo padrao do projeto; e apenas uma capacidade opcional, administrativa, desativada por padrao e condicionada a validacao do lakehouse.
 
 ## Principios
 
@@ -15,8 +15,8 @@ O Postgres continua sendo a fonte de verdade enquanto os dados estao na janela o
 - Backtests nao devem competir com a coleta 24x7.
 - Parquet deve ser a camada principal para historico analitico.
 - Postgres deve manter uma janela quente configuravel.
-- Exclusao do Postgres deve ser opcional, auditavel e condicionada a validacao do lakehouse.
-- Opcao padrao deve ser retencao indefinida.
+- Exclusao do Postgres nao deve ser tratada como meta operacional normal. Deve existir apenas como opcao configuravel, auditavel, desativada por padrao e condicionada a validacao do lakehouse.
+- Opcao padrao deve ser manter dados no Postgres por tempo indefinido.
 - Estrategias devem usar uma query layer unica, independente da origem fisica dos dados.
 - A query layer deve nascer generica para servir backtests, labs e futuro `data-robot`.
 - Lakehouse deve ser reconstruivel a partir do Postgres enquanto os dados ainda existirem nele ou a partir de backups.
@@ -24,7 +24,7 @@ O Postgres continua sendo a fonte de verdade enquanto os dados estao na janela o
 
 ## Strategy Lab Programavel
 
-Este documento foca no lakehouse, sync, manifest, query layer e retencao segura.
+Este documento foca no lakehouse, sync, manifest, query layer e arquivamento validado. Retencao/exclusao do Postgres aparece apenas como capacidade opcional futura, nunca como comportamento padrao.
 
 A arquitetura detalhada para editor de estrategias, linguagem simples, blocos/funcoes reutilizaveis, traces por evento e visualizacao de execucao esta em:
 
@@ -404,7 +404,7 @@ Acoes: preparar dados ausentes, reprocessar invalidos, rodar somente periodo dis
 
 ## Controle De Arquivamento
 
-Criar tabela no `data-colector` para permitir retencao segura:
+Criar tabela no `data-colector` para registrar que o lakehouse possui copia validada de cada evento. Esse registro serve primeiro para auditoria, rastreabilidade e confianca operacional. Ele tambem pode ser usado no futuro para uma retencao opcional do Postgres, caso o operador decida habilitar isso.
 
 ```text
 event_archive_status
@@ -429,7 +429,7 @@ created_at
 updated_at
 ```
 
-A retencao so pode excluir dados do Postgres quando o evento estiver validado.
+Se algum dia a retencao real do Postgres for habilitada, ela so pode considerar eventos com arquivamento validado. Enquanto a retencao estiver desativada, esse status continua util como prova de cobertura do lakehouse.
 
 Status devem aceitar pelo menos:
 
@@ -441,9 +441,9 @@ needs_review
 stale
 ```
 
-## Retencao Configuravel Do Postgres
+## Retencao Opcional Configuravel Do Postgres
 
-Criar configuracao administrativa persistida.
+Criar configuracao administrativa persistida apenas como capacidade opcional. O estado padrao e manter dados no Postgres indefinidamente.
 
 Campos sugeridos:
 
@@ -483,18 +483,18 @@ delete_batch_size = 50000
 retention_run_hour_utc = 3
 ```
 
-## Tela De Configuracoes
+## Tela De Configuracoes Opcionais
 
 Criar uma tela ou aba:
 
 ```text
-Banco de Dados > Retencao
+Banco de Dados > Retencao Opcional
 ```
 
 Controles:
 
 ```text
-Nao excluir dados do Postgres
+Nao excluir dados do Postgres (padrao)
 Excluir dados antigos apos N dias
 So excluir eventos arquivados no lakehouse
 Exigir books arquivados
@@ -588,7 +588,9 @@ SYNC_MARGIN_MINUTES=2
 
 O paralelismo deve comecar baixo para nao pressionar o Postgres. Se houver replica de leitura, aumentar gradualmente.
 
-## Fluxo De Retencao
+## Fluxo Opcional De Retencao
+
+Este fluxo nao faz parte do caminho padrao de operacao. Ele so deve ser usado se o operador decidir explicitamente reduzir o tamanho do Postgres depois de ganhar confianca no lakehouse, backups e processos de restore.
 
 ```text
 1. RetentionJob carrega retention_config.
@@ -598,7 +600,7 @@ O paralelismo deve comecar baixo para nao pressionar o Postgres. Se houver repli
 5. Exige event_quality existente.
 6. Exige event_archive_status validado conforme configuracao.
 7. Se dry_run estiver ativo, apenas registra estimativa.
-8. Se dry_run estiver desativado, apaga ticks em lotes.
+8. Se a retencao opcional estiver explicitamente habilitada e dry_run estiver desativado, executa a remocao em lotes.
 9. Registra auditoria.
 ```
 
@@ -792,7 +794,9 @@ audit_log completo
 - [ ] Migrar `edge-sniper-v2` para estrategia editavel e comparar contra o nativo.
 - [ ] Manter `edge-sniper-v2` nativo como golden test ate a versao editavel ter paridade.
 
-### Fase 10: Exclusao Segura Do Postgres
+### Fase 10: Opcional - Exclusao Segura Do Postgres
+
+Nao e objetivo padrao do projeto. Fazer apenas se houver decisao operacional explicita de reduzir dados no Postgres depois de validar lakehouse, backups e restore.
 
 - [ ] Criar query de eventos elegiveis.
 - [ ] Criar delete em lotes por `condition_id`.
@@ -863,11 +867,11 @@ Nao bloqueia o MVP. Fazer apenas se o Postgres continuar sofrendo com heap/TOAST
 - [ ] O modo `prepare` enfileira sync/rebuild e so roda depois da validacao.
 - [ ] O DuckDB le o range com performance superior ao Postgres.
 - [ ] O dataset `backtest_ticks` consegue alimentar uma estrategia que usa book.
-- [ ] A retencao padrao e indefinida.
-- [ ] Nenhum dado e apagado sem evento arquivado e validado.
-- [ ] A tela permite configurar retencao e dry-run.
-- [ ] Toda exclusao gera auditoria.
-- [ ] Fluxo de retencao identifica quando uma particao Postgres inteira pode ser removida com `DROP PARTITION`.
+- [ ] A retencao/exclusao do Postgres permanece desativada por padrao.
+- [ ] Nenhum dado e apagado sem decisao explicita, evento arquivado e validado.
+- [ ] A tela permite manter retencao indefinida e, opcionalmente, simular dry-run.
+- [ ] Toda exclusao opcional gera auditoria.
+- [ ] Fluxo opcional de retencao identifica quando uma particao Postgres inteira poderia ser removida com `DROP PARTITION`, sem executar por padrao.
 - [ ] O lakehouse pode ser reconstruido por particao.
 
 ## Riscos E Mitigacoes
@@ -877,7 +881,7 @@ Nao bloqueia o MVP. Fazer apenas se o Postgres continuar sofrendo com heap/TOAST
 | Muitos arquivos pequenos | Comecar com particao diaria e compactar depois |
 | Parquet com JSON lento | Criar `backtest_ticks` flattenado |
 | Sync competir com coleta | Usar read-only pool baixo ou replica |
-| Exclusao acidental | Default indefinido, dry-run, confirmacao forte e exigencia de archive |
+| Exclusao acidental | Retencao desativada por padrao, dry-run, confirmacao forte e exigencia de archive |
 | Divergencia silenciosa apos reparo/backfill | Source fingerprint, status `stale` e rebuild obrigatorio |
 | UPDATE que nao muda contagem (ex.: backfill PTB) | Checksum de valores no fingerprint + chamada ao endpoint stale + job de reconciliacao |
 | Dataset derivado desatualizado apos rebuild da fonte | Cascata de invalidacao scalars->ohlc e books->backtest_ticks |
@@ -887,8 +891,8 @@ Nao bloqueia o MVP. Fazer apenas se o Postgres continuar sofrendo com heap/TOAST
 | Lakehouse corrompido | Rebuild por particao a partir do Postgres ou backup |
 | Backtest rodar com dados incompletos | Modo `strict` como padrao e bloqueio por manifest |
 | Backfill historico demorar muito | Processar por dia/mercado, retomar de checkpoint e aumentar paralelismo aos poucos |
-| DELETE nao liberar espaco real no Postgres | Preferir `DROP PARTITION` quando a particao estiver 100% arquivada |
-| Complexidade excessiva | Entregar scalars primeiro, depois books, depois retencao real |
+| DELETE nao liberar espaco real no Postgres | Se a retencao opcional for habilitada no futuro, preferir `DROP PARTITION` apenas quando a particao estiver 100% arquivada |
+| Complexidade excessiva | Fechar lakehouse primeiro; tratar retencao real como opcional e posterior |
 
 ## Ordem Recomendada De Execucao
 
@@ -902,9 +906,9 @@ Nao bloqueia o MVP. Fazer apenas se o Postgres continuar sofrendo com heap/TOAST
 8. Criar query layer DuckDB com checagem de disponibilidade por manifest.
 9. Implementar modos `strict` e `prepare`.
 10. Migrar um lab legado e validar paridade.
-11. Criar `event_archive_status`.
-12. Criar configuracao e tela de retencao.
-13. Ativar dry-run de retencao.
-14. Ativar exclusao real somente apos validacao operacional.
-15. Avaliar `DROP PARTITION` para liberar espaco real.
+11. Criar `event_archive_status` para auditoria de arquivamento validado.
+12. Criar configuracao de retencao opcional mantendo exclusao desativada por padrao.
+13. Fechar UI de preparacao/backtest sobre dados validados.
+14. Evoluir Strategy Lab programavel.
+15. Avaliar retencao real somente se houver decisao operacional futura.
 16. Avaliar live-tail e split vertical depois.
