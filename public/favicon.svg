@@ -3,66 +3,40 @@
     <!-- Gradiente do corpo azul do Papa-léguas -->
     <linearGradient id="runnerBlue" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#2563eb" />
-      <stop offset="50%" stop-color="#3b82f6" />
-      <stop offset="100%" stop-color="#0284c7" />
+      <stop offset="50%" stop-color="#1e40af" />
+      <stop offset="100%" stop-color="#0f172a" />
     </linearGradient>
-    <!-- Gradiente da crista de penas (Índigo para Roxo Elétrico) -->
-    <linearGradient id="runnerCrest" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#6366f1" />
-      <stop offset="100%" stop-color="#a855f7" />
-    </linearGradient>
-    <!-- Gradiente laranja para o bico longo -->
+
+    <!-- Gradiente laranja/âmbar para o bico longo -->
     <linearGradient id="runnerOrange" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ff7a00" />
+      <stop offset="0%" stop-color="#f97316" />
       <stop offset="100%" stop-color="#ea580c" />
-    </linearGradient>
-    <!-- Gradiente amarelo/dourado para pernas/pezinhos (GoldenLens) -->
-    <linearGradient id="runnerYellow" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ffe259" />
-      <stop offset="100%" stop-color="#ffa751" />
-    </linearGradient>
-    <!-- Gradiente azul claro para peito/barriga -->
-    <linearGradient id="runnerLight" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#e0f2fe" />
-      <stop offset="100%" stop-color="#bae6fd" />
     </linearGradient>
   </defs>
 
-  <!-- Crista de penas espetada no topo (apontando para trás/direita) -->
-  <path d="M 52,24 L 20,4 L 38,18 Z" fill="url(#runnerCrest)" />
-  <path d="M 58,22 L 28,0 L 46,16 Z" fill="url(#runnerCrest)" />
-  <path d="M 64,25 L 36,8 L 50,21 Z" fill="url(#runnerCrest)" />
+  <!-- Grupo do Ícone Geométrico -->
+  <g id="favicon-runner">
+    <!-- Pescoço Angular -->
+    <polygon points="38,90 48,54 58,56 48,90" fill="url(#runnerBlue)" />
 
-  <!-- Pescoço longo e elegante azul -->
-  <path d="M 58,49 L 52,80 L 64,80 L 68,52 Z" fill="url(#runnerBlue)" stroke="#2563eb" stroke-width="1" />
-  <!-- Peito/Pescoço frontal azul claro -->
-  <path d="M 58,49 L 52,80 L 57,80 L 62,51 Z" fill="url(#runnerLight)" />
+    <!-- Crista de Spoiler Geométrico (3 plumas angulares) -->
+    <polygon points="44,42 22,28 12,12 30,28" fill="#1e40af" />
+    <polygon points="46,40 30,18 20,4 38,22" fill="#06b6d4" />
+    <polygon points="48,38 38,12 30,0 44,18" fill="url(#runnerOrange)" />
 
-  <!-- Cabeça redonda azul -->
-  <circle cx="58" cy="38" r="14" fill="url(#runnerBlue)" stroke="#2563eb" stroke-width="1" />
+    <!-- Cabeça Geométrica -->
+    <polygon points="40,54 48,38 66,40 64,58 50,58" fill="url(#runnerBlue)" />
 
-  <!-- Olho esperto e amendoado (de perfil olhando à frente/esquerda) -->
-  <ellipse cx="53" cy="34" rx="4.5" ry="6.5" fill="#ffffff" stroke="#1e40af" stroke-width="1" />
-  <ellipse cx="51.5" cy="34" rx="2.2" ry="4" fill="#000000" />
-  <circle cx="51" cy="32" r="0.8" fill="#ffffff" /> <!-- brilho -->
+    <!-- Olho Normal Oval (tradicional e esperto) -->
+    <ellipse cx="54" cy="46" rx="5.5" ry="9" fill="#ffffff" stroke="#1e3a8a" stroke-width="1.2" />
+    <!-- Pupila -->
+    <ellipse cx="55.5" cy="47" rx="2.5" ry="4.5" fill="#000000" />
+    <!-- Brilho do Olho -->
+    <circle cx="54.5" cy="45" r="0.8" fill="#ffffff" />
 
-  <!-- Bico longo, afiado e pontudo na esquerda (característico do Road Runner) -->
-  <path d="M 12,39 C 28,33 45,34 48,35 L 48,43 C 45,44 28,43 12,39 Z" fill="url(#runnerOrange)" stroke="#ea580c" stroke-width="1.2" stroke-linejoin="round" />
-  <!-- Linha central do bico (sorriso focado de velocidade) -->
-  <path d="M 12,39 Q 32,38 48,39" fill="none" stroke="#ea580c" stroke-width="1" />
-
-  <!-- Corpo na base -->
-  <path d="M 44,78 C 44,66 76,66 80,78 C 80,88 44,88 44,78 Z" fill="url(#runnerBlue)" stroke="#2563eb" stroke-width="1.2" />
-  <!-- Peito/Barriga azul claro -->
-  <path d="M 44,78 C 44,66 64,66 60,78 C 58,84 44,83 44,78 Z" fill="url(#runnerLight)" />
-
-  <!-- Asinha dinâmica na lateral -->
-  <path d="M 58,76 C 66,73 76,77 74,84 C 70,86 60,82 58,76 Z" fill="url(#runnerCrest)" stroke="#6366f1" stroke-width="1" />
-
-  <!-- Pernas finas e pezinhos amarelos/laranjas correndo -->
-  <line x1="52" y1="80" x2="48" y2="94" stroke="url(#runnerYellow)" stroke-width="3" stroke-linecap="round" />
-  <line x1="60" y1="80" x2="62" y2="94" stroke="url(#runnerYellow)" stroke-width="3" stroke-linecap="round" />
-  <!-- Dedinhos -->
-  <path d="M 40,94 Q 48,94 50,92" fill="none" stroke="url(#runnerYellow)" stroke-width="3" stroke-linecap="round" />
-  <path d="M 58,94 Q 62,94 66,92" fill="none" stroke="url(#runnerYellow)" stroke-width="3" stroke-linecap="round" />
+    <!-- Bico Angular Militar/Stealth -->
+    <polygon points="62,48 92,48 88,56 60,56" fill="url(#runnerOrange)" stroke="#c2410c" stroke-width="0.8" />
+    <!-- Divisão do bico -->
+    <line x1="62" y1="52" x2="88" y2="52" stroke="#7c2d12" stroke-width="1" />
+  </g>
 </svg>

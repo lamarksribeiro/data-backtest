@@ -1,5 +1,5 @@
 /**
- * Mascote Interativo de Login - Data Runner (Papa-léguas Clássico GoldenLens)
+ * Mascote Interativo de Login - Data Runner (Versão Cibernética Geométrica Premium)
  * Encapsula de forma limpa e isolada todos os estilos, HTML e comportamentos do mascote.
  */
 
@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 1. Injetar Estilos CSS do Mascote e Ticks
   const style = document.createElement('style');
   style.textContent = `
-    /* Estilos do Mascote Interativo (Papa-léguas) */
+    /* Estilos do Mascote Interativo (Papa-léguas Cibernético) */
     .login-wrapper {
       display: flex;
       flex-direction: column;
@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
       align-items: center;
       min-height: 100vh;
       min-height: 100dvh;
-      background: radial-gradient(1200px 600px at 50% -10%, rgba(37, 99, 235, 0.16), transparent 70%), var(--bg-0);
+      background: radial-gradient(1200px 600px at 50% -10%, rgba(249, 115, 22, 0.08), transparent 70%), var(--bg-0);
       overflow-x: hidden;
       overflow-y: auto;
       padding: 20px 0;
@@ -73,129 +73,112 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    /* Leve flutuação do Papa-léguas para dar sensação de respiração e vida */
+    /* Leve flutuação do Papa-léguas para dar sensação de vida */
     @keyframes runnerBreathing {
       0%, 100% {
         transform: translateY(0px) scaleY(1);
       }
       50% {
-        transform: translateY(-2.5px) scaleY(0.97);
+        transform: translateY(-2px) scaleY(0.98);
       }
     }
     
     #lizard {
-      animation: runnerBreathing 3s ease-in-out infinite;
+      animation: runnerBreathing 4s ease-in-out infinite;
       transform-origin: 116px 115px;
     }
 
-    /* Animação de Corrida / Dash Horizontal do Papa-léguas (Dados Bons) */
+    /* Animação de Corrida / Dash Linear Ultra-Rápido (Estilo Quantum/Flicker) */
     @keyframes runnerDash {
       0% {
-        transform: translateX(0px) scaleX(1) skewX(0deg);
+        transform: translateX(0px) skewX(0deg);
       }
       15% {
-        /* Prepara para correr: agacha e puxa para trás */
-        transform: translateX(-20px) scaleY(0.85) scaleX(1.1) skewX(-10deg);
+        /* Puxa para trás rapidamente (recuo de mola) */
+        transform: translateX(-12px) skewX(-8deg);
       }
-      30% {
-        /* Dispara para frente em alta velocidade (esticado) */
-        transform: translateX(95px) scaleY(0.95) scaleX(1.15) skewX(20deg);
+      35% {
+        /* Avança instantaneamente (teleporte) */
+        transform: translateX(110px) skewX(12deg);
       }
-      55% {
-        /* Chega no alvo e freia (inclinando para trás) */
-        transform: translateX(110px) scaleY(1.05) scaleX(0.9) skewX(-15deg);
-      }
-      75% {
-        /* Começa a retornar de costas correndo rápido */
-        transform: translateX(35px) scaleX(0.98) skewX(5deg);
+      65% {
+        /* Retorna amortecido */
+        transform: translateX(15px) skewX(-4deg);
       }
       100% {
-        /* Retorna suave à posição normal */
-        transform: translateX(0px) scaleX(1) skewX(0deg);
+        transform: translateX(0px) skewX(0deg);
       }
     }
     
     .runner-dashing {
-      animation: runnerDash 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+      animation: runnerDash 0.5s cubic-bezier(0.22, 1, 0.36, 1) !important;
       animation-fill-mode: forwards;
     }
 
-    /* Animação de Pulo / Salto Vertical do Papa-léguas (Desvio de Dados Ruins) */
-    @keyframes runnerJump {
+    /* Animação de Pulo / Esquiva Vertical (Desvio Técnico Limpo) */
+    @keyframes runnerEvade {
       0% {
-        transform: translateY(0px) scaleY(1);
+        transform: translateY(0px) scale(1);
+        opacity: 1;
       }
       15% {
-        /* Agacha para pegar impulso */
-        transform: translateY(10px) scaleY(0.78) scaleX(1.1);
+        transform: translateY(-24px) scaleY(1.05) skewX(-5deg);
+        opacity: 0.9;
       }
-      40% {
-        /* Pula alto verticalmente */
-        transform: translateY(-80px) scaleY(1.1) scaleX(0.95);
+      35% {
+        transform: translateY(-28px) scaleY(1.05);
+        opacity: 0.85;
       }
-      65% {
-        /* Flutua ligeiramente no topo do pulo */
-        transform: translateY(-85px) scaleY(1) scaleX(1);
-      }
-      85% {
-        /* Pousa e amortece o impacto */
-        transform: translateY(12px) scaleY(0.78) scaleX(1.1);
+      70% {
+        transform: translateY(2px) scaleY(0.98);
+        opacity: 0.95;
       }
       100% {
-        /* Retorna à posição original */
-        transform: translateY(0px) scaleY(1) scaleX(1);
+        transform: translateY(0px) scale(1);
+        opacity: 1;
       }
     }
 
     .runner-jumping {
-      animation: runnerJump 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+      animation: runnerEvade 0.45s cubic-bezier(0.16, 1, 0.3, 1) !important;
       animation-fill-mode: forwards;
     }
 
-    /* Animação do Beep Beep autônomo */
+    /* Animação do Beep Beep autônomo (flicker de carregamento) */
     @keyframes runnerBeep {
-      0%, 100% {
-        transform: scale(1) rotate(0deg);
-      }
-      20% {
-        /* Inclina o pescoço e abre o peito para o Beep Beep */
-        transform: scaleX(1.05) rotate(4deg) translateY(2px);
-      }
-      40% {
-        /* Movimento rápido 1 */
-        transform: scaleX(1.08) rotate(-2deg) translateY(-2px);
-      }
-      60% {
-        /* Movimento rápido 2 */
-        transform: scaleX(1.08) rotate(3deg) translateY(1px);
-      }
-      80% {
-        transform: scale(1.02) rotate(0deg);
-      }
+      0%, 100% { transform: scale(1); }
+      30% { transform: scale(1.03) translateY(-1px); }
+      60% { transform: scale(1.03) translateY(1px); }
     }
 
     .runner-beeping {
-      animation: runnerBeep 0.8s ease-in-out !important;
+      animation: runnerBeep 0.6s ease-in-out !important;
       animation-fill-mode: forwards;
     }
 
-    /* Rotação rápida do redemoinho de pernas */
-    @keyframes spinLegs {
+    /* Rotação rápida do rastro de pernas em alta velocidade */
+    @keyframes spinRastro {
       0% {
-        transform: rotate(0deg);
+        transform: translateY(0px) scaleY(1);
+        opacity: 0.6;
+      }
+      50% {
+        transform: translateY(1px) scaleY(0.9);
+        opacity: 0.95;
       }
       100% {
-        transform: rotate(360deg);
+        transform: translateY(0px) scaleY(1);
+        opacity: 0.6;
       }
     }
 
-    /* Quando correndo ou pulando, oculta pernas estáticas e mostra o redemoinho girando com blur */
+    /* Quando correndo ou pulando, oculta pernas estáticas e mostra o rastro de movimento linear */
     .runner-dashing #legs-static, .runner-jumping #legs-static {
       display: none !important;
     }
     .runner-dashing #legs-running, .runner-jumping #legs-running {
       display: block !important;
-      animation: spinLegs 0.08s linear infinite !important;
+      animation: spinRastro 0.1s linear infinite !important;
     }
 
     /* Animação sutil da cauda de penas balançando */
@@ -204,11 +187,11 @@ document.addEventListener('DOMContentLoaded', () => {
         transform: rotate(0deg);
       }
       50% {
-        transform: rotate(-4deg);
+        transform: rotate(-3deg);
       }
     }
     #lizard-tail {
-      animation: tailWiggle 3.5s ease-in-out infinite;
+      animation: tailWiggle 4s ease-in-out infinite;
       transform-origin: 90px 115px;
     }
   `;
@@ -223,123 +206,114 @@ document.addEventListener('DOMContentLoaded', () => {
     wrapper.appendChild(loginCard);
   }
 
-  // 3. Criar e injetar o SVG do Papa-léguas (Data Runner)
+  // 3. Criar e injetar o SVG do Papa-léguas Cibernético Geométrico (Data Runner)
   const mascotContainer = document.createElement('div');
   mascotContainer.className = 'mascot-container';
   mascotContainer.innerHTML = `
     <svg id="mascot" width="260" height="180" viewBox="0 0 260 180" style="overflow: visible;">
       <defs>
-        <!-- Gradiente do corpo do Papa-léguas (Azul Cobalto Clássico) -->
+        <!-- Gradiente Metalizado Azul Profundo -->
         <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#2563eb" />
-          <stop offset="100%" stop-color="#1e3a8a" />
+          <stop offset="0%" stop-color="#1e3a8a" />
+          <stop offset="50%" stop-color="#1e40af" />
+          <stop offset="100%" stop-color="#0f172a" />
         </linearGradient>
 
-        <!-- Gradiente das bochechas/bico/pernas (Amarelo Looney Tunes para Ocre/Laranja) -->
+        <!-- Gradiente Neon Laranja Âmbar -->
         <linearGradient id="beakGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#fbbf24" />
-          <stop offset="100%" stop-color="#f59e0b" />
-        </linearGradient>
-
-        <!-- Laranja para partes do bico e plumas -->
-        <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stop-color="#f97316" />
           <stop offset="100%" stop-color="#ea580c" />
         </linearGradient>
 
-        <!-- Gradiente dourado para as pupilas/íris (GoldenLens) -->
-        <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#ffe259" />
-          <stop offset="100%" stop-color="#ffa751" />
+        <!-- Gradiente Ciano Elétrico para o Visor -->
+        <linearGradient id="visorGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#06b6d4" />
+          <stop offset="100%" stop-color="#3b82f6" />
         </linearGradient>
 
-        <!-- Gradiente branco para peito e barriga -->
-        <linearGradient id="whiteGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#ffffff" />
-          <stop offset="100%" stop-color="#f1f5f9" />
-        </linearGradient>
+        <!-- Filtro Glow para o Visor Neon -->
+        <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="2" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
       </defs>
 
-      <!-- Grupo do Papa-léguas (Data Runner) -->
+      <!-- Grupo do Papa-léguas Cibernético Geométrico (Data Runner) -->
       <g id="lizard" style="transform-origin: 116px 115px;">
-        <!-- Cauda de Penas (id lizard-tail para balançar) -->
+        <!-- Cauda Aerodinâmica (3 penas estilizadas angulares como spoilers) -->
         <g id="lizard-tail">
-          <!-- Pena superior -->
-          <path d="M 88,116 C 58,110 36,86 24,56 C 36,74 58,96 88,110 Z" fill="url(#bodyGrad)" stroke="#1e3a8a" stroke-width="1.2" />
-          <!-- Pena do meio -->
-          <path d="M 90,118 C 55,120 32,102 18,78 C 32,92 55,108 90,112 Z" fill="url(#bodyGrad)" stroke="#1e3a8a" stroke-width="1.2" />
-          <!-- Pena inferior (detalhe laranja na cauda) -->
-          <path d="M 90,120 C 50,130 28,118 12,98 C 28,108 50,118 90,114 Z" fill="url(#orangeGrad)" opacity="0.95" />
+          <!-- Pena Superior -->
+          <polygon points="90,112 55,95 38,70 65,90" fill="#1e40af" opacity="0.85" />
+          <!-- Pena do Meio -->
+          <polygon points="90,116 48,108 30,90 58,104" fill="#2563eb" opacity="0.9" />
+          <!-- Pena Inferior (Laranja) -->
+          <polygon points="90,120 40,122 24,110 52,118" fill="url(#beakGrad)" opacity="0.95" />
         </g>
 
-        <!-- Pernas Estáticas (Longas, finas e clássicas do desenho) -->
+        <!-- Pernas Estáticas Metálicas (Design limpo de trem de pouso) -->
         <g id="legs-static">
-          <!-- Perna esquerda (traseira) -->
-          <path d="M 104,130 L 102,156 M 102,156 L 86,160 M 102,156 L 102,164 M 102,156 L 112,160" fill="none" stroke="url(#beakGrad)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-          <!-- Perna direita (dianteira) -->
-          <path d="M 120,130 L 118,156 M 118,156 L 102,160 M 118,156 L 118,164 M 118,156 L 128,160" fill="none" stroke="url(#beakGrad)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+          <!-- Perna Traseira -->
+          <path d="M 106,128 L 98,158 L 88,162 M 98,158 L 108,162" fill="none" stroke="#475569" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+          <!-- Perna Dianteira -->
+          <path d="M 120,128 L 114,158 L 104,162 M 114,158 L 124,162" fill="none" stroke="url(#beakGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
         </g>
 
-        <!-- Pernas Correndo / Redemoinho (Display none por padrão) -->
+        <!-- Pernas Correndo / Rastro de Movimento Linear (Display none por padrão) -->
         <g id="legs-running" style="display: none; transform-origin: 116px 145px;">
-          <ellipse cx="116" cy="145" rx="32" ry="16" fill="none" stroke="#fbbf24" stroke-width="4.5" stroke-dasharray="12 6" opacity="0.9" />
-          <ellipse cx="116" cy="145" rx="16" ry="32" fill="none" stroke="#f97316" stroke-width="4" stroke-dasharray="10 5" opacity="0.8" />
-          <ellipse cx="116" cy="145" rx="26" ry="26" fill="none" stroke="#ea580c" stroke-width="3" stroke-dasharray="18 8" opacity="0.75" />
+          <!-- Linhas de rastro de alta velocidade (blur de corrida) -->
+          <line x1="80" y1="140" x2="150" y2="140" stroke="#f97316" stroke-width="3" opacity="0.8" stroke-dasharray="15 8" />
+          <line x1="90" y1="146" x2="135" y2="146" stroke="#ea580c" stroke-width="2.5" opacity="0.6" stroke-dasharray="8 6" />
+          <line x1="75" y1="152" x2="145" y2="152" stroke="#06b6d4" stroke-width="2" opacity="0.75" stroke-dasharray="20 10" />
         </g>
 
-        <!-- Corpo Oval Aerodinâmico -->
-        <ellipse cx="114" cy="118" rx="28" ry="16" fill="url(#bodyGrad)" stroke="#1e3a8a" stroke-width="1.8" />
-        
-        <!-- Detalhe do Peito Branco -->
-        <path d="M 104,106 C 114,106 128,110 128,118 C 128,126 114,132 104,124 Z" fill="url(#whiteGrad)" opacity="0.95" />
+        <!-- Corpo Geométrico/Aerodinâmico (Estilo Fuselagem de Caça) -->
+        <polygon points="86,118 104,102 134,106 142,122 126,132 98,128" fill="url(#bodyGrad)" stroke="#1e40af" stroke-width="1" />
+        <!-- Detalhe da fuselagem em Ciano -->
+        <polygon points="106,108 126,110 134,120 120,124" fill="#06b6d4" opacity="0.2" />
 
-        <!-- Asas Azuis-Escuras na lateral -->
-        <path d="M 96,110 C 82,110 70,122 62,134 C 76,131 92,122 114,116 Z" fill="#1e3a8a" stroke="#2563eb" stroke-width="1.2" />
-        <!-- Detalhe da pena de asa (azul claro) -->
-        <path d="M 88,114 C 78,116 72,122 68,128 C 76,125 84,120 94,117 Z" fill="#60a5fa" opacity="0.95" />
+        <!-- Asa Traseira Estilizada -->
+        <polygon points="98,112 76,116 62,132 88,124 116,118" fill="#1e3a8a" stroke="#2563eb" stroke-width="0.8" />
+        <polygon points="90,116 80,120 74,128 86,124" fill="url(#beakGrad)" opacity="0.85" />
 
-        <!-- Pescoço Longo e Fino Clássico -->
-        <path d="M 116,104 C 120,80 128,62 138,48 L 145,51 C 135,66 127,84 122,106 Z" fill="url(#bodyGrad)" />
+        <!-- Pescoço Angular Fino -->
+        <polygon points="118,104 136,52 142,54 126,106" fill="url(#bodyGrad)" />
 
-        <!-- Cabeça -->
-        <ellipse cx="140" cy="45" rx="11" ry="9" fill="url(#bodyGrad)" stroke="#1e3a8a" stroke-width="1.5" />
+        <!-- Cabeça Angular Aerodinâmica -->
+        <polygon points="130,52 138,40 152,42 150,56 138,56" fill="url(#bodyGrad)" />
 
-        <!-- Crista de Penas Clássicas do Desenho (Compridas e curvadas para trás) -->
-        <path d="M 134,38 C 120,24 106,16 92,14 C 108,20 122,30 134,38 Z" fill="url(#bodyGrad)" stroke="#1e3a8a" stroke-width="1.2" />
-        <path d="M 137,38 C 124,20 112,10 98,6 C 112,13 124,24 137,38 Z" fill="#1d4ed8" />
-        <path d="M 140,39 C 131,22 122,14 110,8 C 121,15 131,25 140,39 Z" fill="#3b82f6" />
+        <!-- Crista de Spoiler Geométrico -->
+        <polygon points="134,42 114,30 102,18 122,32" fill="#1e40af" />
+        <polygon points="136,41 122,26 112,14 128,29" fill="#06b6d4" />
+        <polygon points="138,40 128,22 120,10 134,26" fill="url(#beakGrad)" />
 
-        <!-- Olhos Expressivos ovais brancos colados (Looney Tunes Style) -->
-        <ellipse cx="137" cy="36" rx="5.5" ry="9" fill="#ffffff" stroke="#1e3a8a" stroke-width="1.2" />
-        <ellipse cx="147" cy="35" rx="5.5" ry="9" fill="#ffffff" stroke="#1e3a8a" stroke-width="1.2" />
+        <!-- Olhos Normais e Espertos (Semi-perfil) -->
+        <ellipse cx="137" cy="42" rx="4.5" ry="7.5" fill="#ffffff" stroke="#1e3a8a" stroke-width="1.2" />
+        <ellipse cx="145.5" cy="41" rx="4.5" ry="7.5" fill="#ffffff" stroke="#1e3a8a" stroke-width="1.2" />
 
         <!-- pupilas para rastreamento ocular -->
         <g id="lizard-pupil" style="transition: transform 0.12s ease-out;">
           <!-- Pupila esquerda -->
-          <ellipse cx="138" cy="38" rx="2.5" ry="4" fill="#000000" />
-          <circle cx="137.2" cy="36.5" r="0.8" fill="#ffffff" />
+          <ellipse cx="138.5" cy="42.5" rx="2" ry="3.2" fill="#000000" />
+          <circle cx="137.9" cy="41.2" r="0.6" fill="#ffffff" />
           <!-- Pupila direita -->
-          <ellipse cx="147.2" cy="37" rx="2.5" ry="4" fill="#000000" />
-          <circle cx="146.4" cy="35.5" r="0.8" fill="#ffffff" />
+          <ellipse cx="146.7" cy="41.5" rx="2" ry="3.2" fill="#000000" />
+          <circle cx="146.1" cy="40.2" r="0.6" fill="#ffffff" />
         </g>
 
-        <!-- Bochecha/Bico Inferior (Amarelo Looney Tunes) -->
-        <ellipse cx="136" cy="46" rx="8" ry="5" fill="url(#beakGrad)" />
-
-        <!-- Bico Superior Laranja/Amarelo -->
-        <path d="M 141,41 Q 162,38 168,43 Q 155,49 141,47 Z" fill="url(#orangeGrad)" stroke="#c2410c" stroke-width="1" />
-        <!-- Linha da boca -->
-        <path d="M 140,44 L 164,44" fill="none" stroke="#7c2d12" stroke-width="1" />
+        <!-- Bico Angular Militar/Stealth -->
+        <polygon points="144,48 168,48 164,54 142,54" fill="url(#beakGrad)" stroke="#c2410c" stroke-width="0.8" />
+        <!-- Divisão do bico -->
+        <line x1="144" y1="51" x2="164" y2="51" stroke="#7c2d12" stroke-width="1" />
 
         <!-- Elementos ocultos para manter compatibilidade retroativa -->
-        <path id="lizard-tongue" d="M 140,45 Q 140,45 140,45" fill="none" opacity="0" display="none" />
-        <circle id="lizard-tongue-tip" cx="140" cy="45" r="1" fill="none" opacity="0" display="none" />
+        <path id="lizard-tongue" d="M 140,48 Q 140,48 140,48" fill="none" opacity="0" display="none" />
+        <circle id="lizard-tongue-tip" cx="140" cy="48" r="1" fill="none" opacity="0" display="none" />
       </g>
     </svg>
   `;
   wrapper.insertBefore(mascotContainer, loginCard);
 
-  // 4. Lógica de Rastreamento Ocular e Comportamento das Partículas de Ticks
+  // 4. Lógica de Rastreamento do Visor e Comportamento das Partículas de Ticks
   const mascot = document.getElementById('mascot');
   const pupil = document.getElementById('lizard-pupil');
   
@@ -348,7 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let lastMouseMoveTime = Date.now();
   let idleEyeTimer = null;
 
-  // Atualização das pupilas com base no mouse (coordenada central X=142, Y=35.5)
+  // Atualização do visor com base no mouse (coordenada central X=145, Y=47)
   function updatePupil(targetX, targetY) {
     if (!pupil || !mascot || isHunting || isJumping) return;
     
@@ -356,8 +330,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const scaleX = rect.width / 260;
     const scaleY = rect.height / 180;
     
-    const eyeCenterX = rect.left + 142 * scaleX;
-    const eyeCenterY = rect.top + 35.5 * scaleY;
+    const eyeCenterX = rect.left + 142.5 * scaleX;
+    const eyeCenterY = rect.top + 41.5 * scaleY;
     
     const dx = targetX - eyeCenterX;
     const dy = targetY - eyeCenterY;
@@ -384,7 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updatePupil(event.clientX, event.clientY);
   });
 
-  // Loop de movimento ocular autônomo quando inativo (vigilância)
+  // Loop de pulsação e leitura do visor quando inativo
   function startIdleEyes() {
     if (idleEyeTimer) return;
     
@@ -392,14 +366,14 @@ document.addEventListener('DOMContentLoaded', () => {
       if (Date.now() - lastMouseMoveTime < 3000 || isHunting || isJumping) return;
       
       const angle = Math.random() * Math.PI * 2;
-      const offset = Math.random() * 2.2;
+      const offset = Math.random() * 2.0;
       const px = Math.cos(angle) * offset;
       const py = Math.sin(angle) * offset;
       
       if (pupil) {
         pupil.style.transform = `translate(${px}px, ${py}px)`;
         
-        // Piscada de olhos
+        // Piscada de olhos tradicional
         if (Math.random() < 0.22) {
           pupil.style.transform += ' scaleY(0.1)';
           setTimeout(() => {
@@ -407,7 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }, 150);
         }
       }
-    }, 1200 + Math.random() * 1500);
+    }, 1000 + Math.random() * 1200);
   }
   
   // Liga o monitorador de inatividade
@@ -519,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
       bug.element.style.left = `${bug.x}px`;
       bug.element.style.top = `${bug.y}px`;
       
-      // Papa-léguas olha para o tick se estiver por perto
+      // Visor olha para o tick se estiver por perto
       if (!isHunting && !isJumping && pupil) {
         const rect = mascot.getBoundingClientRect();
         const scaleX = rect.width / 260;
@@ -529,7 +503,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const bugLocalX = (bugRect.left - mascotRect.left) * scaleX;
         
         if (bugLocalX > 40 && bugLocalX < 200 && Math.random() < 0.15) {
-          const dx = bugLocalX - 142;
+          const dx = bugLocalX - 142.5;
           const px = Math.max(-2.2, Math.min(2.2, dx / 25));
           pupil.style.transform = `translate(${px}px, 0px)`;
         }
@@ -551,7 +525,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. Executa o Dash (CSS class)
     lizardEl.classList.add('runner-dashing');
     
-    // 2. Colisão no pico do dash / impacto sobre a partícula (300ms)
+    // 2. Colisão no pico do dash / impacto sobre a partícula (200ms)
     setTimeout(() => {
       // Oculta e desintegra a partícula
       bugEl.style.transform = 'scale(0)';
@@ -568,18 +542,18 @@ document.addEventListener('DOMContentLoaded', () => {
         activeBugs.delete(bugData);
       }, 150);
       
-    }, 300);
+    }, 200);
     
-    // 3. Fim do dash (650ms) e reset
+    // 3. Fim do dash (500ms) e reset
     setTimeout(() => {
       lizardEl.classList.remove('runner-dashing');
       isHunting = false;
       
-      // Pequena chance de comemorar com Beep Beep!
+      // Pequena chance de comemorar com log de status
       if (Math.random() < 0.25) {
-        showSpeechBubble('BEEP! BEEP!');
+        showSpeechBubble('GAIN!');
       }
-    }, 650);
+    }, 500);
   }
 
   // Esquiva de Tick Ruim: Animação de Salto Vertical
@@ -593,16 +567,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. Executa o Salto (CSS class)
     lizardEl.classList.add('runner-jumping');
     
-    // 2. Feedback visual de desvio após atingir o pico (250ms)
+    // 2. Feedback visual de desvio após atingir o pico (180ms)
     setTimeout(() => {
       createAvoidTag(bugData.x, bugData.y - 12);
-    }, 250);
+    }, 180);
     
-    // 3. Fim do pulo (650ms) e reset
+    // 3. Fim do pulo (450ms) e reset
     setTimeout(() => {
       lizardEl.classList.remove('runner-jumping');
       isJumping = false;
-    }, 650);
+    }, 450);
   }
 
   // Criação de faíscas neon coloridas na desintegração do sinal
@@ -704,57 +678,53 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 850);
   }
 
-  // Balão de fala do Papa-léguas acima de sua cabeça
+  // Notificação HUD de Terminal (em vez de balão infantil de quadrinhos)
   function showSpeechBubble(text) {
     const oldBubble = mascotContainer.querySelector('.speech-bubble');
     if (oldBubble) oldBubble.remove();
 
     const bubble = document.createElement('div');
     bubble.className = 'speech-bubble';
-    bubble.textContent = text;
+    
+    // Formatação de comando de terminal
+    if (text === 'BEEP! BEEP!') {
+      bubble.innerHTML = `<span style="color:#06b6d4;">❯</span> RUNNER_STATUS: <span style="color:#10b981; font-weight:800;">BEEP_BEEP</span>`;
+    } else if (text === 'GAIN!') {
+      bubble.innerHTML = `<span style="color:#f97316;">❯</span> BACKTEST_SIGNAL: <span style="color:#10b981; font-weight:800;">PROFIT_OK</span>`;
+    } else {
+      bubble.innerHTML = `<span style="color:#f97316;">❯</span> RUNNER_LOG: <span style="color:#cbd5e1;">${text}</span>`;
+    }
     
     bubble.style.position = 'absolute';
     bubble.style.top = '-20px';
     bubble.style.left = '60%';
-    bubble.style.transform = 'translate(-50%, -20px) scale(0.8)';
+    bubble.style.transform = 'translate(-50%, -15px) scale(0.85)';
     bubble.style.opacity = '0';
-    bubble.style.background = 'rgba(15, 23, 42, 0.92)';
-    bubble.style.border = '1.5px solid #fbbf24';
-    bubble.style.color = '#ffffff';
-    bubble.style.fontWeight = '900';
-    bubble.style.fontSize = '12px';
-    bubble.style.fontFamily = 'var(--font-sans)';
+    bubble.style.background = 'rgba(9, 13, 22, 0.96)';
+    bubble.style.border = '1px solid rgba(6, 182, 212, 0.4)';
+    bubble.style.color = '#cbd5e1';
+    bubble.style.fontSize = '10.5px';
+    bubble.style.fontFamily = 'var(--font-mono)';
     bubble.style.padding = '6px 12px';
-    bubble.style.borderRadius = '12px';
-    bubble.style.boxShadow = '0 0 15px rgba(251, 191, 36, 0.35), 0 4px 10px rgba(0, 0, 0, 0.5)';
+    bubble.style.borderRadius = '6px';
+    bubble.style.boxShadow = '0 0 20px rgba(6, 182, 212, 0.15), 0 8px 16px rgba(0, 0, 0, 0.6)';
     bubble.style.pointerEvents = 'none';
     bubble.style.whiteSpace = 'nowrap';
     bubble.style.zIndex = '20';
-    bubble.style.transition = 'transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s';
+    bubble.style.transition = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.18s';
     
-    const arrow = document.createElement('div');
-    arrow.style.position = 'absolute';
-    arrow.style.bottom = '-6px';
-    arrow.style.left = '45%';
-    arrow.style.width = '0';
-    arrow.style.height = '0';
-    arrow.style.borderLeft = '6px solid transparent';
-    arrow.style.borderRight = '6px solid transparent';
-    arrow.style.borderTop = '6.5px solid #fbbf24';
-    bubble.appendChild(arrow);
-
     mascotContainer.appendChild(bubble);
     
     setTimeout(() => {
-      bubble.style.transform = 'translate(-50%, -10px) scale(1)';
+      bubble.style.transform = 'translate(-50%, -5px) scale(1)';
       bubble.style.opacity = '1';
     }, 50);
 
     setTimeout(() => {
-      bubble.style.transform = 'translate(-50%, -20px) scale(0.8)';
+      bubble.style.transform = 'translate(-50%, -15px) scale(0.85)';
       bubble.style.opacity = '0';
-      setTimeout(() => bubble.remove(), 250);
-    }, 1300);
+      setTimeout(() => bubble.remove(), 220);
+    }, 1500);
   }
 
   // Função que executa o Beep Beep de forma isolada
@@ -767,13 +737,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     lizardEl.classList.add('runner-beeping');
     
-    // Mostra o balão "BEEP! BEEP!"
+    // Mostra o console de log "BEEP! BEEP!"
     showSpeechBubble('BEEP! BEEP!');
     
     setTimeout(() => {
       lizardEl.classList.remove('runner-beeping');
       isHunting = false;
-    }, 800);
+    }, 600);
   }
 
   // Loop de Beep Beep aleatório (executa de vez em quando)
@@ -783,7 +753,7 @@ document.addEventListener('DOMContentLoaded', () => {
         triggerBeepBeep();
       }
       startBeepBeepLoop();
-    }, 12000 + Math.random() * 8000); // Executa a cada 12 a 20 segundos
+    }, 14000 + Math.random() * 8000); // Executa a cada 14 a 22 segundos
   }
 
   // Inicializa o fluxo de ticks e loops de animação
