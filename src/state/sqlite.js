@@ -61,6 +61,26 @@ CREATE TABLE IF NOT EXISTS prepare_jobs (
 );
 
 CREATE INDEX IF NOT EXISTS prepare_jobs_status_idx ON prepare_jobs(status, created_at);
+
+CREATE TABLE IF NOT EXISTS backtest_runs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  strategy TEXT NOT NULL,
+  source TEXT NOT NULL DEFAULT 'lakehouse',
+  underlying TEXT NOT NULL,
+  interval TEXT NOT NULL,
+  book_depth INTEGER,
+  from_ts TEXT NOT NULL,
+  to_ts TEXT NOT NULL,
+  batch_size INTEGER NOT NULL,
+  params_json TEXT NOT NULL,
+  ticks INTEGER NOT NULL DEFAULT 0,
+  batches INTEGER NOT NULL DEFAULT 0,
+  summary_json TEXT NOT NULL,
+  result_json TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+
+CREATE INDEX IF NOT EXISTS backtest_runs_lookup_idx ON backtest_runs(strategy, underlying, interval, created_at);
 `;
 
 export function openStateDatabase(stateDbPath) {

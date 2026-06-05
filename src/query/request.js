@@ -35,6 +35,7 @@ export function datasetRequestFromParams(params, config) {
 
   if (dataset === 'backtest_ticks') request.bookDepth = positiveIntParam(params, 'book_depth') ?? positiveIntParam(params, 'book-depth') ?? config.backtestBookDepth;
   if (dataset === 'ohlc') request.resolution = requiredParam(params, 'resolution');
+  request.rebuild = boolParam(params, 'rebuild');
   return request;
 }
 
@@ -58,4 +59,12 @@ export function positiveIntParam(params, key) {
   const parsed = Number.parseInt(value, 10);
   if (!Number.isFinite(parsed) || parsed <= 0) throw new Error(`${key} must be a positive integer`);
   return parsed;
+}
+
+export function boolParam(params, key) {
+  const value = params.get(key);
+  if (value == null || value === '') return false;
+  if (value === 'true' || value === '1' || value === 'on') return true;
+  if (value === 'false' || value === '0' || value === 'off') return false;
+  throw new Error(`${key} must be a boolean`);
 }

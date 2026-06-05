@@ -50,15 +50,31 @@
             <option value="5m">5m</option>
           </select>
         </label>
+        <label>Strategy
+          <select name="strategy">
+            <option value="edge-sniper-v2">edge-sniper-v2</option>
+          </select>
+        </label>
+        <label>Batch size
+          <input name="batch_size" type="number" min="1" value="5000">
+        </label>
+        <label>Strategy params JSON
+          <textarea name="params" rows="3" placeholder='{"minDistanceAbs":40}'></textarea>
+        </label>
         <label class="check">
           <input name="dry_run" type="checkbox" checked>
           Dry-run
+        </label>
+        <label class="check">
+          <input name="rebuild" type="checkbox">
+          Reprocessar indisponiveis (--rebuild)
         </label>
         <button type="submit">Verificar disponibilidade</button>
       </form>
     </section>
 
     <section id="result" class="result"></section>
+    <section id="runs" class="result"></section>
   </main>
   <script type="module" src="/app.js"></script>
 </body>

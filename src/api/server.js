@@ -10,6 +10,8 @@ import { checkDatasetAvailability } from '../query/availability.js';
 import { resolveDataRequest } from '../query/dataMode.js';
 import { datasetRequestFromObject, datasetRequestFromParams } from '../query/request.js';
 import { createPrepareJobRunner } from '../prepare/runner.js';
+import { listStrategies, runBacktest } from '../backtest/engine.js';
+import { createBacktestRun, listBacktestRuns } from '../state/backtestRuns.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = path.resolve(__dirname, '../../public');
@@ -47,6 +49,31 @@ export function createApiHandler({ config, db, prepareRunner = createPrepareJobR
       if (req.method === 'GET' && url.pathname === '/api/prepare/jobs') {
         return sendJson(res, 200, { jobs: listPrepareJobs(db, { limit: url.searchParams.get('limit') }) });
       }
+      if (req.method === 'GET' && url.pathname === '/api/backtest/strategies') {
+        return sendJson(res, 200, { strategies: listStrategies() });
+      }
+      if (req.method === 'GET' && url.pathname === '/api/backtest/runs') {
+        return sendJson(res, 200, { runs: listBacktestRuns(db, { limit: url.searchParams.get('limit') }) });
+      }
+      if (req.method === 'POST' && url.pathname === '/api/backtest/run') {
+        const body = await readJson(req);
+        const request = backtestRequestFromBody(body, config);
+        const strict = resolveDataRequest(db, request, 'strict');
+        if (!strict.ready) {
+          const prepare = resolveDataRequest(db, request, 'prepare');
+          return sendJson(res, 409, {
+            error: {
+              code: 'DATA_NOT_READY',
+              message: 'Backtest data is not ready for strict execution',
+            },
+            availability: strict.availability,
+            preparation: prepare.preparation,
+          });
+        }
+        const result = await runBacktest(db, request);
+        const run = createBacktestRun(db, { request, result });
+        return sendJson(res, 200, { run, result });
+      }
       if (req.method === 'GET' && url.pathname.startsWith('/api/prepare/jobs/')) {
         const id = Number.parseInt(url.pathname.split('/').at(-1), 10);
         const job = Number.isFinite(id) ? getPrepareJob(db, id) : null;
@@ -57,10 +84,19 @@ export function createApiHandler({ config, db, prepareRunner = createPrepareJobR
       if (req.method === 'POST' && url.pathname === '/api/prepare/run') {
         const body = await readJson(req);
         const request = datasetRequestFromObject(body.request || body, config);
+        const dryRun = body.dry_run !== false;
+        if (!dryRun && request.rebuild && body.confirm_rebuild !== 'REBUILD_PARTITIONS') {
+          return sendJson(res, 400, {
+            error: {
+              code: 'CONFIRMATION_REQUIRED',
+              message: 'confirm_rebuild must be REBUILD_PARTITIONS for real rebuild jobs',
+            },
+          });
+        }
         const job = prepareRunner.enqueue({
           request,
           mode: body.mode || 'prepare',
-          dryRun: body.dry_run !== false,
+          dryRun,
         });
         return sendJson(res, 202, { job });
       }
@@ -119,4 +155,28 @@ function statusForError(err) {
   if (err instanceof SyntaxError) return 400;
   if (/required|Invalid|must be|Unsupported|JSON/.test(err.message || '')) return 400;
   return 500;
+}
+
+function backtestRequestFromBody(body, config) {
+  const dataRequest = datasetRequestFromObject({ dataset: 'backtest_ticks', ...body }, config);
+  return {
+    ...dataRequest,
+    strategy: body.strategy ? String(body.strategy) : 'edge-sniper-v2',
+    batchSize: positiveIntValue(body.batch_size ?? body.batchSize, 5000),
+    params: parseParams(body.params),
+  };
+}
+
+function positiveIntValue(value, fallback) {
+  if (value == null || value === '') return fallback;
+  const parsed = Number.parseInt(String(value), 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) throw new Error('batch_size must be a positive integer');
+  return parsed;
+}
+
+function parseParams(value) {
+  if (value == null || value === '') return {};
+  if (typeof value === 'string') return JSON.parse(value);
+  if (typeof value === 'object' && !Array.isArray(value)) return value;
+  throw new Error('params must be a JSON object');
 }

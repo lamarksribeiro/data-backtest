@@ -25,7 +25,15 @@ async function executePreparationAction({ config, db, action, dryRun }) {
       const partitions = await listScalarPartitions(pool, range);
       const partitionsResult = [];
       for (const partition of partitions) {
-        partitionsResult.push(await exportScalarsPartition({ config, db, pool, partition, dryRun }));
+        partitionsResult.push(await exportScalarsPartition({
+          config,
+          db,
+          pool,
+          partition,
+          dryRun,
+          rebuild: Boolean(flags.rebuild),
+          allowNeedsReview: Boolean(flags['allow-needs-review']),
+        }));
       }
       return { command: action.command, dryRun, partitions: partitionsResult };
     });
@@ -37,7 +45,15 @@ async function executePreparationAction({ config, db, action, dryRun }) {
       const partitionsResult = [];
       for (const partition of partitions) {
         if (action.command === 'sync:backfill-books') {
-          partitionsResult.push(await exportBooksPartition({ config, db, pool, partition, dryRun }));
+          partitionsResult.push(await exportBooksPartition({
+            config,
+            db,
+            pool,
+            partition,
+            dryRun,
+            rebuild: Boolean(flags.rebuild),
+            allowNeedsReview: Boolean(flags['allow-needs-review']),
+          }));
         } else {
           partitionsResult.push(await exportBacktestTicksPartition({
             config,
@@ -45,6 +61,8 @@ async function executePreparationAction({ config, db, action, dryRun }) {
             pool,
             partition,
             dryRun,
+            rebuild: Boolean(flags.rebuild),
+            allowNeedsReview: Boolean(flags['allow-needs-review']),
             bookDepth: Number(flags['book-depth'] || flags.bookDepth || config.backtestBookDepth),
           }));
         }
@@ -63,6 +81,7 @@ async function executePreparationAction({ config, db, action, dryRun }) {
         scalarPartition,
         resolution: requiredFlag(flags, 'resolution'),
         dryRun,
+        rebuild: Boolean(flags.rebuild),
       }));
     }
     return { command: action.command, dryRun, partitions: partitionsResult };
@@ -87,6 +106,10 @@ function flagsFromArgs(args) {
     if (!String(arg).startsWith('--')) continue;
     const key = String(arg).slice(2);
     const value = args[i + 1];
+    if (value == null || String(value).startsWith('--')) {
+      flags[key] = true;
+      continue;
+    }
     flags[key] = value;
     i += 1;
   }

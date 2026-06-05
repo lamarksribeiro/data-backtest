@@ -105,7 +105,7 @@ npm test
 
 `npm run health` inicializa o banco local de estado, garante o layout básico do lakehouse e retorna estatísticas do manifest.
 
-`npm run api` sobe a API HTTP do `data-backtest` em `DATA_BACKTEST_PORT` (default `3100`) e serve uma UI minima em `http://localhost:3100`. Endpoints iniciais: `GET /healthz`, `GET /api/manifest`, `GET /api/availability`, `GET /api/prepare`, `POST /api/prepare/run`, `GET /api/prepare/jobs` e `GET /api/prepare/jobs/:id`.
+`npm run api` sobe a API HTTP do `data-backtest` em `DATA_BACKTEST_PORT` (default `3100`) e serve uma UI minima em `http://localhost:3100`. Endpoints iniciais: `GET /healthz`, `GET /api/manifest`, `GET /api/availability`, `GET /api/prepare`, `POST /api/prepare/run`, `GET /api/prepare/jobs`, `GET /api/prepare/jobs/:id`, `GET /api/backtest/strategies`, `GET /api/backtest/runs` e `POST /api/backtest/run`.
 
 Exemplo de disponibilidade via API:
 
@@ -114,6 +114,10 @@ curl "http://localhost:3100/api/prepare?dataset=backtest_ticks&from=2026-05-01&t
 ```
 
 Jobs de preparação rodam serialmente e ficam registrados no SQLite em `prepare_jobs`. A UI cria jobs em `dry-run` por padrão; desmarque somente quando quiser executar o sync real contra `DATA_COLLECTOR_DATABASE_URL`.
+
+Para reprocessar partições `stale`, `invalid` ou `needs_review`, marque `Reprocessar indisponiveis (--rebuild)`. Execução real com rebuild exige confirmação explícita `REBUILD_PARTITIONS`; `dry-run` continua liberado para validar o plano sem escrita.
+
+`POST /api/backtest/run` executa `edge-sniper-v2` apenas quando `backtest_ticks` está pronto no modo estrito. Se faltar dado, retorna `409 DATA_NOT_READY` com disponibilidade e plano de preparação. Runs bem-sucedidos ficam persistidos em `backtest_runs` e aparecem em `GET /api/backtest/runs`.
 
 `sync:backfill` exige `DATA_COLLECTOR_DATABASE_URL` e grava apenas o dataset `scalars` nesta fase.
 
