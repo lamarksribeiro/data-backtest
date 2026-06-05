@@ -1,10 +1,12 @@
-# Implementacao Do Editor De Estrategias E Backtest Programavel
+# Implementacao Do Backtest Studio Programavel
 
 ## Objetivo
 
-Este documento descreve como implementar o Strategy Lab do `data-backtest`.
+Este documento descreve como implementar o Backtest Studio do `data-backtest`.
 
-O Strategy Lab e a camada onde o usuario cria, edita, salva, versiona, executa e analisa estrategias de backtest.
+O Backtest Studio e a camada onde o usuario cria, edita, salva, versiona, executa e analisa estrategias de backtest em ambiente controlado.
+
+Research Labs externos continuam separados. Eles sao ambientes livres de pesquisa, tuning e descoberta de estrategias. O Backtest Studio recebe apenas estrategias que devem virar artefatos salvos, versionados, reproduziveis e comparaveis.
 
 O objetivo e sair do modelo:
 
@@ -29,6 +31,44 @@ Antes de implementar este documento, o lakehouse deve ter:
 - API de availability/prepare;
 - backtest nativo `edge-sniper-v2` como golden test.
 
+## Desacoplamento Do Golden Test
+
+Estado atual de transicao:
+
+```text
+src/backtest/engine.js registra edge-sniper-v2 diretamente.
+src/api/server.js e src/cli.js usam edge-sniper-v2 como default quando nenhuma estrategia e informada.
+```
+
+Isso e aceitavel apenas enquanto o Backtest Studio ainda nao tem registry de estrategias salvas.
+
+Meta de arquitetura:
+
+```text
+Lakehouse core -> fornece dados/manifest/query
+Backtest engine -> executa runner recebido por registry generico
+Backtest Studio -> escolhe strategy_id/version e fornece codigo/runner ao engine
+```
+
+Quando `strategy_definitions`/`strategy_versions` e o runtime GLS existirem, remover o default fixo de `edge-sniper-v2` da API/CLI ou manter apenas como estrategia seed/versionada. O lakehouse core nunca deve importar `src/strategies/*`.
+
+## Status De Implementacao
+
+| Fase | Status |
+|---|---|
+| Pre-B1 (traces + endpoints + explorer basico) | pendente |
+| B1 Persistencia de estrategias | pendente |
+| B2 Editor UI | pendente |
+| B3 Validador GLS | pendente |
+| B4 Runtime GLS | pendente |
+| B5 Execucao sobre lakehouse | pendente |
+| B6 Visualizacao | pendente |
+| B7 Migracao edge-sniper | pendente |
+
+Hoje, runs nativos ja persistem `events`, `equity` e `log` dentro de `backtest_runs.result_json`. O pre-B1 normaliza isso em `backtest_event_traces` e expoe endpoints de detalhe antes do CRUD de estrategias.
+
+Equivalencia com `docs/arquitetura-editor-estrategias.md`: A→B1, B→B3, C→B4, D→B5, E→pre-B1+B6, F→B7, G→pos-MVP.
+
 ## Principios
 
 - Estrategias editaveis nunca leem Postgres diretamente.
@@ -43,14 +83,14 @@ Antes de implementar este documento, o lakehouse deve ter:
 ## Arquitetura
 
 ```text
-UI Strategy Lab
+UI Backtest Studio
   editor de codigo
   parametros
   selecao de dataset/range
   run history
   event explorer
 
-API Strategy Lab
+API Backtest Studio
   CRUD estrategias
   validacao
   execucao
@@ -122,7 +162,7 @@ CREATE TABLE IF NOT EXISTS strategy_versions (
 
 ### Evolucao De `backtest_runs`
 
-Adicionar quando o Strategy Lab entrar:
+Adicionar quando o Backtest Studio entrar:
 
 ```text
 strategy_id INTEGER NULL
@@ -314,85 +354,111 @@ Formato de erro:
 
 Bloco = funcao reutilizavel, documentada e testada.
 
+> Fonte de verdade: esta secao e o catalogo canonico das assinaturas da biblioteca padrao GLS v1. O documento `docs/arquitetura-editor-estrategias.md` descreve a intencao conceitual e deve seguir estas assinaturas. Se houver divergencia, vale o que esta aqui.
+
+Convencoes:
+
+- `tick` e o registro do dataset `backtest_ticks` (book top-N flattenado).
+- `side` e sempre `"UP"` ou `"DOWN"`.
+- `samples` e o buffer de ticks recentes mantido pelo runtime.
+- Blocos marcados como `[MVP]` sao obrigatorios para reescrever o `edge-sniper-v2` em GLS; os `[estendido]` podem entrar em fases seguintes.
+
 ### `market`
 
 ```text
-distanceFromPtb(price, ptb)
-directionFromPtb(price, ptb)
-sideFromPrice(price, ptb)
-isAbovePtb(price, ptb)
-isBelowPtb(price, ptb)
+distanceFromPtb(price, ptb)        [MVP]   distancia absoluta entre preco do ativo e price_to_beat
+directionFromPtb(price, ptb)       [MVP]   "above" | "below"
+sideFromPrice(price, ptb)          [MVP]   "UP" | "DOWN" (acima do PTB => UP)
+isAbovePtb(price, ptb)             [MVP]
+isBelowPtb(price, ptb)             [MVP]
+secondsRemaining(event, ts)        [estendido]  atalho para time.secondsUntil(event.end, ts)
+eventElapsedSeconds(event, ts)     [estendido]  atalho para time.secondsSince(event.start, ts)
 ```
+
+Nota: `directionFromPtb` retorna a orientacao textual; `sideFromPrice` ja devolve o lado operavel. Estrategias devem preferir `sideFromPrice` para escolher o lado.
 
 ### `prices`
 
 ```text
-mid(bid, ask)
-marketProbUp(tick)
-priceForSide(side, tick)
-oppositeSide(side)
+mid(bid, ask)                      [MVP]
+marketProbUp(tick)                 [MVP]   probabilidade implicita de UP a partir dos precos do book
+priceForSide(side, tick)           [MVP]
+oppositeSide(side)                 [MVP]
+normalizedProb(probUp)             [estendido]  normaliza probabilidade UP/DOWN para somar 1
 ```
 
 ### `book`
 
 ```text
-ask(side, tick)
-bid(side, tick)
-spread(side, tick)
-availableQty(side, maxPrice, tick)
-liquidityRatio(side, tick, budget)
+ask(side, tick)                    [MVP]
+bid(side, tick)                    [MVP]
+spread(side, tick)                 [MVP]
+availableQty(side, maxPrice, tick) [MVP]
+liquidityRatio(side, tick, budget) [MVP]
+consumeAsks(side, shares, tick)    [estendido]  simula consumo de liquidez por niveis
 ```
 
 ### `signals`
 
 ```text
-momentum(samples, seconds)
-slowMomentum(samples, seconds)
-volatility(samples, seconds)
-directionalEdge(side, probUp, ask)
-zScore(value, mean, std)
+momentum(samples, seconds)         [MVP]
+slowMomentum(samples, seconds)     [MVP]
+volatility(samples, seconds)       [MVP]
+directionalEdge(side, probUp, ask) [MVP]
+zScore(value, mean, std)           [MVP]
+trendStrength(samples, seconds)    [estendido]
 ```
 
 ### `risk`
 
 ```text
-sizeByBudget(price, budget)
-capOrderValue(value, max)
-stopBid(position, bid, threshold)
-takeProfit(position, bid, threshold)
-trailingStop(position, bid, config)
+sizeByBudget(price, budget)             [MVP]
+capOrderValue(value, max)               [MVP]
+stopBid(position, bid, threshold)       [MVP]
+takeProfit(position, bid, threshold)    [MVP]
+trailingStop(position, bid, config)     [MVP]
+sizeByLiquidity(side, tick, budget)     [estendido]
+stopReverseTrigger(ctx)                 [estendido]  ver nota abaixo
 ```
+
+Nota sobre stop-reverse: o `edge-sniper-v2` nativo (`src/strategies/stopReverse.js`) usa uma assinatura rica (`tick`, `priceToBeat`, `positionSide`, `timeRemainingSec`, `attempts`, `params`). O bloco GLS `[estendido]` deve encapsular essa logica; nao confundir com a API de ordens `reverse()`.
 
 ### `time`
 
 ```text
-secondsUntil(end, ts)
-secondsSince(start, ts)
-inWindow(secondsLeft, start, end)
-isNearExpiry(secondsLeft, threshold)
+secondsUntil(end, ts)              [MVP]
+secondsSince(start, ts)            [MVP]
+inWindow(secondsLeft, start, end)  [MVP]
+isNearExpiry(secondsLeft, threshold) [MVP]
 ```
 
 ### `debug`
 
 ```text
-log(name, value)
-mark(name, data)
-metric(name, value)
+log(name, value)                   [MVP]
+mark(name, data)                   [MVP]
+metric(name, value)                [MVP]
 ```
 
 ## Runtime
 
-Modulo futuro sugerido:
+Convencao de pastas do Backtest Studio (codigo futuro):
 
 ```text
-src/strategyLab/runtime/
-  parser.js
-  validator.js
-  interpreter.js
-  standardLibrary.js
-  orderSimulator.js
-  traceCollector.js
+src/backtestStudio/
+  runtime/
+    parser.js
+    validator.js
+    interpreter.js
+    standardLibrary.js
+    orderSimulator.js
+    traceCollector.js
+  state/
+    strategies.js
+    eventTraces.js
 ```
+
+`src/strategies/` permanece apenas como registry nativo transitorio/golden test ate B7. Novo codigo do Studio deve viver em `src/backtestStudio/`.
 
 ### Contexto Por Run
 
@@ -775,15 +841,23 @@ Response:
 
 ## Implementacao Em Fases
 
-### Fase B1: Persistencia De Estrategias
+### Pre-B1: Traces E Endpoints De Run — pendente
+
+- Extrair/normalizar eventos do runner nativo para `backtest_event_traces` (`src/backtestStudio/state/eventTraces.js`).
+- Criar `GET /api/backtest/runs/:id`.
+- Criar `GET /api/backtest/runs/:id/events` e `GET /api/backtest/runs/:id/events/:eventTraceId`.
+- Criar Event Explorer basico na UI (lista + detalhe de um evento).
+- Preparar `GET /api/backtest/runs/:id/chart-data?condition_id=...` para graficos.
+
+### Fase B1: Persistencia De Estrategias — pendente
 
 - Criar tabelas `strategy_definitions` e `strategy_versions`.
-- Criar helpers em `src/state/strategies.js`.
+- Criar helpers em `src/backtestStudio/state/strategies.js`.
 - Criar CRUD API.
 - Criar testes de CRUD.
 - Criar seed opcional com `edge-sniper-v2` como referencia textual.
 
-### Fase B2: Editor UI
+### Fase B2: Editor UI — pendente
 
 - Adicionar tela/lista de estrategias.
 - Adicionar editor simples.
@@ -792,7 +866,7 @@ Response:
 - Mostrar parametros detectados de forma simples.
 - Testar static UI/API.
 
-### Fase B3: Validador GLS MVP
+### Fase B3: Validador GLS MVP — pendente
 
 - Definir sintaxe minima.
 - Implementar parser.
@@ -801,7 +875,7 @@ Response:
 - Mostrar erros no editor.
 - Testar casos validos/invalidos.
 
-### Fase B4: Runtime GLS MVP
+### Fase B4: Runtime GLS MVP — pendente
 
 - Implementar interpreter.
 - Implementar standard library inicial.
@@ -810,7 +884,7 @@ Response:
 - Rodar estrategia simples sobre ticks mockados.
 - Testar determinismo.
 
-### Fase B5: Execucao Sobre Lakehouse
+### Fase B5: Execucao Sobre Lakehouse — pendente
 
 - Integrar runtime com `DuckDbTickProvider`.
 - Bloquear sem availability strict.
@@ -819,7 +893,7 @@ Response:
 - Expor detalhes do run.
 - Testar com Parquet pequeno.
 
-### Fase B6: Visualizacao
+### Fase B6: Visualizacao — pendente
 
 - Tela de run detail.
 - Tabela de eventos.
@@ -828,7 +902,7 @@ Response:
 - Markers de ordens/marks.
 - Logs por evento.
 
-### Fase B7: Migracao Edge Sniper
+### Fase B7: Migracao Edge Sniper — pendente
 
 - Mapear blocos usados pelo nativo.
 - Adicionar blocos faltantes.
@@ -879,7 +953,7 @@ Response:
 - abrir run;
 - abrir evento.
 
-## Criterios De Aceite Do Strategy Lab MVP
+## Criterios De Aceite Do Backtest Studio MVP
 
 - Usuario cria estrategia pela UI.
 - Usuario salva codigo como nova versao.
@@ -907,8 +981,9 @@ Response:
 
 ## Ordem Recomendada Imediata
 
+0. Normalizar traces a partir do runner nativo (`backtest_event_traces`), sem duplicar o que ja existe em `result_json`.
 1. Implementar `backtest_event_traces` para o runner nativo atual.
-2. Criar endpoints de detalhes do run.
+2. Criar endpoints de detalhes do run (`GET /api/backtest/runs/:id`, eventos e detalhe por `eventTraceId`).
 3. Criar Event Explorer basico.
 4. Criar CRUD de estrategias.
 5. Criar editor simples.

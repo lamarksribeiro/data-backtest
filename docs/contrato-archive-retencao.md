@@ -368,4 +368,4 @@ Archive status registra cobertura validada.
 Retencao real permanece desligada.
 ```
 
-Essa decisao pode ser revista no futuro, mas nao deve bloquear o desenvolvimento da UI de backtest nem do Strategy Lab.
+Essa decisao pode ser revista no futuro, mas nao deve bloquear o desenvolvimento da UI de backtest nem do Backtest Studio.

@@ -1,8 +1,8 @@
-# Arquitetura Do Editor De Estrategias E Backtest Programavel
+# Arquitetura Do Backtest Studio Programavel
 
 ## Objetivo
 
-Transformar o `data-backtest` em um ambiente completo de criacao, execucao, comparacao e visualizacao de estrategias, sem prender o sistema a uma estrategia especifica como `edge-sniper-v2`.
+Transformar o `data-backtest` em um ambiente controlado de criacao, execucao, comparacao e visualizacao de estrategias versionadas, sem prender o sistema a uma estrategia especifica como `edge-sniper-v2`.
 
 O objetivo nao e apenas ter estrategias hardcoded no codigo do projeto. O objetivo e ter um sistema onde o usuario possa:
 
@@ -17,7 +17,9 @@ O objetivo nao e apenas ter estrategias hardcoded no codigo do projeto. O objeti
 - ver pontos de entrada, saida, stop, take profit, reversao e logs sobre o grafico;
 - comparar runs e parametros.
 
-Referencia mental: algo parecido com MetaTrader/TradingView, mas focado no dominio GoldenLens/Polymarket crypto-updown e usando o lakehouse Parquet/DuckDB como fonte.
+Referencia mental: algo parecido com MetaTrader/TradingView para execucao reproduzivel, mas focado no dominio GoldenLens/Polymarket crypto-updown e usando o lakehouse Parquet/DuckDB como fonte.
+
+Este documento nao descreve os laboratorios livres de pesquisa. Laboratorios devem existir como Research Labs externos, usando framework/scripts/notebooks para descoberta de estrategias. O Backtest Studio recebe estrategias candidatas quando elas precisam virar codigo salvo, versionado, executavel e comparavel.
 
 ## Separacao De Responsabilidades
 
@@ -36,8 +38,8 @@ data-backtest lakehouse
   lake_manifest
   DuckDB query layer
 
-data-backtest strategy lab
-  editor de estrategias
+data-backtest Backtest Studio
+  editor de codigo (UI)
   biblioteca de blocos/funcoes
   compilador/validador
   engine programavel
@@ -49,8 +51,35 @@ data-backtest strategy lab
 Regra principal:
 
 ```text
-O editor de estrategias nunca le direto do Postgres.
+O Backtest Studio nunca le direto do Postgres.
 Ele executa sobre datasets validos resolvidos pelo lake_manifest.
+```
+
+## Research Labs Externos
+
+Laboratorios sao ambientes de estudo e descoberta. Eles podem usar diversos recursos, frameworks, notebooks, scripts, tuning, otimizacao e fontes auxiliares.
+
+Eles nao devem ficar dentro do Backtest Studio porque possuem objetivos diferentes:
+
+- Research Labs aceitam experimentacao rapida e codigo descartavel.
+- Backtest Studio exige estrategia salva, versionada, reproduzivel e explicavel.
+- Research Labs podem quebrar e mudar rapido.
+- Backtest Studio deve ser estavel para comparar resultados.
+
+Contrato entre eles:
+
+```text
+Research Labs externos
+  usam lakehouse/API/framework
+  descobrem ideias
+  geram estrategia candidata
+
+Backtest Studio
+  recebe a candidata
+  salva versao
+  valida codigo
+  executa em dados strict
+  registra run e trace
 ```
 
 ## Problema Atual
@@ -154,9 +183,8 @@ strategy "PTB Momentum" {
   onTick(tick, event) {
     let secondsLeft = time.secondsUntil(event.end, tick.ts)
     let distance = market.distanceFromPtb(tick.underlyingPrice, event.priceToBeat)
-    let direction = market.directionFromPtb(tick.underlyingPrice, event.priceToBeat)
+    let side = market.sideFromPrice(tick.underlyingPrice, event.priceToBeat)
     let probUp = prices.marketProbUp(tick)
-    let side = direction == "above" ? "UP" : "DOWN"
     let ask = book.ask(side, tick)
     let bid = book.bid(side, tick)
     let edge = signals.directionalEdge(side, probUp, ask)
@@ -205,7 +233,7 @@ Exemplos:
 
 ```js
 market.distanceFromPtb(price, ptb)
-market.directionFromPtb(price, ptb)
+market.sideFromPrice(price, ptb)
 prices.marketProbUp(tick)
 book.ask("UP", tick)
 book.bid("DOWN", tick)
@@ -223,6 +251,8 @@ Assim, a estrategia fica didatica e modificavel, mas a parte dificil fica encaps
 
 ## Categorias De Blocos
 
+> As assinaturas canonicas (com argumentos e a separacao MVP vs estendido) ficam em `docs/implementacao-editor-backtest.md`, secao "Biblioteca Padrao De Blocos". Esta secao e a visao conceitual por categoria. Em caso de divergencia, vale o documento de implementacao.
+
 ### `market`
 
 Funcoes relacionadas ao mercado/evento.
@@ -230,6 +260,7 @@ Funcoes relacionadas ao mercado/evento.
 ```text
 distanceFromPtb
 directionFromPtb
+sideFromPrice
 isAbovePtb
 isBelowPtb
 eventElapsedSeconds
@@ -270,7 +301,6 @@ momentum
 slowMomentum
 volatility
 zScore
-edge
 directionalEdge
 trendStrength
 ```
@@ -512,8 +542,9 @@ params_schema_json
 compiled_json
 validation_json
 created_at
-created_by
 ```
+
+`created_by` fica reservado para autenticacao futura; nao entra no MVP.
 
 ### `strategy_blocks`
 
@@ -535,7 +566,7 @@ updated_at
 
 ### `backtest_runs`
 
-Ja existe base inicial.
+Ja existe base inicial. Hoje persiste `summary_json` e um `result_json` com `events`, `equity` e `log` do runner nativo.
 
 Deve evoluir para guardar:
 
@@ -761,13 +792,17 @@ POST   /api/backtest/run
 GET    /api/backtest/runs
 GET    /api/backtest/runs/:id
 GET    /api/backtest/runs/:id/events
-GET    /api/backtest/runs/:id/events/:condition_id
+GET    /api/backtest/runs/:id/events/:eventTraceId
 GET    /api/backtest/runs/:id/chart-data?condition_id=...
 ```
 
+Detalhe de evento usa `eventTraceId` (PK de `backtest_event_traces`). `chart-data` continua filtrando por `condition_id`.
+
 ## Fases De Implementacao
 
-### Fase A: Fundacao Do Strategy Lab
+> Equivalencia com `docs/implementacao-editor-backtest.md`: Fase A→B1, B→B3, C→B4, D→B5, E→B6, F→B7, G→pos-MVP.
+
+### Fase A: Fundacao Do Backtest Studio — pendente (B1; traces em pre-B1)
 
 - Criar tabelas `strategy_definitions` e `strategy_versions`.
 - Criar CRUD basico de estrategias.
@@ -775,7 +810,7 @@ GET    /api/backtest/runs/:id/chart-data?condition_id=...
 - Salvar codigo como texto.
 - Criar versoes imutaveis ao salvar.
 
-### Fase B: Linguagem GLS V1
+### Fase B: Linguagem GLS V1 — pendente (B3)
 
 - Definir gramatica minima.
 - Criar parser.
@@ -784,7 +819,7 @@ GET    /api/backtest/runs/:id/chart-data?condition_id=...
 - Criar interpretador seguro.
 - Implementar `params`, `state`, `position`, `onEventStart`, `onTick`, `onEventEnd`.
 
-### Fase C: Biblioteca Padrao De Blocos
+### Fase C: Biblioteca Padrao De Blocos — pendente (B4)
 
 - Implementar blocos `market`.
 - Implementar blocos `prices`.
@@ -794,7 +829,7 @@ GET    /api/backtest/runs/:id/chart-data?condition_id=...
 - Implementar blocos `time`.
 - Documentar cada bloco no autocomplete.
 
-### Fase D: Engine Programavel
+### Fase D: Engine Programavel — pendente (B5)
 
 - Criar runner que executa GLS sobre `DuckDbTickProvider`.
 - Garantir modo strict antes de rodar.
@@ -803,7 +838,7 @@ GET    /api/backtest/runs/:id/chart-data?condition_id=...
 - Registrar logs/marks/metrics.
 - Aplicar limites de seguranca.
 
-### Fase E: Visualizacao
+### Fase E: Visualizacao — pendente (pre-B1 + B6)
 
 - Tela de resumo do run.
 - Tabela de eventos.
@@ -812,7 +847,9 @@ GET    /api/backtest/runs/:id/chart-data?condition_id=...
 - Marcadores de entrada/saida/stop/take profit.
 - Logs por tick/evento.
 
-### Fase F: Migracao Do Edge Sniper
+### Fase F: Migracao Do Edge Sniper — pendente (B7)
+
+O nativo usa stop-reverse interno (`src/strategies/stopReverse.js`), nao a API GLS `reverse()`. Na migracao, mapear para blocos `risk.stopReverseTrigger` / budget equivalentes ou manter logica encapsulada no simulador.
 
 - Mapear todos os componentes usados pelo `edge-sniper-v2` nativo.
 - Criar blocos equivalentes.
@@ -820,7 +857,7 @@ GET    /api/backtest/runs/:id/chart-data?condition_id=...
 - Rodar paridade contra o nativo.
 - Registrar diferencas esperadas.
 
-### Fase G: Estrategias Do Usuario
+### Fase G: Estrategias Do Usuario — pos-MVP
 
 - Permitir duplicar estrategia.
 - Permitir comparar versoes.
@@ -876,11 +913,11 @@ Nao incluir no MVP:
 
 ## Resumo
 
-O `data-backtest` deve evoluir de "um lugar que roda edge-sniper-v2" para um laboratorio programavel de estrategias.
+O `data-backtest` deve evoluir de "um lugar que roda edge-sniper-v2" para um Backtest Studio programavel de estrategias versionadas.
 
 O lakehouse continua sendo a base de dados confiavel.
 
-O editor de estrategias fica acima dele.
+O Backtest Studio fica acima dele.
 
 As estrategias viram codigo salvo, versionado e executavel.
 

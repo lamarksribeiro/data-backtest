@@ -18,11 +18,11 @@ O Postgres continua sendo a fonte de verdade operacional. O lakehouse e derivado
 - Exclusao do Postgres nao deve ser tratada como meta operacional normal. Deve existir apenas como opcao configuravel, auditavel, desativada por padrao e condicionada a validacao do lakehouse.
 - Opcao padrao deve ser manter dados no Postgres por tempo indefinido.
 - Estrategias devem usar uma query layer unica, independente da origem fisica dos dados.
-- A query layer deve nascer generica para servir backtests, labs e futuro `data-robot`.
+- A query layer deve nascer generica para servir o Backtest Studio, Research Labs externos e futuro `data-robot`.
 - Lakehouse deve ser reconstruivel a partir do Postgres enquanto os dados ainda existirem nele ou a partir de backups.
 - O engine de backtest nao deve ficar preso a uma estrategia hardcoded. `edge-sniper-v2` e o golden test inicial; a arquitetura alvo deve permitir estrategias editaveis, salvas, versionadas e executadas pelo proprio sistema.
 
-## Strategy Lab Programavel
+## Backtest Studio Programavel
 
 Este documento foca no lakehouse, sync, manifest, query layer e arquivamento validado. Retencao/exclusao do Postgres aparece apenas como capacidade opcional futura, nunca como comportamento padrao.
 
@@ -33,9 +33,10 @@ docs/implementacao-lakehouse.md          guia pratico para implementar lakehouse
 docs/operacao-lakehouse.md               runbook operacional do lakehouse
 docs/contrato-archive-retencao.md        contrato com data-colector e retencao opcional
 docs/contratos-api-schemas.md            contratos de API e schemas SQLite
+docs/paridade-edge-sniper-v2.md          evidencia do golden test nativo
 ```
 
-A arquitetura detalhada para editor de estrategias, linguagem simples, blocos/funcoes reutilizaveis, traces por evento e visualizacao de execucao esta em:
+A arquitetura detalhada do Backtest Studio (linguagem GLS, blocos, runtime, traces e visualizacao) esta em:
 
 ```text
 docs/arquitetura-editor-estrategias.md
@@ -51,6 +52,25 @@ Resumo da decisao:
 - Blocos devem ser funcoes reutilizaveis documentadas, usadas dentro desse codigo.
 - Runs devem salvar resultado agregado e trace por evento para explicar cada decisao.
 
+## Research Labs Externos
+
+Laboratorios de pesquisa nao devem ficar dentro do Backtest Studio.
+
+Eles sao ambientes livres para descoberta de estrategias, tuning, notebooks, scripts experimentais, analise de features e estudos que podem usar recursos variados. Esses laboratorios devem consumir o lakehouse e, quando util, APIs/frameworks do `data-backtest`, mas nao fazem parte do Backtest Studio.
+
+Fluxo recomendado:
+
+```text
+Research Labs externos -> estrategia candidata -> Backtest Studio -> estrategia versionada/validada
+```
+
+Regras:
+
+- Research Labs podem usar dados do lakehouse via manifest/API/framework.
+- Research Labs nao escrevem diretamente no `lake_manifest`.
+- Research Labs nao substituem o versionamento de estrategias do Backtest Studio.
+- Codigo experimental so vira estrategia formal quando for salvo/versionado no Backtest Studio.
+
 ## Arquitetura Alvo
 
 ```text
@@ -65,14 +85,26 @@ data-colector
   API REST
   painel administrativo
 
-data-backtest
+data-backtest lakehouse core
   sync incremental
   manifest/checkpoints
   lakehouse Parquet
   DuckDB query layer
-  engine de backtest
-  estrategias em blocos
+
+data-backtest Backtest Studio
+  engine de backtest programavel
+  estrategias salvas/versionadas
+  biblioteca de blocos/funcoes
+  traces por evento
   API/UI
+```
+
+Fronteira obrigatoria:
+
+```text
+Lakehouse core nao conhece estrategias especificas.
+Backtest Studio consome o lakehouse core.
+Estrategias nativas temporarias vivem no engine/backtest, nao no sync/manifest/query layer.
 ```
 
 ## Armazenamento No Coolify
@@ -637,110 +669,128 @@ audit_log completo
 
 ## Fases De Implementacao
 
-### Fase 0: Decisoes E Preparacao
+Status snapshot (jun/2026). O README e `docs/implementacao-lakehouse.md` sao a referencia operacional do que ja esta no codigo.
 
-- [ ] Confirmar nome do novo projeto: `data-backtest`.
-- [ ] Confirmar caminho do lakehouse no Coolify: `/data/goldenlens/lakehouse`.
-- [ ] Confirmar caminho interno do container: `/lake`.
+| Fase (este doc) | Lakehouse | Status |
+|---|---|---|
+| 0 | — | concluida (decisoes) |
+| 1 | L1 | concluida |
+| 2 | L2 | concluida |
+| 3 | L3 | concluida |
+| 4 | L4 | concluida |
+| 5 | L5 | parcial |
+| 6 | L7 + adapter | parcial |
+| 7 | archive | parcial (`data-backtest` publica; `data-colector` pendente) |
+| 8–10 | — | pendente (retencao opcional) |
+| 9.1 | L6 | parcial (UI minima) |
+| 9.2 | B1–B7 | pendente (ver docs do Backtest Studio) |
+| 11 | L8 | pendente |
+| 12–13 | — | opcional futuro |
+
+### Fase 0: Decisoes E Preparacao — concluida
+
+- [x] Confirmar nome do novo projeto: `data-backtest`.
+- [x] Confirmar caminho do lakehouse no Coolify: `/data/goldenlens/lakehouse`.
+- [x] Confirmar caminho interno do container: `/lake`.
 - [ ] Confirmar se o primeiro deploy usara o Postgres primario read-only ou uma replica.
-- [ ] Confirmar janela inicial de retencao sugerida: indefinida.
-- [ ] Confirmar book depth padrao para `backtest_ticks`: 10.
-- [ ] Confirmar modo padrao de dados para backtest: `strict`.
+- [x] Confirmar janela inicial de retencao sugerida: indefinida.
+- [x] Confirmar book depth padrao para `backtest_ticks`: 10.
+- [x] Confirmar modo padrao de dados para backtest: `strict`.
 - [ ] Confirmar data inicial do backfill historico a partir do primeiro evento no Postgres.
 
-### Fase 1: Estado E Manifest Do Data-Backtest
+### Fase 1: Estado E Manifest Do Data-Backtest — concluida (L1)
 
-- [ ] Criar estrutura inicial do `data-backtest`.
-- [ ] Criar configuracao `LAKE_ROOT`.
-- [ ] Criar configuracao `STATE_DB_PATH`.
-- [ ] Criar banco local de estado em SQLite.
-- [ ] Habilitar SQLite WAL para suportar API, sync e workers concorrentes.
-- [ ] Criar tabela `lake_manifest`.
-- [ ] Adicionar colunas `resolution`, `book_depth`, `active_path`, `run_id` e `source_fingerprint` no manifest.
-- [ ] Implementar status `missing`, `pending`, `writing`, `valid`, `invalid`, `needs_review`, `rebuilding` e `stale`.
-- [ ] Implementar publicacao atomica de `active_path` em transacao.
-- [ ] Criar utilitario para resolver paths Hive partitioned.
-- [ ] Criar healthcheck verificando acesso a `/lake`.
-- [ ] Criar comando CLI para listar manifest.
-- [ ] Criar comando CLI para validar permissoes de escrita.
+- [x] Criar estrutura inicial do `data-backtest`.
+- [x] Criar configuracao `LAKE_ROOT`.
+- [x] Criar configuracao `STATE_DB_PATH`.
+- [x] Criar banco local de estado em SQLite.
+- [x] Habilitar SQLite WAL para suportar API, sync e workers concorrentes.
+- [x] Criar tabela `lake_manifest`.
+- [x] Adicionar colunas `resolution`, `book_depth`, `active_path`, `run_id` e `source_fingerprint` no manifest.
+- [x] Implementar status `missing`, `pending`, `writing`, `valid`, `invalid`, `needs_review`, `rebuilding` e `stale`.
+- [x] Implementar publicacao atomica de `active_path` em transacao.
+- [x] Criar utilitario para resolver paths Hive partitioned.
+- [x] Criar healthcheck verificando acesso a `/lake`.
+- [x] Criar comando CLI para listar manifest.
+- [x] Criar comando CLI para validar permissoes de escrita.
 
-### Fase 2: Backfill E Sync Inicial De Scalars
+### Fase 2: Backfill E Sync Inicial De Scalars — concluida (L2)
 
-- [ ] Criar cliente read-only para Postgres do `data-colector`.
-- [ ] Criar query de eventos selados baseada em `event_quality`.
-- [ ] Criar comando `sync backfill --from --to --underlying --interval`.
-- [ ] Criar export diario de `scalars`.
-- [ ] Escrever primeiro em `/lake/.tmp` e mover para o path final apenas apos validacao.
-- [ ] Nomear arquivos como `part-<run-id>.parquet`.
-- [ ] Escrever Parquet ZSTD com DuckDB.
-- [ ] Registrar particao em `lake_manifest`.
-- [ ] Validar contagem real total consultada no Postgres no momento do export.
-- [ ] Validar contagem real por evento.
-- [ ] Comparar `event_quality.ticks_recorded` como valor esperado operacional e registrar divergencias.
-- [ ] Validar quantidade de eventos, `min_ts` e `max_ts`.
-- [ ] Calcular e persistir `source_fingerprint` por particao/evento, incluindo checksum de valores mutaveis (price_to_beat, precos), nao so contagens.
-- [ ] Implementar cascata de invalidacao: stale/rebuild da fonte propaga para datasets derivados (scalars->ohlc; books->backtest_ticks).
-- [ ] Ignorar particoes `valid` em execucoes repetidas.
-- [ ] Reprocessar particoes `writing` e `invalid`.
-- [ ] Reprocessar particoes `stale`.
-- [ ] Suportar rebuild de particao diaria.
-- [ ] Suportar dry-run do sync.
-- [ ] Implementar sync incremental com margem configuravel apos `event_quality`.
+- [x] Criar cliente read-only para Postgres do `data-colector`.
+- [x] Criar query de eventos selados baseada em `event_quality`.
+- [x] Criar comando `sync backfill --from --to --underlying --interval`.
+- [x] Criar export diario de `scalars`.
+- [x] Escrever primeiro em `/lake/.tmp` e mover para o path final apenas apos validacao.
+- [x] Nomear arquivos como `part-<run-id>.parquet`.
+- [x] Escrever Parquet ZSTD com DuckDB.
+- [x] Registrar particao em `lake_manifest`.
+- [x] Validar contagem real total consultada no Postgres no momento do export.
+- [x] Validar contagem real por evento.
+- [x] Comparar `event_quality.ticks_recorded` como valor esperado operacional e registrar divergencias.
+- [x] Validar quantidade de eventos, `min_ts` e `max_ts`.
+- [x] Calcular e persistir `source_fingerprint` por particao/evento, incluindo checksum de valores mutaveis (price_to_beat, precos), nao so contagens.
+- [x] Implementar cascata de invalidacao: stale/rebuild da fonte propaga para datasets derivados (scalars->ohlc; books->backtest_ticks).
+- [x] Ignorar particoes `valid` em execucoes repetidas.
+- [x] Reprocessar particoes `writing` e `invalid`.
+- [x] Reprocessar particoes `stale`.
+- [x] Suportar rebuild de particao diaria.
+- [x] Suportar dry-run do sync.
+- [x] Implementar sync incremental com margem configuravel apos `event_quality`.
 - [ ] Criar logs estruturados de sync.
 
-### Fase 3: Books E Backtest Ticks
+### Fase 3: Books E Backtest Ticks — concluida (L3)
 
-- [ ] Criar export Parquet de `books`.
-- [ ] Definir parser de JSONB do book.
-- [ ] Criar flatten do book para top N niveis.
-- [ ] Criar dataset `backtest_ticks`.
-- [ ] Validar contagem do `backtest_ticks`.
+- [x] Criar export Parquet de `books`.
+- [x] Definir parser de JSONB do book.
+- [x] Criar flatten do book para top N niveis.
+- [x] Criar dataset `backtest_ticks`.
+- [x] Validar contagem do `backtest_ticks`.
 - [ ] Medir tamanho do Parquet gerado.
 - [ ] Medir tempo de leitura DuckDB.
 - [ ] Comparar performance contra leitura atual do Postgres.
 
-### Fase 4: OHLC
+### Fase 4: OHLC — concluida (L4)
 
-- [ ] Criar geracao de candles 1s.
-- [ ] Criar geracao de candles 5s.
-- [ ] Criar geracao de candles 1m.
-- [ ] Criar geracao de candles 5m.
-- [ ] Registrar cada resolucao de OHLC no manifest usando a coluna `resolution`.
-- [ ] Criar query layer para candles.
+- [x] Criar geracao de candles 1s.
+- [x] Criar geracao de candles 5s.
+- [x] Criar geracao de candles 1m.
+- [x] Criar geracao de candles 5m.
+- [x] Registrar cada resolucao de OHLC no manifest usando a coluna `resolution`.
+- [x] Criar query layer para candles.
 - [ ] Substituir preview de grafico por OHLC onde aplicavel.
 - [ ] Validar candles contra ticks brutos.
 
-### Fase 5: Query Layer
+### Fase 5: Query Layer — parcial (L5)
 
-- [ ] Criar interface `TickProvider`.
-- [ ] Criar `DuckDbTickProvider`.
+- [x] Criar interface `TickProvider`.
+- [x] Criar `DuckDbTickProvider`.
 - [ ] Criar `PostgresTickProvider` para fallback.
 - [ ] Criar `HybridTickProvider` futuro para live-tail.
-- [ ] Criar verificador de disponibilidade no manifest antes de iniciar backtest.
-- [ ] Resolver arquivos por `active_path` no manifest, nunca por glob bruto.
-- [ ] Congelar a lista de arquivos no inicio do run para evitar troca durante rebuild.
-- [ ] Implementar modo `strict` para bloquear execucao se faltar Parquet validado.
-- [ ] Implementar modo `prepare` para enfileirar sync/rebuild antes de rodar.
-- [ ] Restringir modo `hybrid` a debug/desenvolvimento.
-- [ ] Implementar `streamTicks`.
+- [x] Criar verificador de disponibilidade no manifest antes de iniciar backtest.
+- [x] Resolver arquivos por `active_path` no manifest, nunca por glob bruto.
+- [x] Congelar a lista de arquivos no inicio do run para evitar troca durante rebuild.
+- [x] Implementar modo `strict` para bloquear execucao se faltar Parquet validado.
+- [x] Implementar modo `prepare` para enfileirar sync/rebuild antes de rodar.
+- [x] Restringir modo `hybrid` a debug/desenvolvimento.
+- [x] Implementar `streamTicks`.
 - [ ] Implementar `streamEvents`.
-- [ ] Implementar `streamCandles`.
+- [x] Implementar `streamCandles`.
 - [ ] Implementar `includeBooks`.
-- [ ] Implementar filtros por underlying, interval, from e to.
-- [ ] Criar testes de paridade com dados pequenos.
+- [x] Implementar filtros por underlying, interval, from e to.
+- [x] Criar testes de paridade com dados pequenos.
 
-### Fase 6: Integracao Com Labs Legados
+### Fase 6: Integracao Com Referencias Legadas — parcial (L7 + adapter)
 
-- [ ] Mapear `getTicksForBacktestBatches` do `polymarket-test`.
-- [ ] Criar adapter compativel no `data-backtest`.
-- [ ] Garantir que o `TickProvider` seja generico o suficiente para futuro `data-robot`.
-- [ ] Migrar um lab simples para a query layer nova.
-- [ ] Migrar `edgeSniper` como primeiro golden test.
-- [ ] Comparar resultado antigo vs novo.
-- [ ] Registrar divergencias conhecidas.
-- [ ] Migrar labs restantes por prioridade.
+- [x] Mapear `getTicksForBacktestBatches` do `polymarket-test`.
+- [x] Criar adapter compativel no `data-backtest`.
+- [x] Garantir que o `TickProvider` seja generico o suficiente para futuro `data-robot`.
+- [x] Migrar um lab simples para a query layer nova.
+- [x] Migrar `edgeSniper` como primeiro golden test.
+- [x] Comparar resultado antigo vs novo.
+- [x] Registrar divergencias conhecidas.
+- [ ] Migrar ou adaptar referencias legadas por prioridade, sem trazer laboratorios experimentais para dentro do Backtest Studio.
 
-### Fase 7: Controle De Arquivamento No Data-Colector
+### Fase 7: Controle De Arquivamento No Data-Colector — parcial
 
 - [ ] Criar migracao `event_archive_status`.
 - [ ] Criar endpoint admin para receber status de arquivamento.
@@ -750,10 +800,12 @@ audit_log completo
 - [ ] Atualizar scripts de reparo/backfill do `data-colector` para marcar eventos afetados como `stale`.
 - [ ] Criar job de reconciliacao periodica que recalcula `source_fingerprint` de particoes recentes e marca `stale` em caso de drift (rede de seguranca).
 - [ ] Criar auditoria para atualizacoes de arquivamento.
-- [ ] Atualizar `data-backtest` para publicar status validado.
+- [x] Atualizar `data-backtest` para publicar status validado.
 - [ ] Criar testes de integracao.
 
-### Fase 8: Retencao Configuravel
+### Fase 8: Retencao Opcional Configuravel — pendente
+
+Capacidade administrativa opcional. Deve nascer desativada e nao deve apagar dados por padrao.
 
 - [ ] Criar migracao de `retention_config`.
 - [ ] Criar servico para ler e atualizar configuracao.
@@ -763,33 +815,36 @@ audit_log completo
 - [ ] Criar endpoint `POST /api/admin/retention/run`.
 - [ ] Alterar `retentionJob` para usar configuracao global.
 - [ ] Garantir default de retencao indefinida.
+- [ ] Garantir `retention_enabled = false` por padrao.
 - [ ] Garantir `dry_run = true` por padrao.
 - [ ] Adicionar audit log para alteracoes.
 
-### Fase 9: Tela De Retencao
+### Fase 9: Tela De Retencao Opcional — pendente
 
-- [ ] Criar aba `Retencao` em `Banco de Dados`.
+- [ ] Criar aba `Retencao Opcional` em `Banco de Dados`.
 - [ ] Renderizar configuracao atual.
 - [ ] Permitir alternar retencao indefinida.
 - [ ] Permitir configurar numero de dias.
 - [ ] Permitir configurar requisitos de lakehouse.
-- [ ] Mostrar estimativa de exclusao.
+- [ ] Mostrar estimativa de remocao apenas em dry-run.
 - [ ] Mostrar eventos bloqueados por falta de arquivamento.
 - [ ] Mostrar se particoes Parquet ausentes/invalidas impedem exclusao.
 - [ ] Adicionar botao de dry-run.
-- [ ] Adicionar confirmacao forte para execucao real.
+- [ ] Adicionar confirmacao forte para execucao real, se essa opcao for habilitada no futuro.
 - [ ] Mostrar historico das ultimas execucoes.
 
-### Fase 9.1: UI De Preparacao De Dados Para Backtest
+### Fase 9.1: UI De Preparacao De Dados Para Backtest — parcial (L6)
 
-- [ ] Mostrar disponibilidade do periodo solicitado antes de rodar backtest.
-- [ ] Mostrar particoes prontas, ausentes e invalidas.
-- [ ] Adicionar acao `Preparar dados ausentes e rodar`.
-- [ ] Adicionar acao `Reprocessar invalidos`.
-- [ ] Bloquear execucao normal no modo `strict` quando faltar Parquet.
-- [ ] Exibir progresso do sync/rebuild antes da execucao do backtest.
+- [x] Mostrar disponibilidade do periodo solicitado antes de rodar backtest.
+- [x] Mostrar particoes prontas, ausentes e invalidas.
+- [x] Adicionar acao `Preparar dados ausentes e rodar`.
+- [x] Adicionar acao `Reprocessar invalidos`.
+- [x] Bloquear execucao normal no modo `strict` quando faltar Parquet.
+- [x] Exibir progresso do sync/rebuild antes da execucao do backtest.
 
-### Fase 9.2: Strategy Lab Programavel
+### Fase 9.2: Backtest Studio Programavel — pendente (B1–B7)
+
+> O detalhamento autoritativo desta fase (schema SQLite, linguagem GLS v1, biblioteca de blocos, runtime, traces e fases B1-B7) vive em `docs/arquitetura-editor-estrategias.md` e `docs/implementacao-editor-backtest.md`. A lista abaixo e o resumo de alto nivel; ao implementar, siga os documentos do Backtest Studio.
 
 - [ ] Criar tabelas `strategy_definitions` e `strategy_versions`.
 - [ ] Criar CRUD de estrategias pela API.
@@ -823,7 +878,7 @@ Nao e objetivo padrao do projeto. Fazer apenas se houver decisao operacional exp
 - [ ] Testar com dry-run.
 - [ ] Habilitar execucao real somente apos validacao e decisao operacional explicita.
 
-### Fase 11: Operacao No Coolify
+### Fase 11: Operacao No Coolify — pendente (L8)
 
 - [ ] Criar volume persistente `/data/goldenlens/lakehouse`.
 - [ ] Criar volume persistente `/data/goldenlens/backtest-state`.
@@ -919,6 +974,6 @@ Nao bloqueia o MVP. Fazer apenas se o Postgres continuar sofrendo com heap/TOAST
 11. Criar `event_archive_status` para auditoria de arquivamento validado.
 12. Criar configuracao de retencao opcional mantendo exclusao desativada por padrao.
 13. Fechar UI de preparacao/backtest sobre dados validados.
-14. Evoluir Strategy Lab programavel.
+14. Evoluir Backtest Studio programavel.
 15. Avaliar retencao real somente se houver decisao operacional futura.
 16. Avaliar live-tail e split vertical depois.

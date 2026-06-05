@@ -10,23 +10,23 @@ O Postgres continua como fonte de verdade operacional; o lakehouse é derivado, 
 - [Implementação do lakehouse](docs/implementacao-lakehouse.md)
 - [Operação do lakehouse](docs/operacao-lakehouse.md)
 - [Contrato de archive e retenção opcional](docs/contrato-archive-retencao.md)
-- [Editor de estrategias e backtest programavel](docs/arquitetura-editor-estrategias.md)
-- [Implementação do editor/backtest programável](docs/implementacao-editor-backtest.md)
+- [Arquitetura do Backtest Studio programável](docs/arquitetura-editor-estrategias.md)
+- [Implementação do Backtest Studio](docs/implementacao-editor-backtest.md)
 - [Contratos de API e schemas](docs/contratos-api-schemas.md)
 - [Paridade Edge Sniper V2](docs/paridade-edge-sniper-v2.md)
 
 ## Status atual
 
-Implementada a base da Fase 1:
+Snapshot operacional: lakehouse **L1–L7 concluído**; operação em produção (**L8**) e Backtest Studio (**B1–B7**) ainda pendentes. Detalhes por fase em [Implementação do lakehouse](docs/implementacao-lakehouse.md) e [Implementação do Backtest Studio](docs/implementacao-editor-backtest.md).
 
-- Projeto Node.js ESM.
-- Configuração por ambiente.
+Os paths `arquitetura-editor-estrategias.md` e `implementacao-editor-backtest.md` são históricos; o conteúdo descreve o Backtest Studio.
+
+### Lakehouse concluído (L1–L7)
+
+- Projeto Node.js ESM, configuração por ambiente e CLI completa.
 - State store SQLite em modo WAL.
 - Tabela `lake_manifest` com status `missing`, `pending`, `writing`, `valid`, `invalid`, `needs_review`, `rebuilding` e `stale`.
 - CLI para healthcheck, validação de storage e consulta do manifest.
-
-Implementado o início da Fase 2:
-
 - Cliente read-only para o Postgres do `data-colector`.
 - Descoberta de partições seladas por `event_quality`.
 - Export `scalars` por partição diária para Parquet ZSTD.
@@ -53,7 +53,33 @@ Implementado o início da Fase 2:
 - Runner nativo de backtest no `data-backtest` com `DuckDbTickProvider` em batches.
 - Estratégia inicial nativa: `edge-sniper-v2`, usando `backtest_ticks` do lakehouse.
 
-Próxima etapa do plano: validar paridade do `edge-sniper-v2` nativo contra o legado e avançar para API/UI do `data-backtest`.
+Paridade do `edge-sniper-v2` nativo contra o legado já validada (ver [Paridade Edge Sniper V2](docs/paridade-edge-sniper-v2.md)). A API HTTP e a UI mínima do lakehouse (`src/api/server.js`, `public/`) já estão no ar com disponibilidade, prepare jobs e backtest nativo.
+
+Runs persistidos em `backtest_runs` já incluem `events`, `equity` e `log` dentro de `result_json`. A próxima etapa é normalizar isso em `backtest_event_traces`, expor endpoints de detalhe do run e montar o Event Explorer antes do Backtest Studio programável. Ver [Implementação do Backtest Studio](docs/implementacao-editor-backtest.md).
+
+### Pendente
+
+- **L8:** validar deploy Coolify, backup/restore e runbook em produção (`docs/operacao-lakehouse.md`).
+- **Pré-B1:** `backtest_event_traces`, `GET /api/backtest/runs/:id`, lista/detalhe de eventos (`eventTraceId`), Event Explorer básico.
+- **B1–B7:** CRUD de estratégias, editor GLS, runtime programável e paridade `edge-sniper-v2` em GLS.
+
+### Mapa de fases
+
+| Arquitetura (`arquitetura-lakehouse-backtest.md`) | Lakehouse / Editor | Status |
+|---|---|---|
+| Fase 0 | — | decisões tomadas |
+| Fase 1 | L1 | concluída |
+| Fase 2 | L2 | concluída |
+| Fase 3 | L3 | concluída |
+| Fase 4 | L4 | concluída |
+| Fase 5 | L5 | parcial (`PostgresTickProvider`, `HybridTickProvider`, `streamEvents` pendentes) |
+| Fase 6 | L7 + adapter | parcial (golden test OK; adaptação de referências legadas pendente) |
+| Fase 7 | archive API | parcial no `data-backtest`; `data-colector` pendente |
+| Fases 8–10 | — | retencão opcional; fora do caminho padrão |
+| Fase 9.1 | L6 | parcial (UI mínima de prepare/backtest) |
+| Fase 9.2 | B1–B7 | pendente |
+| Fase 11 | L8 | pendente |
+| Fases 12–13 | — | opcionais futuras |
 
 ## Configuração
 
@@ -123,9 +149,9 @@ Jobs de preparação rodam serialmente e ficam registrados no SQLite em `prepare
 
 Para reprocessar partições `stale`, `invalid` ou `needs_review`, marque `Reprocessar indisponiveis (--rebuild)`. Execução real com rebuild exige confirmação explícita `REBUILD_PARTITIONS`; `dry-run` continua liberado para validar o plano sem escrita.
 
-`POST /api/backtest/run` executa `edge-sniper-v2` apenas quando `backtest_ticks` está pronto no modo estrito. Se faltar dado, retorna `409 DATA_NOT_READY` com disponibilidade e plano de preparação. Runs bem-sucedidos ficam persistidos em `backtest_runs` e aparecem em `GET /api/backtest/runs`.
+`POST /api/backtest/run` hoje executa o runner nativo `edge-sniper-v2` como golden test transitório, apenas quando `backtest_ticks` está pronto no modo estrito. Isso não faz parte do lakehouse core: sync, manifest, query layer e Parquet seguem genéricos e sem acoplamento a estratégia. Se faltar dado, retorna `409 DATA_NOT_READY` com disponibilidade e plano de preparação. Runs bem-sucedidos ficam persistidos em `backtest_runs` e aparecem em `GET /api/backtest/runs`.
 
-`sync:backfill` exige `DATA_COLLECTOR_DATABASE_URL` e grava apenas o dataset `scalars` nesta fase.
+`sync:backfill` exige `DATA_COLLECTOR_DATABASE_URL` e exporta apenas o dataset `scalars`. Para `books`, `backtest_ticks` e `ohlc`, use os comandos `sync:backfill-books`, `sync:backfill-backtest-ticks` e `sync:backfill-ohlc`.
 
 `sync:incremental` usa `event_quality.event_end < now - SYNC_MARGIN_MINUTES` para evitar materializar eventos ainda instáveis. Use `--rebuild` para forçar rebuild de partições e `--allow-needs-review` apenas quando uma divergência já tiver sido analisada.
 
@@ -141,7 +167,7 @@ Para reprocessar partições `stale`, `invalid` ou `needs_review`, marque `Repro
 
 `legacy:smoke` usa o adapter `src/legacy/polymarketTestAdapter.js` para retornar um batch no formato esperado pelo `polymarket-test`: `btc_price`, `price_to_beat`, best bid/ask e books JSON (`up_book_asks`, `up_book_bids`, `down_book_asks`, `down_book_bids`).
 
-`backtest:run` executa estratégias nativas dentro do `data-backtest`. O primeiro alvo é `edge-sniper-v2`, que não depende de série temporal Binance externa; ele usa BTC/price-to-beat/preços UP/DOWN/best bid-ask/books já presentes no dataset `backtest_ticks`.
+`backtest:run` executa estratégias nativas transitórias dentro do engine de backtest. O primeiro alvo é `edge-sniper-v2`, usado como golden test para validar o motor e a paridade, não como dependência fixa do lakehouse. Ele usa BTC/price-to-beat/preços UP/DOWN/best bid-ask/books já presentes no dataset `backtest_ticks`.
 
 Parâmetros da estratégia podem ser passados como JSON:
 
@@ -149,9 +175,11 @@ Parâmetros da estratégia podem ser passados como JSON:
 npm run backtest:run -- --strategy edge-sniper-v2 --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --params '{"minDistanceAbs":40,"maxOrderValue":10}'
 ```
 
-## Adapter legado
+## Research Labs e adapter legado
 
-Para migrar labs do `polymarket-test`, crie o adapter com o state DB aberto e use as assinaturas equivalentes:
+Research Labs externos (ex.: scripts do `polymarket-test`) consomem o lakehouse via adapter ou query layer. Estratégias candidatas entram no Backtest Studio quando precisam ser salvas, versionadas e comparadas.
+
+Para adaptar códigos legados do `polymarket-test`, crie o adapter com o state DB aberto e use as assinaturas equivalentes:
 
 ```js
 import { createPolymarketTestAdapter } from './src/legacy/polymarketTestAdapter.js';
@@ -160,7 +188,7 @@ const adapter = createPolymarketTestAdapter(db, { underlying: 'BTC', interval: '
 const rows = await adapter.getTicksForBacktest(from, to, { limit: 100000 });
 
 for await (const batch of adapter.getTicksForBacktestBatches(from, to, 1000)) {
-  // batch tem o shape legado esperado pelos labs.
+  // batch tem o shape legado esperado pelos códigos de pesquisa existentes.
 }
 ```
 
@@ -177,4 +205,4 @@ Sem `--data-source lakehouse`, o script continua usando Postgres.
 
 - `data-colector` — coleta OLTP e API administrativa
 - `data-robot` — robô de trading real
-- `polymarket-test` — simulador/backtest legado (a migrar)
+- `polymarket-test` — Research Lab legado e referência de paridade (não faz parte do Backtest Studio)

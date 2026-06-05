@@ -32,12 +32,12 @@ Incluido neste documento:
 
 Fora do escopo deste documento:
 
-- editor de estrategias;
+- Backtest Studio (estrategias salvas, GLS, traces, Event Explorer);
 - linguagem programavel;
 - visualizacao detalhada de backtest;
 - retencao real do Postgres.
 
-Esses pontos ficam em documentos proprios.
+Esses pontos ficam em `docs/arquitetura-editor-estrategias.md` e `docs/implementacao-editor-backtest.md`.
 
 ## Estado Atual Esperado
 
@@ -63,6 +63,23 @@ Regra principal:
 Queries e backtests nunca escolhem arquivos por glob.
 Eles sempre leem os active_path validos do lake_manifest.
 ```
+
+## Status De Implementacao
+
+Snapshot jun/2026. Detalhes no README.
+
+| Fase | Status |
+|---|---|
+| L1 Base | concluida |
+| L2 Sync scalars | concluida |
+| L3 Books + backtest_ticks | concluida |
+| L4 OHLC | concluida |
+| L5 Query layer | parcial (`PostgresTickProvider`, `HybridTickProvider`, `streamEvents` pendentes) |
+| L6 Prepare jobs + API/UI | concluida |
+| L7 Backtest basico | concluida |
+| L8 Operacao | parcial (docs prontos; validacao Coolify/backup pendente) |
+
+Proximo trabalho documentado: traces/event explorer (pre-B1) e Backtest Studio B1–B7 em `docs/implementacao-editor-backtest.md`.
 
 ## Estrutura De Diretorios
 
@@ -109,6 +126,7 @@ data-backtest/
     strategies/
       edgeSniperV2.js
       stopReverse.js
+    backtestStudio/   (futuro: runtime GLS, state de estrategias/traces, UI do Studio)
     cli.js
     server.js
   public/
@@ -117,6 +135,14 @@ data-backtest/
     styles.css
   docs/
   tests/
+```
+
+Observacao de fronteira:
+
+```text
+src/lake, src/sync, src/query, src/source e src/state/manifest nao podem importar estrategias.
+src/strategies existe apenas como registry nativo transitorio/golden test do Backtest Studio.
+O lakehouse core deve continuar generico e sem acoplamento a edge-sniper ou qualquer outra estrategia.
 ```
 
 ## Configuracao
@@ -324,6 +350,8 @@ strategy_snapshot_json
 dataset_request_json
 trace_root_path
 ```
+
+Hoje, `result_json` ja persiste o payload completo do runner nativo, incluindo `events`, `equity` e `log`. Isso basta para smoke tests, mas nao substitui `backtest_event_traces` nem endpoints de detalhe para o Event Explorer.
 
 ## Lake Storage
 
@@ -768,6 +796,16 @@ GET  /api/prepare/jobs
 GET  /api/prepare/jobs/:id
 ```
 
+Endpoints de backtest nativo (Fase L7, ja implementados):
+
+```text
+GET  /api/backtest/strategies
+GET  /api/backtest/runs
+POST /api/backtest/run
+```
+
+Contratos completos de request/response em `docs/contratos-api-schemas.md`.
+
 Regras:
 
 - erros de validacao retornam HTTP 400;
@@ -851,80 +889,84 @@ backtest:run
 
 ## Implementacao Em Fases
 
-### Fase L1: Base
+### Fase L1: Base — concluida
 
-- Criar estrutura Node ESM.
-- Criar config.
-- Criar SQLite WAL.
-- Criar `lake_manifest`.
-- Criar storage check.
-- Criar health.
-- Criar CLI basica.
-- Testes de config/storage/manifest.
+- [x] Criar estrutura Node ESM.
+- [x] Criar config.
+- [x] Criar SQLite WAL.
+- [x] Criar `lake_manifest`.
+- [x] Criar storage check.
+- [x] Criar health.
+- [x] Criar CLI basica.
+- [x] Testes de config/storage/manifest.
 
-### Fase L2: Sync Scalars
+### Fase L2: Sync Scalars — concluida
 
-- Criar Postgres source.
-- Listar particoes seladas.
-- Exportar scalars.
-- Escrever Parquet ZSTD.
-- Validar rows/eventos.
-- Registrar manifest.
-- Criar incremental.
-- Criar reconcile scalars.
-- Testes de fingerprint e incremental.
+- [x] Criar Postgres source.
+- [x] Listar particoes seladas.
+- [x] Exportar scalars.
+- [x] Escrever Parquet ZSTD.
+- [x] Validar rows/eventos.
+- [x] Registrar manifest.
+- [x] Criar incremental.
+- [x] Criar reconcile scalars.
+- [x] Testes de fingerprint e incremental.
 
-### Fase L3: Books E Backtest Ticks
+### Fase L3: Books E Backtest Ticks — concluida
 
-- Exportar books bruto.
-- Criar flatten top-N.
-- Exportar backtest_ticks.
-- Calcular checksums especificos.
-- Publicar archive valid se configurado.
-- Testes de parser/flatten/checksum.
+- [x] Exportar books bruto.
+- [x] Criar flatten top-N.
+- [x] Exportar backtest_ticks.
+- [x] Calcular checksums especificos.
+- [x] Publicar archive valid se configurado.
+- [x] Testes de parser/flatten/checksum.
 
-### Fase L4: OHLC
+### Fase L4: OHLC — concluida
 
-- Gerar OHLC a partir de scalars validos.
-- Suportar 1s, 5s, 1m, 5m.
-- Registrar resolution no manifest.
-- Cascatear stale de scalars para ohlc.
-- Testes de writer/query.
+- [x] Gerar OHLC a partir de scalars validos.
+- [x] Suportar 1s, 5s, 1m, 5m.
+- [x] Registrar resolution no manifest.
+- [x] Cascatear stale de scalars para ohlc.
+- [x] Testes de writer/query.
 
-### Fase L5: Query Layer
+### Fase L5: Query Layer — parcial
 
-- Implementar availability.
-- Implementar strict/prepare.
-- Implementar query ticks/candles via DuckDB.
-- Adicionar limit/offset.
-- Bloquear unavailable.
-- Testes de disponibilidade e DuckDB.
+- [x] Implementar availability.
+- [x] Implementar strict/prepare.
+- [x] Implementar query ticks/candles via DuckDB.
+- [x] Adicionar limit/offset.
+- [x] Bloquear unavailable.
+- [x] Testes de disponibilidade e DuckDB.
+- [ ] Implementar `PostgresTickProvider` e `HybridTickProvider`.
+- [ ] Implementar `streamEvents`.
 
-### Fase L6: Prepare Jobs E API
+### Fase L6: Prepare Jobs E API — concluida
 
-- Criar API HTTP.
-- Criar static UI.
-- Criar prepare jobs.
-- Criar runner serial.
-- Criar executor.
-- Criar rebuild confirmado.
-- Testes de API/jobs.
+- [x] Criar API HTTP.
+- [x] Criar static UI.
+- [x] Criar prepare jobs.
+- [x] Criar runner serial.
+- [x] Criar executor.
+- [x] Criar rebuild confirmado.
+- [x] Testes de API/jobs.
 
-### Fase L7: Backtest Basico
+### Fase L7: Backtest Basico Nativo — concluida
 
-- Criar `DuckDbTickProvider`.
-- Criar runner nativo `edge-sniper-v2` como golden.
-- Criar `POST /api/backtest/run`.
-- Persistir `backtest_runs`.
-- Testes de backtest.
+Esta fase valida que o lakehouse alimenta um backtest real. Ela nao torna `edge-sniper-v2` parte do lakehouse core.
 
-### Fase L8: Operacao
+- [x] Criar `DuckDbTickProvider`.
+- [x] Criar runner nativo `edge-sniper-v2` como golden test transitorio do Backtest Studio.
+- [x] Criar `POST /api/backtest/run`.
+- [x] Persistir `backtest_runs`.
+- [x] Testes de backtest.
 
-- Documentar backfill.
-- Validar ambiente temporario.
-- Validar Coolify volumes.
-- Configurar healthcheck.
-- Configurar backup `/lake` + `/state`.
+### Fase L8: Operacao — parcial
+
+- [x] Documentar backfill.
+- [ ] Validar ambiente temporario.
+- [ ] Validar Coolify volumes.
+- [ ] Configurar healthcheck.
+- [ ] Configurar backup `/lake` + `/state`.
 
 ## Testes Obrigatorios
 
@@ -985,13 +1027,13 @@ backtest:run
 
 ## Checklist De Revisao Antes De Entrar Na UI Avancada
 
-- [ ] Lakehouse tem docs de arquitetura.
-- [ ] Lakehouse tem runbook operacional.
-- [ ] Archive/retencao opcional esta documentado.
-- [ ] Retencao real esta claramente fora do caminho padrao.
-- [ ] Prepare jobs estao validados.
-- [ ] Backtest run basico esta persistido.
-- [ ] API bloqueia backtest sem dados validos.
-- [ ] Datasets principais estao definidos.
-- [ ] Manifest e fonte unica de paths.
-- [ ] Backup/restore esta documentado.
+- [x] Lakehouse tem docs de arquitetura.
+- [x] Lakehouse tem runbook operacional.
+- [x] Archive/retencao opcional esta documentado.
+- [x] Retencao real esta claramente fora do caminho padrao.
+- [x] Prepare jobs estao validados.
+- [x] Backtest run basico esta persistido.
+- [x] API bloqueia backtest sem dados validos.
+- [x] Datasets principais estao definidos.
+- [x] Manifest e fonte unica de paths.
+- [x] Backup/restore esta documentado.

@@ -275,6 +275,8 @@ Response:
 
 ## Backtest API Atual
 
+Esta API atual expõe o runner nativo `edge-sniper-v2` como golden test transitório. Ela não define acoplamento do lakehouse core com essa estratégia. O contrato futuro do Backtest Studio deve executar estratégias por `strategy_id`/`strategy_version_id` ou por um registry genérico, sem estratégia padrão fixa no lakehouse.
+
 ### `GET /api/backtest/strategies`
 
 Response:
@@ -363,7 +365,7 @@ Response:
 }
 ```
 
-## Backtest API Futura Do Strategy Lab
+## Backtest API Futura Do Backtest Studio
 
 ### `GET /api/backtest/runs/:id`
 
@@ -577,7 +579,7 @@ Ver `docs/implementacao-lakehouse.md` para detalhes completos.
 
 ### `backtest_runs`
 
-Campos atuais:
+Campos atuais (ordem real do schema em `src/state/sqlite.js`):
 
 ```text
 id
@@ -590,11 +592,26 @@ from_ts
 to_ts
 batch_size
 params_json
+ticks
 batches
 summary_json
 result_json
 created_at
 ```
+
+`result_json` atual contem o payload completo do runner, incluindo:
+
+```json
+{
+  "strategy": "EDGE_SNIPER_V2",
+  "summary": {},
+  "events": [],
+  "equity": [],
+  "log": []
+}
+```
+
+Isso e suficiente para smoke tests, mas o Event Explorer deve consumir `backtest_event_traces` e endpoints dedicados, nao parsear JSON grande da listagem de runs.
 
 Campos futuros:
 
@@ -617,6 +634,7 @@ slug
 name
 description
 status
+tags_json
 created_at
 updated_at
 ```
@@ -635,6 +653,8 @@ validation_json
 checksum
 created_at
 ```
+
+`created_by` fica reservado para autenticacao futura; nao entra no MVP.
 
 ### `backtest_event_traces`
 
@@ -665,7 +685,7 @@ created_at
 
 - Nao remover campos existentes de resposta sem migracao clara.
 - Novos campos devem ser opcionais inicialmente.
-- Strategy Lab deve aceitar runs nativos antigos sem `strategy_id`.
+- Backtest Studio deve aceitar runs nativos antigos sem `strategy_id`.
 - UI deve tratar `strategy_id=null` como estrategia nativa/legacy.
 - `book_depth` deve continuar aceitando `book_depth` na API e `bookDepth` internamente.
 - Datas devem sair sempre em ISO UTC.
