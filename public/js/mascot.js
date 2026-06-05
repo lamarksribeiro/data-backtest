@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
       width: 260px;
       height: 180px;
       position: absolute;
-      top: -128px; /* Deita perfeitamente em cima da caixa de login */
+      top: -156px; /* Deita perfeitamente as patas sobre o topo do card de login */
       left: 50%;
       transform: translateX(-50%);
       pointer-events: none;
@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .mascot-container {
         width: 210px;
         height: 145px;
-        top: -108px;
+        top: -125px;
       }
       .login {
         padding: 24px 20px;
@@ -83,8 +83,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
     
-    #lizard {
+    #lizard-upper {
       animation: runnerBreathing 4s ease-in-out infinite;
+      transform-origin: 116px 125px; /* Ponto de pivô de conexão com as pernas */
+    }
+
+    #lizard {
       transform-origin: 116px 115px;
     }
 
@@ -240,25 +244,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
       <!-- Grupo do Papa-léguas Cibernético Geométrico (Data Runner) -->
       <g id="lizard" style="transform-origin: 116px 115px;">
-        <!-- Cauda Aerodinâmica (3 penas estilizadas angulares como spoilers) -->
-        <g id="lizard-tail">
-          <!-- Pena Superior -->
-          <polygon points="90,112 55,95 38,70 65,90" fill="#1e40af" opacity="0.85" />
-          <!-- Pena do Meio -->
-          <polygon points="90,116 48,108 30,90 58,104" fill="#2563eb" opacity="0.9" />
-          <!-- Pena Inferior (Laranja) -->
-          <polygon points="90,120 40,122 24,110 52,118" fill="url(#beakGrad)" opacity="0.95" />
-        </g>
-
-        <!-- Pernas Estáticas Metálicas (Design limpo de trem de pouso) -->
+        <!-- Pernas Estáticas Metálicas (Fora da respiração para não flutuarem) -->
         <g id="legs-static">
+          <!-- Sombras de contato sob cada pé para assentar na borda do card -->
+          <ellipse cx="98" cy="161.5" rx="14" ry="2" fill="#000000" opacity="0.65" />
+          <ellipse cx="114" cy="161.5" rx="14" ry="2" fill="#000000" opacity="0.65" />
+
           <!-- Perna Traseira -->
           <path d="M 106,128 L 98,158 L 88,162 M 98,158 L 108,162" fill="none" stroke="#475569" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
           <!-- Perna Dianteira -->
           <path d="M 120,128 L 114,158 L 104,162 M 114,158 L 124,162" fill="none" stroke="url(#beakGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
         </g>
 
-        <!-- Pernas Correndo / Rastro de Movimento Linear (Display none por padrão) -->
+        <!-- Pernas Correndo / Rastro de Movimento Linear (Fora da respiração) -->
         <g id="legs-running" style="display: none; transform-origin: 116px 145px;">
           <!-- Linhas de rastro de alta velocidade (blur de corrida) -->
           <line x1="80" y1="140" x2="150" y2="140" stroke="#f97316" stroke-width="3" opacity="0.8" stroke-dasharray="15 8" />
@@ -266,48 +264,61 @@ document.addEventListener('DOMContentLoaded', () => {
           <line x1="75" y1="152" x2="145" y2="152" stroke="#06b6d4" stroke-width="2" opacity="0.75" stroke-dasharray="20 10" />
         </g>
 
-        <!-- Corpo Geométrico/Aerodinâmico (Estilo Fuselagem de Caça) -->
-        <polygon points="86,118 104,102 134,106 142,122 126,132 98,128" fill="url(#bodyGrad)" stroke="#1e40af" stroke-width="1" />
-        <!-- Detalhe da fuselagem em Ciano -->
-        <polygon points="106,108 126,110 134,120 120,124" fill="#06b6d4" opacity="0.2" />
+        <!-- Grupo de Respiração (Tronco, Cauda, Cabeça) -->
+        <g id="lizard-upper">
+          <!-- Cauda Aerodinâmica (3 penas estilizadas angulares como spoilers) -->
+          <g id="lizard-tail">
+            <!-- Pena Superior -->
+            <polygon points="90,112 55,95 38,70 65,90" fill="#1e40af" opacity="0.85" />
+            <!-- Pena do Meio -->
+            <polygon points="90,116 48,108 30,90 58,104" fill="#2563eb" opacity="0.9" />
+            <!-- Pena Inferior (Laranja) -->
+            <polygon points="90,120 40,122 24,110 52,118" fill="url(#beakGrad)" opacity="0.95" />
+          </g>
 
-        <!-- Asa Traseira Estilizada -->
-        <polygon points="98,112 76,116 62,132 88,124 116,118" fill="#1e3a8a" stroke="#2563eb" stroke-width="0.8" />
-        <polygon points="90,116 80,120 74,128 86,124" fill="url(#beakGrad)" opacity="0.85" />
+          <!-- Corpo Geométrico/Aerodinâmico (Estilo Fuselagem de Caça) -->
+          <polygon points="86,118 104,102 134,106 142,122 126,132 98,128" fill="url(#bodyGrad)" stroke="#1e40af" stroke-width="1" />
+          <!-- Detalhe da fuselagem em Ciano -->
+          <polygon points="106,108 126,110 134,120 120,124" fill="#06b6d4" opacity="0.2" />
 
-        <!-- Pescoço Angular Fino -->
-        <polygon points="118,104 136,52 142,54 126,106" fill="url(#bodyGrad)" />
+          <!-- Asa Traseira Estilizada -->
+          <polygon points="98,112 76,116 62,132 88,124 116,118" fill="#1e3a8a" stroke="#2563eb" stroke-width="0.8" />
+          <polygon points="90,116 80,120 74,128 86,124" fill="url(#beakGrad)" opacity="0.85" />
 
-        <!-- Cabeça Angular Aerodinâmica -->
-        <polygon points="130,52 138,40 152,42 150,56 138,56" fill="url(#bodyGrad)" />
+          <!-- Pescoço Angular Fino -->
+          <polygon points="118,104 136,52 142,54 126,106" fill="url(#bodyGrad)" />
 
-        <!-- Crista de Spoiler Geométrico -->
-        <polygon points="134,42 114,30 102,18 122,32" fill="#1e40af" />
-        <polygon points="136,41 122,26 112,14 128,29" fill="#06b6d4" />
-        <polygon points="138,40 128,22 120,10 134,26" fill="url(#beakGrad)" />
+          <!-- Cabeça Angular Aerodinâmica -->
+          <polygon points="130,52 138,40 152,42 150,56 138,56" fill="url(#bodyGrad)" />
 
-        <!-- Olhos Normais e Espertos (Semi-perfil) -->
-        <ellipse cx="137" cy="42" rx="4.5" ry="7.5" fill="#ffffff" stroke="#1e3a8a" stroke-width="1.2" />
-        <ellipse cx="145.5" cy="41" rx="4.5" ry="7.5" fill="#ffffff" stroke="#1e3a8a" stroke-width="1.2" />
+          <!-- Crista de Spoiler Geométrico -->
+          <polygon points="134,42 114,30 102,18 122,32" fill="#1e40af" />
+          <polygon points="136,41 122,26 112,14 128,29" fill="#06b6d4" />
+          <polygon points="138,40 128,22 120,10 134,26" fill="url(#beakGrad)" />
 
-        <!-- pupilas para rastreamento ocular -->
-        <g id="lizard-pupil" style="transition: transform 0.12s ease-out;">
-          <!-- Pupila esquerda -->
-          <ellipse cx="138.5" cy="42.5" rx="2" ry="3.2" fill="#000000" />
-          <circle cx="137.9" cy="41.2" r="0.6" fill="#ffffff" />
-          <!-- Pupila direita -->
-          <ellipse cx="146.7" cy="41.5" rx="2" ry="3.2" fill="#000000" />
-          <circle cx="146.1" cy="40.2" r="0.6" fill="#ffffff" />
+          <!-- Olhos Normais e Espertos (Semi-perfil) -->
+          <ellipse cx="137" cy="42" rx="4.5" ry="7.5" fill="#ffffff" stroke="#1e3a8a" stroke-width="1.2" />
+          <ellipse cx="145.5" cy="41" rx="4.5" ry="7.5" fill="#ffffff" stroke="#1e3a8a" stroke-width="1.2" />
+
+          <!-- pupilas para rastreamento ocular -->
+          <g id="lizard-pupil" style="transition: transform 0.12s ease-out;">
+            <!-- Pupila esquerda -->
+            <ellipse cx="138.5" cy="42.5" rx="2" ry="3.2" fill="#000000" />
+            <circle cx="137.9" cy="41.2" r="0.6" fill="#ffffff" />
+            <!-- Pupila direita -->
+            <ellipse cx="146.7" cy="41.5" rx="2" ry="3.2" fill="#000000" />
+            <circle cx="146.1" cy="40.2" r="0.6" fill="#ffffff" />
+          </g>
+
+          <!-- Bico Angular Militar/Stealth -->
+          <polygon points="144,48 168,48 164,54 142,54" fill="url(#beakGrad)" stroke="#c2410c" stroke-width="0.8" />
+          <!-- Divisão do bico -->
+          <line x1="144" y1="51" x2="164" y2="51" stroke="#7c2d12" stroke-width="1" />
+
+          <!-- Elementos ocultos para manter compatibilidade retroativa -->
+          <path id="lizard-tongue" d="M 140,48 Q 140,48 140,48" fill="none" opacity="0" display="none" />
+          <circle id="lizard-tongue-tip" cx="140" cy="48" r="1" fill="none" opacity="0" display="none" />
         </g>
-
-        <!-- Bico Angular Militar/Stealth -->
-        <polygon points="144,48 168,48 164,54 142,54" fill="url(#beakGrad)" stroke="#c2410c" stroke-width="0.8" />
-        <!-- Divisão do bico -->
-        <line x1="144" y1="51" x2="164" y2="51" stroke="#7c2d12" stroke-width="1" />
-
-        <!-- Elementos ocultos para manter compatibilidade retroativa -->
-        <path id="lizard-tongue" d="M 140,48 Q 140,48 140,48" fill="none" opacity="0" display="none" />
-        <circle id="lizard-tongue-tip" cx="140" cy="48" r="1" fill="none" opacity="0" display="none" />
       </g>
     </svg>
   `;
