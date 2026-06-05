@@ -11,8 +11,8 @@ O sistema nao executa backtest direto no Postgres. Primeiro os dados precisam ex
 
 ## Fluxo Normal De Uso
 
-1. Abra a UI em `http://localhost:3100`.
-2. Entre com o usuario configurado em `INITIAL_ADMIN_USERNAME` e `INITIAL_ADMIN_PASSWORD`.
+1. Abra `http://localhost:3100` (sem sessao, redireciona para `/login`).
+2. Entre com o usuario configurado em `INITIAL_ADMIN_USERNAME` e `INITIAL_ADMIN_PASSWORD` (`SESSION_SECRET` obrigatorio em producao).
 3. Ajuste o contexto global no topo da UI: ativo, intervalo, datas, book depth e batch size.
 4. Va em **Dados** e confira se o periodo esta disponivel.
 5. Se faltar dado, crie um job de prepare/sync antes do backtest.

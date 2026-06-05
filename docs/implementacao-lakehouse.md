@@ -25,7 +25,7 @@ Incluido neste documento:
 - validacao;
 - query layer DuckDB;
 - prepare jobs;
-- API/UI minima;
+- API/UI Data Runner (prepare, backtest, auth);
 - archive publish;
 - testes;
 - criterios de pronto.
@@ -74,12 +74,12 @@ Snapshot jun/2026. Detalhes no README.
 | L2 Sync scalars | concluida |
 | L3 Books + backtest_ticks | concluida |
 | L4 OHLC | concluida |
-| L5 Query layer | parcial (`PostgresTickProvider`, `HybridTickProvider`, `streamEvents` pendentes) |
+| L5 Query layer | parcial (`PostgresTickProvider`, `HybridTickProvider`, `streamEvents`, `streamCandles` pendentes; `queryCandles` pontual OK) |
 | L6 Prepare jobs + API/UI | concluida |
 | L7 Backtest basico | concluida |
 | L8 Operacao | parcial (docs prontos; validacao Coolify/backup pendente) |
 
-Proximo trabalho documentado: traces/event explorer (pre-B1) e Backtest Studio B1–B7 em `docs/implementacao-editor-backtest.md`.
+Proximo trabalho documentado: **L8** (validar deploy Coolify, backup/restore de `/lake` + `/state`) e **L5** (`PostgresTickProvider`, `HybridTickProvider`, `streamEvents`). Backtest Studio Pre-B1 + B1–B7 concluidos (MVP); ver `docs/implementacao-editor-backtest.md`.
 
 ## Estrutura De Diretorios
 
@@ -962,11 +962,15 @@ Esta fase valida que o lakehouse alimenta um backtest real. Ela nao torna `edge-
 
 ### Fase L8: Operacao — parcial
 
+> Status (jun/2026): artefatos de container (`Dockerfile`, `docker-compose.yml`) e runbooks em `docs/operacao-lakehouse.md` prontos no repo. Validacao operacional em Coolify/producao ainda pendente.
+
 - [x] Documentar backfill.
-- [ ] Validar ambiente temporario.
-- [ ] Validar Coolify volumes.
-- [ ] Configurar healthcheck.
-- [ ] Configurar backup `/lake` + `/state`.
+- [x] Criar `Dockerfile` e `docker-compose.yml` com volumes `/lake` e `/state`.
+- [x] Documentar auth da UI (`SESSION_SECRET`, login obrigatorio) em README e `docs/operacao-lakehouse.md`.
+- [ ] Validar ambiente temporario end-to-end.
+- [ ] Validar Coolify volumes e deploy real.
+- [x] Configurar healthcheck (`GET /healthz`, `npm run ops:check`).
+- [ ] Configurar e testar backup `/lake` + `/state` em producao.
 
 ## Testes Obrigatorios
 

@@ -850,74 +850,78 @@ Response:
 
 ## Implementacao Em Fases
 
-### Pre-B1: Traces E Endpoints De Run — pendente
+> Status (jun/2026): todas as fases abaixo estao **concluidas no MVP**. A tabela resumida no topo deste documento e a referencia operacional. Lacunas pos-MVP: autocomplete rico, diff entre versoes, comparador visual de runs, otimizador/tuning de parametros.
 
-- Extrair/normalizar eventos do runner nativo para `backtest_event_traces` (`src/backtestStudio/state/eventTraces.js`).
-- Criar `GET /api/backtest/runs/:id`.
-- Criar `GET /api/backtest/runs/:id/events` e `GET /api/backtest/runs/:id/events/:eventTraceId`.
-- Criar Event Explorer basico na UI (lista + detalhe de um evento).
-- Preparar `GET /api/backtest/runs/:id/chart-data?condition_id=...` para graficos.
+### Pre-B1: Traces E Endpoints De Run — concluido
 
-### Fase B1: Persistencia De Estrategias — pendente
+- [x] Extrair/normalizar eventos do runner nativo para `backtest_event_traces` (`src/backtestStudio/state/eventTraces.js`).
+- [x] Criar `GET /api/backtest/runs/:id`.
+- [x] Criar `GET /api/backtest/runs/:id/events` e `GET /api/backtest/runs/:id/events/:eventTraceId`.
+- [x] Criar Event Explorer basico na UI (lista + detalhe de um evento).
+- [x] Preparar `GET /api/backtest/runs/:id/chart-data?condition_id=...` para graficos.
 
-- Criar tabelas `strategy_definitions` e `strategy_versions`.
-- Criar helpers em `src/backtestStudio/state/strategies.js`.
-- Criar CRUD API.
-- Criar testes de CRUD.
-- Criar seed opcional com `edge-sniper-v2` como referencia textual.
+### Fase B1: Persistencia De Estrategias — concluido
 
-### Fase B2: Editor UI — pendente
+- [x] Criar tabelas `strategy_definitions` e `strategy_versions`.
+- [x] Criar helpers em `src/backtestStudio/state/strategies.js`.
+- [x] Criar CRUD API.
+- [x] Criar testes de CRUD.
+- [x] Criar seed opcional com `edge-sniper-v2` como referencia textual.
 
-- Adicionar tela/lista de estrategias.
-- Adicionar editor simples.
-- Salvar nova versao.
-- Abrir versao existente.
-- Mostrar parametros detectados de forma simples.
-- Testar static UI/API.
+### Fase B2: Editor UI — concluido (MVP)
 
-### Fase B3: Validador GLS MVP — pendente
+- [x] Adicionar tela/lista de estrategias.
+- [x] Adicionar editor simples (CodeMirror).
+- [x] Salvar nova versao.
+- [x] Abrir versao existente.
+- [x] Mostrar parametros detectados de forma simples.
+- [x] Testar static UI/API.
+- [ ] Autocomplete rico e diff entre versoes (pos-MVP).
 
-- Definir sintaxe minima.
-- Implementar parser.
-- Implementar validator.
-- Expor `POST /api/strategies/validate`.
-- Mostrar erros no editor.
-- Testar casos validos/invalidos.
+### Fase B3: Validador GLS MVP — concluido
 
-### Fase B4: Runtime GLS MVP — pendente
+- [x] Definir sintaxe minima.
+- [x] Implementar parser.
+- [x] Implementar validator.
+- [x] Expor `POST /api/strategies/validate`.
+- [x] Mostrar erros no editor.
+- [x] Testar casos validos/invalidos.
 
-- Implementar interpreter.
-- Implementar standard library inicial.
-- Implementar order simulator.
-- Implementar trace collector.
-- Rodar estrategia simples sobre ticks mockados.
-- Testar determinismo.
+### Fase B4: Runtime GLS MVP — concluido
 
-### Fase B5: Execucao Sobre Lakehouse — pendente
+- [x] Implementar interpreter.
+- [x] Implementar standard library inicial.
+- [x] Implementar order simulator.
+- [x] Implementar trace collector.
+- [x] Rodar estrategia simples sobre ticks mockados.
+- [x] Testar determinismo.
 
-- Integrar runtime com `DuckDbTickProvider`.
-- Bloquear sem availability strict.
-- Persistir run com strategy/version snapshot.
-- Persistir event traces.
-- Expor detalhes do run.
-- Testar com Parquet pequeno.
+### Fase B5: Execucao Sobre Lakehouse — concluido
 
-### Fase B6: Visualizacao — pendente
+- [x] Integrar runtime com `DuckDbTickProvider`.
+- [x] Bloquear sem availability strict.
+- [x] Persistir run com strategy/version snapshot.
+- [x] Persistir event traces.
+- [x] Expor detalhes do run.
+- [x] Testar com Parquet pequeno.
 
-- Tela de run detail.
-- Tabela de eventos.
-- Event explorer.
-- Chart BTC vs PTB.
-- Markers de ordens/marks.
-- Logs por evento.
+### Fase B6: Visualizacao — concluido
 
-### Fase B7: Migracao Edge Sniper — pendente
+- [x] Tela de run detail.
+- [x] Tabela de eventos.
+- [x] Event explorer.
+- [x] Chart BTC vs PTB.
+- [x] Markers de ordens/marks.
+- [x] Logs por evento.
+- [ ] Comparador visual entre runs (pos-MVP).
 
-- Mapear blocos usados pelo nativo.
-- Adicionar blocos faltantes.
-- Reescrever edge-sniper em GLS.
-- Rodar paridade com runner nativo.
-- Documentar divergencias.
+### Fase B7: Migracao Edge Sniper — concluido (seed GLS + paridade)
+
+- [x] Mapear blocos usados pelo nativo.
+- [x] Adicionar blocos faltantes.
+- [x] Reescrever edge-sniper em GLS (`src/backtestStudio/gls/strategies/edgeSniperV2.gls`).
+- [x] Rodar paridade com runner nativo (`tests/edgeSniperGlsParity.test.js`).
+- [x] Documentar divergencias (`docs/paridade-edge-sniper-v2.md`).
 
 ## Estrategia De Testes
 

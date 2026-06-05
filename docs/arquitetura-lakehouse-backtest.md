@@ -682,9 +682,9 @@ Status snapshot (jun/2026). O README e `docs/implementacao-lakehouse.md` sao a r
 | 6 | L7 + adapter | parcial |
 | 7 | archive | parcial (`data-backtest` publica; `data-colector` pendente) |
 | 8–10 | — | pendente (retencao opcional) |
-| 9.1 | L6 | parcial (UI minima) |
-| 9.2 | B1–B7 | pendente (ver docs do Backtest Studio) |
-| 11 | L8 | pendente |
+| 9.1 | L6 | concluida |
+| 9.2 | Pre-B1 + B1–B7 | concluida (MVP; lacunas pos-MVP no Backtest Studio) |
+| 11 | L8 | parcial (`Dockerfile`/`docker-compose.yml` no repo; producao Coolify nao validada) |
 | 12–13 | — | opcional futuro |
 
 ### Fase 0: Decisoes E Preparacao — concluida
@@ -774,7 +774,7 @@ Status snapshot (jun/2026). O README e `docs/implementacao-lakehouse.md` sao a r
 - [x] Restringir modo `hybrid` a debug/desenvolvimento.
 - [x] Implementar `streamTicks`.
 - [ ] Implementar `streamEvents`.
-- [x] Implementar `streamCandles`.
+- [ ] Implementar `streamCandles` (consulta pontual via `queryCandles` existe; streaming async ainda nao).
 - [ ] Implementar `includeBooks`.
 - [x] Implementar filtros por underlying, interval, from e to.
 - [x] Criar testes de paridade com dados pequenos.
@@ -833,7 +833,7 @@ Capacidade administrativa opcional. Deve nascer desativada e nao deve apagar dad
 - [ ] Adicionar confirmacao forte para execucao real, se essa opcao for habilitada no futuro.
 - [ ] Mostrar historico das ultimas execucoes.
 
-### Fase 9.1: UI De Preparacao De Dados Para Backtest — parcial (L6)
+### Fase 9.1: UI De Preparacao De Dados Para Backtest — concluida (L6)
 
 - [x] Mostrar disponibilidade do periodo solicitado antes de rodar backtest.
 - [x] Mostrar particoes prontas, ausentes e invalidas.
@@ -842,22 +842,22 @@ Capacidade administrativa opcional. Deve nascer desativada e nao deve apagar dad
 - [x] Bloquear execucao normal no modo `strict` quando faltar Parquet.
 - [x] Exibir progresso do sync/rebuild antes da execucao do backtest.
 
-### Fase 9.2: Backtest Studio Programavel — pendente (B1–B7)
+### Fase 9.2: Backtest Studio Programavel — concluida (MVP: Pre-B1 + B1–B7)
 
-> O detalhamento autoritativo desta fase (schema SQLite, linguagem GLS v1, biblioteca de blocos, runtime, traces e fases B1-B7) vive em `docs/arquitetura-editor-estrategias.md` e `docs/implementacao-editor-backtest.md`. A lista abaixo e o resumo de alto nivel; ao implementar, siga os documentos do Backtest Studio.
+> Status (jun/2026): MVP implementado no codigo. O detalhamento autoritativo (schema SQLite, linguagem GLS v1, biblioteca de blocos, runtime, traces e fases B1-B7) vive em `docs/arquitetura-editor-estrategias.md` e `docs/implementacao-editor-backtest.md`. Lacunas pos-MVP: autocomplete rico, diff entre versoes, comparador de runs, otimizador de parametros.
 
-- [ ] Criar tabelas `strategy_definitions` e `strategy_versions`.
-- [ ] Criar CRUD de estrategias pela API.
-- [ ] Criar editor de codigo na UI.
-- [ ] Definir linguagem controlada `GLS v1` ou equivalente.
-- [ ] Criar parser/validador inicial.
-- [ ] Criar biblioteca padrao de blocos/funcoes (`market`, `prices`, `book`, `signals`, `risk`, `time`).
-- [ ] Criar runtime seguro para executar estrategia salva sobre `DuckDbTickProvider`.
-- [ ] Persistir `strategy_id` e `strategy_version_id` em `backtest_runs`.
-- [ ] Registrar trace por evento: ordens, marks, logs, metricas e motivo das decisoes.
-- [ ] Criar tela de resultado com resumo do run e event explorer.
-- [ ] Migrar `edge-sniper-v2` para estrategia editavel e comparar contra o nativo.
-- [ ] Manter `edge-sniper-v2` nativo como golden test ate a versao editavel ter paridade.
+- [x] Criar tabelas `strategy_definitions` e `strategy_versions`.
+- [x] Criar CRUD de estrategias pela API.
+- [x] Criar editor de codigo na UI.
+- [x] Definir linguagem controlada `GLS v1` ou equivalente.
+- [x] Criar parser/validador inicial.
+- [x] Criar biblioteca padrao de blocos/funcoes (`market`, `prices`, `book`, `signals`, `risk`, `time`).
+- [x] Criar runtime seguro para executar estrategia salva sobre `DuckDbTickProvider`.
+- [x] Persistir `strategy_id` e `strategy_version_id` em `backtest_runs`.
+- [x] Registrar trace por evento: ordens, marks, logs, metricas e motivo das decisoes.
+- [x] Criar tela de resultado com resumo do run e event explorer.
+- [x] Migrar `edge-sniper-v2` para estrategia editavel e comparar contra o nativo (seed GLS + testes de paridade).
+- [x] Manter `edge-sniper-v2` nativo como golden test ate a versao editavel ter paridade.
 
 ### Fase 10: Opcional - Exclusao Segura Do Postgres
 
@@ -878,18 +878,20 @@ Nao e objetivo padrao do projeto. Fazer apenas se houver decisao operacional exp
 - [ ] Testar com dry-run.
 - [ ] Habilitar execucao real somente apos validacao e decisao operacional explicita.
 
-### Fase 11: Operacao No Coolify — pendente (L8)
+### Fase 11: Operacao No Coolify — parcial (L8)
 
-- [ ] Criar volume persistente `/data/goldenlens/lakehouse`.
-- [ ] Criar volume persistente `/data/goldenlens/backtest-state`.
-- [ ] Configurar `LAKE_ROOT=/lake`.
-- [ ] Configurar `STATE_DB_PATH=/state/data-backtest.db`.
-- [ ] Configurar credenciais read-only do Postgres.
-- [ ] Configurar healthcheck do `data-backtest`.
-- [ ] Configurar backup do lakehouse ou snapshot do disco.
-- [ ] Documentar restauracao.
-- [ ] Documentar rebuild do lakehouse.
-- [ ] Documentar limpeza manual segura.
+> Status (jun/2026): `Dockerfile`, `docker-compose.yml` e runbooks em `docs/operacao-lakehouse.md` existem no repositorio. Deploy Coolify, backup/restore conjunto e smoke em producao ainda **nao foram validados**.
+
+- [ ] Criar volume persistente `/data/goldenlens/lakehouse` (documentado; pendente validacao em producao).
+- [ ] Criar volume persistente `/data/goldenlens/backtest-state` (documentado; pendente validacao em producao).
+- [x] Configurar `LAKE_ROOT=/lake` (default no `Dockerfile` e `docker-compose.yml`).
+- [x] Configurar `STATE_DB_PATH=/state/data-backtest.db` (default no `Dockerfile` e `docker-compose.yml`).
+- [ ] Configurar credenciais read-only do Postgres (ambiente dependente).
+- [x] Configurar healthcheck do `data-backtest` (`GET /healthz`, `npm run health`, `npm run ops:check`).
+- [ ] Configurar backup do lakehouse ou snapshot do disco (documentado; nao validado em producao).
+- [x] Documentar restauracao (`docs/operacao-lakehouse.md`).
+- [x] Documentar rebuild do lakehouse (`docs/operacao-lakehouse.md`).
+- [x] Documentar limpeza manual segura (`docs/operacao-lakehouse.md`).
 
 ### Fase 12: Opcional - Live-Tail Futuro
 

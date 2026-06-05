@@ -50,6 +50,10 @@ BACKTEST_BOOK_DEPTH=10
 DATA_COLLECTOR_DATABASE_URL=...
 DATA_COLLECTOR_API_URL=http://localhost:3000
 DATA_COLLECTOR_ARCHIVE_API_KEY=...
+SESSION_SECRET=change-me-to-a-long-random-string
+SESSION_MAX_AGE_SEC=86400
+INITIAL_ADMIN_USERNAME=admin
+INITIAL_ADMIN_PASSWORD=change-me
 ```
 
 Coolify/producao:
@@ -59,7 +63,22 @@ LAKE_ROOT=/lake
 STATE_DB_PATH=/state/data-backtest.db
 BACKTEST_DATA_MODE=strict
 BACKTEST_BOOK_DEPTH=10
+SESSION_SECRET=<segredo-longo-aleatorio>
+SESSION_MAX_AGE_SEC=86400
+INITIAL_ADMIN_USERNAME=admin
+INITIAL_ADMIN_PASSWORD=<senha-forte>
 ```
+
+## Autenticacao Da UI
+
+A interface web exige login antes de acessar rotas e `/api/*` (exceto `POST /api/login`, `GET /api/me` e `GET /healthz`). O padrao e cookie HMAC + bcrypt, alinhado ao `data-colector`.
+
+1. Defina `SESSION_SECRET` (obrigatorio em producao; o servidor recusa subir sem ele fora de `TEST_MODE`).
+2. Na primeira subida com tabela `users` vazia, o servidor cria o admin com `INITIAL_ADMIN_USERNAME` / `INITIAL_ADMIN_PASSWORD`.
+3. Acesse `/login`; `GET /` redireciona para la sem sessao.
+4. Rotas `/api/*` protegidas retornam `401 UNAUTHORIZED` sem cookie valido.
+
+`docker-compose.yml` do repositorio **nao** inclui `SESSION_*` por padrao — injete essas variaveis no compose local ou no Coolify antes de expor a UI na rede. Testes (`npm test`) usam `TEST_MODE=true` e ignoram auth.
 
 Volumes recomendados:
 

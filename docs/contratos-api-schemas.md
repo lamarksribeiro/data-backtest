@@ -49,10 +49,91 @@ ETH
 200 sucesso
 202 job aceito
 400 request invalido ou confirmacao ausente
+401 nao autenticado ou credenciais invalidas
 404 recurso nao encontrado
 409 dados indisponiveis para execucao strict
 500 erro inesperado
 ```
+
+## Auth API
+
+A UI web e a maioria dos endpoints `/api/*` exigem sessao autenticada (cookie HMAC + bcrypt, mesmo padrao do `data-colector`). Excecoes publicas: `POST /api/login`, `GET /api/me` (retorna `401` sem sessao) e `GET /healthz`. Em `TEST_MODE=true` (`NODE_ENV=test`), o middleware ignora auth.
+
+Variaveis: `SESSION_SECRET` (obrigatorio em producao), `SESSION_MAX_AGE_SEC`, `INITIAL_ADMIN_USERNAME`, `INITIAL_ADMIN_PASSWORD`.
+
+### `POST /api/login`
+
+Request:
+
+```json
+{
+  "username": "admin",
+  "password": "change-me"
+}
+```
+
+Response sucesso (`200`):
+
+```json
+{
+  "user": {
+    "id": 1,
+    "username": "admin"
+  }
+}
+```
+
+Response credenciais invalidas (`401`):
+
+```json
+{
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Invalid credentials"
+  }
+}
+```
+
+Define cookie de sessao via `Set-Cookie`.
+
+### `POST /api/logout`
+
+Response (`200`):
+
+```json
+{
+  "ok": true
+}
+```
+
+Limpa o cookie de sessao.
+
+### `GET /api/me`
+
+Response autenticado (`200`):
+
+```json
+{
+  "principal": {
+    "kind": "session",
+    "userId": 1,
+    "username": "admin"
+  }
+}
+```
+
+Response sem sessao (`401`):
+
+```json
+{
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Not authenticated"
+  }
+}
+```
+
+Demais rotas `/api/*` sem sessao valida retornam `401` com `code: UNAUTHORIZED`. Paginas estaticas (`GET /`, views da UI) redirecionam para `/login`.
 
 ## Dataset Request
 
@@ -273,11 +354,13 @@ Response:
 }
 ```
 
-## Backtest API Atual
+## Backtest API
 
-Esta API atual expõe o runner nativo `edge-sniper-v2` como golden test transitório. Ela não define acoplamento do lakehouse core com essa estratégia. O contrato futuro do Backtest Studio deve executar estratégias por `strategy_id`/`strategy_version_id` ou por um registry genérico, sem estratégia padrão fixa no lakehouse.
+Status (jun/2026): implementada. Aceita runner nativo `edge-sniper-v2` (golden test) **ou** estrategia GLS salva via `strategy_id` + `strategy_version_id`. Bloqueia execucao strict sem `backtest_ticks` validos (`409 DATA_NOT_READY`).
 
 ### `GET /api/backtest/strategies`
+
+Lista estrategias nativas transitórias disponiveis no registry.
 
 Response:
 
@@ -289,11 +372,27 @@ Response:
 
 ### `POST /api/backtest/run`
 
-Request nativo atual:
+Request nativo:
 
 ```json
 {
   "strategy": "edge-sniper-v2",
+  "from": "2026-05-29",
+  "to": "2026-05-30",
+  "underlying": "BTC",
+  "interval": "5m",
+  "book_depth": 10,
+  "batch_size": 5000,
+  "params": {}
+}
+```
+
+Request estrategia GLS salva:
+
+```json
+{
+  "strategy_id": 12,
+  "strategy_version_id": 44,
   "from": "2026-05-29",
   "to": "2026-05-30",
   "underlying": "BTC",
@@ -364,8 +463,6 @@ Response:
   ]
 }
 ```
-
-## Backtest API Do Backtest Studio
 
 ### `GET /api/backtest/runs/:id`
 
@@ -591,6 +688,27 @@ Response:
 }
 ```
 
+### `GET /api/strategy-blocks`
+
+Lista assinaturas MVP da biblioteca padrao GLS (somente leitura; CRUD de blocos customizados nao faz parte do MVP).
+
+Response:
+
+```json
+{
+  "blocks": [
+    {
+      "module": "market",
+      "name": "distanceFromPtb",
+      "signature": "market.distanceFromPtb(underlyingPrice, priceToBeat)",
+      "description": "..."
+    }
+  ]
+}
+```
+
+> Endpoints `POST/PATCH /api/strategy-blocks` permanecem fora do escopo MVP; a UI consome apenas `GET`.
+
 ## SQLite Schemas Consolidados
 
 ### `lake_manifest`
@@ -603,7 +721,7 @@ Ver `docs/implementacao-lakehouse.md` para detalhes completos.
 
 ### `backtest_runs`
 
-Campos atuais (ordem real do schema em `src/state/sqlite.js`):
+Campos (ordem real do schema em `src/state/sqlite.js`, incluindo migracoes):
 
 ```text
 id
@@ -621,9 +739,16 @@ batches
 summary_json
 result_json
 created_at
+strategy_id
+strategy_version_id
+strategy_snapshot_json
+dataset_request_json
+status
+error
+duration_ms
 ```
 
-`result_json` atual contem o payload completo do runner, incluindo:
+`result_json` ainda contem o payload completo do runner (runs antigos e nativos), incluindo:
 
 ```json
 {
@@ -635,20 +760,9 @@ created_at
 }
 ```
 
-Isso e suficiente para smoke tests, mas o Event Explorer deve consumir `backtest_event_traces` e endpoints dedicados, nao parsear JSON grande da listagem de runs.
+O Event Explorer consome `backtest_event_traces` e endpoints dedicados (`/api/backtest/runs/:id/events`, `/chart-data`), nao parseia `result_json` na listagem.
 
-Campos futuros:
-
-```text
-strategy_id
-strategy_version_id
-strategy_snapshot_json
-dataset_request_json
-trace_root_path
-status
-error
-duration_ms
-```
+`strategy_id` e `strategy_version_id` sao `null` em runs nativos legados. `strategy_snapshot_json` guarda o codigo/params da versao GLS executada.
 
 ### `strategy_definitions`
 

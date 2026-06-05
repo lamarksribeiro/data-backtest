@@ -72,8 +72,10 @@ Runs nativos são normalizados em `backtest_event_traces` após cada execução.
 
 ### Pendente
 
-- **L8 (produção):** `Dockerfile` e `docker-compose.yml` existem no repositório com volumes `/lake` e `/state`, mas deploy Coolify, backup/restore conjunto e smoke em produção ainda **não foram validados** localmente. Use `npm run ops:check` para validar health + `active_path` antes de backup; ver lacunas em [Operação do lakehouse](docs/operacao-lakehouse.md).
-- **L5:** `PostgresTickProvider`, `HybridTickProvider`, `streamEvents` ainda pendentes.
+- **L8 (produção):** `Dockerfile` e `docker-compose.yml` existem no repositório com volumes `/lake` e `/state`, mas deploy Coolify, backup/restore conjunto e smoke em produção ainda **não foram validados**. Use `npm run ops:check` para validar health + `active_path` antes de backup; ver [Operação do lakehouse](docs/operacao-lakehouse.md). No Docker local, defina também `SESSION_SECRET` e credenciais admin (ver seção Login).
+- **L5:** `PostgresTickProvider`, `HybridTickProvider`, `streamEvents` e `streamCandles` ainda pendentes (`queryCandles` pontual ja existe).
+- **Archive `data-colector`:** endpoints e migracao `event_archive_status` no coletor ainda pendentes; o `data-backtest` ja publica status validado.
+- **Pós-MVP Backtest Studio:** autocomplete rico, diff entre versões, comparador visual de runs, otimizador de parâmetros. Ver [Manual do Backtest Studio](docs/manual-backtest-studio.md).
 
 ### Mapa de fases
 
@@ -88,7 +90,7 @@ Runs nativos são normalizados em `backtest_event_traces` após cada execução.
 | Fase 6 | L7 + adapter | parcial (golden test OK; adaptação de referências legadas pendente) |
 | Fase 7 | archive API | parcial no `data-backtest`; `data-colector` pendente |
 | Fases 8–10 | — | retencão opcional; fora do caminho padrão |
-| Fase 9.1 | L6 | parcial (UI mínima de prepare/backtest) |
+| Fase 9.1 | L6 | concluída (prepare jobs, backtest, estratégias GLS, auth) |
 | Fase 9.2 | Pre-B1 + B1 | concluída (explorer + CRUD estratégias) |
 | Fase 9.2 | B2–B5 | concluída (editor GLS, runtime, execucao lakehouse) |
 | Fase 9.2 | B6–B7 | concluída (visualizacao + GLS edge-sniper seed) |
@@ -170,7 +172,7 @@ npm test
 
 `npm run health` inicializa o banco local de estado, garante o layout básico do lakehouse e retorna estatísticas do manifest.
 
-`npm run api` sobe a API HTTP do `data-backtest` em `DATA_BACKTEST_PORT` (default `3100`) e serve a UI **Data Gecko · Backtest** (sidebar, login, rotas hash) em `http://localhost:3100`. Endpoints principais: auth (`POST /api/login`, `POST /api/logout`, `GET /api/me`), lakehouse (`/healthz`, `/api/manifest`, `/api/availability`, `/api/prepare`, `/api/prepare/run`, jobs), backtest (`/api/backtest/run`, `/api/backtest/runs`, eventos, chart-data) e estratégias GLS (`/api/strategies`, versões, `/api/strategies/validate`).
+`npm run api` sobe a API HTTP do `data-backtest` em `DATA_BACKTEST_PORT` (default `3100`) e serve a UI **Data Runner · Backtest** (sidebar, login, rotas hash) em `http://localhost:3100`. Endpoints principais: auth (`POST /api/login`, `POST /api/logout`, `GET /api/me`), lakehouse (`/healthz`, `/api/manifest`, `/api/availability`, `/api/prepare`, `/api/prepare/run`, jobs), backtest (`/api/backtest/run`, `/api/backtest/runs`, eventos, chart-data) e estratégias GLS (`/api/strategies`, versões, `/api/strategies/validate`, `/api/strategy-blocks`). Fluxo de uso: [Manual do Backtest Studio](docs/manual-backtest-studio.md).
 
 Deploy local com Docker: `docker compose up --build` monta volumes nomeados em `/lake` e `/state`. Para Coolify, mapear volumes persistentes conforme [Operação do lakehouse](docs/operacao-lakehouse.md); validação de backup local: `npm run ops:check`.
 

@@ -779,10 +779,10 @@ POST   /api/strategies/validate
 ### Blocos
 
 ```text
-GET    /api/strategy-blocks
-POST   /api/strategy-blocks
-GET    /api/strategy-blocks/:id
-PATCH  /api/strategy-blocks/:id
+GET    /api/strategy-blocks          # implementado (MVP, somente leitura)
+POST   /api/strategy-blocks          # pos-MVP
+GET    /api/strategy-blocks/:id      # pos-MVP
+PATCH  /api/strategy-blocks/:id      # pos-MVP
 ```
 
 ### Backtests
@@ -800,9 +800,21 @@ Detalhe de evento usa `eventTraceId` (PK de `backtest_event_traces`). `chart-dat
 
 ## Fases De Implementacao
 
-> Equivalencia com `docs/implementacao-editor-backtest.md`: Fase A→B1, B→B3, C→B4, D→B5, E→B6, F→B7, G→pos-MVP.
+> Equivalencia com `docs/implementacao-editor-backtest.md`: Fase A→B1, B→B3, C→B4, D→B5, E→pre-B1+B6, F→B7, G→pos-MVP.
 
-### Fase A: Fundacao Do Backtest Studio — pendente (B1; traces em pre-B1)
+Status (jun/2026):
+
+| Fase (este doc) | Implementacao | Status |
+|---|---|---|
+| A | B1 + pre-B1 traces | concluida (MVP) |
+| B | B3 Validador GLS | concluida (MVP) |
+| C | B4 Biblioteca/runtime | concluida (MVP) |
+| D | B5 Engine programavel | concluida (MVP) |
+| E | pre-B1 + B6 Visualizacao | concluida (MVP) |
+| F | B7 Migracao edge-sniper | concluida (seed GLS + paridade) |
+| G | — | pos-MVP (comparador, diff, tuning) |
+
+### Fase A: Fundacao Do Backtest Studio — concluida (MVP: B1 + pre-B1)
 
 - Criar tabelas `strategy_definitions` e `strategy_versions`.
 - Criar CRUD basico de estrategias.
@@ -810,7 +822,7 @@ Detalhe de evento usa `eventTraceId` (PK de `backtest_event_traces`). `chart-dat
 - Salvar codigo como texto.
 - Criar versoes imutaveis ao salvar.
 
-### Fase B: Linguagem GLS V1 — pendente (B3)
+### Fase B: Linguagem GLS V1 — concluida (MVP: B3)
 
 - Definir gramatica minima.
 - Criar parser.
@@ -819,7 +831,7 @@ Detalhe de evento usa `eventTraceId` (PK de `backtest_event_traces`). `chart-dat
 - Criar interpretador seguro.
 - Implementar `params`, `state`, `position`, `onEventStart`, `onTick`, `onEventEnd`.
 
-### Fase C: Biblioteca Padrao De Blocos — pendente (B4)
+### Fase C: Biblioteca Padrao De Blocos — concluida (MVP: B4)
 
 - Implementar blocos `market`.
 - Implementar blocos `prices`.
@@ -829,7 +841,7 @@ Detalhe de evento usa `eventTraceId` (PK de `backtest_event_traces`). `chart-dat
 - Implementar blocos `time`.
 - Documentar cada bloco no autocomplete.
 
-### Fase D: Engine Programavel — pendente (B5)
+### Fase D: Engine Programavel — concluida (MVP: B5)
 
 - Criar runner que executa GLS sobre `DuckDbTickProvider`.
 - Garantir modo strict antes de rodar.
@@ -838,7 +850,7 @@ Detalhe de evento usa `eventTraceId` (PK de `backtest_event_traces`). `chart-dat
 - Registrar logs/marks/metrics.
 - Aplicar limites de seguranca.
 
-### Fase E: Visualizacao — pendente (pre-B1 + B6)
+### Fase E: Visualizacao — concluida (MVP: pre-B1 + B6)
 
 - Tela de resumo do run.
 - Tabela de eventos.
@@ -847,7 +859,7 @@ Detalhe de evento usa `eventTraceId` (PK de `backtest_event_traces`). `chart-dat
 - Marcadores de entrada/saida/stop/take profit.
 - Logs por tick/evento.
 
-### Fase F: Migracao Do Edge Sniper — pendente (B7)
+### Fase F: Migracao Do Edge Sniper — concluida (MVP: B7)
 
 O nativo usa stop-reverse interno (`src/strategies/stopReverse.js`), nao a API GLS `reverse()`. Na migracao, mapear para blocos `risk.stopReverseTrigger` / budget equivalentes ou manter logica encapsulada no simulador.
 
