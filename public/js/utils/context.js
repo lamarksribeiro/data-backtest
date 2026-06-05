@@ -14,14 +14,14 @@ const DEFAULTS = {
 export function loadContext() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return { ...DEFAULTS, ...(raw ? JSON.parse(raw) : {}) };
+    return normalizeContext({ ...DEFAULTS, ...(raw ? JSON.parse(raw) : {}) });
   } catch {
     return { ...DEFAULTS };
   }
 }
 
 export function saveContext(patch) {
-  const next = { ...loadContext(), ...patch };
+  const next = normalizeContext({ ...loadContext(), ...patch });
   localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   return next;
 }
@@ -44,13 +44,14 @@ export function contextQueryParams(ctx = loadContext()) {
 }
 
 export function renderContextBar(ctx, onChange) {
+  const current = normalizeContext({ ...DEFAULTS, ...(ctx || {}) });
   const bar = document.createElement('div');
   bar.className = 'context-bar';
   bar.innerHTML = `
-    <label class="context-bar__field">De <input type="date" name="from" value="${ctx.from}"></label>
-    <label class="context-bar__field">Até <input type="date" name="to" value="${ctx.to}"></label>
-    <label class="context-bar__field">Ativo <input type="text" name="underlying" value="${ctx.underlying}" size="5"></label>
-    <label class="context-bar__field">Intervalo <input type="text" name="interval" value="${ctx.interval}" size="4"></label>
+    <label class="context-bar__field">De <input type="date" name="from" value="${current.from || ''}"></label>
+    <label class="context-bar__field">Até <input type="date" name="to" value="${current.to || ''}"></label>
+    <label class="context-bar__field">Ativo <input type="text" name="underlying" value="${current.underlying || DEFAULTS.underlying}" size="5"></label>
+    <label class="context-bar__field">Intervalo <input type="text" name="interval" value="${current.interval || DEFAULTS.interval}" size="4"></label>
   `;
   bar.querySelectorAll('input').forEach((input) => {
     input.addEventListener('change', () => {
@@ -74,4 +75,15 @@ function daysAgo(n) {
   const d = new Date();
   d.setDate(d.getDate() - n);
   return d;
+}
+
+function normalizeContext(ctx) {
+  const normalized = { ...DEFAULTS, ...(ctx || {}) };
+  for (const key of Object.keys(DEFAULTS)) {
+    const value = normalized[key];
+    if (value == null || value === '' || value === 'undefined' || value === 'null') {
+      normalized[key] = DEFAULTS[key];
+    }
+  }
+  return normalized;
 }

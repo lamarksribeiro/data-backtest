@@ -1,7 +1,7 @@
 import { initRouter, navigate } from './js/router.js';
 import { api } from './js/api.js';
 import { toast } from './js/utils/toast.js';
-import { renderContextBar } from './js/utils/context.js';
+import { loadContext, renderContextBar as renderContextControls } from './js/utils/context.js';
 import { startSidebarStatus } from './js/utils/sidebarStatus.js';
 import { renderOverview } from './js/views/overview.js';
 import { renderLakehouse } from './js/views/lakehouse.js';
@@ -100,7 +100,7 @@ const ctx = {
   renderContextBar() {
     if (!topbarActions) return;
     topbarActions.innerHTML = '';
-    topbarActions.appendChild(renderContextBar({}, () => {}));
+    topbarActions.appendChild(renderContextControls(loadContext(), () => {}));
   },
   toast,
   api,
