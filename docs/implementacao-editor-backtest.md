@@ -1,0 +1,923 @@
+# Implementacao Do Editor De Estrategias E Backtest Programavel
+
+## Objetivo
+
+Este documento descreve como implementar o Strategy Lab do `data-backtest`.
+
+O Strategy Lab e a camada onde o usuario cria, edita, salva, versiona, executa e analisa estrategias de backtest.
+
+O objetivo e sair do modelo:
+
+```text
+uma estrategia hardcoded por arquivo/classe
+```
+
+e chegar no modelo:
+
+```text
+estrategias como documentos salvos, versionados e executados por um runtime controlado
+```
+
+## Dependencias
+
+Antes de implementar este documento, o lakehouse deve ter:
+
+- `backtest_ticks` validado;
+- `lake_manifest` operacional;
+- `DuckDbTickProvider`;
+- `backtest_runs` basico;
+- API de availability/prepare;
+- backtest nativo `edge-sniper-v2` como golden test.
+
+## Principios
+
+- Estrategias editaveis nunca leem Postgres diretamente.
+- Toda execucao usa dados resolvidos pelo manifest.
+- O runtime deve ser seguro e deterministico.
+- Codigo de estrategia deve ser salvo e versionado.
+- Um run sempre aponta para um snapshot imutavel da estrategia.
+- Resultado deve ser explicavel por evento.
+- O usuario deve conseguir duplicar uma estrategia e alterar codigo/parametros.
+- `edge-sniper-v2` nativo e golden test, nao arquitetura final.
+
+## Arquitetura
+
+```text
+UI Strategy Lab
+  editor de codigo
+  parametros
+  selecao de dataset/range
+  run history
+  event explorer
+
+API Strategy Lab
+  CRUD estrategias
+  validacao
+  execucao
+  runs
+  traces
+
+Runtime GLS
+  parser
+  validator
+  interpreter
+  standard library blocks
+  order simulator
+  trace collector
+
+Lakehouse
+  manifest
+  DuckDB
+  backtest_ticks
+  ohlc/chart data
+```
+
+## Estrategia Como Documento
+
+Uma estrategia tem duas entidades:
+
+```text
+strategy_definitions
+strategy_versions
+```
+
+`strategy_definitions` guarda identidade mutavel.
+
+`strategy_versions` guarda snapshots imutaveis do codigo.
+
+## Schema SQLite
+
+### `strategy_definitions`
+
+```sql
+CREATE TABLE IF NOT EXISTS strategy_definitions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  slug TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  description TEXT,
+  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'validated', 'archived')),
+  tags_json TEXT NOT NULL DEFAULT '[]',
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+```
+
+### `strategy_versions`
+
+```sql
+CREATE TABLE IF NOT EXISTS strategy_versions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  strategy_id INTEGER NOT NULL REFERENCES strategy_definitions(id),
+  version INTEGER NOT NULL,
+  language TEXT NOT NULL DEFAULT 'gls-v1',
+  source_code TEXT NOT NULL,
+  params_schema_json TEXT NOT NULL DEFAULT '{}',
+  compiled_json TEXT,
+  validation_json TEXT NOT NULL DEFAULT '{}',
+  checksum TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  UNIQUE(strategy_id, version)
+);
+```
+
+### Evolucao De `backtest_runs`
+
+Adicionar quando o Strategy Lab entrar:
+
+```text
+strategy_id INTEGER NULL
+strategy_version_id INTEGER NULL
+strategy_snapshot_json TEXT NULL
+dataset_request_json TEXT NULL
+trace_root_path TEXT NULL
+status TEXT NOT NULL DEFAULT 'completed'
+error TEXT NULL
+duration_ms INTEGER NULL
+```
+
+### `backtest_event_traces`
+
+```sql
+CREATE TABLE IF NOT EXISTS backtest_event_traces (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  run_id INTEGER NOT NULL REFERENCES backtest_runs(id),
+  condition_id TEXT NOT NULL,
+  market_id TEXT,
+  event_start TEXT NOT NULL,
+  event_end TEXT NOT NULL,
+  side TEXT,
+  entries_count INTEGER NOT NULL DEFAULT 0,
+  exits_count INTEGER NOT NULL DEFAULT 0,
+  final_pnl REAL NOT NULL DEFAULT 0,
+  result TEXT,
+  reason TEXT,
+  ticks_count INTEGER NOT NULL DEFAULT 0,
+  summary_json TEXT NOT NULL DEFAULT '{}',
+  orders_json TEXT NOT NULL DEFAULT '[]',
+  marks_json TEXT NOT NULL DEFAULT '[]',
+  logs_json TEXT NOT NULL DEFAULT '[]',
+  metrics_json TEXT NOT NULL DEFAULT '{}',
+  chart_series_path TEXT,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+```
+
+Indices:
+
+```sql
+CREATE INDEX IF NOT EXISTS backtest_event_traces_run_idx ON backtest_event_traces(run_id, event_start);
+CREATE INDEX IF NOT EXISTS backtest_event_traces_condition_idx ON backtest_event_traces(condition_id);
+```
+
+## Linguagem GLS V1
+
+Nome provisório:
+
+```text
+GLS = GoldenLens Strategy
+```
+
+### Objetivo Da Linguagem
+
+Permitir que o usuario escreva estrategia de forma parecida com programacao comum, mas dentro de um ambiente seguro.
+
+### Nao Permitido
+
+- acesso a filesystem;
+- acesso a rede;
+- `eval`;
+- imports arbitrarios;
+- async;
+- loops sem limite;
+- acesso a variaveis de ambiente;
+- chamadas Node.js;
+- mutacao fora de `state`/`runState` permitido.
+
+### Permitido
+
+- declaracao de parametros;
+- funcoes/hooks fixos;
+- `if/else`;
+- operadores matematicos;
+- comparacoes;
+- variaveis locais;
+- chamada a blocos da biblioteca padrao;
+- chamada a API de ordens simuladas;
+- logs/marks/metrics.
+
+## Sintaxe MVP
+
+Exemplo:
+
+```js
+strategy "Simple PTB" {
+  param minDistanceAbs = 50
+  param maxAsk = 0.58
+  param stopBid = 0.18
+  param maxOrderValue = 15
+
+  onEventStart(event) {
+    state.entered = false
+  }
+
+  onTick(tick, event) {
+    let secondsLeft = time.secondsUntil(event.end, tick.ts)
+    let distance = market.distanceFromPtb(tick.underlyingPrice, event.priceToBeat)
+    let side = market.sideFromPrice(tick.underlyingPrice, event.priceToBeat)
+    let ask = book.ask(side, tick)
+    let bid = book.bid(side, tick)
+
+    if (!state.entered && secondsLeft <= 105 && distance >= params.minDistanceAbs && ask <= params.maxAsk) {
+      enter(side, { price: ask, budget: params.maxOrderValue, reason: "entry" })
+      state.entered = true
+      mark("entry")
+    }
+
+    if (position.open && bid <= params.stopBid) {
+      exit({ price: bid, reason: "stop_bid" })
+    }
+  }
+
+  onEventEnd(event) {
+    closeOpenPosition({ reason: "event_end" })
+  }
+}
+```
+
+## Parser E AST
+
+### MVP Recomendado
+
+Implementar parser simples para GLS em vez de executar JavaScript livre.
+
+Opcoes:
+
+1. Parser proprio recursivo pequeno.
+2. Parser baseado em uma gramatica simples com biblioteca leve.
+3. Subconjunto JS parseado para AST e validado rigidamente.
+
+Recomendacao inicial:
+
+```text
+Subconjunto proprio pequeno, suficiente para hooks, params, if, let e chamadas de funcao.
+```
+
+### AST Minima
+
+```json
+{
+  "type": "Strategy",
+  "name": "Simple PTB",
+  "params": [
+    { "name": "minDistanceAbs", "default": 50 }
+  ],
+  "hooks": {
+    "onEventStart": { "body": [] },
+    "onTick": { "body": [] },
+    "onEventEnd": { "body": [] }
+  }
+}
+```
+
+## Validador
+
+Validacoes obrigatorias:
+
+- sintaxe valida;
+- nome de estrategia presente;
+- parametros sem duplicidade;
+- hooks conhecidos;
+- chamadas de funcao existentes;
+- variaveis locais declaradas antes do uso;
+- escrita permitida apenas em `state`/`runState`;
+- `enter/exit/reverse/closeOpenPosition` usados com argumentos validos;
+- limites de complexidade.
+
+Formato de erro:
+
+```json
+{
+  "ok": false,
+  "errors": [
+    {
+      "line": 18,
+      "column": 12,
+      "code": "UNKNOWN_FUNCTION",
+      "message": "book.bestAsk does not exist. Did you mean book.ask?"
+    }
+  ],
+  "warnings": []
+}
+```
+
+## Biblioteca Padrao De Blocos
+
+Bloco = funcao reutilizavel, documentada e testada.
+
+### `market`
+
+```text
+distanceFromPtb(price, ptb)
+directionFromPtb(price, ptb)
+sideFromPrice(price, ptb)
+isAbovePtb(price, ptb)
+isBelowPtb(price, ptb)
+```
+
+### `prices`
+
+```text
+mid(bid, ask)
+marketProbUp(tick)
+priceForSide(side, tick)
+oppositeSide(side)
+```
+
+### `book`
+
+```text
+ask(side, tick)
+bid(side, tick)
+spread(side, tick)
+availableQty(side, maxPrice, tick)
+liquidityRatio(side, tick, budget)
+```
+
+### `signals`
+
+```text
+momentum(samples, seconds)
+slowMomentum(samples, seconds)
+volatility(samples, seconds)
+directionalEdge(side, probUp, ask)
+zScore(value, mean, std)
+```
+
+### `risk`
+
+```text
+sizeByBudget(price, budget)
+capOrderValue(value, max)
+stopBid(position, bid, threshold)
+takeProfit(position, bid, threshold)
+trailingStop(position, bid, config)
+```
+
+### `time`
+
+```text
+secondsUntil(end, ts)
+secondsSince(start, ts)
+inWindow(secondsLeft, start, end)
+isNearExpiry(secondsLeft, threshold)
+```
+
+### `debug`
+
+```text
+log(name, value)
+mark(name, data)
+metric(name, value)
+```
+
+## Runtime
+
+Modulo futuro sugerido:
+
+```text
+src/strategyLab/runtime/
+  parser.js
+  validator.js
+  interpreter.js
+  standardLibrary.js
+  orderSimulator.js
+  traceCollector.js
+```
+
+### Contexto Por Run
+
+```js
+{
+  params,
+  runState,
+  limits,
+  standardLibrary,
+  traceCollector
+}
+```
+
+### Contexto Por Evento
+
+```js
+{
+  event,
+  state,
+  position,
+  samples,
+  orders,
+  marks,
+  logs,
+  metrics
+}
+```
+
+### Hooks
+
+Ordem:
+
+```text
+onEventStart(event)
+onTick(tick, event) para cada tick
+onEventEnd(event)
+```
+
+Se hook ausente:
+
+- `onEventStart`: no-op;
+- `onTick`: obrigatorio para estrategia util, mas pode ser no-op em validacao inicial;
+- `onEventEnd`: no-op com fechamento automatico opcional configurado.
+
+## Simulador De Ordens
+
+### API Para Estrategia
+
+```js
+enter(side, { price, budget, reason })
+exit({ price, reason })
+reverse(side, { price, budget, reason })
+closeOpenPosition({ reason })
+```
+
+### Modelo MVP
+
+- uma posicao por evento;
+- compra no ask;
+- venda no bid;
+- sem fee no primeiro MVP, mas campo reservado;
+- slippage configuravel;
+- size por budget;
+- consumo de liquidez simples usando book top-N;
+- partial fill pode ficar para fase futura.
+
+### Ordem Registrada
+
+```json
+{
+  "type": "entry",
+  "side": "UP",
+  "ts": "2026-05-29T19:12:30.000Z",
+  "price": 0.52,
+  "shares": 20,
+  "notional": 10.4,
+  "reason": "distance_edge_entry"
+}
+```
+
+## Trace Collector
+
+O trace deve explicar a execucao.
+
+### Marks
+
+```json
+{
+  "ts": "2026-05-29T19:12:30.000Z",
+  "name": "entry_candidate",
+  "data": { "distance": 55, "edge": 0.08 }
+}
+```
+
+### Logs
+
+```json
+{
+  "ts": "2026-05-29T19:12:30.000Z",
+  "level": "info",
+  "name": "decision",
+  "value": "entered UP"
+}
+```
+
+### Metrics
+
+```json
+{
+  "edge": [
+    { "ts": "...", "value": 0.08 }
+  ],
+  "spread": [
+    { "ts": "...", "value": 0.03 }
+  ]
+}
+```
+
+## Limites De Seguranca
+
+Configurar por run:
+
+```text
+maxTicks
+maxEvents
+maxRuntimeMs
+maxEventRuntimeMs
+maxLogsPerEvent
+maxMarksPerEvent
+maxOrdersPerEvent
+maxOperationsPerTick
+```
+
+Defaults sugeridos:
+
+```json
+{
+  "maxRuntimeMs": 120000,
+  "maxEventRuntimeMs": 5000,
+  "maxLogsPerEvent": 200,
+  "maxMarksPerEvent": 200,
+  "maxOrdersPerEvent": 20,
+  "maxOperationsPerTick": 10000
+}
+```
+
+Status de falha:
+
+```text
+failed_validation
+failed_runtime
+failed_resource_limit
+failed_data_not_ready
+```
+
+## API
+
+### Strategies
+
+```text
+GET    /api/strategies
+POST   /api/strategies
+GET    /api/strategies/:id
+PATCH  /api/strategies/:id
+GET    /api/strategies/:id/versions
+POST   /api/strategies/:id/versions
+GET    /api/strategies/:id/versions/:versionId
+POST   /api/strategies/validate
+```
+
+### Blocks
+
+```text
+GET /api/strategy-blocks
+```
+
+No MVP, blocos podem ser read-only e vir da standard library.
+
+### Backtests
+
+```text
+POST /api/backtest/run
+GET  /api/backtest/runs
+GET  /api/backtest/runs/:id
+GET  /api/backtest/runs/:id/events
+GET  /api/backtest/runs/:id/events/:eventTraceId
+GET  /api/backtest/runs/:id/chart-data?condition_id=...
+```
+
+## Request Para Executar Estrategia Salva
+
+```json
+{
+  "strategy_id": 12,
+  "strategy_version_id": 44,
+  "from": "2026-05-29",
+  "to": "2026-05-30",
+  "underlying": "BTC",
+  "interval": "5m",
+  "book_depth": 10,
+  "batch_size": 5000,
+  "params": {
+    "minDistanceAbs": 50,
+    "maxAsk": 0.58
+  },
+  "trace": true
+}
+```
+
+## Response De Run
+
+```json
+{
+  "run": {
+    "id": 100,
+    "strategy_id": 12,
+    "strategy_version_id": 44,
+    "status": "completed",
+    "ticks": 5729,
+    "batches": 2,
+    "summary": {
+      "totalEvents": 11,
+      "totalEntries": 3,
+      "wins": 1,
+      "losses": 2,
+      "totalPnl": -4.2
+    }
+  }
+}
+```
+
+## DATA_NOT_READY
+
+Antes de executar qualquer estrategia, a API deve chamar availability strict.
+
+Se faltar dado:
+
+```http
+409 Conflict
+```
+
+```json
+{
+  "error": {
+    "code": "DATA_NOT_READY",
+    "message": "Backtest data is not ready for strict execution"
+  },
+  "availability": {},
+  "preparation": []
+}
+```
+
+## UI
+
+### Rotas/Telas Sugeridas
+
+```text
+/                         dashboard atual
+/strategies               lista de estrategias
+/strategies/:id           editor
+/runs                     historico de runs
+/runs/:id                 resultado do run
+/runs/:id/events/:eventId event explorer
+```
+
+Se a UI continuar single-page sem roteador, usar hash:
+
+```text
+#strategies
+#strategy/12
+#run/100
+#event/100/condition-id
+```
+
+## Tela De Estrategias
+
+Funcionalidades:
+
+- listar estrategias;
+- criar nova;
+- duplicar;
+- arquivar;
+- abrir ultima versao;
+- ver status;
+- ver tags.
+
+## Editor
+
+Componentes:
+
+- editor de codigo;
+- painel de parametros detectados;
+- painel de blocos disponiveis;
+- botao validar;
+- botao salvar nova versao;
+- seletor de dataset/range;
+- botao preparar dados;
+- botao executar backtest.
+
+Biblioteca sugerida:
+
+- CodeMirror para MVP;
+- Monaco se autocomplete mais avancado for necessario.
+
+## Event Explorer
+
+### Dados Necessarios
+
+- ticks do evento;
+- price_to_beat;
+- underlying_price;
+- up/down price;
+- bid/ask;
+- orders;
+- marks;
+- metrics;
+- logs.
+
+### Graficos MVP
+
+1. BTC/ETH vs price_to_beat.
+2. UP/DOWN price.
+3. Bid/ask do lado operado.
+4. Marcadores de entry/exit/stop/take profit.
+
+### Tabela Por Evento
+
+Colunas:
+
+```text
+event_start
+condition_id
+entries
+exits
+side
+pnl
+result
+reason
+ticks_count
+```
+
+Filtros:
+
+```text
+all
+entries only
+wins
+losses
+no_entry
+errors
+```
+
+## Chart Data
+
+Endpoint:
+
+```text
+GET /api/backtest/runs/:id/chart-data?condition_id=...
+```
+
+Response:
+
+```json
+{
+  "event": {},
+  "series": {
+    "underlying": [],
+    "priceToBeat": [],
+    "upPrice": [],
+    "downPrice": [],
+    "bid": [],
+    "ask": []
+  },
+  "orders": [],
+  "marks": [],
+  "logs": [],
+  "metrics": {}
+}
+```
+
+## Implementacao Em Fases
+
+### Fase B1: Persistencia De Estrategias
+
+- Criar tabelas `strategy_definitions` e `strategy_versions`.
+- Criar helpers em `src/state/strategies.js`.
+- Criar CRUD API.
+- Criar testes de CRUD.
+- Criar seed opcional com `edge-sniper-v2` como referencia textual.
+
+### Fase B2: Editor UI
+
+- Adicionar tela/lista de estrategias.
+- Adicionar editor simples.
+- Salvar nova versao.
+- Abrir versao existente.
+- Mostrar parametros detectados de forma simples.
+- Testar static UI/API.
+
+### Fase B3: Validador GLS MVP
+
+- Definir sintaxe minima.
+- Implementar parser.
+- Implementar validator.
+- Expor `POST /api/strategies/validate`.
+- Mostrar erros no editor.
+- Testar casos validos/invalidos.
+
+### Fase B4: Runtime GLS MVP
+
+- Implementar interpreter.
+- Implementar standard library inicial.
+- Implementar order simulator.
+- Implementar trace collector.
+- Rodar estrategia simples sobre ticks mockados.
+- Testar determinismo.
+
+### Fase B5: Execucao Sobre Lakehouse
+
+- Integrar runtime com `DuckDbTickProvider`.
+- Bloquear sem availability strict.
+- Persistir run com strategy/version snapshot.
+- Persistir event traces.
+- Expor detalhes do run.
+- Testar com Parquet pequeno.
+
+### Fase B6: Visualizacao
+
+- Tela de run detail.
+- Tabela de eventos.
+- Event explorer.
+- Chart BTC vs PTB.
+- Markers de ordens/marks.
+- Logs por evento.
+
+### Fase B7: Migracao Edge Sniper
+
+- Mapear blocos usados pelo nativo.
+- Adicionar blocos faltantes.
+- Reescrever edge-sniper em GLS.
+- Rodar paridade com runner nativo.
+- Documentar divergencias.
+
+## Estrategia De Testes
+
+### Parser/Validator
+
+- codigo valido;
+- parametro duplicado;
+- funcao inexistente;
+- variavel nao declarada;
+- hook desconhecido;
+- escrita proibida;
+- JSON de params invalido.
+
+### Runtime
+
+- onEventStart chamado uma vez;
+- onTick chamado para cada tick;
+- onEventEnd chamado no final;
+- entry cria ordem;
+- exit fecha posicao;
+- stop funciona;
+- limites bloqueiam loop/uso excessivo;
+- duas execucoes iguais produzem mesmo resultado.
+
+### API
+
+- CRUD estrategia;
+- salvar versao;
+- validar estrategia;
+- executar sem dados retorna `DATA_NOT_READY`;
+- executar com dados cria run;
+- run retorna traces;
+- chart-data retorna series.
+
+### UI
+
+- abrir lista;
+- criar estrategia;
+- salvar versao;
+- validar e mostrar erro;
+- executar backtest;
+- abrir run;
+- abrir evento.
+
+## Criterios De Aceite Do Strategy Lab MVP
+
+- Usuario cria estrategia pela UI.
+- Usuario salva codigo como nova versao.
+- Usuario reabre estrategia depois.
+- API valida codigo e retorna erros amigaveis.
+- Estrategia simples executa sobre `backtest_ticks` validado.
+- Run fica salvo em `backtest_runs`.
+- Event traces ficam salvos.
+- UI mostra resumo do run.
+- UI mostra lista de eventos.
+- UI mostra grafico de um evento com entry/exit.
+- Backtest bloqueia quando dados nao estao prontos.
+- `edge-sniper-v2` nativo continua funcionando como golden test.
+
+## Fora Do MVP
+
+- editor visual de blocos;
+- JavaScript arbitrario;
+- live trading;
+- multi-estrategia portfolio;
+- otimizador genetico;
+- partial fill complexo;
+- fila real de order book;
+- permissao de rede/filesystem.
+
+## Ordem Recomendada Imediata
+
+1. Implementar `backtest_event_traces` para o runner nativo atual.
+2. Criar endpoints de detalhes do run.
+3. Criar Event Explorer basico.
+4. Criar CRUD de estrategias.
+5. Criar editor simples.
+6. Criar GLS MVP.
+7. Executar estrategia simples salva.
+8. Migrar `edge-sniper-v2` para GLS.
+
+Motivo:
+
+```text
+Antes de programar estrategias novas, precisamos conseguir explicar visualmente o que um run fez.
+```

@@ -26,10 +26,20 @@ O Postgres continua sendo a fonte de verdade operacional. O lakehouse e derivado
 
 Este documento foca no lakehouse, sync, manifest, query layer e arquivamento validado. Retencao/exclusao do Postgres aparece apenas como capacidade opcional futura, nunca como comportamento padrao.
 
+A documentacao de implementacao foi separada por area para evitar ambiguidade:
+
+```text
+docs/implementacao-lakehouse.md          guia pratico para implementar lakehouse
+docs/operacao-lakehouse.md               runbook operacional do lakehouse
+docs/contrato-archive-retencao.md        contrato com data-colector e retencao opcional
+docs/contratos-api-schemas.md            contratos de API e schemas SQLite
+```
+
 A arquitetura detalhada para editor de estrategias, linguagem simples, blocos/funcoes reutilizaveis, traces por evento e visualizacao de execucao esta em:
 
 ```text
 docs/arquitetura-editor-estrategias.md
+docs/implementacao-editor-backtest.md
 ```
 
 Resumo da decisao:
@@ -802,7 +812,7 @@ Nao e objetivo padrao do projeto. Fazer apenas se houver decisao operacional exp
 - [ ] Criar delete em lotes por `condition_id`.
 - [ ] Proteger contra exclusao de eventos nao arquivados.
 - [ ] Proteger contra exclusao se `event_quality` estiver ausente.
-- [ ] Registrar quantidade apagada por evento.
+- [ ] Registrar quantidade removida por evento, caso a retencao opcional seja explicitamente habilitada.
 - [ ] Registrar espaco estimado liberado.
 - [ ] Registrar erros por evento sem abortar tudo.
 - [ ] Implementar dry-run para identificar particoes Postgres 100% arquivadas.
@@ -811,7 +821,7 @@ Nao e objetivo padrao do projeto. Fazer apenas se houver decisao operacional exp
 - [ ] Exigir backup/snapshot e confirmacao forte antes de `DROP PARTITION`.
 - [ ] Adicionar metricas no health.
 - [ ] Testar com dry-run.
-- [ ] Habilitar execucao real somente apos validacao.
+- [ ] Habilitar execucao real somente apos validacao e decisao operacional explicita.
 
 ### Fase 11: Operacao No Coolify
 
@@ -839,7 +849,7 @@ Nao bloqueia o MVP. Fazer apenas se for necessario backtest/replay ate os ultimo
 
 ### Fase 13: Opcional - Split Vertical Futuro No Data-Colector
 
-Nao bloqueia o MVP. Fazer apenas se o Postgres continuar sofrendo com heap/TOAST/cache depois do lakehouse e da retencao segura.
+Nao bloqueia o MVP. Fazer apenas se o Postgres continuar sofrendo com heap/TOAST/cache depois do lakehouse e depois de avaliar a retencao opcional.
 
 - [ ] Criar tabela `tick_books`.
 - [ ] Criar view `ticks_full`.

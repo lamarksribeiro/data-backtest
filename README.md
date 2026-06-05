@@ -7,9 +7,12 @@ O Postgres continua como fonte de verdade operacional; o lakehouse é derivado, 
 ## Documentação
 
 - [Arquitetura e plano de implementação](docs/arquitetura-lakehouse-backtest.md)
+- [Implementação do lakehouse](docs/implementacao-lakehouse.md)
 - [Operação do lakehouse](docs/operacao-lakehouse.md)
 - [Contrato de archive e retenção opcional](docs/contrato-archive-retencao.md)
 - [Editor de estrategias e backtest programavel](docs/arquitetura-editor-estrategias.md)
+- [Implementação do editor/backtest programável](docs/implementacao-editor-backtest.md)
+- [Contratos de API e schemas](docs/contratos-api-schemas.md)
 - [Paridade Edge Sniper V2](docs/paridade-edge-sniper-v2.md)
 
 ## Status atual

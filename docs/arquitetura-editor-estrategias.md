@@ -28,7 +28,7 @@ data-colector
   coleta oficial
   Postgres operacional
   archive status
-  retencao segura
+  retencao opcional desativada por padrao
 
 data-backtest lakehouse
   sync do Postgres
