@@ -356,38 +356,11 @@ Response:
 
 ## Backtest API
 
-Status (jun/2026): implementada. Aceita runner nativo `edge-sniper-v2` (golden test) **ou** estrategia GLS salva via `strategy_id` + `strategy_version_id`. Bloqueia execucao strict sem `backtest_ticks` validos (`409 DATA_NOT_READY`).
-
-### `GET /api/backtest/strategies`
-
-Lista estrategias nativas transitórias disponiveis no registry.
-
-Response:
-
-```json
-{
-  "strategies": ["edge-sniper-v2", "edgeSniperV2"]
-}
-```
+Status (jun/2026): implementada. Executa estrategias salvas/versionadas via `strategy_id` + `strategy_version_id`. Bloqueia execucao strict sem `backtest_ticks` validos (`409 DATA_NOT_READY`).
 
 ### `POST /api/backtest/run`
 
-Request nativo:
-
-```json
-{
-  "strategy": "edge-sniper-v2",
-  "from": "2026-05-29",
-  "to": "2026-05-30",
-  "underlying": "BTC",
-  "interval": "5m",
-  "book_depth": 10,
-  "batch_size": 5000,
-  "params": {}
-}
-```
-
-Request estrategia GLS salva:
+Request:
 
 ```json
 {
@@ -409,7 +382,7 @@ Response sucesso:
 {
   "run": {
     "id": 1,
-    "strategy": "EDGE_SNIPER_V2",
+    "strategy": "Minha Estrategia",
     "source": "lakehouse",
     "underlying": "BTC",
     "interval": "5m",
@@ -448,7 +421,7 @@ Response:
   "runs": [
     {
       "id": 1,
-      "strategy": "EDGE_SNIPER_V2",
+      "strategy": "Minha Estrategia",
       "source": "lakehouse",
       "underlying": "BTC",
       "interval": "5m",
@@ -582,6 +555,7 @@ Response:
       "status": "draft",
       "tags": [],
       "latest_version": 3,
+      "latest_version_id": 44,
       "created_at": "...",
       "updated_at": "..."
     }
@@ -748,11 +722,11 @@ error
 duration_ms
 ```
 
-`result_json` ainda contem o payload completo do runner (runs antigos e nativos), incluindo:
+`result_json` ainda contem o payload completo do runner, incluindo:
 
 ```json
 {
-  "strategy": "EDGE_SNIPER_V2",
+  "strategy": "Minha Estrategia",
   "summary": {},
   "events": [],
   "equity": [],
@@ -762,7 +736,7 @@ duration_ms
 
 O Event Explorer consome `backtest_event_traces` e endpoints dedicados (`/api/backtest/runs/:id/events`, `/chart-data`), nao parseia `result_json` na listagem.
 
-`strategy_id` e `strategy_version_id` sao `null` em runs nativos legados. `strategy_snapshot_json` guarda o codigo/params da versao GLS executada.
+`strategy_snapshot_json` guarda o codigo/params da versao GLS executada. Runs antigos podem nao ter snapshot completo e devem continuar legiveis no historico.
 
 ### `strategy_definitions`
 
@@ -823,8 +797,8 @@ created_at
 
 - Nao remover campos existentes de resposta sem migracao clara.
 - Novos campos devem ser opcionais inicialmente.
-- Backtest Studio deve aceitar runs nativos antigos sem `strategy_id`.
-- UI deve tratar `strategy_id=null` como estrategia nativa/legacy.
+- Backtest Studio deve aceitar runs antigos sem `strategy_id`.
+- UI deve tratar `strategy_id=null` como historico sem snapshot versionado.
 - `book_depth` deve continuar aceitando `book_depth` na API e `bookDepth` internamente.
 - Datas devem sair sempre em ISO UTC.
 

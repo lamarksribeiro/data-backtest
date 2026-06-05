@@ -22,6 +22,8 @@ import { queryCandles, queryTicks } from './query/duckdbQuery.js';
 import { getTicksForBacktestBatch } from './legacy/polymarketTestAdapter.js';
 import { runBacktest } from './backtest/engine.js';
 import { runBackupCheck } from './ops/backupCheck.js';
+import { getStrategy, getStrategyVersion } from './backtestStudio/state/strategies.js';
+import { parse } from './backtestStudio/gls/parser.js';
 
 function parseArgs(argv) {
   const [command = 'help', ...rest] = argv;
@@ -66,7 +68,7 @@ Commands:
   query:ticks Reads scalars/backtest_ticks through DuckDB using manifest active_path
   query:candles Reads OHLC candles through DuckDB using manifest active_path
   legacy:smoke Reads one polymarket-test compatible backtest batch
-  backtest:run Runs a native data-backtest strategy over lakehouse ticks
+  backtest:run Runs a versioned strategy over lakehouse ticks
   sync:partitions Lists sealed source partitions available for sync
   sync:backfill   Exports sealed scalars partitions to Parquet
   sync:backfill-books Exports raw books partitions to Parquet
@@ -87,7 +89,7 @@ Sync examples:
   node src/cli.js query:resolve --mode prepare --dataset backtest_ticks --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10
   node src/cli.js query:ticks --dataset backtest_ticks --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --limit 10
   node src/cli.js legacy:smoke --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --limit 10
-  node src/cli.js backtest:run --strategy edge-sniper-v2 --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --batch-size 5000
+  node src/cli.js backtest:run --strategy-id 1 --strategy-version-id 1 --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --batch-size 5000
 `);
 }
 
@@ -225,9 +227,30 @@ async function main() {
 
     if (command === 'backtest:run') {
       const range = toRange(flags);
+      const strategyId = optionalIntFlag(flags, 'strategy-id');
+      const strategyVersionId = optionalIntFlag(flags, 'strategy-version-id');
+      if (!strategyId || !strategyVersionId) throw new Error('--strategy-id and --strategy-version-id are required');
+      const strategy = getStrategy(db, strategyId);
+      if (!strategy) throw new Error('Strategy not found');
+      const version = getStrategyVersion(db, strategyId, strategyVersionId);
+      if (!version) throw new Error('Strategy version not found');
+      if (!version.validation?.ok) throw new Error('Strategy version failed validation');
       const result = await runBacktest(db, {
         ...range,
-        strategy: flags.strategy ? String(flags.strategy) : 'edge-sniper-v2',
+        strategy: `gls:${strategy.slug}`,
+        strategyLabel: version.source_code.match(/strategy\s+"([^"]+)"/)?.[1] || strategy.name,
+        glsAst: parse(version.source_code),
+        strategyMeta: {
+          strategy_id: strategyId,
+          strategy_version_id: strategyVersionId,
+          slug: strategy.slug,
+          name: strategy.name,
+          version: version.version,
+          language: version.language,
+          source_code: version.source_code,
+          params_schema: version.params_schema,
+          checksum: version.checksum,
+        },
         underlying: requiredFlag(flags, 'underlying').toUpperCase(),
         interval: requiredFlag(flags, 'interval'),
         bookDepth: optionalIntFlag(flags, 'book-depth') ?? config.backtestBookDepth,

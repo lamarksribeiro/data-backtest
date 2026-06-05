@@ -79,7 +79,7 @@ Conceitos importantes:
 
 Na aba **Backtests**:
 
-1. Escolha a estrategia nativa ou GLS.
+1. Escolha uma estrategia versionada.
 2. Defina `Params JSON` se quiser sobrescrever parametros, por exemplo:
 
 ```json
@@ -132,7 +132,7 @@ npm run api
 npm run health
 npm run query:availability -- --dataset backtest_ticks --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10
 npm run sync:backfill-backtest-ticks -- --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --dry-run
-npm run backtest:run -- --strategy edge-sniper-v2 --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10
+npm run backtest:run -- --strategy-id 1 --strategy-version-id 1 --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10
 npm test
 ```
 

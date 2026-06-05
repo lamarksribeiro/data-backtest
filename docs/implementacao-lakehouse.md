@@ -796,10 +796,9 @@ GET  /api/prepare/jobs
 GET  /api/prepare/jobs/:id
 ```
 
-Endpoints de backtest nativo (Fase L7, ja implementados):
+Endpoints de backtest e runs (Fase L7 + Backtest Studio, ja implementados):
 
 ```text
-GET  /api/backtest/strategies
 GET  /api/backtest/runs
 POST /api/backtest/run
 ```

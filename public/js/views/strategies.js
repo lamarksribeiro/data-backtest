@@ -1,5 +1,4 @@
 import { el, mount, emptyState } from '../utils/dom.js';
-import { escapeHtml } from '../utils/format.js';
 import { loadContext } from '../utils/context.js';
 import { backtestPayloadFromPick } from '../utils/strategyPicker.js';
 import { promptDialog, confirmDialog } from '../utils/confirm.js';
@@ -35,7 +34,7 @@ const state = { list: [], selectedId: null, selectedVersionId: null, editor: nul
 export async function renderStrategies(ctx, params = {}) {
   const strategyId = params.id ? Number(params.id) : null;
   if (strategyId) state.selectedId = strategyId;
-  ctx.setBreadcrumb('strategies', state.selectedId ? `Estratégia #${state.selectedId}` : null);
+  ctx.setBreadcrumb('strategies', null);
 
   mount(ctx.contentEl, [
     el('div', { class: 'page-header' }, [
@@ -57,10 +56,16 @@ export async function renderStrategies(ctx, params = {}) {
     return;
   }
   state.list = res.data.strategies || [];
+  if (state.selectedId && !state.list.some((strategy) => strategy.id === state.selectedId)) {
+    state.selectedId = null;
+    state.selectedVersionId = null;
+  }
   if (!state.selectedId && state.list.length) state.selectedId = state.list[0].id;
+  const selected = state.list.find((strategy) => strategy.id === state.selectedId);
+  ctx.setBreadcrumb('strategies', selected?.name || null);
 
   mount(document.getElementById('strategies-root'), [
-    el('aside', { class: 'editor-sidebar card' }, renderStrategyList(ctx)),
+    el('aside', { class: 'editor-sidebar card', id: 'strategy-list-panel' }, renderStrategyList(ctx)),
     el('div', { class: 'editor-main card', id: 'strategy-editor' }, el('p', { class: 'muted' }, 'Selecione uma estratégia.')),
     el('aside', { class: 'editor-meta card', id: 'strategy-meta' }),
   ]);
@@ -103,6 +108,7 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
   }
 
   const strategy = strategyRes.data.strategy;
+  ctx.setBreadcrumb('strategies', strategy.name);
   const versions = versionsRes.ok ? versionsRes.data.versions || [] : [];
   const version = versionId
     ? versions.find((item) => item.id === versionId) || versions[0]
@@ -115,12 +121,17 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
   }
 
   mount(editorPanel, [
-    el('h2', { class: 'card__title' }, strategy.name),
-    el('div', { class: 'row row--wrap editor-toolbar' }, [
-      el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => validateStrategyEditor(ctx) }, 'Validar'),
-      el('button', { class: 'btn btn--primary btn--sm', type: 'button', onclick: () => saveStrategyVersion(ctx, strategyId) }, 'Salvar versão'),
-      el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => runStrategyBacktest(ctx, strategyId) }, 'Executar backtest'),
-      el('button', { class: 'btn btn--danger btn--sm', type: 'button', onclick: () => deleteStrategyFlow(ctx, strategy) }, 'Apagar'),
+    el('div', { class: 'editor-main__header' }, [
+      el('div', { class: 'editor-title-block' }, [
+        el('h2', { class: 'card__title', id: 'strategy-title' }, strategy.name),
+        el('p', { class: 'muted mono editor-title-block__meta', id: 'strategy-title-meta' }, `${strategy.slug} · ${strategy.status} · v${strategy.latest_version ?? '-'}`),
+      ]),
+      el('div', { class: 'row row--wrap editor-toolbar' }, [
+        el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => validateStrategyEditor(ctx) }, 'Validar'),
+        el('button', { class: 'btn btn--primary btn--sm', type: 'button', onclick: () => saveStrategyVersion(ctx, strategyId) }, 'Salvar versão'),
+        el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => runStrategyBacktest(ctx, strategyId) }, 'Executar backtest'),
+        el('button', { class: 'btn btn--danger btn--sm', type: 'button', onclick: () => deleteStrategyFlow(ctx, strategy) }, 'Apagar'),
+      ]),
     ]),
     el('label', { class: 'field' }, [
       el('span', { class: 'field__label' }, 'Versão'),
@@ -143,11 +154,21 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
   ]);
 
   mount(metaPanel, [
-    el('h3', { class: 'card__title' }, 'Parâmetros'),
-    el('div', { id: 'strategy-params', class: 'params-list' }, el('p', { class: 'muted' }, 'Valide o código para detectar params.')),
-    el('h3', { class: 'card__title' }, 'Blocos MVP'),
-    el('ul', { class: 'mono-list' }, (blocksRes.data?.blocks || []).slice(0, 12).map((block) => el('li', {}, el('code', {}, block.signature)))),
-    el('p', { class: 'muted' }, 'Namespaces: market, book, prices, time, risk, debug.'),
+    el('div', { class: 'editor-meta__scroll' }, [
+      el('section', { class: 'editor-meta-section' }, [
+        el('h3', { class: 'card__title' }, 'Dados da estratégia'),
+        renderStrategyMetaForm(ctx, strategy),
+      ]),
+      el('section', { class: 'editor-meta-section' }, [
+        el('h3', { class: 'card__title' }, 'Parâmetros'),
+        el('div', { id: 'strategy-params', class: 'params-list' }, el('p', { class: 'muted' }, 'Valide o código para detectar params.')),
+      ]),
+      el('section', { class: 'editor-meta-section' }, [
+        el('h3', { class: 'card__title' }, 'Blocos'),
+        el('ul', { class: 'mono-list' }, (blocksRes.data?.blocks || []).slice(0, 14).map((block) => el('li', {}, el('code', {}, block.signature)))),
+        el('p', { class: 'muted' }, 'Namespaces: market, book, prices, time, risk, debug.'),
+      ]),
+    ]),
   ]);
 
   state.editor = window.CodeMirror.fromTextArea(document.getElementById('strategy-source'), {
@@ -156,6 +177,7 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
     lineNumbers: true,
     lineWrapping: true,
   });
+  window.setTimeout(() => state.editor?.refresh(), 0);
 
   if (version?.validation) renderValidation(version.validation);
 }
@@ -187,9 +209,71 @@ function renderValidation(validation) {
     const schema = validation.params_schema || {};
     const keys = Object.keys(schema);
     mount(paramsPanel, keys.length
-      ? keys.map((key) => el('div', { class: 'param-row' }, [el('code', {}, key), el('span', {}, String(schema[key]?.default ?? ''))]))
+      ? keys.map((key) => el('div', { class: 'param-row' }, [
+        el('code', { class: 'param-row__key', title: key }, key),
+        el('span', { class: 'param-row__value', title: String(schema[key]?.default ?? '') }, String(schema[key]?.default ?? '')),
+      ]))
       : el('p', { class: 'muted' }, 'Nenhum param detectado.'));
   }
+}
+
+function renderStrategyMetaForm(ctx, strategy) {
+  return el('form', {
+    class: 'strategy-meta-form',
+    id: 'strategy-meta-form',
+    onsubmit: (event) => updateStrategyMeta(event, ctx, strategy.id),
+  }, [
+    el('label', { class: 'field' }, [
+      el('span', { class: 'field__label' }, 'Nome'),
+      el('input', { class: 'field__input', name: 'name', value: strategy.name }),
+    ]),
+    el('label', { class: 'field' }, [
+      el('span', { class: 'field__label' }, 'Descrição'),
+      el('textarea', { class: 'field__input', name: 'description', rows: '3' }, strategy.description || ''),
+    ]),
+    el('label', { class: 'field' }, [
+      el('span', { class: 'field__label' }, 'Status'),
+      el('select', { class: 'field__input', name: 'status' }, ['draft', 'validated', 'archived'].map((status) => (
+        el('option', { value: status, selected: status === strategy.status }, status)
+      ))),
+    ]),
+    el('label', { class: 'field' }, [
+      el('span', { class: 'field__label' }, 'Tags'),
+      el('input', { class: 'field__input', name: 'tags', value: (strategy.tags || []).join(', '), placeholder: 'btc, 5m' }),
+    ]),
+    el('button', { class: 'btn btn--ghost btn--sm', type: 'submit' }, 'Salvar dados'),
+  ]);
+}
+
+async function updateStrategyMeta(event, ctx, strategyId) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const fd = new FormData(form);
+  const payload = {
+    name: String(fd.get('name') || '').trim(),
+    description: String(fd.get('description') || '').trim() || null,
+    status: String(fd.get('status') || 'draft'),
+    tags: String(fd.get('tags') || '').split(',').map((tag) => tag.trim()).filter(Boolean),
+  };
+  if (!payload.name) {
+    ctx.toast.warn('Informe um nome para a estratégia.');
+    return;
+  }
+  const res = await ctx.api.patch(`/api/strategies/${strategyId}`, payload);
+  if (!res.ok) {
+    ctx.toast.err(res.error?.message || 'Falha ao salvar dados');
+    return;
+  }
+  const updated = res.data.strategy;
+  state.list = state.list.map((item) => (item.id === updated.id ? updated : item));
+  ctx.setBreadcrumb('strategies', updated.name);
+  const title = document.getElementById('strategy-title');
+  if (title) title.textContent = updated.name;
+  const titleMeta = document.getElementById('strategy-title-meta');
+  if (titleMeta) titleMeta.textContent = `${updated.slug} · ${updated.status} · v${updated.latest_version ?? '-'}`;
+  const listPanel = document.getElementById('strategy-list-panel');
+  if (listPanel) mount(listPanel, renderStrategyList(ctx));
+  ctx.toast.ok('Dados da estratégia atualizados');
 }
 
 async function saveStrategyVersion(ctx, strategyId) {

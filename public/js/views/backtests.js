@@ -9,13 +9,13 @@ export async function renderBacktests(ctx) {
 
   const formCtx = loadContext();
   const strategyOptions = await loadStrategyOptions(ctx.api);
-  const defaultPick = strategyOptions[0]?.value || 'native:edge-sniper-v2';
+  const defaultPick = strategyOptions[0]?.value || '';
 
   mount(ctx.contentEl, [
     el('div', { class: 'page-header' }, [
       el('div', {}, [
         el('h1', {}, 'Backtests'),
-        el('p', { class: 'page-header__sub' }, 'Execute e acompanhe runs nativos ou GLS.'),
+        el('p', { class: 'page-header__sub' }, 'Execute e acompanhe runs de estratégias versionadas.'),
       ]),
     ]),
     el('section', { class: 'card' }, [
@@ -34,9 +34,10 @@ export async function renderBacktests(ctx) {
           el('textarea', { class: 'field__input', name: 'params', rows: '2', placeholder: '{"minDistanceAbs":40}' }),
         ]),
         el('div', { class: 'form-actions' }, [
-          el('button', { class: 'btn btn--primary', type: 'submit' }, 'Executar'),
+          el('button', { class: 'btn btn--primary', type: 'submit', disabled: !strategyOptions.length }, 'Executar'),
         ]),
       ]),
+      strategyOptions.length ? null : el('p', { class: 'muted' }, 'Crie e salve uma versão de estratégia antes de executar backtests.'),
       el('div', { id: 'backtest-run-result' }),
     ]),
     el('div', { id: 'backtests-table' }),
@@ -49,6 +50,10 @@ export async function renderBacktests(ctx) {
     const fd = new FormData(event.target);
     const ctxSaved = saveContext({ batch_size: fd.get('batch_size') });
     const pick = fd.get('strategy_pick');
+    if (!pick) {
+      ctx.toast.warn('Selecione uma estratégia versionada.');
+      return;
+    }
     let params = {};
     const rawParams = String(fd.get('params') || '').trim();
     if (rawParams) {

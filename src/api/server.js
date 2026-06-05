@@ -11,7 +11,7 @@ import { checkDatasetAvailability } from '../query/availability.js';
 import { resolveDataRequest } from '../query/dataMode.js';
 import { datasetRequestFromObject, datasetRequestFromParams } from '../query/request.js';
 import { createPrepareJobRunner } from '../prepare/runner.js';
-import { listStrategies as listNativeStrategies, runBacktest } from '../backtest/engine.js';
+import { runBacktest } from '../backtest/engine.js';
 import { createBacktestRun, getBacktestRun, listBacktestRuns } from '../state/backtestRuns.js';
 import { getChartData, getEventTrace, listEventTraces } from '../backtestStudio/state/eventTraces.js';
 import {
@@ -116,9 +116,6 @@ export function createApiHandler(deps) {
       }
       if (req.method === 'GET' && url.pathname === '/api/prepare/jobs') {
         return sendJson(res, 200, { jobs: listPrepareJobs(db, { limit: url.searchParams.get('limit') }) });
-      }
-      if (req.method === 'GET' && url.pathname === '/api/backtest/strategies') {
-        return sendJson(res, 200, { strategies: listNativeStrategies() });
       }
       if (req.method === 'GET' && url.pathname === '/api/backtest/runs') {
         return sendJson(res, 200, { runs: listBacktestRuns(db, { limit: url.searchParams.get('limit') }) });
@@ -387,6 +384,10 @@ function backtestRequestFromBody(body, config, db) {
 
   const strategyId = positiveOptionalInt(body.strategy_id);
   const strategyVersionId = positiveOptionalInt(body.strategy_version_id);
+  if (!strategyId || !strategyVersionId) {
+    throw new Error('strategy_id and strategy_version_id are required');
+  }
+
   if (strategyId && strategyVersionId) {
     const strategy = getStrategy(db, strategyId);
     if (!strategy) throw new Error('Strategy not found');
@@ -411,11 +412,6 @@ function backtestRequestFromBody(body, config, db) {
       },
     };
   }
-
-  return {
-    ...base,
-    strategy: body.strategy ? String(body.strategy) : 'edge-sniper-v2',
-  };
 }
 
 function positiveOptionalInt(value) {

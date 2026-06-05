@@ -11,6 +11,7 @@ import { createTestAuthService, testServerConfig } from './testAuth.js';
 import { upsertManifestPartition } from '../src/state/manifest.js';
 import { toPortablePath } from '../src/lake/paths.js';
 import { writeBacktestTicksParquet } from '../src/sync/duckdbParquet.js';
+import { createStrategy, createStrategyVersion } from '../src/backtestStudio/state/strategies.js';
 
 test('data-backtest API exposes health, availability and prepare plan', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-api-'));
@@ -219,7 +220,7 @@ test('data-backtest API requires confirmation for real rebuild jobs', async () =
   }
 });
 
-test('data-backtest API runs native backtest only when data is ready', async () => {
+test('data-backtest API runs versioned strategy only when data is ready', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-api-run-'));
   let server = null;
   try {
@@ -235,11 +236,27 @@ test('data-backtest API runs native backtest only when data is ready', async () 
       await new Promise((resolve) => server.listen(0, resolve));
       const baseUrl = `http://127.0.0.1:${server.address().port}`;
 
-      const strategies = await getJson(`${baseUrl}/api/backtest/strategies`);
-      assert.ok(strategies.strategies.includes('edge-sniper-v2'));
+      const strategy = createStrategy(db, { slug: 'api-gls', name: 'API GLS' });
+      const version = createStrategyVersion(db, strategy.id, {
+        source_code: `strategy "API GLS" {
+          param minDistanceAbs = 5
+          onEventStart(event) { state.entered = false }
+          onTick(tick, event) {
+            let dist = market.distanceFromPtb(tick.underlyingPrice, event.priceToBeat)
+            let side = market.sideFromPrice(tick.underlyingPrice, event.priceToBeat)
+            let ask = book.ask(side, tick)
+            if (!state.entered && dist >= params.minDistanceAbs) {
+              enter(side, { price: ask, budget: 10, reason: "entry" })
+              state.entered = true
+            }
+          }
+          onEventEnd(event) { closeOpenPosition({ reason: "event_end" }) }
+        }`,
+      });
 
       const blocked = await postJson(`${baseUrl}/api/backtest/run`, {
-        strategy: 'edge-sniper-v2',
+        strategy_id: strategy.id,
+        strategy_version_id: version.id,
         from: '2026-05-31',
         to: '2026-06-01',
         underlying: 'BTC',
@@ -268,7 +285,8 @@ test('data-backtest API runs native backtest only when data is ready', async () 
       });
 
       const completed = await postJson(`${baseUrl}/api/backtest/run`, {
-        strategy: 'edge-sniper-v2',
+        strategy_id: strategy.id,
+        strategy_version_id: version.id,
         from: '2026-05-31',
         to: '2026-06-01',
         underlying: 'BTC',
@@ -276,11 +294,12 @@ test('data-backtest API runs native backtest only when data is ready', async () 
         book_depth: 2,
         batch_size: 5,
       });
-      assert.equal(completed.result.strategy, 'EDGE_SNIPER_V2');
+      assert.equal(completed.result.strategy, 'API GLS');
       assert.equal(completed.result.ticks, 12);
       assert.equal(completed.result.batches, 3);
       assert.equal(completed.run.id, 1);
       assert.equal(completed.run.result.ticks, 12);
+      assert.equal(completed.run.strategy_id, strategy.id);
 
       const runs = await getJson(`${baseUrl}/api/backtest/runs`);
       assert.equal(runs.runs.length, 1);

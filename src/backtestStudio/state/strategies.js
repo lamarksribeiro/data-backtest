@@ -111,7 +111,13 @@ export function validateStrategySource({ language = 'gls-v1', source_code: sourc
 }
 
 function toApiStrategy(db, row) {
-  const latest = db.prepare('SELECT MAX(version) AS max_version FROM strategy_versions WHERE strategy_id = ?').get(row.id);
+  const latest = db.prepare(`
+    SELECT id, version
+    FROM strategy_versions
+    WHERE strategy_id = ?
+    ORDER BY version DESC, id DESC
+    LIMIT 1
+  `).get(row.id);
   return {
     id: Number(row.id),
     slug: row.slug,
@@ -119,7 +125,8 @@ function toApiStrategy(db, row) {
     description: row.description,
     status: row.status,
     tags: JSON.parse(row.tags_json),
-    latest_version: latest?.max_version != null ? Number(latest.max_version) : null,
+    latest_version: latest?.version != null ? Number(latest.version) : null,
+    latest_version_id: latest?.id != null ? Number(latest.id) : null,
     created_at: row.created_at,
     updated_at: row.updated_at,
   };

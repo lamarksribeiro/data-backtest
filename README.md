@@ -51,12 +51,12 @@ Os paths `arquitetura-editor-estrategias.md` e `implementacao-editor-backtest.md
 - Resolução dos modos `strict` e `prepare` para uma futura execução de backtest.
 - Plano de preparação com comandos de sync quando faltarem partições.
 - Adapter inicial para consumir `backtest_ticks` com shape compatível com `polymarket-test`.
-- Runner nativo de backtest no `data-backtest` com `DuckDbTickProvider` em batches.
-- Estratégia inicial nativa: `edge-sniper-v2`, usando `backtest_ticks` do lakehouse.
+- Engine de backtest no `data-backtest` com `DuckDbTickProvider` em batches.
+- Estratégias salvas/versionadas executadas pelo Backtest Studio sobre `backtest_ticks` do lakehouse.
 
-Paridade do `edge-sniper-v2` nativo contra o legado já validada (ver [Paridade Edge Sniper V2](docs/paridade-edge-sniper-v2.md)). A API HTTP e a UI mínima do lakehouse (`src/api/server.js`, `public/`) já estão no ar com disponibilidade, prepare jobs e backtest nativo.
+Paridade da estratégia seed Edge Sniper V2 GLS contra a referência legada já validada (ver [Paridade Edge Sniper V2](docs/paridade-edge-sniper-v2.md)). A API HTTP e a UI do lakehouse (`src/api/server.js`, `public/`) já estão no ar com disponibilidade, prepare jobs e execução de estratégias versionadas.
 
-Runs nativos são normalizados em `backtest_event_traces` após cada execução. A UI inclui **Run Detail & Event Explorer** (resumo do run, params, snapshot, tabela de eventos, gráfico BTC vs PTB com markers, logs) e endpoints `GET /api/backtest/runs/:id`, `/events`, `/events/:eventTraceId` e `/chart-data`. CRUD de `strategy_definitions` / `strategy_versions` (B1), editor GLS (B2), validador/runtime GLS (B3–B4), execução de estratégias salvas sobre o lakehouse (B5), visualização completa (B6) e seed GLS `edge-sniper-v2` (B7) também estão disponíveis. Ver [Implementação do Backtest Studio](docs/implementacao-editor-backtest.md) e [Paridade Edge Sniper V2](docs/paridade-edge-sniper-v2.md).
+Runs são normalizados em `backtest_event_traces` após cada execução. A UI inclui **Run Detail & Event Explorer** (resumo do run, params, snapshot, tabela de eventos, gráfico BTC vs PTB com markers, logs) e endpoints `GET /api/backtest/runs/:id`, `/events`, `/events/:eventTraceId` e `/chart-data`. CRUD de `strategy_definitions` / `strategy_versions` (B1), editor GLS (B2), validador/runtime GLS (B3–B4), execução de estratégias salvas sobre o lakehouse (B5), visualização completa (B6) e seed GLS Edge Sniper V2 (B7) também estão disponíveis. Ver [Implementação do Backtest Studio](docs/implementacao-editor-backtest.md) e [Paridade Edge Sniper V2](docs/paridade-edge-sniper-v2.md).
 
 ### Backtest Studio concluído (Pre-B1, B1–B7)
 
@@ -65,7 +65,7 @@ Runs nativos são normalizados em `backtest_event_traces` após cada execução.
 - UI com aba **Estrategias GLS**: lista, editor CodeMirror, params detectados, validação inline, salvar versão (B2).
 - Parser + validador GLS v1 em `src/backtestStudio/gls/` (B3).
 - Runtime GLS: interpreter, biblioteca MVP (`market`, `book`, `prices`, `time`, `risk`, `math`, `model`, `debug`), simulador de ordens, trace collector (B4).
-- `POST /api/backtest/run` aceita `strategy_id` + `strategy_version_id` ou `edge-sniper-v2` nativo; persiste snapshot da versão, traces e bloqueia sem availability strict (B5).
+- `POST /api/backtest/run` aceita `strategy_id` + `strategy_version_id`, persiste snapshot da versão, traces e bloqueia sem availability strict (B5).
 - `GET /api/strategy-blocks` lista assinaturas MVP da biblioteca padrão.
 - **B6:** Run detail (summary, params, strategy snapshot), tabela de eventos, gráfico Chart.js BTC vs PTB com markers de entry/exit, logs formatados por evento.
 - **B7:** GLS seed `src/backtestStudio/gls/strategies/edgeSniperV2.gls`, blocos `math`/`model`/`signals.effectiveMinDistance`, `seedEdgeSniperV2Strategy`, testes de paridade em `tests/edgeSniperGlsParity.test.js`.
@@ -165,7 +165,7 @@ npm run query:resolve -- --mode prepare --dataset backtest_ticks --from 2026-05-
 npm run query:ticks -- --dataset backtest_ticks --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --limit 10
 npm run query:candles -- --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --resolution 1m --limit 10
 npm run legacy:smoke -- --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --limit 10
-npm run backtest:run -- --strategy edge-sniper-v2 --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --batch-size 5000
+npm run backtest:run -- --strategy-id 1 --strategy-version-id 1 --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --batch-size 5000
 npm run manifest:mark-stale -- --underlying BTC --interval 5m --dt 2026-05-31 --reason "repair-gap"
 npm test
 ```
@@ -186,7 +186,7 @@ Jobs de preparação rodam serialmente e ficam registrados no SQLite em `prepare
 
 Para reprocessar partições `stale`, `invalid` ou `needs_review`, marque `Reprocessar indisponiveis (--rebuild)`. Execução real com rebuild exige confirmação explícita `REBUILD_PARTITIONS`; `dry-run` continua liberado para validar o plano sem escrita.
 
-`POST /api/backtest/run` executa o runner nativo `edge-sniper-v2` (golden test) **ou** uma estrategia GLS salva via `strategy_id` + `strategy_version_id`, apenas quando `backtest_ticks` esta pronto no modo estrito. Se faltar dado, retorna `409 DATA_NOT_READY`. Runs bem-sucedidos ficam persistidos em `backtest_runs` (com snapshot opcional da versao) e normalizados em `backtest_event_traces`.
+`POST /api/backtest/run` executa uma estrategia salva via `strategy_id` + `strategy_version_id`, apenas quando `backtest_ticks` esta pronto no modo estrito. Se faltar dado, retorna `409 DATA_NOT_READY`. Runs bem-sucedidos ficam persistidos em `backtest_runs` com snapshot da versao e normalizados em `backtest_event_traces`.
 
 `sync:backfill` exige `DATA_COLLECTOR_DATABASE_URL` e exporta apenas o dataset `scalars`. Para `books`, `backtest_ticks` e `ohlc`, use os comandos `sync:backfill-books`, `sync:backfill-backtest-ticks` e `sync:backfill-ohlc`.
 
@@ -204,12 +204,12 @@ Para reprocessar partições `stale`, `invalid` ou `needs_review`, marque `Repro
 
 `legacy:smoke` usa o adapter `src/legacy/polymarketTestAdapter.js` para retornar um batch no formato esperado pelo `polymarket-test`: `btc_price`, `price_to_beat`, best bid/ask e books JSON (`up_book_asks`, `up_book_bids`, `down_book_asks`, `down_book_bids`).
 
-`backtest:run` executa estratégias nativas transitórias dentro do engine de backtest. O primeiro alvo é `edge-sniper-v2`, usado como golden test para validar o motor e a paridade, não como dependência fixa do lakehouse. Ele usa BTC/price-to-beat/preços UP/DOWN/best bid-ask/books já presentes no dataset `backtest_ticks`.
+`backtest:run` executa uma estrategia versionada pelo ID da definicao e da versao. Ele usa BTC/price-to-beat/preços UP/DOWN/best bid-ask/books já presentes no dataset `backtest_ticks`.
 
 Parâmetros da estratégia podem ser passados como JSON:
 
 ```bash
-npm run backtest:run -- --strategy edge-sniper-v2 --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --params '{"minDistanceAbs":40,"maxOrderValue":10}'
+npm run backtest:run -- --strategy-id 1 --strategy-version-id 1 --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --params '{"minDistanceAbs":40,"maxOrderValue":10}'
 ```
 
 ## Research Labs e adapter legado
