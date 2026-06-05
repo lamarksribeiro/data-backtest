@@ -81,7 +81,75 @@ CREATE TABLE IF NOT EXISTS backtest_runs (
 );
 
 CREATE INDEX IF NOT EXISTS backtest_runs_lookup_idx ON backtest_runs(strategy, underlying, interval, created_at);
+
+CREATE TABLE IF NOT EXISTS backtest_event_traces (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  run_id INTEGER NOT NULL REFERENCES backtest_runs(id),
+  condition_id TEXT NOT NULL,
+  market_id TEXT,
+  event_start TEXT NOT NULL,
+  event_end TEXT NOT NULL,
+  side TEXT,
+  entries_count INTEGER NOT NULL DEFAULT 0,
+  exits_count INTEGER NOT NULL DEFAULT 0,
+  final_pnl REAL NOT NULL DEFAULT 0,
+  result TEXT,
+  reason TEXT,
+  ticks_count INTEGER NOT NULL DEFAULT 0,
+  summary_json TEXT NOT NULL DEFAULT '{}',
+  orders_json TEXT NOT NULL DEFAULT '[]',
+  marks_json TEXT NOT NULL DEFAULT '[]',
+  logs_json TEXT NOT NULL DEFAULT '[]',
+  metrics_json TEXT NOT NULL DEFAULT '{}',
+  chart_series_path TEXT,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+
+CREATE INDEX IF NOT EXISTS backtest_event_traces_run_idx ON backtest_event_traces(run_id, event_start);
+CREATE INDEX IF NOT EXISTS backtest_event_traces_condition_idx ON backtest_event_traces(condition_id);
+
+CREATE TABLE IF NOT EXISTS strategy_definitions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  slug TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  description TEXT,
+  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'validated', 'archived')),
+  tags_json TEXT NOT NULL DEFAULT '[]',
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+
+CREATE TABLE IF NOT EXISTS strategy_versions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  strategy_id INTEGER NOT NULL REFERENCES strategy_definitions(id),
+  version INTEGER NOT NULL,
+  language TEXT NOT NULL DEFAULT 'gls-v1',
+  source_code TEXT NOT NULL,
+  params_schema_json TEXT NOT NULL DEFAULT '{}',
+  compiled_json TEXT,
+  validation_json TEXT NOT NULL DEFAULT '{}',
+  checksum TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  UNIQUE(strategy_id, version)
+);
+
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
 `;
+
+const BACKTEST_RUNS_MIGRATIONS = [
+  'ALTER TABLE backtest_runs ADD COLUMN strategy_id INTEGER NULL',
+  'ALTER TABLE backtest_runs ADD COLUMN strategy_version_id INTEGER NULL',
+  'ALTER TABLE backtest_runs ADD COLUMN strategy_snapshot_json TEXT NULL',
+  'ALTER TABLE backtest_runs ADD COLUMN dataset_request_json TEXT NULL',
+  'ALTER TABLE backtest_runs ADD COLUMN status TEXT NOT NULL DEFAULT \'completed\'',
+  'ALTER TABLE backtest_runs ADD COLUMN error TEXT NULL',
+  'ALTER TABLE backtest_runs ADD COLUMN duration_ms INTEGER NULL',
+];
 
 export function openStateDatabase(stateDbPath) {
   mkdirSync(path.dirname(stateDbPath), { recursive: true });
@@ -90,7 +158,23 @@ export function openStateDatabase(stateDbPath) {
   db.exec('PRAGMA foreign_keys = ON');
   db.exec('PRAGMA busy_timeout = 5000');
   db.exec(SCHEMA_SQL);
+  migrateBacktestRuns(db);
   return db;
+}
+
+function migrateBacktestRuns(db) {
+  const cols = new Set(db.prepare('PRAGMA table_info(backtest_runs)').all().map((row) => row.name));
+  for (const sql of BACKTEST_RUNS_MIGRATIONS) {
+    const column = sql.match(/ADD COLUMN (\w+)/)?.[1];
+    if (column && !cols.has(column)) {
+      try {
+        db.exec(sql);
+        cols.add(column);
+      } catch {
+        // column may already exist in race/migration retries
+      }
+    }
+  }
 }
 
 export function closeStateDatabase(db) {

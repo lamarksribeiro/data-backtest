@@ -1,81 +1,124 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GoldenLens Data Backtest</title>
-  <link rel="stylesheet" href="/styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Data Runner · Backtest</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+        media="print"
+        onload="this.media='all'" />
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+  </noscript>
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
 </head>
 <body>
-  <main class="shell">
-    <header class="hero">
-      <div>
-        <p class="eyebrow">GoldenLens Lakehouse</p>
-        <h1>Preparacao de dados para backtest</h1>
-        <p class="sub">Consulte o manifest, veja particoes ausentes e copie o plano de sync antes de rodar estrategias.</p>
+  <div id="app" class="app">
+    <aside class="sidebar" aria-label="Navegação principal">
+      <div class="sidebar__brand">
+        <div class="sidebar__logo" aria-hidden="true">
+          <img class="sidebar__logo-img" src="/favicon.svg" alt="Data Runner Logo" />
+        </div>
+        <div>
+          <div class="sidebar__title">Data Runner</div>
+          <div class="sidebar__subtitle">GoldenLens · Backtest</div>
+        </div>
       </div>
-      <div id="health" class="pill">Conectando...</div>
+
+      <nav class="sidebar__nav">
+        <a class="navlink" href="#/overview" data-route="overview">
+          <span class="navlink__icon" aria-hidden="true">◉</span>
+          <span class="navlink__label">Visão Geral</span>
+        </a>
+        <a class="navlink" href="#/data" data-route="data">
+          <span class="navlink__icon" aria-hidden="true">◫</span>
+          <span class="navlink__label">Dados</span>
+        </a>
+        <a class="navlink" href="#/jobs" data-route="jobs">
+          <span class="navlink__icon" aria-hidden="true">⚙</span>
+          <span class="navlink__label">Jobs</span>
+        </a>
+        <a class="navlink" href="#/backtests" data-route="backtests">
+          <span class="navlink__icon" aria-hidden="true">▦</span>
+          <span class="navlink__label">Backtests</span>
+        </a>
+        <a class="navlink" href="#/strategies" data-route="strategies">
+          <span class="navlink__icon" aria-hidden="true">⌘</span>
+          <span class="navlink__label">Estratégias</span>
+        </a>
+      </nav>
+
+      <div class="sidebar__footer">
+        <div class="sidebar__user">
+          <span class="dot dot--ok connection-dot" aria-hidden="true"></span>
+          <span class="connection-label">Conectando…</span>
+        </div>
+        <button class="btn btn--ghost btn--sm logout-btn" type="button" data-action="logout">Sair</button>
+      </div>
+    </aside>
+
+    <header class="topbar">
+      <button id="menu-btn" class="menu-btn" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobile-nav">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </button>
+      <button id="nav-back" class="topbar__back" type="button" hidden aria-label="Voltar">←</button>
+      <div class="topbar__crumbs">
+        <button id="crumb-section" class="topbar__crumb-link" type="button">Visão Geral</button>
+        <span class="topbar__sep" id="crumb-sep" hidden>›</span>
+        <span id="crumb-detail" class="topbar__detail" hidden></span>
+      </div>
+      <div class="topbar__actions" id="topbar-actions"></div>
     </header>
 
-    <section class="card">
-      <form id="prepare-form" class="form">
-        <label>Dataset
-          <select name="dataset">
-            <option value="backtest_ticks">backtest_ticks</option>
-            <option value="scalars">scalars</option>
-            <option value="books">books</option>
-            <option value="ohlc">ohlc</option>
-          </select>
-        </label>
-        <label>From
-          <input name="from" type="date" required>
-        </label>
-        <label>To
-          <input name="to" type="date" required>
-        </label>
-        <label>Underlying
-          <input name="underlying" value="BTC" required>
-        </label>
-        <label>Interval
-          <input name="interval" value="5m" required>
-        </label>
-        <label>Book depth
-          <input name="book_depth" type="number" min="1" value="10">
-        </label>
-        <label>Resolution
-          <select name="resolution">
-            <option value="1m">1m</option>
-            <option value="1s">1s</option>
-            <option value="5s">5s</option>
-            <option value="5m">5m</option>
-          </select>
-        </label>
-        <label>Strategy
-          <select name="strategy">
-            <option value="edge-sniper-v2">edge-sniper-v2</option>
-          </select>
-        </label>
-        <label>Batch size
-          <input name="batch_size" type="number" min="1" value="5000">
-        </label>
-        <label>Strategy params JSON
-          <textarea name="params" rows="3" placeholder='{"minDistanceAbs":40}'></textarea>
-        </label>
-        <label class="check">
-          <input name="dry_run" type="checkbox" checked>
-          Dry-run
-        </label>
-        <label class="check">
-          <input name="rebuild" type="checkbox">
-          Reprocessar indisponiveis (--rebuild)
-        </label>
-        <button type="submit">Verificar disponibilidade</button>
-      </form>
-    </section>
+    <main class="content" id="content" aria-live="polite"></main>
+  </div>
 
-    <section id="result" class="result"></section>
-    <section id="runs" class="result"></section>
-  </main>
+  <div id="mobile-nav" class="mobile-nav" aria-hidden="true">
+    <div class="mobile-nav__backdrop" tabindex="-1" aria-hidden="true"></div>
+    <aside class="mobile-nav__panel" aria-label="Menu">
+      <div class="mobile-nav__header">
+        <div class="sidebar__brand mobile-nav__brand">
+          <div class="sidebar__logo" aria-hidden="true">
+            <img class="sidebar__logo-img" src="/favicon.svg" alt="" />
+          </div>
+          <div>
+            <div class="sidebar__title">Data Runner</div>
+            <div class="sidebar__subtitle">GoldenLens · Backtest</div>
+          </div>
+        </div>
+        <button class="mobile-nav__close btn btn--icon btn--ghost" type="button" aria-label="Fechar">✕</button>
+      </div>
+      <nav class="mobile-nav__links">
+        <a class="navlink" href="#/overview" data-route="overview"><span class="navlink__icon">◉</span><span class="navlink__label">Visão Geral</span></a>
+        <a class="navlink" href="#/data" data-route="data"><span class="navlink__icon">◫</span><span class="navlink__label">Dados</span></a>
+        <a class="navlink" href="#/jobs" data-route="jobs"><span class="navlink__icon">⚙</span><span class="navlink__label">Jobs</span></a>
+        <a class="navlink" href="#/backtests" data-route="backtests"><span class="navlink__icon">▦</span><span class="navlink__label">Backtests</span></a>
+        <a class="navlink" href="#/strategies" data-route="strategies"><span class="navlink__icon">⌘</span><span class="navlink__label">Estratégias</span></a>
+      </nav>
+      <div class="mobile-nav__footer">
+        <div class="sidebar__user">
+          <span class="dot dot--ok connection-dot" aria-hidden="true"></span>
+          <span class="connection-label">Conectando…</span>
+        </div>
+        <button class="btn btn--ghost btn--sm logout-btn" type="button" data-action="logout">Sair</button>
+      </div>
+    </aside>
+  </div>
+
+  <div id="modal-root" aria-hidden="true"></div>
+  <div id="toast-stack" class="toast-stack" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
   <script type="module" src="/app.js"></script>
 </body>
 </html>

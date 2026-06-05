@@ -7,6 +7,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { createApiServer } from '../src/api/server.js';
 import { createPrepareJobRunner } from '../src/prepare/runner.js';
 import { openStateDatabase, closeStateDatabase } from '../src/state/sqlite.js';
+import { createTestAuthService, testServerConfig } from './testAuth.js';
 import { upsertManifestPartition } from '../src/state/manifest.js';
 import { toPortablePath } from '../src/lake/paths.js';
 import { writeBacktestTicksParquet } from '../src/sync/duckdbParquet.js';
@@ -15,13 +16,12 @@ test('data-backtest API exposes health, availability and prepare plan', async ()
   const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-api-'));
   let server = null;
   try {
-    const config = {
+    const config = testServerConfig({
       lakeRoot: path.join(dir, 'lake'),
       stateDbPath: path.join(dir, 'state.db'),
-      backtestDataMode: 'strict',
-      backtestBookDepth: 10,
-    };
+    });
     const db = openStateDatabase(config.stateDbPath);
+    const authService = createTestAuthService(db);
     try {
       upsertManifestPartition(db, {
         dataset: 'backtest_ticks',
@@ -33,7 +33,7 @@ test('data-backtest API exposes health, availability and prepare plan', async ()
         status: 'valid',
       });
 
-      server = createApiServer({ config, db });
+      server = createApiServer({ config, db, authService });
       await new Promise((resolve) => server.listen(0, resolve));
       const baseUrl = `http://127.0.0.1:${server.address().port}`;
 
@@ -44,7 +44,7 @@ test('data-backtest API exposes health, availability and prepare plan', async ()
       const page = await fetch(`${baseUrl}/`);
       assert.equal(page.status, 200);
       assert.match(page.headers.get('content-type'), /text\/html/);
-      assert.match(await page.text(), /Preparacao de dados/);
+      assert.match(await page.text(), /Data Runner/);
 
       const script = await fetch(`${baseUrl}/app.js`);
       assert.equal(script.status, 200);
@@ -70,15 +70,14 @@ test('data-backtest API returns 400 for invalid requests', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-api-invalid-'));
   let server = null;
   try {
-    const config = {
+    const config = testServerConfig({
       lakeRoot: path.join(dir, 'lake'),
       stateDbPath: path.join(dir, 'state.db'),
-      backtestDataMode: 'strict',
-      backtestBookDepth: 10,
-    };
+    });
     const db = openStateDatabase(config.stateDbPath);
+    const authService = createTestAuthService(db);
     try {
-      server = createApiServer({ config, db });
+      server = createApiServer({ config, db, authService });
       await new Promise((resolve) => server.listen(0, resolve));
       const res = await fetch(`http://127.0.0.1:${server.address().port}/api/availability?dataset=backtest_ticks`);
       const body = await res.json();
@@ -98,20 +97,19 @@ test('data-backtest API creates and completes prepare jobs', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-api-job-'));
   let server = null;
   try {
-    const config = {
+    const config = testServerConfig({
       lakeRoot: path.join(dir, 'lake'),
       stateDbPath: path.join(dir, 'state.db'),
-      backtestDataMode: 'strict',
-      backtestBookDepth: 10,
-    };
+    });
     const db = openStateDatabase(config.stateDbPath);
+    const authService = createTestAuthService(db);
     try {
       const prepareRunner = createPrepareJobRunner({
         config,
         db,
         executeActions: async ({ actions, dryRun }) => actions.map((action) => ({ command: action.command, dryRun })),
       });
-      server = createApiServer({ config, db, prepareRunner });
+      server = createApiServer({ config, db, prepareRunner, authService });
       await new Promise((resolve) => server.listen(0, resolve));
       const baseUrl = `http://127.0.0.1:${server.address().port}`;
 
@@ -146,13 +144,12 @@ test('data-backtest API requires confirmation for real rebuild jobs', async () =
   const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-api-rebuild-'));
   let server = null;
   try {
-    const config = {
+    const config = testServerConfig({
       lakeRoot: path.join(dir, 'lake'),
       stateDbPath: path.join(dir, 'state.db'),
-      backtestDataMode: 'strict',
-      backtestBookDepth: 10,
-    };
+    });
     const db = openStateDatabase(config.stateDbPath);
+    const authService = createTestAuthService(db);
     try {
       upsertManifestPartition(db, {
         dataset: 'backtest_ticks',
@@ -172,7 +169,7 @@ test('data-backtest API requires confirmation for real rebuild jobs', async () =
           args: action.args,
         })),
       });
-      server = createApiServer({ config, db, prepareRunner });
+      server = createApiServer({ config, db, prepareRunner, authService });
       await new Promise((resolve) => server.listen(0, resolve));
       const baseUrl = `http://127.0.0.1:${server.address().port}`;
 
@@ -226,15 +223,15 @@ test('data-backtest API runs native backtest only when data is ready', async () 
   const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-api-run-'));
   let server = null;
   try {
-    const config = {
+    const config = testServerConfig({
       lakeRoot: path.join(dir, 'lake'),
       stateDbPath: path.join(dir, 'state.db'),
-      backtestDataMode: 'strict',
       backtestBookDepth: 2,
-    };
+    });
     const db = openStateDatabase(config.stateDbPath);
+    const authService = createTestAuthService(db);
     try {
-      server = createApiServer({ config, db });
+      server = createApiServer({ config, db, authService });
       await new Promise((resolve) => server.listen(0, resolve));
       const baseUrl = `http://127.0.0.1:${server.address().port}`;
 

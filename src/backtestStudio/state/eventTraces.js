@@ -1,0 +1,233 @@
+import { queryTicks } from '../../query/duckdbQuery.js';
+
+export function persistEventTraces(db, runId, result) {
+  db.prepare('DELETE FROM backtest_event_traces WHERE run_id = ?').run(runId);
+  const rows = normalizeEventsFromResult(runId, result);
+  const insert = db.prepare(`
+    INSERT INTO backtest_event_traces (
+      run_id, condition_id, market_id, event_start, event_end, side,
+      entries_count, exits_count, final_pnl, result, reason, ticks_count,
+      summary_json, orders_json, marks_json, logs_json, metrics_json
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  for (const row of rows) {
+    insert.run(
+      row.run_id,
+      row.condition_id,
+      row.market_id,
+      row.event_start,
+      row.event_end,
+      row.side,
+      row.entries_count,
+      row.exits_count,
+      row.final_pnl,
+      row.result,
+      row.reason,
+      row.ticks_count,
+      JSON.stringify(row.summary),
+      JSON.stringify(row.orders),
+      JSON.stringify(row.marks),
+      JSON.stringify(row.logs),
+      JSON.stringify(row.metrics),
+    );
+  }
+  return listEventTraces(db, runId);
+}
+
+export function listEventTraces(db, runId, { result, limit = 100, offset = 0 } = {}) {
+  const safeLimit = Math.min(Math.max(Number.parseInt(String(limit), 10) || 100, 1), 500);
+  const safeOffset = Math.max(Number.parseInt(String(offset), 10) || 0, 0);
+  let sql = 'SELECT * FROM backtest_event_traces WHERE run_id = ?';
+  const params = [runId];
+  if (result) {
+    sql += ' AND result = ?';
+    params.push(String(result));
+  }
+  sql += ' ORDER BY event_start ASC LIMIT ? OFFSET ?';
+  params.push(safeLimit, safeOffset);
+  return db.prepare(sql).all(...params).map(toApiEventSummary);
+}
+
+export function getEventTrace(db, runId, eventTraceId) {
+  const row = db.prepare('SELECT * FROM backtest_event_traces WHERE run_id = ? AND id = ?').get(runId, eventTraceId);
+  return row ? toApiEventDetail(row) : null;
+}
+
+export function getEventTraceByConditionId(db, runId, conditionId) {
+  const row = db.prepare(`
+    SELECT * FROM backtest_event_traces
+    WHERE run_id = ? AND condition_id = ?
+    ORDER BY event_start ASC
+    LIMIT 1
+  `).get(runId, conditionId);
+  return row ? toApiEventDetail(row) : null;
+}
+
+export async function getChartData(db, config, run, conditionId) {
+  const event = getEventTraceByConditionId(db, run.id, conditionId);
+  if (!event) return null;
+
+  const rows = await queryTicks(db, {
+    dataset: 'backtest_ticks',
+    underlying: run.underlying,
+    interval: run.interval,
+    bookDepth: run.bookDepth,
+    from: event.event_start,
+    to: event.event_end,
+    limit: 100000,
+    offset: 0,
+    validBacktestRows: true,
+  });
+  const filtered = rows.filter((row) => row.condition_id === conditionId);
+  const side = event.side || 'UP';
+  const series = buildChartSeries(filtered, side);
+
+  return {
+    event: toApiEventSummaryFromDetail(event),
+    series,
+    orders: event.orders,
+    marks: event.marks,
+    logs: event.logs,
+    metrics: event.metrics,
+  };
+}
+
+function normalizeEventsFromResult(runId, result) {
+  const events = Array.isArray(result?.events) ? result.events : [];
+  const globalLog = Array.isArray(result?.log) ? result.log : [];
+  return events.map((event) => {
+    const eventStart = new Date(event.eventStart).toISOString();
+    const eventEnd = new Date(event.eventEnd).toISOString();
+    const closedAt = event.closedAt ? new Date(event.closedAt).toISOString() : eventEnd;
+    const orders = Array.isArray(event.orders) ? event.orders : [];
+    const exits = Array.isArray(event.exits) ? event.exits : [];
+    const logs = globalLog.filter((entry) => {
+      const ts = new Date(entry.ts).getTime();
+      return ts >= new Date(eventStart).getTime() && ts <= new Date(closedAt).getTime();
+    });
+    const summary = {
+      eventId: event.eventId,
+      positionType: event.positionType ?? null,
+      entryTime: event.entryTime ?? null,
+      entryDistanceToPtb: event.entryDistanceToPtb ?? null,
+      entryTimeRemaining: event.entryTimeRemaining ?? null,
+      quantity: event.quantity ?? 0,
+      cost: event.cost ?? 0,
+      avgEntryPrice: event.avgEntryPrice ?? null,
+      expirationResult: event.expirationResult ?? null,
+      winnerSide: event.winnerSide ?? null,
+      expiryPnl: event.expiryPnl ?? 0,
+      closedAt,
+      profitOrders: event.profitOrders ?? [],
+      reversals: event.reversals ?? [],
+      diagnostics: event.diagnostics ?? null,
+    };
+    return {
+      run_id: runId,
+      condition_id: String(event.eventId),
+      market_id: event.marketId ?? null,
+      event_start: eventStart,
+      event_end: eventEnd,
+      side: event.positionType ?? null,
+      entries_count: orders.length,
+      exits_count: exits.length,
+      final_pnl: Number(event.finalPnl || 0),
+      result: deriveEventResult(event),
+      reason: event.reason ?? null,
+      ticks_count: logs.length,
+      summary,
+      orders,
+      marks: Array.isArray(event.marks) ? event.marks : [],
+      logs,
+      metrics: buildEventMetrics(event),
+    };
+  });
+}
+
+function deriveEventResult(event) {
+  if (event.reason === 'no_entry') return 'no_entry';
+  const pnl = Number(event.finalPnl || 0);
+  if (pnl > 0) return 'win';
+  if (pnl < 0) return 'loss';
+  return 'loss';
+}
+
+function buildEventMetrics(event) {
+  const metrics = {};
+  if (event.diagnostics) {
+    for (const [key, value] of Object.entries(event.diagnostics)) {
+      if (value != null) metrics[key] = [{ ts: event.entryTime || event.closedAt || event.eventEnd, value }];
+    }
+  }
+  if (event.entryDiagnostics) {
+    for (const [key, value] of Object.entries(event.entryDiagnostics)) {
+      if (value != null) metrics[key] = [{ ts: event.entryTime || event.eventStart, value }];
+    }
+  }
+  return metrics;
+}
+
+function buildChartSeries(rows, side) {
+  const prefix = side === 'DOWN' ? 'down' : 'up';
+  return {
+    underlying: rows.map((row) => point(row.ts, row.underlying_price)),
+    priceToBeat: rows.map((row) => point(row.ts, row.price_to_beat)),
+    upPrice: rows.map((row) => point(row.ts, row.up_price)),
+    downPrice: rows.map((row) => point(row.ts, row.down_price)),
+    bid: rows.map((row) => point(row.ts, row[`${prefix}_best_bid`])),
+    ask: rows.map((row) => point(row.ts, row[`${prefix}_best_ask`])),
+  };
+}
+
+function point(ts, value) {
+  return { ts: new Date(ts).toISOString(), value: value == null ? null : Number(value) };
+}
+
+function toApiEventSummary(row) {
+  return {
+    id: Number(row.id),
+    run_id: Number(row.run_id),
+    condition_id: row.condition_id,
+    market_id: row.market_id,
+    event_start: row.event_start,
+    event_end: row.event_end,
+    side: row.side,
+    entries_count: row.entries_count,
+    exits_count: row.exits_count,
+    final_pnl: row.final_pnl,
+    result: row.result,
+    reason: row.reason,
+    ticks_count: row.ticks_count,
+    created_at: row.created_at,
+  };
+}
+
+function toApiEventDetail(row) {
+  return {
+    id: Number(row.id),
+    run_id: Number(row.run_id),
+    condition_id: row.condition_id,
+    market_id: row.market_id,
+    event_start: row.event_start,
+    event_end: row.event_end,
+    side: row.side,
+    entries_count: row.entries_count,
+    exits_count: row.exits_count,
+    final_pnl: row.final_pnl,
+    result: row.result,
+    reason: row.reason,
+    ticks_count: row.ticks_count,
+    summary: JSON.parse(row.summary_json),
+    orders: JSON.parse(row.orders_json),
+    marks: JSON.parse(row.marks_json),
+    logs: JSON.parse(row.logs_json),
+    metrics: JSON.parse(row.metrics_json),
+    chart_series_path: row.chart_series_path,
+    created_at: row.created_at,
+  };
+}
+
+function toApiEventSummaryFromDetail(event) {
+  const { summary, orders, marks, logs, metrics, ...rest } = event;
+  return rest;
+}

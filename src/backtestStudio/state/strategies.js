@@ -1,0 +1,153 @@
+import { createHash } from 'node:crypto';
+import { validate as validateGls } from '../gls/validator.js';
+
+const ALLOWED_STATUS = new Set(['draft', 'validated', 'archived']);
+
+export function listStrategies(db) {
+  return db.prepare('SELECT * FROM strategy_definitions ORDER BY updated_at DESC, id DESC').all()
+    .map((row) => toApiStrategy(db, row));
+}
+
+export function getStrategy(db, id) {
+  const row = db.prepare('SELECT * FROM strategy_definitions WHERE id = ?').get(id);
+  return row ? toApiStrategy(db, row) : null;
+}
+
+export function createStrategy(db, { slug, name, description = null, tags = [] }) {
+  const normalizedSlug = normalizeSlug(slug);
+  const normalizedName = normalizeName(name);
+  const result = db.prepare(`
+    INSERT INTO strategy_definitions (slug, name, description, tags_json)
+    VALUES (?, ?, ?, ?)
+  `).run(normalizedSlug, normalizedName, description, JSON.stringify(normalizeTags(tags)));
+  return getStrategy(db, result.lastInsertRowid);
+}
+
+export function updateStrategy(db, id, patch = {}) {
+  const current = getStrategy(db, id);
+  if (!current) return null;
+
+  const next = {
+    name: patch.name != null ? normalizeName(patch.name) : current.name,
+    description: patch.description !== undefined ? patch.description : current.description,
+    status: patch.status != null ? normalizeStatus(patch.status) : current.status,
+    tags: patch.tags != null ? normalizeTags(patch.tags) : current.tags,
+  };
+
+  db.prepare(`
+    UPDATE strategy_definitions
+    SET name = ?, description = ?, status = ?, tags_json = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+    WHERE id = ?
+  `).run(next.name, next.description, next.status, JSON.stringify(next.tags), id);
+
+  return getStrategy(db, id);
+}
+
+export function listStrategyVersions(db, strategyId) {
+  return db.prepare(`
+    SELECT * FROM strategy_versions
+    WHERE strategy_id = ?
+    ORDER BY version DESC, id DESC
+  `).all(strategyId).map(toApiVersion);
+}
+
+export function getStrategyVersion(db, strategyId, versionId) {
+  const row = db.prepare('SELECT * FROM strategy_versions WHERE strategy_id = ? AND id = ?').get(strategyId, versionId);
+  return row ? toApiVersion(row) : null;
+}
+
+export function createStrategyVersion(db, strategyId, { language = 'gls-v1', source_code: sourceCode }) {
+  const strategy = getStrategy(db, strategyId);
+  if (!strategy) return null;
+  const code = String(sourceCode || '').trim();
+  if (!code) throw new Error('source_code is required');
+
+  const latest = db.prepare('SELECT MAX(version) AS max_version FROM strategy_versions WHERE strategy_id = ?').get(strategyId);
+  const version = Number(latest?.max_version || 0) + 1;
+  const validation = validateStrategySource({ language, source_code: code });
+  const result = db.prepare(`
+    INSERT INTO strategy_versions (
+      strategy_id, version, language, source_code, params_schema_json, validation_json, checksum
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    strategyId,
+    version,
+    String(language || 'gls-v1'),
+    code,
+    JSON.stringify(validation.params_schema || {}),
+    JSON.stringify(validation),
+    checksumSource(code),
+  );
+
+  db.prepare(`
+    UPDATE strategy_definitions
+    SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+    WHERE id = ?
+  `).run(strategyId);
+
+  return getStrategyVersion(db, strategyId, result.lastInsertRowid);
+}
+
+export function validateStrategySource({ language = 'gls-v1', source_code: sourceCode }) {
+  const result = validateGls(sourceCode, { language });
+  const { ast, ...publicResult } = result;
+  return publicResult;
+}
+
+function toApiStrategy(db, row) {
+  const latest = db.prepare('SELECT MAX(version) AS max_version FROM strategy_versions WHERE strategy_id = ?').get(row.id);
+  return {
+    id: Number(row.id),
+    slug: row.slug,
+    name: row.name,
+    description: row.description,
+    status: row.status,
+    tags: JSON.parse(row.tags_json),
+    latest_version: latest?.max_version != null ? Number(latest.max_version) : null,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  };
+}
+
+function toApiVersion(row) {
+  const validation = JSON.parse(row.validation_json);
+  return {
+    id: Number(row.id),
+    strategy_id: Number(row.strategy_id),
+    version: row.version,
+    language: row.language,
+    source_code: row.source_code,
+    params_schema: JSON.parse(row.params_schema_json),
+    validation,
+    checksum: row.checksum,
+    created_at: row.created_at,
+  };
+}
+
+function normalizeSlug(value) {
+  const slug = String(value || '').trim().toLowerCase();
+  if (!slug) throw new Error('slug is required');
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) throw new Error('slug must be lowercase alphanumeric with hyphens');
+  return slug;
+}
+
+function normalizeName(value) {
+  const name = String(value || '').trim();
+  if (!name) throw new Error('name is required');
+  return name;
+}
+
+function normalizeStatus(value) {
+  const status = String(value || '').trim().toLowerCase();
+  if (!ALLOWED_STATUS.has(status)) throw new Error(`status must be one of: ${[...ALLOWED_STATUS].join(', ')}`);
+  return status;
+}
+
+function normalizeTags(value) {
+  if (!Array.isArray(value)) throw new Error('tags must be an array');
+  return value.map((tag) => String(tag).trim()).filter(Boolean);
+}
+
+function checksumSource(sourceCode) {
+  return createHash('sha256').update(String(sourceCode)).digest('hex');
+}

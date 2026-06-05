@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Login · Data Runner</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/styles.css" />
+  <style>
+    body {
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 10% 20%, rgba(249, 115, 22, 0.05), transparent 45%),
+        radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.03), transparent 45%),
+        radial-gradient(800px 400px at 50% -10%, rgba(249, 115, 22, 0.08), transparent 70%),
+        var(--bg-0);
+      overflow-x: hidden;
+    }
+    .login {
+      width: min(420px, calc(100vw - 32px));
+      background: rgba(15, 22, 36, 0.6);
+      backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 24px 50px rgba(0, 0, 0, 0.6), 0 0 40px rgba(249, 115, 22, 0.06);
+      padding: 40px 32px;
+    }
+    .login__brand { text-align: center; margin-bottom: 28px; }
+    .login h1 {
+      margin: 0 0 4px;
+      font-size: 26px;
+      background: linear-gradient(135deg, #f97316, #ea580c);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 800;
+    }
+    .login__subtitle {
+      font-size: 11px;
+      color: var(--text-2);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .login form { display: flex; flex-direction: column; gap: 18px; }
+    .login__error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      color: #f87171;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin: 0;
+    }
+    .login button[type="submit"] {
+      width: 100%;
+      padding: 13px;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(135deg, #f97316, #ea580c);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
+    }
+  </style>
+</head>
+<body>
+  <div class="login">
+    <div class="login__brand">
+      <h1>Data Runner</h1>
+      <div class="login__subtitle">GoldenLens · Backtest</div>
+    </div>
+    <form id="login-form" autocomplete="on" novalidate>
+      <div class="field">
+        <label class="field__label" for="username">Usuário</label>
+        <input id="username" class="field__input" name="username" type="text" autocomplete="username" required />
+      </div>
+      <div class="field">
+        <label class="field__label" for="password">Senha</label>
+        <input id="password" class="field__input" name="password" type="password" autocomplete="current-password" required />
+      </div>
+      <p id="login-error" class="login__error" hidden></p>
+      <button type="submit" class="btn btn--primary">Entrar</button>
+    </form>
+  </div>
+  <script>
+    const form = document.getElementById('login-form');
+    const errorEl = document.getElementById('login-error');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      errorEl.hidden = true;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Entrando...';
+      const fd = new FormData(form);
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: String(fd.get('username') || '').trim(),
+            password: String(fd.get('password') || ''),
+          }),
+          credentials: 'same-origin',
+        });
+        if (res.ok) { location.href = '/'; return; }
+        let msg = 'Credenciais inválidas';
+        try {
+          const body = await res.json();
+          if (body?.error?.message && res.status !== 401) msg = body.error.message;
+        } catch { /* ignore */ }
+        errorEl.textContent = msg;
+        errorEl.hidden = false;
+      } catch {
+        errorEl.textContent = 'Falha de rede. Tente novamente.';
+        errorEl.hidden = false;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Entrar';
+      }
+    });
+  </script>
+  <script src="/js/mascot.js" defer></script>
+</body>
+</html>

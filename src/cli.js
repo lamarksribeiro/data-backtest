@@ -21,6 +21,7 @@ import { resolveDataRequest } from './query/dataMode.js';
 import { queryCandles, queryTicks } from './query/duckdbQuery.js';
 import { getTicksForBacktestBatch } from './legacy/polymarketTestAdapter.js';
 import { runBacktest } from './backtest/engine.js';
+import { runBackupCheck } from './ops/backupCheck.js';
 
 function parseArgs(argv) {
   const [command = 'help', ...rest] = argv;
@@ -50,11 +51,13 @@ function printHelp() {
 Usage:
   npm run health
   npm run storage:check
+  npm run ops:check
   npm run manifest:list -- --status valid --limit 50
 
 Commands:
   health          Checks state DB, manifest and lake storage
   storage:check   Ensures lake folders exist and are writable
+  ops:check       Validates health, storage and manifest active_path files for backup readiness
   manifest:list   Lists manifest partitions
   manifest:stats  Prints manifest aggregate counts
   manifest:mark-stale Marks a scalars partition stale locally
@@ -143,6 +146,11 @@ async function main() {
 
     if (command === 'storage:check') {
       printJson(await checkLakeStorage(config.lakeRoot));
+      return;
+    }
+
+    if (command === 'ops:check') {
+      printJson(await runBackupCheck(config, db));
       return;
     }
 

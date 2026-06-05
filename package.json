@@ -28,10 +28,12 @@
     "sync:incremental": "node src/cli.js sync:incremental",
     "sync:reconcile-scalars": "node src/cli.js sync:reconcile-scalars",
     "storage:check": "node src/cli.js storage:check",
+    "ops:check": "node src/cli.js ops:check",
     "test": "node --test tests/*.test.js"
   },
   "dependencies": {
     "@duckdb/node-api": "^1.5.3-r.2",
+    "bcrypt": "^6.0.0",
     "dotenv": "^17.4.2",
     "pg": "^8.21.0"
   }

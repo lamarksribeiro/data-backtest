@@ -1,0 +1,96 @@
+strategy "Edge Sniper V2 GLS" {
+  param walletSize = 100
+  param maxOrderValue = 15
+  param minShares = 5
+  param entryWindowStart = 105
+  param entryWindowEnd = 4
+  param minAsk = 0.08
+  param maxAsk = 0.58
+  param minEdge = 0.07
+  param minDirectionalProb = 0.56
+  param minDistanceAbs = 50
+  param minDistanceNearExpiry = 50
+  param nearExpiryThresholdSec = 30
+  param minSigma = 10
+  param sigmaMultiplier = 1
+  param distanceWeight = 2.0
+  param momentumWeight = 0.65
+  param momentumSec = 6
+  param slowMomentumSec = 18
+  param slowMomentumWeight = 0.35
+  param lagWeight = 0.45
+  param volLookbackSec = 45
+  param maxSpread = 0.08
+  param minLiquidityRatio = 0.75
+  param stopBid = 0.18
+  param takeProfitBid = 0.92
+  param takeProfitPct = 0.35
+  param trailAfterBid = 0.78
+  param trailDrop = 0.10
+  param lateExitSec = 16
+  param lateExitMinBid = 0.64
+
+  onEventStart(event) {
+    state.entered = false
+    state.tookProfit = false
+    state.maxBid = 0
+  }
+
+  onTick(tick, event) {
+    let secsLeft = time.secondsUntil(event.end, tick.ts)
+    let elapsed = time.secondsSince(event.start, tick.ts)
+
+    if (position.open) {
+      let side = position.side
+      let bid = book.bid(side, tick)
+      if (bid > state.maxBid) {
+        state.maxBid = bid
+      }
+      if (bid <= params.stopBid && secsLeft > params.lateExitSec) {
+        exit({ price: bid, reason: "stop_bid" })
+        mark("exit", { reason: "stop_bid", price: bid })
+      } else {
+        if (!state.tookProfit && bid >= params.takeProfitBid && params.takeProfitPct > 0) {
+          exit({ price: params.takeProfitBid, reason: "partial_edge" })
+          state.tookProfit = true
+          mark("partial", { price: bid })
+        }
+        if (state.maxBid >= params.trailAfterBid && state.maxBid - bid >= params.trailDrop) {
+          exit({ price: bid, reason: "trail" })
+          mark("exit", { reason: "trail", price: bid })
+        } else {
+          if (secsLeft <= params.lateExitSec && bid >= params.lateExitMinBid) {
+            exit({ price: bid, reason: "late_exit" })
+            mark("exit", { reason: "late_exit", price: bid })
+          }
+        }
+      }
+    } else {
+      if (time.inWindow(secsLeft, params.entryWindowStart, params.entryWindowEnd)) {
+        if (elapsed >= params.momentumSec) {
+          let minDist = signals.effectiveMinDistance(secsLeft, params.minDistanceAbs, params.minDistanceNearExpiry, params.nearExpiryThresholdSec)
+          let dist = market.distanceFromPtb(tick.underlyingPrice, event.priceToBeat)
+          if (dist >= minDist) {
+            let scored = model.scoreSides(samples, tick, event, params)
+            let best = scored.best
+            if (best) {
+              let liq = book.liquidityRatio(best.side, tick, params.maxOrderValue)
+              if (liq >= params.minLiquidityRatio) {
+                let budget = risk.capOrderValue(params.maxOrderValue, params.maxOrderValue)
+                enter(best.side, { price: best.ask, budget: budget, reason: "entry" })
+                state.entered = true
+                mark("entry", { side: best.side, ask: best.ask, edge: best.edge })
+                metric("edge", best.edge)
+                log("entry", best.side)
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  onEventEnd(event) {
+    closeOpenPosition({ reason: "event_end" })
+  }
+}

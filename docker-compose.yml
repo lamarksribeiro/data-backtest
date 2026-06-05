@@ -1,0 +1,22 @@
+services:
+  data-backtest:
+    build: .
+    ports:
+      - "${DATA_BACKTEST_PORT:-3100}:3100"
+    environment:
+      LAKE_ROOT: /lake
+      STATE_DB_PATH: /state/data-backtest.db
+      BACKTEST_DATA_MODE: strict
+      BACKTEST_BOOK_DEPTH: 10
+      DATA_BACKTEST_PORT: 3100
+      DATA_COLLECTOR_DATABASE_URL: ${DATA_COLLECTOR_DATABASE_URL:-}
+      DATA_COLLECTOR_API_URL: ${DATA_COLLECTOR_API_URL:-}
+      DATA_COLLECTOR_ARCHIVE_API_KEY: ${DATA_COLLECTOR_ARCHIVE_API_KEY:-}
+    volumes:
+      - lake-data:/lake
+      - state-data:/state
+    restart: unless-stopped
+
+volumes:
+  lake-data:
+  state-data:

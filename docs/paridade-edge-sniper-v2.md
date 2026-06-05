@@ -79,3 +79,36 @@ final_pnl: -0.8100000000000007
 O `data-backtest` ja consegue executar o Edge Sniper V2 de forma nativa sobre DuckDB/Parquet e reproduzir o resultado do engine legado para o dataset validado.
 
 O `polymarket-test` permanece apenas como referencia temporaria de paridade. A execucao final de backtests deve acontecer no `data-backtest`.
+
+## Paridade GLS (B7)
+
+Versao GLS seed: `src/backtestStudio/gls/strategies/edgeSniperV2.gls` (slug `edge-sniper-v2-gls` via `seedEdgeSniperV2Strategy`).
+
+Blocos adicionados na biblioteca padrao para aproximar o nativo:
+
+- `math.*` (`abs`, `min`, `max`, `clamp`, `sqrt`, `logistic`)
+- `signals.effectiveMinDistance`
+- `model.directionProbability`, `model.scoreSides`
+
+### Resultado com parametros padrao (ticks sinteticos / dataset 2026-05-29)
+
+| Engine | Eventos | Entradas | PnL |
+|---|---:|---:|---:|
+| nativo | 1 | 0 | 0 |
+| GLS | 1 | 0 | 0 |
+
+Paridade: **OK** (mesmo comportamento conservador — sem entradas com `minDistanceAbs=50`).
+
+### Divergencias aceitaveis (MVP GLS)
+
+A versao GLS ainda nao replica:
+
+- consumo de book por nivel (`consumeAsksFromTick`);
+- `stop_reverse` e partial fill proporcional (`takeProfitPct` fecha posicao inteira no simulador GLS);
+- sizing `sizePriceAware` e `entrySlippageMax`.
+
+Em ticks sinteticos com parametros relaxados, entradas podem coincidir mas PnL/saidas podem divergir por causa do simulador simplificado. Testes automatizados: `tests/edgeSniperGlsParity.test.js`.
+
+### Conclusao GLS
+
+O golden test nativo permanece autoritativo. A estrategia GLS seed e editavel no Backtest Studio e serve como base para convergencia futura; paridade estrita em PnL com parametros relaxados no lakehouse real ainda depende dos itens acima.

@@ -17,7 +17,7 @@ O Postgres continua como fonte de verdade operacional; o lakehouse é derivado, 
 
 ## Status atual
 
-Snapshot operacional: lakehouse **L1–L7 concluído**; operação em produção (**L8**) e Backtest Studio (**B1–B7**) ainda pendentes. Detalhes por fase em [Implementação do lakehouse](docs/implementacao-lakehouse.md) e [Implementação do Backtest Studio](docs/implementacao-editor-backtest.md).
+Snapshot operacional: lakehouse **L1–L7 concluído**; Backtest Studio **Pre-B1, B1–B7 concluídos**; pendente **L5** e validação **L8** em produção. Detalhes por fase em [Implementação do lakehouse](docs/implementacao-lakehouse.md) e [Implementação do Backtest Studio](docs/implementacao-editor-backtest.md).
 
 Os paths `arquitetura-editor-estrategias.md` e `implementacao-editor-backtest.md` são históricos; o conteúdo descreve o Backtest Studio.
 
@@ -55,13 +55,24 @@ Os paths `arquitetura-editor-estrategias.md` e `implementacao-editor-backtest.md
 
 Paridade do `edge-sniper-v2` nativo contra o legado já validada (ver [Paridade Edge Sniper V2](docs/paridade-edge-sniper-v2.md)). A API HTTP e a UI mínima do lakehouse (`src/api/server.js`, `public/`) já estão no ar com disponibilidade, prepare jobs e backtest nativo.
 
-Runs persistidos em `backtest_runs` já incluem `events`, `equity` e `log` dentro de `result_json`. A próxima etapa é normalizar isso em `backtest_event_traces`, expor endpoints de detalhe do run e montar o Event Explorer antes do Backtest Studio programável. Ver [Implementação do Backtest Studio](docs/implementacao-editor-backtest.md).
+Runs nativos são normalizados em `backtest_event_traces` após cada execução. A UI inclui **Run Detail & Event Explorer** (resumo do run, params, snapshot, tabela de eventos, gráfico BTC vs PTB com markers, logs) e endpoints `GET /api/backtest/runs/:id`, `/events`, `/events/:eventTraceId` e `/chart-data`. CRUD de `strategy_definitions` / `strategy_versions` (B1), editor GLS (B2), validador/runtime GLS (B3–B4), execução de estratégias salvas sobre o lakehouse (B5), visualização completa (B6) e seed GLS `edge-sniper-v2` (B7) também estão disponíveis. Ver [Implementação do Backtest Studio](docs/implementacao-editor-backtest.md) e [Paridade Edge Sniper V2](docs/paridade-edge-sniper-v2.md).
+
+### Backtest Studio concluído (Pre-B1, B1–B7)
+
+- `backtest_event_traces` + Event Explorer (Pre-B1).
+- CRUD `strategy_definitions` / `strategy_versions` + `POST /api/strategies/validate` (B1).
+- UI com aba **Estrategias GLS**: lista, editor CodeMirror, params detectados, validação inline, salvar versão (B2).
+- Parser + validador GLS v1 em `src/backtestStudio/gls/` (B3).
+- Runtime GLS: interpreter, biblioteca MVP (`market`, `book`, `prices`, `time`, `risk`, `math`, `model`, `debug`), simulador de ordens, trace collector (B4).
+- `POST /api/backtest/run` aceita `strategy_id` + `strategy_version_id` ou `edge-sniper-v2` nativo; persiste snapshot da versão, traces e bloqueia sem availability strict (B5).
+- `GET /api/strategy-blocks` lista assinaturas MVP da biblioteca padrão.
+- **B6:** Run detail (summary, params, strategy snapshot), tabela de eventos, gráfico Chart.js BTC vs PTB com markers de entry/exit, logs formatados por evento.
+- **B7:** GLS seed `src/backtestStudio/gls/strategies/edgeSniperV2.gls`, blocos `math`/`model`/`signals.effectiveMinDistance`, `seedEdgeSniperV2Strategy`, testes de paridade em `tests/edgeSniperGlsParity.test.js`.
 
 ### Pendente
 
-- **L8:** validar deploy Coolify, backup/restore e runbook em produção (`docs/operacao-lakehouse.md`).
-- **Pré-B1:** `backtest_event_traces`, `GET /api/backtest/runs/:id`, lista/detalhe de eventos (`eventTraceId`), Event Explorer básico.
-- **B1–B7:** CRUD de estratégias, editor GLS, runtime programável e paridade `edge-sniper-v2` em GLS.
+- **L8 (produção):** `Dockerfile` e `docker-compose.yml` existem no repositório com volumes `/lake` e `/state`, mas deploy Coolify, backup/restore conjunto e smoke em produção ainda **não foram validados** localmente. Use `npm run ops:check` para validar health + `active_path` antes de backup; ver lacunas em [Operação do lakehouse](docs/operacao-lakehouse.md).
+- **L5:** `PostgresTickProvider`, `HybridTickProvider`, `streamEvents` ainda pendentes.
 
 ### Mapa de fases
 
@@ -77,8 +88,10 @@ Runs persistidos em `backtest_runs` já incluem `events`, `equity` e `log` dentr
 | Fase 7 | archive API | parcial no `data-backtest`; `data-colector` pendente |
 | Fases 8–10 | — | retencão opcional; fora do caminho padrão |
 | Fase 9.1 | L6 | parcial (UI mínima de prepare/backtest) |
-| Fase 9.2 | B1–B7 | pendente |
-| Fase 11 | L8 | pendente |
+| Fase 9.2 | Pre-B1 + B1 | concluída (explorer + CRUD estratégias) |
+| Fase 9.2 | B2–B5 | concluída (editor GLS, runtime, execucao lakehouse) |
+| Fase 9.2 | B6–B7 | concluída (visualizacao + GLS edge-sniper seed) |
+| Fase 11 | L8 | parcial (Docker/ops:check no repo; produção não validada) |
 | Fases 12–13 | — | opcionais futuras |
 
 ## Configuração
@@ -90,9 +103,27 @@ LAKE_ROOT=./lake
 STATE_DB_PATH=./state/data-backtest.db
 BACKTEST_DATA_MODE=strict
 BACKTEST_BOOK_DEPTH=10
+DATA_BACKTEST_PORT=3100
+SESSION_SECRET=change-me-to-a-long-random-string
+SESSION_MAX_AGE_SEC=86400
+INITIAL_ADMIN_USERNAME=admin
+INITIAL_ADMIN_PASSWORD=change-me
 DATA_COLLECTOR_API_URL=http://localhost:3000
 DATA_COLLECTOR_ARCHIVE_API_KEY=
 ```
+
+### Login da UI
+
+A interface web exige autenticação (mesmo padrão do `data-colector`: cookie HMAC + bcrypt).
+
+1. Defina `SESSION_SECRET` (obrigatório em produção).
+2. Na primeira subida, se a tabela `users` estiver vazia, o servidor cria o admin inicial com `INITIAL_ADMIN_USERNAME` / `INITIAL_ADMIN_PASSWORD`.
+3. Acesse `http://localhost:3100/login` e entre com essas credenciais.
+4. Rotas `/api/*` (exceto `POST /api/login` e `GET /healthz`) retornam `401` sem sessão; `GET /` redireciona para `/login`.
+
+Credenciais padrão do `.env.example`: usuário `admin`, senha `change-me` — altere antes de expor a rede.
+
+Testes automatizados usam `TEST_MODE=true` (via `NODE_ENV=test`) para ignorar auth.
 
 No Coolify, os valores esperados são:
 
@@ -117,6 +148,7 @@ volumes:
 npm run health
 npm run api
 npm run storage:check
+npm run ops:check
 npm run manifest:list
 npm run sync:partitions -- --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m
 npm run sync:backfill -- --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --dry-run
@@ -137,7 +169,9 @@ npm test
 
 `npm run health` inicializa o banco local de estado, garante o layout básico do lakehouse e retorna estatísticas do manifest.
 
-`npm run api` sobe a API HTTP do `data-backtest` em `DATA_BACKTEST_PORT` (default `3100`) e serve uma UI minima em `http://localhost:3100`. Endpoints iniciais: `GET /healthz`, `GET /api/manifest`, `GET /api/availability`, `GET /api/prepare`, `POST /api/prepare/run`, `GET /api/prepare/jobs`, `GET /api/prepare/jobs/:id`, `GET /api/backtest/strategies`, `GET /api/backtest/runs` e `POST /api/backtest/run`.
+`npm run api` sobe a API HTTP do `data-backtest` em `DATA_BACKTEST_PORT` (default `3100`) e serve a UI **Data Gecko · Backtest** (sidebar, login, rotas hash) em `http://localhost:3100`. Endpoints principais: auth (`POST /api/login`, `POST /api/logout`, `GET /api/me`), lakehouse (`/healthz`, `/api/manifest`, `/api/availability`, `/api/prepare`, `/api/prepare/run`, jobs), backtest (`/api/backtest/run`, `/api/backtest/runs`, eventos, chart-data) e estratégias GLS (`/api/strategies`, versões, `/api/strategies/validate`).
+
+Deploy local com Docker: `docker compose up --build` monta volumes nomeados em `/lake` e `/state`. Para Coolify, mapear volumes persistentes conforme [Operação do lakehouse](docs/operacao-lakehouse.md); validação de backup local: `npm run ops:check`.
 
 Exemplo de disponibilidade via API:
 
@@ -149,7 +183,7 @@ Jobs de preparação rodam serialmente e ficam registrados no SQLite em `prepare
 
 Para reprocessar partições `stale`, `invalid` ou `needs_review`, marque `Reprocessar indisponiveis (--rebuild)`. Execução real com rebuild exige confirmação explícita `REBUILD_PARTITIONS`; `dry-run` continua liberado para validar o plano sem escrita.
 
-`POST /api/backtest/run` hoje executa o runner nativo `edge-sniper-v2` como golden test transitório, apenas quando `backtest_ticks` está pronto no modo estrito. Isso não faz parte do lakehouse core: sync, manifest, query layer e Parquet seguem genéricos e sem acoplamento a estratégia. Se faltar dado, retorna `409 DATA_NOT_READY` com disponibilidade e plano de preparação. Runs bem-sucedidos ficam persistidos em `backtest_runs` e aparecem em `GET /api/backtest/runs`.
+`POST /api/backtest/run` executa o runner nativo `edge-sniper-v2` (golden test) **ou** uma estrategia GLS salva via `strategy_id` + `strategy_version_id`, apenas quando `backtest_ticks` esta pronto no modo estrito. Se faltar dado, retorna `409 DATA_NOT_READY`. Runs bem-sucedidos ficam persistidos em `backtest_runs` (com snapshot opcional da versao) e normalizados em `backtest_event_traces`.
 
 `sync:backfill` exige `DATA_COLLECTOR_DATABASE_URL` e exporta apenas o dataset `scalars`. Para `books`, `backtest_ticks` e `ohlc`, use os comandos `sync:backfill-books`, `sync:backfill-backtest-ticks` e `sync:backfill-ohlc`.
 

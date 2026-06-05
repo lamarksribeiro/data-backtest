@@ -1,5 +1,6 @@
 import { DuckDbTickProvider } from './tickProvider.js';
 import { createEdgeSniperBacktestRunner } from '../strategies/edgeSniperV2.js';
+import { createGlsBacktestRunner } from '../backtestStudio/gls/runtime.js';
 
 const STRATEGIES = {
   'edge-sniper-v2': createEdgeSniperBacktestRunner,
@@ -7,7 +8,7 @@ const STRATEGIES = {
 };
 
 export async function runBacktest(db, request) {
-  const createRunner = STRATEGIES[request.strategy];
+  const createRunner = resolveRunnerFactory(request);
   if (!createRunner) throw new Error(`Unsupported strategy: ${request.strategy}`);
 
   const provider = new DuckDbTickProvider(db, {
@@ -44,7 +45,15 @@ export async function runBacktest(db, request) {
     events: result.events,
     equity: result.equity,
     log: result.log,
+    strategyMeta: request.strategyMeta ?? null,
   };
+}
+
+function resolveRunnerFactory(request) {
+  if (request.glsAst) {
+    return (params) => createGlsBacktestRunner(request.glsAst, params);
+  }
+  return STRATEGIES[request.strategy];
 }
 
 export function listStrategies() {

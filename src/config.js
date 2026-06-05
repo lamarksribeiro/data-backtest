@@ -13,6 +13,9 @@ export function loadConfig(env = process.env) {
     throw new Error(`Invalid BACKTEST_DATA_MODE: ${backtestDataMode}`);
   }
 
+  const testMode = String(env.TEST_MODE || '').trim().toLowerCase() === 'true'
+    || String(env.NODE_ENV || '').trim().toLowerCase() === 'test';
+
   return {
     lakeRoot: resolvePath(env.LAKE_ROOT, './lake'),
     stateDbPath: resolvePath(env.STATE_DB_PATH, './state/data-backtest.db'),
@@ -25,6 +28,12 @@ export function loadConfig(env = process.env) {
     syncMarginMinutes: Math.max(Number.parseInt(String(env.SYNC_MARGIN_MINUTES || '2'), 10) || 2, 0),
     backtestBookDepth: Math.max(Number.parseInt(String(env.BACKTEST_BOOK_DEPTH || '10'), 10) || 10, 1),
     apiPort: Math.max(Number.parseInt(String(env.DATA_BACKTEST_PORT || env.PORT || '3100'), 10) || 3100, 1),
+    NODE_ENV: env.NODE_ENV || 'development',
+    SESSION_SECRET: env.SESSION_SECRET || (testMode ? 'test-session-secret' : ''),
+    SESSION_MAX_AGE_SEC: Math.max(Number.parseInt(String(env.SESSION_MAX_AGE_SEC || '86400'), 10) || 86400, 300),
+    INITIAL_ADMIN_USERNAME: String(env.INITIAL_ADMIN_USERNAME || 'admin').trim(),
+    INITIAL_ADMIN_PASSWORD: String(env.INITIAL_ADMIN_PASSWORD || '').trim(),
+    TEST_MODE: testMode,
   };
 }
 

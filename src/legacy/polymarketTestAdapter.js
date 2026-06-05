@@ -71,6 +71,7 @@ export function toLegacyBacktestTick(row, { index = 0, bookDepth = 10 } = {}) {
   return {
     id: index + 1,
     event_start: row.event_start,
+    event_end: row.event_end,
     condition_id: row.condition_id,
     ts: row.ts,
     btc_price: row.underlying_price,
