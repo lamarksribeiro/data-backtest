@@ -31,13 +31,15 @@ export async function renderLakehouse(ctx) {
         field('Intervalo', el('input', { class: 'field__input', name: 'interval', value: formCtx.interval, required: true })),
         field('Book depth', el('input', { class: 'field__input', type: 'number', min: '1', name: 'book_depth', value: formCtx.book_depth }), 'field-book-depth'),
         field('Resolução', selectField('resolution', [['1m', '1m'], ['1s', '1s'], ['5s', '5s'], ['5m', '5m']], formCtx.resolution), 'field-resolution'),
-        el('label', { class: 'check' }, [
-          el('input', { type: 'checkbox', name: 'dry_run', checked: true }),
-          ' Dry-run',
+        el('label', { class: 'switch-field' }, [
+          el('input', { class: 'switch-field__input', type: 'checkbox', name: 'dry_run', checked: true }),
+          el('span', { class: 'switch-field__slider' }),
+          el('span', { class: 'switch-field__label' }, 'Dry-run'),
         ]),
-        el('label', { class: 'check' }, [
-          el('input', { type: 'checkbox', name: 'rebuild' }),
-          ' Reprocessar indisponíveis',
+        el('label', { class: 'switch-field' }, [
+          el('input', { class: 'switch-field__input', type: 'checkbox', name: 'rebuild' }),
+          el('span', { class: 'switch-field__slider' }),
+          el('span', { class: 'switch-field__label' }, 'Reprocessar indisponíveis'),
         ]),
         el('div', { class: 'form-actions' }, [
           el('button', { class: 'btn btn--primary', type: 'submit' }, 'Verificar disponibilidade'),

@@ -28,10 +28,10 @@ export async function renderOverview(ctx) {
   const byStatus = stats.by_status || {};
 
   mount(document.getElementById('overview-stats'), [
-    statCard('Status', health.status === 'ok' ? 'Operacional' : 'Alerta', health.status === 'ok' ? 'ok' : 'warn'),
-    statCard('Partições', String(stats.partitions ?? 0), 'idle', `${byStatus.valid ?? 0} válidas`),
-    statCard('Modo backtest', health.backtest_data_mode || '-', 'idle'),
-    statCard('Lake root', (health.lake_root || '').split(/[/\\]/).pop() || '-', 'idle'),
+    statCard('Status', health.status === 'ok' ? '🛡️ Operacional' : '⚠️ Alerta', health.status === 'ok' ? 'ok' : 'warn'),
+    statCard('Partições', `📦 ${stats.partitions ?? 0}`, 'idle', `${byStatus.valid ?? 0} válidas`),
+    statCard('Modo backtest', `⚡ ${health.backtest_data_mode || '-'}`, 'idle'),
+    statCard('Lake root', `📂 ${(health.lake_root || '').split(/[/\\]/).pop() || '-'}`, 'idle'),
   ]);
 
   const card = el('section', { class: 'card' }, [

@@ -28,31 +28,50 @@ const GLS_TEMPLATE = `strategy "Nova Estrategia" {
   }
 }`;
 
-/** @type {{ list: object[], selectedId: number|null, selectedVersionId: number|null, focusedEditor: object|null, sourceCode: string, validation: object|null, blocks: object[], currentStrategy: object|null, currentVersion: object|null }} */
-const state = { list: [], selectedId: null, selectedVersionId: null, focusedEditor: null, sourceCode: '', validation: null, blocks: [], currentStrategy: null, currentVersion: null };
+/** @type {{ list: object[], selectedId: number|null, selectedVersionId: number|null, focusedEditor: object|null, sourceCode: string, validation: object|null, blocks: object[], currentStrategy: object|null, currentVersion: object|null, strategyQuery: string }} */
+const state = {
+  list: [],
+  selectedId: null,
+  selectedVersionId: null,
+  focusedEditor: null,
+  sourceCode: '',
+  validation: null,
+  blocks: [],
+  currentStrategy: null,
+  currentVersion: null,
+  strategyQuery: ''
+};
 
 export async function renderStrategies(ctx, params = {}) {
   const strategyId = params.id ? Number(params.id) : null;
   if (strategyId) state.selectedId = strategyId;
   ctx.setBreadcrumb('strategies', null);
 
+  // Clean up any old editor before loading
+  if (state.focusedEditor) {
+    try {
+      state.focusedEditor.toTextArea();
+    } catch { /* ignore */ }
+    state.focusedEditor = null;
+  }
+
   mount(ctx.contentEl, [
     el('div', { class: 'page-header' }, [
       el('div', {}, [
         el('h1', {}, 'Estratégias'),
-        el('p', { class: 'page-header__sub' }, 'Editor GLS, validação e versões.'),
+        el('p', { class: 'page-header__sub' }, 'Editor GLS, validação e parâmetros integrados.'),
       ]),
       el('div', { class: 'row' }, [
         el('button', { class: 'btn btn--primary btn--sm', type: 'button', onclick: () => createStrategyFlow(ctx) }, 'Nova'),
         el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => renderStrategies(ctx) }, 'Recarregar'),
       ]),
     ]),
-    el('div', { class: 'editor-layout', id: 'strategies-root' }, el('p', { class: 'muted' }, 'Carregando...')),
+    el('div', { class: 'editor-layout editor-layout--two-cols', id: 'strategies-root' }, el('p', { class: 'muted' }, 'Carregando...')),
   ]);
 
   const res = await ctx.api.get('/api/strategies');
   if (!res.ok) {
-    mount(document.getElementById('strategies-root'), el('p', { class: 'bad' }, res.error?.message || 'Falha'));
+    mount(document.getElementById('strategies-root'), el('p', { class: 'bad' }, res.error?.message || 'Falha ao carregar estratégias'));
     return;
   }
   state.list = res.data.strategies || [];
@@ -67,15 +86,20 @@ export async function renderStrategies(ctx, params = {}) {
   mount(document.getElementById('strategies-root'), [
     el('aside', { class: 'editor-sidebar card', id: 'strategy-list-panel' }, renderStrategyList(ctx)),
     el('div', { class: 'editor-main card', id: 'strategy-editor' }, el('p', { class: 'muted' }, 'Selecione uma estratégia.')),
-    el('aside', { class: 'editor-meta card', id: 'strategy-meta' }),
   ]);
 
-  if (state.selectedId) await openStrategyEditor(ctx, state.selectedId, params.versionId ? Number(params.versionId) : null);
+  if (state.selectedId) {
+    await openStrategyEditor(ctx, state.selectedId, params.versionId ? Number(params.versionId) : null);
+  }
 }
 
 function renderStrategyList(ctx) {
-  if (!state.list.length) return emptyState('Nenhuma estratégia salva.');
-  return el('ul', { class: 'strategy-list' }, state.list.map((strategy) => el('li', {}, [
+  const filtered = state.list.filter((s) => {
+    const q = state.strategyQuery.toLowerCase();
+    return s.name.toLowerCase().includes(q) || s.slug.toLowerCase().includes(q);
+  });
+
+  const listItems = filtered.map((strategy) => el('li', { dataset: { status: strategy.status } }, [
     el('button', {
       type: 'button',
       class: state.selectedId === strategy.id ? 'is-active' : '',
@@ -86,16 +110,51 @@ function renderStrategyList(ctx) {
         await renderStrategies(ctx, { id: strategy.id });
       },
     }, [
-      el('div', {}, strategy.name),
-      el('div', { class: 'muted mono' }, `${strategy.slug} · v${strategy.latest_version ?? '-'} · ${strategy.status}`),
+      el('div', { style: { fontWeight: '700' } }, strategy.name),
+      el('div', { class: 'muted mono', style: { fontSize: '11px', marginTop: '2px' } }, `${strategy.slug} · v${strategy.latest_version ?? '-'} · ${strategy.status}`),
     ]),
-  ])));
+  ]));
+
+  return [
+    el('div', { class: 'strategy-search-wrap' }, [
+      el('input', {
+        class: 'strategy-search-input',
+        type: 'text',
+        placeholder: '🔍 Buscar estratégia...',
+        value: state.strategyQuery,
+        oninput: (e) => {
+          state.strategyQuery = e.target.value;
+          const panel = document.getElementById('strategy-list-panel');
+          if (panel) {
+            // Re-render list reactive content
+            const nextList = renderStrategyList(ctx);
+            mount(panel, nextList);
+            const input = panel.querySelector('.strategy-search-input');
+            if (input) {
+              input.focus();
+              input.selectionStart = input.selectionEnd = input.value.length;
+            }
+          }
+        }
+      })
+    ]),
+    el('ul', { class: 'strategy-list' }, listItems.length ? listItems : emptyState('Nenhuma estratégia encontrada.'))
+  ];
 }
 
 async function openStrategyEditor(ctx, strategyId, versionId = null) {
   const editorPanel = document.getElementById('strategy-editor');
-  const metaPanel = document.getElementById('strategy-meta');
-  if (!editorPanel || !metaPanel) return;
+  if (!editorPanel) return;
+
+  // Clean up any old editor before loading next one
+  if (state.focusedEditor) {
+    try {
+      state.focusedEditor.toTextArea();
+    } catch { /* ignore */ }
+    state.focusedEditor = null;
+  }
+
+  mount(editorPanel, el('p', { class: 'muted' }, 'Carregando detalhes do editor...'));
 
   const [strategyRes, versionsRes, blocksRes] = await Promise.all([
     ctx.api.get(`/api/strategies/${strategyId}`),
@@ -103,7 +162,7 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
     ctx.api.get('/api/strategy-blocks'),
   ]);
   if (!strategyRes.ok) {
-    mount(editorPanel, el('p', { class: 'bad' }, strategyRes.error?.message || 'Falha'));
+    mount(editorPanel, el('p', { class: 'bad' }, strategyRes.error?.message || 'Falha ao abrir estratégia'));
     return;
   }
 
@@ -120,82 +179,161 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
   state.sourceCode = version?.source_code || GLS_TEMPLATE;
   state.validation = version?.validation || null;
   state.blocks = blocksRes.data?.blocks || [];
-  const hasParams = Object.keys(state.validation?.params_schema || version?.params_schema || {}).length > 0;
+  
+  const schema = state.validation?.params_schema || version?.params_schema || {};
+  const hasParams = Object.keys(schema).length > 0;
 
   mount(editorPanel, [
-    el('div', { class: 'editor-main__header' }, [
+    // Header Row with status, version selector and main execution controls
+    el('div', { class: 'strategy-header-row' }, [
       el('div', { class: 'editor-title-block' }, [
         el('h2', { class: 'card__title', id: 'strategy-title' }, strategy.name),
-        el('p', { class: 'muted mono editor-title-block__meta', id: 'strategy-title-meta' }, `${strategy.slug} · ${strategy.status} · v${strategy.latest_version ?? '-'}`),
+        el('p', { class: 'muted mono editor-title-block__meta', id: 'strategy-title-meta' }, `${strategy.slug} · status: ${strategy.status} · versão atual: v${strategy.latest_version ?? '-'}`),
       ]),
-      el('div', { class: 'row row--wrap editor-toolbar' }, [
-        el('button', { class: 'btn btn--primary btn--sm', type: 'button', disabled: !hasParams, onclick: () => saveParamsVersion(ctx, strategy.id) }, 'Salvar parâmetros'),
-        el('button', { class: 'btn btn--primary btn--sm', type: 'button', onclick: () => openFocusedCodeEditor(ctx, strategy, version) }, 'Editar código'),
-        el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => validateStrategySource(ctx) }, 'Validar'),
-        el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => runStrategyBacktest(ctx, strategyId) }, 'Executar backtest'),
-        el('button', { class: 'btn btn--danger btn--sm', type: 'button', onclick: () => deleteStrategyFlow(ctx, strategy) }, 'Apagar'),
+      el('div', { class: 'strategy-header-version-picker' }, [
+        el('label', { class: 'field' }, [
+          el('span', { class: 'field__label' }, 'Versão:'),
+          el('select', {
+            class: 'field__input',
+            id: 'strategy-version-select',
+            onchange: async (e) => {
+              const nextVersionId = Number(e.target.value);
+              if (!Number.isFinite(nextVersionId)) return;
+              state.selectedVersionId = nextVersionId;
+              ctx.navigate(`strategies/${strategyId}/${nextVersionId}`);
+              await openStrategyEditor(ctx, strategyId, nextVersionId);
+            },
+          }, versions.length
+            ? versions.map((item) => el('option', { value: item.id, selected: item.id === version?.id }, `v${item.version} (${item.created_at ? item.created_at.slice(0,10) : ''})`))
+            : [el('option', { value: '' }, 'Sem versões')]),
+        ]),
+        el('button', {
+          class: 'btn btn--danger btn--sm',
+          type: 'button',
+          title: 'Excluir esta versão',
+          disabled: !version || versions.length <= 1,
+          onclick: () => deleteVersionFlow(ctx, strategy, version),
+        }, '✕'),
+      ]),
+      el('div', { class: 'row' }, [
+        el('button', { class: 'btn btn--primary btn--sm', type: 'button', onclick: () => runStrategyBacktest(ctx, strategyId) }, 'Executar backtest'),
+        el('button', { class: 'btn btn--danger btn--sm btn--ghost', type: 'button', onclick: () => deleteStrategyFlow(ctx, strategy) }, 'Apagar'),
       ]),
     ]),
-    renderVersionSelector(ctx, strategyId, versions, version, strategy),
-    renderStrategyWorkbench(ctx, strategy, version),
-  ]);
 
-  mount(metaPanel, [
-    el('div', { class: 'editor-meta__scroll' }, [
-      el('section', { class: 'editor-meta-section' }, [
-        el('h3', { class: 'card__title' }, 'Dados da estratégia'),
+    // Tab Navigation bar
+    el('div', { class: 'premium-tabs-nav' }, [
+      el('button', { class: 'premium-tab-link is-active', id: 'tab-link-code', type: 'button', onclick: () => switchTab('code') }, '⚡ Editor de Código'),
+      el('button', { class: 'premium-tab-link', id: 'tab-link-params', type: 'button', onclick: () => switchTab('params') }, '⚙ Parâmetros'),
+      el('button', { class: 'premium-tab-link', id: 'tab-link-config', type: 'button', onclick: () => switchTab('config') }, '📝 Ficha Técnica'),
+    ]),
+
+    // 1. Tab Código Content
+    el('div', { class: 'premium-tab-content is-active', id: 'tab-content-code' }, [
+      el('div', { class: 'strategy-code-tab-layout' }, [
+        el('div', { class: 'strategy-code-editor-area' }, [
+          el('div', { class: 'row row--between' }, [
+            el('span', { class: 'eyebrow' }, 'Linguagem GLS'),
+            el('div', { class: 'row' }, [
+              el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => validateTabCode(ctx) }, 'Validar Código'),
+              el('button', { class: 'btn btn--primary btn--sm', type: 'button', onclick: () => saveTabCodeVersion(ctx, strategy.id) }, 'Salvar Versão (Ctrl+S)'),
+            ]),
+          ]),
+          el('textarea', { id: `gls-editor-textarea-${strategyId}` }, state.sourceCode),
+          el('div', { class: 'validation-console-card' }, [
+            el('div', { class: 'validation-console-card__header' }, [
+              el('span', {}, 'Console de Validação'),
+              renderValidationBadge(state.validation),
+            ]),
+            el('div', { id: 'strategy-validation' }, renderValidationDetails(state.validation)),
+          ]),
+        ]),
+        el('div', { class: 'strategy-code-sidebar-area' }, [
+          el('section', { class: 'editor-help-card' }, [
+            el('h3', { class: 'card__title' }, 'Teclas de Atalho'),
+            el('div', { class: 'shortcut-list' }, [
+              shortcut('Ctrl+Space', 'Autocomplete'),
+              shortcut('Ctrl+S', 'Salvar versão'),
+              shortcut('Tab', 'Indentar Código'),
+            ]),
+          ]),
+          el('section', { class: 'editor-help-card' }, [
+            el('h3', { class: 'card__title' }, 'Blocos GLS'),
+            el('ul', { class: 'mono-list mono-list--dense', style: { fontSize: '11px', lineHeight: '1.4' } }, state.blocks.map((block) => el('li', {}, el('code', {}, block.signature)))),
+            el('p', { class: 'muted', style: { fontSize: '11px', marginTop: '8px' } }, 'Namespaces do runtime: market, book, prices, time, risk, debug.'),
+          ]),
+        ]),
+      ]),
+    ]),
+
+    // 2. Tab Parâmetros Content
+    el('div', { class: 'premium-tab-content', id: 'tab-content-params' }, [
+      el('div', { class: 'row row--between', style: { marginBottom: '14px' } }, [
+        el('div', {}, [
+          el('h3', { class: 'card__title' }, 'Parâmetros Declarados'),
+          el('p', { class: 'muted', style: { fontSize: '12px' } }, 'Edite os valores numéricos ou booleanos diretamente na estrutura do código.'),
+        ]),
+        el('button', { class: 'btn btn--primary btn--sm', type: 'button', disabled: !hasParams, onclick: () => saveParamsVersion(ctx, strategy.id) }, 'Salvar parâmetros e recriar versão'),
+      ]),
+      el('div', { class: 'strategy-workbench', id: 'strategy-workbench-root' }, [
+        hasParams ? renderParamsForm(schema) : emptyState('Esta versão de estratégia não declara parâmetros editáveis no cabeçalho param.'),
+      ]),
+    ]),
+
+    // 3. Tab Ficha Técnica / Metadados Content
+    el('div', { class: 'premium-tab-content', id: 'tab-content-config' }, [
+      el('div', { style: { maxWidth: '600px' } }, [
+        el('h3', { class: 'card__title', style: { marginBottom: '14px' } }, 'Metadados da Estratégia'),
         renderStrategyMetaForm(ctx, strategy),
       ]),
-      el('section', { class: 'editor-meta-section' }, [
-        el('h3', { class: 'card__title' }, 'Parâmetros'),
-        el('div', { id: 'strategy-params', class: 'params-list params-list--compact' }, renderParamsSummary(state.validation)),
-      ]),
-      el('section', { class: 'editor-meta-section' }, [
-        el('h3', { class: 'card__title' }, 'Blocos'),
-        el('ul', { class: 'mono-list' }, state.blocks.slice(0, 14).map((block) => el('li', {}, el('code', {}, block.signature)))),
-        el('p', { class: 'muted' }, 'Namespaces: market, book, prices, time, risk, debug.'),
-      ]),
     ]),
   ]);
-}
 
-function renderVersionSelector(ctx, strategyId, versions, version, strategy) {
-  return el('div', { class: 'strategy-version-card' }, [
-    el('label', { class: 'field' }, [
-      el('span', { class: 'field__label' }, 'Versão ativa'),
-      el('select', {
-        class: 'field__input',
-        id: 'strategy-version-select',
-        onchange: async (e) => {
-          const nextVersionId = Number(e.target.value);
-          if (!Number.isFinite(nextVersionId)) return;
-          state.selectedVersionId = nextVersionId;
-          ctx.navigate(`strategies/${strategyId}/${nextVersionId}`);
-          await openStrategyEditor(ctx, strategyId, nextVersionId);
+  // Initialize CodeMirror editor
+  const editorId = `gls-editor-textarea-${strategyId}`;
+  const textarea = document.getElementById(editorId);
+  if (textarea) {
+    const editor = window.CodeMirror.fromTextArea(textarea, {
+      mode: 'javascript',
+      theme: 'material-darker',
+      lineNumbers: true,
+      lineWrapping: true,
+      autofocus: true,
+      extraKeys: {
+        'Ctrl-Space': (cm) => showGlsHint(cm),
+        'Ctrl-S': async (cm) => {
+          state.sourceCode = cm.getValue();
+          await saveTabCodeVersion(ctx, strategy.id);
         },
-      }, versions.length
-        ? versions.map((item) => el('option', { value: item.id, selected: item.id === version?.id }, `v${item.version} · ${item.created_at}`))
-        : [el('option', { value: '' }, 'Sem versões')]),
-    ]),
-    el('div', { class: 'strategy-version-card__status' }, [
-      renderValidationBadge(state.validation),
-      el('button', {
-        class: 'btn btn--danger btn--sm',
-        type: 'button',
-        disabled: !version || versions.length <= 1,
-        onclick: () => deleteVersionFlow(ctx, strategy, version),
-      }, 'Excluir versão'),
-    ]),
-  ]);
+        Tab: (cm) => cm.execCommand('indentMore'),
+      },
+    });
+    state.focusedEditor = editor;
+    editor.on('inputRead', (cm, change) => {
+      if (!change.text?.[0] || /\s/.test(change.text[0])) return;
+      if (/[A-Za-z_.]/.test(change.text[0])) showGlsHint(cm, true);
+    });
+    editor.on('change', (cm) => {
+      state.sourceCode = cm.getValue();
+    });
+    window.setTimeout(() => editor.refresh(), 50);
+  }
 }
 
-function renderStrategyWorkbench(ctx, strategy, version) {
-  const schema = state.validation?.params_schema || version?.params_schema || {};
-  const keys = Object.keys(schema);
-  return el('div', { class: 'strategy-workbench', id: 'strategy-workbench-root' }, [
-    keys.length ? renderParamsForm(schema) : emptyState('Esta versão não declara parâmetros editáveis.'),
-    el('div', { id: 'strategy-validation' }, renderValidationDetails(state.validation)),
-  ]);
+function switchTab(tabId) {
+  document.querySelectorAll('.premium-tab-link').forEach((link) => {
+    link.classList.toggle('is-active', link.id === `tab-link-${tabId}`);
+  });
+  document.querySelectorAll('.premium-tab-content').forEach((content) => {
+    content.classList.toggle('is-active', content.id === `tab-content-${tabId}`);
+  });
+  if (tabId === 'code' && state.focusedEditor) {
+    window.setTimeout(() => state.focusedEditor.refresh(), 50);
+  }
+}
+
+function shortcut(keys, label) {
+  return el('div', { class: 'shortcut-row' }, [el('kbd', {}, keys), el('span', {}, label)]);
 }
 
 function renderParamsForm(schema) {
@@ -235,9 +373,15 @@ async function validateStrategySource(ctx, source = state.sourceCode) {
 function renderValidation(validation) {
   state.validation = validation;
   const panel = document.getElementById('strategy-validation');
-  const paramsPanel = document.getElementById('strategy-params');
   if (panel) mount(panel, renderValidationDetails(validation));
-  if (paramsPanel) mount(paramsPanel, renderParamsSummary(validation));
+
+  const badgeWrap = document.querySelector('.validation-console-card__header .badge');
+  if (badgeWrap) {
+    mount(badgeWrap.parentElement, [
+      el('span', {}, 'Console de Validação'),
+      renderValidationBadge(validation),
+    ]);
+  }
 }
 
 function renderValidationBadge(validation) {
@@ -246,25 +390,16 @@ function renderValidationBadge(validation) {
 }
 
 function renderValidationDetails(validation) {
-  if (!validation) return null;
+  if (!validation) return el('p', { class: 'muted', style: { margin: 0 } }, 'Pronto para validar.');
   const errors = validation.errors || [];
   const warnings = validation.warnings || [];
+  if (!errors.length && !warnings.length) {
+    return el('p', { style: { color: 'var(--ok)', fontWeight: '600', margin: 0 } }, '✓ Estratégia válida. Nenhum erro ou aviso encontrado.');
+  }
   return el('div', { class: 'validation-panel' }, [
-    renderValidationBadge(validation),
-    errors.length ? el('ul', { class: 'validation-list' }, errors.map((item) => el('li', { class: 'is-error' }, `L${item.line}:${item.column} · ${item.message}`))) : null,
-    warnings.length ? el('ul', { class: 'validation-list' }, warnings.map((item) => el('li', { class: 'is-warn' }, item.message))) : null,
+    errors.length ? el('ul', { class: 'validation-list', style: { margin: 0 } }, errors.map((item) => el('li', { class: 'is-error' }, `L${item.line}:${item.column} · ${item.message}`))) : null,
+    warnings.length ? el('ul', { class: 'validation-list', style: { margin: 0 } }, warnings.map((item) => el('li', { class: 'is-warn' }, item.message))) : null,
   ]);
-}
-
-function renderParamsSummary(validation) {
-  const schema = validation?.params_schema || {};
-  const keys = Object.keys(schema);
-  return keys.length
-    ? keys.map((key) => el('div', { class: 'param-row' }, [
-      el('code', { class: 'param-row__key', title: key }, key),
-      el('span', { class: 'param-row__value', title: String(schema[key]?.default ?? '') }, String(schema[key]?.default ?? '')),
-    ]))
-    : el('p', { class: 'muted' }, 'Nenhum param detectado.');
 }
 
 function renderStrategyMetaForm(ctx, strategy) {
@@ -291,7 +426,7 @@ function renderStrategyMetaForm(ctx, strategy) {
       el('span', { class: 'field__label' }, 'Tags'),
       el('input', { class: 'field__input', name: 'tags', value: (strategy.tags || []).join(', '), placeholder: 'btc, 5m' }),
     ]),
-    el('button', { class: 'btn btn--ghost btn--sm', type: 'submit' }, 'Salvar dados'),
+    el('button', { class: 'btn btn--primary btn--sm', type: 'submit', style: { alignSelf: 'flex-start', marginTop: '10px' } }, 'Salvar dados'),
   ]);
 }
 
@@ -317,23 +452,26 @@ async function updateStrategyMeta(event, ctx, strategyId) {
   const updated = res.data.strategy;
   state.list = state.list.map((item) => (item.id === updated.id ? updated : item));
   ctx.setBreadcrumb('strategies', updated.name);
+  
   const title = document.getElementById('strategy-title');
   if (title) title.textContent = updated.name;
+  
   const titleMeta = document.getElementById('strategy-title-meta');
-  if (titleMeta) titleMeta.textContent = `${updated.slug} · ${updated.status} · v${updated.latest_version ?? '-'}`;
+  if (titleMeta) titleMeta.textContent = `${updated.slug} · status: ${updated.status} · versão atual: v${updated.latest_version ?? '-'}`;
+  
   const listPanel = document.getElementById('strategy-list-panel');
   if (listPanel) mount(listPanel, renderStrategyList(ctx));
   ctx.toast.ok('Dados da estratégia atualizados');
 }
 
-async function saveStrategyVersion(ctx, strategyId) {
+async function saveTabCodeVersion(ctx, strategyId) {
   return saveSourceVersion(ctx, strategyId, state.sourceCode);
 }
 
 async function saveSourceVersion(ctx, strategyId, source) {
   const validation = await validateStrategySource(ctx, source);
   if (!validation?.ok) {
-    ctx.toast.warn('Corrija a validação antes de salvar a versão.');
+    ctx.toast.warn('Corrija os erros de validação do GLS antes de salvar.');
     return null;
   }
   const res = await ctx.api.post(`/api/strategies/${strategyId}/versions`, { source_code: source });
@@ -344,7 +482,9 @@ async function saveSourceVersion(ctx, strategyId, source) {
   state.selectedVersionId = res.data.version.id;
   state.sourceCode = res.data.version.source_code;
   state.validation = res.data.version.validation;
-  ctx.toast.ok(`Versão v${res.data.version.version} salva`);
+  ctx.toast.ok(`Versão v${res.data.version.version} salva com sucesso`);
+  
+  // Re-render strategy view but preserve the active tab
   await renderStrategies(ctx, { id: strategyId, versionId: state.selectedVersionId });
   return res.data.version;
 }
@@ -370,6 +510,9 @@ async function saveParamsVersion(ctx, strategyId) {
     return;
   }
   await saveSourceVersion(ctx, strategyId, source);
+  
+  // Go back to parameters tab to see changes
+  switchTab('params');
 }
 
 function parseParamValue(value, type) {
@@ -401,107 +544,6 @@ function glsLiteral(value) {
 
 function escapeRegExp(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function openFocusedCodeEditor(ctx, strategy, version) {
-  const root = document.getElementById('modal-root');
-  if (!root) return;
-  root.setAttribute('aria-hidden', 'false');
-  const textareaId = `focused-strategy-source-${strategy.id}`;
-  const validationId = `focused-strategy-validation-${strategy.id}`;
-  const overlay = el('div', { class: 'code-workspace-overlay' }, [
-    el('section', { class: 'code-workspace', role: 'dialog', 'aria-modal': 'true' }, [
-      el('header', { class: 'code-workspace__header' }, [
-        el('div', { class: 'code-workspace__title' }, [
-          el('span', { class: 'eyebrow' }, 'Editor GLS'),
-          el('h2', {}, strategy.name),
-          el('p', { class: 'muted mono' }, `${strategy.slug} · v${version?.version ?? '-'} · Ctrl+Space autocomplete · Ctrl+S salvar`),
-        ]),
-        el('div', { class: 'row row--wrap code-workspace__actions' }, [
-          el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => validateFocusedEditor(ctx, validationId) }, 'Validar'),
-          el('button', { class: 'btn btn--primary btn--sm', type: 'button', onclick: () => saveFocusedEditor(ctx, strategy.id) }, 'Salvar versão'),
-          el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => closeFocusedEditor(ctx, root, overlay, true) }, 'Aplicar e fechar'),
-          el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => closeFocusedEditor(ctx, root, overlay, false) }, 'Fechar'),
-        ]),
-      ]),
-      el('div', { class: 'code-workspace__body' }, [
-        el('div', { class: 'code-workspace__editor' }, el('textarea', { id: textareaId }, state.sourceCode)),
-        el('aside', { class: 'code-workspace__side' }, [
-          el('section', { class: 'editor-help-card' }, [
-            el('h3', {}, 'Assistente'),
-            el('p', { class: 'muted' }, 'Use autocomplete para blocos, hooks, variáveis do runtime e funções de ordem.'),
-            el('div', { class: 'shortcut-list' }, [
-              shortcut('Ctrl+Space', 'autocomplete'),
-              shortcut('Ctrl+S', 'salvar versão'),
-              shortcut('Esc', 'fechar'),
-            ]),
-          ]),
-          el('section', { class: 'editor-help-card' }, [
-            el('h3', {}, 'Blocos disponíveis'),
-            el('ul', { class: 'mono-list mono-list--dense' }, state.blocks.slice(0, 28).map((block) => el('li', {}, el('code', {}, block.signature)))),
-          ]),
-          el('section', { class: 'editor-help-card', id: validationId }, renderValidationDetails(state.validation)),
-        ]),
-      ]),
-    ]),
-  ]);
-  root.appendChild(overlay);
-  const editor = window.CodeMirror.fromTextArea(document.getElementById(textareaId), {
-    mode: 'javascript',
-    theme: 'material-darker',
-    lineNumbers: true,
-    lineWrapping: true,
-    autofocus: true,
-    extraKeys: {
-      'Ctrl-Space': (cm) => showGlsHint(cm),
-      'Ctrl-S': async (cm) => {
-        state.sourceCode = cm.getValue();
-        await saveFocusedEditor(ctx, strategy.id);
-      },
-      Esc: () => closeFocusedEditor(ctx, root, overlay, false),
-      Tab: (cm) => cm.execCommand('indentMore'),
-    },
-  });
-  state.focusedEditor = editor;
-  editor.on('inputRead', (cm, change) => {
-    if (!change.text?.[0] || /\s/.test(change.text[0])) return;
-    if (/[A-Za-z_.]/.test(change.text[0])) showGlsHint(cm, true);
-  });
-  window.setTimeout(() => editor.refresh(), 0);
-}
-
-function shortcut(keys, label) {
-  return el('div', { class: 'shortcut-row' }, [el('kbd', {}, keys), el('span', {}, label)]);
-}
-
-async function validateFocusedEditor(ctx, validationId) {
-  state.sourceCode = state.focusedEditor?.getValue() || state.sourceCode;
-  const validation = await validateStrategySource(ctx, state.sourceCode);
-  const panel = document.getElementById(validationId);
-  if (panel) mount(panel, renderValidationDetails(validation));
-}
-
-async function saveFocusedEditor(ctx, strategyId) {
-  state.sourceCode = state.focusedEditor?.getValue() || state.sourceCode;
-  await saveSourceVersion(ctx, strategyId, state.sourceCode);
-}
-
-async function closeFocusedEditor(ctx, root, overlay, applyChanges) {
-  if (applyChanges) state.sourceCode = state.focusedEditor?.getValue() || state.sourceCode;
-  if (state.focusedEditor) {
-    state.focusedEditor.toTextArea();
-    state.focusedEditor = null;
-  }
-  overlay.remove();
-  root.setAttribute('aria-hidden', root.children.length ? 'false' : 'true');
-  if (applyChanges) await refreshWorkbench(ctx);
-}
-
-async function refreshWorkbench(ctx) {
-  if (!state.currentStrategy) return;
-  await validateStrategySource(ctx, state.sourceCode);
-  const root = document.getElementById('strategy-workbench-root');
-  if (root?.parentElement) mount(root.parentElement, renderStrategyWorkbench(ctx, state.currentStrategy, state.currentVersion));
 }
 
 function showGlsHint(cm, automatic = false) {

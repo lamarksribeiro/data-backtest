@@ -104,7 +104,7 @@ async function loadRunsTable(ctx) {
         el('td', {}, el('code', {}, run.strategy)),
         el('td', {}, `${run.underlying} ${run.interval}`),
         el('td', {}, String(run.ticks ?? 0)),
-        el('td', {}, formatPnl(summary.totalPnl ?? 0)),
+        el('td', {}, renderPnlBadge(summary.totalPnl ?? 0)),
         el('td', {}, el('button', {
           class: 'btn btn--ghost btn--sm',
           type: 'button',
@@ -117,4 +117,13 @@ async function loadRunsTable(ctx) {
     el('h2', { class: 'card__title' }, 'Histórico'),
     table,
   ]));
+}
+
+function renderPnlBadge(value) {
+  const num = Number(value);
+  const formatted = formatPnl(num);
+  let toneClass = 'pnl-badge--neutral';
+  if (num > 0) toneClass = 'pnl-badge--positive';
+  else if (num < 0) toneClass = 'pnl-badge--negative';
+  return el('span', { class: `pnl-badge ${toneClass}` }, formatted);
 }
