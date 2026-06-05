@@ -213,6 +213,32 @@ Response:
 }
 ```
 
+### `GET /api/context-options`
+
+Opcoes reais para a barra de contexto da UI, derivadas de particoes `backtest_ticks` validas no manifest.
+
+Response:
+
+```json
+{
+  "options": {
+    "underlyings": ["BTC", "ETH"],
+    "intervals": ["5m", "15m", "1h"],
+    "book_depths": ["10"],
+    "combinations": [
+      {
+        "underlying": "BTC",
+        "interval": "5m",
+        "book_depth": "10",
+        "from": "2026-05-29",
+        "to": "2026-05-30",
+        "partitions": 1
+      }
+    ]
+  }
+}
+```
+
 ### `GET /api/availability`
 
 Response:
@@ -637,6 +663,21 @@ Response:
   }
 }
 ```
+
+### `DELETE /api/strategies/:id/versions/:versionId`
+
+Remove uma versao somente quando ela nao e a ultima versao da estrategia e nao foi usada por nenhum backtest.
+
+Response:
+
+```json
+{
+  "deleted": true,
+  "version": {}
+}
+```
+
+Bloqueios retornam `400 REQUEST_FAILED`, por exemplo versao unica ou versao ja usada em runs.
 
 ### `POST /api/strategies/validate`
 

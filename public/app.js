@@ -100,7 +100,13 @@ const ctx = {
   renderContextBar() {
     if (!topbarActions) return;
     topbarActions.innerHTML = '';
-    topbarActions.appendChild(renderContextControls(loadContext(), () => {}));
+    const current = loadContext();
+    topbarActions.appendChild(renderContextControls(current, () => {}));
+    api.get('/api/context-options').then((res) => {
+      if (!res.ok || !topbarActions) return;
+      topbarActions.innerHTML = '';
+      topbarActions.appendChild(renderContextControls(loadContext(), () => {}, res.data.options || {}));
+    });
   },
   toast,
   api,

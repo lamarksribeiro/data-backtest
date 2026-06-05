@@ -28,10 +28,7 @@ export async function renderBacktests(ctx) {
         el('label', { class: 'field' }, [
           el('span', { class: 'field__label' }, 'Batch size'),
           el('input', { class: 'field__input', type: 'number', name: 'batch_size', min: '1', value: formCtx.batch_size }),
-        ]),
-        el('label', { class: 'field field--wide' }, [
-          el('span', { class: 'field__label' }, 'Params JSON'),
-          el('textarea', { class: 'field__input', name: 'params', rows: '2', placeholder: '{"minDistanceAbs":40}' }),
+          el('span', { class: 'field__hint' }, 'Tamanho do lote de ticks lidos por vez. Afeta performance/memória, não a lógica da estratégia.'),
         ]),
         el('div', { class: 'form-actions' }, [
           el('button', { class: 'btn btn--primary', type: 'submit', disabled: !strategyOptions.length }, 'Executar'),
@@ -54,12 +51,7 @@ export async function renderBacktests(ctx) {
       ctx.toast.warn('Selecione uma estratégia versionada.');
       return;
     }
-    let params = {};
-    const rawParams = String(fd.get('params') || '').trim();
-    if (rawParams) {
-      try { params = JSON.parse(rawParams); } catch { ctx.toast.err('Params JSON inválido'); return; }
-    }
-    const payload = backtestPayloadFromPick(String(pick), ctxSaved, { params });
+    const payload = backtestPayloadFromPick(String(pick), ctxSaved);
     const resultPanel = document.getElementById('backtest-run-result');
     mount(resultPanel, el('p', { class: 'muted' }, 'Executando backtest...'));
 

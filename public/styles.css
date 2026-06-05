@@ -3013,6 +3013,15 @@ details.advanced[open] { padding-bottom: 16px; }
   font-size: 12px;
   min-width: 0;
 }
+.context-bar__select {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-1);
+  padding: 4px 8px;
+  font-size: 12px;
+  min-width: 74px;
+}
 
 .form-grid {
   display: grid;
@@ -3089,7 +3098,13 @@ details.advanced[open] { padding-bottom: 16px; }
   gap: 12px;
   margin-bottom: 16px;
 }
-.strategy-version-card__status { padding-bottom: 8px; }
+.strategy-version-card__status {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-bottom: 8px;
+}
 .strategy-workbench {
   display: flex;
   flex-direction: column;

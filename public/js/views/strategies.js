@@ -136,7 +136,7 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
         el('button', { class: 'btn btn--danger btn--sm', type: 'button', onclick: () => deleteStrategyFlow(ctx, strategy) }, 'Apagar'),
       ]),
     ]),
-    renderVersionSelector(ctx, strategyId, versions, version),
+    renderVersionSelector(ctx, strategyId, versions, version, strategy),
     renderStrategyWorkbench(ctx, strategy, version),
   ]);
 
@@ -159,7 +159,7 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
   ]);
 }
 
-function renderVersionSelector(ctx, strategyId, versions, version) {
+function renderVersionSelector(ctx, strategyId, versions, version, strategy) {
   return el('div', { class: 'strategy-version-card' }, [
     el('label', { class: 'field' }, [
       el('span', { class: 'field__label' }, 'Versão ativa'),
@@ -177,7 +177,15 @@ function renderVersionSelector(ctx, strategyId, versions, version) {
         ? versions.map((item) => el('option', { value: item.id, selected: item.id === version?.id }, `v${item.version} · ${item.created_at}`))
         : [el('option', { value: '' }, 'Sem versões')]),
     ]),
-    el('div', { class: 'strategy-version-card__status' }, renderValidationBadge(state.validation)),
+    el('div', { class: 'strategy-version-card__status' }, [
+      renderValidationBadge(state.validation),
+      el('button', {
+        class: 'btn btn--danger btn--sm',
+        type: 'button',
+        disabled: !version || versions.length <= 1,
+        onclick: () => deleteVersionFlow(ctx, strategy, version),
+      }, 'Excluir versão'),
+    ]),
   ]);
 }
 
@@ -560,6 +568,26 @@ async function deleteStrategyFlow(ctx, strategy) {
   state.selectedVersionId = null;
   ctx.navigate('strategies');
   await renderStrategies(ctx);
+}
+
+async function deleteVersionFlow(ctx, strategy, version) {
+  if (!version) return;
+  const ok = await confirmDialog({
+    title: 'Excluir versão',
+    message: `Excluir a versão v${version.version} de "${strategy.name}"?`,
+    detail: 'A exclusão só é permitida se a versão não foi usada em nenhum backtest e se não for a última versão da estratégia.',
+    confirmLabel: 'Excluir versão',
+    tone: 'danger',
+  });
+  if (!ok) return;
+  const res = await ctx.api.delete(`/api/strategies/${strategy.id}/versions/${version.id}`);
+  if (!res.ok) {
+    ctx.toast.err(res.error?.message || 'Falha ao excluir versão');
+    return;
+  }
+  ctx.toast.ok(`Versão v${version.version} excluída`);
+  state.selectedVersionId = null;
+  await renderStrategies(ctx, { id: strategy.id });
 }
 
 async function runStrategyBacktest(ctx, strategyId) {

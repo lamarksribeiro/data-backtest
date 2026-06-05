@@ -43,23 +43,28 @@ export function contextQueryParams(ctx = loadContext()) {
   return params;
 }
 
-export function renderContextBar(ctx, onChange) {
+export function renderContextBar(ctx, onChange, options = {}) {
   const current = normalizeContext({ ...DEFAULTS, ...(ctx || {}) });
+  const underlyings = optionValues(options.underlyings, current.underlying);
+  const intervals = optionValues(options.intervals, current.interval);
+  const bookDepths = optionValues(options.book_depths, current.book_depth);
   const bar = document.createElement('div');
   bar.className = 'context-bar';
   bar.innerHTML = `
     <label class="context-bar__field">De <input type="date" name="from" value="${current.from || ''}"></label>
     <label class="context-bar__field">Até <input type="date" name="to" value="${current.to || ''}"></label>
-    <label class="context-bar__field">Ativo <input type="text" name="underlying" value="${current.underlying || DEFAULTS.underlying}" size="5"></label>
-    <label class="context-bar__field">Intervalo <input type="text" name="interval" value="${current.interval || DEFAULTS.interval}" size="4"></label>
+    <label class="context-bar__field">Ativo ${selectHtml('underlying', underlyings, current.underlying, formatRaw)}</label>
+    <label class="context-bar__field">Intervalo ${selectHtml('interval', intervals, current.interval, formatInterval)}</label>
+    <label class="context-bar__field">Book ${selectHtml('book_depth', bookDepths, current.book_depth, (value) => `top ${value}`)}</label>
   `;
-  bar.querySelectorAll('input').forEach((input) => {
+  bar.querySelectorAll('input, select').forEach((input) => {
     input.addEventListener('change', () => {
       const next = saveContext({
         from: bar.querySelector('[name=from]').value,
         to: bar.querySelector('[name=to]').value,
-        underlying: bar.querySelector('[name=underlying]').value.trim(),
-        interval: bar.querySelector('[name=interval]').value.trim(),
+        underlying: bar.querySelector('[name=underlying]').value,
+        interval: bar.querySelector('[name=interval]').value,
+        book_depth: bar.querySelector('[name=book_depth]').value,
       });
       onChange?.(next);
     });
@@ -86,4 +91,36 @@ function normalizeContext(ctx) {
     }
   }
   return normalized;
+}
+
+function optionValues(values, selected) {
+  const list = [...new Set([...(values || []), selected].filter(Boolean).map(String))];
+  return list.length ? list : [selected].filter(Boolean);
+}
+
+function selectHtml(name, values, selected, format) {
+  return `<select name="${name}" class="context-bar__select">${values.map((value) => (
+    `<option value="${escapeAttr(value)}" ${String(value) === String(selected) ? 'selected' : ''}>${escapeAttr(format(value))}</option>`
+  )).join('')}</select>`;
+}
+
+function formatRaw(value) {
+  return String(value);
+}
+
+function formatInterval(value) {
+  const text = String(value);
+  const match = text.match(/^(\d+)([mhd])$/);
+  if (!match) return text;
+  const amount = match[1];
+  const unit = { m: 'min', h: 'h', d: 'd' }[match[2]];
+  return `${amount} ${unit}`;
+}
+
+function escapeAttr(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
 }

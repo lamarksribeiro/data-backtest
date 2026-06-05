@@ -80,14 +80,12 @@ Conceitos importantes:
 Na aba **Backtests**:
 
 1. Escolha uma estrategia versionada.
-2. Defina `Params JSON` se quiser sobrescrever parametros, por exemplo:
+2. Confira o contexto global no topo: datas, ativo, intervalo e book depth. Esses seletores usam combinacoes disponiveis no manifest do lakehouse.
+3. Ajuste `Batch size` somente se precisar mexer em performance/memoria. Ele define quantos ticks o engine le por lote; nao altera a logica nem o resultado esperado da estrategia.
+4. Clique em **Executar**.
+5. Se aparecer `DATA_NOT_READY`, va para **Dados** e prepare o periodo.
 
-```json
-{"minDistanceAbs":40,"budget":10}
-```
-
-3. Clique em **Executar**.
-4. Se aparecer `DATA_NOT_READY`, va para **Dados** e prepare o periodo.
+Parametros da estrategia nao sao alterados na tela de backtest. Edite os parametros na aba **Estrategias** e salve uma nova versao antes de executar.
 
 Na aba **Estrategias**:
 
@@ -124,6 +122,14 @@ Na tela do evento:
 Na aba **Estrategias**, abra uma estrategia e clique em **Apagar**.
 
 Isso remove a definicao e todas as versoes salvas. Runs antigos nao sao apagados porque `backtest_runs` guarda o snapshot executado.
+
+## Excluir Versoes
+
+Versoes sao snapshots de reproducibilidade. Por isso, a exclusao e limitada:
+
+- nao e permitido excluir a ultima versao de uma estrategia;
+- nao e permitido excluir uma versao ja usada por backtests;
+- versoes nao usadas podem ser excluidas para limpar rascunhos ou salvamentos acidentais.
 
 ## Comandos Uteis
 

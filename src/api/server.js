@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 import { createAuthMiddleware } from '../middleware/auth.js';
 import { getHealth } from '../health.js';
-import { listManifest, manifestStats } from '../state/manifest.js';
+import { listBacktestContextOptions, listManifest, manifestStats } from '../state/manifest.js';
 import { getPrepareJob, listPrepareJobs } from '../state/prepareJobs.js';
 import { checkDatasetAvailability } from '../query/availability.js';
 import { resolveDataRequest } from '../query/dataMode.js';
@@ -18,6 +18,7 @@ import {
   createStrategy,
   createStrategyVersion,
   deleteStrategy,
+  deleteStrategyVersion,
   getStrategy,
   getStrategyVersion,
   listStrategies as listSavedStrategies,
@@ -104,6 +105,9 @@ export function createApiHandler(deps) {
             limit: url.searchParams.get('limit') || undefined,
           }),
         });
+      }
+      if (req.method === 'GET' && url.pathname === '/api/context-options') {
+        return sendJson(res, 200, { options: listBacktestContextOptions(db) });
       }
       if (req.method === 'GET' && url.pathname === '/api/availability') {
         const request = datasetRequestFromParams(url.searchParams, config);
@@ -211,6 +215,14 @@ export function createApiHandler(deps) {
           const version = getStrategyVersion(db, strategyRoute.strategyId, strategyRoute.versionId);
           return version
             ? sendJson(res, 200, { version })
+            : sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Strategy version not found' } });
+        }
+        if (req.method === 'DELETE' && strategyRoute.kind === 'version-detail') {
+          const strategy = getStrategy(db, strategyRoute.strategyId);
+          if (!strategy) return sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Strategy not found' } });
+          const version = deleteStrategyVersion(db, strategyRoute.strategyId, strategyRoute.versionId);
+          return version
+            ? sendJson(res, 200, { deleted: true, version })
             : sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Strategy version not found' } });
         }
       }
@@ -370,7 +382,7 @@ async function readJson(req) {
 
 function statusForError(err) {
   if (err instanceof SyntaxError) return 400;
-  if (/required|Invalid|must be|Unsupported|JSON/.test(err.message || '')) return 400;
+  if (/required|Invalid|must be|Unsupported|JSON|Cannot/.test(err.message || '')) return 400;
   return 500;
 }
 

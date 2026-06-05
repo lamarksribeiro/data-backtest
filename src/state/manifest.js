@@ -40,6 +40,36 @@ export function manifestStats(db) {
   };
 }
 
+export function listBacktestContextOptions(db) {
+  const rows = db.prepare(`
+    SELECT underlying, interval, book_depth, MIN(dt) AS from_dt, MAX(dt) AS to_dt, COUNT(*) AS partitions
+    FROM lake_manifest
+    WHERE dataset = 'backtest_ticks'
+      AND status = 'valid'
+      AND active_path IS NOT NULL
+    GROUP BY underlying, interval, book_depth
+    ORDER BY underlying ASC, interval ASC, book_depth ASC
+  `).all();
+
+  return {
+    underlyings: unique(rows.map((row) => row.underlying)),
+    intervals: unique(rows.map((row) => row.interval)),
+    book_depths: unique(rows.map((row) => row.book_depth).filter((value) => value != null).map(String)),
+    combinations: rows.map((row) => ({
+      underlying: row.underlying,
+      interval: row.interval,
+      book_depth: row.book_depth != null ? String(row.book_depth) : null,
+      from: row.from_dt,
+      to: row.to_dt,
+      partitions: Number(row.partitions || 0),
+    })),
+  };
+}
+
+function unique(values) {
+  return [...new Set(values.filter(Boolean).map(String))];
+}
+
 export function upsertManifestPartition(db, entry) {
   const now = new Date().toISOString();
   const stmt = db.prepare(`

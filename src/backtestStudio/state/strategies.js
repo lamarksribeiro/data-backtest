@@ -72,6 +72,25 @@ export function getStrategyVersion(db, strategyId, versionId) {
   return row ? toApiVersion(row) : null;
 }
 
+export function deleteStrategyVersion(db, strategyId, versionId) {
+  const version = getStrategyVersion(db, strategyId, versionId);
+  if (!version) return null;
+
+  const total = db.prepare('SELECT COUNT(*) AS count FROM strategy_versions WHERE strategy_id = ?').get(strategyId);
+  if (Number(total?.count || 0) <= 1) throw new Error('Cannot delete the last strategy version');
+
+  const runs = db.prepare('SELECT COUNT(*) AS count FROM backtest_runs WHERE strategy_version_id = ?').get(versionId);
+  if (Number(runs?.count || 0) > 0) throw new Error('Cannot delete a version used by backtest runs');
+
+  db.prepare('DELETE FROM strategy_versions WHERE strategy_id = ? AND id = ?').run(strategyId, versionId);
+  db.prepare(`
+    UPDATE strategy_definitions
+    SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+    WHERE id = ?
+  `).run(strategyId);
+  return version;
+}
+
 export function createStrategyVersion(db, strategyId, { language = 'gls-v1', source_code: sourceCode }) {
   const strategy = getStrategy(db, strategyId);
   if (!strategy) return null;

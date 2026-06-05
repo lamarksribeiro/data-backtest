@@ -17,6 +17,7 @@ import {
   createStrategy,
   createStrategyVersion,
   deleteStrategy,
+  deleteStrategyVersion,
   listStrategies,
   updateStrategy,
   validateStrategySource,
@@ -222,6 +223,12 @@ test('strategy CRUD API creates definitions and versions', async () => {
         source_code: 'strategy "Simple PTB" { param maxAsk = 0.58 }',
       });
       assert.equal(savedVersion.version.version, 2);
+
+      const deletedVersion = deleteStrategyVersion(db, strategy.id, version.id);
+      assert.equal(deletedVersion.version, 1);
+
+      const lastVersionDelete = await fetch(`${baseUrl}/api/strategies/${strategy.id}/versions/${savedVersion.version.id}`, { method: 'DELETE' });
+      assert.equal(lastVersionDelete.status, 400);
 
       const validation = await postJson(`${baseUrl}/api/strategies/validate`, {
         source_code: 'invalid',
