@@ -148,7 +148,9 @@ export function createApiHandler(deps) {
       }
       const backtestRunRoute = matchBacktestRunRoute(url.pathname);
       if (backtestRunRoute) {
-        const run = Number.isFinite(backtestRunRoute.runId) ? getBacktestRun(db, backtestRunRoute.runId) : null;
+        const run = Number.isFinite(backtestRunRoute.runId)
+          ? getBacktestRun(db, backtestRunRoute.runId, { includeEquity: false })
+          : null;
         if (!run) {
           return sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Backtest run not found' } });
         }
@@ -282,7 +284,15 @@ export function createApiHandler(deps) {
             strategyMeta: request.strategyMeta ?? null,
             durationMs: Date.now() - startedAt,
           });
-          return sendJson(res, 200, { run, result });
+          return sendJson(res, 200, {
+            run,
+            result: {
+              strategy: result.strategy,
+              ticks: result.ticks,
+              batches: result.batches,
+              summary: result.summary,
+            },
+          });
         } catch (err) {
           const run = createBacktestRun(db, {
             request,
@@ -433,7 +443,7 @@ function backtestRequestFromBody(body, config, db) {
   const dataRequest = datasetRequestFromObject({ dataset: 'backtest_ticks', ...body }, config);
   const base = {
     ...dataRequest,
-    batchSize: positiveIntValue(body.batch_size ?? body.batchSize, 50_000),
+    batchSize: positiveIntValue(body.batch_size ?? body.batchSize, 10_000),
     params: parseParams(body.params),
   };
 

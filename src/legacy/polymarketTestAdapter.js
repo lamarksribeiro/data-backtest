@@ -1,6 +1,6 @@
-import { queryAllTicksForBacktest, queryTicks } from '../query/duckdbQuery.js';
+import { openBacktestTickSession, queryTicks } from '../query/duckdbQuery.js';
 
-const DEFAULT_BATCH_SIZE = 50_000;
+const DEFAULT_BATCH_SIZE = 10_000;
 
 export function createPolymarketTestAdapter(db, defaults = {}) {
   return {
@@ -53,15 +53,23 @@ export async function getTicksForBacktestBatch(db, {
 export async function* getTicksForBacktestBatches(db, opts = {}) {
   const batchSize = normalizeBatchSize(opts.batchSize ?? opts.limit ?? DEFAULT_BATCH_SIZE);
   const bookDepth = opts.bookDepth ?? 25;
-  const rows = await queryAllTicksForBacktest(db, {
+  const session = await openBacktestTickSession(db, {
     ...opts,
     bookDepth,
     to: toExclusiveForLegacyInclusiveRange(opts.to),
     validBacktestRows: true,
   });
-  for (let offset = 0; offset < rows.length; offset += batchSize) {
-    const slice = rows.slice(offset, offset + batchSize);
-    yield slice.map((row, index) => toLegacyBacktestTick(row, { index: offset + index, bookDepth }));
+  try {
+    let offset = 0;
+    while (true) {
+      const rows = await session.readBatch(offset, batchSize);
+      if (!rows.length) break;
+      yield rows.map((row, index) => toLegacyBacktestTick(row, { index: offset + index, bookDepth }));
+      offset += rows.length;
+      if (rows.length < batchSize) break;
+    }
+  } finally {
+    session.close();
   }
 }
 
@@ -118,7 +126,7 @@ function finiteOrNull(value) {
 
 function normalizeBatchSize(value) {
   const parsed = Number.parseInt(String(value ?? DEFAULT_BATCH_SIZE), 10);
-  return Math.min(Math.max(Number.isFinite(parsed) ? parsed : DEFAULT_BATCH_SIZE, 1), 200_000);
+  return Math.min(Math.max(Number.isFinite(parsed) ? parsed : DEFAULT_BATCH_SIZE, 1), 50_000);
 }
 
 function toExclusiveForLegacyInclusiveRange(to) {

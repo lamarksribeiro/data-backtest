@@ -22,7 +22,7 @@ export function createBacktestRun(db, { request, result, strategyMeta = null, st
     result.ticks,
     result.batches,
     JSON.stringify(result.summary ?? {}),
-    JSON.stringify(result),
+    JSON.stringify(slimResultForStorage(result)),
     meta?.strategy_id ?? null,
     meta?.strategy_version_id ?? null,
     meta ? JSON.stringify(meta) : null,
@@ -33,7 +33,7 @@ export function createBacktestRun(db, { request, result, strategyMeta = null, st
   );
   const runId = inserted.lastInsertRowid;
   persistEventTraces(db, runId, result);
-  return getBacktestRun(db, runId, { includeResult: true, includeEquity: false });
+  return getBacktestRun(db, runId, { includeResult: false, includeEquity: false });
 }
 
 export function getBacktestRun(db, id, { includeResult = false, includeEquity = true } = {}) {
@@ -107,5 +107,10 @@ function toApiRun(row, { includeResult = false, includeEquity = false } = {}) {
 
 function stripRequestForSnapshot(request) {
   const { glsAst, strategyMeta, ...rest } = request;
+  return rest;
+}
+
+function slimResultForStorage(result) {
+  const { events, log, ...rest } = result;
   return rest;
 }

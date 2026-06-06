@@ -34,21 +34,51 @@ export async function queryTicks(db, request) {
   return runDuckQuery(sql);
 }
 
-/** Uma varredura Parquet para todo o range — uso em backtests (evita OFFSET repetido). */
-export async function queryAllTicksForBacktest(db, request) {
+/**
+ * Sessão DuckDB com uma varredura Parquet → tabela temporária em memória.
+ * Batches subsequentes usam OFFSET na tabela (rápido) sem reabrir DuckDB nem reescanear Parquet.
+ */
+export async function openBacktestTickSession(db, request) {
   const availability = requireDatasetAvailability(db, {
     ...request,
     dataset: 'backtest_ticks',
   });
-  const sql = buildTicksSql(availability, {
+  const bookDepth = request.bookDepth ?? 25;
+  const selectCols = backtestTickSelectColumns(bookDepth);
+  const sourceSql = buildTicksSql(availability, {
     ...request,
     dataset: 'backtest_ticks',
-    limit: MAX_BACKTEST_ROWS,
-    offset: 0,
-  }, {
-    select: backtestTickSelectColumns(request.bookDepth ?? 25),
-  });
-  return runDuckQuery(sql);
+  }, { select: selectCols });
+
+  const instance = await DuckDBInstance.create(':memory:');
+  const connection = await instance.connect();
+  try {
+    await connection.run('SET threads TO 4');
+    await connection.run(`CREATE TEMP TABLE _bt_ticks AS ${sourceSql.trim()}`);
+  } catch (err) {
+    connection.closeSync();
+    instance.closeSync();
+    throw err;
+  }
+
+  return {
+    bookDepth,
+    async readBatch(offset, limit) {
+      const safeLimit = Math.min(Math.max(Number.parseInt(String(limit), 10) || 1, 1), MAX_BACKTEST_ROWS);
+      const safeOffset = Math.max(Number.parseInt(String(offset), 10) || 0, 0);
+      const sql = `
+        SELECT * FROM _bt_ticks
+        ORDER BY CAST(ts AS TIMESTAMP) ASC, condition_id ASC
+        LIMIT ${safeLimit} OFFSET ${safeOffset}
+      `;
+      const result = await connection.runAndReadAll(sql);
+      return result.getRowObjectsJS().map(jsonSafeRow);
+    },
+    close() {
+      connection.closeSync();
+      instance.closeSync();
+    },
+  };
 }
 
 export async function queryCandles(db, request) {

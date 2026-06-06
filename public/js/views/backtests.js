@@ -75,7 +75,7 @@ export async function renderBacktests(ctx) {
       }
       return;
     }
-    const summary = res.data.result?.summary || {};
+    const summary = res.data.result?.summary || res.data.run?.summary || {};
     ctx.toast.ok(`Backtest #${res.data.run.id} concluído · PnL ${formatPnl(summary.totalPnl ?? 0)}`);
     mount(resultPanel, el('div', { class: 'row row--wrap' }, [
       el('span', { class: 'badge badge--ok' }, `Run #${res.data.run.id}`),

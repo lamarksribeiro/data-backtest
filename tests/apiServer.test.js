@@ -312,7 +312,7 @@ test('data-backtest API runs versioned strategy only when data is ready', async 
       assert.equal(completed.result.ticks, 12);
       assert.equal(completed.result.batches, 3);
       assert.equal(completed.run.id, 1);
-      assert.equal(completed.run.result.ticks, 12);
+      assert.equal(completed.run.ticks, 12);
       assert.equal(completed.run.strategy_id, strategy.id);
 
       const runs = await getJson(`${baseUrl}/api/backtest/runs`);
