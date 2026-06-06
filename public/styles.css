@@ -4156,12 +4156,20 @@ kbd {
 }
 
 /* Responsividade de Tabelas */
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 @media (max-width: 768px) {
-  .table {
-    display: block;
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+  .table-wrap {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: rgba(15, 23, 42, 0.2);
+  }
+  .table-wrap .table {
+    min-width: 640px;
   }
   
   /* Ajuste para quebrar o layout do editor de estratégias de duas colunas */
@@ -4224,4 +4232,46 @@ kbd {
 .backtest-stats-section .stat:hover {
   transform: translateY(-2px);
   border-color: var(--accent);
+}
+
+/* Micro-animações e consistência para ícones Font Awesome */
+i.fa-solid, i.fa-regular, i.fa-brands {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease;
+  display: inline-block;
+}
+.btn:hover i.fa-solid, .btn:hover i.fa-regular {
+  transform: scale(1.08) translateY(-0.5px);
+}
+.navlink:hover i.fa-solid {
+  transform: scale(1.1);
+}
+
+/* Estrutura do cabeçalho do editor de estratégias responsiva */
+.strategy-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 16px;
+}
+.editor-title-block {
+  min-width: 200px;
+}
+.strategy-header-version-picker {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+@media (max-width: 768px) {
+  .strategy-header-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .strategy-header-version-picker {
+    width: 100%;
+    justify-content: space-between;
+  }
 }
