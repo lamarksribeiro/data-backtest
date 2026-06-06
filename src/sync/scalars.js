@@ -99,6 +99,7 @@ export function shouldProcessScalarsPartition(db, partition, opts = {}) {
   if (opts.rebuild) return { process: true, reason: 'rebuild_requested' };
   const existing = getScalarsManifestStatus(db, partition);
   if (existing.status === 'valid') return { process: false, reason: 'already_valid', existing };
+  if (existing.status === 'accepted') return { process: false, reason: 'already_accepted', existing };
   if (existing.status === 'needs_review' && !opts.allowNeedsReview) {
     return { process: false, reason: 'needs_review_requires_manual_rebuild', existing };
   }

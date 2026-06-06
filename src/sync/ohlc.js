@@ -23,7 +23,7 @@ export function listValidScalarManifestPartitions(db, opts = {}) {
   let sql = `
     SELECT * FROM lake_manifest
     WHERE dataset = 'scalars'
-      AND status = 'valid'
+      AND status IN ('valid', 'accepted')
       AND active_path IS NOT NULL`;
 
   if (opts.from) {
@@ -70,7 +70,7 @@ export async function exportOhlcFromScalarsPartition({ config, db, scalarPartiti
 
   if (!rebuild) {
     const existing = getOhlcManifestStatus(db, manifestPartition);
-    if (existing?.status === 'valid') {
+    if (existing?.status === 'valid' || existing?.status === 'accepted') {
       return { skipped: true, reason: 'already_valid', partition: manifestPartition, activePath: existing.active_path };
     }
   }

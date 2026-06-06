@@ -18,6 +18,8 @@ export function partitionDatesForRange(from, to) {
 
 const STATUS_HINTS = {
   valid: 'Pronta para backtest em modo strict.',
+  accepted:
+    'Aceita manualmente apesar de divergência de qualidade. Usável em modo strict, mas deve ser monitorada.',
   needs_review:
     'O parquet foi gerado, mas a contagem real de ticks divergiu do event_quality no Postgres. '
     + 'Bloqueada em modo strict até reprocessar com "Reprocessar indisponíveis" + confirmação REBUILD_PARTITIONS.',
@@ -58,7 +60,7 @@ export function checkDatasetAvailability(db, request) {
       continue;
     }
 
-    const usable = row.status === 'valid' && Boolean(row.active_path);
+    const usable = ['valid', 'accepted'].includes(row.status) && Boolean(row.active_path);
     const partition = {
       dt,
       status: row.status,

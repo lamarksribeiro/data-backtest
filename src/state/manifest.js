@@ -45,7 +45,7 @@ export function listBacktestContextOptions(db) {
     SELECT underlying, interval, book_depth, MIN(dt) AS from_dt, MAX(dt) AS to_dt, COUNT(*) AS partitions
     FROM lake_manifest
     WHERE dataset = 'backtest_ticks'
-      AND status = 'valid'
+      AND status IN ('valid', 'accepted')
       AND active_path IS NOT NULL
     GROUP BY underlying, interval, book_depth
     ORDER BY underlying ASC, interval ASC, book_depth ASC
@@ -64,6 +64,57 @@ export function listBacktestContextOptions(db) {
       partitions: Number(row.partitions || 0),
     })),
   };
+}
+
+export function acceptManifestPartition(db, partition, reason = '') {
+  const existing = getManifestPartition(db, partition);
+  if (!existing) return { ok: false, reason: 'not_found' };
+  if (!existing.active_path) return { ok: false, reason: 'missing_active_path' };
+  if (!['needs_review', 'stale', 'invalid'].includes(existing.status)) {
+    return { ok: false, reason: 'unsupported_status', status: existing.status };
+  }
+
+  const note = reason?.trim() || 'accepted manually despite quality warning';
+  const previous = existing.error ? `Original: ${existing.error}` : 'Original: no error recorded';
+  db.prepare(`
+    UPDATE lake_manifest
+    SET status = 'accepted', verified_at = ?, error = ?
+    WHERE id = ?
+  `).run(new Date().toISOString(), `Accepted: ${note}. ${previous}`, existing.id);
+  return { ok: true, partition: getManifestPartition(db, partition) };
+}
+
+export function revokeAcceptedManifestPartition(db, partition, reason = '') {
+  const existing = getManifestPartition(db, partition);
+  if (!existing) return { ok: false, reason: 'not_found' };
+  if (existing.status !== 'accepted') return { ok: false, reason: 'unsupported_status', status: existing.status };
+
+  const note = reason?.trim() || 'manual acceptance revoked';
+  db.prepare(`
+    UPDATE lake_manifest
+    SET status = 'needs_review', verified_at = NULL, error = ?
+    WHERE id = ?
+  `).run(`Acceptance revoked: ${note}. ${existing.error || ''}`.trim(), existing.id);
+  return { ok: true, partition: getManifestPartition(db, partition) };
+}
+
+export function getManifestPartition(db, partition) {
+  return db.prepare(`
+    SELECT * FROM lake_manifest
+    WHERE dataset = ? AND COALESCE(market_id, '') = COALESCE(?, '')
+      AND underlying = ? AND interval = ?
+      AND COALESCE(resolution, '') = COALESCE(?, '')
+      AND COALESCE(book_depth, -1) = COALESCE(?, -1)
+      AND dt = ?
+  `).get(
+    partition.dataset,
+    partition.marketId ?? null,
+    partition.underlying,
+    partition.interval,
+    partition.resolution ?? null,
+    partition.bookDepth ?? null,
+    partition.dt,
+  );
 }
 
 function unique(values) {
@@ -119,7 +170,7 @@ export function upsertManifestPartition(db, entry) {
     entry.sourceQualityRecordedAtMax ?? null,
     entry.sourceFingerprint ?? null,
     entry.status ?? 'pending',
-    entry.status === 'valid' ? (entry.verifiedAt ?? now) : (entry.verifiedAt ?? null),
+    ['valid', 'accepted'].includes(entry.status) ? (entry.verifiedAt ?? now) : (entry.verifiedAt ?? null),
     entry.error ?? null,
   );
 }

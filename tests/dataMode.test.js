@@ -36,6 +36,35 @@ test('strict mode resolves ready when all partitions are valid', async () => {
   }
 });
 
+test('strict mode accepts manually accepted warning partitions', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-mode-accepted-'));
+  try {
+    const db = openStateDatabase(path.join(dir, 'state.db'));
+    try {
+      upsertManifestPartition(db, {
+        dataset: 'backtest_ticks',
+        underlying: 'BTC',
+        interval: '5m',
+        bookDepth: 10,
+        dt: '2026-05-31',
+        activePath: '/lake/backtest_ticks/accepted.parquet',
+        status: 'accepted',
+        error: 'Accepted: mismatch below tolerance',
+      });
+
+      const request = requestFor('backtest_ticks', '2026-05-31T00:00:00.000Z', '2026-06-01T00:00:00.000Z');
+      const result = resolveDataRequest(db, request, 'strict');
+      assert.equal(result.ready, true);
+      assert.equal(result.availability.partitions[0].status, 'accepted');
+      assert.equal(requireStrictDataRequest(db, request).ready, true);
+    } finally {
+      closeStateDatabase(db);
+    }
+  } finally {
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
+  }
+});
+
 test('prepare mode returns sync plan for missing backtest_ticks partitions', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-prepare-'));
   try {

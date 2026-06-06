@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 import { createAuthMiddleware } from '../middleware/auth.js';
 import { getHealth } from '../health.js';
-import { listBacktestContextOptions, listManifest, manifestStats } from '../state/manifest.js';
+import { acceptManifestPartition, listBacktestContextOptions, listManifest, manifestStats, revokeAcceptedManifestPartition } from '../state/manifest.js';
 import { emptyContextOptions, mergeContextOptions } from '../state/contextOptions.js';
 import { closeSourcePool, createSourcePool, listSourceContextOptions } from '../source/postgres.js';
 import { getPrepareJob, listPrepareJobs } from '../state/prepareJobs.js';
@@ -113,6 +113,20 @@ export function createApiHandler(deps) {
             limit: url.searchParams.get('limit') || undefined,
           }),
         });
+      }
+      if (req.method === 'POST' && url.pathname === '/api/manifest/accept') {
+        const body = await readJson(req);
+        const result = acceptManifestPartition(db, manifestPartitionFromBody(body), body.reason);
+        return result.ok
+          ? sendJson(res, 200, result)
+          : sendJson(res, 409, { error: { code: 'ACCEPT_FAILED', message: manifestActionError(result) } });
+      }
+      if (req.method === 'POST' && url.pathname === '/api/manifest/revoke-acceptance') {
+        const body = await readJson(req);
+        const result = revokeAcceptedManifestPartition(db, manifestPartitionFromBody(body), body.reason);
+        return result.ok
+          ? sendJson(res, 200, result)
+          : sendJson(res, 409, { error: { code: 'REVOKE_ACCEPTANCE_FAILED', message: manifestActionError(result) } });
       }
       if (req.method === 'GET' && url.pathname === '/api/context-options') {
         const lake = listBacktestContextOptions(db);
@@ -656,6 +670,25 @@ function backtestRequestFromBody(body, config, db) {
       },
     };
   }
+}
+
+function manifestPartitionFromBody(body) {
+  return {
+    dataset: String(body.dataset || '').trim(),
+    marketId: body.market_id ?? body.marketId ?? null,
+    underlying: String(body.underlying || '').trim().toUpperCase(),
+    interval: String(body.interval || '').trim(),
+    resolution: body.resolution || null,
+    bookDepth: positiveOptionalInt(body.book_depth ?? body.bookDepth),
+    dt: String(body.dt || '').trim(),
+  };
+}
+
+function manifestActionError(result) {
+  if (result.reason === 'not_found') return 'Partition not found in manifest';
+  if (result.reason === 'missing_active_path') return 'Partition has no active parquet file to accept';
+  if (result.reason === 'unsupported_status') return `Partition status ${result.status} cannot be changed by this action`;
+  return result.reason || 'Manifest action failed';
 }
 
 function positiveOptionalInt(value) {

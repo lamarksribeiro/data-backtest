@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS lake_manifest (
   source_quality_recorded_at_max TEXT,
   source_fingerprint TEXT,
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN (
-    'missing', 'pending', 'writing', 'valid', 'invalid', 'needs_review', 'rebuilding', 'stale'
+    'missing', 'pending', 'writing', 'valid', 'accepted', 'invalid', 'needs_review', 'rebuilding', 'stale'
   )),
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   verified_at TEXT,
@@ -162,9 +162,36 @@ export function openStateDatabase(stateDbPath) {
   db.exec('PRAGMA foreign_keys = ON');
   db.exec('PRAGMA busy_timeout = 5000');
   db.exec(SCHEMA_SQL);
+  migrateLakeManifest(db);
   migrateBacktestRuns(db);
   migratePrepareJobs(db);
   return db;
+}
+
+function migrateLakeManifest(db) {
+  const table = db.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'lake_manifest'").get();
+  if (!table?.sql || table.sql.includes("'accepted'")) return;
+
+  db.exec(`
+    PRAGMA foreign_keys = OFF;
+    ALTER TABLE lake_manifest RENAME TO lake_manifest_old;
+    ${SCHEMA_SQL.split('CREATE INDEX IF NOT EXISTS lake_manifest_status_idx')[0]}
+    INSERT INTO lake_manifest (
+      id, dataset, market_id, underlying, interval, resolution, book_depth, dt,
+      active_path, run_id, rows, events_count, min_ts, max_ts, coverage_min,
+      has_degraded, source_tick_count, source_condition_count,
+      source_quality_recorded_at_max, source_fingerprint, status, created_at, verified_at, error
+    )
+    SELECT
+      id, dataset, market_id, underlying, interval, resolution, book_depth, dt,
+      active_path, run_id, rows, events_count, min_ts, max_ts, coverage_min,
+      has_degraded, source_tick_count, source_condition_count,
+      source_quality_recorded_at_max, source_fingerprint, status, created_at, verified_at, error
+    FROM lake_manifest_old;
+    DROP TABLE lake_manifest_old;
+    PRAGMA foreign_keys = ON;
+  `);
+  db.exec(SCHEMA_SQL);
 }
 
 function migrateBacktestRuns(db) {

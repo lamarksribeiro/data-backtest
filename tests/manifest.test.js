@@ -5,7 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { openStateDatabase, closeStateDatabase } from '../src/state/sqlite.js';
-import { listManifest, manifestStats, upsertManifestPartition } from '../src/state/manifest.js';
+import { acceptManifestPartition, listManifest, manifestStats, revokeAcceptedManifestPartition, upsertManifestPartition } from '../src/state/manifest.js';
 import { checkLakeStorage } from '../src/lake/storage.js';
 
 test('manifest initializes in SQLite WAL and upserts partition', async () => {
@@ -61,6 +61,43 @@ test('manifest initializes in SQLite WAL and upserts partition', async () => {
       assert.equal(rebuilt[0].rows, 12);
       assert.equal(rebuilt[0].run_id, 'rebuild');
       assert.equal(rebuilt[0].source_fingerprint, 'fingerprint-rebuild');
+    } finally {
+      closeStateDatabase(db);
+    }
+  } finally {
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
+  }
+});
+
+test('manifest can accept and revoke needs_review partitions', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-manifest-accept-'));
+  try {
+    const db = openStateDatabase(path.join(dir, 'state', 'data-backtest.db'));
+    try {
+      const partition = {
+        dataset: 'backtest_ticks',
+        underlying: 'BTC',
+        interval: '5m',
+        bookDepth: 25,
+        dt: '2026-06-02',
+      };
+      upsertManifestPartition(db, {
+        ...partition,
+        activePath: '/lake/backtest_ticks/review.parquet',
+        rows: 172749,
+        status: 'needs_review',
+        error: 'actual tick count 172749 differs from event_quality 171733',
+      });
+
+      const accepted = acceptManifestPartition(db, partition, 'difference below tolerance');
+      assert.equal(accepted.ok, true);
+      assert.equal(accepted.partition.status, 'accepted');
+      assert.match(accepted.partition.error, /difference below tolerance/);
+
+      const revoked = revokeAcceptedManifestPartition(db, partition, 'bad sample');
+      assert.equal(revoked.ok, true);
+      assert.equal(revoked.partition.status, 'needs_review');
+      assert.match(revoked.partition.error, /bad sample/);
     } finally {
       closeStateDatabase(db);
     }

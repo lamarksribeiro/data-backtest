@@ -290,7 +290,8 @@ function renderPlan(panel, plan, ctx) {
   };
   const partitions = availability.partitions || buildPartitionsFallback(availability);
 
-  const available = partitions.filter((p) => p.usable);
+  const available = partitions.filter((p) => p.usable && p.status !== 'accepted');
+  const accepted = partitions.filter((p) => p.usable && p.status === 'accepted');
   const blocked = partitions.filter((p) => !p.usable && p.active_path);
   const gaps = partitions.filter((p) => !p.usable && !p.active_path);
 
@@ -312,6 +313,11 @@ function renderPlan(panel, plan, ctx) {
       el('h2', { class: 'card__title' }, `Disponíveis (${available.length})`),
       availablePartitionsTable(available),
     ]) : null,
+    accepted.length ? el('section', { class: 'card lake-card--warn' }, [
+      el('h2', { class: 'card__title' }, `Aceitas com aviso (${accepted.length})`),
+      el('p', { class: 'muted' }, 'Usáveis em backtests, mas mantêm divergência registrada para auditoria.'),
+      acceptedPartitionsTable(accepted, ctx, availability),
+    ]) : null,
     blocked.length ? el('section', { class: 'card lake-card--warn' }, [
       el('h2', { class: 'card__title' }, `Bloqueadas (${blocked.length})`),
       blockedPartitionsTable(blocked, ctx, availability),
@@ -320,7 +326,7 @@ function renderPlan(panel, plan, ctx) {
       el('h2', { class: 'card__title' }, `Ausentes (${gaps.length})`),
       listBlock('Datas', gaps.map((p) => p.dt)),
     ]) : null,
-    !available.length && !blocked.length && !gaps.length ? el('p', { class: 'muted' }, 'Nenhuma partição no intervalo.') : null,
+    !available.length && !accepted.length && !blocked.length && !gaps.length ? el('p', { class: 'muted' }, 'Nenhuma partição no intervalo.') : null,
     preparationCard(result.preparation, plan, ctx),
   ]);
 }
@@ -419,6 +425,69 @@ async function quickRebuildPartition(ctx, p, availability) {
   ctx.navigate('jobs');
 }
 
+async function acceptPartition(ctx, p, availability) {
+  const ok = await confirmDialog({
+    title: 'Aceitar divergência',
+    message: `Liberar dt=${p.dt} para uso em backtests mesmo com divergência de contagem?`,
+    detail: 'Use isso quando a diferença for pequena ou aceitável. A partição continuará marcada como aceita com aviso e pode ser bloqueada novamente.',
+    confirmLabel: 'Aceitar',
+    tone: 'danger',
+  });
+  if (!ok) return;
+
+  const res = await ctx.api.post('/api/manifest/accept', manifestPartitionPayload(p, availability, 'accepted from lakehouse UI'));
+  if (!res.ok) {
+    ctx.toast.err(res.error?.message || 'Falha ao aceitar partição');
+    return;
+  }
+  ctx.toast.ok(`Partição ${p.dt} aceita com aviso`);
+  await refreshCurrentPlan(ctx);
+}
+
+async function revokeAcceptedPartition(ctx, p, availability) {
+  const ok = await confirmDialog({
+    title: 'Bloquear partição aceita',
+    message: `Voltar dt=${p.dt} para needs_review?`,
+    detail: 'Backtests em strict deixarão de usar essa partição até novo aceite ou reconstrução válida.',
+    confirmLabel: 'Bloquear',
+    tone: 'danger',
+  });
+  if (!ok) return;
+
+  const res = await ctx.api.post('/api/manifest/revoke-acceptance', manifestPartitionPayload(p, availability, 'acceptance revoked from lakehouse UI'));
+  if (!res.ok) {
+    ctx.toast.err(res.error?.message || 'Falha ao bloquear partição');
+    return;
+  }
+  ctx.toast.ok(`Partição ${p.dt} bloqueada novamente`);
+  await refreshCurrentPlan(ctx);
+}
+
+function manifestPartitionPayload(p, availability, reason) {
+  return {
+    dataset: availability.dataset,
+    dt: p.dt,
+    underlying: availability.underlying,
+    interval: availability.interval,
+    book_depth: availability.book_depth,
+    resolution: availability.resolution,
+    reason,
+  };
+}
+
+async function refreshCurrentPlan(ctx) {
+  if (!lastPlan?.request) return;
+  const params = new URLSearchParams(lastPlan.request);
+  const res = await ctx.api.get(`/api/prepare?${params}`);
+  const panel = document.getElementById('lake-result');
+  if (!res.ok) {
+    ctx.toast.err(res.error?.message || 'Falha ao atualizar disponibilidade');
+    return;
+  }
+  lastPlan = { ...lastPlan, result: res.data.result };
+  renderPlan(panel, lastPlan, ctx);
+}
+
 function normalizeOneDayRange(params) {
   const from = params.get('from');
   const to = params.get('to');
@@ -507,14 +576,53 @@ function blockedPartitionsTable(partitions, ctx, availability) {
         el('td', { class: 'lake-partition__detail' }, p.error
           ? el('span', { class: 'lake-partition__error' }, escapeHtml(p.error))
           : el('span', { class: 'muted' }, '-')),
-        el('td', {}, el('button', {
-          class: 'btn btn--ghost btn--sm btn--primary-hover',
-          type: 'button',
-          style: { color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', gap: '4px' },
-          onclick: () => quickRebuildPartition(ctx, p, availability)
-        }, [
-          'Refazer ',
-          el('i', { class: 'fa-solid fa-rotate' })
+        el('td', {}, el('div', { style: { display: 'flex', gap: '8px', flexWrap: 'wrap' } }, [
+          el('button', {
+            class: 'btn btn--ghost btn--sm btn--primary-hover',
+            type: 'button',
+            style: { color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', gap: '4px' },
+            onclick: () => quickRebuildPartition(ctx, p, availability)
+          }, [
+            'Refazer ',
+            el('i', { class: 'fa-solid fa-rotate' })
+          ]),
+          p.status === 'needs_review' ? el('button', {
+            class: 'btn btn--ghost btn--sm',
+            type: 'button',
+            onclick: () => acceptPartition(ctx, p, availability),
+          }, 'Aceitar') : null,
+        ])),
+      ]))),
+    ])
+  ]);
+}
+
+function acceptedPartitionsTable(partitions, ctx, availability) {
+  return el('div', { class: 'table-wrap' }, [
+    el('table', { class: 'table table--compact lake-partitions-table' }, [
+      el('thead', {}, el('tr', {}, [
+        el('th', {}, 'dt'), el('th', {}, 'Rows'), el('th', {}, 'Eventos'),
+        el('th', {}, 'Motivo'), el('th', {}, 'Ações'),
+      ])),
+      el('tbody', {}, partitions.map((p) => el('tr', { class: 'lake-partition--gap' }, [
+        el('td', {}, el('code', {}, p.dt)),
+        el('td', {}, p.rows != null ? String(p.rows) : '-'),
+        el('td', {}, p.events_count != null ? String(p.events_count) : '-'),
+        el('td', { class: 'lake-partition__detail' }, p.error
+          ? el('span', { class: 'lake-partition__error' }, escapeHtml(p.error))
+          : el('span', { class: 'muted' }, p.hint || '-')),
+        el('td', {}, el('div', { style: { display: 'flex', gap: '8px', flexWrap: 'wrap' } }, [
+          el('button', {
+            class: 'btn btn--ghost btn--sm',
+            type: 'button',
+            onclick: () => revokeAcceptedPartition(ctx, p, availability),
+          }, 'Bloquear'),
+          el('button', {
+            class: 'btn btn--ghost btn--sm btn--primary-hover',
+            type: 'button',
+            style: { color: 'var(--accent)' },
+            onclick: () => quickRebuildPartition(ctx, p, availability),
+          }, 'Refazer'),
         ])),
       ]))),
     ])
@@ -528,6 +636,7 @@ function formatCoverage(value) {
 
 function partitionStatusTone(status) {
   if (status === 'valid') return 'ok';
+  if (status === 'accepted') return 'warn';
   if (status === 'missing') return 'idle';
   if (status === 'needs_review') return 'warn';
   if (status === 'writing' || status === 'rebuilding' || status === 'pending') return 'warn';
