@@ -119,6 +119,30 @@ Se Resource Limits estiverem em `0` na UI, o container sobe sem teto. Fallback m
 ssh Brutus 'BT=$(docker ps --filter name=le4sptof36h14ry6s5zet5v0 -q | head -1); DC=$(docker ps --filter name=du0z38giulbmy1jeexsxswba -q | head -1); docker update --cpus=12 --memory=10g --memory-swap=10g "$BT"; docker update --cpus=4 --memory=2g --memory-swap=2g "$DC"'
 ```
 
+## Postgres: erro de shared memory no sync
+
+Se o job de preparacao/sync falhar com:
+
+```text
+could not resize shared memory segment "/PostgreSQL...." to N bytes: No space left on device
+```
+
+**Nao e falta de disco.** O container `data-collector-db` usa o padrao Docker de **64 MiB** em `/dev/shm`. Consultas pesadas do sync (varios dias BTC 5m) pedem segmentos POSIX maiores e o Postgres estoura esse limite.
+
+Conferir no servidor:
+
+```bash
+ssh Brutus 'docker inspect vgiav63o4y359d73hvzx3d1y --format "ShmSize={{.HostConfig.ShmSize}}"; docker exec vgiav63o4y359d73hvzx3d1y df -h /dev/shm'
+```
+
+Correcao persistente no Coolify:
+
+1. Abra **data-collector-db** → **Configuration** → **Custom Docker Options**
+2. Adicione: `--shm-size=1g` (ou `512m` minimo)
+3. **Restart** o banco (recria o container com o novo `/dev/shm`; dados no volume permanecem)
+
+O host tem ~16 GiB de `/dev/shm`; so o container do Postgres estava limitado.
+
 ## Backup
 
 Antes de jobs grandes:
