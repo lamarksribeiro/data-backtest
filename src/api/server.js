@@ -433,7 +433,7 @@ function backtestRequestFromBody(body, config, db) {
   const dataRequest = datasetRequestFromObject({ dataset: 'backtest_ticks', ...body }, config);
   const base = {
     ...dataRequest,
-    batchSize: positiveIntValue(body.batch_size ?? body.batchSize, 5000),
+    batchSize: positiveIntValue(body.batch_size ?? body.batchSize, 50_000),
     params: parseParams(body.params),
   };
 

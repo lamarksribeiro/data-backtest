@@ -46,7 +46,7 @@ test('native edge-sniper-v2 backtest runs from manifest backtest_ticks parquet',
       assert.equal(result.strategy, 'EDGE_SNIPER_V2');
       assert.equal(result.source, 'lakehouse');
       assert.equal(result.ticks, 12);
-      assert.equal(result.batches, 3);
+      assert.equal(result.batches, 3); // fatiamento em memória após leitura única
       assert.equal(result.summary.totalEvents, 1);
       assert.equal(result.summary.totalEntries, 0);
       assert.equal(result.events.length, 1);
