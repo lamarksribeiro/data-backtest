@@ -9,6 +9,7 @@ import { upsertManifestPartition } from '../src/state/manifest.js';
 import { toPortablePath } from '../src/lake/paths.js';
 import { writeOhlcParquetFromScalars, writeScalarsParquet } from '../src/sync/duckdbParquet.js';
 import { checkDatasetAvailability, partitionDatesForRange } from '../src/query/availability.js';
+import { rangeFromParams } from '../src/query/request.js';
 import { queryCandles, queryTicks } from '../src/query/duckdbQuery.js';
 
 test('availability resolves valid active_path and reports missing partitions', async () => {
@@ -29,6 +30,10 @@ test('availability resolves valid active_path and reports missing partitions', a
         '2026-05-31',
         '2026-06-01',
       ]);
+      assert.deepEqual(rangeFromParams(new URLSearchParams({ from: '2026-06-02', to: '2026-06-02' })), {
+        from: '2026-06-02T00:00:00.000Z',
+        to: '2026-06-03T00:00:00.000Z',
+      });
 
       const availability = checkDatasetAvailability(db, {
         dataset: 'scalars',

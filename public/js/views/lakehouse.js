@@ -51,10 +51,10 @@ export async function renderLakehouse(ctx) {
     // Tab 1: Availability Content
     el('div', { class: 'lake-tab-content is-active', id: 'lake-tab-content-avail' }, [
       el('section', { class: 'card' }, [
-        el('form', { id: 'lake-form', class: 'form-grid' }, [
+        el('form', { id: 'lake-form', class: 'form-grid form-grid--compact' }, [
           field('Dataset', selectField('dataset', ['backtest_ticks', 'scalars', 'books', 'ohlc'], formCtx.dataset)),
-          field('De', el('input', { class: 'field__input', type: 'date', name: 'from', value: formCtx.from, required: true })),
-          field('Até', el('input', { class: 'field__input', type: 'date', name: 'to', value: formCtx.to, required: true })),
+          field('Dia inicial', el('input', { class: 'field__input', type: 'date', name: 'from', value: formCtx.from, required: true })),
+          field('Dia final', el('input', { class: 'field__input', type: 'date', name: 'to', value: formCtx.to, required: true })),
           field('Ativo', selectField('underlying', underlyingOptions, formCtx.underlying)),
           field('Intervalo', selectField('interval', intervalOptions, formCtx.interval)),
           field('Book depth', selectField('book_depth', bookDepthOptions, formCtx.book_depth), 'field-book-depth'),
@@ -70,8 +70,10 @@ export async function renderLakehouse(ctx) {
             el('span', { class: 'switch-field__label' }, 'Reprocessar indisponíveis'),
           ]),
           el('div', { class: 'form-actions' }, [
+            el('button', { class: 'btn btn--ghost', type: 'button', id: 'lake-one-day-btn' }, '1 dia'),
             el('button', { class: 'btn btn--primary', type: 'submit' }, 'Verificar disponibilidade'),
           ]),
+          el('p', { class: 'muted', style: { gridColumn: '1 / -1', margin: '-4px 0 0' } }, 'Selecione o mesmo dia nos dois campos para consultar ou refazer apenas uma partição diária.'),
         ]),
       ]),
       el('div', { id: 'lake-result' }),
@@ -96,6 +98,12 @@ export async function renderLakehouse(ctx) {
   datasetSelect.addEventListener('change', toggleFields);
   toggleFields();
 
+  document.getElementById('lake-one-day-btn')?.addEventListener('click', () => {
+    const fromInput = form.querySelector('[name=from]');
+    const toInput = form.querySelector('[name=to]');
+    toInput.value = fromInput.value;
+  });
+
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     const fd = new FormData(form);
@@ -109,6 +117,7 @@ export async function renderLakehouse(ctx) {
       resolution: fd.get('resolution'),
     });
     const params = contextQueryParams(ctxSaved);
+    normalizeOneDayRange(params);
     if (fd.get('rebuild') === 'on') params.set('rebuild', 'true');
 
     const res = await ctx.api.get(`/api/prepare?${params}`);
@@ -312,20 +321,32 @@ function renderPlan(panel, plan, ctx) {
       listBlock('Datas', gaps.map((p) => p.dt)),
     ]) : null,
     !available.length && !blocked.length && !gaps.length ? el('p', { class: 'muted' }, 'Nenhuma partição no intervalo.') : null,
-    el('section', { class: 'card' }, [
-      el('h2', { class: 'card__title' }, 'Plano de preparação'),
-      result.preparation.length
-        ? el('ol', { class: 'mono-list' }, result.preparation.map((action) => el('li', {}, [
-          el('code', {}, `node src/cli.js ${action.command} ${action.args.map(shellQuote).join(' ')}`),
-          action.prerequisite ? el('span', { class: 'badge badge--warn' }, 'pré-requisito') : null,
-        ])))
-        : el('p', { class: 'muted' }, 'Nenhuma ação necessária.'),
-      result.preparation.length ? el('button', {
+    preparationCard(result.preparation, plan, ctx),
+  ]);
+}
+
+function preparationCard(preparation, plan, ctx) {
+  return el('section', { class: 'card' }, [
+    el('div', { style: { display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', flexWrap: 'wrap' } }, [
+      el('div', {}, [
+        el('h2', { class: 'card__title' }, 'Plano de preparação'),
+        el('p', { class: 'muted', style: { margin: '4px 0 0' } }, preparation.length
+          ? `${preparation.length} ação(ões) para deixar o intervalo pronto.`
+          : 'Nenhuma ação necessária.'),
+      ]),
+      preparation.length ? el('button', {
         class: 'btn btn--primary',
         type: 'button',
         onclick: () => runPrepareJob(plan, ctx),
-      }, 'Criar job de preparação') : null,
+      }, 'Criar job') : null,
     ]),
+    preparation.length ? el('details', { style: { marginTop: '14px' } }, [
+      el('summary', { class: 'muted', style: { cursor: 'pointer' } }, 'Ver comandos CLI'),
+      el('ol', { class: 'mono-list mono-list--dense', style: { marginTop: '10px' } }, preparation.map((action) => el('li', {}, [
+        el('code', {}, `node src/cli.js ${action.command} ${action.args.map(shellQuote).join(' ')}`),
+        action.prerequisite ? el('span', { class: 'badge badge--warn' }, 'pré-requisito') : null,
+      ]))),
+    ]) : null,
   ]);
 }
 
@@ -376,7 +397,7 @@ async function quickRebuildPartition(ctx, p, availability) {
   const request = {
     dataset: availability.dataset,
     from: p.dt,
-    to: p.dt,
+    to: nextDate(p.dt),
     underlying: availability.underlying,
     interval: availability.interval,
     book_depth: availability.book_depth,
@@ -396,6 +417,12 @@ async function quickRebuildPartition(ctx, p, availability) {
   }
   ctx.toast.ok(`Job #${res.data.job.id} de reprocessamento criado!`);
   ctx.navigate('jobs');
+}
+
+function normalizeOneDayRange(params) {
+  const from = params.get('from');
+  const to = params.get('to');
+  if (from && to && from === to) params.set('to', nextDate(to));
 }
 
 function field(label, control, extraClass = '') {
@@ -516,9 +543,22 @@ function formatUnavailableLine(item) {
 
 function formatDateRange(from, to) {
   const fromDate = from?.slice(0, 10);
-  const toDate = to?.slice(0, 10);
+  const toDate = previousDate(to?.slice(0, 10));
   if (!fromDate || !toDate) return '';
   return fromDate === toDate ? fromDate : `${fromDate} → ${toDate}`;
+}
+
+function nextDate(dt) {
+  const date = new Date(`${dt}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() + 1);
+  return date.toISOString().slice(0, 10);
+}
+
+function previousDate(dt) {
+  if (!dt) return null;
+  const date = new Date(`${dt}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() - 1);
+  return date.toISOString().slice(0, 10);
 }
 
 function errorCard(message) {

@@ -16,9 +16,16 @@ export function rangeFromParams(params) {
   const fromRaw = requiredParam(params, 'from');
   const toRaw = requiredParam(params, 'to');
   const from = parseDateStart(fromRaw);
-  const to = parseDateEnd(toRaw);
+  const to = parseDateEnd(normalizeDateOnlyEnd(fromRaw, toRaw));
   if (to <= from) throw new Error('to must be after from');
   return { from: from.toISOString(), to: to.toISOString() };
+}
+
+function normalizeDateOnlyEnd(fromRaw, toRaw) {
+  if (fromRaw !== toRaw || !/^\d{4}-\d{2}-\d{2}$/.test(toRaw)) return toRaw;
+  const end = new Date(`${toRaw}T00:00:00.000Z`);
+  end.setUTCDate(end.getUTCDate() + 1);
+  return end.toISOString();
 }
 
 import { normalizeInterval } from '../source/postgres.js';
