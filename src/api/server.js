@@ -60,7 +60,7 @@ export function createApiHandler(deps) {
       }
 
       if (req.method === 'GET' && pathname === '/login') {
-        return serveStaticFile('login.html', res);
+        return serveStaticFile('login.html', req, res);
       }
 
       if (req.method === 'POST' && pathname === '/api/login') {
@@ -98,7 +98,7 @@ export function createApiHandler(deps) {
       if (req.method === 'GET' && (pathname === '/' || pathname === '/index.html')) {
         const allowed = await authMiddleware.requirePageAuth(req, res);
         if (!allowed) return;
-        return serveStaticFile('index.html', res);
+        return serveStaticFile('index.html', req, res);
       }
       if (req.method === 'GET' && url.pathname === '/api/manifest') {
         return sendJson(res, 200, {
@@ -422,7 +422,7 @@ export function createApiHandler(deps) {
         return sendJson(res, 202, { job });
       }
       if (req.method === 'GET') {
-        const staticResponse = await tryServeStatic(pathname, res);
+        const staticResponse = await tryServeStatic(pathname, req, res);
         if (staticResponse) return staticResponse;
       }
       return sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Not found' } });
@@ -440,15 +440,34 @@ export function createApiServer(deps) {
   return http.createServer(createApiHandler({ ...deps, authMiddleware }));
 }
 
-async function serveStaticFile(relative, res) {
+async function serveStaticFile(relative, req, res) {
   const filePath = path.resolve(PUBLIC_DIR, relative);
   if (!filePath.startsWith(PUBLIC_DIR)) return false;
   try {
-    const body = await readFile(filePath);
-    res.writeHead(200, {
+    const fileStats = await stat(filePath);
+    const lastModified = fileStats.mtime.toUTCString();
+    
+    const isHtml = relative.endsWith('.html');
+    const headers = {
       'content-type': STATIC_TYPES.get(path.extname(filePath)) || 'application/octet-stream',
-      'content-length': body.length,
-    });
+    };
+
+    if (isHtml) {
+      headers['cache-control'] = 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0';
+    } else {
+      headers['cache-control'] = 'no-cache';
+      headers['last-modified'] = lastModified;
+    }
+
+    if (!isHtml && req.headers['if-modified-since'] === lastModified) {
+      res.writeHead(304, headers);
+      res.end();
+      return true;
+    }
+
+    const body = await readFile(filePath);
+    headers['content-length'] = body.length;
+    res.writeHead(200, headers);
     res.end(body);
     return true;
   } catch (err) {
@@ -457,18 +476,37 @@ async function serveStaticFile(relative, res) {
   }
 }
 
-async function tryServeStatic(urlPath, res) {
+async function tryServeStatic(urlPath, req, res) {
   const relative = urlPath === '/' ? 'index.html' : urlPath.replace(/^\/+/, '');
   if (!relative || relative.includes('..')) return false;
   const filePath = path.resolve(PUBLIC_DIR, relative);
   if (!filePath.startsWith(PUBLIC_DIR)) return false;
 
   try {
-    const body = await readFile(filePath);
-    res.writeHead(200, {
+    const fileStats = await stat(filePath);
+    const lastModified = fileStats.mtime.toUTCString();
+    
+    const isHtml = relative.endsWith('.html');
+    const headers = {
       'content-type': STATIC_TYPES.get(path.extname(filePath)) || 'application/octet-stream',
-      'content-length': body.length,
-    });
+    };
+
+    if (isHtml) {
+      headers['cache-control'] = 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0';
+    } else {
+      headers['cache-control'] = 'no-cache';
+      headers['last-modified'] = lastModified;
+    }
+
+    if (!isHtml && req.headers['if-modified-since'] === lastModified) {
+      res.writeHead(304, headers);
+      res.end();
+      return true;
+    }
+
+    const body = await readFile(filePath);
+    headers['content-length'] = body.length;
+    res.writeHead(200, headers);
     res.end(body);
     return true;
   } catch (err) {
