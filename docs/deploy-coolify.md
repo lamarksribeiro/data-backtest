@@ -67,8 +67,21 @@ Evite duplicar com **Custom Docker Options** (`--cpus`/`--memory`); use so Resou
 NODE_OPTIONS=--max-old-space-size=7168
 SYNC_BATCH_SIZE=50000
 SYNC_MAX_POOL=2
-SYNC_STATEMENT_TIMEOUT_MS=180000
+SYNC_STATEMENT_TIMEOUT_MS=600000
 ```
+
+**Desempenho do sync**
+
+| Variavel | Recomendado | Efeito |
+|----------|-------------|--------|
+| `NODE_OPTIONS` | `--max-old-space-size=7168` | heap Node para Parquet/DuckDB (ajuste ~70% da RAM do container) |
+| `SYNC_STATEMENT_TIMEOUT_MS` | `600000` (10 min) | timeout das queries no Postgres fonte; sync real conta ticks |
+| `SYNC_MAX_POOL` | `2` | conexoes RO ao colector; nao subir muito |
+| `SYNC_BATCH_SIZE` | `50000` | reservado para batching futuro no export |
+
+**Dry-run** usa apenas `event_quality` (rapido). **Sync real** valida contando ticks — 1 dia BTC 15m leva ~1–3 min; ranges grandes rodam **1 particao/dia** em sequencia (nao precisa baixar dia a dia na UI, mas jobs muito longos podem ser melhor fatiados por semana).
+
+**Intervalo na UI:** use `5m` / `15m` / `1h` / `4h`. Campo **Resolucao** so vale para dataset `ohlc`, nao para `backtest_ticks`.
 
 ## Variaveis Obrigatorias
 

@@ -187,8 +187,9 @@ export async function countTicksByEvent(pool, partition, conditionIds) {
     FROM ticks
     WHERE market_id = $1
       AND condition_id = ANY($2::text[])
+      AND (event_start AT TIME ZONE 'UTC')::date = $3::date
     GROUP BY condition_id
-  `, [partition.marketId, conditionIds]);
+  `, [partition.marketId, conditionIds, partition.dt]);
 
   return new Map(rows.map((row) => [row.condition_id, {
     count: Number(row.count || 0),

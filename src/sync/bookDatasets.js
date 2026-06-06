@@ -100,6 +100,20 @@ async function exportBookDatasetPartition({
 
   const events = await getPartitionEvents(pool, partition);
   const conditionIds = events.map((event) => event.conditionId);
+  const expectedRows = events.reduce((sum, event) => sum + event.ticksRecorded, 0);
+
+  if (dryRun) {
+    return {
+      dryRun: true,
+      partition,
+      rows: expectedRows,
+      expectedRows,
+      eventsCount: events.length,
+      status: 'valid',
+      estimateSource: 'event_quality',
+    };
+  }
+
   const counts = await countTicksByEvent(pool, partition, conditionIds);
   const eventsWithCounts = events.map((event) => {
     const actual = counts.get(event.conditionId) || { count: 0, minTs: null, maxTs: null };
@@ -107,13 +121,8 @@ async function exportBookDatasetPartition({
   });
 
   const actualRows = eventsWithCounts.reduce((sum, event) => sum + event.actualCount, 0);
-  const expectedRows = eventsWithCounts.reduce((sum, event) => sum + event.ticksRecorded, 0);
   const diverged = actualRows !== expectedRows;
   const status = diverged ? 'needs_review' : 'valid';
-
-  if (dryRun) {
-    return { dryRun: true, partition, rows: actualRows, expectedRows, eventsCount: events.length, status };
-  }
 
   const runId = createRunId(dataset.replace('_', '-'));
   const manifestPartition = {
