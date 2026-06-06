@@ -187,6 +187,10 @@ test('strategy CRUD API creates definitions and versions', async () => {
       });
       assert.equal(version.version, 1);
       assert.equal(version.validation.ok, true);
+      assert.throws(
+        () => createStrategyVersion(db, strategy.id, { source_code: 'strategy "Simple PTB" { param minDistanceAbs = 50 }' }),
+        /unchanged/,
+      );
 
       const updated = updateStrategy(db, strategy.id, { status: 'validated' });
       assert.equal(updated.status, 'validated');
@@ -223,6 +227,13 @@ test('strategy CRUD API creates definitions and versions', async () => {
         source_code: 'strategy "Simple PTB" { param maxAsk = 0.58 }',
       });
       assert.equal(savedVersion.version.version, 2);
+
+      const duplicateVersion = await fetch(`${baseUrl}/api/strategies/${strategy.id}/versions`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ source_code: 'strategy "Simple PTB" { param maxAsk = 0.58 }' }),
+      });
+      assert.equal(duplicateVersion.status, 400);
 
       const deletedVersion = deleteStrategyVersion(db, strategy.id, version.id);
       assert.equal(deletedVersion.version, 1);

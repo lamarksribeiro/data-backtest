@@ -310,6 +310,16 @@ test('data-backtest API runs versioned strategy only when data is ready', async 
       assert.equal(runs.runs.length, 1);
       assert.equal(runs.runs[0].id, 1);
       assert.equal(runs.runs[0].ticks, 12);
+
+      const byStrategy = await getJson(`${baseUrl}/api/backtest/runs?strategy_id=${strategy.id}&strategy_version_id=${version.id}`);
+      assert.equal(byStrategy.runs.length, 1);
+      assert.equal(byStrategy.runs[0].strategy_version_id, version.id);
+
+      const byStatus = await getJson(`${baseUrl}/api/backtest/runs?status=completed&underlying=BTC&interval=5m`);
+      assert.equal(byStatus.runs.length, 1);
+
+      const noMatches = await getJson(`${baseUrl}/api/backtest/runs?underlying=ETH`);
+      assert.equal(noMatches.runs.length, 0);
     } finally {
       if (server) await new Promise((resolve) => server.close(resolve));
       closeStateDatabase(db);

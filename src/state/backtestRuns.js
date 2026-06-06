@@ -41,9 +41,36 @@ export function getBacktestRun(db, id) {
   return row ? toApiRun(row, true) : null;
 }
 
-export function listBacktestRuns(db, { limit = 20 } = {}) {
+export function listBacktestRuns(db, { limit = 20, strategy_id: strategyId, strategy_version_id: strategyVersionId, status, underlying, interval, pnl } = {}) {
   const safeLimit = Math.min(Math.max(Number.parseInt(String(limit), 10) || 20, 1), 100);
-  return db.prepare('SELECT * FROM backtest_runs ORDER BY id DESC LIMIT ?').all(safeLimit).map((row) => toApiRun(row));
+  const filters = [];
+  const params = [];
+
+  addNumberFilter(filters, params, 'strategy_id', strategyId);
+  addNumberFilter(filters, params, 'strategy_version_id', strategyVersionId);
+  addTextFilter(filters, params, 'status', status);
+  addTextFilter(filters, params, 'underlying', underlying);
+  addTextFilter(filters, params, 'interval', interval);
+  if (pnl === 'positive') filters.push("CAST(json_extract(summary_json, '$.totalPnl') AS REAL) > 0");
+  if (pnl === 'negative') filters.push("CAST(json_extract(summary_json, '$.totalPnl') AS REAL) < 0");
+  if (pnl === 'zero') filters.push("COALESCE(CAST(json_extract(summary_json, '$.totalPnl') AS REAL), 0) = 0");
+
+  const where = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
+  return db.prepare(`SELECT * FROM backtest_runs ${where} ORDER BY id DESC LIMIT ?`).all(...params, safeLimit).map((row) => toApiRun(row));
+}
+
+function addNumberFilter(filters, params, column, value) {
+  if (value == null || value === '' || value === 'all') return;
+  const parsed = Number.parseInt(String(value), 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) return;
+  filters.push(`${column} = ?`);
+  params.push(parsed);
+}
+
+function addTextFilter(filters, params, column, value) {
+  if (value == null || value === '' || value === 'all') return;
+  filters.push(`${column} = ?`);
+  params.push(String(value));
 }
 
 function toApiRun(row, includeResult = false) {

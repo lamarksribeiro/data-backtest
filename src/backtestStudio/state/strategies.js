@@ -97,8 +97,17 @@ export function createStrategyVersion(db, strategyId, { language = 'gls-v1', sou
   const code = String(sourceCode || '').trim();
   if (!code) throw new Error('source_code is required');
 
-  const latest = db.prepare('SELECT MAX(version) AS max_version FROM strategy_versions WHERE strategy_id = ?').get(strategyId);
-  const version = Number(latest?.max_version || 0) + 1;
+  const latestRow = db.prepare(`
+    SELECT version, source_code
+    FROM strategy_versions
+    WHERE strategy_id = ?
+    ORDER BY version DESC, id DESC
+    LIMIT 1
+  `).get(strategyId);
+  if (latestRow && normalizeSource(latestRow.source_code) === normalizeSource(code)) {
+    throw new Error('source_code is unchanged from the latest version');
+  }
+  const version = Number(latestRow?.version || 0) + 1;
   const validation = validateStrategySource({ language, source_code: code });
   const result = db.prepare(`
     INSERT INTO strategy_versions (
@@ -149,6 +158,10 @@ function toApiStrategy(db, row) {
     created_at: row.created_at,
     updated_at: row.updated_at,
   };
+}
+
+function normalizeSource(source) {
+  return String(source || '').replace(/\r\n/g, '\n').trim();
 }
 
 function toApiVersion(row) {

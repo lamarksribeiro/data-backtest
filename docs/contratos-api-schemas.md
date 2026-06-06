@@ -440,6 +440,18 @@ Response sem dados:
 
 ### `GET /api/backtest/runs`
 
+Query params:
+
+```text
+limit optional
+strategy_id optional
+strategy_version_id optional
+status optional: completed/failed_runtime
+underlying optional
+interval optional
+pnl optional: positive/negative/zero
+```
+
 Response:
 
 ```json
@@ -457,6 +469,10 @@ Response:
       "ticks": 5729,
       "batches": 2,
       "summary": {},
+      "strategy_id": 12,
+      "strategy_version_id": 44,
+      "strategy_snapshot": {},
+      "status": "completed",
       "created_at": "..."
     }
   ]
@@ -637,6 +653,8 @@ Response:
 ```
 
 ### `POST /api/strategies/:id/versions`
+
+Cria um snapshot novo apenas quando `source_code` muda em relacao a versao mais recente. Codigo igual retorna `400 REQUEST_FAILED` com mensagem de `unchanged`.
 
 Request:
 

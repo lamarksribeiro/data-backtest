@@ -4,6 +4,15 @@ import { loadContext, saveContext } from '../utils/context.js';
 import { escapeHtml, formatPnl } from '../utils/format.js';
 import { loadStrategyOptions, renderStrategySelect, backtestPayloadFromPick } from '../utils/strategyPicker.js';
 
+const historyState = {
+  strategy: 'all',
+  version: 'all',
+  period: 'all',
+  status: 'all',
+  pnl: 'all',
+  sort: 'newest',
+};
+
 export async function renderBacktests(ctx) {
   ctx.setBreadcrumb('backtests', null);
   ctx.renderContextBar?.();
@@ -95,17 +104,21 @@ async function loadRunsTable(ctx) {
     return;
   }
 
+  const filteredRuns = filterAndSortRuns(runs);
+
   const table = el('table', { class: 'table' }, [
     el('thead', {}, el('tr', {}, [
-      el('th', {}, 'ID'), el('th', {}, 'Estratégia'), el('th', {}, 'Período'),
+      el('th', {}, 'ID'), el('th', {}, 'Estratégia'), el('th', {}, 'Versão'), el('th', {}, 'Período'), el('th', {}, 'Status'),
       el('th', {}, 'Ticks'), el('th', {}, 'PnL'), el('th', {}, ''),
     ])),
-    el('tbody', {}, runs.map((run) => {
+    el('tbody', {}, filteredRuns.map((run) => {
       const summary = run.summary || {};
       return el('tr', {}, [
         el('td', {}, `#${run.id}`),
-        el('td', {}, el('code', {}, run.strategy)),
-        el('td', {}, `${run.underlying} ${run.interval}`),
+        el('td', {}, strategyName(run)),
+        el('td', {}, versionLabel(run)),
+        el('td', {}, periodLabel(run)),
+        el('td', {}, statusBadge(run.status)),
         el('td', {}, String(run.ticks ?? 0)),
         el('td', {}, renderPnlBadge(summary.totalPnl ?? 0)),
         el('td', {}, el('button', {
@@ -117,9 +130,102 @@ async function loadRunsTable(ctx) {
     })),
   ]);
   mount(panel, el('section', { class: 'card' }, [
-    el('h2', { class: 'card__title' }, 'Histórico'),
-    table,
+    el('div', { class: 'card__header card__header--inline' }, [
+      el('h2', { class: 'card__title' }, 'Histórico'),
+      el('span', { class: 'muted' }, `${filteredRuns.length}/${runs.length} runs`),
+    ]),
+    renderRunFilters(runs, ctx),
+    filteredRuns.length ? table : emptyState('Nenhum run encontrado com os filtros atuais.'),
   ]));
+}
+
+function renderRunFilters(runs, ctx) {
+  const strategies = [...new Set(runs.map(strategyName).filter(Boolean))].sort();
+  const versions = [...new Set(runs.map(versionLabel).filter((value) => value !== '-'))].sort(sortVersionLabel);
+  const periods = [...new Set(runs.map(periodLabel).filter(Boolean))].sort();
+  const statuses = [...new Set(runs.map((run) => run.status || 'completed'))].sort();
+  return el('div', { class: 'history-filters' }, [
+    filterSelect('Estratégia', 'strategy', historyState.strategy, ['all', ...strategies], (value) => value === 'all' ? 'Todas' : value, ctx),
+    filterSelect('Versão', 'version', historyState.version, ['all', ...versions], (value) => value === 'all' ? 'Todas' : value, ctx),
+    filterSelect('Período', 'period', historyState.period, ['all', ...periods], (value) => value === 'all' ? 'Todos' : value, ctx),
+    filterSelect('Status', 'status', historyState.status, ['all', ...statuses], (value) => value === 'all' ? 'Todos' : statusLabel(value), ctx),
+    filterSelect('PnL', 'pnl', historyState.pnl, ['all', 'positive', 'negative', 'zero'], pnlFilterLabel, ctx),
+    filterSelect('Ordenar', 'sort', historyState.sort, ['newest', 'best_pnl', 'worst_pnl'], sortFilterLabel, ctx),
+  ]);
+}
+
+function filterSelect(label, key, selected, values, format, ctx) {
+  return el('label', { class: 'field history-filter' }, [
+    el('span', { class: 'field__label' }, label),
+    el('select', {
+      class: 'field__input',
+      value: selected,
+      onchange: async (event) => {
+        historyState[key] = event.target.value;
+        await loadRunsTable(ctx);
+      },
+    }, values.map((value) => el('option', { value, selected: value === selected }, format(value)))),
+  ]);
+}
+
+function filterAndSortRuns(runs) {
+  const filtered = runs.filter((run) => {
+    if (historyState.strategy !== 'all' && strategyName(run) !== historyState.strategy) return false;
+    if (historyState.version !== 'all' && versionLabel(run) !== historyState.version) return false;
+    if (historyState.period !== 'all' && periodLabel(run) !== historyState.period) return false;
+    if (historyState.status !== 'all' && (run.status || 'completed') !== historyState.status) return false;
+    const pnl = Number(run.summary?.totalPnl ?? 0);
+    if (historyState.pnl === 'positive' && !(pnl > 0)) return false;
+    if (historyState.pnl === 'negative' && !(pnl < 0)) return false;
+    if (historyState.pnl === 'zero' && pnl !== 0) return false;
+    return true;
+  });
+  return filtered.sort((a, b) => {
+    if (historyState.sort === 'best_pnl') return Number(b.summary?.totalPnl ?? 0) - Number(a.summary?.totalPnl ?? 0);
+    if (historyState.sort === 'worst_pnl') return Number(a.summary?.totalPnl ?? 0) - Number(b.summary?.totalPnl ?? 0);
+    return Number(b.id) - Number(a.id);
+  });
+}
+
+function strategyName(run) {
+  return run.strategy_snapshot?.name || run.strategy || '-';
+}
+
+function versionLabel(run) {
+  return run.strategy_snapshot?.version != null ? `v${run.strategy_snapshot.version}` : (run.strategy_version_id ? `#${run.strategy_version_id}` : '-');
+}
+
+function periodLabel(run) {
+  return `${run.underlying || '-'} ${run.interval || '-'}`;
+}
+
+function statusLabel(status) {
+  if (status === 'failed_runtime') return 'Falhou';
+  if (status === 'completed') return 'Concluído';
+  return status || '-';
+}
+
+function statusBadge(status) {
+  const value = status || 'completed';
+  const tone = value === 'completed' ? 'ok' : 'err';
+  return el('span', { class: `badge badge--${tone}` }, statusLabel(value));
+}
+
+function sortVersionLabel(a, b) {
+  return Number(String(a).replace(/\D/g, '')) - Number(String(b).replace(/\D/g, ''));
+}
+
+function pnlFilterLabel(value) {
+  if (value === 'positive') return 'Positivo';
+  if (value === 'negative') return 'Negativo';
+  if (value === 'zero') return 'Zero';
+  return 'Todos';
+}
+
+function sortFilterLabel(value) {
+  if (value === 'best_pnl') return 'Melhor PnL';
+  if (value === 'worst_pnl') return 'Pior PnL';
+  return 'Mais recentes';
 }
 
 function renderPnlBadge(value) {

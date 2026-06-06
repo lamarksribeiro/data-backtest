@@ -28,7 +28,7 @@ const GLS_TEMPLATE = `strategy "Nova Estrategia" {
   }
 }`;
 
-/** @type {{ list: object[], selectedId: number|null, selectedVersionId: number|null, focusedEditor: object|null, sourceCode: string, validation: object|null, blocks: object[], currentStrategy: object|null, currentVersion: object|null, strategyQuery: string }} */
+/** @type {{ list: object[], selectedId: number|null, selectedVersionId: number|null, focusedEditor: object|null, sourceCode: string, validation: object|null, blocks: object[], currentStrategy: object|null, currentVersion: object|null, strategyQuery: string, statusFilter: string }} */
 const state = {
   list: [],
   selectedId: null,
@@ -39,7 +39,8 @@ const state = {
   blocks: [],
   currentStrategy: null,
   currentVersion: null,
-  strategyQuery: ''
+  strategyQuery: '',
+  statusFilter: 'all'
 };
 
 export async function renderStrategies(ctx, params = {}) {
@@ -96,8 +97,11 @@ export async function renderStrategies(ctx, params = {}) {
 function renderStrategyList(ctx) {
   const filtered = state.list.filter((s) => {
     const q = state.strategyQuery.toLowerCase();
-    return s.name.toLowerCase().includes(q) || s.slug.toLowerCase().includes(q);
+    const matchesQuery = s.name.toLowerCase().includes(q) || s.slug.toLowerCase().includes(q);
+    const matchesStatus = state.statusFilter === 'all' || s.status === state.statusFilter;
+    return matchesQuery && matchesStatus;
   });
+  const counts = countByStatus(state.list);
 
   const listItems = filtered.map((strategy) => el('li', { dataset: { status: strategy.status } }, [
     el('button', {
@@ -116,6 +120,12 @@ function renderStrategyList(ctx) {
   ]));
 
   return [
+    el('div', { class: 'strategy-status-tabs' }, [
+      statusTab(ctx, 'all', `Todas ${state.list.length}`),
+      statusTab(ctx, 'draft', `Draft ${counts.draft || 0}`),
+      statusTab(ctx, 'validated', `Validated ${counts.validated || 0}`),
+      statusTab(ctx, 'archived', `Archived ${counts.archived || 0}`),
+    ]),
     el('div', { class: 'strategy-search-wrap' }, [
       el('input', {
         class: 'strategy-search-input',
@@ -140,6 +150,25 @@ function renderStrategyList(ctx) {
     ]),
     el('ul', { class: 'strategy-list' }, listItems.length ? listItems : emptyState('Nenhuma estratégia encontrada.'))
   ];
+}
+
+function countByStatus(strategies) {
+  return strategies.reduce((acc, strategy) => {
+    acc[strategy.status] = (acc[strategy.status] || 0) + 1;
+    return acc;
+  }, {});
+}
+
+function statusTab(ctx, status, label) {
+  return el('button', {
+    class: `strategy-status-tab ${state.statusFilter === status ? 'is-active' : ''}`,
+    type: 'button',
+    onclick: () => {
+      state.statusFilter = status;
+      const panel = document.getElementById('strategy-list-panel');
+      if (panel) mount(panel, renderStrategyList(ctx));
+    },
+  }, label);
 }
 
 async function openStrategyEditor(ctx, strategyId, versionId = null) {
@@ -465,10 +494,23 @@ async function updateStrategyMeta(event, ctx, strategyId) {
 }
 
 async function saveTabCodeVersion(ctx, strategyId) {
+  if (state.focusedEditor) state.sourceCode = state.focusedEditor.getValue();
   return saveSourceVersion(ctx, strategyId, state.sourceCode);
 }
 
+async function validateTabCode(ctx) {
+  if (state.focusedEditor) state.sourceCode = state.focusedEditor.getValue();
+  const validation = await validateStrategySource(ctx, state.sourceCode);
+  if (!validation) return;
+  if (validation.ok) ctx.toast.ok('Código GLS válido');
+  else ctx.toast.err(`Código inválido: ${validation.errors?.length || 0} erro(s)`);
+}
+
 async function saveSourceVersion(ctx, strategyId, source) {
+  if (!hasSourceChanged(source, state.currentVersion?.source_code)) {
+    ctx.toast.warn('Nenhuma alteração detectada. Versão não criada.');
+    return null;
+  }
   const validation = await validateStrategySource(ctx, source);
   if (!validation?.ok) {
     ctx.toast.warn('Corrija os erros de validação do GLS antes de salvar.');
@@ -487,6 +529,14 @@ async function saveSourceVersion(ctx, strategyId, source) {
   // Re-render strategy view but preserve the active tab
   await renderStrategies(ctx, { id: strategyId, versionId: state.selectedVersionId });
   return res.data.version;
+}
+
+function hasSourceChanged(nextSource, currentSource) {
+  return normalizeSource(nextSource) !== normalizeSource(currentSource || '');
+}
+
+function normalizeSource(source) {
+  return String(source || '').replace(/\r\n/g, '\n').trim();
 }
 
 async function saveParamsVersion(ctx, strategyId) {

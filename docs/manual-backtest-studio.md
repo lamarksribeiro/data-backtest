@@ -29,7 +29,7 @@ Uma estrategia tem duas camadas:
 - Definicao: nome, slug, descricao, tags e status.
 - Versoes: snapshots imutaveis do codigo GLS salvo.
 
-Quando voce salva, o sistema cria uma nova versao. Runs antigos continuam apontando para o snapshot executado, mesmo que a estrategia seja editada ou apagada depois.
+Quando voce salva uma alteracao real, o sistema cria uma nova versao. Se o codigo final for igual ao snapshot atual, nenhuma versao nova e gravada. Runs antigos continuam apontando para o snapshot executado, mesmo que a estrategia seja editada ou apagada depois.
 
 ## Editor GLS
 
@@ -67,7 +67,7 @@ strategy "Minha Estrategia" {
 
 Conceitos importantes:
 
-- `params`: parametros declarados com `param`; podem ser sobrescritos no backtest via JSON.
+- `params`: parametros declarados com `param`; edite pela aba **Parametros** da estrategia e salve uma nova versao antes de executar.
 - `state`: estado local do evento atual.
 - `runState`: estado compartilhado durante o run inteiro.
 - `tick`: snapshot atual do mercado.
@@ -84,6 +84,7 @@ Na aba **Backtests**:
 3. Ajuste `Batch size` somente se precisar mexer em performance/memoria. Ele define quantos ticks o engine le por lote; nao altera a logica nem o resultado esperado da estrategia.
 4. Clique em **Executar**.
 5. Se aparecer `DATA_NOT_READY`, va para **Dados** e prepare o periodo.
+6. Use os filtros do **Historico** para localizar runs por estrategia, versao, periodo, status e PnL.
 
 Parametros da estrategia nao sao alterados na tela de backtest. Edite os parametros na aba **Estrategias** e salve uma nova versao antes de executar.
 

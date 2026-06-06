@@ -14,7 +14,7 @@ import { validate } from '../src/backtestStudio/gls/validator.js';
 import { compareEdgeSniperParity } from '../src/backtestStudio/gls/parity.js';
 import { getEdgeSniperV2GlsSource } from '../src/backtestStudio/gls/loadStrategySource.js';
 import { seedEdgeSniperV2Strategy } from '../src/backtestStudio/gls/seedStrategies.js';
-import { createStrategyVersion } from '../src/backtestStudio/state/strategies.js';
+import { listStrategyVersions } from '../src/backtestStudio/state/strategies.js';
 
 const RELAXED_PARAMS = {
   minDistanceAbs: 0,
@@ -64,7 +64,7 @@ test('seed edge-sniper-v2-gls strategy and run via lakehouse engine', async () =
     const db = openStateDatabase(path.join(dir, 'state.db'));
     try {
       const strategy = seedEdgeSniperV2Strategy(db);
-      const version = createStrategyVersion(db, strategy.id, { source_code: getEdgeSniperV2GlsSource() });
+      const [version] = listStrategyVersions(db, strategy.id);
       assert.equal(strategy.slug, 'edge-sniper-v2-gls');
 
       const parquetPath = path.join(dir, 'lake', 'backtest_ticks', 'part-test.parquet');

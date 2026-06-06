@@ -122,7 +122,15 @@ export function createApiHandler(deps) {
         return sendJson(res, 200, { jobs: listPrepareJobs(db, { limit: url.searchParams.get('limit') }) });
       }
       if (req.method === 'GET' && url.pathname === '/api/backtest/runs') {
-        return sendJson(res, 200, { runs: listBacktestRuns(db, { limit: url.searchParams.get('limit') }) });
+        return sendJson(res, 200, { runs: listBacktestRuns(db, {
+          limit: url.searchParams.get('limit'),
+          strategy_id: url.searchParams.get('strategy_id'),
+          strategy_version_id: url.searchParams.get('strategy_version_id'),
+          status: url.searchParams.get('status'),
+          underlying: url.searchParams.get('underlying'),
+          interval: url.searchParams.get('interval'),
+          pnl: url.searchParams.get('pnl'),
+        }) });
       }
       const backtestRunRoute = matchBacktestRunRoute(url.pathname);
       if (backtestRunRoute) {
@@ -382,7 +390,7 @@ async function readJson(req) {
 
 function statusForError(err) {
   if (err instanceof SyntaxError) return 400;
-  if (/required|Invalid|must be|Unsupported|JSON|Cannot/.test(err.message || '')) return 400;
+  if (/required|Invalid|must be|Unsupported|JSON|Cannot|unchanged/.test(err.message || '')) return 400;
   return 500;
 }
 
