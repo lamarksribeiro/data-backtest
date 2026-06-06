@@ -304,12 +304,28 @@ export function createApiHandler(deps) {
           return sendJson(res, 500, { error: { code: 'REQUEST_FAILED', message: err.message }, run });
         }
       }
-      if (req.method === 'GET' && url.pathname.startsWith('/api/prepare/jobs/')) {
-        const id = Number.parseInt(url.pathname.split('/').at(-1), 10);
-        const job = Number.isFinite(id) ? getPrepareJob(db, id) : null;
-        return job
-          ? sendJson(res, 200, { job })
-          : sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Job not found' } });
+      const prepareJobRoute = matchPrepareJobRoute(url.pathname);
+      if (prepareJobRoute) {
+        const job = getPrepareJob(db, prepareJobRoute.jobId);
+        if (!job) {
+          return sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Job not found' } });
+        }
+        if (req.method === 'GET' && prepareJobRoute.kind === 'detail') {
+          return sendJson(res, 200, { job });
+        }
+        if (req.method === 'POST' && prepareJobRoute.kind === 'cancel') {
+          const result = prepareRunner.cancel(prepareJobRoute.jobId);
+          if (!result.ok) {
+            return sendJson(res, 409, {
+              error: {
+                code: 'CANCEL_FAILED',
+                message: result.reason === 'not_found' ? 'Job not found' : `Job cannot be cancelled while ${result.status}`,
+              },
+            });
+          }
+          const updated = getPrepareJob(db, prepareJobRoute.jobId);
+          return sendJson(res, 200, { ok: true, status: result.status, job: updated });
+        }
       }
       if (req.method === 'POST' && url.pathname === '/api/prepare/run') {
         const body = await readJson(req);
@@ -467,6 +483,16 @@ function parseParams(value) {
   if (typeof value === 'string') return JSON.parse(value);
   if (typeof value === 'object' && !Array.isArray(value)) return value;
   throw new Error('params must be a JSON object');
+}
+
+function matchPrepareJobRoute(pathname) {
+  const parts = pathname.split('/').filter(Boolean);
+  if (parts.length < 4 || parts[0] !== 'api' || parts[1] !== 'prepare' || parts[2] !== 'jobs') return null;
+  const jobId = Number.parseInt(parts[3], 10);
+  if (!Number.isFinite(jobId)) return null;
+  if (parts.length === 4) return { kind: 'detail', jobId };
+  if (parts.length === 5 && parts[4] === 'cancel') return { kind: 'cancel', jobId };
+  return null;
 }
 
 function matchBacktestRunRoute(pathname) {

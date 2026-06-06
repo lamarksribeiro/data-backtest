@@ -3,6 +3,7 @@ import 'dotenv/config';
 
 import { loadConfig } from './config.js';
 import { openStateDatabase, closeStateDatabase } from './state/sqlite.js';
+import { recoverStalePrepareJobs } from './state/prepareJobs.js';
 import { createApiServer } from './api/server.js';
 import { createPrepareJobRunner } from './prepare/runner.js';
 import { createAuthService } from './auth/authService.js';
@@ -14,6 +15,10 @@ if (!config.TEST_MODE && !config.SESSION_SECRET) {
 }
 
 const db = openStateDatabase(config.stateDbPath);
+const recoveredJobs = recoverStalePrepareJobs(db);
+if (recoveredJobs > 0) {
+  console.log(JSON.stringify({ ok: true, recoveredPrepareJobs: recoveredJobs }));
+}
 seedEdgeSniperV2Strategy(db);
 const authService = createAuthService({ db, config });
 if (!config.TEST_MODE) {

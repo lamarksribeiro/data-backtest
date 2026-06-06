@@ -30,6 +30,15 @@ export function markPrepareJobRunning(db, id) {
   return getPrepareJob(db, id);
 }
 
+export function updatePrepareJobProgress(db, id, progress) {
+  db.prepare(`
+    UPDATE prepare_jobs
+    SET progress_json = ?
+    WHERE id = ?
+  `).run(JSON.stringify(progress), id);
+  return getPrepareJob(db, id);
+}
+
 export function markPrepareJobCompleted(db, id, result) {
   db.prepare(`
     UPDATE prepare_jobs
@@ -48,6 +57,26 @@ export function markPrepareJobFailed(db, id, error) {
   return getPrepareJob(db, id);
 }
 
+export function markPrepareJobCancelled(db, id, reason = 'cancelado pelo operador') {
+  db.prepare(`
+    UPDATE prepare_jobs
+    SET status = 'failed', error = ?, completed_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+    WHERE id = ? AND status IN ('queued', 'running')
+  `).run(reason, id);
+  return getPrepareJob(db, id);
+}
+
+export function recoverStalePrepareJobs(db) {
+  const result = db.prepare(`
+    UPDATE prepare_jobs
+    SET status = 'failed',
+        error = 'interrupted on restart',
+        completed_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+    WHERE status IN ('queued', 'running')
+  `).run();
+  return result.changes;
+}
+
 function toApiJob(row) {
   return {
     id: Number(row.id),
@@ -57,6 +86,7 @@ function toApiJob(row) {
     request: JSON.parse(row.request_json),
     plan: JSON.parse(row.plan_json),
     result: row.result_json ? JSON.parse(row.result_json) : null,
+    progress: row.progress_json ? JSON.parse(row.progress_json) : null,
     error: row.error,
     created_at: row.created_at,
     started_at: row.started_at,

@@ -13,7 +13,7 @@ export async function listBookPartitions(pool, opts) {
   return listSealedScalarPartitions(pool, opts);
 }
 
-export async function exportBooksPartition({ config, db, pool, partition, dryRun = false, rebuild = false, allowNeedsReview = false }) {
+export async function exportBooksPartition({ config, db, pool, partition, dryRun = false, rebuild = false, allowNeedsReview = false, onProgress }) {
   return exportBookDatasetPartition({
     dataset: 'books',
     config,
@@ -23,6 +23,7 @@ export async function exportBooksPartition({ config, db, pool, partition, dryRun
     dryRun,
     rebuild,
     allowNeedsReview,
+    onProgress,
     transformRows: (rows) => rows,
     checksumRows: (rows) => createBooksRowsChecksum(rows),
     writeParquet: ({ rows, tempPath, finalPath }) => writeBooksParquet({ rows, tempPath, finalPath }),
@@ -38,6 +39,7 @@ export async function exportBacktestTicksPartition({
   rebuild = false,
   allowNeedsReview = false,
   bookDepth = config.backtestBookDepth,
+  onProgress,
 }) {
   return exportBookDatasetPartition({
     dataset: 'backtest_ticks',
@@ -48,6 +50,7 @@ export async function exportBacktestTicksPartition({
     dryRun,
     rebuild,
     allowNeedsReview,
+    onProgress,
     transformRows: (rows) => rows.map((row) => flattenBookTick(row, bookDepth)),
     checksumRows: (rows) => createBacktestTicksRowsChecksum(rows, bookDepth),
     writeParquet: ({ rows, tempPath, finalPath }) => writeBacktestTicksParquet({ rows, tempPath, finalPath, bookDepth }),
@@ -86,9 +89,15 @@ async function exportBookDatasetPartition({
   transformRows,
   checksumRows,
   writeParquet,
+  onProgress,
 }) {
+  const report = (phase, extra = {}) => {
+    onProgress?.({ current: { dt: partition.dt, phase, ...extra } });
+  };
+
   const decision = shouldProcess(db, dataset, partition, { rebuild, allowNeedsReview });
   if (!decision.process) {
+    report('skipped');
     return {
       skipped: true,
       reason: decision.reason,
@@ -98,11 +107,13 @@ async function exportBookDatasetPartition({
     };
   }
 
+  report('listing_events');
   const events = await getPartitionEvents(pool, partition);
   const conditionIds = events.map((event) => event.conditionId);
   const expectedRows = events.reduce((sum, event) => sum + event.ticksRecorded, 0);
 
   if (dryRun) {
+    report('done', { rows: expectedRows });
     return {
       dryRun: true,
       partition,
@@ -114,6 +125,7 @@ async function exportBookDatasetPartition({
     };
   }
 
+  report('counting_ticks');
   const counts = await countTicksByEvent(pool, partition, conditionIds);
   const eventsWithCounts = events.map((event) => {
     const actual = counts.get(event.conditionId) || { count: 0, minTs: null, maxTs: null };
@@ -136,6 +148,7 @@ async function exportBookDatasetPartition({
   const tempPath = buildTempParquetPath(config.lakeRoot, dataset, runId);
   const finalPath = buildFinalParquetPath(config.lakeRoot, manifestPartition, runId);
 
+  report('fetching_rows');
   const rawRows = await getTicksWithBooksForEvents(pool, partition, conditionIds);
   const rows = transformRows(rawRows);
   const valueChecksum = checksumRows(rows);
@@ -160,6 +173,7 @@ async function exportBookDatasetPartition({
   });
 
   try {
+    report('writing_parquet', { rows: actualRows });
     await writeParquet({ rows, tempPath, finalPath });
     const minTs = eventsWithCounts.map((event) => event.minTs).filter(Boolean).sort()[0] ?? null;
     const maxTs = eventsWithCounts.map((event) => event.maxTs).filter(Boolean).sort().at(-1) ?? null;
@@ -193,6 +207,7 @@ async function exportBookDatasetPartition({
       status,
       sourceFingerprint,
     };
+    report('done', { rows: actualRows, path: exportResult.activePath });
     if (dataset === 'backtest_ticks') {
       exportResult.archivePublish = await publishPartitionArchiveStatus({
         config,

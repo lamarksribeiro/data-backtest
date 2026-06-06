@@ -151,6 +151,10 @@ const BACKTEST_RUNS_MIGRATIONS = [
   'ALTER TABLE backtest_runs ADD COLUMN duration_ms INTEGER NULL',
 ];
 
+const PREPARE_JOBS_MIGRATIONS = [
+  'ALTER TABLE prepare_jobs ADD COLUMN progress_json TEXT NULL',
+];
+
 export function openStateDatabase(stateDbPath) {
   mkdirSync(path.dirname(stateDbPath), { recursive: true });
   const db = new DatabaseSync(stateDbPath);
@@ -159,12 +163,21 @@ export function openStateDatabase(stateDbPath) {
   db.exec('PRAGMA busy_timeout = 5000');
   db.exec(SCHEMA_SQL);
   migrateBacktestRuns(db);
+  migratePrepareJobs(db);
   return db;
 }
 
 function migrateBacktestRuns(db) {
-  const cols = new Set(db.prepare('PRAGMA table_info(backtest_runs)').all().map((row) => row.name));
-  for (const sql of BACKTEST_RUNS_MIGRATIONS) {
+  applyColumnMigrations(db, 'backtest_runs', BACKTEST_RUNS_MIGRATIONS);
+}
+
+function migratePrepareJobs(db) {
+  applyColumnMigrations(db, 'prepare_jobs', PREPARE_JOBS_MIGRATIONS);
+}
+
+function applyColumnMigrations(db, table, migrations) {
+  const cols = new Set(db.prepare(`PRAGMA table_info(${table})`).all().map((row) => row.name));
+  for (const sql of migrations) {
     const column = sql.match(/ADD COLUMN (\w+)/)?.[1];
     if (column && !cols.has(column)) {
       try {
