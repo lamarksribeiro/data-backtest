@@ -197,17 +197,53 @@ export async function countTicksByEvent(pool, partition, conditionIds) {
   }]));
 }
 
-export function marketTypeFromInterval(interval) {
-  const normalized = String(interval || '').toLowerCase();
-  if (normalized === '5m' || normalized === 'crypto-updown-5m') return 'crypto-updown-5m';
-  if (normalized === '15m' || normalized === 'crypto-updown-15m') return 'crypto-updown-15m';
+export const SUPPORTED_INTERVALS = ['5m', '15m', '1h', '4h'];
+
+const INTERVAL_ALIASES = {
+  '5m': '5m',
+  '15m': '15m',
+  '1h': '1h',
+  '4h': '4h',
+  'crypto-updown-5m': '5m',
+  'crypto-updown-15m': '15m',
+  'crypto-updown-1h': '1h',
+  'crypto-updown-4h': '4h',
+};
+
+const INTERVAL_TO_MARKET_TYPE = {
+  '5m': 'crypto-updown-5m',
+  '15m': 'crypto-updown-15m',
+  '1h': 'crypto-updown-1h',
+  '4h': 'crypto-updown-4h',
+};
+
+export function normalizeInterval(interval) {
+  const normalized = INTERVAL_ALIASES[String(interval || '').trim().toLowerCase()];
+  if (!normalized) {
+    throw new Error(`Invalid interval: ${interval}. Supported: ${SUPPORTED_INTERVALS.join(', ')}`);
+  }
   return normalized;
 }
 
+export function isSupportedInterval(interval) {
+  try {
+    normalizeInterval(interval);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function marketTypeFromInterval(interval) {
+  return INTERVAL_TO_MARKET_TYPE[normalizeInterval(interval)];
+}
+
 export function intervalFromMarketType(type) {
-  if (type === 'crypto-updown-5m') return '5m';
-  if (type === 'crypto-updown-15m') return '15m';
-  return type;
+  const normalized = INTERVAL_ALIASES[String(type || '').trim().toLowerCase()];
+  if (!normalized) {
+    throw new Error(`Invalid market type: ${type}`);
+  }
+  return normalized;
 }
 
 export async function listSourceBookDepths(pool) {
@@ -237,18 +273,21 @@ export async function listSourceContextOptions(pool, config) {
     `),
   ]);
 
-  const combinations = combinationsResult.rows.map((row) => ({
-    underlying: row.underlying,
-    interval: intervalFromMarketType(row.market_type),
-    book_depth: String(row.book_depth),
-    from: row.from_dt,
-    to: row.to_dt,
-    partitions: Number(row.partitions || 0),
-  }));
+  const combinations = combinationsResult.rows.flatMap((row) => {
+    if (!isSupportedInterval(row.market_type)) return [];
+    return [{
+      underlying: row.underlying,
+      interval: intervalFromMarketType(row.market_type),
+      book_depth: String(row.book_depth),
+      from: row.from_dt,
+      to: row.to_dt,
+      partitions: Number(row.partitions || 0),
+    }];
+  });
 
   return {
     underlyings: uniqueValues(combinations.map((row) => row.underlying)),
-    intervals: uniqueValues(combinations.map((row) => row.interval)),
+    intervals: uniqueValues(combinations.map((row) => row.interval)).filter(isSupportedInterval),
     book_depths: sourceBookDepthOptions(config, bookDepths),
     combinations,
   };

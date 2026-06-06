@@ -93,9 +93,36 @@ function normalizeContext(ctx) {
   return normalized;
 }
 
+function uniqueOptionList(values) {
+  return [...new Set((values || []).filter(Boolean).map(String))];
+}
+
 function optionValues(values, selected) {
-  const list = [...new Set([...(values || []), selected].filter(Boolean).map(String))];
-  return list.length ? list : [selected].filter(Boolean);
+  const list = uniqueOptionList(values);
+  if (list.length) return list;
+  return selected ? [String(selected)] : [];
+}
+
+export function applyContextOptions(current, options = {}) {
+  const next = { ...normalizeContext(current) };
+  const underlyings = uniqueOptionList(options.underlyings);
+  const intervals = uniqueOptionList(options.intervals);
+  const bookDepths = uniqueOptionList(options.book_depths);
+
+  if (underlyings.length && !underlyings.includes(next.underlying)) {
+    next.underlying = underlyings[0];
+  }
+  if (intervals.length && !intervals.includes(next.interval)) {
+    next.interval = intervals[0];
+  }
+  if (bookDepths.length && !bookDepths.includes(String(next.book_depth))) {
+    next.book_depth = bookDepths[0];
+  }
+
+  const saved = normalizeContext(next);
+  const previous = normalizeContext(current);
+  const changed = Object.keys(DEFAULTS).some((key) => String(saved[key]) !== String(previous[key]));
+  return changed ? saveContext(saved) : saved;
 }
 
 export function selectField(name, values, selected, { className = 'field__input', format = formatRaw } = {}) {

@@ -1,5 +1,5 @@
 import { el, mount } from '../utils/dom.js';
-import { loadContext, saveContext, contextQueryParams, selectField } from '../utils/context.js';
+import { applyContextOptions, contextBarOptions, loadContext, saveContext, contextQueryParams, selectField } from '../utils/context.js';
 import { escapeHtml, shellQuote } from '../utils/format.js';
 import { confirmDialog, promptDialog } from '../utils/confirm.js';
 
@@ -9,12 +9,13 @@ export async function renderLakehouse(ctx) {
   ctx.setBreadcrumb('data', null);
   ctx.renderContextBar?.();
 
-  const formCtx = loadContext();
   const optionsRes = await ctx.api.get('/api/context-options');
-  const sourceOptions = optionsRes.ok ? (optionsRes.data.options?.source || {}) : {};
-  const underlyingOptions = sourceOptions.underlyings?.length ? sourceOptions.underlyings : [formCtx.underlying];
-  const intervalOptions = sourceOptions.intervals?.length ? sourceOptions.intervals : [formCtx.interval];
-  const bookDepthOptions = sourceOptions.book_depths?.length ? sourceOptions.book_depths : [formCtx.book_depth];
+  const apiOptions = optionsRes.ok ? (optionsRes.data.options || {}) : {};
+  const fieldOptions = contextBarOptions(apiOptions);
+  const formCtx = applyContextOptions(loadContext(), fieldOptions);
+  const underlyingOptions = fieldOptions.underlyings?.length ? fieldOptions.underlyings : [formCtx.underlying];
+  const intervalOptions = fieldOptions.intervals?.length ? fieldOptions.intervals : [formCtx.interval];
+  const bookDepthOptions = fieldOptions.book_depths?.length ? fieldOptions.book_depths : [formCtx.book_depth];
 
   mount(ctx.contentEl, [
     el('div', { class: 'page-header' }, [

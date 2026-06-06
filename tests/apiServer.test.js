@@ -94,6 +94,11 @@ test('data-backtest API returns 400 for invalid requests', async () => {
 
       assert.equal(res.status, 400);
       assert.match(body.error.message, /from is required/);
+
+      const badInterval = await fetch(`http://127.0.0.1:${server.address().port}/api/availability?dataset=backtest_ticks&from=2026-05-31&to=2026-06-01&underlying=BTC&interval=4&book_depth=25`);
+      const badIntervalBody = await badInterval.json();
+      assert.equal(badInterval.status, 400);
+      assert.match(badIntervalBody.error.message, /Invalid interval/);
     } finally {
       if (server) await new Promise((resolve) => server.close(resolve));
       closeStateDatabase(db);

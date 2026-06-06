@@ -21,6 +21,8 @@ export function rangeFromParams(params) {
   return { from: from.toISOString(), to: to.toISOString() };
 }
 
+import { normalizeInterval } from '../source/postgres.js';
+
 export function datasetRequestFromParams(params, config) {
   const range = rangeFromParams(params);
   const dataset = String(params.get('dataset') || 'backtest_ticks');
@@ -29,7 +31,7 @@ export function datasetRequestFromParams(params, config) {
     from: range.from,
     to: range.to,
     underlying: requiredParam(params, 'underlying').toUpperCase(),
-    interval: requiredParam(params, 'interval'),
+    interval: normalizeInterval(requiredParam(params, 'interval')),
     limit: positiveIntParam(params, 'limit') ?? 1000,
   };
 

@@ -198,8 +198,13 @@ test('book and backtest tick checksums change when book changes', () => {
 test('market type and interval conversion is stable', () => {
   assert.equal(marketTypeFromInterval('5m'), 'crypto-updown-5m');
   assert.equal(marketTypeFromInterval('15m'), 'crypto-updown-15m');
+  assert.equal(marketTypeFromInterval('1h'), 'crypto-updown-1h');
+  assert.equal(marketTypeFromInterval('4h'), 'crypto-updown-4h');
   assert.equal(intervalFromMarketType('crypto-updown-5m'), '5m');
   assert.equal(intervalFromMarketType('crypto-updown-15m'), '15m');
+  assert.equal(intervalFromMarketType('crypto-updown-1h'), '1h');
+  assert.equal(intervalFromMarketType('crypto-updown-4h'), '4h');
+  assert.throws(() => marketTypeFromInterval('4'), /Invalid interval/);
 });
 
 test('duckdb writer creates scalars parquet file', async () => {
