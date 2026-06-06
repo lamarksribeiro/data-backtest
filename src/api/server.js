@@ -153,7 +153,12 @@ export function createApiHandler(deps) {
           return sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Backtest run not found' } });
         }
         if (req.method === 'GET' && backtestRunRoute.kind === 'detail') {
-          return sendJson(res, 200, { run });
+          const full = url.searchParams.get('full') === '1';
+          const slimRun = getBacktestRun(db, backtestRunRoute.runId, {
+            includeResult: full,
+            includeEquity: !full,
+          });
+          return sendJson(res, 200, { run: slimRun ?? run });
         }
         if (req.method === 'GET' && backtestRunRoute.kind === 'events') {
           return sendJson(res, 200, {

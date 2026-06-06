@@ -26,7 +26,7 @@ export async function renderRunDetail(ctx, params) {
   const events = eventsRes.ok ? eventsRes.data.events || [] : [];
   const summary = run.summary || {};
   const paramsObj = run.params || {};
-  const equity = Array.isArray(run.result?.equity) ? run.result.equity : [];
+  const equity = Array.isArray(run.equity) ? run.equity : (Array.isArray(run.result?.equity) ? run.result.equity : []);
 
   mount(ctx.contentEl, [
     el('div', { class: 'page-header' }, [

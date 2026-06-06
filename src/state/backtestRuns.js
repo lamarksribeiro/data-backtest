@@ -33,12 +33,12 @@ export function createBacktestRun(db, { request, result, strategyMeta = null, st
   );
   const runId = inserted.lastInsertRowid;
   persistEventTraces(db, runId, result);
-  return getBacktestRun(db, runId);
+  return getBacktestRun(db, runId, { includeResult: true, includeEquity: false });
 }
 
-export function getBacktestRun(db, id) {
+export function getBacktestRun(db, id, { includeResult = false, includeEquity = true } = {}) {
   const row = db.prepare('SELECT * FROM backtest_runs WHERE id = ?').get(id);
-  return row ? toApiRun(row, true) : null;
+  return row ? toApiRun(row, { includeResult, includeEquity }) : null;
 }
 
 export function listBacktestRuns(db, { limit = 20, strategy_id: strategyId, strategy_version_id: strategyVersionId, status, underlying, interval, pnl } = {}) {
@@ -73,7 +73,7 @@ function addTextFilter(filters, params, column, value) {
   params.push(String(value));
 }
 
-function toApiRun(row, includeResult = false) {
+function toApiRun(row, { includeResult = false, includeEquity = false } = {}) {
   const run = {
     id: Number(row.id),
     strategy: row.strategy,
@@ -96,7 +96,12 @@ function toApiRun(row, includeResult = false) {
     error: row.error ?? null,
     duration_ms: row.duration_ms ?? null,
   };
-  if (includeResult) run.result = JSON.parse(row.result_json);
+  if (includeResult) {
+    run.result = JSON.parse(row.result_json);
+  } else if (includeEquity && row.result_json) {
+    const parsed = JSON.parse(row.result_json);
+    run.equity = Array.isArray(parsed.equity) ? parsed.equity : [];
+  }
   return run;
 }
 

@@ -95,17 +95,55 @@ export async function renderLakehouse(ctx) {
 function renderPlan(panel, plan, ctx) {
   const { result } = plan;
   const availability = result.availability;
+  const summary = availability.summary || {
+    total: availability.expected_partitions.length,
+    valid: availability.files.length,
+    missing: availability.missing.length,
+    unavailable: availability.unavailable.length,
+  };
+  const partitions = availability.partitions || buildPartitionsFallback(availability);
+
+  const available = partitions.filter((p) => p.usable);
+  const blocked = partitions.filter((p) => !p.usable && p.active_path);
+  const gaps = partitions.filter((p) => !p.usable && !p.active_path);
+
   mount(panel, [
-    el('div', { class: 'grid grid--4' }, [
+    el('div', { class: 'grid grid--5' }, [
       stat('Status', result.ready ? 'Pronto' : 'Preparar'),
       stat('Dataset', availability.dataset),
-      stat('Partições', availability.expected_partitions.length),
-      stat('Válidas', availability.files.length),
+      stat('No intervalo', summary.total),
+      stat('Prontas (strict)', summary.valid),
+      stat('Pendentes', summary.missing + summary.unavailable),
     ]),
-    el('section', { class: 'card' }, [
-      el('h2', { class: 'card__title' }, 'Disponibilidade'),
-      listBlock('Ausentes', availability.missing),
-      listBlock('Indisponíveis', availability.unavailable.map((item) => `${item.dt}: ${item.status}`)),
+    el('p', { class: 'page-header__sub lake-context-line' }, [
+      `${availability.underlying} · ${availability.interval}`,
+      availability.book_depth != null ? ` · book depth ${availability.book_depth}` : '',
+      availability.resolution ? ` · resolução ${availability.resolution}` : '',
+      ` · ${formatDateRange(availability.from, availability.to)}`,
+    ]),
+    available.length ? el('section', { class: 'card lake-card--ok' }, [
+      el('h2', { class: 'card__title' }, `Já disponíveis no intervalo (${available.length})`),
+      el('p', { class: 'muted' }, 'Partições com status valid — podem ser usadas em backtest strict.'),
+      availablePartitionsTable(available),
+    ]) : el('section', { class: 'card' }, [
+      el('h2', { class: 'card__title' }, 'Já disponíveis no intervalo'),
+      el('p', { class: 'muted' }, 'Nenhuma partição valid neste intervalo ainda.'),
+    ]),
+    blocked.length ? el('section', { class: 'card lake-card--warn' }, [
+      el('h2', { class: 'card__title' }, `Com parquet, mas bloqueadas (${blocked.length})`),
+      el('p', { class: 'muted' }, 'Arquivo existe no lake, porém o manifest não está valid para modo strict.'),
+      blockedPartitionsTable(blocked),
+      degradedVsReviewCallout(blocked),
+      needsReviewCallout(blocked),
+    ]) : null,
+    gaps.length ? el('section', { class: 'card' }, [
+      el('h2', { class: 'card__title' }, `Ausentes (${gaps.length})`),
+      el('p', { class: 'muted' }, 'Datas esperadas no intervalo sem parquet no lake.'),
+      listBlock('Sem manifest / sem arquivo', gaps.map((p) => p.dt)),
+    ]) : null,
+    el('section', { class: 'card card--nested' }, [
+      el('h3', { class: 'card__title' }, 'Visão completa do intervalo'),
+      partitionsTable(partitions),
     ]),
     el('section', { class: 'card' }, [
       el('h2', { class: 'card__title' }, 'Plano de preparação'),
@@ -178,6 +216,185 @@ function listBlock(title, items) {
     el('strong', {}, title),
     el('ul', {}, items.map((item) => el('li', {}, el('code', {}, item)))),
   ]);
+}
+
+function buildPartitionsFallback(availability) {
+  const byUnavailable = new Map((availability.unavailable || []).map((item) => [item.dt, item]));
+  return (availability.expected_partitions || []).map((dt) => {
+    if (availability.missing?.includes(dt)) {
+      return { dt, status: 'missing', usable: false, rows: null, active_path: null, error: null, hint: 'Sem entrada no manifest.' };
+    }
+    const item = byUnavailable.get(dt);
+    if (item) {
+      return {
+        dt,
+        status: item.status,
+        usable: false,
+        rows: item.rows ?? null,
+        active_path: item.active_path ?? null,
+        error: item.error ?? null,
+        hint: item.hint || null,
+      };
+    }
+    return { dt, status: 'valid', usable: true, rows: null, active_path: null, error: null, hint: null };
+  });
+}
+
+function availablePartitionsTable(partitions) {
+  return el('table', { class: 'table table--compact lake-partitions-table' }, [
+    el('thead', {}, el('tr', {}, [
+      el('th', {}, 'dt'), el('th', {}, 'Rows'), el('th', {}, 'Eventos'),
+      el('th', {}, 'Cobertura mín.'), el('th', {}, 'Degradado'), el('th', {}, 'Arquivo'),
+    ])),
+    el('tbody', {}, partitions.map((p) => el('tr', { class: 'lake-partition--ok' }, [
+      el('td', {}, el('code', {}, p.dt)),
+      el('td', {}, p.rows != null ? String(p.rows) : '-'),
+      el('td', {}, p.events_count != null ? String(p.events_count) : '-'),
+      el('td', {}, formatCoverage(p.coverage_min)),
+      el('td', {}, p.has_degraded
+        ? el('span', { class: 'badge badge--warn' }, 'sim')
+        : el('span', { class: 'badge badge--ok' }, 'não')),
+      el('td', { class: 'mono truncate', title: p.active_path || '' }, p.active_path || '-'),
+    ]))),
+  ]);
+}
+
+function blockedPartitionsTable(partitions) {
+  return el('table', { class: 'table table--compact lake-partitions-table' }, [
+    el('thead', {}, el('tr', {}, [
+      el('th', {}, 'dt'), el('th', {}, 'Status'), el('th', {}, 'Rows'),
+      el('th', {}, 'Degradado'), el('th', {}, 'Motivo'),
+    ])),
+    el('tbody', {}, partitions.map((p) => el('tr', { class: 'lake-partition--gap' }, [
+      el('td', {}, el('code', {}, p.dt)),
+      el('td', {}, el('span', { class: `badge badge--${partitionStatusTone(p.status)}` }, p.status)),
+      el('td', {}, p.rows != null ? String(p.rows) : '-'),
+      el('td', {}, p.has_degraded
+        ? el('span', { class: 'badge badge--warn' }, 'sim')
+        : el('span', { class: 'badge badge--ok' }, 'não')),
+      el('td', { class: 'lake-partition__detail' }, [
+        p.error ? el('div', { class: 'lake-partition__error' }, escapeHtml(p.error)) : null,
+        el('span', { class: 'muted' }, p.hint || '-'),
+      ]),
+    ]))),
+  ]);
+}
+
+function degradedVsReviewCallout(partitions) {
+  const hasDegraded = partitions.some((p) => p.has_degraded);
+  if (!hasDegraded && !partitions.some((p) => p.status === 'needs_review')) return null;
+  return el('div', { class: 'callout callout--info lake-degraded-callout' }, [
+    el('strong', {}, 'Degradado ≠ needs_review'),
+    el('p', {}, [
+      el('strong', {}, 'Degradado'),
+      ' significa que alguns eventos do dia tiveram cobertura abaixo do SLA no coletor (gaps). '
+      + 'Isso vai para o parquet como flag ',
+      el('code', {}, 'degraded'),
+      ' por tick e ',
+      el('code', {}, 'has_degraded'),
+      ' no manifest — ',
+      el('strong', {}, 'não bloqueia'),
+      ' o backtest strict se o status do manifest for ',
+      el('code', {}, 'valid'),
+      '.',
+    ]),
+    el('p', {}, [
+      el('strong', {}, 'needs_review'),
+      ' é outra coisa: divergência entre ',
+      el('code', {}, 'COUNT(ticks)'),
+      ' e ',
+      el('code', {}, 'event_quality.ticks_recorded'),
+      '. Reprocessar ',
+      el('strong', {}, 'não inventa ticks'),
+      ' — se a divergência vier do Postgres, o rebuild gera o mesmo parquet e mantém ',
+      el('code', {}, 'needs_review'),
+      ' até corrigir a fonte ou aceitar manualmente.',
+    ]),
+  ]);
+}
+
+function formatCoverage(value) {
+  if (value == null || !Number.isFinite(Number(value))) return '-';
+  return `${Math.round(Number(value) * 100)}%`;
+}
+
+function partitionsTable(partitions) {
+  if (!partitions.length) {
+    return el('p', { class: 'muted' }, 'Nenhuma partição esperada para o intervalo.');
+  }
+  return el('table', { class: 'table table--compact lake-partitions-table' }, [
+    el('thead', {}, el('tr', {}, [
+      el('th', {}, 'dt'),
+      el('th', {}, 'Status'),
+      el('th', {}, 'Rows'),
+      el('th', {}, 'Uso strict'),
+      el('th', {}, 'Arquivo / motivo'),
+    ])),
+    el('tbody', {}, partitions.map((partition) => el('tr', { class: partition.usable ? 'lake-partition--ok' : 'lake-partition--gap' }, [
+      el('td', {}, el('code', {}, partition.dt)),
+      el('td', {}, el('span', { class: `badge badge--${partitionStatusTone(partition.status)}` }, partition.status)),
+      el('td', {}, partition.rows != null ? String(partition.rows) : '-'),
+      el('td', {}, partition.usable
+        ? el('span', { class: 'badge badge--ok' }, 'sim')
+        : el('span', { class: 'badge badge--warn' }, 'não')),
+      el('td', { class: 'lake-partition__detail' }, [
+        partition.active_path
+          ? el('span', { class: 'mono truncate', title: partition.active_path }, partition.active_path)
+          : el('span', { class: 'muted' }, partition.hint || '-'),
+        partition.error && partition.status === 'needs_review'
+          ? el('div', { class: 'lake-partition__error' }, escapeHtml(partition.error))
+          : null,
+      ]),
+    ]))),
+  ]);
+}
+
+function needsReviewCallout(partitions) {
+  const needsReview = partitions.filter((item) => item.status === 'needs_review');
+  if (!needsReview.length) return null;
+  return el('div', { class: 'callout callout--warn lake-needs-review-callout' }, [
+    el('strong', {}, 'Por que needs_review fica indisponível?'),
+    el('p', {}, [
+      'O sync comparou a contagem real de ticks no Postgres com o total registrado em ',
+      el('code', {}, 'event_quality'),
+      '. Quando os números divergem, o parquet é salvo mas marcado como ',
+      el('code', {}, 'needs_review'),
+      ' — o backtest em modo strict não usa essa partição para evitar dados inconsistentes.',
+    ]),
+    el('p', {}, [
+      'Se a divergência for só do ',
+      el('code', {}, 'event_quality'),
+      ' desatualizado, corrigir no ',
+      el('strong', {}, 'data-colector'),
+      ' resolve. Rebuild sozinho só ajuda quando a fonte já está alinhada.',
+    ]),
+    el('ul', {}, needsReview.map((item) => el('li', {}, [
+      el('code', {}, item.dt),
+      item.error ? `: ${escapeHtml(item.error)}` : null,
+    ]))),
+  ]);
+}
+
+function partitionStatusTone(status) {
+  if (status === 'valid') return 'ok';
+  if (status === 'missing') return 'idle';
+  if (status === 'needs_review') return 'warn';
+  if (status === 'writing' || status === 'rebuilding' || status === 'pending') return 'warn';
+  return 'err';
+}
+
+function formatUnavailableLine(item) {
+  const parts = [`${item.dt}: ${item.status}`];
+  if (item.rows != null) parts.push(`${item.rows} rows`);
+  if (item.error) parts.push(item.error);
+  return parts.join(' · ');
+}
+
+function formatDateRange(from, to) {
+  const fromDate = from?.slice(0, 10);
+  const toDate = to?.slice(0, 10);
+  if (!fromDate || !toDate) return '';
+  return fromDate === toDate ? fromDate : `${fromDate} → ${toDate}`;
 }
 
 function errorCard(message) {

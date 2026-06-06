@@ -41,6 +41,38 @@ test('availability resolves valid active_path and reports missing partitions', a
       assert.equal(availability.ok, false);
       assert.deepEqual(availability.files, ['/lake/scalars/part.parquet']);
       assert.deepEqual(availability.missing, ['2026-06-01']);
+      assert.equal(availability.summary.valid, 1);
+      assert.equal(availability.summary.missing, 1);
+      assert.equal(availability.partitions.length, 2);
+      assert.equal(availability.partitions[0].usable, true);
+      assert.equal(availability.partitions[1].status, 'missing');
+      upsertManifestPartition(db, {
+        dataset: 'backtest_ticks',
+        underlying: 'BTC',
+        interval: '5m',
+        bookDepth: 25,
+        dt: '2026-06-02',
+        activePath: '/lake/backtest_ticks/dt=2026-06-02/part.parquet',
+        rows: 172749,
+        status: 'needs_review',
+        error: 'actual tick count 172749 differs from event_quality 170000',
+      });
+
+      const reviewAvailability = checkDatasetAvailability(db, {
+        dataset: 'backtest_ticks',
+        underlying: 'BTC',
+        interval: '5m',
+        bookDepth: 25,
+        from: '2026-06-02T00:00:00.000Z',
+        to: '2026-06-03T00:00:00.000Z',
+      });
+
+      assert.equal(reviewAvailability.ok, false);
+      assert.equal(reviewAvailability.summary.unavailable, 1);
+      assert.equal(reviewAvailability.partitions[0].status, 'needs_review');
+      assert.equal(reviewAvailability.partitions[0].usable, false);
+      assert.match(reviewAvailability.partitions[0].hint, /event_quality/);
+      assert.equal(reviewAvailability.unavailable[0].error, 'actual tick count 172749 differs from event_quality 170000');
     } finally {
       closeStateDatabase(db);
     }

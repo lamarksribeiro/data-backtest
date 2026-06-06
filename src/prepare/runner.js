@@ -52,6 +52,7 @@ export function createPrepareJobRunner({ config, db, executeActions = executePre
       current: null,
     };
 
+    let lastPersistMs = 0;
     return (patch) => {
       const nextFiles = patch.files ? [...progress.files, ...patch.files] : progress.files;
       progress = {
@@ -61,6 +62,13 @@ export function createPrepareJobRunner({ config, db, executeActions = executePre
         current: patch.current === undefined ? progress.current : patch.current,
         updated_at: new Date().toISOString(),
       };
+      const now = Date.now();
+      const force = Boolean(patch.files?.length)
+        || patch.current?.phase === 'done'
+        || patch.current === null
+        || patch.partitions_done != null && patch.current == null;
+      if (!force && now - lastPersistMs < 1000) return;
+      lastPersistMs = now;
       updatePrepareJobProgress(db, job.id, progress);
     };
   }

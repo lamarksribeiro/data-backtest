@@ -85,6 +85,7 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
       finalPnl: pnl,
       reason: snap.orders.length ? settlement.reason : 'no_entry',
       closedAt: lastTick?.ts ?? currentEvent.eventEnd,
+      ticksProcessed: samples.length,
     };
     events.push(eventRecord);
     equity.push({ ts: eventRecord.closedAt, pnl: totalPnl });

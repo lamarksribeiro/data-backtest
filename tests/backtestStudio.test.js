@@ -123,7 +123,9 @@ test('backtest studio API exposes run detail, events and chart-data', async () =
 
       const detail = await getJson(`${baseUrl}/api/backtest/runs/${run.id}`);
       assert.equal(detail.run.id, run.id);
-      assert.equal(detail.run.result.strategy, 'EDGE_SNIPER_V2');
+      assert.ok(Array.isArray(detail.run.equity));
+      const full = await getJson(`${baseUrl}/api/backtest/runs/${run.id}?full=1`);
+      assert.equal(full.run.result.strategy, 'EDGE_SNIPER_V2');
 
       const events = await getJson(`${baseUrl}/api/backtest/runs/${run.id}/events`);
       assert.equal(events.events.length, 1);

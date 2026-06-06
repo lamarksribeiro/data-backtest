@@ -13,11 +13,15 @@ export async function queryTicks(db, request) {
       AND underlying_price IS NOT NULL
       AND price_to_beat IS NOT NULL
       AND price_to_beat > 1000` : '';
+  const conditionClause = request.conditionId
+    ? ` AND condition_id = ${quotedString(String(request.conditionId))}`
+    : '';
   const sql = `
     SELECT *
     FROM read_parquet(${parquetList(availability.files)})
     WHERE CAST(${tsColumn} AS TIMESTAMP) >= CAST(${quotedString(new Date(request.from).toISOString())} AS TIMESTAMP)
       AND CAST(${tsColumn} AS TIMESTAMP) < CAST(${quotedString(new Date(request.to).toISOString())} AS TIMESTAMP)
+      ${conditionClause}
       ${qualityClause}
     ORDER BY CAST(${tsColumn} AS TIMESTAMP) ASC, condition_id ASC
     LIMIT ${safeLimit(request.limit)}

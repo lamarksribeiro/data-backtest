@@ -1,4 +1,7 @@
 import { queryTicks } from '../../query/duckdbQuery.js';
+import { downsamplePoints } from '../../utils/downsample.js';
+
+const CHART_MAX_POINTS = 400;
 
 export function persistEventTraces(db, runId, result) {
   db.prepare('DELETE FROM backtest_event_traces WHERE run_id = ?').run(runId);
@@ -72,19 +75,22 @@ export async function getChartData(db, config, run, conditionId) {
     underlying: run.underlying,
     interval: run.interval,
     bookDepth: run.bookDepth,
+    conditionId,
     from: event.event_start,
     to: event.event_end,
-    limit: 100000,
+    limit: 20000,
     offset: 0,
     validBacktestRows: true,
   });
-  const filtered = rows.filter((row) => row.condition_id === conditionId);
   const side = event.side || 'UP';
-  const series = buildChartSeries(filtered, side);
+  const fullSeries = buildChartSeries(rows, side);
+  const keepTs = collectMarkerTimestamps(event);
+  const { series, meta } = downsampleChartSeries(fullSeries, keepTs);
 
   return {
     event: toApiEventSummaryFromDetail(event),
     series,
+    series_meta: meta,
     orders: event.orders,
     marks: event.marks,
     logs: event.logs,
@@ -135,7 +141,7 @@ function normalizeEventsFromResult(runId, result) {
       final_pnl: Number(event.finalPnl || 0),
       result: deriveEventResult(event),
       reason: event.reason ?? null,
-      ticks_count: logs.length,
+      ticks_count: Number(event.ticksProcessed ?? event.ticksInEvent ?? 0) || logs.length,
       summary,
       orders,
       marks: Array.isArray(event.marks) ? event.marks : [],
@@ -178,6 +184,35 @@ function buildChartSeries(rows, side) {
     downPrice: rows.map((row) => point(row.ts, row.down_price)),
     bid: rows.map((row) => point(row.ts, row[`${prefix}_best_bid`])),
     ask: rows.map((row) => point(row.ts, row[`${prefix}_best_ask`])),
+  };
+}
+
+function collectMarkerTimestamps(event) {
+  const stamps = [];
+  for (const mark of event.marks || []) if (mark?.ts) stamps.push(mark.ts);
+  for (const order of event.orders || []) if (order?.ts || order?.createdAt) stamps.push(order.ts || order.createdAt);
+  return stamps;
+}
+
+function downsampleChartSeries(series, keepTs) {
+  const base = series.underlying || [];
+  const total = base.length;
+  if (total <= CHART_MAX_POINTS) {
+    return { series, meta: { total_points: total, displayed_points: total, downsampled: false } };
+  }
+  const picked = downsamplePoints(base, { maxPoints: CHART_MAX_POINTS, keepTs });
+  const pickedTs = new Set(picked.map((p) => p.ts));
+  const pick = (arr) => (arr || []).filter((p) => pickedTs.has(p.ts));
+  return {
+    series: {
+      underlying: pick(series.underlying),
+      priceToBeat: pick(series.priceToBeat),
+      upPrice: pick(series.upPrice),
+      downPrice: pick(series.downPrice),
+      bid: pick(series.bid),
+      ask: pick(series.ask),
+    },
+    meta: { total_points: total, displayed_points: picked.length, downsampled: true },
   };
 }
 

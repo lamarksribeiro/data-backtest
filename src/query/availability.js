@@ -16,6 +16,23 @@ export function partitionDatesForRange(from, to) {
   return dates;
 }
 
+const STATUS_HINTS = {
+  valid: 'Pronta para backtest em modo strict.',
+  needs_review:
+    'O parquet foi gerado, mas a contagem real de ticks divergiu do event_quality no Postgres. '
+    + 'Bloqueada em modo strict até reprocessar com "Reprocessar indisponíveis" + confirmação REBUILD_PARTITIONS.',
+  invalid: 'Exportação falhou ou o arquivo ficou inválido.',
+  stale: 'A fonte mudou desde o último export; requer reexport.',
+  writing: 'Sync em andamento nesta partição.',
+  pending: 'Registrada no manifest, ainda não exportada.',
+  rebuilding: 'Reexport em andamento.',
+  missing: 'Sem entrada no manifest para esta data.',
+};
+
+export function partitionStatusHint(status) {
+  return STATUS_HINTS[status] || `Status "${status}" não pode ser usado em modo strict.`;
+}
+
 export function checkDatasetAvailability(db, request) {
   const dates = partitionDatesForRange(request.from, request.to);
   const rows = findManifestPartitions(db, request, dates[0], dates.at(-1));
@@ -23,19 +40,54 @@ export function checkDatasetAvailability(db, request) {
   const missing = [];
   const unavailable = [];
   const files = [];
+  const partitions = [];
 
   for (const dt of dates) {
     const row = byDate.get(dt);
     if (!row) {
       missing.push(dt);
+      partitions.push({
+        dt,
+        status: 'missing',
+        usable: false,
+        rows: null,
+        active_path: null,
+        error: null,
+        hint: STATUS_HINTS.missing,
+      });
       continue;
     }
-    if (row.status !== 'valid' || !row.active_path) {
-      unavailable.push({ dt, status: row.status, active_path: row.active_path });
+
+    const usable = row.status === 'valid' && Boolean(row.active_path);
+    const partition = {
+      dt,
+      status: row.status,
+      usable,
+      rows: row.rows ?? null,
+      events_count: row.events_count ?? null,
+      coverage_min: row.coverage_min ?? null,
+      has_degraded: Boolean(row.has_degraded),
+      active_path: row.active_path ?? null,
+      error: row.error ?? null,
+      hint: partitionStatusHint(row.status),
+    };
+    partitions.push(partition);
+
+    if (usable) {
+      files.push(row.active_path);
       continue;
     }
-    files.push(row.active_path);
+    unavailable.push({
+      dt,
+      status: row.status,
+      active_path: row.active_path,
+      rows: row.rows ?? null,
+      error: row.error ?? null,
+      hint: partition.hint,
+    });
   }
+
+  const validCount = partitions.filter((item) => item.usable).length;
 
   return {
     ok: missing.length === 0 && unavailable.length === 0,
@@ -47,6 +99,13 @@ export function checkDatasetAvailability(db, request) {
     from: new Date(request.from).toISOString(),
     to: new Date(request.to).toISOString(),
     expected_partitions: dates,
+    partitions,
+    summary: {
+      total: dates.length,
+      valid: validCount,
+      missing: missing.length,
+      unavailable: unavailable.length,
+    },
     files,
     missing,
     unavailable,
