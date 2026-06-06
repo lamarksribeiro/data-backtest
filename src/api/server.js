@@ -1,5 +1,6 @@
 import http from 'node:http';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir, stat } from 'node:fs/promises';
+import { createReadStream } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -131,6 +132,65 @@ export function createApiHandler(deps) {
         const request = datasetRequestFromParams(url.searchParams, config);
         const mode = url.searchParams.get('mode') || 'prepare';
         return sendJson(res, 200, { result: resolveDataRequest(db, request, mode) });
+      }
+      if (req.method === 'GET' && url.pathname === '/api/lake/files') {
+        const relativePath = url.searchParams.get('path') || '';
+        const safePath = path.resolve(config.lakeRoot, relativePath);
+        if (!safePath.startsWith(config.lakeRoot)) {
+          return sendJson(res, 403, { error: { code: 'FORBIDDEN', message: 'Access denied' } });
+        }
+        try {
+          const entries = await readdir(safePath, { withFileTypes: true });
+          const list = [];
+          for (const entry of entries) {
+            if (entry.name.startsWith('.')) continue;
+            const entryPath = path.join(safePath, entry.name);
+            const entryRelative = path.relative(config.lakeRoot, entryPath).replace(/\\/g, '/');
+            const entryStats = await stat(entryPath);
+            list.push({
+              name: entry.name,
+              path: entryRelative,
+              isDir: entry.isDirectory(),
+              size: entryStats.size,
+              mtime: entryStats.mtime,
+            });
+          }
+          return sendJson(res, 200, { files: list, currentPath: relativePath.replace(/\\/g, '/') });
+        } catch (err) {
+          if (err.code === 'ENOENT') {
+            return sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Directory not found' } });
+          }
+          throw err;
+        }
+      }
+      if (req.method === 'GET' && url.pathname === '/api/lake/download') {
+        const relativePath = url.searchParams.get('path') || '';
+        if (!relativePath) {
+          return sendJson(res, 400, { error: { code: 'BAD_REQUEST', message: 'path parameter is required' } });
+        }
+        const safePath = path.resolve(config.lakeRoot, relativePath);
+        if (!safePath.startsWith(config.lakeRoot)) {
+          return sendJson(res, 403, { error: { code: 'FORBIDDEN', message: 'Access denied' } });
+        }
+        try {
+          const entryStats = await stat(safePath);
+          if (entryStats.isDirectory()) {
+            return sendJson(res, 400, { error: { code: 'BAD_REQUEST', message: 'Cannot download a directory' } });
+          }
+          res.writeHead(200, {
+            'content-type': 'application/octet-stream',
+            'content-disposition': `attachment; filename="${path.basename(safePath)}"`,
+            'content-length': entryStats.size
+          });
+          const stream = createReadStream(safePath);
+          stream.pipe(res);
+          return;
+        } catch (err) {
+          if (err.code === 'ENOENT') {
+            return sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'File not found' } });
+          }
+          throw err;
+        }
       }
       if (req.method === 'GET' && url.pathname === '/api/prepare/jobs') {
         return sendJson(res, 200, { jobs: listPrepareJobs(db, { limit: url.searchParams.get('limit') }) });

@@ -1,68 +1,142 @@
 import { el, mount, emptyState } from '../utils/dom.js';
 import { fieldLabelWithHelp } from '../utils/fieldHelp.js';
-import { loadContext, saveContext } from '../utils/context.js';
+import { applyContextOptions, contextBarOptions, loadContext, saveContext, selectField } from '../utils/context.js';
 import { escapeHtml, formatPnl } from '../utils/format.js';
 import { loadStrategyOptions, renderStrategySelect, backtestPayloadFromPick } from '../utils/strategyPicker.js';
 
-const historyState = {
-  strategy: 'all',
-  version: 'all',
-  period: 'all',
-  status: 'all',
-  pnl: 'all',
-  sort: 'newest',
+const state = {
+  runs: [],
+  strategyOptions: [],
+  selectedStrategyPick: '',
+  filterBySelectedStrategy: true,
+  historyFilters: {
+    status: 'all',
+    sort: 'newest',
+  }
 };
 
 export async function renderBacktests(ctx) {
   ctx.setBreadcrumb('backtests', null);
   ctx.renderContextBar?.();
 
-  const formCtx = loadContext();
-  const strategyOptions = await loadStrategyOptions(ctx.api);
-  const defaultPick = strategyOptions[0]?.value || '';
+  const optionsRes = await ctx.api.get('/api/context-options');
+  const apiOptions = optionsRes.ok ? (optionsRes.data.options || {}) : {};
+  const fieldOptions = contextBarOptions(apiOptions);
+  const formCtx = applyContextOptions(loadContext(), fieldOptions);
+  const underlyingOptions = fieldOptions.underlyings?.length ? fieldOptions.underlyings : [formCtx.underlying];
+  const intervalOptions = fieldOptions.intervals?.length ? fieldOptions.intervals : [formCtx.interval];
+  const bookDepthOptions = fieldOptions.book_depths?.length ? fieldOptions.book_depths : [formCtx.book_depth];
+
+  state.strategyOptions = await loadStrategyOptions(ctx.api);
+  if (state.strategyOptions.length && !state.selectedStrategyPick) {
+    state.selectedStrategyPick = state.strategyOptions[0].value;
+  }
+  const defaultPick = state.selectedStrategyPick || '';
+
+  const runsRes = await ctx.api.get('/api/backtest/runs?limit=50');
+  state.runs = runsRes.ok ? runsRes.data.runs || [] : [];
 
   mount(ctx.contentEl, [
     el('div', { class: 'page-header' }, [
       el('div', {}, [
         el('h1', {}, 'Backtests'),
-        el('p', { class: 'page-header__sub' }, 'Execute e acompanhe runs de estratégias versionadas.'),
+        el('p', { class: 'page-header__sub' }, 'Execute runs de estratégias e compare resultados passados.'),
       ]),
     ]),
-    el('section', { class: 'card' }, [
-      el('h2', { class: 'card__title' }, 'Executar backtest'),
-      el('form', { id: 'backtest-form', class: 'form-grid form-grid--compact' }, [
-        el('label', { class: 'field' }, [
-          el('span', { class: 'field__label' }, 'Estratégia'),
-          el('div', { id: 'strategy-pick-wrap' }),
-        ]),
-        el('label', { class: 'field' }, [
-          fieldLabelWithHelp(
-            'Batch size',
-            'Tamanho do lote de ticks lidos por vez. Afeta performance/memória, não a lógica da estratégia.',
-          ),
-          el('input', { class: 'field__input', type: 'number', name: 'batch_size', min: '1', value: formCtx.batch_size }),
-        ]),
-        el('div', { class: 'form-actions' }, [
-          el('button', { class: 'btn btn--primary', type: 'submit', disabled: !strategyOptions.length }, 'Executar'),
-        ]),
+    el('div', { class: 'backtest-dashboard-layout' }, [
+      // Coluna da Esquerda: Formulário de Execução
+      el('aside', { class: 'backtest-sidebar-panel' }, [
+        el('section', { class: 'card' }, [
+          el('h2', { class: 'card__title', style: { marginBottom: '14px' } }, 'Configurar Simulação 🚀'),
+          el('form', { id: 'backtest-form', class: 'backtest-execution-form' }, [
+            el('label', { class: 'field' }, [
+              el('span', { class: 'field__label' }, 'Estratégia'),
+              el('div', { id: 'strategy-pick-wrap' }),
+            ]),
+            el('label', { class: 'field' }, [
+              el('span', { class: 'field__label' }, 'Ativo'),
+              selectField('underlying', underlyingOptions, formCtx.underlying),
+            ]),
+            el('label', { class: 'field' }, [
+              el('span', { class: 'field__label' }, 'Intervalo'),
+              selectField('interval', intervalOptions, formCtx.interval),
+            ]),
+            el('label', { class: 'field' }, [
+              el('span', { class: 'field__label' }, 'Book depth'),
+              selectField('book_depth', bookDepthOptions, formCtx.book_depth),
+            ]),
+            el('label', { class: 'field' }, [
+              el('span', { class: 'field__label' }, 'De'),
+              el('input', { class: 'field__input', type: 'date', name: 'from', value: formCtx.from, required: true }),
+            ]),
+            el('label', { class: 'field' }, [
+              el('span', { class: 'field__label' }, 'Até'),
+              el('input', { class: 'field__input', type: 'date', name: 'to', value: formCtx.to, required: true }),
+            ]),
+            el('details', { class: 'advanced-settings-details', style: { gridColumn: '1 / -1', marginTop: '4px' } }, [
+              el('summary', { style: { cursor: 'pointer', color: 'var(--accent)', fontSize: '12.5px', fontWeight: '600', outline: 'none' } }, 'Configurações Avançadas'),
+              el('div', { style: { paddingTop: '10px' } }, [
+                el('label', { class: 'field' }, [
+                  fieldLabelWithHelp(
+                    'Batch size',
+                    'Tamanho do lote de ticks lidos por vez. Afeta performance/memória, não a lógica da estratégia.',
+                  ),
+                  el('input', { class: 'field__input', type: 'number', name: 'batch_size', min: '1', value: formCtx.batch_size }),
+                ]),
+              ])
+            ]),
+            el('button', { 
+              class: 'btn btn--primary btn--large', 
+              type: 'submit', 
+              style: { gridColumn: '1 / -1', marginTop: '14px', width: '100%', height: '42px', fontSize: '14px', fontWeight: 'bold' },
+              disabled: !state.strategyOptions.length 
+            }, 'Iniciar Backtest ⚡'),
+          ]),
+          state.strategyOptions.length ? null : el('p', { class: 'muted', style: { marginTop: '10px', fontSize: '12.5px' } }, 'Crie e salve uma versão de estratégia antes de executar backtests.'),
+          el('div', { id: 'backtest-run-result', style: { marginTop: '12px' } }),
+        ])
       ]),
-      strategyOptions.length ? null : el('p', { class: 'muted' }, 'Crie e salve uma versão de estratégia antes de executar backtests.'),
-      el('div', { id: 'backtest-run-result' }),
-    ]),
-    el('div', { id: 'backtests-table' }),
+      // Coluna da Direita: Estatísticas e Histórico
+      el('div', { class: 'backtest-main-panel' }, [
+        el('div', { id: 'backtest-stats-panel' }),
+        el('div', { id: 'backtests-table-panel' }),
+      ])
+    ])
   ]);
 
-  document.getElementById('strategy-pick-wrap').innerHTML = renderStrategySelect(strategyOptions, defaultPick);
+  const strategyPickWrap = document.getElementById('strategy-pick-wrap');
+  if (strategyPickWrap) {
+    strategyPickWrap.innerHTML = renderStrategySelect(state.strategyOptions, defaultPick);
+    const select = strategyPickWrap.querySelector('select');
+    if (select) {
+      select.addEventListener('change', (e) => {
+        state.selectedStrategyPick = e.target.value;
+        updateDashboard(ctx);
+      });
+    }
+  }
 
-  document.getElementById('backtest-form').addEventListener('submit', async (event) => {
+  updateDashboard(ctx);
+
+  const form = document.getElementById('backtest-form');
+  form?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const fd = new FormData(event.target);
-    const ctxSaved = saveContext({ batch_size: fd.get('batch_size') });
+    const ctxSaved = saveContext({
+      batch_size: fd.get('batch_size'),
+      from: fd.get('from'),
+      to: fd.get('to'),
+      underlying: String(fd.get('underlying')).trim(),
+      interval: String(fd.get('interval')).trim(),
+      book_depth: fd.get('book_depth'),
+    });
+    
     const pick = fd.get('strategy_pick');
     if (!pick) {
       ctx.toast.warn('Selecione uma estratégia versionada.');
       return;
     }
+
     const payload = backtestPayloadFromPick(String(pick), ctxSaved);
     const resultPanel = document.getElementById('backtest-run-result');
     mount(resultPanel, el('p', { class: 'muted' }, 'Executando backtest...'));
@@ -75,6 +149,7 @@ export async function renderBacktests(ctx) {
       }
       return;
     }
+    
     const summary = res.data.result?.summary || res.data.run?.summary || {};
     ctx.toast.ok(`Backtest #${res.data.run.id} concluído · PnL ${formatPnl(summary.totalPnl ?? 0)}`);
     mount(resultPanel, el('div', { class: 'row row--wrap' }, [
@@ -85,37 +160,95 @@ export async function renderBacktests(ctx) {
         onclick: () => ctx.navigate(`backtests/${res.data.run.id}`),
       }, 'Ver detalhes'),
     ]));
-    await loadRunsTable(ctx);
-  });
 
-  await loadRunsTable(ctx);
+    const runsRes = await ctx.api.get('/api/backtest/runs?limit=50');
+    state.runs = runsRes.ok ? runsRes.data.runs || [] : [];
+    updateDashboard(ctx);
+  });
 }
 
-async function loadRunsTable(ctx) {
-  const panel = document.getElementById('backtests-table');
-  const res = await ctx.api.get('/api/backtest/runs?limit=50');
-  if (!res.ok) {
-    mount(panel, el('p', { class: 'bad' }, res.error?.message || 'Falha'));
-    return;
+function updateDashboard(ctx) {
+  const statsPanel = document.getElementById('backtest-stats-panel');
+  const tablePanel = document.getElementById('backtests-table-panel');
+  
+  const selectedOpt = state.strategyOptions.find(opt => opt.value === state.selectedStrategyPick);
+  const activeStrategyName = (state.filterBySelectedStrategy && selectedOpt) ? selectedOpt.label.split(' · ')[0] : 'all';
+
+  if (statsPanel) {
+    mount(statsPanel, renderStatsCards(activeStrategyName));
   }
-  const runs = res.data.runs || [];
-  if (!runs.length) {
-    mount(panel, emptyState('Nenhum backtest executado ainda.'));
-    return;
+  if (tablePanel) {
+    mount(tablePanel, renderRunsTablePanel(ctx));
+  }
+}
+
+function renderStatsCards(strategyNameFilter) {
+  const filtered = state.runs.filter(run => {
+    if (strategyNameFilter === 'all') return true;
+    return strategyName(run) === strategyNameFilter;
+  });
+
+  const totalRuns = filtered.length;
+  const completedRuns = filtered.filter(r => (r.status || 'completed') === 'completed');
+  const profitableRuns = completedRuns.filter(r => Number(r.summary?.totalPnl ?? 0) > 0);
+  const winRate = totalRuns > 0 ? Math.round((profitableRuns.length / totalRuns) * 100) : 0;
+  
+  const totalPnl = completedRuns.reduce((sum, r) => sum + Number(r.summary?.totalPnl ?? 0), 0);
+  
+  let bestPnl = 0;
+  if (completedRuns.length) {
+    bestPnl = Math.max(...completedRuns.map(r => Number(r.summary?.totalPnl ?? 0)));
   }
 
-  const filteredRuns = filterAndSortRuns(runs);
+  const titlePrefix = strategyNameFilter === 'all' ? 'Globais (Todos os Runs)' : `Estratégia: ${strategyNameFilter}`;
 
-  const table = el('table', { class: 'table' }, [
+  return el('section', { class: 'card backtest-stats-section', style: { padding: '16px 20px', marginBottom: '16px' } }, [
+    el('h3', { class: 'card__title', style: { fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: '12px' } }, `Métricas de Simulação · ${titlePrefix}`),
+    el('div', { class: 'grid grid--4' }, [
+      statCardMini('Runs Totais', `📊 ${totalRuns}`, 'idle', `${profitableRuns.length} lucrativos`),
+      statCardMini('PnL Acumulado', formatPnlMini(totalPnl), totalPnl > 0 ? 'ok' : (totalPnl < 0 ? 'err' : 'idle')),
+      statCardMini('Win Rate', `🎯 ${winRate}%`, winRate > 50 ? 'ok' : (winRate > 0 ? 'warn' : 'idle'), 'runs com lucro'),
+      statCardMini('Melhor Run', formatPnlMini(bestPnl), bestPnl > 0 ? 'ok' : 'idle'),
+    ])
+  ]);
+}
+
+function statCardMini(label, value, tone, hint) {
+  return el('div', { class: `stat stat--compact stat--${tone}`, style: { padding: '10px 14px', borderRadius: '8px' } }, [
+    el('span', { class: 'stat__label', style: { fontSize: '10px' } }, label),
+    el('span', { class: 'stat__value', style: { fontSize: '16px', fontWeight: 'bold' } }, value),
+    hint ? el('span', { class: 'stat__hint', style: { fontSize: '10px' } }, hint) : null,
+  ]);
+}
+
+function formatPnlMini(value) {
+  const num = Number(value);
+  const formatted = formatPnl(num);
+  return num > 0 ? `+${formatted}` : formatted;
+}
+
+function renderRunsTablePanel(ctx) {
+  const selectedOpt = state.strategyOptions.find(opt => opt.value === state.selectedStrategyPick);
+  const activeStrategyName = (state.filterBySelectedStrategy && selectedOpt) ? selectedOpt.label.split(' · ')[0] : 'all';
+
+  const filteredRuns = filterAndSortRuns(state.runs, activeStrategyName);
+
+  const table = el('table', { class: 'table table--compact' }, [
     el('thead', {}, el('tr', {}, [
-      el('th', {}, 'ID'), el('th', {}, 'Estratégia'), el('th', {}, 'Versão'), el('th', {}, 'Período'), el('th', {}, 'Status'),
-      el('th', {}, 'Ticks'), el('th', {}, 'PnL'), el('th', {}, ''),
+      el('th', {}, 'ID'),
+      el('th', {}, 'Estratégia'),
+      el('th', {}, 'Versão'),
+      el('th', {}, 'Período'),
+      el('th', {}, 'Status'),
+      el('th', {}, 'Ticks'),
+      el('th', {}, 'PnL'),
+      el('th', {}, 'Ações'),
     ])),
     el('tbody', {}, filteredRuns.map((run) => {
       const summary = run.summary || {};
       return el('tr', {}, [
         el('td', {}, `#${run.id}`),
-        el('td', {}, strategyName(run)),
+        el('td', { style: { fontWeight: '600' } }, strategyName(run)),
         el('td', {}, versionLabel(run)),
         el('td', {}, periodLabel(run)),
         el('td', {}, statusBadge(run.status)),
@@ -125,64 +258,82 @@ async function loadRunsTable(ctx) {
           class: 'btn btn--ghost btn--sm',
           type: 'button',
           onclick: () => ctx.navigate(`backtests/${run.id}`),
-        }, 'Abrir')),
+        }, 'Detalhes 📊')),
       ]);
     })),
   ]);
-  mount(panel, el('section', { class: 'card' }, [
-    el('div', { class: 'card__header card__header--inline' }, [
-      el('h2', { class: 'card__title' }, 'Histórico'),
-      el('span', { class: 'muted' }, `${filteredRuns.length}/${runs.length} runs`),
-    ]),
-    renderRunFilters(runs, ctx),
-    filteredRuns.length ? table : emptyState('Nenhum run encontrado com os filtros atuais.'),
-  ]));
-}
 
-function renderRunFilters(runs, ctx) {
-  const strategies = [...new Set(runs.map(strategyName).filter(Boolean))].sort();
-  const versions = [...new Set(runs.map(versionLabel).filter((value) => value !== '-'))].sort(sortVersionLabel);
-  const periods = [...new Set(runs.map(periodLabel).filter(Boolean))].sort();
-  const statuses = [...new Set(runs.map((run) => run.status || 'completed'))].sort();
-  return el('div', { class: 'history-filters' }, [
-    filterSelect('Estratégia', 'strategy', historyState.strategy, ['all', ...strategies], (value) => value === 'all' ? 'Todas' : value, ctx),
-    filterSelect('Versão', 'version', historyState.version, ['all', ...versions], (value) => value === 'all' ? 'Todas' : value, ctx),
-    filterSelect('Período', 'period', historyState.period, ['all', ...periods], (value) => value === 'all' ? 'Todos' : value, ctx),
-    filterSelect('Status', 'status', historyState.status, ['all', ...statuses], (value) => value === 'all' ? 'Todos' : statusLabel(value), ctx),
-    filterSelect('PnL', 'pnl', historyState.pnl, ['all', 'positive', 'negative', 'zero'], pnlFilterLabel, ctx),
-    filterSelect('Ordenar', 'sort', historyState.sort, ['newest', 'best_pnl', 'worst_pnl'], sortFilterLabel, ctx),
+  return el('section', { class: 'card' }, [
+    el('div', { class: 'card__header card__header--inline' }, [
+      el('div', {}, [
+        el('h2', { class: 'card__title' }, 'Histórico de Simulações'),
+        el('p', { class: 'muted', style: { fontSize: '11.5px', marginTop: '2px' } }, 'Runs executados no ambiente local.')
+      ]),
+      el('span', { class: 'badge badge--idle' }, `${filteredRuns.length}/${state.runs.length} runs`),
+    ]),
+    
+    el('div', { class: 'history-filters-row', style: { display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '14px', alignItems: 'center' } }, [
+      el('label', { class: 'switch-field', style: { fontSize: '12.5px', minHeight: 'auto', display: 'flex', alignItems: 'center' } }, [
+        el('input', { 
+          class: 'switch-field__input', 
+          type: 'checkbox', 
+          id: 'filter-by-selected-strategy',
+          checked: state.filterBySelectedStrategy,
+          onchange: (e) => {
+            state.filterBySelectedStrategy = e.target.checked;
+            updateDashboard(ctx);
+          }
+        }),
+        el('span', { class: 'switch-field__slider', style: { transform: 'scale(0.85)' } }),
+        el('span', { style: { marginLeft: '4px' } }, 'Filtrar por esta estratégia'),
+      ]),
+      
+      el('div', { style: { flex: 1 } }),
+
+      filterSelectMini('Status', state.historyFilters.status, ['all', 'completed', 'failed_runtime'], (value) => {
+        if (value === 'all') return 'Todos';
+        if (value === 'completed') return 'Concluídos';
+        return 'Falhados';
+      }, (e) => {
+        state.historyFilters.status = e.target.value;
+        updateDashboard(ctx);
+      }),
+
+      filterSelectMini('Ordenar', state.historyFilters.sort, ['newest', 'best_pnl', 'worst_pnl'], (value) => {
+        if (value === 'best_pnl') return 'Melhor PnL';
+        if (value === 'worst_pnl') return 'Pior PnL';
+        return 'Mais Recentes';
+      }, (e) => {
+        state.historyFilters.sort = e.target.value;
+        updateDashboard(ctx);
+      })
+    ]),
+
+    filteredRuns.length ? table : emptyState('Nenhum run encontrado para os critérios de busca.')
   ]);
 }
 
-function filterSelect(label, key, selected, values, format, ctx) {
-  return el('label', { class: 'field history-filter' }, [
-    el('span', { class: 'field__label' }, label),
+function filterSelectMini(label, selected, values, format, onchange) {
+  return el('label', { class: 'field', style: { flexDirection: 'row', alignItems: 'center', gap: '6px', margin: 0, fontSize: '12.5px' } }, [
+    el('span', { class: 'muted' }, label),
     el('select', {
       class: 'field__input',
-      value: selected,
-      onchange: async (event) => {
-        historyState[key] = event.target.value;
-        await loadRunsTable(ctx);
-      },
+      style: { padding: '4px 24px 4px 8px', height: '26px', fontSize: '12px', width: 'auto' },
+      onchange: onchange,
     }, values.map((value) => el('option', { value, selected: value === selected }, format(value)))),
   ]);
 }
 
-function filterAndSortRuns(runs) {
+function filterAndSortRuns(runs, activeStrategyName) {
   const filtered = runs.filter((run) => {
-    if (historyState.strategy !== 'all' && strategyName(run) !== historyState.strategy) return false;
-    if (historyState.version !== 'all' && versionLabel(run) !== historyState.version) return false;
-    if (historyState.period !== 'all' && periodLabel(run) !== historyState.period) return false;
-    if (historyState.status !== 'all' && (run.status || 'completed') !== historyState.status) return false;
-    const pnl = Number(run.summary?.totalPnl ?? 0);
-    if (historyState.pnl === 'positive' && !(pnl > 0)) return false;
-    if (historyState.pnl === 'negative' && !(pnl < 0)) return false;
-    if (historyState.pnl === 'zero' && pnl !== 0) return false;
+    if (activeStrategyName !== 'all' && strategyName(run) !== activeStrategyName) return false;
+    if (state.historyFilters.status !== 'all' && (run.status || 'completed') !== state.historyFilters.status) return false;
     return true;
   });
+
   return filtered.sort((a, b) => {
-    if (historyState.sort === 'best_pnl') return Number(b.summary?.totalPnl ?? 0) - Number(a.summary?.totalPnl ?? 0);
-    if (historyState.sort === 'worst_pnl') return Number(a.summary?.totalPnl ?? 0) - Number(b.summary?.totalPnl ?? 0);
+    if (state.historyFilters.sort === 'best_pnl') return Number(b.summary?.totalPnl ?? 0) - Number(a.summary?.totalPnl ?? 0);
+    if (state.historyFilters.sort === 'worst_pnl') return Number(a.summary?.totalPnl ?? 0) - Number(b.summary?.totalPnl ?? 0);
     return Number(b.id) - Number(a.id);
   });
 }
@@ -209,23 +360,6 @@ function statusBadge(status) {
   const value = status || 'completed';
   const tone = value === 'completed' ? 'ok' : 'err';
   return el('span', { class: `badge badge--${tone}` }, statusLabel(value));
-}
-
-function sortVersionLabel(a, b) {
-  return Number(String(a).replace(/\D/g, '')) - Number(String(b).replace(/\D/g, ''));
-}
-
-function pnlFilterLabel(value) {
-  if (value === 'positive') return 'Positivo';
-  if (value === 'negative') return 'Negativo';
-  if (value === 'zero') return 'Zero';
-  return 'Todos';
-}
-
-function sortFilterLabel(value) {
-  if (value === 'best_pnl') return 'Melhor PnL';
-  if (value === 'worst_pnl') return 'Pior PnL';
-  return 'Mais recentes';
 }
 
 function renderPnlBadge(value) {

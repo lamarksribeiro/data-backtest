@@ -245,7 +245,6 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
         }, '✕'),
       ]),
       el('div', { class: 'row' }, [
-        el('button', { class: 'btn btn--primary btn--sm', type: 'button', onclick: () => runStrategyBacktest(ctx, strategyId) }, 'Executar backtest'),
         el('button', { class: 'btn btn--danger btn--sm btn--ghost', type: 'button', onclick: () => deleteStrategyFlow(ctx, strategy) }, 'Apagar'),
       ]),
     ]),
@@ -259,11 +258,12 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
 
     // 1. Tab Código Content
     el('div', { class: 'premium-tab-content is-active', id: 'tab-content-code' }, [
-      el('div', { class: 'strategy-code-tab-layout' }, [
+      el('div', { class: 'strategy-code-tab-layout strategy-code-tab-layout--single' }, [
         el('div', { class: 'strategy-code-editor-area' }, [
           el('div', { class: 'row row--between' }, [
             el('span', { class: 'eyebrow' }, 'Linguagem GLS'),
             el('div', { class: 'row' }, [
+              el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => toggleGlsDrawer(true) }, 'Ajuda GLS 🛟'),
               el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => validateTabCode(ctx) }, 'Validar Código'),
               el('button', { class: 'btn btn--primary btn--sm', type: 'button', onclick: () => saveTabCodeVersion(ctx, strategy.id) }, 'Salvar Versão (Ctrl+S)'),
             ]),
@@ -275,21 +275,6 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
               renderValidationBadge(state.validation),
             ]),
             el('div', { id: 'strategy-validation' }, renderValidationDetails(state.validation)),
-          ]),
-        ]),
-        el('div', { class: 'strategy-code-sidebar-area' }, [
-          el('section', { class: 'editor-help-card' }, [
-            el('h3', { class: 'card__title' }, 'Teclas de Atalho'),
-            el('div', { class: 'shortcut-list' }, [
-              shortcut('Ctrl+Space', 'Autocomplete'),
-              shortcut('Ctrl+S', 'Salvar versão'),
-              shortcut('Tab', 'Indentar Código'),
-            ]),
-          ]),
-          el('section', { class: 'editor-help-card' }, [
-            el('h3', { class: 'card__title' }, 'Blocos GLS'),
-            el('ul', { class: 'mono-list mono-list--dense', style: { fontSize: '11px', lineHeight: '1.4' } }, state.blocks.map((block) => el('li', {}, el('code', {}, block.signature)))),
-            el('p', { class: 'muted', style: { fontSize: '11px', marginTop: '8px' } }, 'Namespaces do runtime: market, book, prices, time, risk, debug.'),
           ]),
         ]),
       ]),
@@ -682,27 +667,80 @@ async function deleteVersionFlow(ctx, strategy, version) {
   await renderStrategies(ctx, { id: strategy.id });
 }
 
-async function runStrategyBacktest(ctx, strategyId) {
-  if (!state.selectedVersionId) {
-    ctx.toast.warn('Salve uma versão válida antes de executar.');
-    return;
+function toggleGlsDrawer(isOpen) {
+  let drawer = document.getElementById('gls-help-drawer');
+  if (!drawer) {
+    drawer = createGlsDrawer();
+    document.body.appendChild(drawer);
   }
-  const ok = await confirmDialog({
-    title: 'Executar backtest GLS',
-    message: 'Executar backtest com o contexto global (datas/ativo)?',
-    tone: 'primary',
-    confirmLabel: 'Executar',
-  });
-  if (!ok) return;
+  drawer.classList.toggle('is-open', isOpen);
+  if (isOpen) {
+    const input = drawer.querySelector('.drawer-search-input');
+    if (input) {
+      input.value = '';
+      input.focus();
+    }
+    renderDrawerBlocks('');
+  }
+}
 
-  const formCtx = loadContext();
-  const payload = backtestPayloadFromPick(`gls:${strategyId}:${state.selectedVersionId}`, formCtx);
-  const res = await ctx.api.post('/api/backtest/run', payload);
-  if (!res.ok) {
-    ctx.toast.err(res.error?.message || 'Falha ao executar backtest');
-    return;
-  }
-  const pnl = res.data.result?.summary?.totalPnl ?? 0;
-  ctx.toast.ok(`Backtest #${res.data.run.id} concluído · PnL ${pnl}`);
-  ctx.navigate(`backtests/${res.data.run.id}`);
+function createGlsDrawer() {
+  return el('div', { class: 'gls-drawer', id: 'gls-help-drawer' }, [
+    el('div', { class: 'gls-drawer__header' }, [
+      el('h3', {}, 'Ajuda GLS 🛟'),
+      el('button', { class: 'btn btn--icon btn--ghost', type: 'button', onclick: () => toggleGlsDrawer(false) }, '✕'),
+    ]),
+    el('div', { class: 'gls-drawer__body' }, [
+      el('section', { class: 'editor-help-card' }, [
+        el('h4', { style: { margin: '0 0 8px 0' } }, 'Teclas de Atalho'),
+        el('div', { class: 'shortcut-list' }, [
+          shortcut('Ctrl+Space', 'Autocomplete'),
+          shortcut('Ctrl+S', 'Salvar versão'),
+          shortcut('Tab', 'Indentar Código'),
+        ]),
+      ]),
+      el('section', { class: 'editor-help-card' }, [
+        el('h4', { style: { margin: '0 0 8px 0' } }, 'Blocos GLS'),
+        el('input', {
+          class: 'strategy-search-input drawer-search-input',
+          type: 'text',
+          placeholder: '🔍 Buscar bloco ou assinatura...',
+          oninput: (e) => renderDrawerBlocks(e.target.value),
+        }),
+        el('div', { id: 'drawer-blocks-list-wrap', style: { marginTop: '12px' } }),
+        el('p', { class: 'muted', style: { fontSize: '11px', marginTop: '12px' } }, 'Namespaces do runtime: market, book, prices, time, risk, debug. Clique em um bloco para inseri-lo no cursor.'),
+      ]),
+    ]),
+  ]);
+}
+
+function renderDrawerBlocks(query = '') {
+  const wrap = document.getElementById('drawer-blocks-list-wrap');
+  if (!wrap) return;
+  const q = query.toLowerCase().trim();
+  const filtered = state.blocks.filter(block => 
+    block.signature.toLowerCase().includes(q) || 
+    (block.description && block.description.toLowerCase().includes(q))
+  );
+  mount(wrap, el('ul', { class: 'mono-list mono-list--dense', style: { fontSize: '11px', lineHeight: '1.4', paddingLeft: '12px', listStyle: 'none', margin: 0 } }, 
+    filtered.length 
+      ? filtered.map((block) => el('li', { style: { marginBottom: '8px', borderBottom: '1px solid var(--border)', paddingBottom: '8px' } }, [
+          el('code', { 
+            style: { display: 'block', color: 'var(--accent)', cursor: 'pointer', fontWeight: 'bold' }, 
+            onclick: () => insertBlockIntoEditor(block.signature) 
+          }, block.signature),
+          block.description ? el('div', { class: 'muted', style: { fontSize: '10px', marginTop: '2px' } }, block.description) : null
+        ]))
+      : [el('li', { class: 'muted' }, 'Nenhum bloco encontrado.')]
+  ));
+}
+
+function insertBlockIntoEditor(signature) {
+  if (!state.focusedEditor) return;
+  const cm = state.focusedEditor;
+  const doc = cm.getDoc();
+  const cursor = doc.getCursor();
+  const cleanSig = signature.split(' -> ')[0].trim();
+  doc.replaceRange(cleanSig, cursor);
+  cm.focus();
 }

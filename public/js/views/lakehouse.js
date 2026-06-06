@@ -1,9 +1,10 @@
-import { el, mount } from '../utils/dom.js';
+import { el, mount, emptyState } from '../utils/dom.js';
 import { applyContextOptions, contextBarOptions, loadContext, saveContext, contextQueryParams, selectField } from '../utils/context.js';
 import { escapeHtml, shellQuote } from '../utils/format.js';
 import { confirmDialog, promptDialog } from '../utils/confirm.js';
 
 let lastPlan = null;
+let currentExplorerPath = '';
 
 export async function renderLakehouse(ctx) {
   ctx.setBreadcrumb('data', null);
@@ -21,34 +22,62 @@ export async function renderLakehouse(ctx) {
     el('div', { class: 'page-header' }, [
       el('div', {}, [
         el('h1', {}, 'Dados'),
-        el('p', { class: 'page-header__sub' }, 'Verifique disponibilidade e crie jobs de preparação.'),
+        el('p', { class: 'page-header__sub' }, 'Verifique disponibilidade, gerencie arquivos e reprocesse partições.'),
       ]),
     ]),
-    el('section', { class: 'card' }, [
-      el('form', { id: 'lake-form', class: 'form-grid' }, [
-        field('Dataset', selectField('dataset', ['backtest_ticks', 'scalars', 'books', 'ohlc'], formCtx.dataset)),
-        field('De', el('input', { class: 'field__input', type: 'date', name: 'from', value: formCtx.from, required: true })),
-        field('Até', el('input', { class: 'field__input', type: 'date', name: 'to', value: formCtx.to, required: true })),
-        field('Ativo', selectField('underlying', underlyingOptions, formCtx.underlying)),
-        field('Intervalo', selectField('interval', intervalOptions, formCtx.interval)),
-        field('Book depth', selectField('book_depth', bookDepthOptions, formCtx.book_depth), 'field-book-depth'),
-        field('Resolução', selectField('resolution', ['1m', '1s', '5s', '5m'], formCtx.resolution), 'field-resolution'),
-        el('label', { class: 'switch-field' }, [
-          el('input', { class: 'switch-field__input', type: 'checkbox', name: 'dry_run', checked: true }),
-          el('span', { class: 'switch-field__slider' }),
-          el('span', { class: 'switch-field__label' }, 'Dry-run'),
-        ]),
-        el('label', { class: 'switch-field' }, [
-          el('input', { class: 'switch-field__input', type: 'checkbox', name: 'rebuild' }),
-          el('span', { class: 'switch-field__slider' }),
-          el('span', { class: 'switch-field__label' }, 'Reprocessar indisponíveis'),
-        ]),
-        el('div', { class: 'form-actions' }, [
-          el('button', { class: 'btn btn--primary', type: 'submit' }, 'Verificar disponibilidade'),
+    
+    // Tab Navigation bar
+    el('div', { class: 'premium-tabs-nav', style: { marginBottom: '20px' } }, [
+      el('button', { 
+        class: 'premium-tab-link is-active', 
+        id: 'lake-tab-link-avail', 
+        type: 'button', 
+        onclick: () => switchLakeTab('avail') 
+      }, '◫ Disponibilidade & Preparação'),
+      el('button', { 
+        class: 'premium-tab-link', 
+        id: 'lake-tab-link-explorer', 
+        type: 'button', 
+        onclick: () => switchLakeTab('explorer') 
+      }, '📁 Explorador de Arquivos do Lake'),
+    ]),
+
+    // Tab 1: Availability Content
+    el('div', { class: 'lake-tab-content is-active', id: 'lake-tab-content-avail' }, [
+      el('section', { class: 'card' }, [
+        el('form', { id: 'lake-form', class: 'form-grid' }, [
+          field('Dataset', selectField('dataset', ['backtest_ticks', 'scalars', 'books', 'ohlc'], formCtx.dataset)),
+          field('De', el('input', { class: 'field__input', type: 'date', name: 'from', value: formCtx.from, required: true })),
+          field('Até', el('input', { class: 'field__input', type: 'date', name: 'to', value: formCtx.to, required: true })),
+          field('Ativo', selectField('underlying', underlyingOptions, formCtx.underlying)),
+          field('Intervalo', selectField('interval', intervalOptions, formCtx.interval)),
+          field('Book depth', selectField('book_depth', bookDepthOptions, formCtx.book_depth), 'field-book-depth'),
+          field('Resolução', selectField('resolution', ['1m', '1s', '5s', '5m'], formCtx.resolution), 'field-resolution'),
+          el('label', { class: 'switch-field' }, [
+            el('input', { class: 'switch-field__input', type: 'checkbox', name: 'dry_run', checked: true }),
+            el('span', { class: 'switch-field__slider' }),
+            el('span', { class: 'switch-field__label' }, 'Dry-run'),
+          ]),
+          el('label', { class: 'switch-field' }, [
+            el('input', { class: 'switch-field__input', type: 'checkbox', name: 'rebuild' }),
+            el('span', { class: 'switch-field__slider' }),
+            el('span', { class: 'switch-field__label' }, 'Reprocessar indisponíveis'),
+          ]),
+          el('div', { class: 'form-actions' }, [
+            el('button', { class: 'btn btn--primary', type: 'submit' }, 'Verificar disponibilidade'),
+          ]),
         ]),
       ]),
+      el('div', { id: 'lake-result' }),
     ]),
-    el('div', { id: 'lake-result' }),
+
+    // Tab 2: Explorer Content
+    el('div', { class: 'lake-tab-content', id: 'lake-tab-content-explorer', style: { display: 'none' } }, [
+      el('section', { class: 'card' }, [
+        el('div', { class: 'explorer-breadcrumbs', id: 'explorer-breadcrumbs-wrap', style: { marginBottom: '14px', fontSize: '13px', fontWeight: 'bold' } }),
+        el('div', { id: 'explorer-table-wrap' })
+      ]),
+    ]),
   ]);
 
   const form = document.getElementById('lake-form');
@@ -90,6 +119,135 @@ export async function renderLakehouse(ctx) {
     };
     renderPlan(panel, lastPlan, ctx);
   });
+
+  function switchLakeTab(tabId) {
+    const availTab = document.getElementById('lake-tab-content-avail');
+    const explorerTab = document.getElementById('lake-tab-content-explorer');
+    const availLink = document.getElementById('lake-tab-link-avail');
+    const explorerLink = document.getElementById('lake-tab-link-explorer');
+
+    if (tabId === 'avail') {
+      availTab.style.display = 'block';
+      explorerTab.style.display = 'none';
+      availLink.classList.add('is-active');
+      explorerLink.classList.remove('is-active');
+    } else {
+      availTab.style.display = 'none';
+      explorerTab.style.display = 'block';
+      availLink.classList.remove('is-active');
+      explorerLink.classList.add('is-active');
+      loadExplorerPath(ctx, currentExplorerPath || '');
+    }
+  }
+
+  // Bind local tab switcher so buttons work
+  const availBtn = document.getElementById('lake-tab-link-avail');
+  const explorerBtn = document.getElementById('lake-tab-link-explorer');
+  availBtn.onclick = () => switchLakeTab('avail');
+  explorerBtn.onclick = () => switchLakeTab('explorer');
+}
+
+async function loadExplorerPath(ctx, relativePath) {
+  currentExplorerPath = relativePath;
+  const breadcrumbsWrap = document.getElementById('explorer-breadcrumbs-wrap');
+  const tableWrap = document.getElementById('explorer-table-wrap');
+  if (!tableWrap) return;
+  
+  mount(tableWrap, el('p', { class: 'muted' }, 'Carregando arquivos do lakehouse...'));
+  
+  const parts = relativePath.split('/').filter(Boolean);
+  const breadcrumbElements = [
+    el('a', { 
+      href: 'javascript:void(0)', 
+      style: { color: 'var(--accent)', marginRight: '4px' }, 
+      onclick: () => loadExplorerPath(ctx, '') 
+    }, 'lake')
+  ];
+  let accumulated = '';
+  for (let i = 0; i < parts.length; i++) {
+    breadcrumbElements.push(el('span', { class: 'muted', style: { margin: '0 6px' } }, '›'));
+    accumulated += (accumulated ? '/' : '') + parts[i];
+    const target = accumulated;
+    breadcrumbElements.push(
+      i === parts.length - 1
+        ? el('span', { style: { marginLeft: '4px' } }, parts[i])
+        : el('a', { 
+            href: 'javascript:void(0)', 
+            style: { color: 'var(--accent)', marginLeft: '4px', marginRight: '4px' }, 
+            onclick: () => loadExplorerPath(ctx, target) 
+          }, parts[i])
+    );
+  }
+  if (breadcrumbsWrap) mount(breadcrumbsWrap, breadcrumbElements);
+
+  const res = await ctx.api.get(`/api/lake/files?path=${encodeURIComponent(relativePath)}`);
+  if (!res.ok) {
+    mount(tableWrap, el('p', { class: 'bad' }, res.error?.message || 'Falha ao carregar diretório.'));
+    return;
+  }
+
+  const files = res.data.files || [];
+  if (!files.length && relativePath === '') {
+    mount(tableWrap, emptyState('O diretório do lakehouse está vazio.'));
+    return;
+  }
+
+  const table = el('table', { class: 'table table--compact' }, [
+    el('thead', {}, el('tr', {}, [
+      el('th', {}, 'Nome'),
+      el('th', {}, 'Tipo'),
+      el('th', {}, 'Tamanho'),
+      el('th', {}, 'Modificado'),
+      el('th', {}, 'Ações'),
+    ])),
+    el('tbody', {}, [
+      relativePath !== '' ? el('tr', {}, [
+        el('td', { colspan: '5', style: { padding: '8px 12px' } }, el('a', { 
+          href: 'javascript:void(0)', 
+          style: { fontWeight: 'bold', color: 'var(--accent)', display: 'block' },
+          onclick: () => {
+            const up = parts.slice(0, -1).join('/');
+            loadExplorerPath(ctx, up);
+          }
+        }, '📁 .. (Voltar)'))
+      ]) : null,
+      
+      ...(files.length ? files.map((file) => {
+        return el('tr', {}, [
+          el('td', {}, el('a', {
+            href: 'javascript:void(0)',
+            style: file.isDir ? { fontWeight: 'bold', color: 'var(--text-1)', display: 'block' } : { color: 'var(--text-2)', display: 'block' },
+            onclick: () => {
+              if (file.isDir) {
+                loadExplorerPath(ctx, file.path);
+              }
+            }
+          }, (file.isDir ? '📁 ' : '📄 ') + file.name)),
+          el('td', {}, file.isDir ? 'Pasta' : 'Parquet'),
+          el('td', {}, file.isDir ? '-' : formatBytes(file.size)),
+          el('td', {}, file.mtime ? new Date(file.mtime).toLocaleString() : '-'),
+          el('td', {}, file.isDir ? null : el('a', {
+            class: 'btn btn--ghost btn--sm',
+            href: `/api/lake/download?path=${encodeURIComponent(file.path)}`,
+            target: '_blank',
+            download: file.name,
+            style: { display: 'inline-flex', alignItems: 'center', gap: '4px' }
+          }, 'Baixar 📥')),
+        ]);
+      }) : [el('tr', {}, el('td', { colspan: '5', class: 'muted', style: { textAlign: 'center', padding: '12px' } }, 'Diretório vazio.'))])
+    ])
+  ]);
+  
+  mount(tableWrap, table);
+}
+
+function formatBytes(bytes, decimals = 2) {
+  if (!+bytes) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 }
 
 function renderPlan(panel, plan, ctx) {
@@ -127,7 +285,7 @@ function renderPlan(panel, plan, ctx) {
     ]) : null,
     blocked.length ? el('section', { class: 'card lake-card--warn' }, [
       el('h2', { class: 'card__title' }, `Bloqueadas (${blocked.length})`),
-      blockedPartitionsTable(blocked),
+      blockedPartitionsTable(blocked, ctx, availability),
     ]) : null,
     gaps.length ? el('section', { class: 'card' }, [
       el('h2', { class: 'card__title' }, `Ausentes (${gaps.length})`),
@@ -182,6 +340,41 @@ async function runPrepareJob(plan, ctx) {
     return;
   }
   ctx.toast.ok(`Job #${res.data.job.id} criado`);
+  ctx.navigate('jobs');
+}
+
+async function quickRebuildPartition(ctx, p, availability) {
+  const ok = await confirmDialog({
+    title: 'Reprocessar partição',
+    message: `Deseja criar um job de preparação para reprocessar a partição de dt=${p.dt}?`,
+    detail: `Isso disparará o reprocessamento imediato deste dia (${p.dt}) e ativo (${availability.underlying}) no banco coletor.`,
+    confirmLabel: 'Reprocessar',
+    tone: 'danger'
+  });
+  if (!ok) return;
+
+  const request = {
+    dataset: availability.dataset,
+    from: p.dt,
+    to: p.dt,
+    underlying: availability.underlying,
+    interval: availability.interval,
+    book_depth: availability.book_depth,
+    resolution: availability.resolution,
+    rebuild: true
+  };
+
+  const res = await ctx.api.post('/api/prepare/run', {
+    request,
+    dry_run: false,
+    confirm_rebuild: 'REBUILD_PARTITIONS'
+  });
+  
+  if (!res.ok) {
+    ctx.toast.err(res.error?.message || 'Falha ao criar job de reprocessamento');
+    return;
+  }
+  ctx.toast.ok(`Job #${res.data.job.id} de reprocessamento criado!`);
   ctx.navigate('jobs');
 }
 
@@ -248,11 +441,11 @@ function availablePartitionsTable(partitions) {
   ]);
 }
 
-function blockedPartitionsTable(partitions) {
+function blockedPartitionsTable(partitions, ctx, availability) {
   return el('table', { class: 'table table--compact lake-partitions-table' }, [
     el('thead', {}, el('tr', {}, [
       el('th', {}, 'dt'), el('th', {}, 'Status'), el('th', {}, 'Rows'),
-      el('th', {}, 'Degradado'), el('th', {}, 'Motivo'),
+      el('th', {}, 'Degradado'), el('th', {}, 'Motivo'), el('th', {}, 'Ações'),
     ])),
     el('tbody', {}, partitions.map((p) => el('tr', { class: 'lake-partition--gap' }, [
       el('td', {}, el('code', {}, p.dt)),
@@ -264,6 +457,12 @@ function blockedPartitionsTable(partitions) {
       el('td', { class: 'lake-partition__detail' }, p.error
         ? el('span', { class: 'lake-partition__error' }, escapeHtml(p.error))
         : el('span', { class: 'muted' }, '-')),
+      el('td', {}, el('button', {
+        class: 'btn btn--ghost btn--sm btn--primary-hover',
+        type: 'button',
+        style: { color: 'var(--accent)' },
+        onclick: () => quickRebuildPartition(ctx, p, availability)
+      }, 'Refazer 🔄')),
     ]))),
   ]);
 }

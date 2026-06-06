@@ -64,8 +64,13 @@ function navigateBack() {
 
 function updateBackButton(route) {
   if (!backButton) return;
-  const show = !topLevelRoute(route) || Boolean(previousRoute && previousRoute !== route);
+  const show = !topLevelRoute(route);
   backButton.hidden = !show;
+  
+  const appEl = document.getElementById('app');
+  if (appEl) {
+    appEl.classList.toggle('has-back-route', show);
+  }
 }
 
 backButton?.addEventListener('click', navigateBack);
@@ -98,17 +103,7 @@ const ctx = {
     });
   },
   renderContextBar() {
-    if (!topbarActions) return;
-    topbarActions.innerHTML = '';
-    const current = loadContext();
-    topbarActions.appendChild(renderContextControls(current, () => {}));
-    api.get('/api/context-options').then((res) => {
-      if (!res.ok || !topbarActions) return;
-      const options = contextBarOptions(res.data.options || {});
-      const current = applyContextOptions(loadContext(), options);
-      topbarActions.innerHTML = '';
-      topbarActions.appendChild(renderContextControls(current, () => {}, options));
-    });
+    if (topbarActions) topbarActions.innerHTML = '';
   },
   toast,
   api,
