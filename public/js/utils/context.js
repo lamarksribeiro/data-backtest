@@ -98,6 +98,37 @@ function optionValues(values, selected) {
   return list.length ? list : [selected].filter(Boolean);
 }
 
+export function selectField(name, values, selected, { className = 'field__input', format = formatRaw } = {}) {
+  const select = document.createElement('select');
+  select.className = className;
+  select.name = name;
+  for (const value of optionValues(values, selected)) {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = format(value);
+    if (String(value) === String(selected)) option.selected = true;
+    select.appendChild(option);
+  }
+  return select;
+}
+
+export function contextBarOptions(apiOptions = {}) {
+  const lake = apiOptions.lake || {};
+  const source = apiOptions.source || {};
+  const preferSource = !lake.underlyings?.length && !lake.intervals?.length;
+  return {
+    underlyings: preferSource
+      ? (source.underlyings?.length ? source.underlyings : apiOptions.underlyings)
+      : (apiOptions.underlyings?.length ? apiOptions.underlyings : source.underlyings),
+    intervals: preferSource
+      ? (source.intervals?.length ? source.intervals : apiOptions.intervals)
+      : (apiOptions.intervals?.length ? apiOptions.intervals : source.intervals),
+    book_depths: apiOptions.book_depths?.length
+      ? apiOptions.book_depths
+      : (source.book_depths?.length ? source.book_depths : lake.book_depths),
+  };
+}
+
 function selectHtml(name, values, selected, format) {
   return `<select name="${name}" class="context-bar__select">${values.map((value) => (
     `<option value="${escapeAttr(value)}" ${String(value) === String(selected) ? 'selected' : ''}>${escapeAttr(format(value))}</option>`

@@ -60,9 +60,13 @@ test('data-backtest API exposes health, availability and prepare plan', async ()
       assert.equal(prepare.result.preparation[0].command, 'sync:backfill-backtest-ticks');
 
       const contextOptions = await getJson(`${baseUrl}/api/context-options`);
+      assert.deepEqual(contextOptions.options.lake.underlyings, ['BTC']);
+      assert.deepEqual(contextOptions.options.lake.intervals, ['5m']);
+      assert.deepEqual(contextOptions.options.lake.book_depths, ['10']);
       assert.deepEqual(contextOptions.options.underlyings, ['BTC']);
       assert.deepEqual(contextOptions.options.intervals, ['5m']);
       assert.deepEqual(contextOptions.options.book_depths, ['10']);
+      assert.equal(contextOptions.options.source.underlyings.length, 0);
     } finally {
       if (server) await new Promise((resolve) => server.close(resolve));
       closeStateDatabase(db);

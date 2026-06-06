@@ -215,29 +215,51 @@ Response:
 
 ### `GET /api/context-options`
 
-Opcoes reais para a barra de contexto da UI, derivadas de particoes `backtest_ticks` validas no manifest.
+Opcoes para a barra de contexto e aba Dados. Combina manifest local (`lake`) com dados disponiveis no Postgres do data-colector (`source`). Se `DATA_COLLECTOR_DATABASE_URL` estiver ausente ou a consulta falhar, `source` retorna listas vazias.
 
 Response:
 
 ```json
 {
   "options": {
+    "source": {
+      "underlyings": ["BTC", "ETH"],
+      "intervals": ["5m", "15m"],
+      "book_depths": ["5", "10", "15", "20"],
+      "combinations": [
+        {
+          "underlying": "BTC",
+          "interval": "5m",
+          "from": "2026-05-01",
+          "to": "2026-06-01",
+          "partitions": 31
+        }
+      ]
+    },
+    "lake": {
+      "underlyings": ["BTC"],
+      "intervals": ["5m"],
+      "book_depths": ["10"],
+      "combinations": [
+        {
+          "underlying": "BTC",
+          "interval": "5m",
+          "book_depth": "10",
+          "from": "2026-05-29",
+          "to": "2026-05-30",
+          "partitions": 1
+        }
+      ]
+    },
     "underlyings": ["BTC", "ETH"],
-    "intervals": ["5m", "15m", "1h"],
-    "book_depths": ["10"],
-    "combinations": [
-      {
-        "underlying": "BTC",
-        "interval": "5m",
-        "book_depth": "10",
-        "from": "2026-05-29",
-        "to": "2026-05-30",
-        "partitions": 1
-      }
-    ]
+    "intervals": ["5m", "15m"],
+    "book_depths": ["5", "10", "15", "20"],
+    "combinations": []
   }
 }
 ```
+
+Campos de nivel superior (`underlyings`, `intervals`, `book_depths`) sao a uniao de `lake` e `source`. `combinations` prioriza entradas do `lake`; se vazio, usa `source` (sem `book_depth`, com `source: "data_collector"`).
 
 ### `GET /api/availability`
 

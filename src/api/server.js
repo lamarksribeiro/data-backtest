@@ -6,6 +6,8 @@ import { fileURLToPath } from 'node:url';
 import { createAuthMiddleware } from '../middleware/auth.js';
 import { getHealth } from '../health.js';
 import { listBacktestContextOptions, listManifest, manifestStats } from '../state/manifest.js';
+import { emptyContextOptions, mergeContextOptions } from '../state/contextOptions.js';
+import { closeSourcePool, createSourcePool, listSourceContextOptions } from '../source/postgres.js';
 import { getPrepareJob, listPrepareJobs } from '../state/prepareJobs.js';
 import { checkDatasetAvailability } from '../query/availability.js';
 import { resolveDataRequest } from '../query/dataMode.js';
@@ -107,7 +109,19 @@ export function createApiHandler(deps) {
         });
       }
       if (req.method === 'GET' && url.pathname === '/api/context-options') {
-        return sendJson(res, 200, { options: listBacktestContextOptions(db) });
+        const lake = listBacktestContextOptions(db);
+        let source = emptyContextOptions();
+        if (config.dataCollectorDatabaseUrl) {
+          const pool = createSourcePool(config);
+          try {
+            source = await listSourceContextOptions(pool, config);
+          } catch (error) {
+            console.warn('[context-options] source query failed:', error.message);
+          } finally {
+            await closeSourcePool(pool);
+          }
+        }
+        return sendJson(res, 200, { options: mergeContextOptions(lake, source, config) });
       }
       if (req.method === 'GET' && url.pathname === '/api/availability') {
         const request = datasetRequestFromParams(url.searchParams, config);

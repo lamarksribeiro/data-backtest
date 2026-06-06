@@ -1,4 +1,5 @@
 import pg from 'pg';
+import { sourceBookDepthOptions } from '../state/contextOptions.js';
 
 const { Pool } = pg;
 
@@ -207,6 +208,40 @@ export function intervalFromMarketType(type) {
   if (type === 'crypto-updown-5m') return '5m';
   if (type === 'crypto-updown-15m') return '15m';
   return type;
+}
+
+export async function listSourceContextOptions(pool, config) {
+  const { rows } = await pool.query(`
+    SELECT
+      m.underlying,
+      m.type AS market_type,
+      MIN((eq.event_start AT TIME ZONE 'UTC')::date)::text AS from_dt,
+      MAX((eq.event_start AT TIME ZONE 'UTC')::date)::text AS to_dt,
+      COUNT(DISTINCT (eq.event_start AT TIME ZONE 'UTC')::date)::int AS partitions
+    FROM markets m
+    JOIN event_quality eq ON eq.market_id = m.id
+    GROUP BY m.underlying, m.type
+    ORDER BY m.underlying ASC, m.type ASC
+  `);
+
+  const combinations = rows.map((row) => ({
+    underlying: row.underlying,
+    interval: intervalFromMarketType(row.market_type),
+    from: row.from_dt,
+    to: row.to_dt,
+    partitions: Number(row.partitions || 0),
+  }));
+
+  return {
+    underlyings: uniqueValues(combinations.map((row) => row.underlying)),
+    intervals: uniqueValues(combinations.map((row) => row.interval)),
+    book_depths: sourceBookDepthOptions(config),
+    combinations,
+  };
+}
+
+function uniqueValues(values) {
+  return [...new Set(values.filter(Boolean).map(String))];
 }
 
 function numberOrNull(value) {

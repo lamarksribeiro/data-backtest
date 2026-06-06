@@ -1,5 +1,5 @@
 import { el, mount } from '../utils/dom.js';
-import { loadContext, saveContext, contextQueryParams } from '../utils/context.js';
+import { loadContext, saveContext, contextQueryParams, selectField } from '../utils/context.js';
 import { escapeHtml, shellQuote } from '../utils/format.js';
 import { confirmDialog, promptDialog } from '../utils/confirm.js';
 
@@ -10,6 +10,12 @@ export async function renderLakehouse(ctx) {
   ctx.renderContextBar?.();
 
   const formCtx = loadContext();
+  const optionsRes = await ctx.api.get('/api/context-options');
+  const sourceOptions = optionsRes.ok ? (optionsRes.data.options?.source || {}) : {};
+  const underlyingOptions = sourceOptions.underlyings?.length ? sourceOptions.underlyings : [formCtx.underlying];
+  const intervalOptions = sourceOptions.intervals?.length ? sourceOptions.intervals : [formCtx.interval];
+  const bookDepthOptions = sourceOptions.book_depths?.length ? sourceOptions.book_depths : [formCtx.book_depth];
+
   mount(ctx.contentEl, [
     el('div', { class: 'page-header' }, [
       el('div', {}, [
@@ -19,18 +25,13 @@ export async function renderLakehouse(ctx) {
     ]),
     el('section', { class: 'card' }, [
       el('form', { id: 'lake-form', class: 'form-grid' }, [
-        field('Dataset', selectField('dataset', [
-          ['backtest_ticks', 'backtest_ticks'],
-          ['scalars', 'scalars'],
-          ['books', 'books'],
-          ['ohlc', 'ohlc'],
-        ], formCtx.dataset)),
+        field('Dataset', selectField('dataset', ['backtest_ticks', 'scalars', 'books', 'ohlc'], formCtx.dataset)),
         field('De', el('input', { class: 'field__input', type: 'date', name: 'from', value: formCtx.from, required: true })),
         field('Até', el('input', { class: 'field__input', type: 'date', name: 'to', value: formCtx.to, required: true })),
-        field('Ativo', el('input', { class: 'field__input', name: 'underlying', value: formCtx.underlying, required: true })),
-        field('Intervalo', el('input', { class: 'field__input', name: 'interval', value: formCtx.interval, required: true })),
-        field('Book depth', el('input', { class: 'field__input', type: 'number', min: '1', name: 'book_depth', value: formCtx.book_depth }), 'field-book-depth'),
-        field('Resolução', selectField('resolution', [['1m', '1m'], ['1s', '1s'], ['5s', '5s'], ['5m', '5m']], formCtx.resolution), 'field-resolution'),
+        field('Ativo', selectField('underlying', underlyingOptions, formCtx.underlying)),
+        field('Intervalo', selectField('interval', intervalOptions, formCtx.interval)),
+        field('Book depth', selectField('book_depth', bookDepthOptions, formCtx.book_depth), 'field-book-depth'),
+        field('Resolução', selectField('resolution', ['1m', '1s', '5s', '5m'], formCtx.resolution), 'field-resolution'),
         el('label', { class: 'switch-field' }, [
           el('input', { class: 'switch-field__input', type: 'checkbox', name: 'dry_run', checked: true }),
           el('span', { class: 'switch-field__slider' }),
@@ -161,14 +162,6 @@ function field(label, control, extraClass = '') {
     el('span', { class: 'field__label' }, label),
     control,
   ]);
-}
-
-function selectField(name, options, selected) {
-  const select = el('select', { class: 'field__input', name });
-  for (const [value, text] of options) {
-    select.appendChild(el('option', { value, selected: value === selected ? true : undefined }, text));
-  }
-  return select;
 }
 
 function stat(label, value) {
