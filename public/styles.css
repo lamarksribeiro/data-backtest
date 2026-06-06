@@ -4061,7 +4061,13 @@ kbd {
   font-size: 11px;
   color: var(--warn);
 }
-.lake-context-line { margin: 0 0 12px; }
+.lake-context-line {
+  margin: 14px 2px 18px;
+  font-size: 13px;
+  color: var(--text-3);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
 .lake-card--ok { border-color: color-mix(in srgb, var(--ok) 25%, transparent); }
 .lake-card--warn { border-color: color-mix(in srgb, var(--warn) 30%, transparent); }
 

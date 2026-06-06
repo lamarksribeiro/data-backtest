@@ -28,10 +28,10 @@ export async function renderOverview(ctx) {
   const byStatus = stats.by_status || {};
 
   mount(document.getElementById('overview-stats'), [
-    statCard('Status', health.status === 'ok' ? '🛡️ Operacional' : '⚠️ Alerta', health.status === 'ok' ? 'ok' : 'warn'),
-    statCard('Partições', `📦 ${stats.partitions ?? 0}`, 'idle', `${byStatus.valid ?? 0} válidas`),
-    statCard('Modo backtest', `⚡ ${health.backtest_data_mode || '-'}`, 'idle'),
-    statCard('Lake root', `📂 ${(health.lake_root || '').split(/[/\\]/).pop() || '-'}`, 'idle'),
+    statCard('Status', health.status === 'ok' ? 'Operacional' : 'Alerta', health.status === 'ok' ? 'fa-solid fa-circle-check' : 'fa-solid fa-triangle-exclamation', health.status === 'ok' ? 'ok' : 'warn'),
+    statCard('Partições', String(stats.partitions ?? 0), 'fa-solid fa-cubes', 'idle', `${byStatus.valid ?? 0} válidas`),
+    statCard('Modo backtest', health.backtest_data_mode || '-', 'fa-solid fa-bolt', 'idle'),
+    statCard('Lake root', (health.lake_root || '').split(/[/\\]/).pop() || '-', 'fa-solid fa-folder-open', 'idle'),
   ]);
 
   const card = el('section', { class: 'card' }, [
@@ -45,25 +45,30 @@ export async function renderOverview(ctx) {
   if (!partitions.length) {
     card.appendChild(el('p', { class: 'muted' }, 'Nenhuma partição registrada no manifest.'));
   } else {
-    const table = el('table', { class: 'table' }, [
-      el('thead', {}, el('tr', {}, [
-        el('th', {}, 'Dataset'), el('th', {}, 'Data'), el('th', {}, 'Status'), el('th', {}, 'Linhas'),
-      ])),
-      el('tbody', {}, partitions.map((p) => el('tr', {}, [
-        el('td', {}, p.dataset),
-        el('td', {}, p.dt),
-        el('td', {}, el('span', { class: `badge badge--${statusTone(p.status)}` }, p.status)),
-        el('td', {}, String(p.rows ?? 0)),
-      ]))),
+    const table = el('div', { class: 'table-wrap' }, [
+      el('table', { class: 'table' }, [
+        el('thead', {}, el('tr', {}, [
+          el('th', {}, 'Dataset'), el('th', {}, 'Data'), el('th', {}, 'Status'), el('th', {}, 'Linhas'),
+        ])),
+        el('tbody', {}, partitions.map((p) => el('tr', {}, [
+          el('td', {}, p.dataset),
+          el('td', {}, p.dt),
+          el('td', {}, el('span', { class: `badge badge--${statusTone(p.status)}` }, p.status)),
+          el('td', {}, String(p.rows ?? 0)),
+        ]))),
+      ]),
     ]);
     card.appendChild(table);
   }
   ctx.contentEl.appendChild(card);
 }
 
-function statCard(label, value, tone, hint) {
+function statCard(label, value, iconClass, tone, hint) {
   return el('div', { class: `stat stat--${tone}` }, [
-    el('span', { class: 'stat__label' }, label),
+    el('div', { class: 'stat__header', style: 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;' }, [
+      el('span', { class: 'stat__label', style: 'margin: 0;' }, label),
+      iconClass ? el('i', { class: `${iconClass} stat__icon`, style: 'font-size: var(--font-size-lg); opacity: 0.8;' }) : null,
+    ]),
     el('span', { class: 'stat__value' }, value),
     hint ? el('span', { class: 'stat__hint' }, hint) : null,
   ]);

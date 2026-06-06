@@ -47,7 +47,7 @@ export async function renderBacktests(ctx) {
       // Coluna da Esquerda: Formulário de Execução
       el('aside', { class: 'backtest-sidebar-panel' }, [
         el('section', { class: 'card' }, [
-          el('h2', { class: 'card__title', style: { marginBottom: '14px' } }, 'Configurar Simulação 🚀'),
+          el('h2', { class: 'card__title', style: { marginBottom: '14px' } }, 'Configurar Simulação'),
           el('form', { id: 'backtest-form', class: 'backtest-execution-form' }, [
             el('label', { class: 'field' }, [
               el('span', { class: 'field__label' }, 'Estratégia'),
@@ -88,9 +88,12 @@ export async function renderBacktests(ctx) {
             el('button', { 
               class: 'btn btn--primary btn--large', 
               type: 'submit', 
-              style: { gridColumn: '1 / -1', marginTop: '14px', width: '100%', height: '42px', fontSize: '14px', fontWeight: 'bold' },
+              style: { gridColumn: '1 / -1', marginTop: '14px', width: '100%', height: '42px', fontSize: '14px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' },
               disabled: !state.strategyOptions.length 
-            }, 'Iniciar Backtest ⚡'),
+            }, [
+              'Iniciar Backtest ',
+              el('i', { class: 'fa-solid fa-bolt' })
+            ]),
           ]),
           state.strategyOptions.length ? null : el('p', { class: 'muted', style: { marginTop: '10px', fontSize: '12.5px' } }, 'Crie e salve uma versão de estratégia antes de executar backtests.'),
           el('div', { id: 'backtest-run-result', style: { marginTop: '12px' } }),
@@ -205,17 +208,20 @@ function renderStatsCards(strategyNameFilter) {
   return el('section', { class: 'card backtest-stats-section', style: { padding: '16px 20px', marginBottom: '16px' } }, [
     el('h3', { class: 'card__title', style: { fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: '12px' } }, `Métricas de Simulação · ${titlePrefix}`),
     el('div', { class: 'grid grid--4' }, [
-      statCardMini('Runs Totais', `📊 ${totalRuns}`, 'idle', `${profitableRuns.length} lucrativos`),
-      statCardMini('PnL Acumulado', formatPnlMini(totalPnl), totalPnl > 0 ? 'ok' : (totalPnl < 0 ? 'err' : 'idle')),
-      statCardMini('Win Rate', `🎯 ${winRate}%`, winRate > 50 ? 'ok' : (winRate > 0 ? 'warn' : 'idle'), 'runs com lucro'),
-      statCardMini('Melhor Run', formatPnlMini(bestPnl), bestPnl > 0 ? 'ok' : 'idle'),
+      statCardMini('Runs Totais', String(totalRuns), 'fa-solid fa-chart-column', 'idle', `${profitableRuns.length} lucrativos`),
+      statCardMini('PnL Acumulado', formatPnlMini(totalPnl), 'fa-solid fa-wallet', totalPnl > 0 ? 'ok' : (totalPnl < 0 ? 'err' : 'idle')),
+      statCardMini('Win Rate', `${winRate}%`, 'fa-solid fa-bullseye', winRate > 50 ? 'ok' : (winRate > 0 ? 'warn' : 'idle'), 'runs com lucro'),
+      statCardMini('Melhor Run', formatPnlMini(bestPnl), 'fa-solid fa-trophy', bestPnl > 0 ? 'ok' : 'idle'),
     ])
   ]);
 }
 
-function statCardMini(label, value, tone, hint) {
+function statCardMini(label, value, iconClass, tone, hint) {
   return el('div', { class: `stat stat--compact stat--${tone}`, style: { padding: '10px 14px', borderRadius: '8px' } }, [
-    el('span', { class: 'stat__label', style: { fontSize: '10px' } }, label),
+    el('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' } }, [
+      el('span', { class: 'stat__label', style: { fontSize: '10px', margin: 0 } }, label),
+      iconClass ? el('i', { class: iconClass, style: { fontSize: '12px', opacity: 0.8 } }) : null,
+    ]),
     el('span', { class: 'stat__value', style: { fontSize: '16px', fontWeight: 'bold' } }, value),
     hint ? el('span', { class: 'stat__hint', style: { fontSize: '10px' } }, hint) : null,
   ]);
@@ -233,34 +239,40 @@ function renderRunsTablePanel(ctx) {
 
   const filteredRuns = filterAndSortRuns(state.runs, activeStrategyName);
 
-  const table = el('table', { class: 'table table--compact' }, [
-    el('thead', {}, el('tr', {}, [
-      el('th', {}, 'ID'),
-      el('th', {}, 'Estratégia'),
-      el('th', {}, 'Versão'),
-      el('th', {}, 'Período'),
-      el('th', {}, 'Status'),
-      el('th', {}, 'Ticks'),
-      el('th', {}, 'PnL'),
-      el('th', {}, 'Ações'),
-    ])),
-    el('tbody', {}, filteredRuns.map((run) => {
-      const summary = run.summary || {};
-      return el('tr', {}, [
-        el('td', {}, `#${run.id}`),
-        el('td', { style: { fontWeight: '600' } }, strategyName(run)),
-        el('td', {}, versionLabel(run)),
-        el('td', {}, periodLabel(run)),
-        el('td', {}, statusBadge(run.status)),
-        el('td', {}, String(run.ticks ?? 0)),
-        el('td', {}, renderPnlBadge(summary.totalPnl ?? 0)),
-        el('td', {}, el('button', {
-          class: 'btn btn--ghost btn--sm',
-          type: 'button',
-          onclick: () => ctx.navigate(`backtests/${run.id}`),
-        }, 'Detalhes 📊')),
-      ]);
-    })),
+  const table = el('div', { class: 'table-wrap' }, [
+    el('table', { class: 'table table--compact' }, [
+      el('thead', {}, el('tr', {}, [
+        el('th', {}, 'ID'),
+        el('th', {}, 'Estratégia'),
+        el('th', {}, 'Versão'),
+        el('th', {}, 'Período'),
+        el('th', {}, 'Status'),
+        el('th', {}, 'Ticks'),
+        el('th', {}, 'PnL'),
+        el('th', {}, 'Ações'),
+      ])),
+      el('tbody', {}, filteredRuns.map((run) => {
+        const summary = run.summary || {};
+        return el('tr', {}, [
+          el('td', {}, `#${run.id}`),
+          el('td', { style: { fontWeight: '600' } }, strategyName(run)),
+          el('td', {}, versionLabel(run)),
+          el('td', {}, periodLabel(run)),
+          el('td', {}, statusBadge(run.status)),
+          el('td', {}, String(run.ticks ?? 0)),
+          el('td', {}, renderPnlBadge(summary.totalPnl ?? 0)),
+          el('td', {}, el('button', {
+            class: 'btn btn--ghost btn--sm',
+            type: 'button',
+            style: { display: 'inline-flex', alignItems: 'center', gap: '4px' },
+            onclick: () => ctx.navigate(`backtests/${run.id}`),
+          }, [
+            'Detalhes ',
+            el('i', { class: 'fa-solid fa-chart-line' })
+          ])),
+        ]);
+      })),
+    ])
   ]);
 
   return el('section', { class: 'card' }, [

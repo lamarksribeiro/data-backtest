@@ -64,9 +64,12 @@ export async function renderRunDetail(ctx, params) {
   if (equity.length) renderEquityChart(document.getElementById('equity-chart'), equity);
 }
 
-function stat(label, value) {
+function stat(label, value, iconClass) {
   return el('div', { class: 'stat stat--compact' }, [
-    el('span', { class: 'stat__label' }, label),
+    el('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' } }, [
+      el('span', { class: 'stat__label', style: { margin: 0 } }, label),
+      iconClass ? el('i', { class: iconClass, style: { fontSize: '12px', opacity: 0.8 } }) : null,
+    ]),
     el('span', { class: 'stat__value' }, String(value)),
   ]);
 }
@@ -77,14 +80,14 @@ function metricCards(run, summary) {
   const losses = summary.totalLosses ?? summary.losses ?? 0;
   const winRate = summary.winRate ?? (totalEntries > 0 ? (wins / totalEntries) * 100 : 0);
   return [
-    stat('Ticks', run.ticks),
-    stat('Eventos', summary.totalEvents ?? 0),
-    stat('Entradas', totalEntries),
-    stat('PnL', formatPnl(summary.totalPnl ?? 0)),
-    stat('Win rate', `${formatMetric(winRate)}%`),
-    stat('Wins / losses', `${wins} / ${losses}`),
-    stat('Drawdown', formatPnl(summary.maxDrawdown ?? 0)),
-    stat('Profit factor', formatMetric(summary.profitFactor ?? 0)),
+    stat('Ticks', run.ticks, 'fa-solid fa-wave-square'),
+    stat('Eventos', summary.totalEvents ?? 0, 'fa-solid fa-bolt'),
+    stat('Entradas', totalEntries, 'fa-solid fa-right-to-bracket'),
+    stat('PnL', formatPnl(summary.totalPnl ?? 0), 'fa-solid fa-wallet'),
+    stat('Win rate', `${formatMetric(winRate)}%`, 'fa-solid fa-bullseye'),
+    stat('Wins / losses', `${wins} / ${losses}`, 'fa-solid fa-scale-balanced'),
+    stat('Drawdown', formatPnl(summary.maxDrawdown ?? 0), 'fa-solid fa-arrow-trend-down'),
+    stat('Profit factor', formatMetric(summary.profitFactor ?? 0), 'fa-solid fa-arrow-trend-up'),
   ];
 }
 
@@ -95,26 +98,28 @@ function formatMetric(value) {
 }
 
 function eventTable(ctx, runId, events) {
-  return el('table', { class: 'table' }, [
-    el('thead', {}, el('tr', {}, [
-      el('th', {}, 'Condition'), el('th', {}, 'Início'), el('th', {}, 'Resultado'), el('th', {}, 'PnL'),
-      el('th', {}, 'Lado'), el('th', {}, 'Entradas'), el('th', {}, 'Saídas'), el('th', {}, 'Ticks'), el('th', {}, 'Motivo'),
-    ])),
-    el('tbody', {}, events.map((event) => el('tr', {}, [
-      el('td', {}, el('button', {
-        class: 'btn btn--link',
-        type: 'button',
-        onclick: () => ctx.navigate(`backtests/${runId}/events/${event.id}`),
-      }, el('code', {}, shortId(event.condition_id)))),
-      el('td', {}, formatTime(event.event_start)),
-      el('td', {}, el('span', { class: `badge ${resultBadgeClass(event.result)}` }, event.result || 'n/a')),
-      el('td', {}, formatPnl(event.final_pnl)),
-      el('td', {}, event.side || '-'),
-      el('td', {}, String(event.entries_count)),
-      el('td', {}, String(event.exits_count)),
-      el('td', {}, String(event.ticks_count ?? 0)),
-      el('td', {}, escapeHtml(event.reason || '-')),
-    ]))),
+  return el('div', { class: 'table-wrap' }, [
+    el('table', { class: 'table' }, [
+      el('thead', {}, el('tr', {}, [
+        el('th', {}, 'Condition'), el('th', {}, 'Início'), el('th', {}, 'Resultado'), el('th', {}, 'PnL'),
+        el('th', {}, 'Lado'), el('th', {}, 'Entradas'), el('th', {}, 'Saídas'), el('th', {}, 'Ticks'), el('th', {}, 'Motivo'),
+      ])),
+      el('tbody', {}, events.map((event) => el('tr', {}, [
+        el('td', {}, el('button', {
+          class: 'btn btn--link',
+          type: 'button',
+          onclick: () => ctx.navigate(`backtests/${runId}/events/${event.id}`),
+        }, el('code', {}, shortId(event.condition_id)))),
+        el('td', {}, formatTime(event.event_start)),
+        el('td', {}, el('span', { class: `badge ${resultBadgeClass(event.result)}` }, event.result || 'n/a')),
+        el('td', {}, formatPnl(event.final_pnl)),
+        el('td', {}, event.side || '-'),
+        el('td', {}, String(event.entries_count)),
+        el('td', {}, String(event.exits_count)),
+        el('td', {}, String(event.ticks_count ?? 0)),
+        el('td', {}, escapeHtml(event.reason || '-')),
+      ]))),
+    ])
   ]);
 }
 
@@ -164,7 +169,7 @@ function renderMetricsSection(summary) {
   const grid = el('div', { class: 'metrics-dashboard-grid' }, [
     // Group 1: Geral
     el('div', { class: 'metrics-group-card' }, [
-      el('h3', { class: 'metrics-group-title' }, '📊 Visão Geral'),
+      el('h3', { class: 'metrics-group-title' }, 'Visão Geral'),
       el('div', { class: 'metrics-grid' }, [
         metricItem('PnL Líquido', formatPnl(summary.totalPnl ?? 0), (summary.totalPnl ?? 0) > 0 ? 'good' : (summary.totalPnl ?? 0) < 0 ? 'bad' : ''),
         metricItem('Drawdown Máximo', formatPnl(summary.maxDrawdown ?? 0), 'bad'),
@@ -176,7 +181,7 @@ function renderMetricsSection(summary) {
     ]),
     // Group 2: Trades
     el('div', { class: 'metrics-group-card' }, [
-      el('h3', { class: 'metrics-group-title' }, '🎯 Assertividade'),
+      el('h3', { class: 'metrics-group-title' }, 'Assertividade'),
       el('div', { class: 'metrics-grid' }, [
         metricItem('Total Operações', totalEntries),
         metricItem('Vitórias (Wins)', wins, 'good'),
@@ -191,7 +196,7 @@ function renderMetricsSection(summary) {
     ]),
     // Group 3: Médias
     el('div', { class: 'metrics-group-card' }, [
-      el('h3', { class: 'metrics-group-title' }, '⚡ Médias & Limites'),
+      el('h3', { class: 'metrics-group-title' }, 'Médias e Limites'),
       el('div', { class: 'metrics-grid' }, [
         metricItem('Retorno Médio', formatPnl(summary.avgPnl ?? 0), (summary.avgPnl ?? 0) > 0 ? 'good' : (summary.avgPnl ?? 0) < 0 ? 'bad' : ''),
         metricItem('Média Vencedora', formatPnl(summary.avgWin ?? 0), 'good'),

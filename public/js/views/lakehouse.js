@@ -33,13 +33,19 @@ export async function renderLakehouse(ctx) {
         id: 'lake-tab-link-avail', 
         type: 'button', 
         onclick: () => switchLakeTab('avail') 
-      }, '◫ Disponibilidade & Preparação'),
+      }, [
+        el('i', { class: 'fa-solid fa-table-cells', style: { marginRight: '8px' } }),
+        'Disponibilidade e Preparação'
+      ]),
       el('button', { 
         class: 'premium-tab-link', 
         id: 'lake-tab-link-explorer', 
         type: 'button', 
         onclick: () => switchLakeTab('explorer') 
-      }, '📁 Explorador de Arquivos do Lake'),
+      }, [
+        el('i', { class: 'fa-solid fa-folder-open', style: { marginRight: '8px' } }),
+        'Explorador de Arquivos'
+      ]),
     ]),
 
     // Tab 1: Availability Content
@@ -192,49 +198,63 @@ async function loadExplorerPath(ctx, relativePath) {
     return;
   }
 
-  const table = el('table', { class: 'table table--compact' }, [
-    el('thead', {}, el('tr', {}, [
-      el('th', {}, 'Nome'),
-      el('th', {}, 'Tipo'),
-      el('th', {}, 'Tamanho'),
-      el('th', {}, 'Modificado'),
-      el('th', {}, 'Ações'),
-    ])),
-    el('tbody', {}, [
-      relativePath !== '' ? el('tr', {}, [
-        el('td', { colspan: '5', style: { padding: '8px 12px' } }, el('a', { 
-          href: 'javascript:void(0)', 
-          style: { fontWeight: 'bold', color: 'var(--accent)', display: 'block' },
-          onclick: () => {
-            const up = parts.slice(0, -1).join('/');
-            loadExplorerPath(ctx, up);
-          }
-        }, '📁 .. (Voltar)'))
-      ]) : null,
-      
-      ...(files.length ? files.map((file) => {
-        return el('tr', {}, [
-          el('td', {}, el('a', {
-            href: 'javascript:void(0)',
-            style: file.isDir ? { fontWeight: 'bold', color: 'var(--text-1)', display: 'block' } : { color: 'var(--text-2)', display: 'block' },
+  const table = el('div', { class: 'table-wrap' }, [
+    el('table', { class: 'table table--compact' }, [
+      el('thead', {}, el('tr', {}, [
+        el('th', {}, 'Nome'),
+        el('th', {}, 'Tipo'),
+        el('th', {}, 'Tamanho'),
+        el('th', {}, 'Modificado'),
+        el('th', {}, 'Ações'),
+      ])),
+      el('tbody', {}, [
+        relativePath !== '' ? el('tr', {}, [
+          el('td', { colspan: '5', style: { padding: '8px 12px' } }, el('a', { 
+            href: 'javascript:void(0)', 
+            style: { fontWeight: 'bold', color: 'var(--accent)', display: 'block' },
             onclick: () => {
-              if (file.isDir) {
-                loadExplorerPath(ctx, file.path);
-              }
+              const up = parts.slice(0, -1).join('/');
+              loadExplorerPath(ctx, up);
             }
-          }, (file.isDir ? '📁 ' : '📄 ') + file.name)),
-          el('td', {}, file.isDir ? 'Pasta' : 'Parquet'),
-          el('td', {}, file.isDir ? '-' : formatBytes(file.size)),
-          el('td', {}, file.mtime ? new Date(file.mtime).toLocaleString() : '-'),
-          el('td', {}, file.isDir ? null : el('a', {
-            class: 'btn btn--ghost btn--sm',
-            href: `/api/lake/download?path=${encodeURIComponent(file.path)}`,
-            target: '_blank',
-            download: file.name,
-            style: { display: 'inline-flex', alignItems: 'center', gap: '4px' }
-          }, 'Baixar 📥')),
-        ]);
-      }) : [el('tr', {}, el('td', { colspan: '5', class: 'muted', style: { textAlign: 'center', padding: '12px' } }, 'Diretório vazio.'))])
+          }, [
+            el('i', { class: 'fa-solid fa-arrow-left', style: { marginRight: '8px' } }),
+            '.. (Voltar)'
+          ]))
+        ]) : null,
+        
+        ...(files.length ? files.map((file) => {
+          return el('tr', {}, [
+            el('td', {}, el('a', {
+              href: 'javascript:void(0)',
+              style: file.isDir ? { fontWeight: 'bold', color: 'var(--text-1)', display: 'block' } : { color: 'var(--text-2)', display: 'block' },
+              onclick: () => {
+                if (file.isDir) {
+                  loadExplorerPath(ctx, file.path);
+                }
+              }
+            }, [
+              el('i', { 
+                class: file.isDir ? 'fa-solid fa-folder' : 'fa-solid fa-file-code', 
+                style: { marginRight: '8px', color: file.isDir ? 'var(--accent)' : 'var(--text-3)' } 
+              }),
+              file.name
+            ])),
+            el('td', {}, file.isDir ? 'Pasta' : 'Parquet'),
+            el('td', {}, file.isDir ? '-' : formatBytes(file.size)),
+            el('td', {}, file.mtime ? new Date(file.mtime).toLocaleString() : '-'),
+            el('td', {}, file.isDir ? null : el('a', {
+              class: 'btn btn--ghost btn--sm',
+              href: `/api/lake/download?path=${encodeURIComponent(file.path)}`,
+              target: '_blank',
+              download: file.name,
+              style: { display: 'inline-flex', alignItems: 'center', gap: '4px' }
+            }, [
+              'Baixar ',
+              el('i', { class: 'fa-solid fa-download' })
+            ])),
+          ]);
+        }) : [el('tr', {}, el('td', { colspan: '5', class: 'muted', style: { textAlign: 'center', padding: '12px' } }, 'Diretório vazio.'))])
+      ])
     ])
   ]);
   
@@ -423,47 +443,54 @@ function buildPartitionsFallback(availability) {
 }
 
 function availablePartitionsTable(partitions) {
-  return el('table', { class: 'table table--compact lake-partitions-table' }, [
-    el('thead', {}, el('tr', {}, [
-      el('th', {}, 'dt'), el('th', {}, 'Rows'), el('th', {}, 'Eventos'),
-      el('th', {}, 'Cobertura mín.'), el('th', {}, 'Degradado'), el('th', {}, 'Arquivo'),
-    ])),
-    el('tbody', {}, partitions.map((p) => el('tr', { class: 'lake-partition--ok' }, [
-      el('td', {}, el('code', {}, p.dt)),
-      el('td', {}, p.rows != null ? String(p.rows) : '-'),
-      el('td', {}, p.events_count != null ? String(p.events_count) : '-'),
-      el('td', {}, formatCoverage(p.coverage_min)),
-      el('td', {}, p.has_degraded
-        ? el('span', { class: 'badge badge--warn' }, 'sim')
-        : el('span', { class: 'badge badge--ok' }, 'não')),
-      el('td', { class: 'mono truncate', title: p.active_path || '' }, p.active_path || '-'),
-    ]))),
+  return el('div', { class: 'table-wrap' }, [
+    el('table', { class: 'table table--compact lake-partitions-table' }, [
+      el('thead', {}, el('tr', {}, [
+        el('th', {}, 'dt'), el('th', {}, 'Rows'), el('th', {}, 'Eventos'),
+        el('th', {}, 'Cobertura mín.'), el('th', {}, 'Degradado'), el('th', {}, 'Arquivo'),
+      ])),
+      el('tbody', {}, partitions.map((p) => el('tr', { class: 'lake-partition--ok' }, [
+        el('td', {}, el('code', {}, p.dt)),
+        el('td', {}, p.rows != null ? String(p.rows) : '-'),
+        el('td', {}, p.events_count != null ? String(p.events_count) : '-'),
+        el('td', {}, formatCoverage(p.coverage_min)),
+        el('td', {}, p.has_degraded
+          ? el('span', { class: 'badge badge--warn' }, 'sim')
+          : el('span', { class: 'badge badge--ok' }, 'não')),
+        el('td', { class: 'mono truncate', title: p.active_path || '' }, p.active_path || '-'),
+      ]))),
+    ])
   ]);
 }
 
 function blockedPartitionsTable(partitions, ctx, availability) {
-  return el('table', { class: 'table table--compact lake-partitions-table' }, [
-    el('thead', {}, el('tr', {}, [
-      el('th', {}, 'dt'), el('th', {}, 'Status'), el('th', {}, 'Rows'),
-      el('th', {}, 'Degradado'), el('th', {}, 'Motivo'), el('th', {}, 'Ações'),
-    ])),
-    el('tbody', {}, partitions.map((p) => el('tr', { class: 'lake-partition--gap' }, [
-      el('td', {}, el('code', {}, p.dt)),
-      el('td', {}, el('span', { class: `badge badge--${partitionStatusTone(p.status)}` }, p.status)),
-      el('td', {}, p.rows != null ? String(p.rows) : '-'),
-      el('td', {}, p.has_degraded
-        ? el('span', { class: 'badge badge--warn' }, 'sim')
-        : el('span', { class: 'badge badge--ok' }, 'não')),
-      el('td', { class: 'lake-partition__detail' }, p.error
-        ? el('span', { class: 'lake-partition__error' }, escapeHtml(p.error))
-        : el('span', { class: 'muted' }, '-')),
-      el('td', {}, el('button', {
-        class: 'btn btn--ghost btn--sm btn--primary-hover',
-        type: 'button',
-        style: { color: 'var(--accent)' },
-        onclick: () => quickRebuildPartition(ctx, p, availability)
-      }, 'Refazer 🔄')),
-    ]))),
+  return el('div', { class: 'table-wrap' }, [
+    el('table', { class: 'table table--compact lake-partitions-table' }, [
+      el('thead', {}, el('tr', {}, [
+        el('th', {}, 'dt'), el('th', {}, 'Status'), el('th', {}, 'Rows'),
+        el('th', {}, 'Degradado'), el('th', {}, 'Motivo'), el('th', {}, 'Ações'),
+      ])),
+      el('tbody', {}, partitions.map((p) => el('tr', { class: 'lake-partition--gap' }, [
+        el('td', {}, el('code', {}, p.dt)),
+        el('td', {}, el('span', { class: `badge badge--${partitionStatusTone(p.status)}` }, p.status)),
+        el('td', {}, p.rows != null ? String(p.rows) : '-'),
+        el('td', {}, p.has_degraded
+          ? el('span', { class: 'badge badge--warn' }, 'sim')
+          : el('span', { class: 'badge badge--ok' }, 'não')),
+        el('td', { class: 'lake-partition__detail' }, p.error
+          ? el('span', { class: 'lake-partition__error' }, escapeHtml(p.error))
+          : el('span', { class: 'muted' }, '-')),
+        el('td', {}, el('button', {
+          class: 'btn btn--ghost btn--sm btn--primary-hover',
+          type: 'button',
+          style: { color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', gap: '4px' },
+          onclick: () => quickRebuildPartition(ctx, p, availability)
+        }, [
+          'Refazer ',
+          el('i', { class: 'fa-solid fa-rotate' })
+        ])),
+      ]))),
+    ])
   ]);
 }
 

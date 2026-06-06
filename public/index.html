@@ -15,6 +15,7 @@
   <noscript>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
   </noscript>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="/styles.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css" />
@@ -35,23 +36,23 @@
 
       <nav class="sidebar__nav">
         <a class="navlink" href="#/overview" data-route="overview">
-          <span class="navlink__icon" aria-hidden="true">◉</span>
+          <span class="navlink__icon" aria-hidden="true"><i class="fa-solid fa-chart-simple"></i></span>
           <span class="navlink__label">Visão Geral</span>
         </a>
         <a class="navlink" href="#/data" data-route="data">
-          <span class="navlink__icon" aria-hidden="true">◫</span>
+          <span class="navlink__icon" aria-hidden="true"><i class="fa-solid fa-database"></i></span>
           <span class="navlink__label">Dados</span>
         </a>
         <a class="navlink" href="#/jobs" data-route="jobs">
-          <span class="navlink__icon" aria-hidden="true">⚙</span>
+          <span class="navlink__icon" aria-hidden="true"><i class="fa-solid fa-gears"></i></span>
           <span class="navlink__label">Jobs</span>
         </a>
         <a class="navlink" href="#/backtests" data-route="backtests">
-          <span class="navlink__icon" aria-hidden="true">▦</span>
+          <span class="navlink__icon" aria-hidden="true"><i class="fa-solid fa-flask"></i></span>
           <span class="navlink__label">Backtests</span>
         </a>
         <a class="navlink" href="#/strategies" data-route="strategies">
-          <span class="navlink__icon" aria-hidden="true">⌘</span>
+          <span class="navlink__icon" aria-hidden="true"><i class="fa-solid fa-chess-knight"></i></span>
           <span class="navlink__label">Estratégias</span>
         </a>
       </nav>
@@ -71,7 +72,7 @@
         <span aria-hidden="true"></span>
         <span aria-hidden="true"></span>
       </button>
-      <button id="nav-back" class="topbar__back" type="button" hidden aria-label="Voltar">←</button>
+      <button id="nav-back" class="topbar__back" type="button" hidden aria-label="Voltar"><i class="fa-solid fa-arrow-left"></i></button>
       <div class="topbar__crumbs">
         <button id="crumb-section" class="topbar__crumb-link" type="button">Visão Geral</button>
         <span class="topbar__sep" id="crumb-sep" hidden>›</span>
@@ -96,14 +97,14 @@
             <div class="sidebar__subtitle">GoldenLens · Backtest</div>
           </div>
         </div>
-        <button class="mobile-nav__close btn btn--icon btn--ghost" type="button" aria-label="Fechar">✕</button>
+        <button class="mobile-nav__close btn btn--icon btn--ghost" type="button" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <nav class="mobile-nav__links">
-        <a class="navlink" href="#/overview" data-route="overview"><span class="navlink__icon">◉</span><span class="navlink__label">Visão Geral</span></a>
-        <a class="navlink" href="#/data" data-route="data"><span class="navlink__icon">◫</span><span class="navlink__label">Dados</span></a>
-        <a class="navlink" href="#/jobs" data-route="jobs"><span class="navlink__icon">⚙</span><span class="navlink__label">Jobs</span></a>
-        <a class="navlink" href="#/backtests" data-route="backtests"><span class="navlink__icon">▦</span><span class="navlink__label">Backtests</span></a>
-        <a class="navlink" href="#/strategies" data-route="strategies"><span class="navlink__icon">⌘</span><span class="navlink__label">Estratégias</span></a>
+        <a class="navlink" href="#/overview" data-route="overview"><span class="navlink__icon"><i class="fa-solid fa-chart-simple"></i></span><span class="navlink__label">Visão Geral</span></a>
+        <a class="navlink" href="#/data" data-route="data"><span class="navlink__icon"><i class="fa-solid fa-database"></i></span><span class="navlink__label">Dados</span></a>
+        <a class="navlink" href="#/jobs" data-route="jobs"><span class="navlink__icon"><i class="fa-solid fa-gears"></i></span><span class="navlink__label">Jobs</span></a>
+        <a class="navlink" href="#/backtests" data-route="backtests"><span class="navlink__icon"><i class="fa-solid fa-flask"></i></span><span class="navlink__label">Backtests</span></a>
+        <a class="navlink" href="#/strategies" data-route="strategies"><span class="navlink__icon"><i class="fa-solid fa-chess-knight"></i></span><span class="navlink__label">Estratégias</span></a>
       </nav>
       <div class="mobile-nav__footer">
         <div class="sidebar__user">

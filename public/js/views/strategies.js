@@ -126,11 +126,13 @@ function renderStrategyList(ctx) {
       statusTab(ctx, 'validated', `Validated ${counts.validated || 0}`),
       statusTab(ctx, 'archived', `Archived ${counts.archived || 0}`),
     ]),
-    el('div', { class: 'strategy-search-wrap' }, [
+    el('div', { class: 'strategy-search-wrap', style: { position: 'relative' } }, [
+      el('i', { class: 'fa-solid fa-magnifying-glass search-icon', style: { position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-3)', pointerEvents: 'none' } }),
       el('input', {
         class: 'strategy-search-input',
+        style: { paddingLeft: '32px' },
         type: 'text',
-        placeholder: '🔍 Buscar estratégia...',
+        placeholder: 'Buscar estratégia...',
         value: state.strategyQuery,
         oninput: (e) => {
           state.strategyQuery = e.target.value;
@@ -242,30 +244,52 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
           title: 'Excluir esta versão',
           disabled: !version || versions.length <= 1,
           onclick: () => deleteVersionFlow(ctx, strategy, version),
-        }, '✕'),
+          style: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }
+        }, el('i', { class: 'fa-solid fa-trash-can' })),
       ]),
       el('div', { class: 'row' }, [
-        el('button', { class: 'btn btn--danger btn--sm btn--ghost', type: 'button', onclick: () => deleteStrategyFlow(ctx, strategy) }, 'Apagar'),
+        el('button', { class: 'btn btn--danger btn--sm btn--ghost', type: 'button', onclick: () => deleteStrategyFlow(ctx, strategy) }, [
+          el('i', { class: 'fa-solid fa-trash-can', style: { marginRight: '6px' } }),
+          'Apagar'
+        ]),
       ]),
     ]),
 
     // Tab Navigation bar
     el('div', { class: 'premium-tabs-nav' }, [
-      el('button', { class: 'premium-tab-link is-active', id: 'tab-link-code', type: 'button', onclick: () => switchTab('code') }, '⚡ Editor de Código'),
-      el('button', { class: 'premium-tab-link', id: 'tab-link-params', type: 'button', onclick: () => switchTab('params') }, '⚙ Parâmetros'),
-      el('button', { class: 'premium-tab-link', id: 'tab-link-config', type: 'button', onclick: () => switchTab('config') }, '📝 Ficha Técnica'),
+      el('button', { class: 'premium-tab-link is-active', id: 'tab-link-code', type: 'button', onclick: () => switchTab('code') }, [
+        el('i', { class: 'fa-solid fa-code', style: { marginRight: '8px' } }),
+        'Editor de Código'
+      ]),
+      el('button', { class: 'premium-tab-link', id: 'tab-link-params', type: 'button', onclick: () => switchTab('params') }, [
+        el('i', { class: 'fa-solid fa-sliders', style: { marginRight: '8px' } }),
+        'Parâmetros'
+      ]),
+      el('button', { class: 'premium-tab-link', id: 'tab-link-config', type: 'button', onclick: () => switchTab('config') }, [
+        el('i', { class: 'fa-solid fa-circle-info', style: { marginRight: '8px' } }),
+        'Ficha Técnica'
+      ]),
     ]),
 
     // 1. Tab Código Content
     el('div', { class: 'premium-tab-content is-active', id: 'tab-content-code' }, [
       el('div', { class: 'strategy-code-tab-layout strategy-code-tab-layout--single' }, [
         el('div', { class: 'strategy-code-editor-area' }, [
-          el('div', { class: 'row row--between' }, [
+          el('div', { class: 'row row--between', style: { flexWrap: 'wrap', gap: '8px' } }, [
             el('span', { class: 'eyebrow' }, 'Linguagem GLS'),
-            el('div', { class: 'row' }, [
-              el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => toggleGlsDrawer(true) }, 'Ajuda GLS 🛟'),
-              el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => validateTabCode(ctx) }, 'Validar Código'),
-              el('button', { class: 'btn btn--primary btn--sm', type: 'button', onclick: () => saveTabCodeVersion(ctx, strategy.id) }, 'Salvar Versão (Ctrl+S)'),
+            el('div', { class: 'row', style: { flexWrap: 'wrap', gap: '8px' } }, [
+              el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => toggleGlsDrawer(true) }, [
+                'Ajuda GLS ',
+                el('i', { class: 'fa-solid fa-circle-question', style: { marginLeft: '4px' } })
+              ]),
+              el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => validateTabCode(ctx) }, [
+                el('i', { class: 'fa-solid fa-circle-check', style: { marginRight: '4px' } }),
+                'Validar Código'
+              ]),
+              el('button', { class: 'btn btn--primary btn--sm', type: 'button', onclick: () => saveTabCodeVersion(ctx, strategy.id) }, [
+                el('i', { class: 'fa-solid fa-floppy-disk', style: { marginRight: '6px' } }),
+                'Salvar Versão'
+              ]),
             ]),
           ]),
           el('textarea', { id: `gls-editor-textarea-${strategyId}` }, state.sourceCode),
@@ -687,8 +711,11 @@ function toggleGlsDrawer(isOpen) {
 function createGlsDrawer() {
   return el('div', { class: 'gls-drawer', id: 'gls-help-drawer' }, [
     el('div', { class: 'gls-drawer__header' }, [
-      el('h3', {}, 'Ajuda GLS 🛟'),
-      el('button', { class: 'btn btn--icon btn--ghost', type: 'button', onclick: () => toggleGlsDrawer(false) }, '✕'),
+      el('h3', {}, [
+        'Ajuda GLS ',
+        el('i', { class: 'fa-solid fa-circle-question', style: { marginLeft: '4px', color: 'var(--accent)' } })
+      ]),
+      el('button', { class: 'btn btn--icon btn--ghost', type: 'button', onclick: () => toggleGlsDrawer(false) }, el('i', { class: 'fa-solid fa-xmark' })),
     ]),
     el('div', { class: 'gls-drawer__body' }, [
       el('section', { class: 'editor-help-card' }, [
@@ -701,12 +728,16 @@ function createGlsDrawer() {
       ]),
       el('section', { class: 'editor-help-card' }, [
         el('h4', { style: { margin: '0 0 8px 0' } }, 'Blocos GLS'),
-        el('input', {
-          class: 'strategy-search-input drawer-search-input',
-          type: 'text',
-          placeholder: '🔍 Buscar bloco ou assinatura...',
-          oninput: (e) => renderDrawerBlocks(e.target.value),
-        }),
+        el('div', { class: 'strategy-search-wrap', style: { position: 'relative' } }, [
+          el('i', { class: 'fa-solid fa-magnifying-glass search-icon', style: { position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-3)', pointerEvents: 'none' } }),
+          el('input', {
+            class: 'strategy-search-input drawer-search-input',
+            style: { paddingLeft: '32px' },
+            type: 'text',
+            placeholder: 'Buscar bloco ou assinatura...',
+            oninput: (e) => renderDrawerBlocks(e.target.value),
+          }),
+        ]),
         el('div', { id: 'drawer-blocks-list-wrap', style: { marginTop: '12px' } }),
         el('p', { class: 'muted', style: { fontSize: '11px', marginTop: '12px' } }, 'Namespaces do runtime: market, book, prices, time, risk, debug. Clique em um bloco para inseri-lo no cursor.'),
       ]),
