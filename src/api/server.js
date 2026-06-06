@@ -1,4 +1,5 @@
 import http from 'node:http';
+import { createHash } from 'node:crypto';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import path from 'node:path';
@@ -40,6 +41,10 @@ const STATIC_TYPES = new Map([
   ['.js', 'text/javascript; charset=utf-8'],
   ['.svg', 'image/svg+xml'],
 ]);
+const VERSION_PARAM = 'v';
+const NO_STORE = 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0';
+const REVALIDATE = 'no-cache, must-revalidate';
+const IMMUTABLE = 'public, max-age=31536000, immutable';
 
 export function createApiHandler(deps) {
   const {
@@ -441,31 +446,40 @@ export function createApiServer(deps) {
 }
 
 async function serveStaticFile(relative, req, res) {
-  const filePath = path.resolve(PUBLIC_DIR, relative);
-  if (!filePath.startsWith(PUBLIC_DIR)) return false;
+  return serveStaticAsset(relative, req, res);
+}
+
+async function tryServeStatic(urlPath, req, res) {
+  const relative = urlPath === '/' ? 'index.html' : urlPath.replace(/^\/+/, '');
+  return serveStaticAsset(relative, req, res);
+}
+
+async function serveStaticAsset(relative, req, res) {
+  if (!isSafePublicRelative(relative)) return false;
+  const filePath = publicFilePath(relative);
+
   try {
-    const fileStats = await stat(filePath);
-    const lastModified = fileStats.mtime.toUTCString();
-    
-    const isHtml = relative.endsWith('.html');
+    await stat(filePath);
+    const cache = new Map();
+    const body = await staticAssetBody(relative, cache);
+    const extension = path.extname(filePath);
+    const isHtml = extension === '.html';
+    const version = isHtml ? null : await staticAssetVersion(relative, cache);
+    const requestedVersion = new URL(req.url || '/', 'http://localhost').searchParams.get(VERSION_PARAM);
+    const etag = version ? `"${version}"` : null;
     const headers = {
-      'content-type': STATIC_TYPES.get(path.extname(filePath)) || 'application/octet-stream',
+      'content-type': STATIC_TYPES.get(extension) || 'application/octet-stream',
+      'cache-control': cacheControlForAsset({ isHtml, version, requestedVersion }),
     };
 
-    if (isHtml) {
-      headers['cache-control'] = 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0';
-    } else {
-      headers['cache-control'] = 'no-cache';
-      headers['last-modified'] = lastModified;
-    }
+    if (etag) headers.etag = etag;
 
-    if (!isHtml && req.headers['if-modified-since'] === lastModified) {
+    if (!isHtml && req.headers['if-none-match'] === etag) {
       res.writeHead(304, headers);
       res.end();
       return true;
     }
 
-    const body = await readFile(filePath);
     headers['content-length'] = body.length;
     res.writeHead(200, headers);
     res.end(body);
@@ -476,43 +490,110 @@ async function serveStaticFile(relative, req, res) {
   }
 }
 
-async function tryServeStatic(urlPath, req, res) {
-  const relative = urlPath === '/' ? 'index.html' : urlPath.replace(/^\/+/, '');
-  if (!relative || relative.includes('..')) return false;
-  const filePath = path.resolve(PUBLIC_DIR, relative);
-  if (!filePath.startsWith(PUBLIC_DIR)) return false;
+function cacheControlForAsset({ isHtml, version, requestedVersion }) {
+  if (isHtml) return NO_STORE;
+  return version && requestedVersion === version ? IMMUTABLE : REVALIDATE;
+}
+
+async function staticAssetBody(relative, cache) {
+  const body = await readFile(publicFilePath(relative));
+  const extension = path.posix.extname(toPublicRelative(relative));
+
+  if (extension === '.html') {
+    return Buffer.from(await versionHtml(body.toString('utf8'), cache), 'utf8');
+  }
+
+  if (extension === '.js') {
+    return Buffer.from(await versionJsModule(toPublicRelative(relative), body.toString('utf8'), cache), 'utf8');
+  }
+
+  return body;
+}
+
+async function staticAssetVersion(relative, cache, stack = new Set()) {
+  const normalized = toPublicRelative(relative);
+  const cached = cache.get(normalized);
+  if (cached) return cached;
+  if (stack.has(normalized)) return hashBuffer(await readFile(publicFilePath(normalized)));
+
+  stack.add(normalized);
+  const body = await readFile(publicFilePath(normalized));
+  const extension = path.posix.extname(normalized);
+  const versionedBody = extension === '.js'
+    ? await versionJsModule(normalized, body.toString('utf8'), cache, stack)
+    : body;
+  const version = hashBuffer(Buffer.isBuffer(versionedBody) ? versionedBody : Buffer.from(versionedBody, 'utf8'));
+  stack.delete(normalized);
+  cache.set(normalized, version);
+  return version;
+}
+
+async function versionHtml(html, cache) {
+  return replaceAsync(html, /\b(href|src)=(['"])(\/[^'"?#]+)(?:\?[^'"]*)?\2/g, async (match, attr, quote, urlPath) => {
+    const versioned = await versionedAbsoluteUrl(urlPath, cache);
+    return versioned ? `${attr}=${quote}${versioned}${quote}` : match;
+  });
+}
+
+async function versionJsModule(relative, source, cache, stack = new Set()) {
+  return replaceAsync(source, /\b(from\s+['"]|import\s*['"])(\.{1,2}\/[^'"]+)(['"])/g, async (match, prefix, specifier, suffix) => {
+    const [specifierPath] = specifier.split('?');
+    if (path.posix.extname(specifierPath) !== '.js') return match;
+
+    const dependency = path.posix.normalize(path.posix.join(path.posix.dirname(relative), specifierPath));
+    if (!isSafePublicRelative(dependency)) return match;
+
+    const version = await staticAssetVersion(dependency, cache, stack);
+    return `${prefix}${specifierPath}?${VERSION_PARAM}=${version}${suffix}`;
+  });
+}
+
+async function versionedAbsoluteUrl(urlPath, cache) {
+  const relative = urlPath.replace(/^\/+/, '');
+  if (!isSafePublicRelative(relative)) return null;
+  if (!STATIC_TYPES.has(path.posix.extname(relative))) return null;
 
   try {
-    const fileStats = await stat(filePath);
-    const lastModified = fileStats.mtime.toUTCString();
-    
-    const isHtml = relative.endsWith('.html');
-    const headers = {
-      'content-type': STATIC_TYPES.get(path.extname(filePath)) || 'application/octet-stream',
-    };
-
-    if (isHtml) {
-      headers['cache-control'] = 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0';
-    } else {
-      headers['cache-control'] = 'no-cache';
-      headers['last-modified'] = lastModified;
-    }
-
-    if (!isHtml && req.headers['if-modified-since'] === lastModified) {
-      res.writeHead(304, headers);
-      res.end();
-      return true;
-    }
-
-    const body = await readFile(filePath);
-    headers['content-length'] = body.length;
-    res.writeHead(200, headers);
-    res.end(body);
-    return true;
+    const version = await staticAssetVersion(relative, cache);
+    return `${urlPath}?${VERSION_PARAM}=${version}`;
   } catch (err) {
-    if (err.code === 'ENOENT') return false;
+    if (err.code === 'ENOENT') return null;
     throw err;
   }
+}
+
+async function replaceAsync(value, regex, replacer) {
+  const matches = [...value.matchAll(regex)];
+  const replacements = await Promise.all(matches.map((match) => replacer(...match)));
+  let result = '';
+  let offset = 0;
+
+  for (let i = 0; i < matches.length; i += 1) {
+    const match = matches[i];
+    result += value.slice(offset, match.index) + replacements[i];
+    offset = match.index + match[0].length;
+  }
+
+  return result + value.slice(offset);
+}
+
+function hashBuffer(body) {
+  return createHash('sha256').update(body).digest('hex').slice(0, 16);
+}
+
+function publicFilePath(relative) {
+  return path.resolve(PUBLIC_DIR, toPublicRelative(relative));
+}
+
+function toPublicRelative(relative) {
+  return relative.replace(/\\/g, '/').replace(/^\/+/, '');
+}
+
+function isSafePublicRelative(relative) {
+  const normalized = toPublicRelative(relative);
+  if (!normalized || normalized.startsWith('../') || normalized.includes('/../')) return false;
+  const filePath = publicFilePath(normalized);
+  return filePath === PUBLIC_DIR || filePath.startsWith(`${PUBLIC_DIR}${path.sep}`);
 }
 
 function sendJson(res, status, payload) {

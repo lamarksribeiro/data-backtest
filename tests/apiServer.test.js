@@ -45,11 +45,21 @@ test('data-backtest API exposes health, availability and prepare plan', async ()
       const page = await fetch(`${baseUrl}/`);
       assert.equal(page.status, 200);
       assert.match(page.headers.get('content-type'), /text\/html/);
-      assert.match(await page.text(), /Data Runner/);
+      assert.match(page.headers.get('cache-control'), /no-store/);
+      const html = await page.text();
+      assert.match(html, /Data Runner/);
+      assert.match(html, /href="\/styles\.css\?v=[a-f0-9]{16}"/);
+      const appUrl = html.match(/src="(\/app\.js\?v=[a-f0-9]{16})"/)?.[1];
+      assert.ok(appUrl);
 
       const script = await fetch(`${baseUrl}/app.js`);
       assert.equal(script.status, 200);
       assert.match(script.headers.get('content-type'), /javascript/);
+
+      const versionedScript = await fetch(`${baseUrl}${appUrl}`);
+      assert.equal(versionedScript.status, 200);
+      assert.match(versionedScript.headers.get('cache-control'), /immutable/);
+      assert.match(await versionedScript.text(), /\.\/js\/router\.js\?v=[a-f0-9]{16}/);
 
       const availability = await getJson(`${baseUrl}/api/availability?dataset=backtest_ticks&from=2026-05-31&to=2026-06-02&underlying=BTC&interval=5m&book_depth=25`);
       assert.equal(availability.availability.ok, false);
