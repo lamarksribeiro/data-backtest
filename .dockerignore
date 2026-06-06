@@ -1,0 +1,14 @@
+node_modules
+.git
+.env
+.env.*
+state
+lake
+*.db
+*.db-*
+coverage
+.DS_Store
+docs
+tests
+*.md
+!README.md

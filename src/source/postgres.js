@@ -9,7 +9,7 @@ export function createSourcePool(config) {
 
   const pool = new Pool({
     connectionString: config.dataCollectorDatabaseUrl,
-    max: 2,
+    max: config.syncMaxPool ?? 2,
     statement_timeout: config.syncStatementTimeoutMs,
     application_name: 'data-backtest-sync',
   });
