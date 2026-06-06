@@ -23,7 +23,7 @@ export class DuckDbTickProvider {
       });
       const batch = rows.map((row, index) => toLegacyBacktestTick(row, {
         index: offset + index,
-        bookDepth: this.defaults.bookDepth ?? request.bookDepth ?? 10,
+        bookDepth: this.defaults.bookDepth ?? request.bookDepth ?? 25,
       }));
       if (!batch.length) break;
       yield batch;

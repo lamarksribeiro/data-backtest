@@ -20,7 +20,7 @@ export function testServerConfig(overrides = {}) {
     lakeRoot: overrides.lakeRoot,
     stateDbPath: overrides.stateDbPath,
     backtestDataMode: 'strict',
-    backtestBookDepth: overrides.backtestBookDepth ?? 10,
+    backtestBookDepth: overrides.backtestBookDepth ?? 25,
     SESSION_SECRET: 'test-session-secret',
     SESSION_MAX_AGE_SEC: 3600,
     NODE_ENV: 'test',

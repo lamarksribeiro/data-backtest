@@ -6,7 +6,7 @@ const DEFAULTS = {
   to: isoDate(new Date()),
   underlying: 'BTC',
   interval: '5m',
-  book_depth: '10',
+  book_depth: '25',
   resolution: '1m',
   batch_size: '5000',
 };

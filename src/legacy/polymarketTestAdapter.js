@@ -13,7 +13,7 @@ export function createPolymarketTestAdapter(db, defaults = {}) {
   };
 }
 
-export async function getTicksForBacktest(db, { from, to, underlying = 'BTC', interval = '5m', bookDepth = 10, limit = 100000 } = {}) {
+export async function getTicksForBacktest(db, { from, to, underlying = 'BTC', interval = '5m', bookDepth = 25, limit = 100000 } = {}) {
   const rows = await queryTicks(db, {
     dataset: 'backtest_ticks',
     underlying,
@@ -32,7 +32,7 @@ export async function getTicksForBacktestBatch(db, {
   to,
   underlying = 'BTC',
   interval = '5m',
-  bookDepth = 10,
+  bookDepth = 25,
   limit = DEFAULT_BATCH_SIZE,
   offset = 0,
 } = {}) {
@@ -62,7 +62,7 @@ export async function* getTicksForBacktestBatches(db, opts = {}) {
   }
 }
 
-export function toLegacyBacktestTick(row, { index = 0, bookDepth = 10 } = {}) {
+export function toLegacyBacktestTick(row, { index = 0, bookDepth = 25 } = {}) {
   const upBookAsks = levelsFromFlattened(row, 'up_ask', bookDepth);
   const upBookBids = levelsFromFlattened(row, 'up_bid', bookDepth);
   const downBookAsks = levelsFromFlattened(row, 'down_ask', bookDepth);

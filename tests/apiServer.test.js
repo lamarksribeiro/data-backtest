@@ -28,7 +28,7 @@ test('data-backtest API exposes health, availability and prepare plan', async ()
         dataset: 'backtest_ticks',
         underlying: 'BTC',
         interval: '5m',
-        bookDepth: 10,
+        bookDepth: 25,
         dt: '2026-05-31',
         activePath: '/lake/backtest_ticks/part.parquet',
         status: 'valid',
@@ -51,21 +51,21 @@ test('data-backtest API exposes health, availability and prepare plan', async ()
       assert.equal(script.status, 200);
       assert.match(script.headers.get('content-type'), /javascript/);
 
-      const availability = await getJson(`${baseUrl}/api/availability?dataset=backtest_ticks&from=2026-05-31&to=2026-06-02&underlying=BTC&interval=5m&book_depth=10`);
+      const availability = await getJson(`${baseUrl}/api/availability?dataset=backtest_ticks&from=2026-05-31&to=2026-06-02&underlying=BTC&interval=5m&book_depth=25`);
       assert.equal(availability.availability.ok, false);
       assert.deepEqual(availability.availability.missing, ['2026-06-01']);
 
-      const prepare = await getJson(`${baseUrl}/api/prepare?dataset=backtest_ticks&from=2026-05-31&to=2026-06-02&underlying=BTC&interval=5m&book_depth=10`);
+      const prepare = await getJson(`${baseUrl}/api/prepare?dataset=backtest_ticks&from=2026-05-31&to=2026-06-02&underlying=BTC&interval=5m&book_depth=25`);
       assert.equal(prepare.result.status, 'prepare_required');
       assert.equal(prepare.result.preparation[0].command, 'sync:backfill-backtest-ticks');
 
       const contextOptions = await getJson(`${baseUrl}/api/context-options`);
       assert.deepEqual(contextOptions.options.lake.underlyings, ['BTC']);
       assert.deepEqual(contextOptions.options.lake.intervals, ['5m']);
-      assert.deepEqual(contextOptions.options.lake.book_depths, ['10']);
+      assert.deepEqual(contextOptions.options.lake.book_depths, ['25']);
       assert.deepEqual(contextOptions.options.underlyings, ['BTC']);
       assert.deepEqual(contextOptions.options.intervals, ['5m']);
-      assert.deepEqual(contextOptions.options.book_depths, ['10']);
+      assert.deepEqual(contextOptions.options.book_depths, ['25']);
       assert.equal(contextOptions.options.source.underlyings.length, 0);
     } finally {
       if (server) await new Promise((resolve) => server.close(resolve));
@@ -130,7 +130,7 @@ test('data-backtest API creates and completes prepare jobs', async () => {
           to: '2026-06-01',
           underlying: 'BTC',
           interval: '5m',
-          book_depth: 10,
+          book_depth: 25,
         },
         dry_run: true,
       }, 202);
@@ -165,7 +165,7 @@ test('data-backtest API requires confirmation for real rebuild jobs', async () =
         dataset: 'backtest_ticks',
         underlying: 'BTC',
         interval: '5m',
-        bookDepth: 10,
+        bookDepth: 25,
         dt: '2026-05-31',
         activePath: '/lake/backtest_ticks/stale.parquet',
         status: 'stale',
@@ -183,7 +183,7 @@ test('data-backtest API requires confirmation for real rebuild jobs', async () =
       await new Promise((resolve) => server.listen(0, resolve));
       const baseUrl = `http://127.0.0.1:${server.address().port}`;
 
-      const prepare = await getJson(`${baseUrl}/api/prepare?dataset=backtest_ticks&from=2026-05-31&to=2026-06-01&underlying=BTC&interval=5m&book_depth=10&rebuild=true`);
+      const prepare = await getJson(`${baseUrl}/api/prepare?dataset=backtest_ticks&from=2026-05-31&to=2026-06-01&underlying=BTC&interval=5m&book_depth=25&rebuild=true`);
       assert.equal(prepare.result.status, 'prepare_required');
       assert.ok(prepare.result.preparation[0].args.includes('--rebuild'));
 
@@ -194,7 +194,7 @@ test('data-backtest API requires confirmation for real rebuild jobs', async () =
           to: '2026-06-01',
           underlying: 'BTC',
           interval: '5m',
-          book_depth: 10,
+          book_depth: 25,
           rebuild: true,
         },
         dry_run: false,
@@ -208,7 +208,7 @@ test('data-backtest API requires confirmation for real rebuild jobs', async () =
           to: '2026-06-01',
           underlying: 'BTC',
           interval: '5m',
-          book_depth: 10,
+          book_depth: 25,
           rebuild: true,
         },
         dry_run: false,

@@ -1,5 +1,3 @@
-const DEFAULT_BOOK_DEPTHS = ['5', '10', '15', '20'];
-
 function unique(values) {
   return [...new Set(values.filter(Boolean).map(String))];
 }
@@ -17,10 +15,10 @@ export function emptyContextOptions() {
   };
 }
 
-export function sourceBookDepthOptions(config) {
+export function sourceBookDepthOptions(config, sourceDepths = []) {
   return sortNumericStrings([
-    ...DEFAULT_BOOK_DEPTHS,
-    config?.backtestBookDepth != null ? String(config.backtestBookDepth) : null,
+    ...sourceDepths,
+    config?.backtestBookDepth != null ? String(config.backtestBookDepth) : '25',
   ]);
 }
 
@@ -34,7 +32,7 @@ export function mergeContextOptions(lake, source, config) {
   );
   const sourceBookDepths = sourceOptions.book_depths?.length
     ? sourceOptions.book_depths
-    : (hasSourceData ? sourceBookDepthOptions(config) : []);
+    : (hasSourceData ? sourceBookDepthOptions(config, sourceOptions.book_depths) : []);
 
   const mergedBookDepths = sortNumericStrings([
     ...lakeOptions.book_depths,
@@ -46,7 +44,7 @@ export function mergeContextOptions(lake, source, config) {
     : sourceOptions.combinations.map((item) => ({
       underlying: item.underlying,
       interval: item.interval,
-      book_depth: null,
+      book_depth: item.book_depth ?? null,
       from: item.from,
       to: item.to,
       partitions: item.partitions ?? null,

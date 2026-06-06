@@ -225,7 +225,7 @@ Response:
     "source": {
       "underlyings": ["BTC", "ETH"],
       "intervals": ["5m", "15m"],
-      "book_depths": ["5", "10", "15", "20"],
+      "book_depths": ["25"],
       "combinations": [
         {
           "underlying": "BTC",
@@ -253,13 +253,13 @@ Response:
     },
     "underlyings": ["BTC", "ETH"],
     "intervals": ["5m", "15m"],
-    "book_depths": ["5", "10", "15", "20"],
+    "book_depths": ["25"],
     "combinations": []
   }
 }
 ```
 
-Campos de nivel superior (`underlyings`, `intervals`, `book_depths`) sao a uniao de `lake` e `source`. `combinations` prioriza entradas do `lake`; se vazio, usa `source` (sem `book_depth`, com `source: "data_collector"`).
+Campos de nivel superior (`underlyings`, `intervals`, `book_depths`) sao a uniao de `lake` e `source`. `book_depths` no `source` vem de `markets.book_depth` no Postgres. `combinations` prioriza entradas do `lake`; se vazio, usa `source` (com `book_depth` quando disponivel e `source: "data_collector"`).
 
 ### `GET /api/availability`
 

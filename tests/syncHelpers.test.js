@@ -31,6 +31,7 @@ test('config loads sync defaults and validates data mode', () => {
   assert.equal(config.syncBatchSize, 50000);
   assert.equal(config.syncStatementTimeoutMs, 120000);
   assert.equal(config.syncMarginMinutes, 2);
+  assert.equal(config.backtestBookDepth, 25);
   assert.throws(() => loadConfig({ BACKTEST_DATA_MODE: 'invalid' }), /Invalid BACKTEST_DATA_MODE/);
 });
 

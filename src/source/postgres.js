@@ -210,23 +210,37 @@ export function intervalFromMarketType(type) {
   return type;
 }
 
-export async function listSourceContextOptions(pool, config) {
+export async function listSourceBookDepths(pool) {
   const { rows } = await pool.query(`
-    SELECT
-      m.underlying,
-      m.type AS market_type,
-      MIN((eq.event_start AT TIME ZONE 'UTC')::date)::text AS from_dt,
-      MAX((eq.event_start AT TIME ZONE 'UTC')::date)::text AS to_dt,
-      COUNT(DISTINCT (eq.event_start AT TIME ZONE 'UTC')::date)::int AS partitions
+    SELECT DISTINCT m.book_depth
     FROM markets m
-    JOIN event_quality eq ON eq.market_id = m.id
-    GROUP BY m.underlying, m.type
-    ORDER BY m.underlying ASC, m.type ASC
+    ORDER BY m.book_depth ASC
   `);
+  return rows.map((row) => String(row.book_depth));
+}
 
-  const combinations = rows.map((row) => ({
+export async function listSourceContextOptions(pool, config) {
+  const [bookDepths, combinationsResult] = await Promise.all([
+    listSourceBookDepths(pool),
+    pool.query(`
+      SELECT
+        m.underlying,
+        m.type AS market_type,
+        m.book_depth,
+        MIN((eq.event_start AT TIME ZONE 'UTC')::date)::text AS from_dt,
+        MAX((eq.event_start AT TIME ZONE 'UTC')::date)::text AS to_dt,
+        COUNT(DISTINCT (eq.event_start AT TIME ZONE 'UTC')::date)::int AS partitions
+      FROM markets m
+      JOIN event_quality eq ON eq.market_id = m.id
+      GROUP BY m.underlying, m.type, m.book_depth
+      ORDER BY m.underlying ASC, m.type ASC, m.book_depth ASC
+    `),
+  ]);
+
+  const combinations = combinationsResult.rows.map((row) => ({
     underlying: row.underlying,
     interval: intervalFromMarketType(row.market_type),
+    book_depth: String(row.book_depth),
     from: row.from_dt,
     to: row.to_dt,
     partitions: Number(row.partitions || 0),
@@ -235,7 +249,7 @@ export async function listSourceContextOptions(pool, config) {
   return {
     underlyings: uniqueValues(combinations.map((row) => row.underlying)),
     intervals: uniqueValues(combinations.map((row) => row.interval)),
-    book_depths: sourceBookDepthOptions(config),
+    book_depths: sourceBookDepthOptions(config, bookDepths),
     combinations,
   };
 }
