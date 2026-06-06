@@ -4064,22 +4064,3 @@ kbd {
 .lake-context-line { margin: 0 0 12px; }
 .lake-card--ok { border-color: color-mix(in srgb, var(--ok) 25%, transparent); }
 .lake-card--warn { border-color: color-mix(in srgb, var(--warn) 30%, transparent); }
-.lake-needs-review-callout,
-.lake-degraded-callout {
-  margin-top: 16px;
-  padding: 12px 14px;
-  border-radius: var(--radius-sm);
-}
-.lake-needs-review-callout {
-  border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent);
-  background: color-mix(in srgb, var(--warn) 8%, transparent);
-}
-.lake-degraded-callout {
-  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
-  background: color-mix(in srgb, var(--accent) 6%, transparent);
-}
-.lake-needs-review-callout p,
-.lake-degraded-callout p { margin: 8px 0 0; font-size: 13px; line-height: 1.45; }
-.lake-needs-review-callout ul { margin: 8px 0 0 18px; font-size: 12px; }
-.callout--warn strong { color: var(--warn); }
-.callout--info strong { color: var(--accent-strong); }

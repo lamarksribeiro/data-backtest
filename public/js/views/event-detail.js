@@ -44,9 +44,6 @@ export async function renderEventDetail(ctx, params) {
     ]),
     el('section', { class: 'card chart-card' }, [
       el('h2', { class: 'card__title' }, 'BTC vs PTB e odds'),
-      chartData?.series_meta?.downsampled
-        ? el('p', { class: 'muted' }, `Grafico com ${chartData.series_meta.displayed_points} de ${chartData.series_meta.total_points} ticks (amostragem para performance).`)
-        : null,
       chartData?.series
         ? el('div', { class: 'chart-wrap' }, el('canvas', { id: 'event-chart' }))
         : emptyState('Sem serie de grafico para este evento. Verifique se o periodo do run ainda existe no lakehouse.'),
