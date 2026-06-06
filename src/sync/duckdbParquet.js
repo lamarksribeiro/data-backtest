@@ -1,6 +1,10 @@
 import { mkdir, rename, rm } from 'node:fs/promises';
 import path from 'node:path';
+import crypto from 'node:crypto';
+import { availableParallelism } from 'node:os';
 import { DuckDBInstance, quotedString } from '@duckdb/node-api';
+
+import { parseBookLevels } from './bookFlatten.js';
 
 const SCALARS_TABLE_SQL = `
 CREATE TABLE scalars (
@@ -32,6 +36,7 @@ export async function writeScalarsParquet({ rows, tempPath, finalPath }) {
   const instance = await DuckDBInstance.create(':memory:');
   const connection = await instance.connect();
   try {
+    await configureDuckDb(connection);
     await connection.run(SCALARS_TABLE_SQL);
     const appender = await connection.createAppender('scalars');
     try {
@@ -87,6 +92,19 @@ export async function writeBacktestTicksParquet({ rows, tempPath, finalPath, boo
   });
 }
 
+export async function writeBacktestTicksParquetFromBookRows({ rows, tempPath, finalPath, bookDepth }) {
+  const hash = crypto.createHash('sha256');
+  await writeWithDuckDb({
+    rows,
+    tempPath,
+    finalPath,
+    tableName: 'backtest_ticks',
+    createTableSql: buildBacktestTicksTableSql(bookDepth),
+    appendRow: (appender, row) => appendBacktestTickBookRow(appender, row, bookDepth, hash),
+  });
+  return { valueChecksum: hash.digest('hex') };
+}
+
 export async function writeOhlcParquetFromScalars({ scalarPath, tempPath, finalPath, resolution }) {
   await mkdir(path.dirname(tempPath), { recursive: true });
   await mkdir(path.dirname(finalPath), { recursive: true });
@@ -96,6 +114,7 @@ export async function writeOhlcParquetFromScalars({ scalarPath, tempPath, finalP
   const instance = await DuckDBInstance.create(':memory:');
   const connection = await instance.connect();
   try {
+    await configureDuckDb(connection);
     await connection.run(`
       CREATE TABLE ohlc AS
       WITH src AS (
@@ -180,6 +199,7 @@ async function writeWithDuckDb({ rows, tempPath, finalPath, tableName, createTab
   const instance = await DuckDBInstance.create(':memory:');
   const connection = await instance.connect();
   try {
+    await configureDuckDb(connection);
     await connection.run(createTableSql);
     const appender = await connection.createAppender(tableName);
     try {
@@ -197,6 +217,20 @@ async function writeWithDuckDb({ rows, tempPath, finalPath, tableName, createTab
 
   await rm(finalPath, { force: true });
   await rename(tempPath, finalPath);
+}
+
+async function configureDuckDb(connection) {
+  const threads = positiveInt(process.env.SYNC_DUCKDB_THREADS || process.env.DUCKDB_THREADS)
+    ?? Math.max(1, Math.min(availableParallelism(), 16));
+  await connection.run(`PRAGMA threads=${threads}`);
+
+  const memoryLimit = String(process.env.SYNC_DUCKDB_MEMORY_LIMIT || process.env.DUCKDB_MEMORY_LIMIT || '').trim();
+  if (memoryLimit) await connection.run(`PRAGMA memory_limit=${quotedString(memoryLimit)}`);
+}
+
+function positiveInt(value) {
+  const parsed = Number.parseInt(String(value || ''), 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 
 function appendNullableDouble(appender, value) {
@@ -284,6 +318,52 @@ function appendBacktestTickRow(appender, row, bookDepth) {
     }
   }
   appender.endRow();
+}
+
+function appendBacktestTickBookRow(appender, row, bookDepth, hash) {
+  appendScalarColumns(appender, row);
+  appender.appendInteger(bookDepth);
+
+  const checksumValues = backtestChecksumScalarValues(row);
+  appendBookSide(appender, checksumValues, row.upBookAsks, 'ask', bookDepth);
+  appendBookSide(appender, checksumValues, row.upBookBids, 'bid', bookDepth);
+  appendBookSide(appender, checksumValues, row.downBookAsks, 'ask', bookDepth);
+  appendBookSide(appender, checksumValues, row.downBookBids, 'bid', bookDepth);
+
+  hash.update(checksumValues.join('|'));
+  hash.update('\n');
+  appender.endRow();
+}
+
+function appendBookSide(appender, checksumValues, rawLevels, side, bookDepth) {
+  const levels = parseBookLevels(rawLevels, side);
+  for (let i = 0; i < bookDepth; i += 1) {
+    const level = levels[i];
+    appendNullableDouble(appender, level?.price ?? null);
+    appendNullableDouble(appender, level?.size ?? null);
+    checksumValues.push(formatNumber(level?.price ?? null));
+    checksumValues.push(formatNumber(level?.size ?? null));
+  }
+}
+
+function backtestChecksumScalarValues(row) {
+  return [
+    row.conditionId,
+    row.ts,
+    formatNumber(row.underlyingPrice),
+    formatNumber(row.priceToBeat),
+    formatNumber(row.upPrice),
+    formatNumber(row.downPrice),
+    formatNumber(row.upBestBid),
+    formatNumber(row.upBestAsk),
+    formatNumber(row.downBestBid),
+    formatNumber(row.downBestAsk),
+  ];
+}
+
+function formatNumber(value) {
+  if (value == null) return '';
+  return Number(value).toFixed(8);
 }
 
 function appendScalarColumns(appender, row) {

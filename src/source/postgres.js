@@ -138,8 +138,10 @@ export async function getScalarTicksForEvents(pool, partition, conditionIds) {
     JOIN event_quality eq ON eq.market_id = t.market_id AND eq.condition_id = t.condition_id
     WHERE t.market_id = $1
       AND t.condition_id = ANY($4::text[])
+      AND t.event_start >= ($5::date::timestamp AT TIME ZONE 'UTC')
+      AND t.event_start < (($5::date + 1)::timestamp AT TIME ZONE 'UTC')
     ORDER BY t.ts ASC, t.id ASC
-  `, [partition.marketId, partition.underlying, partition.interval, conditionIds]);
+  `, [partition.marketId, partition.underlying, partition.interval, conditionIds, partition.dt]);
 
   return rows.map(rowToScalarTick);
 }
@@ -174,8 +176,10 @@ export async function getTicksWithBooksForEvents(pool, partition, conditionIds) 
     JOIN event_quality eq ON eq.market_id = t.market_id AND eq.condition_id = t.condition_id
     WHERE t.market_id = $1
       AND t.condition_id = ANY($4::text[])
+      AND t.event_start >= ($5::date::timestamp AT TIME ZONE 'UTC')
+      AND t.event_start < (($5::date + 1)::timestamp AT TIME ZONE 'UTC')
     ORDER BY t.ts ASC, t.id ASC
-  `, [partition.marketId, partition.underlying, partition.interval, conditionIds]);
+  `, [partition.marketId, partition.underlying, partition.interval, conditionIds, partition.dt]);
 
   return rows.map(rowToBookTick);
 }
@@ -187,7 +191,8 @@ export async function countTicksByEvent(pool, partition, conditionIds) {
     FROM ticks
     WHERE market_id = $1
       AND condition_id = ANY($2::text[])
-      AND (event_start AT TIME ZONE 'UTC')::date = $3::date
+      AND event_start >= ($3::date::timestamp AT TIME ZONE 'UTC')
+      AND event_start < (($3::date + 1)::timestamp AT TIME ZONE 'UTC')
     GROUP BY condition_id
   `, [partition.marketId, conditionIds, partition.dt]);
 

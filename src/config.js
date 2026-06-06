@@ -24,7 +24,7 @@ export function loadConfig(env = process.env) {
     dataCollectorApiUrl: env.DATA_COLLECTOR_API_URL || '',
     dataCollectorArchiveApiKey: env.DATA_COLLECTOR_ARCHIVE_API_KEY || '',
     syncBatchSize: Math.max(Number.parseInt(String(env.SYNC_BATCH_SIZE || '50000'), 10) || 50000, 1),
-    syncMaxPool: Math.min(Math.max(Number.parseInt(String(env.SYNC_MAX_POOL || '2'), 10) || 2, 1), 4),
+    syncMaxPool: Math.min(Math.max(Number.parseInt(String(env.SYNC_MAX_POOL || '2'), 10) || 2, 1), 16),
     syncStatementTimeoutMs: Math.max(Number.parseInt(String(env.SYNC_STATEMENT_TIMEOUT_MS || '120000'), 10) || 120000, 1000),
     syncMarginMinutes: Math.max(Number.parseInt(String(env.SYNC_MARGIN_MINUTES || '2'), 10) || 2, 0),
     backtestBookDepth: Math.max(Number.parseInt(String(env.BACKTEST_BOOK_DEPTH || '25'), 10) || 25, 1),

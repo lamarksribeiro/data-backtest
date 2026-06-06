@@ -4,9 +4,8 @@ import path from 'node:path';
 import { buildFinalParquetPath, buildTempParquetPath, toPortablePath } from '../lake/paths.js';
 import { upsertManifestPartition } from '../state/manifest.js';
 import { countTicksByEvent, getPartitionEvents, getTicksWithBooksForEvents, listSealedScalarPartitions } from '../source/postgres.js';
-import { flattenBookTick } from './bookFlatten.js';
-import { writeBacktestTicksParquet, writeBooksParquet } from './duckdbParquet.js';
-import { createBacktestTicksRowsChecksum, createBooksRowsChecksum, createRunId, createSourceFingerprint } from './fingerprint.js';
+import { writeBacktestTicksParquetFromBookRows, writeBooksParquet } from './duckdbParquet.js';
+import { createBooksRowsChecksum, createRunId, createSourceFingerprint } from './fingerprint.js';
 import { publishPartitionArchiveStatus } from '../source/archiveApi.js';
 
 export async function listBookPartitions(pool, opts) {
@@ -51,9 +50,9 @@ export async function exportBacktestTicksPartition({
     rebuild,
     allowNeedsReview,
     onProgress,
-    transformRows: (rows) => rows.map((row) => flattenBookTick(row, bookDepth)),
-    checksumRows: (rows) => createBacktestTicksRowsChecksum(rows, bookDepth),
-    writeParquet: ({ rows, tempPath, finalPath }) => writeBacktestTicksParquet({ rows, tempPath, finalPath, bookDepth }),
+    transformRows: null,
+    checksumRows: null,
+    writeParquet: ({ rows, tempPath, finalPath }) => writeBacktestTicksParquetFromBookRows({ rows, tempPath, finalPath, bookDepth }),
   });
 }
 
@@ -150,15 +149,23 @@ async function exportBookDatasetPartition({
 
   report('fetching_rows');
   const rawRows = await getTicksWithBooksForEvents(pool, partition, conditionIds);
-  const rows = transformRows(rawRows);
-  const valueChecksum = checksumRows(rows);
-  const sourceFingerprint = createSourceFingerprint({
+  const rows = transformRows ? transformRows(rawRows) : rawRows;
+  let valueChecksum = checksumRows ? checksumRows(rows) : null;
+  const countOnlyFingerprint = createSourceFingerprint({
     dataset,
     ...partition,
     rows: actualRows,
-    valueChecksum,
     events: eventsWithCounts,
   });
+  let sourceFingerprint = valueChecksum
+    ? createSourceFingerprint({
+      dataset,
+      ...partition,
+      rows: actualRows,
+      valueChecksum,
+      events: eventsWithCounts,
+    })
+    : countOnlyFingerprint;
 
   upsertManifestPartition(db, {
     ...manifestPartition,
@@ -174,7 +181,17 @@ async function exportBookDatasetPartition({
 
   try {
     report('writing_parquet', { rows: actualRows });
-    await writeParquet({ rows, tempPath, finalPath });
+    const writeResult = await writeParquet({ rows, tempPath, finalPath });
+    if (!valueChecksum && writeResult?.valueChecksum) {
+      valueChecksum = writeResult.valueChecksum;
+      sourceFingerprint = createSourceFingerprint({
+        dataset,
+        ...partition,
+        rows: actualRows,
+        valueChecksum,
+        events: eventsWithCounts,
+      });
+    }
     const minTs = eventsWithCounts.map((event) => event.minTs).filter(Boolean).sort()[0] ?? null;
     const maxTs = eventsWithCounts.map((event) => event.maxTs).filter(Boolean).sort().at(-1) ?? null;
 

@@ -15,11 +15,21 @@ export function parseBookLevels(rawLevels, side = 'ask') {
   }
   if (!Array.isArray(levels)) return [];
 
-  const parsed = levels
-    .map((level) => ({ price: toNumber(level?.price), size: toNumber(level?.size) }))
-    .filter((level) => level.price != null && level.size != null && level.size > 0);
+  const parsed = [];
+  let sorted = true;
+  let previousPrice = null;
+  for (const level of levels) {
+    const price = toNumber(level?.price);
+    const size = toNumber(level?.size);
+    if (price == null || size == null || size <= 0) continue;
+    if (previousPrice != null) {
+      sorted = sorted && (side === 'bid' ? previousPrice >= price : previousPrice <= price);
+    }
+    previousPrice = price;
+    parsed.push({ price, size });
+  }
 
-  parsed.sort((left, right) => side === 'bid' ? right.price - left.price : left.price - right.price);
+  if (!sorted) parsed.sort((left, right) => side === 'bid' ? right.price - left.price : left.price - right.price);
   return parsed;
 }
 
