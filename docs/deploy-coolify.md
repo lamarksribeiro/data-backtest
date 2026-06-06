@@ -43,22 +43,31 @@ Separacao por papel no host `data-lake-market`. O **backtest** e o app mais pesa
 | `data-backtest-app` | **12** | **10 GiB** | sync + backtest studio |
 | `polymarket-robot` (futuro) | 4 (reservar) | 2 GiB (reservar) | conta real, baixa latencia |
 
-Coolify: `custom_docker_run_options` nos apps (`--cpus=… --memory=…`).
+### Como configurar no Coolify (recomendado)
 
-### data-backtest-app (producao)
+Em cada app: **Configuration → Resource Limits** (nao deixar `0` = ilimitado).
+
+| App | Number of CPUs | Memory limit (MB) |
+|-----|----------------|-------------------|
+| `data-backtest-app` | `12` | `10240` |
+| `data-collector-app` | `4` | `2048` |
+| `data-collector-db` | `0` (ilimitado) | `0` (ilimitado) |
+
+Salve e **Redeploy** o app. Confira no servidor:
+
+```bash
+docker inspect <container> --format 'cpus={{.HostConfig.NanoCpus}} mem={{.HostConfig.Memory}}'
+```
+
+Evite duplicar com **Custom Docker Options** (`--cpus`/`--memory`); use so Resource Limits.
+
+### data-backtest-app — env de runtime (alem dos limites)
 
 ```text
-custom_docker_run_options=--cpus=12 --memory=10g
 NODE_OPTIONS=--max-old-space-size=7168
 SYNC_BATCH_SIZE=50000
 SYNC_MAX_POOL=2
 SYNC_STATEMENT_TIMEOUT_MS=180000
-```
-
-### data-collector-app
-
-```text
-custom_docker_run_options=--cpus=4 --memory=2g
 ```
 
 ## Variaveis Obrigatorias
@@ -91,7 +100,7 @@ curl -fsS https://backtest.fracta.online/healthz
 # login na UI, aba Dados, dry-run de 1 dia
 ```
 
-Apos cada redeploy do Coolify, reaplicar limites Docker (o `custom_docker_run_options` fica salvo, mas o compose gerado pode nao aplicar ate ajuste na UI **Resource Limits**):
+Se Resource Limits estiverem em `0` na UI, o container sobe sem teto. Fallback manual (so se a UI nao aplicar):
 
 ```bash
 ssh Brutus 'BT=$(docker ps --filter name=le4sptof36h14ry6s5zet5v0 -q | head -1); DC=$(docker ps --filter name=du0z38giulbmy1jeexsxswba -q | head -1); docker update --cpus=12 --memory=10g --memory-swap=10g "$BT"; docker update --cpus=4 --memory=2g --memory-swap=2g "$DC"'
