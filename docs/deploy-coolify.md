@@ -91,6 +91,12 @@ curl -fsS https://backtest.fracta.online/healthz
 # login na UI, aba Dados, dry-run de 1 dia
 ```
 
+Apos cada redeploy do Coolify, reaplicar limites Docker (o `custom_docker_run_options` fica salvo, mas o compose gerado pode nao aplicar ate ajuste na UI **Resource Limits**):
+
+```bash
+ssh Brutus 'BT=$(docker ps --filter name=le4sptof36h14ry6s5zet5v0 -q | head -1); DC=$(docker ps --filter name=du0z38giulbmy1jeexsxswba -q | head -1); docker update --cpus=12 --memory=10g --memory-swap=10g "$BT"; docker update --cpus=4 --memory=2g --memory-swap=2g "$DC"'
+```
+
 ## Backup
 
 Antes de jobs grandes:
