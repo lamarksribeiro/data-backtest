@@ -3913,36 +3913,94 @@ kbd {
   font-size: 12.5px;
 }
 
-/* ── Inline Version Card & Actions ── */
+/* ── Strategy editor header & version control ── */
 .strategy-header-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: 20px;
   flex-wrap: wrap;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--border);
 }
-.strategy-header-version-picker {
+.strategy-header-row .editor-title-block {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+.strategy-header-meta {
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-top: 4px;
+  flex-wrap: wrap;
 }
-.strategy-header-version-picker .field {
-  flex-direction: row;
+.strategy-header-meta__slug {
+  font-size: 12px;
+}
+.strategy-header-toolbar {
+  display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
 }
-.strategy-header-version-picker .field__label {
+.strategy-version-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  padding: 4px 4px 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(15, 23, 42, 0.45);
+}
+.strategy-version-control__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-3);
   white-space: nowrap;
+  margin-right: 8px;
 }
-.strategy-header-version-picker select {
-  padding: 6px 32px 6px 12px;
+.strategy-version-control__label i {
+  font-size: 10px;
+  color: var(--accent);
+}
+.strategy-version-control__select {
+  appearance: none;
+  border: none;
+  background: rgba(30, 41, 59, 0.65) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M3 4.5 6 7.5 9 4.5'/%3E%3C/svg%3E") no-repeat right 8px center;
+  border-radius: 6px;
+  padding: 6px 28px 6px 10px;
   font-size: 13px;
-  width: auto;
-  min-width: 140px;
-  background-position: right 8px center;
+  font-family: var(--font-mono);
+  color: var(--text-0);
+  min-width: 168px;
+  cursor: pointer;
+}
+.strategy-version-control__select:focus {
+  outline: 2px solid rgba(249, 115, 22, 0.4);
+  outline-offset: 1px;
+}
+.strategy-version-control__delete {
+  color: var(--text-3);
+}
+.strategy-version-control__delete:hover:not(:disabled) {
+  color: var(--err);
+  background: var(--err-soft);
+}
+.strategy-header-toolbar__sep {
+  width: 1px;
+  height: 28px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+.strategy-header-toolbar .btn--ghost i {
+  margin-right: 6px;
 }
 
 /* ── Table & Cards Upgrades ── */
@@ -4324,32 +4382,24 @@ i.fa-solid, i.fa-regular, i.fa-brands {
   transform: scale(1.1);
 }
 
-/* Estrutura do cabeçalho do editor de estratégias responsiva */
-.strategy-header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 20px;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 16px;
-}
-.editor-title-block {
-  min-width: 200px;
-}
-.strategy-header-version-picker {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-}
 @media (max-width: 768px) {
   .strategy-header-row {
     flex-direction: column;
     align-items: stretch;
   }
-  .strategy-header-version-picker {
+  .strategy-header-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .strategy-version-control {
     width: 100%;
-    justify-content: space-between;
+  }
+  .strategy-version-control__select {
+    flex: 1;
+    min-width: 0;
+  }
+  .strategy-header-toolbar__sep {
+    width: 100%;
+    height: 1px;
   }
 }

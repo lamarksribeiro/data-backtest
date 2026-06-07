@@ -173,6 +173,22 @@ function statusTab(ctx, status, label) {
   }, label);
 }
 
+function strategyStatusTone(status) {
+  if (status === 'validated') return 'ok';
+  if (status === 'archived') return 'idle';
+  return 'warn';
+}
+
+function renderStrategyHeaderMeta(strategy) {
+  return el('div', { class: 'strategy-header-meta', id: 'strategy-title-meta' }, [
+    el('span', {
+      class: `badge badge--${strategyStatusTone(strategy.status)}`,
+      id: 'strategy-status-badge',
+    }, strategy.status),
+    el('span', { class: 'mono muted strategy-header-meta__slug', id: 'strategy-title-slug' }, strategy.slug),
+  ]);
+}
+
 async function openStrategyEditor(ctx, strategyId, versionId = null) {
   const editorPanel = document.getElementById('strategy-editor');
   if (!editorPanel) return;
@@ -215,17 +231,19 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
   const hasParams = Object.keys(schema).length > 0;
 
   mount(editorPanel, [
-    // Header Row with status, version selector and main execution controls
     el('div', { class: 'strategy-header-row' }, [
       el('div', { class: 'editor-title-block' }, [
         el('h2', { class: 'card__title', id: 'strategy-title' }, strategy.name),
-        el('p', { class: 'muted mono editor-title-block__meta', id: 'strategy-title-meta' }, `${strategy.slug} · status: ${strategy.status} · versão atual: v${strategy.latest_version ?? '-'}`),
+        renderStrategyHeaderMeta(strategy),
       ]),
-      el('div', { class: 'strategy-header-version-picker' }, [
-        el('label', { class: 'field' }, [
-          el('span', { class: 'field__label' }, 'Versão:'),
+      el('div', { class: 'strategy-header-toolbar' }, [
+        el('div', { class: 'strategy-version-control' }, [
+          el('span', { class: 'strategy-version-control__label' }, [
+            el('i', { class: 'fa-solid fa-code-branch' }),
+            'Versão',
+          ]),
           el('select', {
-            class: 'field__input',
+            class: 'strategy-version-control__select',
             id: 'strategy-version-select',
             onchange: async (e) => {
               const nextVersionId = Number(e.target.value);
@@ -235,22 +253,24 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
               await openStrategyEditor(ctx, strategyId, nextVersionId);
             },
           }, versions.length
-            ? versions.map((item) => el('option', { value: item.id, selected: item.id === version?.id }, `v${item.version} (${item.created_at ? item.created_at.slice(0,10) : ''})`))
+            ? versions.map((item) => el('option', { value: item.id, selected: item.id === version?.id }, `v${item.version} · ${item.created_at ? item.created_at.slice(0, 10) : '—'}`))
             : [el('option', { value: '' }, 'Sem versões')]),
+          el('button', {
+            class: 'btn btn--ghost btn--sm btn--icon strategy-version-control__delete',
+            type: 'button',
+            title: 'Excluir esta versão',
+            disabled: !version || versions.length <= 1,
+            onclick: () => deleteVersionFlow(ctx, strategy, version),
+          }, el('i', { class: 'fa-solid fa-trash-can' })),
         ]),
+        el('div', { class: 'strategy-header-toolbar__sep', 'aria-hidden': 'true' }),
         el('button', {
-          class: 'btn btn--danger btn--sm',
+          class: 'btn btn--danger btn--sm btn--ghost',
           type: 'button',
-          title: 'Excluir esta versão',
-          disabled: !version || versions.length <= 1,
-          onclick: () => deleteVersionFlow(ctx, strategy, version),
-          style: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }
-        }, el('i', { class: 'fa-solid fa-trash-can' })),
-      ]),
-      el('div', { class: 'row' }, [
-        el('button', { class: 'btn btn--danger btn--sm btn--ghost', type: 'button', onclick: () => deleteStrategyFlow(ctx, strategy) }, [
-          el('i', { class: 'fa-solid fa-trash-can', style: { marginRight: '6px' } }),
-          'Apagar'
+          onclick: () => deleteStrategyFlow(ctx, strategy),
+        }, [
+          el('i', { class: 'fa-solid fa-trash-can' }),
+          'Apagar estratégia',
         ]),
       ]),
     ]),
@@ -494,8 +514,13 @@ async function updateStrategyMeta(event, ctx, strategyId) {
   const title = document.getElementById('strategy-title');
   if (title) title.textContent = updated.name;
   
-  const titleMeta = document.getElementById('strategy-title-meta');
-  if (titleMeta) titleMeta.textContent = `${updated.slug} · status: ${updated.status} · versão atual: v${updated.latest_version ?? '-'}`;
+  const statusBadge = document.getElementById('strategy-status-badge');
+  if (statusBadge) {
+    statusBadge.className = `badge badge--${strategyStatusTone(updated.status)}`;
+    statusBadge.textContent = updated.status;
+  }
+  const slugEl = document.getElementById('strategy-title-slug');
+  if (slugEl) slugEl.textContent = updated.slug;
   
   const listPanel = document.getElementById('strategy-list-panel');
   if (listPanel) mount(listPanel, renderStrategyList(ctx));
