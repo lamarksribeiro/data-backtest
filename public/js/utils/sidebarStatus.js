@@ -17,9 +17,11 @@ export async function refreshSidebarStatus(ctx) {
     }
     const manifest = body.manifest || {};
     const partitions = manifest.partitions ?? 0;
-    const valid = manifest.by_status?.valid ?? 0;
+    const usable = manifest.usable ?? ((manifest.by_status?.valid ?? 0) + (manifest.by_status?.accepted ?? 0));
+    const warnings = manifest.warnings ?? (manifest.by_status?.accepted ?? 0);
+    const suffix = warnings ? ` · ${warnings} com aviso` : '';
     ctx.setConnection('ok', partitions
-      ? `${valid}/${partitions} partições válidas`
+      ? `${usable}/${partitions} partições prontas${suffix}`
       : 'Lakehouse ok · sem partições');
   } catch {
     ctx.setConnection('err', 'Sem conexão ao servidor');

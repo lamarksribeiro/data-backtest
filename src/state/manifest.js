@@ -35,10 +35,17 @@ export function manifestStats(db) {
     FROM lake_manifest
   `).get();
 
+  const byStatusMap = Object.fromEntries(byStatus.map((row) => [row.status, Number(row.count || 0)]));
+  const usable = (byStatusMap.valid || 0) + (byStatusMap.accepted || 0);
+  const blocked = (byStatusMap.needs_review || 0) + (byStatusMap.invalid || 0) + (byStatusMap.stale || 0) + (byStatusMap.missing || 0);
+
   return {
     partitions: Number(totals.partitions || 0),
     rows: Number(totals.rows || 0),
-    by_status: Object.fromEntries(byStatus.map((row) => [row.status, Number(row.count || 0)])),
+    usable,
+    warnings: byStatusMap.accepted || 0,
+    blocked,
+    by_status: byStatusMap,
   };
 }
 

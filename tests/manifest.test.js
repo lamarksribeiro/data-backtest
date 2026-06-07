@@ -41,6 +41,9 @@ test('manifest initializes in SQLite WAL and upserts partition', async () => {
       assert.equal(stats.partitions, 1);
       assert.equal(stats.rows, 10);
       assert.equal(stats.by_status.valid, 1);
+      assert.equal(stats.usable, 1);
+      assert.equal(stats.warnings, 0);
+      assert.equal(stats.blocked, 0);
 
       upsertManifestPartition(db, {
         dataset: 'scalars',
