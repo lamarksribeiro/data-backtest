@@ -40,6 +40,7 @@ export function datasetRequestFromParams(params, config) {
     underlying: requiredParam(params, 'underlying').toUpperCase(),
     interval: normalizeInterval(requiredParam(params, 'interval')),
     limit: positiveIntParam(params, 'limit') ?? 1000,
+    acceptMismatchRatio: config.syncAcceptCountMismatchRatio,
   };
 
   if (dataset === 'backtest_ticks') request.bookDepth = positiveIntParam(params, 'book_depth') ?? positiveIntParam(params, 'book-depth') ?? config.backtestBookDepth;

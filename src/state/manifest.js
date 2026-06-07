@@ -1,3 +1,5 @@
+import { classifyTickCountQuality } from '../sync/qualityPolicy.js';
+
 const LIST_LIMIT = 100;
 
 export function listManifest(db, opts = {}) {
@@ -98,6 +100,63 @@ export function revokeAcceptedManifestPartition(db, partition, reason = '') {
   return { ok: true, partition: getManifestPartition(db, partition) };
 }
 
+export function acceptEligibleReviewPartitions(db, opts, acceptMismatchRatio) {
+  const params = [opts.dataset, opts.underlying, opts.interval, opts.fromDt, opts.toDt];
+  let sql = `
+    SELECT * FROM lake_manifest
+    WHERE dataset = ?
+      AND underlying = ?
+      AND interval = ?
+      AND dt >= ?
+      AND dt <= ?
+      AND status = 'needs_review'
+      AND active_path IS NOT NULL
+      AND error LIKE '%differs from event_quality%'`;
+
+  if (opts.resolution) {
+    params.push(opts.resolution);
+    sql += ` AND resolution = ?`;
+  } else {
+    sql += ` AND resolution IS NULL`;
+  }
+
+  if (opts.bookDepth != null) {
+    params.push(opts.bookDepth);
+    sql += ` AND book_depth = ?`;
+  } else {
+    sql += ` AND book_depth IS NULL`;
+  }
+
+  const rows = db.prepare(sql).all(...params);
+  const accepted = [];
+  const skipped = [];
+  const now = new Date().toISOString();
+
+  for (const row of rows) {
+    const expectedRows = expectedRowsFromError(row.error);
+    const actualRows = Number(row.rows ?? row.source_tick_count ?? 0);
+    if (expectedRows == null) {
+      skipped.push({ id: row.id, dt: row.dt, reason: 'expected_rows_not_found' });
+      continue;
+    }
+
+    const quality = classifyTickCountQuality({ actualRows, expectedRows, acceptMismatchRatio });
+    if (quality.status !== 'accepted') {
+      skipped.push({ id: row.id, dt: row.dt, reason: quality.status, error: quality.error });
+      continue;
+    }
+
+    db.prepare(`
+      UPDATE lake_manifest
+      SET status = 'accepted', verified_at = ?, error = ?
+      WHERE id = ?
+    `).run(now, `Accepted automatically during manifest recheck: ${quality.error}. Original: ${row.error}`, row.id);
+    accepted.push({ id: row.id, dt: row.dt, rows: actualRows, expectedRows });
+  }
+
+  return { ok: true, accepted, skipped };
+}
+
 export function getManifestPartition(db, partition) {
   return db.prepare(`
     SELECT * FROM lake_manifest
@@ -115,6 +174,11 @@ export function getManifestPartition(db, partition) {
     partition.bookDepth ?? null,
     partition.dt,
   );
+}
+
+function expectedRowsFromError(error) {
+  const match = String(error || '').match(/event_quality\s+(\d+)/);
+  return match ? Number(match[1]) : null;
 }
 
 function unique(values) {

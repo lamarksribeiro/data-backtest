@@ -1,3 +1,5 @@
+import { acceptEligibleReviewPartitions } from '../state/manifest.js';
+
 export function partitionDatesForRange(from, to) {
   const fromDate = new Date(from);
   const toDate = new Date(to);
@@ -37,6 +39,15 @@ export function partitionStatusHint(status) {
 
 export function checkDatasetAvailability(db, request) {
   const dates = partitionDatesForRange(request.from, request.to);
+  acceptEligibleReviewPartitions(db, {
+    dataset: request.dataset,
+    underlying: request.underlying,
+    interval: request.interval,
+    resolution: request.resolution ?? null,
+    bookDepth: request.bookDepth ?? null,
+    fromDt: dates[0],
+    toDt: dates.at(-1),
+  }, request.acceptMismatchRatio ?? request.syncAcceptCountMismatchRatio ?? 0.02);
   const rows = findManifestPartitions(db, request, dates[0], dates.at(-1));
   const byDate = new Map(rows.map((row) => [row.dt, row]));
   const missing = [];

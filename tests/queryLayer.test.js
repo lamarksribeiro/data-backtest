@@ -60,7 +60,7 @@ test('availability resolves valid active_path and reports missing partitions', a
         activePath: '/lake/backtest_ticks/dt=2026-06-02/part.parquet',
         rows: 172749,
         status: 'needs_review',
-        error: 'actual tick count 172749 differs from event_quality 170000',
+        error: 'actual tick count 172749 differs from event_quality 100000',
       });
 
       const reviewAvailability = checkDatasetAvailability(db, {
@@ -77,7 +77,32 @@ test('availability resolves valid active_path and reports missing partitions', a
       assert.equal(reviewAvailability.partitions[0].status, 'needs_review');
       assert.equal(reviewAvailability.partitions[0].usable, false);
       assert.match(reviewAvailability.partitions[0].hint, /event_quality/);
-      assert.equal(reviewAvailability.unavailable[0].error, 'actual tick count 172749 differs from event_quality 170000');
+      assert.match(reviewAvailability.unavailable[0].error, /event_quality 100000/);
+
+      upsertManifestPartition(db, {
+        dataset: 'backtest_ticks',
+        underlying: 'BTC',
+        interval: '5m',
+        bookDepth: 25,
+        dt: '2026-06-03',
+        activePath: '/lake/backtest_ticks/dt=2026-06-03/part.parquet',
+        rows: 172789,
+        status: 'needs_review',
+        error: 'actual tick count 172789 differs from event_quality 172587',
+      });
+
+      const autoAcceptedAvailability = checkDatasetAvailability(db, {
+        dataset: 'backtest_ticks',
+        underlying: 'BTC',
+        interval: '5m',
+        bookDepth: 25,
+        from: '2026-06-03T00:00:00.000Z',
+        to: '2026-06-04T00:00:00.000Z',
+        acceptMismatchRatio: 0.02,
+      });
+
+      assert.equal(autoAcceptedAvailability.ok, true);
+      assert.equal(autoAcceptedAvailability.partitions[0].status, 'accepted');
     } finally {
       closeStateDatabase(db);
     }

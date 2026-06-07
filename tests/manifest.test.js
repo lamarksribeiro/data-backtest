@@ -5,7 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { openStateDatabase, closeStateDatabase } from '../src/state/sqlite.js';
-import { acceptManifestPartition, listManifest, manifestStats, revokeAcceptedManifestPartition, upsertManifestPartition } from '../src/state/manifest.js';
+import { acceptEligibleReviewPartitions, acceptManifestPartition, listManifest, manifestStats, revokeAcceptedManifestPartition, upsertManifestPartition } from '../src/state/manifest.js';
 import { checkLakeStorage } from '../src/lake/storage.js';
 
 test('manifest initializes in SQLite WAL and upserts partition', async () => {
@@ -98,6 +98,53 @@ test('manifest can accept and revoke needs_review partitions', async () => {
       assert.equal(revoked.ok, true);
       assert.equal(revoked.partition.status, 'needs_review');
       assert.match(revoked.partition.error, /bad sample/);
+    } finally {
+      closeStateDatabase(db);
+    }
+  } finally {
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
+  }
+});
+
+test('manifest bulk accepts eligible stale event_quality mismatches', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-manifest-bulk-accept-'));
+  try {
+    const db = openStateDatabase(path.join(dir, 'state', 'data-backtest.db'));
+    try {
+      const base = {
+        dataset: 'backtest_ticks',
+        underlying: 'BTC',
+        interval: '5m',
+        bookDepth: 25,
+      };
+      upsertManifestPartition(db, {
+        ...base,
+        dt: '2026-06-02',
+        activePath: '/lake/backtest_ticks/review-small.parquet',
+        rows: 172749,
+        status: 'needs_review',
+        error: 'actual tick count 172749 differs from event_quality 171733',
+      });
+      upsertManifestPartition(db, {
+        ...base,
+        dt: '2026-06-03',
+        activePath: '/lake/backtest_ticks/review-large.parquet',
+        rows: 100,
+        status: 'needs_review',
+        error: 'actual tick count 100 differs from event_quality 1000',
+      });
+
+      const result = acceptEligibleReviewPartitions(db, {
+        ...base,
+        fromDt: '2026-06-02',
+        toDt: '2026-06-03',
+      }, 0.02);
+
+      assert.equal(result.accepted.length, 1);
+      assert.equal(result.skipped.length, 1);
+      const rows = listManifest(db, { limit: 10 }).sort((left, right) => left.dt.localeCompare(right.dt));
+      assert.equal(rows[0].status, 'accepted');
+      assert.equal(rows[1].status, 'needs_review');
     } finally {
       closeStateDatabase(db);
     }
