@@ -348,9 +348,9 @@ function renderPlan(panel, plan, ctx) {
       el('h2', { class: 'card__title' }, `Bloqueadas (${blocked.length})`),
       blockedPartitionsTable(blocked, ctx, availability),
     ]) : null,
-    gaps.length ? el('section', { class: 'card' }, [
+    gaps.length ? el('section', { class: 'card lake-card--missing' }, [
       el('h2', { class: 'card__title' }, `Ausentes (${gaps.length})`),
-      listBlock('Datas', gaps.map((p) => p.dt)),
+      missingPartitionsBlock(gaps),
     ]) : null,
     !available.length && !blocked.length && !gaps.length ? el('p', { class: 'muted' }, 'Nenhuma partição no intervalo.') : null,
     preparationCard(result.preparation, plan, ctx),
@@ -534,11 +534,22 @@ function stat(label, value) {
   ]);
 }
 
-function listBlock(title, items) {
-  if (!items.length) return el('p', {}, [el('strong', {}, `${title}: `), el('span', { class: 'muted' }, 'nenhum')]);
-  return el('div', {}, [
-    el('strong', {}, title),
-    el('ul', {}, items.map((item) => el('li', {}, el('code', {}, item)))),
+function missingPartitionsBlock(partitions) {
+  const dates = partitions.map((p) => p.dt).sort();
+  const first = dates[0];
+  const last = dates[dates.length - 1];
+  const rangeLabel = dates.length > 1 ? `${first} → ${last}` : first;
+
+  return el('div', { class: 'lake-missing-dates' }, [
+    el('div', { class: 'lake-missing-dates__meta' }, [
+      el('span', { class: 'lake-missing-dates__label' }, 'Datas'),
+      el('span', { class: 'mono lake-missing-dates__range muted' }, rangeLabel),
+      el('span', { class: 'badge badge--idle' }, `${dates.length} dia(s)`),
+    ]),
+    el('div', { class: 'lake-missing-dates__scroll' }, [
+      el('div', { class: 'lake-missing-dates__grid' }, dates.map((dt) =>
+        el('span', { class: 'lake-missing-dates__chip mono', title: dt }, dt))),
+    ]),
   ]);
 }
 
