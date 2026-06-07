@@ -2745,6 +2745,27 @@ details.advanced[open] { padding-bottom: 16px; }
     font-size: 12.5px;
   }
 
+  .premium-tabs-nav {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 0;
+    margin-left: -14px;
+    margin-right: -14px;
+    padding-left: 14px;
+    padding-right: 14px;
+    margin-bottom: 16px;
+  }
+  .premium-tabs-nav::-webkit-scrollbar { display: none; }
+  .premium-tab-link {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 10px 14px;
+    font-size: 12.5px;
+  }
+
   .form-row { grid-template-columns: 1fr; }
 
   .table th,
@@ -3000,6 +3021,14 @@ details.advanced[open] { padding-bottom: 16px; }
   .modal--wide {
     width: 100%;
     max-height: min(92vh, 900px);
+  }
+}
+
+@media (max-width: 560px) {
+  .backtest-execution-form,
+  .form-grid,
+  .form-grid--compact {
+    grid-template-columns: 1fr !important;
   }
 }
 
@@ -3971,12 +4000,13 @@ kbd {
 
 /* ── Segmented Control for Strategy Status Sidebar Filters ── */
 .strategy-status-tabs {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   background: rgba(13, 19, 32, 0.6);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 3px;
-  gap: 2px;
+  gap: 4px;
   margin: 12px 12px 6px;
 }
 .strategy-status-tab {

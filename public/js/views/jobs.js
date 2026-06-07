@@ -97,16 +97,18 @@ function renderJobsPanel(panel, jobs, ctx) {
   const tbody = el('tbody', { id: 'jobs-table-body' });
   for (const job of jobs) tbody.appendChild(jobRow(job, ctx));
 
-  const table = el('table', { class: 'table', id: 'jobs-table' }, [
-    el('thead', {}, el('tr', {}, [
-      el('th', {}, 'ID'),
-      el('th', {}, 'Status'),
-      el('th', {}, 'Progresso'),
-      el('th', {}, 'Modo'),
-      el('th', {}, 'Criado'),
-      el('th', {}, ''),
-    ])),
-    tbody,
+  const table = el('div', { class: 'table-wrap' }, [
+    el('table', { class: 'table', id: 'jobs-table' }, [
+      el('thead', {}, el('tr', {}, [
+        el('th', {}, 'ID'),
+        el('th', {}, 'Status'),
+        el('th', {}, 'Progresso'),
+        el('th', {}, 'Modo'),
+        el('th', {}, 'Criado'),
+        el('th', {}, ''),
+      ])),
+      tbody,
+    ])
   ]);
 
   mount(panel, el('section', { class: 'card' }, [
@@ -450,16 +452,18 @@ async function showJobDetail(ctx, id, cachedJob = null, { skipFetch = false } = 
     ]) : null,
     files.length ? el('div', { class: 'jobs-detail__files', 'data-field': 'files' }, [
       el('h4', {}, `Arquivos (${files.length})`),
-      el('table', { class: 'table table--compact' }, [
-        el('thead', {}, el('tr', {}, [
-          el('th', {}, 'dt'), el('th', {}, 'rows'), el('th', {}, 'status'), el('th', {}, 'path'),
-        ])),
-        el('tbody', {}, files.map((file) => el('tr', {}, [
-          el('td', {}, escapeHtml(file.dt || '-')),
-          el('td', {}, file.rows != null ? String(file.rows) : '-'),
-          el('td', {}, escapeHtml(file.status || (file.skipped ? 'skipped' : '-'))),
-          el('td', { class: 'mono truncate' }, escapeHtml(file.path || file.reason || '-')),
-        ]))),
+      el('div', { class: 'table-wrap' }, [
+        el('table', { class: 'table table--compact' }, [
+          el('thead', {}, el('tr', {}, [
+            el('th', {}, 'dt'), el('th', {}, 'rows'), el('th', {}, 'status'), el('th', {}, 'path'),
+          ])),
+          el('tbody', {}, files.map((file) => el('tr', {}, [
+            el('td', {}, escapeHtml(file.dt || '-')),
+            el('td', {}, file.rows != null ? String(file.rows) : '-'),
+            el('td', {}, escapeHtml(file.status || (file.skipped ? 'skipped' : '-'))),
+            el('td', { class: 'mono truncate' }, escapeHtml(file.path || file.reason || '-')),
+          ]))),
+        ])
       ]),
     ]) : null,
     job.error ? el('p', { class: 'bad' }, escapeHtml(job.error)) : null,
