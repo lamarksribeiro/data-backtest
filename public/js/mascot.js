@@ -198,6 +198,11 @@ document.addEventListener('DOMContentLoaded', () => {
       animation: tailWiggle 4s ease-in-out infinite;
       transform-origin: 90px 115px;
     }
+    
+    #mascot {
+      pointer-events: auto;
+      cursor: pointer;
+    }
   `;
   document.head.appendChild(style);
 
@@ -323,6 +328,11 @@ document.addEventListener('DOMContentLoaded', () => {
     </svg>
   `;
   wrapper.insertBefore(mascotContainer, loginCard);
+
+  // Animação ao clicar no mascote (Beep Beep + Super Jump Combo)
+  mascotContainer.addEventListener('click', () => {
+    triggerClickCombo();
+  });
 
   // 4. Lógica de Rastreamento do Visor e Comportamento das Partículas de Ticks
   const mascot = document.getElementById('mascot');
@@ -663,7 +673,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Tag flutuante vermelha que indica que o dado ruim foi pulado/ignorado
-  function createAvoidTag(x, y) {
+  function createAvoidTag(x, y, text = 'SKIP TICK') {
     const tag = document.createElement('div');
     tag.style.position = 'absolute';
     tag.style.left = `${x - 20}px`;
@@ -676,7 +686,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tag.style.pointerEvents = 'none';
     tag.style.zIndex = '6';
     tag.style.transition = 'transform 0.8s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.8s';
-    tag.textContent = 'SKIP TICK';
+    tag.textContent = text;
     wrapper.appendChild(tag);
     
     setTimeout(() => {
@@ -755,6 +765,66 @@ document.addEventListener('DOMContentLoaded', () => {
       lizardEl.classList.remove('runner-beeping');
       isHunting = false;
     }, 600);
+  }
+
+  // Função que executa uma animação de combo melhorada ao clicar
+  function triggerClickCombo() {
+    if (isHunting || isJumping) return;
+    isJumping = true; // Bloqueia outras interações temporariamente
+    
+    const lizardEl = document.getElementById('lizard');
+    if (!lizardEl) return;
+    
+    // 1. Treme e Beepa ( runner-beeping )
+    lizardEl.classList.add('runner-beeping');
+    showSpeechBubble('BOOST!');
+    
+    setTimeout(() => {
+      lizardEl.classList.remove('runner-beeping');
+      
+      // 2. Faz o Super Pulo ( runner-jumping )
+      lizardEl.classList.add('runner-jumping');
+      
+      // Detona faíscas neon na base das pernas
+      const rect = mascot.getBoundingClientRect();
+      const scaleX = rect.width / 260;
+      const scaleY = rect.height / 180;
+      
+      const mascotRect = mascot.getBoundingClientRect();
+      const wrapperRect = wrapper.getBoundingClientRect();
+      const feetGlobalX = mascotRect.left - wrapperRect.left + 106 * scaleX;
+      const feetGlobalY = mascotRect.top - wrapperRect.top + 160 * scaleY;
+      
+      createSparkExplosion(feetGlobalX, feetGlobalY);
+      
+      // Cria uma tag de boost flutuante verde/ciano
+      const tag = document.createElement('div');
+      tag.style.position = 'absolute';
+      tag.style.left = `${feetGlobalX - 25}px`;
+      tag.style.top = `${feetGlobalY - 10}px`;
+      tag.style.color = '#06b6d4';
+      tag.style.fontFamily = 'var(--font-mono)';
+      tag.style.fontSize = '10px';
+      tag.style.fontWeight = '900';
+      tag.style.textShadow = '0 0 8px rgba(6, 182, 212, 0.8)';
+      tag.style.pointerEvents = 'none';
+      tag.style.zIndex = '6';
+      tag.style.transition = 'transform 0.8s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.8s';
+      tag.textContent = 'SYSTEM BOOST';
+      wrapper.appendChild(tag);
+      
+      setTimeout(() => {
+        tag.style.transform = 'translateY(-40px) scale(1.2)';
+        tag.style.opacity = '0';
+      }, 20);
+      setTimeout(() => tag.remove(), 850);
+      
+      setTimeout(() => {
+        lizardEl.classList.remove('runner-jumping');
+        isJumping = false;
+      }, 450);
+      
+    }, 400); // Executa o pulo logo após o início do beep
   }
 
   // Loop de Beep Beep aleatório (executa de vez em quando)
