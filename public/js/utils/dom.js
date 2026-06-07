@@ -48,7 +48,10 @@ export function enhanceResponsiveTables(root = document) {
   if (root instanceof HTMLTableElement) tables.push(root);
   if (root.querySelectorAll) tables.push(...root.querySelectorAll('table'));
   for (const table of tables) {
-    const headers = [...table.querySelectorAll('thead th')].map((th) => th.textContent.trim()).filter(Boolean);
+    enhanceDataTable(table);
+    const headers = [...(table.querySelector('thead tr')?.querySelectorAll('th') || [])]
+      .map((th) => th.textContent.trim())
+      .filter(Boolean);
     if (!headers.length) continue;
     table.dataset.responsiveCard = 'true';
     for (const row of table.querySelectorAll('tbody tr')) {
@@ -63,6 +66,97 @@ export function enhanceResponsiveTables(root = document) {
       }
     }
   }
+}
+
+function enhanceDataTable(table) {
+  if (table.dataset.controlsEnhanced === 'true') return;
+  const headerRow = table.querySelector('thead tr');
+  const tbody = table.querySelector('tbody');
+  if (!headerRow || !tbody) return;
+
+  const headers = [...headerRow.querySelectorAll('th')].map((th) => th.textContent.trim());
+  if (!headers.length) return;
+
+  table.dataset.controlsEnhanced = 'true';
+  const state = {
+    filters: headers.map(() => ''),
+    page: 1,
+    pageSize: 25,
+  };
+
+  const filterRow = el('tr', { class: 'table-filter-row' }, headers.map((header, index) => el('th', {}, [
+    el('input', {
+      class: 'table-filter-input',
+      type: 'search',
+      placeholder: header ? `Filtrar ${header}` : 'Filtrar',
+      oninput: (event) => {
+        state.filters[index] = event.target.value.trim().toLowerCase();
+        state.page = 1;
+        render();
+      },
+    }),
+  ])));
+  table.querySelector('thead')?.appendChild(filterRow);
+
+  const pageSizeSelect = el('select', { class: 'table-page-size' }, [10, 25, 50, 100, 'all'].map((value) => {
+    const option = el('option', { value: String(value) }, value === 'all' ? 'Todos' : String(value));
+    if (value === 25) option.selected = true;
+    return option;
+  }));
+  pageSizeSelect.addEventListener('change', () => {
+    state.pageSize = pageSizeSelect.value === 'all' ? Infinity : Number(pageSizeSelect.value);
+    state.page = 1;
+    render();
+  });
+
+  const previousButton = el('button', { class: 'btn btn--ghost btn--sm', type: 'button' }, 'Anterior');
+  const nextButton = el('button', { class: 'btn btn--ghost btn--sm', type: 'button' }, 'Próxima');
+  const info = el('span', { class: 'table-pagination__info' }, '');
+  previousButton.addEventListener('click', () => {
+    state.page = Math.max(1, state.page - 1);
+    render();
+  });
+  nextButton.addEventListener('click', () => {
+    state.page += 1;
+    render();
+  });
+
+  const controls = el('div', { class: 'table-controls' }, [
+    el('div', { class: 'table-controls__left' }, [
+      el('span', { class: 'muted' }, 'Linhas'),
+      pageSizeSelect,
+    ]),
+    el('div', { class: 'table-pagination' }, [previousButton, info, nextButton]),
+  ]);
+  table.parentNode?.insertBefore(controls, table.nextSibling);
+
+  const observer = new MutationObserver(() => render());
+  observer.observe(tbody, { childList: true });
+  render();
+
+  function render() {
+    const rows = [...tbody.querySelectorAll('tr')];
+    const filtered = rows.filter((row) => rowMatchesFilters(row, state.filters));
+    const totalPages = state.pageSize === Infinity ? 1 : Math.max(1, Math.ceil(filtered.length / state.pageSize));
+    state.page = Math.min(Math.max(1, state.page), totalPages);
+    const start = state.pageSize === Infinity ? 0 : (state.page - 1) * state.pageSize;
+    const end = state.pageSize === Infinity ? filtered.length : start + state.pageSize;
+    const visible = new Set(filtered.slice(start, end));
+
+    for (const row of rows) row.hidden = !visible.has(row);
+
+    previousButton.disabled = state.page <= 1;
+    nextButton.disabled = state.page >= totalPages;
+    info.textContent = `${filtered.length} de ${rows.length} linhas · página ${state.page}/${totalPages}`;
+  }
+}
+
+function rowMatchesFilters(row, filters) {
+  return filters.every((filter, index) => {
+    if (!filter) return true;
+    const cell = row.children[index];
+    return String(cell?.textContent || '').toLowerCase().includes(filter);
+  });
 }
 
 export function emptyState(message) {

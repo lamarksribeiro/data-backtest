@@ -1402,6 +1402,54 @@ details.advanced[open] { padding-bottom: 16px; }
   text-overflow: ellipsis;
 }
 
+.table-filter-row th {
+  padding-top: 6px;
+  padding-bottom: 8px;
+  background: color-mix(in srgb, var(--bg-1) 86%, transparent);
+}
+
+.table-filter-input,
+.table-page-size {
+  width: 100%;
+  min-width: 90px;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.72);
+  color: var(--text-1);
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
+.table-filter-input::placeholder { color: var(--text-3); }
+
+.table-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 2px 2px;
+}
+
+.table-controls__left,
+.table-pagination {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.table-page-size { width: auto; min-width: 72px; }
+.table-pagination__info { color: var(--text-2); font-size: 12px; }
+
+@media (max-width: 760px) {
+  .table-filter-row { display: none; }
+  .table-controls { align-items: stretch; }
+  .table-controls__left,
+  .table-pagination { width: 100%; justify-content: space-between; }
+}
+
 .db-th-sort {
   cursor: pointer;
   user-select: none;
