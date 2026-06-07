@@ -1,5 +1,7 @@
 import path from 'node:path';
 
+import { normalizeAcceptCountMismatchRatio } from './sync/qualityPolicy.js';
+
 const VALID_DATA_MODES = new Set(['strict', 'prepare', 'hybrid']);
 
 function resolvePath(value, fallback) {
@@ -27,6 +29,7 @@ export function loadConfig(env = process.env) {
     syncMaxPool: Math.min(Math.max(Number.parseInt(String(env.SYNC_MAX_POOL || '2'), 10) || 2, 1), 16),
     syncStatementTimeoutMs: Math.max(Number.parseInt(String(env.SYNC_STATEMENT_TIMEOUT_MS || '120000'), 10) || 120000, 1000),
     syncMarginMinutes: Math.max(Number.parseInt(String(env.SYNC_MARGIN_MINUTES || '2'), 10) || 2, 0),
+    syncAcceptCountMismatchRatio: normalizeAcceptCountMismatchRatio(env.SYNC_ACCEPT_COUNT_MISMATCH_RATIO),
     backtestBookDepth: Math.max(Number.parseInt(String(env.BACKTEST_BOOK_DEPTH || '25'), 10) || 25, 1),
     apiPort: Math.max(Number.parseInt(String(env.DATA_BACKTEST_PORT || env.PORT || '3100'), 10) || 3100, 1),
     NODE_ENV: env.NODE_ENV || 'development',

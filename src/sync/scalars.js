@@ -7,6 +7,7 @@ import { countTicksByEvent, getPartitionEvents, getScalarTicksForEvents, listSea
 import { markPartitionArchiveStatusStale } from '../source/archiveApi.js';
 import { createRunId, createScalarRowsChecksum, createSourceFingerprint } from './fingerprint.js';
 import { writeScalarsParquet } from './duckdbParquet.js';
+import { classifyTickCountQuality } from './qualityPolicy.js';
 
 export async function listScalarPartitions(pool, opts) {
   return listSealedScalarPartitions(pool, opts);
@@ -145,8 +146,11 @@ export async function exportScalarsPartition({
 
   const actualRows = eventsWithCounts.reduce((sum, event) => sum + event.actualCount, 0);
   const expectedRows = eventsWithCounts.reduce((sum, event) => sum + event.ticksRecorded, 0);
-  const diverged = actualRows !== expectedRows;
-  const status = diverged ? 'needs_review' : 'valid';
+  const quality = classifyTickCountQuality({
+    actualRows,
+    expectedRows,
+    acceptMismatchRatio: config.syncAcceptCountMismatchRatio,
+  });
   const countOnlyFingerprint = createSourceFingerprint({
     dataset,
     ...partition,
@@ -161,7 +165,7 @@ export async function exportScalarsPartition({
       rows: actualRows,
       expectedRows,
       eventsCount: events.length,
-      status,
+      status: quality.status,
       sourceFingerprint: countOnlyFingerprint,
     };
   }
@@ -211,8 +215,8 @@ export async function exportScalarsPartition({
       sourceConditionCount: conditionIds.length,
       sourceQualityRecordedAtMax: partition.sourceQualityRecordedAtMax,
       sourceFingerprint,
-      status,
-      error: diverged ? `actual tick count ${actualRows} differs from event_quality ${expectedRows}` : null,
+      status: quality.status,
+      error: quality.error,
     });
 
     await rm(path.dirname(tempPath), { recursive: true, force: true });
@@ -223,7 +227,7 @@ export async function exportScalarsPartition({
       rows: actualRows,
       expectedRows,
       eventsCount: events.length,
-      status,
+      status: quality.status,
       sourceFingerprint,
     };
   } catch (err) {

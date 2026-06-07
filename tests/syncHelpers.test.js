@@ -13,6 +13,7 @@ import { createBacktestTicksRowsChecksum, createBooksRowsChecksum, createScalarR
 import { flattenBookTick, parseBookLevels } from '../src/sync/bookFlatten.js';
 import { normalizeOhlcResolutions } from '../src/sync/ohlc.js';
 import { incrementalRange, markScalarsPartitionStale, shouldProcessScalarsPartition } from '../src/sync/scalars.js';
+import { classifyTickCountQuality } from '../src/sync/qualityPolicy.js';
 import { intervalFromMarketType, marketTypeFromInterval } from '../src/source/postgres.js';
 import { canPublishArchiveStatus, markPartitionArchiveStatusStale, publishPartitionArchiveStatus } from '../src/source/archiveApi.js';
 
@@ -31,8 +32,35 @@ test('config loads sync defaults and validates data mode', () => {
   assert.equal(config.syncBatchSize, 50000);
   assert.equal(config.syncStatementTimeoutMs, 120000);
   assert.equal(config.syncMarginMinutes, 2);
+  assert.equal(config.syncAcceptCountMismatchRatio, 0.02);
   assert.equal(config.backtestBookDepth, 25);
+  assert.equal(loadConfig({ SYNC_ACCEPT_COUNT_MISMATCH_RATIO: '0.005' }).syncAcceptCountMismatchRatio, 0.005);
   assert.throws(() => loadConfig({ BACKTEST_DATA_MODE: 'invalid' }), /Invalid BACKTEST_DATA_MODE/);
+});
+
+test('tick count quality auto-accepts small event_quality mismatches only', () => {
+  assert.deepEqual(classifyTickCountQuality({ actualRows: 1000, expectedRows: 1000 }), {
+    status: 'valid',
+    diverged: false,
+    error: null,
+    mismatchRatio: 0,
+  });
+
+  const smallMismatch = classifyTickCountQuality({ actualRows: 1005, expectedRows: 1000, acceptMismatchRatio: 0.02 });
+  assert.equal(smallMismatch.status, 'accepted');
+  assert.match(smallMismatch.error, /Accepted automatically/);
+
+  const largeMismatch = classifyTickCountQuality({ actualRows: 900, expectedRows: 1000, acceptMismatchRatio: 0.02 });
+  assert.equal(largeMismatch.status, 'needs_review');
+  assert.match(largeMismatch.error, /> tolerance/);
+
+  const emptyExport = classifyTickCountQuality({ actualRows: 0, expectedRows: 1000, acceptMismatchRatio: 1 });
+  assert.equal(emptyExport.status, 'needs_review');
+  assert.match(emptyExport.error, /no ticks/);
+
+  const unexpectedData = classifyTickCountQuality({ actualRows: 500, expectedRows: 0, acceptMismatchRatio: 1 });
+  assert.equal(unexpectedData.status, 'needs_review');
+  assert.match(unexpectedData.error, /expects no ticks but export has data/);
 });
 
 test('archive status publishing posts one valid status per event when configured', async () => {
