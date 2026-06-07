@@ -206,19 +206,29 @@ async function loadExplorerPath(ctx, relativePath) {
     mount(tableWrap, emptyState('O diretório do lakehouse está vazio.'));
     return;
   }
+  const obsoleteFiles = files.filter((file) => file.isObsolete);
 
   const table = el('div', { class: 'table-wrap' }, [
+    obsoleteFiles.length ? el('div', { style: { display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', padding: '10px 12px' } }, [
+      el('span', { class: 'muted' }, `${obsoleteFiles.length} Parquet obsoleto(s) nesta pasta · ${formatBytes(obsoleteFiles.reduce((sum, file) => sum + Number(file.size || 0), 0))}`),
+      el('button', {
+        class: 'btn btn--ghost btn--sm',
+        type: 'button',
+        onclick: () => cleanupExplorerPath(ctx, relativePath),
+      }, 'Limpar obsoletos'),
+    ]) : null,
     el('table', { class: 'table table--compact' }, [
       el('thead', {}, el('tr', {}, [
         el('th', {}, 'Nome'),
         el('th', {}, 'Tipo'),
+        el('th', {}, 'Uso'),
         el('th', {}, 'Tamanho'),
         el('th', {}, 'Modificado'),
         el('th', {}, 'Ações'),
       ])),
       el('tbody', {}, [
         relativePath !== '' ? el('tr', {}, [
-          el('td', { colspan: '5', style: { padding: '8px 12px' } }, el('a', { 
+          el('td', { colspan: '6', style: { padding: '8px 12px' } }, el('a', { 
             href: 'javascript:void(0)', 
             style: { fontWeight: 'bold', color: 'var(--accent)', display: 'block' },
             onclick: () => {
@@ -249,6 +259,9 @@ async function loadExplorerPath(ctx, relativePath) {
               file.name
             ])),
             el('td', {}, file.isDir ? 'Pasta' : 'Parquet'),
+            el('td', {}, file.isDir ? '-' : file.isActive
+              ? el('span', { class: 'badge badge--ok' }, 'ativo')
+              : el('span', { class: 'badge badge--warn' }, 'obsoleto')),
             el('td', {}, file.isDir ? '-' : formatBytes(file.size)),
             el('td', {}, file.mtime ? new Date(file.mtime).toLocaleString() : '-'),
             el('td', {}, file.isDir ? null : el('a', {
@@ -262,12 +275,31 @@ async function loadExplorerPath(ctx, relativePath) {
               el('i', { class: 'fa-solid fa-download' })
             ])),
           ]);
-        }) : [el('tr', {}, el('td', { colspan: '5', class: 'muted', style: { textAlign: 'center', padding: '12px' } }, 'Diretório vazio.'))])
+        }) : [el('tr', {}, el('td', { colspan: '6', class: 'muted', style: { textAlign: 'center', padding: '12px' } }, 'Diretório vazio.'))])
       ])
     ])
   ]);
   
   mount(tableWrap, table);
+}
+
+async function cleanupExplorerPath(ctx, relativePath) {
+  const ok = await confirmDialog({
+    title: 'Limpar Parquets obsoletos',
+    message: 'Remover os arquivos Parquet desta pasta que não são active_path no manifest?',
+    detail: 'O arquivo em uso pelo backtest será mantido. Apenas versões antigas da mesma partição serão removidas.',
+    confirmLabel: 'Limpar',
+    tone: 'danger',
+  });
+  if (!ok) return;
+
+  const res = await ctx.api.post('/api/lake/cleanup', { path: relativePath });
+  if (!res.ok) {
+    ctx.toast.err(res.error?.message || 'Falha ao limpar arquivos obsoletos');
+    return;
+  }
+  ctx.toast.ok(`${res.data.deleted.length} arquivo(s) removido(s) · ${formatBytes(res.data.bytesFreed || 0)} liberados`);
+  await loadExplorerPath(ctx, relativePath);
 }
 
 function formatBytes(bytes, decimals = 2) {

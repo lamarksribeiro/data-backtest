@@ -5,6 +5,7 @@ import { createReadStream } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { cleanupOrphanParquetFiles, listActiveParquetRelativePaths } from '../lake/cleanup.js';
 import { createAuthMiddleware } from '../middleware/auth.js';
 import { getHealth } from '../health.js';
 import { acceptManifestPartition, listBacktestContextOptions, listManifest, manifestStats, revokeAcceptedManifestPartition } from '../state/manifest.js';
@@ -160,16 +161,20 @@ export function createApiHandler(deps) {
         }
         try {
           const entries = await readdir(safePath, { withFileTypes: true });
+          const activePaths = listActiveParquetRelativePaths(db, config.lakeRoot);
           const list = [];
           for (const entry of entries) {
             if (entry.name.startsWith('.')) continue;
             const entryPath = path.join(safePath, entry.name);
             const entryRelative = path.relative(config.lakeRoot, entryPath).replace(/\\/g, '/');
             const entryStats = await stat(entryPath);
+            const isActive = !entry.isDirectory() && activePaths.has(entryRelative);
             list.push({
               name: entry.name,
               path: entryRelative,
               isDir: entry.isDirectory(),
+              isActive,
+              isObsolete: !entry.isDirectory() && entry.name.endsWith('.parquet') && !isActive,
               size: entryStats.size,
               mtime: entryStats.mtime,
             });
@@ -181,6 +186,21 @@ export function createApiHandler(deps) {
           }
           throw err;
         }
+      }
+      if (req.method === 'POST' && url.pathname === '/api/lake/cleanup') {
+        const body = await readJson(req);
+        const result = await cleanupOrphanParquetFiles({
+          db,
+          lakeRoot: config.lakeRoot,
+          relativePath: body.path || '',
+          dryRun: Boolean(body.dry_run),
+        });
+        return sendJson(res, 200, {
+          dryRun: result.dryRun,
+          deleted: result.deleted.map((file) => ({ path: file.relativePath, size: file.size })),
+          kept: result.kept.length,
+          bytesFreed: result.bytesFreed,
+        });
       }
       if (req.method === 'GET' && url.pathname === '/api/lake/download') {
         const relativePath = url.searchParams.get('path') || '';

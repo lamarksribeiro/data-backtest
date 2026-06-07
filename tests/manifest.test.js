@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 
 import { openStateDatabase, closeStateDatabase } from '../src/state/sqlite.js';
 import { acceptEligibleReviewPartitions, acceptManifestPartition, listManifest, manifestStats, revokeAcceptedManifestPartition, upsertManifestPartition } from '../src/state/manifest.js';
+import { cleanupOrphanParquetFiles } from '../src/lake/cleanup.js';
 import { checkLakeStorage } from '../src/lake/storage.js';
 
 test('manifest initializes in SQLite WAL and upserts partition', async () => {
@@ -145,6 +146,47 @@ test('manifest bulk accepts eligible stale event_quality mismatches', async () =
       const rows = listManifest(db, { limit: 10 }).sort((left, right) => left.dt.localeCompare(right.dt));
       assert.equal(rows[0].status, 'accepted');
       assert.equal(rows[1].status, 'needs_review');
+    } finally {
+      closeStateDatabase(db);
+    }
+  } finally {
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
+  }
+});
+
+test('lake cleanup removes only parquet files not referenced by active_path', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-lake-cleanup-'));
+  try {
+    const lakeRoot = path.join(dir, 'lake');
+    const partitionDir = path.join(lakeRoot, 'backtest_ticks', 'underlying=BTC', 'interval=5m', 'book_depth=25', 'dt=2026-06-04');
+    await mkdir(partitionDir, { recursive: true });
+    const activePath = path.join(partitionDir, 'part-active.parquet');
+    const oldPath = path.join(partitionDir, 'part-old.parquet');
+    await writeFile(activePath, 'active');
+    await writeFile(oldPath, 'old');
+
+    const db = openStateDatabase(path.join(dir, 'state.db'));
+    try {
+      upsertManifestPartition(db, {
+        dataset: 'backtest_ticks',
+        underlying: 'BTC',
+        interval: '5m',
+        bookDepth: 25,
+        dt: '2026-06-04',
+        activePath,
+        status: 'valid',
+      });
+
+      const result = await cleanupOrphanParquetFiles({
+        db,
+        lakeRoot,
+        relativePath: 'backtest_ticks/underlying=BTC/interval=5m/book_depth=25/dt=2026-06-04',
+      });
+
+      assert.equal(result.deleted.length, 1);
+      assert.match(result.deleted[0].relativePath, /part-old\.parquet$/);
+      assert.equal(await readFile(activePath, 'utf8'), 'active');
+      await assert.rejects(() => readFile(oldPath, 'utf8'), /ENOENT/);
     } finally {
       closeStateDatabase(db);
     }

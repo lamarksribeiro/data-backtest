@@ -3,6 +3,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 
 import { buildFinalParquetPath, buildTempParquetPath, toPortablePath } from '../lake/paths.js';
+import { cleanupPartitionParquetFiles } from '../lake/cleanup.js';
 import { upsertManifestPartition } from '../state/manifest.js';
 import { writeOhlcParquetFromScalars } from './duckdbParquet.js';
 import { createRunId } from './fingerprint.js';
@@ -126,6 +127,7 @@ export async function exportOhlcFromScalarsPartition({ config, db, scalarPartiti
     });
 
     await rm(path.dirname(tempPath), { recursive: true, force: true });
+    await cleanupPartitionParquetFiles({ db, lakeRoot: config.lakeRoot, partition: manifestPartition });
 
     return {
       partition: manifestPartition,

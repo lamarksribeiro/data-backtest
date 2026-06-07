@@ -2,6 +2,7 @@ import { mkdir, rm } from 'node:fs/promises';
 import path from 'node:path';
 
 import { buildFinalParquetPath, buildTempParquetPath, toPortablePath } from '../lake/paths.js';
+import { cleanupPartitionParquetFiles } from '../lake/cleanup.js';
 import { markDerivedStaleForScalars, markManifestPartitionStale, upsertManifestPartition } from '../state/manifest.js';
 import { countTicksByEvent, getPartitionEvents, getScalarTicksForEvents, listSealedScalarPartitions } from '../source/postgres.js';
 import { markPartitionArchiveStatusStale } from '../source/archiveApi.js';
@@ -220,6 +221,7 @@ export async function exportScalarsPartition({
     });
 
     await rm(path.dirname(tempPath), { recursive: true, force: true });
+    await cleanupPartitionParquetFiles({ db, lakeRoot: config.lakeRoot, partition: manifestPartition });
 
     return {
       partition,

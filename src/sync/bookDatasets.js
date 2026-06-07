@@ -2,6 +2,7 @@ import { mkdir, rm } from 'node:fs/promises';
 import path from 'node:path';
 
 import { buildFinalParquetPath, buildTempParquetPath, toPortablePath } from '../lake/paths.js';
+import { cleanupPartitionParquetFiles } from '../lake/cleanup.js';
 import { upsertManifestPartition } from '../state/manifest.js';
 import { countTicksByEvent, getPartitionEvents, getTicksWithBooksForEvents, listSealedScalarPartitions } from '../source/postgres.js';
 import { writeBacktestTicksParquetFromBookRows, writeBooksParquet } from './duckdbParquet.js';
@@ -219,6 +220,7 @@ async function exportBookDatasetPartition({
     });
 
     await rm(path.dirname(tempPath), { recursive: true, force: true });
+    await cleanupPartitionParquetFiles({ db, lakeRoot: config.lakeRoot, partition: manifestPartition });
 
     const exportResult = {
       partition,
