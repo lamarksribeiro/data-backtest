@@ -255,13 +255,14 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
           }, versions.length
             ? versions.map((item) => el('option', { value: item.id, selected: item.id === version?.id }, `v${item.version} · ${item.created_at ? item.created_at.slice(0, 10) : '—'}`))
             : [el('option', { value: '' }, 'Sem versões')]),
-          el('button', {
-            class: 'btn btn--ghost btn--sm btn--icon strategy-version-control__delete',
-            type: 'button',
-            title: 'Excluir esta versão',
-            disabled: !version || versions.length <= 1,
-            onclick: () => deleteVersionFlow(ctx, strategy, version),
-          }, el('i', { class: 'fa-solid fa-trash-can' })),
+          ...(versions.length > 1
+            ? [el('button', {
+              class: 'btn btn--ghost btn--sm btn--icon strategy-version-control__delete',
+              type: 'button',
+              title: 'Excluir esta versão',
+              onclick: () => deleteVersionFlow(ctx, strategy, version),
+            }, el('i', { class: 'fa-solid fa-trash-can' }))]
+            : []),
         ]),
         el('div', { class: 'strategy-header-toolbar__sep', 'aria-hidden': 'true' }),
         el('button', {

@@ -3915,17 +3915,15 @@ kbd {
 
 /* ── Strategy editor header & version control ── */
 .strategy-header-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px 16px;
   margin-bottom: 20px;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--border);
 }
 .strategy-header-row .editor-title-block {
-  flex: 1 1 220px;
   min-width: 0;
 }
 .strategy-header-meta {
@@ -3939,20 +3937,22 @@ kbd {
   font-size: 12px;
 }
 .strategy-header-toolbar {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 0;
   flex-shrink: 0;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(15, 23, 42, 0.45);
+  justify-self: end;
 }
 .strategy-version-control {
   display: inline-flex;
   align-items: center;
   gap: 0;
-  padding: 4px 4px 4px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: rgba(15, 23, 42, 0.45);
+  padding: 0 2px 0 8px;
 }
 .strategy-version-control__label {
   display: inline-flex;
@@ -3979,7 +3979,9 @@ kbd {
   font-size: 13px;
   font-family: var(--font-mono);
   color: var(--text-0);
-  min-width: 168px;
+  width: auto;
+  min-width: 132px;
+  max-width: 200px;
   cursor: pointer;
 }
 .strategy-version-control__select:focus {
@@ -3995,11 +3997,15 @@ kbd {
 }
 .strategy-header-toolbar__sep {
   width: 1px;
-  height: 28px;
+  height: 24px;
+  margin: 0 4px;
   background: var(--border);
   flex-shrink: 0;
 }
-.strategy-header-toolbar .btn--ghost i {
+.strategy-header-toolbar .btn--danger {
+  white-space: nowrap;
+}
+.strategy-header-toolbar .btn--danger i {
   margin-right: 6px;
 }
 
@@ -4382,24 +4388,31 @@ i.fa-solid, i.fa-regular, i.fa-brands {
   transform: scale(1.1);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .strategy-header-row {
-    flex-direction: column;
+    grid-template-columns: 1fr;
     align-items: stretch;
   }
   .strategy-header-toolbar {
-    flex-direction: column;
-    align-items: stretch;
+    justify-self: stretch;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px;
   }
   .strategy-version-control {
-    width: 100%;
+    flex: 1 1 auto;
+    min-width: 0;
   }
   .strategy-version-control__select {
     flex: 1;
     min-width: 0;
+    max-width: none;
   }
   .strategy-header-toolbar__sep {
+    display: none;
+  }
+  .strategy-header-toolbar .btn--danger {
     width: 100%;
-    height: 1px;
+    justify-content: center;
   }
 }
