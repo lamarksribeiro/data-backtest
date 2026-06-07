@@ -9,6 +9,7 @@ import { markPartitionArchiveStatusStale } from '../source/archiveApi.js';
 import { createRunId, createScalarRowsChecksum, createSourceFingerprint } from './fingerprint.js';
 import { writeScalarsParquet } from './duckdbParquet.js';
 import { classifyTickCountQuality } from './qualityPolicy.js';
+import { buildPartitionQualityDetails } from './qualityDetails.js';
 
 export async function listScalarPartitions(pool, opts) {
   return listSealedScalarPartitions(pool, opts);
@@ -152,6 +153,13 @@ export async function exportScalarsPartition({
     expectedRows,
     acceptMismatchRatio: config.syncAcceptCountMismatchRatio,
   });
+  const qualityDetails = buildPartitionQualityDetails({
+    partition,
+    events: eventsWithCounts,
+    actualRows,
+    expectedRows,
+    quality,
+  });
   const countOnlyFingerprint = createSourceFingerprint({
     dataset,
     ...partition,
@@ -212,6 +220,7 @@ export async function exportScalarsPartition({
       maxTs,
       coverageMin: partition.coverageMin,
       hasDegraded: partition.hasDegraded,
+      qualityDetails,
       sourceTickCount: actualRows,
       sourceConditionCount: conditionIds.length,
       sourceQualityRecordedAtMax: partition.sourceQualityRecordedAtMax,

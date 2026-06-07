@@ -80,6 +80,7 @@ export function checkDatasetAvailability(db, request) {
       events_count: row.events_count ?? null,
       coverage_min: row.coverage_min ?? null,
       has_degraded: Boolean(row.has_degraded),
+      quality_details: parseQualityDetails(row.quality_details_json),
       active_path: row.active_path ?? null,
       error: row.error ?? null,
       hint: partitionStatusHint(row.status),
@@ -95,6 +96,7 @@ export function checkDatasetAvailability(db, request) {
       status: row.status,
       active_path: row.active_path,
       rows: row.rows ?? null,
+      quality_details: partition.quality_details,
       error: row.error ?? null,
       hint: partition.hint,
     });
@@ -163,6 +165,15 @@ function findManifestPartitions(db, request, fromDt, toDt) {
 
   sql += ` ORDER BY dt ASC`;
   return db.prepare(sql).all(...params);
+}
+
+function parseQualityDetails(value) {
+  if (!value) return null;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
 }
 
 function utcDateOnly(date) {

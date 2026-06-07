@@ -645,10 +645,91 @@ function formatCoverage(value) {
 
 function qualityBadge(p) {
   if (p.status === 'accepted') {
-    return el('span', { class: 'badge badge--warn', title: p.error || p.hint || 'Aceita com aviso' }, 'aviso');
+    return qualityDetailsDisclosure(p, 'aviso', p.error || p.hint || 'Aceita com aviso');
   }
-  if (p.has_degraded) return el('span', { class: 'badge badge--warn' }, 'degradado');
+  if (p.has_degraded) return qualityDetailsDisclosure(p, 'degradado', 'Ver detalhes da degradação');
   return el('span', { class: 'badge badge--ok' }, 'ok');
+}
+
+function qualityDetailsDisclosure(p, label, title) {
+  return el('details', { class: 'lake-quality-details' }, [
+    el('summary', { title }, [
+      el('span', { class: 'badge badge--warn' }, label),
+      el('span', { class: 'lake-quality-details__hint' }, 'detalhes'),
+    ]),
+    qualityDetailsBody(p),
+  ]);
+}
+
+function qualityDetailsBody(p) {
+  const details = p.quality_details;
+  if (!details) {
+    return el('div', { class: 'lake-quality-details__body' }, [
+      el('p', {}, 'Esta partição foi marcada como degradada, mas foi gerada antes do resumo detalhado existir.'),
+      p.error ? el('p', { class: 'lake-quality-details__note' }, p.error) : null,
+      el('p', { class: 'muted' }, 'Reprocesse a partição para gravar eventos afetados, cobertura e ticks faltantes.'),
+    ]);
+  }
+
+  const issueItems = (details.issues || []).map((issue) => el('li', {}, formatQualityIssue(issue)));
+  const samples = (details.samples || []).slice(0, 8);
+
+  return el('div', { class: 'lake-quality-details__body' }, [
+    el('div', { class: 'lake-quality-details__stats' }, [
+      qualityMetric('Eventos degradados', `${details.events_degraded ?? 0}/${details.events_total ?? '-'}`),
+      qualityMetric('Cobertura mín.', formatCoverage(details.coverage_min)),
+      qualityMetric('Ticks faltantes', formatInteger(details.source_missing_ticks)),
+      qualityMetric('Delta rows', formatSignedInteger(details.row_count_delta)),
+    ]),
+    issueItems.length ? el('ul', { class: 'lake-quality-details__issues' }, issueItems) : null,
+    samples.length ? el('div', { class: 'lake-quality-details__samples' }, [
+      el('div', { class: 'lake-quality-details__subtitle' }, 'Piores eventos'),
+      ...samples.map((sample) => el('div', { class: 'lake-quality-details__sample' }, [
+        el('code', { title: sample.condition_id || '' }, shortConditionId(sample.condition_id)),
+        el('span', {}, sample.event_start ? sample.event_start.replace('T', ' ').slice(0, 16) : '-'),
+        el('span', {}, formatCoverage(sample.coverage)),
+        el('span', {}, `${formatInteger(sample.ticks_recorded)}/${formatInteger(sample.ticks_expected)} ticks`),
+      ])),
+    ]) : null,
+    p.error ? el('p', { class: 'lake-quality-details__note' }, p.error) : null,
+  ]);
+}
+
+function qualityMetric(label, value) {
+  return el('div', { class: 'lake-quality-details__metric' }, [
+    el('span', {}, label),
+    el('strong', {}, value),
+  ]);
+}
+
+function formatQualityIssue(issue) {
+  if (issue.code === 'low_coverage') {
+    return `${issue.label}: ${issue.events ?? 0} evento(s) abaixo de ${formatCoverage(issue.threshold)}`;
+  }
+  if (issue.code === 'missing_ticks') {
+    return `${issue.label}: ${formatInteger(issue.missing_ticks)} faltantes de ${formatInteger(issue.expected_ticks)} esperados`;
+  }
+  if (issue.code === 'manifest_count_mismatch') {
+    return `${issue.label}: exportado ${formatInteger(issue.actual_rows)}, event_quality ${formatInteger(issue.event_quality_rows)} (${formatSignedInteger(issue.delta)})`;
+  }
+  return issue.label || issue.code || 'Problema de qualidade';
+}
+
+function formatInteger(value) {
+  if (value == null || !Number.isFinite(Number(value))) return '-';
+  return Number(value).toLocaleString('pt-BR');
+}
+
+function formatSignedInteger(value) {
+  if (value == null || !Number.isFinite(Number(value))) return '-';
+  const number = Number(value);
+  return `${number > 0 ? '+' : ''}${number.toLocaleString('pt-BR')}`;
+}
+
+function shortConditionId(value) {
+  if (!value) return '-';
+  const text = String(value);
+  return text.length > 12 ? `${text.slice(0, 6)}...${text.slice(-4)}` : text;
 }
 
 function partitionStatusTone(status) {

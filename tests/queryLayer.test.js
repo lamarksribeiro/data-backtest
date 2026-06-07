@@ -59,6 +59,18 @@ test('availability resolves valid active_path and reports missing partitions', a
         dt: '2026-06-02',
         activePath: '/lake/backtest_ticks/dt=2026-06-02/part.parquet',
         rows: 172749,
+        eventsCount: 288,
+        hasDegraded: true,
+        qualityDetails: {
+          version: 1,
+          events_total: 288,
+          events_degraded: 2,
+          coverage_min: 0.49,
+          source_missing_ticks: 300,
+          row_count_delta: 72749,
+          issues: [{ code: 'low_coverage', label: 'Cobertura abaixo do mínimo por evento', events: 2 }],
+          samples: [{ condition_id: 'cond-1', event_start: '2026-06-02T00:00:00.000Z', coverage: 0.49 }],
+        },
         status: 'needs_review',
         error: 'actual tick count 172749 differs from event_quality 100000',
       });
@@ -76,6 +88,9 @@ test('availability resolves valid active_path and reports missing partitions', a
       assert.equal(reviewAvailability.summary.unavailable, 1);
       assert.equal(reviewAvailability.partitions[0].status, 'needs_review');
       assert.equal(reviewAvailability.partitions[0].usable, false);
+      assert.equal(reviewAvailability.partitions[0].has_degraded, true);
+      assert.equal(reviewAvailability.partitions[0].quality_details.events_degraded, 2);
+      assert.equal(reviewAvailability.unavailable[0].quality_details.coverage_min, 0.49);
       assert.match(reviewAvailability.partitions[0].hint, /event_quality/);
       assert.match(reviewAvailability.unavailable[0].error, /event_quality 100000/);
 

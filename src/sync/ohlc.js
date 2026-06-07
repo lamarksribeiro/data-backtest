@@ -119,6 +119,7 @@ export async function exportOhlcFromScalarsPartition({ config, db, scalarPartiti
       maxTs: stats.maxTs,
       coverageMin: scalarPartition.coverage_min,
       hasDegraded: Boolean(scalarPartition.has_degraded),
+      qualityDetails: parseJson(scalarPartition.quality_details_json),
       sourceTickCount: Number(scalarPartition.rows || 0),
       sourceConditionCount: scalarPartition.source_condition_count,
       sourceQualityRecordedAtMax: scalarPartition.source_quality_recorded_at_max,
@@ -149,6 +150,15 @@ export async function exportOhlcFromScalarsPartition({ config, db, scalarPartiti
       error: err.message,
     });
     throw err;
+  }
+}
+
+function parseJson(value) {
+  if (!value) return null;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
   }
 }
 

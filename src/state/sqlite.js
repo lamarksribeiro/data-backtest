@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS lake_manifest (
   max_ts TEXT,
   coverage_min REAL,
   has_degraded INTEGER NOT NULL DEFAULT 0,
+  quality_details_json TEXT,
   source_tick_count INTEGER,
   source_condition_count INTEGER,
   source_quality_recorded_at_max TEXT,
@@ -155,6 +156,10 @@ const PREPARE_JOBS_MIGRATIONS = [
   'ALTER TABLE prepare_jobs ADD COLUMN progress_json TEXT NULL',
 ];
 
+const LAKE_MANIFEST_MIGRATIONS = [
+  'ALTER TABLE lake_manifest ADD COLUMN quality_details_json TEXT NULL',
+];
+
 export function openStateDatabase(stateDbPath) {
   mkdirSync(path.dirname(stateDbPath), { recursive: true });
   const db = new DatabaseSync(stateDbPath);
@@ -170,27 +175,30 @@ export function openStateDatabase(stateDbPath) {
 
 function migrateLakeManifest(db) {
   const table = db.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'lake_manifest'").get();
-  if (!table?.sql || table.sql.includes("'accepted'")) return;
+  if (!table?.sql) return;
 
-  db.exec(`
-    PRAGMA foreign_keys = OFF;
-    ALTER TABLE lake_manifest RENAME TO lake_manifest_old;
-    ${SCHEMA_SQL.split('CREATE INDEX IF NOT EXISTS lake_manifest_status_idx')[0]}
-    INSERT INTO lake_manifest (
-      id, dataset, market_id, underlying, interval, resolution, book_depth, dt,
-      active_path, run_id, rows, events_count, min_ts, max_ts, coverage_min,
-      has_degraded, source_tick_count, source_condition_count,
-      source_quality_recorded_at_max, source_fingerprint, status, created_at, verified_at, error
-    )
-    SELECT
-      id, dataset, market_id, underlying, interval, resolution, book_depth, dt,
-      active_path, run_id, rows, events_count, min_ts, max_ts, coverage_min,
-      has_degraded, source_tick_count, source_condition_count,
-      source_quality_recorded_at_max, source_fingerprint, status, created_at, verified_at, error
-    FROM lake_manifest_old;
-    DROP TABLE lake_manifest_old;
-    PRAGMA foreign_keys = ON;
-  `);
+  if (!table.sql.includes("'accepted'")) {
+    db.exec(`
+      PRAGMA foreign_keys = OFF;
+      ALTER TABLE lake_manifest RENAME TO lake_manifest_old;
+      ${SCHEMA_SQL.split('CREATE INDEX IF NOT EXISTS lake_manifest_status_idx')[0]}
+      INSERT INTO lake_manifest (
+        id, dataset, market_id, underlying, interval, resolution, book_depth, dt,
+        active_path, run_id, rows, events_count, min_ts, max_ts, coverage_min,
+        has_degraded, quality_details_json, source_tick_count, source_condition_count,
+        source_quality_recorded_at_max, source_fingerprint, status, created_at, verified_at, error
+      )
+      SELECT
+        id, dataset, market_id, underlying, interval, resolution, book_depth, dt,
+        active_path, run_id, rows, events_count, min_ts, max_ts, coverage_min,
+        has_degraded, NULL, source_tick_count, source_condition_count,
+        source_quality_recorded_at_max, source_fingerprint, status, created_at, verified_at, error
+      FROM lake_manifest_old;
+      DROP TABLE lake_manifest_old;
+      PRAGMA foreign_keys = ON;
+    `);
+  }
+  applyColumnMigrations(db, 'lake_manifest', LAKE_MANIFEST_MIGRATIONS);
   db.exec(SCHEMA_SQL);
 }
 

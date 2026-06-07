@@ -91,6 +91,7 @@ export async function getPartitionEvents(pool, partition) {
       eq.event_start,
       eq.event_end,
       eq.ticks_recorded,
+      eq.ticks_expected,
       eq.coverage,
       eq.degraded,
       eq.recorded_at
@@ -106,6 +107,7 @@ export async function getPartitionEvents(pool, partition) {
     eventStart: new Date(row.event_start).toISOString(),
     eventEnd: new Date(row.event_end).toISOString(),
     ticksRecorded: Number(row.ticks_recorded || 0),
+    ticksExpected: Number(row.ticks_expected || 0),
     coverage: row.coverage == null ? null : Number(row.coverage),
     degraded: Boolean(row.degraded),
     recordedAt: row.recorded_at ? new Date(row.recorded_at).toISOString() : null,

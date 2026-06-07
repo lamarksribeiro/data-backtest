@@ -9,6 +9,7 @@ import { writeBacktestTicksParquetFromBookRows, writeBooksParquet } from './duck
 import { createBooksRowsChecksum, createRunId, createSourceFingerprint } from './fingerprint.js';
 import { publishPartitionArchiveStatus } from '../source/archiveApi.js';
 import { classifyTickCountQuality } from './qualityPolicy.js';
+import { buildPartitionQualityDetails } from './qualityDetails.js';
 
 export async function listBookPartitions(pool, opts) {
   return listSealedScalarPartitions(pool, opts);
@@ -140,6 +141,13 @@ async function exportBookDatasetPartition({
     expectedRows,
     acceptMismatchRatio: config.syncAcceptCountMismatchRatio,
   });
+  const qualityDetails = buildPartitionQualityDetails({
+    partition,
+    events: eventsWithCounts,
+    actualRows,
+    expectedRows,
+    quality,
+  });
 
   const runId = createRunId(dataset.replace('_', '-'));
   const manifestPartition = {
@@ -211,6 +219,7 @@ async function exportBookDatasetPartition({
       maxTs,
       coverageMin: partition.coverageMin,
       hasDegraded: partition.hasDegraded,
+      qualityDetails,
       sourceTickCount: actualRows,
       sourceConditionCount: conditionIds.length,
       sourceQualityRecordedAtMax: partition.sourceQualityRecordedAtMax,

@@ -198,9 +198,9 @@ export function upsertManifestPartition(db, entry) {
     INSERT INTO lake_manifest (
       dataset, market_id, underlying, interval, resolution, book_depth, dt,
       active_path, run_id, rows, events_count, min_ts, max_ts, coverage_min,
-      has_degraded, source_tick_count, source_condition_count,
+      has_degraded, quality_details_json, source_tick_count, source_condition_count,
       source_quality_recorded_at_max, source_fingerprint, status, verified_at, error
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(dataset, COALESCE(market_id, ''), underlying, interval, COALESCE(resolution, ''), COALESCE(book_depth, -1), dt)
     DO UPDATE SET
       active_path = excluded.active_path,
@@ -211,6 +211,7 @@ export function upsertManifestPartition(db, entry) {
       max_ts = excluded.max_ts,
       coverage_min = excluded.coverage_min,
       has_degraded = excluded.has_degraded,
+      quality_details_json = excluded.quality_details_json,
       source_tick_count = excluded.source_tick_count,
       source_condition_count = excluded.source_condition_count,
       source_quality_recorded_at_max = excluded.source_quality_recorded_at_max,
@@ -236,6 +237,7 @@ export function upsertManifestPartition(db, entry) {
     entry.maxTs ?? null,
     entry.coverageMin ?? null,
     entry.hasDegraded ? 1 : 0,
+    entry.qualityDetails ? JSON.stringify(entry.qualityDetails) : null,
     entry.sourceTickCount ?? null,
     entry.sourceConditionCount ?? null,
     entry.sourceQualityRecordedAtMax ?? null,
