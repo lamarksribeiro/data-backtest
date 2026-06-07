@@ -10,6 +10,7 @@
   "scripts": {
     "cli": "node src/cli.js",
     "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
     "api": "node src/server.js",
     "health": "node src/cli.js health",
     "manifest:list": "node src/cli.js manifest:list",
