@@ -290,8 +290,7 @@ function renderPlan(panel, plan, ctx) {
   };
   const partitions = availability.partitions || buildPartitionsFallback(availability);
 
-  const available = partitions.filter((p) => p.usable && p.status !== 'accepted');
-  const accepted = partitions.filter((p) => p.usable && p.status === 'accepted');
+  const available = partitions.filter((p) => p.usable);
   const blocked = partitions.filter((p) => !p.usable && p.active_path);
   const gaps = partitions.filter((p) => !p.usable && !p.active_path);
 
@@ -311,12 +310,7 @@ function renderPlan(panel, plan, ctx) {
     ]),
     available.length ? el('section', { class: 'card lake-card--ok' }, [
       el('h2', { class: 'card__title' }, `Disponíveis (${available.length})`),
-      availablePartitionsTable(available),
-    ]) : null,
-    accepted.length ? el('section', { class: 'card lake-card--warn' }, [
-      el('h2', { class: 'card__title' }, `Aceitas com aviso (${accepted.length})`),
-      el('p', { class: 'muted' }, 'Usáveis em backtests, mas mantêm divergência registrada para auditoria.'),
-      acceptedPartitionsTable(accepted, ctx, availability),
+      availablePartitionsTable(available, ctx, availability),
     ]) : null,
     blocked.length ? el('section', { class: 'card lake-card--warn' }, [
       el('h2', { class: 'card__title' }, `Bloqueadas (${blocked.length})`),
@@ -326,7 +320,7 @@ function renderPlan(panel, plan, ctx) {
       el('h2', { class: 'card__title' }, `Ausentes (${gaps.length})`),
       listBlock('Datas', gaps.map((p) => p.dt)),
     ]) : null,
-    !available.length && !accepted.length && !blocked.length && !gaps.length ? el('p', { class: 'muted' }, 'Nenhuma partição no intervalo.') : null,
+    !available.length && !blocked.length && !gaps.length ? el('p', { class: 'muted' }, 'Nenhuma partição no intervalo.') : null,
     preparationCard(result.preparation, plan, ctx),
   ]);
 }
@@ -538,22 +532,26 @@ function buildPartitionsFallback(availability) {
   });
 }
 
-function availablePartitionsTable(partitions) {
+function availablePartitionsTable(partitions, ctx, availability) {
   return el('div', { class: 'table-wrap' }, [
     el('table', { class: 'table table--compact lake-partitions-table' }, [
       el('thead', {}, el('tr', {}, [
         el('th', {}, 'dt'), el('th', {}, 'Rows'), el('th', {}, 'Eventos'),
-        el('th', {}, 'Cobertura mín.'), el('th', {}, 'Degradado'), el('th', {}, 'Arquivo'),
+        el('th', {}, 'Cobertura mín.'), el('th', {}, 'Qualidade'), el('th', {}, 'Arquivo'), el('th', {}, 'Ações'),
       ])),
       el('tbody', {}, partitions.map((p) => el('tr', { class: 'lake-partition--ok' }, [
         el('td', {}, el('code', {}, p.dt)),
         el('td', {}, p.rows != null ? String(p.rows) : '-'),
         el('td', {}, p.events_count != null ? String(p.events_count) : '-'),
         el('td', {}, formatCoverage(p.coverage_min)),
-        el('td', {}, p.has_degraded
-          ? el('span', { class: 'badge badge--warn' }, 'sim')
-          : el('span', { class: 'badge badge--ok' }, 'não')),
+        el('td', {}, qualityBadge(p)),
         el('td', { class: 'mono truncate', title: p.active_path || '' }, p.active_path || '-'),
+        el('td', {}, p.status === 'accepted' ? el('button', {
+          class: 'btn btn--ghost btn--sm',
+          type: 'button',
+          title: p.error || p.hint || 'Partição aceita com aviso',
+          onclick: () => revokeAcceptedPartition(ctx, p, availability),
+        }, 'Bloquear') : null),
       ]))),
     ])
   ]);
@@ -597,41 +595,17 @@ function blockedPartitionsTable(partitions, ctx, availability) {
   ]);
 }
 
-function acceptedPartitionsTable(partitions, ctx, availability) {
-  return el('div', { class: 'table-wrap' }, [
-    el('table', { class: 'table table--compact lake-partitions-table' }, [
-      el('thead', {}, el('tr', {}, [
-        el('th', {}, 'dt'), el('th', {}, 'Rows'), el('th', {}, 'Eventos'),
-        el('th', {}, 'Motivo'), el('th', {}, 'Ações'),
-      ])),
-      el('tbody', {}, partitions.map((p) => el('tr', { class: 'lake-partition--gap' }, [
-        el('td', {}, el('code', {}, p.dt)),
-        el('td', {}, p.rows != null ? String(p.rows) : '-'),
-        el('td', {}, p.events_count != null ? String(p.events_count) : '-'),
-        el('td', { class: 'lake-partition__detail' }, p.error
-          ? el('span', { class: 'lake-partition__error' }, escapeHtml(p.error))
-          : el('span', { class: 'muted' }, p.hint || '-')),
-        el('td', {}, el('div', { style: { display: 'flex', gap: '8px', flexWrap: 'wrap' } }, [
-          el('button', {
-            class: 'btn btn--ghost btn--sm',
-            type: 'button',
-            onclick: () => revokeAcceptedPartition(ctx, p, availability),
-          }, 'Bloquear'),
-          el('button', {
-            class: 'btn btn--ghost btn--sm btn--primary-hover',
-            type: 'button',
-            style: { color: 'var(--accent)' },
-            onclick: () => quickRebuildPartition(ctx, p, availability),
-          }, 'Refazer'),
-        ])),
-      ]))),
-    ])
-  ]);
-}
-
 function formatCoverage(value) {
   if (value == null || !Number.isFinite(Number(value))) return '-';
   return `${Math.round(Number(value) * 100)}%`;
+}
+
+function qualityBadge(p) {
+  if (p.status === 'accepted') {
+    return el('span', { class: 'badge badge--warn', title: p.error || p.hint || 'Aceita com aviso' }, 'aviso');
+  }
+  if (p.has_degraded) return el('span', { class: 'badge badge--warn' }, 'degradado');
+  return el('span', { class: 'badge badge--ok' }, 'ok');
 }
 
 function partitionStatusTone(status) {
