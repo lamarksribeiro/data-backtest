@@ -72,10 +72,11 @@ export function createStandardLibrary() {
         }
         return total;
       },
-      liquidityRatio(side, tick, budget) {
+      liquidityRatio(side, tick, budget, maxPrice = null) {
         const ask = lib.book.ask(side, tick);
-        const qty = lib.book.availableQty(side, ask, tick);
-        const needed = budget / Math.max(ask, 0.001);
+        const limitPrice = Number.isFinite(Number(maxPrice)) ? Number(maxPrice) : ask;
+        const qty = lib.book.availableQty(side, limitPrice, tick);
+        const needed = budget / Math.max(limitPrice, 0.001);
         return needed > 0 ? qty / needed : 0;
       },
     },
@@ -113,6 +114,27 @@ export function createStandardLibrary() {
         const ratio = clamp01(1 - (secs / threshold));
         return base + ((near - base) * ratio);
       },
+      stopReverseMinDistance(params = {}, secondsLeft) {
+        const fallback = Math.max(0, Number(params.stopReverseMinDistanceAbs ?? 0));
+        let schedule = params.stopReverseDistanceSchedule;
+        if (typeof schedule === 'string') {
+          try {
+            schedule = JSON.parse(schedule);
+          } catch {
+            schedule = null;
+          }
+        }
+        if (!Array.isArray(schedule) || !schedule.length) return fallback;
+        const normalized = schedule
+          .map((item) => ({
+            minSecondsRemaining: Number(item?.minSecondsRemaining ?? item?.minSec ?? item?.secondsRemaining ?? item?.seconds),
+            minDistanceAbs: Number(item?.minDistanceAbs ?? item?.distanceAbs ?? item?.distance ?? item?.dist),
+          }))
+          .filter((item) => Number.isFinite(item.minSecondsRemaining) && Number.isFinite(item.minDistanceAbs))
+          .sort((left, right) => right.minSecondsRemaining - left.minSecondsRemaining);
+        const bucket = normalized.find((item) => Number(secondsLeft) >= Math.min(300, Math.max(0, item.minSecondsRemaining)));
+        return bucket ? Math.max(0, bucket.minDistanceAbs) : fallback;
+      },
     },
     math: {
       abs: Math.abs,
@@ -134,15 +156,17 @@ export function createStandardLibrary() {
         if (!Number.isFinite(btc) || !Number.isFinite(ptb)) return 0.5;
         const secsLeft = Math.max(0, (new Date(event.end || tick.event_end).getTime() - new Date(tick.ts).getTime()) / 1000);
         const distance = btc - ptb;
-        const fastMove = lib.signals.momentum(samples, params.momentumSec ?? 6);
-        const slowMove = lib.signals.slowMomentum(samples, params.slowMomentumSec ?? 18);
-        const recentVol = lib.signals.volatility(samples, params.volLookbackSec ?? 45);
+        const fastSample = sampleAgo(samples, params.momentumSec ?? 6);
+        const slowSample = sampleAgo(samples, params.slowMomentumSec ?? 18) || fastSample;
+        const fastMove = btc - sampleUnderlying(fastSample, btc);
+        const slowMove = btc - sampleUnderlying(slowSample, btc);
+        const recentVol = recentVolatility(samples, params.volLookbackSec ?? 45);
         const minSigma = Number(params.minSigma ?? 10);
         const sigmaMultiplier = Number(params.sigmaMultiplier ?? 1);
         const sigma = Math.max(minSigma, recentVol * Math.sqrt(Math.max(1, secsLeft)) * sigmaMultiplier);
         const distanceZ = distance / sigma;
         const momentumZ = (fastMove + (Number(params.slowMomentumWeight ?? 0.35) * slowMove)) / sigma;
-        const marketProbability = lib.prices.marketProbUp(tick);
+        const marketProbability = marketProbUpFromBook(tick);
         const marketLag = Math.min(0.5, Math.max(-0.5, (distance > 0 ? 1 - marketProbability : marketProbability) - 0.5));
         const distanceWeight = Number(params.distanceWeight ?? 2);
         const momentumWeight = Number(params.momentumWeight ?? 0.65);
@@ -213,6 +237,65 @@ export function createStandardLibrary() {
     },
   };
   return lib;
+}
+
+function sampleAgo(samples, seconds) {
+  if (!samples?.length) return null;
+  const latest = samples[samples.length - 1];
+  const latestTs = latest._tsMs ?? timestampMs(latest.ts);
+  const targetMs = latestTs - Number(seconds) * 1000;
+  for (let index = samples.length - 1; index >= 0; index -= 1) {
+    const sampleTs = samples[index]._tsMs ?? timestampMs(samples[index].ts);
+    if (sampleTs <= targetMs) return samples[index];
+  }
+  return samples[0];
+}
+
+function sampleUnderlying(sample, fallback) {
+  const value = Number(sample?.underlyingPrice ?? sample?.btc_price ?? sample?.underlying_price);
+  return Number.isFinite(value) ? value : fallback;
+}
+
+function recentVolatility(samples, lookbackSec) {
+  if (!samples?.length || samples.length < 3) return 0;
+  const latest = samples[samples.length - 1];
+  const latestTs = latest._tsMs ?? timestampMs(latest.ts);
+  const cutoff = latestTs - Number(lookbackSec) * 1000;
+  const recent = samples.filter((sample) => {
+    const ts = sample._tsMs ?? timestampMs(sample.ts);
+    return ts >= cutoff && Number.isFinite(sampleUnderlying(sample, Number.NaN));
+  });
+  const changes = [];
+  for (let index = 1; index < recent.length; index += 1) {
+    changes.push(sampleUnderlying(recent[index], 0) - sampleUnderlying(recent[index - 1], 0));
+  }
+  return stdDev(changes);
+}
+
+function marketProbUpFromBook(tick) {
+  const upMid = sideMid(tick, 'UP');
+  const downMid = sideMid(tick, 'DOWN');
+  if (upMid == null || downMid == null || upMid + downMid <= 0) return 0.5;
+  return Math.min(0.999, Math.max(0.001, upMid / (upMid + downMid)));
+}
+
+function sideMid(tick, side) {
+  const bid = side === 'DOWN'
+    ? finiteNumber(tick?.down_best_bid ?? tick?.downBestBid)
+    : finiteNumber(tick?.up_best_bid ?? tick?.upBestBid);
+  const ask = side === 'DOWN'
+    ? finiteNumber(tick?.down_best_ask ?? tick?.downBestAsk)
+    : finiteNumber(tick?.up_best_ask ?? tick?.upBestAsk);
+  const price = side === 'DOWN'
+    ? finiteNumber(tick?.down_price ?? tick?.downPrice)
+    : finiteNumber(tick?.up_price ?? tick?.upPrice);
+  if (bid != null && ask != null) return (bid + ask) / 2;
+  return ask ?? bid ?? price ?? null;
+}
+
+function finiteNumber(value) {
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : null;
 }
 
 function recentValues(samples, seconds, pick) {

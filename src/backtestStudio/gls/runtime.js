@@ -29,11 +29,12 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
   let ticksProcessed = 0;
   let currentKey = null;
   let currentEvent = null;
-  let runState = {};
+  let runState = { totalPnl: 0 };
   let state = {};
   let samples = [];
   let orderSim = null;
   let trace = null;
+  let currentLastTick = null;
   let startedAt = null;
 
   function mergeParams(declarations, overrides) {
@@ -51,6 +52,7 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
     samples = [];
     orderSim = createOrderSimulator({ limits });
     trace = createTraceCollector({ limits });
+    currentLastTick = null;
   }
 
   function finalizeEvent(lastTick) {
@@ -60,6 +62,7 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
     const traces = trace.snapshot();
     const pnl = settlement.finalPnl;
     totalPnl += pnl;
+    runState.totalPnl = totalPnl;
     if (snap.orders.some((o) => o.type === 'entry')) totalEntries += 1;
     if (pnl > 0) wins += 1;
     else if (pnl < 0 && snap.orders.some((o) => o.type === 'entry')) losses += 1;
@@ -84,7 +87,7 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
       expiryPnl: settlement.expiryPnl ?? 0,
       finalPnl: pnl,
       reason: snap.orders.length ? settlement.reason : 'no_entry',
-      closedAt: lastTick?.ts ?? currentEvent.eventEnd,
+      closedAt: closedAtForEvent(snap, lastTick, currentEvent),
       ticksProcessed: samples.length,
     };
     events.push(eventRecord);
@@ -99,7 +102,7 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
 
     const ordersApi = {
       enter: (side, opts = {}) => orderSim.enter(side, { ...opts, ts: normalized.ts }),
-      exit: (opts = {}) => orderSim.exit({ ...opts, ts: normalized.ts }),
+      exit: (opts = {}) => orderSim.exit({ ...opts, tick: normalized, ts: normalized.ts }),
       reverse: (side, opts = {}) => orderSim.reverse(side, { ...opts, ts: normalized.ts }),
       closeOpenPosition: (opts = {}) => orderSim.closeOpenPosition({ ...opts, tick: normalized, ts: normalized.ts }),
     };
@@ -143,7 +146,7 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
     if (key !== currentKey) {
       if (currentEvent) {
         runHook('onEventEnd', buildRuntimeContext(tick, currentEvent));
-        finalizeEvent(tick);
+        finalizeEvent(currentLastTick ?? tick);
       }
       resetEventContext();
       currentKey = key;
@@ -151,18 +154,26 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
       runHook('onEventStart', buildRuntimeContext(tick, currentEvent));
     }
 
+    if ((tick._tsMs ?? new Date(tick.ts).getTime()) >= new Date(currentEvent.eventEnd).getTime()) {
+      currentLastTick = tick;
+      runHook('onEventEnd', buildRuntimeContext(tick, currentEvent));
+      finalizeEvent(tick);
+      return;
+    }
+
     samples.push(tick);
     if (samples.length > 500) samples.shift();
 
     const ctx = buildRuntimeContext(tick, currentEvent);
     runHook('onTick', ctx);
+    currentLastTick = tick;
   }
 
   function finish() {
     if (currentEvent) {
       const ctx = buildRuntimeContext({ ts: currentEvent.eventEnd, condition_id: currentEvent.eventId, event_start: currentEvent.eventStart, event_end: currentEvent.eventEnd, price_to_beat: currentEvent.priceToBeat }, currentEvent);
       runHook('onEventEnd', ctx);
-      finalizeEvent({ ts: currentEvent.eventEnd, condition_id: currentEvent.eventId, price_to_beat: currentEvent.priceToBeat });
+      finalizeEvent(currentLastTick ?? { ts: currentEvent.eventEnd, condition_id: currentEvent.eventId, price_to_beat: currentEvent.priceToBeat });
     }
 
     return {
@@ -175,6 +186,13 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
   }
 
   return { processTick, finish };
+}
+
+function closedAtForEvent(snapshot, lastTick, currentEvent) {
+  if (!snapshot?.position && snapshot?.exits?.length) {
+    return snapshot.exits[snapshot.exits.length - 1].ts ?? lastTick?.ts ?? currentEvent.eventEnd;
+  }
+  return lastTick?.ts ?? currentEvent.eventEnd;
 }
 
 function buildSummary({ events, equity, totalEntries, wins, losses, totalPnl, ticksProcessed }) {
