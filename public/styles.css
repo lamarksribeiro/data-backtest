@@ -4345,6 +4345,61 @@ kbd {
   color: var(--text-2);
   letter-spacing: 0.02em;
 }
+
+.backtest-data-blocker {
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--warn) 30%, var(--border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--warn) 6%, var(--bg-1));
+}
+.backtest-data-blocker__head,
+.backtest-data-blocker__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.backtest-data-blocker__head strong { color: var(--text-0); }
+.backtest-data-blocker p {
+  margin: 10px 0;
+  color: var(--text-2);
+  font-size: 12px;
+}
+.backtest-data-blocker__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 10px 0;
+}
+.backtest-data-blocker__metric {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--bg-2);
+}
+.backtest-data-blocker__metric span {
+  display: block;
+  color: var(--text-3);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.backtest-data-blocker__metric strong { color: var(--text-0); }
+.backtest-data-blocker__list {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0;
+}
+.backtest-data-blocker__item {
+  display: grid;
+  grid-template-columns: 92px 92px 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 7px 8px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg-2) 72%, transparent);
+  font-size: 11px;
+}
 .lake-missing-dates__range {
   font-size: 12px;
 }

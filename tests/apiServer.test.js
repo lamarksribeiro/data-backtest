@@ -305,7 +305,8 @@ test('data-backtest API runs versioned strategy only when data is ready', async 
         dt: '2026-05-31',
         activePath: toPortablePath(parquetPath),
         rows: 12,
-        status: 'valid',
+        status: 'accepted',
+        error: 'Accepted: mismatch below tolerance',
       });
 
       const completed = await postJson(`${baseUrl}/api/backtest/run`, {

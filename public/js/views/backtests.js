@@ -146,9 +146,11 @@ export async function renderBacktests(ctx) {
 
     const res = await ctx.api.post('/api/backtest/run', payload);
     if (!res.ok) {
-      mount(resultPanel, el('p', { class: 'bad' }, res.error?.message || 'Falha ao executar'));
       if (res.data?.availability) {
-        ctx.toast.warn('Dados não prontos — verifique a aba Dados');
+        mount(resultPanel, dataNotReadyCard(res.data.availability, payload, ctx));
+        ctx.toast.warn('Dados não prontos — veja os dias bloqueados no painel');
+      } else {
+        mount(resultPanel, el('p', { class: 'bad' }, res.error?.message || 'Falha ao executar'));
       }
       return;
     }
@@ -168,6 +170,75 @@ export async function renderBacktests(ctx) {
     state.runs = runsRes.ok ? runsRes.data.runs || [] : [];
     updateDashboard(ctx);
   });
+}
+
+function dataNotReadyCard(availability, payload, ctx) {
+  const missing = availability.missing || [];
+  const unavailable = availability.unavailable || [];
+  const acceptedWarnings = (availability.partitions || []).filter((p) => p.status === 'accepted').length;
+  const degraded = (availability.partitions || []).filter((p) => p.has_degraded).length;
+  const blockers = [
+    ...missing.map((dt) => ({ dt, status: 'missing', detail: 'Sem partição no manifesto.' })),
+    ...unavailable.map((item) => ({
+      dt: item.dt,
+      status: item.status,
+      detail: item.error || item.hint || 'Partição não liberada para strict.',
+    })),
+  ];
+
+  return el('div', { class: 'backtest-data-blocker' }, [
+    el('div', { class: 'backtest-data-blocker__head' }, [
+      el('span', { class: 'badge badge--warn' }, 'dados não prontos'),
+      el('strong', {}, `${blockers.length} dia(s) bloqueando o backtest`),
+    ]),
+    el('p', {}, acceptedWarnings
+      ? `Períodos aceitos com aviso não bloqueiam a execução. O bloqueio abaixo vem de datas ausentes, needs_review, stale ou inválidas no intervalo.`
+      : 'O backtest só executa quando todas as partições do intervalo estão valid ou accepted.'),
+    el('div', { class: 'backtest-data-blocker__stats' }, [
+      miniMetric('Prontas strict', availability.summary?.valid ?? 0),
+      miniMetric('Pendentes', (availability.summary?.missing ?? missing.length) + (availability.summary?.unavailable ?? unavailable.length)),
+      miniMetric('Aceitas aviso', acceptedWarnings),
+      miniMetric('Degradadas', degraded),
+    ]),
+    blockers.length ? el('div', { class: 'backtest-data-blocker__list' }, blockers.slice(0, 12).map((item) =>
+      el('div', { class: 'backtest-data-blocker__item' }, [
+        el('code', {}, item.dt),
+        el('span', { class: `badge badge--${partitionTone(item.status)}` }, item.status),
+        el('span', {}, item.detail),
+      ]))) : null,
+    blockers.length > 12 ? el('p', { class: 'muted' }, `Mostrando 12 de ${blockers.length} bloqueios.`) : null,
+    el('div', { class: 'backtest-data-blocker__actions' }, [
+      el('button', {
+        class: 'btn btn--primary btn--sm',
+        type: 'button',
+        onclick: () => {
+          saveContext({
+            dataset: 'backtest_ticks',
+            from: payload.from,
+            to: payload.to,
+            underlying: payload.underlying,
+            interval: payload.interval,
+            book_depth: payload.book_depth,
+          });
+          ctx.navigate('data');
+        },
+      }, 'Abrir na aba Dados'),
+    ]),
+  ]);
+}
+
+function miniMetric(label, value) {
+  return el('div', { class: 'backtest-data-blocker__metric' }, [
+    el('span', {}, label),
+    el('strong', {}, String(value)),
+  ]);
+}
+
+function partitionTone(status) {
+  if (status === 'valid') return 'ok';
+  if (status === 'accepted' || status === 'needs_review' || status === 'stale') return 'warn';
+  if (status === 'missing') return 'idle';
+  return 'err';
 }
 
 function updateDashboard(ctx) {

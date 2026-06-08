@@ -37,10 +37,10 @@ export function backtestPayloadFromPick(pick, ctx, extra = {}) {
     to: ctx.to,
     underlying: ctx.underlying,
     interval: ctx.interval,
+    book_depth: Number(ctx.book_depth) || 25,
     batch_size: Number(ctx.batch_size) || 5000,
     ...extra,
   };
-  if (ctx.dataset === 'backtest_ticks') base.book_depth = Number(ctx.book_depth) || 10;
 
   const [, strategyId, versionId] = pick.split(':');
   return {
