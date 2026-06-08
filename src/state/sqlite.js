@@ -78,6 +78,7 @@ CREATE TABLE IF NOT EXISTS backtest_runs (
   batches INTEGER NOT NULL DEFAULT 0,
   summary_json TEXT NOT NULL,
   result_json TEXT NOT NULL,
+  progress_json TEXT,
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 

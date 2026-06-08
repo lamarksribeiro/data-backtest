@@ -17,7 +17,15 @@ import { resolveDataRequest } from '../query/dataMode.js';
 import { datasetRequestFromObject, datasetRequestFromParams } from '../query/request.js';
 import { createPrepareJobRunner } from '../prepare/runner.js';
 import { runBacktest } from '../backtest/engine.js';
-import { createBacktestRun, getBacktestRun, listBacktestRuns } from '../state/backtestRuns.js';
+import {
+  completeBacktestRun,
+  createBacktestRun,
+  createRunningBacktestRun,
+  failBacktestRun,
+  getBacktestRun,
+  listBacktestRuns,
+  updateBacktestRunProgress,
+} from '../state/backtestRuns.js';
 import { getChartData, getEventTrace, listEventTraces } from '../backtestStudio/state/eventTraces.js';
 import {
   createStrategy,

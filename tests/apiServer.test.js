@@ -326,17 +326,40 @@ test('data-backtest API runs versioned strategy only when data is ready', async 
       assert.equal(completed.run.ticks, 12);
       assert.equal(completed.run.strategy_id, strategy.id);
 
+      const asyncRun = await postJson(`${baseUrl}/api/backtest/run`, {
+        strategy_id: strategy.id,
+        strategy_version_id: version.id,
+        from: '2026-05-31',
+        to: '2026-06-01',
+        underlying: 'BTC',
+        interval: '5m',
+        book_depth: 2,
+        batch_size: 5,
+        async: true,
+      }, 202);
+      assert.equal(asyncRun.run.status, 'running');
+      assert.equal(asyncRun.run.progress.total_ticks, 12);
+
+      let asyncDetail = null;
+      for (let i = 0; i < 20; i += 1) {
+        asyncDetail = await getJson(`${baseUrl}/api/backtest/runs/${asyncRun.run.id}`);
+        if (asyncDetail.run.status !== 'running') break;
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      }
+      assert.equal(asyncDetail.run.status, 'completed');
+      assert.equal(asyncDetail.run.ticks, 12);
+
       const runs = await getJson(`${baseUrl}/api/backtest/runs`);
-      assert.equal(runs.runs.length, 1);
-      assert.equal(runs.runs[0].id, 1);
+      assert.equal(runs.runs.length, 2);
+      assert.equal(runs.runs[0].id, 2);
       assert.equal(runs.runs[0].ticks, 12);
 
       const byStrategy = await getJson(`${baseUrl}/api/backtest/runs?strategy_id=${strategy.id}&strategy_version_id=${version.id}`);
-      assert.equal(byStrategy.runs.length, 1);
+      assert.equal(byStrategy.runs.length, 2);
       assert.equal(byStrategy.runs[0].strategy_version_id, version.id);
 
       const byStatus = await getJson(`${baseUrl}/api/backtest/runs?status=completed&underlying=BTC&interval=5m`);
-      assert.equal(byStatus.runs.length, 1);
+      assert.equal(byStatus.runs.length, 2);
 
       const noMatches = await getJson(`${baseUrl}/api/backtest/runs?underlying=ETH`);
       assert.equal(noMatches.runs.length, 0);
