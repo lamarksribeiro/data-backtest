@@ -34,6 +34,10 @@ test('availability resolves valid active_path and reports missing partitions', a
         from: '2026-06-02T00:00:00.000Z',
         to: '2026-06-03T00:00:00.000Z',
       });
+      assert.deepEqual(rangeFromParams(new URLSearchParams({ from: '2026-05-31', to: '2026-06-07' })), {
+        from: '2026-05-31T00:00:00.000Z',
+        to: '2026-06-08T00:00:00.000Z',
+      });
 
       const availability = checkDatasetAvailability(db, {
         dataset: 'scalars',

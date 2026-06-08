@@ -6,7 +6,11 @@ export function parseDateStart(value) {
 }
 
 export function parseDateEnd(value) {
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return new Date(`${value}T00:00:00.000Z`);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const date = new Date(`${value}T00:00:00.000Z`);
+    date.setUTCDate(date.getUTCDate() + 1);
+    return date;
+  }
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) throw new Error(`Invalid date: ${value}`);
   return date;
@@ -22,10 +26,7 @@ export function rangeFromParams(params) {
 }
 
 function normalizeDateOnlyEnd(fromRaw, toRaw) {
-  if (fromRaw !== toRaw || !/^\d{4}-\d{2}-\d{2}$/.test(toRaw)) return toRaw;
-  const end = new Date(`${toRaw}T00:00:00.000Z`);
-  end.setUTCDate(end.getUTCDate() + 1);
-  return end.toISOString();
+  return toRaw;
 }
 
 import { normalizeInterval } from '../source/postgres.js';

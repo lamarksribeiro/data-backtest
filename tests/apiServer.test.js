@@ -63,7 +63,7 @@ test('data-backtest API exposes health, availability and prepare plan', async ()
 
       const availability = await getJson(`${baseUrl}/api/availability?dataset=backtest_ticks&from=2026-05-31&to=2026-06-02&underlying=BTC&interval=5m&book_depth=25`);
       assert.equal(availability.availability.ok, false);
-      assert.deepEqual(availability.availability.missing, ['2026-06-01']);
+      assert.deepEqual(availability.availability.missing, ['2026-06-01', '2026-06-02']);
 
       const prepare = await getJson(`${baseUrl}/api/prepare?dataset=backtest_ticks&from=2026-05-31&to=2026-06-02&underlying=BTC&interval=5m&book_depth=25`);
       assert.equal(prepare.result.status, 'prepare_required');
@@ -288,7 +288,7 @@ test('data-backtest API runs versioned strategy only when data is ready', async 
         book_depth: 2,
       }, 409);
       assert.equal(blocked.error.code, 'DATA_NOT_READY');
-      assert.deepEqual(blocked.availability.missing, ['2026-05-31']);
+      assert.deepEqual(blocked.availability.missing, ['2026-05-31', '2026-06-01']);
 
       const parquetPath = path.join(dir, 'lake', 'backtest_ticks', 'part-test.parquet');
       await writeBacktestTicksParquet({
@@ -313,7 +313,7 @@ test('data-backtest API runs versioned strategy only when data is ready', async 
         strategy_id: strategy.id,
         strategy_version_id: version.id,
         from: '2026-05-31',
-        to: '2026-06-01',
+        to: '2026-05-31',
         underlying: 'BTC',
         interval: '5m',
         book_depth: 2,
@@ -330,7 +330,7 @@ test('data-backtest API runs versioned strategy only when data is ready', async 
         strategy_id: strategy.id,
         strategy_version_id: version.id,
         from: '2026-05-31',
-        to: '2026-06-01',
+        to: '2026-05-31',
         underlying: 'BTC',
         interval: '5m',
         book_depth: 2,

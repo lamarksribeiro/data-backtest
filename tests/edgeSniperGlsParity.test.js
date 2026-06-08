@@ -14,7 +14,7 @@ import { validate } from '../src/backtestStudio/gls/validator.js';
 import { compareEdgeSniperParity } from '../src/backtestStudio/gls/parity.js';
 import { getEdgeSniperV2GlsSource } from '../src/backtestStudio/gls/loadStrategySource.js';
 import { seedEdgeSniperV2Strategy } from '../src/backtestStudio/gls/seedStrategies.js';
-import { listStrategyVersions } from '../src/backtestStudio/state/strategies.js';
+import { createStrategyVersion, listStrategyVersions } from '../src/backtestStudio/state/strategies.js';
 
 const RELAXED_PARAMS = {
   minDistanceAbs: 0,
@@ -311,6 +311,28 @@ test('seed edge-sniper-v2-gls strategy and run via lakehouse engine', async () =
       assert.equal(native.summary.totalEntries, gls.summary.totalEntries);
       assert.equal(native.summary.totalPnl, gls.summary.totalPnl);
       assert.equal(version.validation.ok, true);
+    } finally {
+      closeStateDatabase(db);
+    }
+  } finally {
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
+  }
+});
+
+test('seed edge-sniper-v2-gls creates a new version when embedded source changes', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-gls-seed-update-'));
+  try {
+    const db = openStateDatabase(path.join(dir, 'state.db'));
+    try {
+      const strategy = seedEdgeSniperV2Strategy(db);
+      const [currentVersion] = listStrategyVersions(db, strategy.id);
+      createStrategyVersion(db, strategy.id, { source_code: currentVersion.source_code.replace('param maxOrderValue = 15', 'param maxOrderValue = 14') });
+
+      seedEdgeSniperV2Strategy(db);
+      const versions = listStrategyVersions(db, strategy.id);
+      assert.equal(versions.length, 3);
+      assert.equal(versions[0].source_code, currentVersion.source_code);
+      assert.equal(versions[0].validation.ok, true);
     } finally {
       closeStateDatabase(db);
     }

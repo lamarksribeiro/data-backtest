@@ -2,8 +2,24 @@ import { createStrategy, createStrategyVersion, getStrategy } from '../state/str
 import { getEdgeSniperV2GlsSource } from './loadStrategySource.js';
 
 export function seedEdgeSniperV2Strategy(db) {
+  const source = getEdgeSniperV2GlsSource();
   const existing = db.prepare('SELECT id FROM strategy_definitions WHERE slug = ?').get('edge-sniper-v2-gls');
-  if (existing) return getStrategy(db, existing.id);
+  if (existing) {
+    const latest = db.prepare(`
+      SELECT source_code
+      FROM strategy_versions
+      WHERE strategy_id = ?
+      ORDER BY version DESC, id DESC
+      LIMIT 1
+    `).get(existing.id);
+    if (!latest || normalizeSource(latest.source_code) !== normalizeSource(source)) {
+      createStrategyVersion(db, existing.id, {
+        language: 'gls-v1',
+        source_code: source,
+      });
+    }
+    return getStrategy(db, existing.id);
+  }
 
   const strategy = createStrategy(db, {
     slug: 'edge-sniper-v2-gls',
@@ -13,7 +29,11 @@ export function seedEdgeSniperV2Strategy(db) {
   });
   createStrategyVersion(db, strategy.id, {
     language: 'gls-v1',
-    source_code: getEdgeSniperV2GlsSource(),
+    source_code: source,
   });
   return getStrategy(db, strategy.id);
+}
+
+function normalizeSource(sourceCode) {
+  return String(sourceCode || '').replace(/\r\n/g, '\n').trim();
 }
