@@ -67,7 +67,7 @@ export async function renderLakehouse(ctx) {
           el('label', { class: 'switch-field' }, [
             el('input', { class: 'switch-field__input', type: 'checkbox', name: 'rebuild' }),
             el('span', { class: 'switch-field__slider' }),
-            el('span', { class: 'switch-field__label' }, 'Forçar reprocessamento'),
+            el('span', { class: 'switch-field__label' }, 'Reprocessar degradadas'),
           ]),
           el('div', { class: 'form-actions' }, [
             el('button', { class: 'btn btn--ghost', type: 'button', id: 'lake-one-day-btn' }, '1 dia'),
@@ -397,7 +397,7 @@ async function runPrepareJob(plan, ctx) {
   if (!dryRun && rebuild) {
     confirmRebuild = await promptDialog({
       title: 'Confirmar rebuild',
-      message: 'Digite REBUILD_PARTITIONS para reprocessar partições.',
+      message: 'Digite REBUILD_PARTITIONS para reprocessar as partições degradadas do intervalo.',
       placeholder: 'REBUILD_PARTITIONS',
     });
     if (confirmRebuild !== 'REBUILD_PARTITIONS') return;
@@ -582,30 +582,33 @@ function availablePartitionsTable(partitions, ctx, availability) {
         el('th', {}, 'dt'), el('th', {}, 'Rows'), el('th', {}, 'Eventos'),
         el('th', {}, 'Cobertura mín.'), el('th', {}, 'Qualidade'), el('th', {}, 'Arquivo'), el('th', {}, 'Ações'),
       ])),
-      el('tbody', {}, partitions.map((p) => el('tr', { class: 'lake-partition--ok' }, [
-        el('td', {}, el('code', {}, p.dt)),
-        el('td', {}, p.rows != null ? String(p.rows) : '-'),
-        el('td', {}, p.events_count != null ? String(p.events_count) : '-'),
-        el('td', {}, formatCoverage(p.coverage_min)),
-        el('td', {}, qualityBadge(p)),
-        el('td', { class: 'mono truncate', title: p.active_path || '' }, p.active_path || '-'),
-        el('td', {}, el('div', { class: 'lake-partition-actions' }, [
-          p.has_degraded ? el('button', {
-            class: 'btn btn--ghost btn--sm btn--primary-hover',
-            type: 'button',
-            title: p.quality_details ? 'Reprocessar e atualizar detalhes de qualidade' : 'Reprocessar para gerar detalhes de qualidade',
-            onclick: () => quickRebuildPartition(ctx, p, availability, p.quality_details ? 'Atualizar detalhes' : 'Gerar detalhes'),
-          }, p.quality_details ? 'Atualizar detalhes' : 'Gerar detalhes') : null,
-          p.status === 'accepted' ? el('button', {
-            class: 'btn btn--ghost btn--sm',
-            type: 'button',
-            title: p.error || p.hint || 'Partição aceita com aviso',
-            onclick: () => revokeAcceptedPartition(ctx, p, availability),
-          }, 'Bloquear') : null,
-        ])),
-      ]))),
+      el('tbody', {}, partitions.flatMap((p) => availablePartitionRows(p, ctx, availability))),
     ])
   ]);
+}
+
+function availablePartitionRows(p, ctx, availability) {
+  const rows = [el('tr', { class: 'lake-partition--ok' }, [
+    el('td', {}, el('code', {}, p.dt)),
+    el('td', {}, p.rows != null ? String(p.rows) : '-'),
+    el('td', {}, p.events_count != null ? String(p.events_count) : '-'),
+    el('td', {}, formatCoverage(p.coverage_min)),
+    el('td', {}, qualityBadge(p)),
+    el('td', { class: 'mono truncate', title: p.active_path || '' }, p.active_path || '-'),
+    el('td', {}, p.status === 'accepted' ? el('button', {
+      class: 'btn btn--ghost btn--sm',
+      type: 'button',
+      title: p.error || p.hint || 'Partição aceita com aviso',
+      onclick: () => revokeAcceptedPartition(ctx, p, availability),
+    }, 'Bloquear') : null),
+  ])];
+
+  if (p.has_degraded) {
+    rows.push(el('tr', { class: 'lake-quality-row' }, [
+      el('td', { colspan: '7' }, qualityDetailsPanel(p)),
+    ]));
+  }
+  return rows;
 }
 
 function blockedPartitionsTable(partitions, ctx, availability) {
@@ -653,17 +656,36 @@ function formatCoverage(value) {
 
 function qualityBadge(p) {
   if (p.status === 'accepted') {
-    return qualityDetailsDisclosure(p, 'aviso', p.error || p.hint || 'Aceita com aviso');
+    return el('span', { class: 'badge badge--warn', title: p.error || p.hint || 'Aceita com aviso' }, 'aviso');
   }
-  if (p.has_degraded) return qualityDetailsDisclosure(p, 'degradado', 'Ver detalhes da degradação');
+  if (p.has_degraded) return el('span', { class: 'badge badge--warn', title: p.quality_details ? 'Detalhes abaixo da linha' : 'Reprocesse as degradadas para gerar detalhes' }, 'degradado');
   return el('span', { class: 'badge badge--ok' }, 'ok');
 }
 
-function qualityDetailsDisclosure(p, label, title) {
-  return el('details', { class: 'lake-quality-details' }, [
-    el('summary', { title }, [
-      el('span', { class: 'badge badge--warn' }, label),
-      el('span', { class: 'lake-quality-details__hint' }, 'detalhes'),
+function qualityDetailsPanel(p) {
+  const details = p.quality_details;
+  if (!details) {
+    return el('div', { class: 'lake-quality-panel lake-quality-panel--empty' }, [
+      el('div', { class: 'lake-quality-panel__header' }, [
+        el('span', { class: 'badge badge--warn' }, p.status === 'accepted' ? 'aviso' : 'degradado'),
+        el('strong', {}, `dt=${p.dt}`),
+        el('span', { class: 'muted' }, 'Detalhes ainda não gravados no manifesto.'),
+      ]),
+      el('p', {}, 'Marque “Reprocessar degradadas” e crie o job para reler a fonte e salvar os motivos por evento.'),
+      p.error ? el('p', { class: 'lake-quality-details__note' }, p.error) : null,
+    ]);
+  }
+
+  return el('details', { class: 'lake-quality-panel' }, [
+    el('summary', {}, [
+      el('div', { class: 'lake-quality-panel__summary' }, [
+        el('span', { class: 'badge badge--warn' }, 'degradado'),
+        el('strong', {}, `dt=${p.dt}`),
+        el('span', {}, `${details.events_degraded ?? 0}/${details.events_total ?? '-'} eventos`),
+        el('span', {}, `cobertura mín. ${formatCoverage(details.coverage_min)}`),
+        el('span', {}, `${formatInteger(details.source_missing_ticks)} ticks faltantes`),
+      ]),
+      el('span', { class: 'lake-quality-panel__toggle' }, 'Ver motivos'),
     ]),
     qualityDetailsBody(p),
   ]);

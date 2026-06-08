@@ -24,7 +24,7 @@ const STATUS_HINTS = {
     'Aceita manualmente apesar de divergência de qualidade. Usável em modo strict, mas deve ser monitorada.',
   needs_review:
     'O parquet foi gerado, mas a contagem real de ticks divergiu do event_quality no Postgres. '
-    + 'Bloqueada em modo strict até reprocessar com "Reprocessar indisponíveis" + confirmação REBUILD_PARTITIONS.',
+    + 'Bloqueada em modo strict até reprocessar com "Reprocessar degradadas" + confirmação REBUILD_PARTITIONS.',
   invalid: 'Exportação falhou ou o arquivo ficou inválido.',
   stale: 'A fonte mudou desde o último export; requer reexport.',
   writing: 'Sync em andamento nesta partição.',
