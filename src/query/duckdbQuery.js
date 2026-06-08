@@ -54,7 +54,11 @@ export async function openBacktestTickSession(db, request) {
   const connection = await instance.connect();
   try {
     await connection.run('SET threads TO 4');
-    await connection.run(`CREATE TEMP TABLE _bt_ticks AS ${sourceSql.trim()}`);
+    await connection.run(`
+      CREATE TEMP TABLE _bt_ticks AS
+      SELECT row_number() OVER (ORDER BY CAST(ts AS TIMESTAMP) ASC, condition_id ASC) AS _bt_rn, *
+      FROM (${sourceSql.trim()})
+    `);
   } catch (err) {
     connection.closeSync();
     instance.closeSync();
@@ -67,9 +71,9 @@ export async function openBacktestTickSession(db, request) {
       const safeLimit = Math.min(Math.max(Number.parseInt(String(limit), 10) || 1, 1), MAX_BACKTEST_ROWS);
       const safeOffset = Math.max(Number.parseInt(String(offset), 10) || 0, 0);
       const sql = `
-        SELECT * FROM _bt_ticks
-        ORDER BY CAST(ts AS TIMESTAMP) ASC, condition_id ASC
-        LIMIT ${safeLimit} OFFSET ${safeOffset}
+        SELECT * EXCLUDE (_bt_rn) FROM _bt_ticks
+        WHERE _bt_rn > ${safeOffset} AND _bt_rn <= ${safeOffset + safeLimit}
+        ORDER BY _bt_rn ASC
       `;
       const result = await connection.runAndReadAll(sql);
       return result.getRowObjectsJS().map(jsonSafeRow);

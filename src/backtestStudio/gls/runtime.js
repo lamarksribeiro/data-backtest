@@ -34,7 +34,7 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
   let samples = [];
   let orderSim = null;
   let trace = null;
-  let startedAt = Date.now();
+  let startedAt = null;
 
   function mergeParams(declarations, overrides) {
     const merged = {};
@@ -94,7 +94,7 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
   }
 
   function buildRuntimeContext(tick, event) {
-    const normalized = normalizeTick(tick);
+    const normalized = tick?.underlyingPrice != null && tick?.priceToBeat != null ? tick : normalizeTick(tick);
     orderSim.updatePeakBid(normalized, lib);
 
     const ordersApi = {
@@ -132,6 +132,7 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
   }
 
   function processTick(rawTick) {
+    if (startedAt == null) startedAt = Date.now();
     ticksProcessed += 1;
     if (Date.now() - startedAt > limits.maxRuntimeMs) {
       throw new Error('failed_resource_limit: maxRuntimeMs exceeded');

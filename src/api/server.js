@@ -381,7 +381,7 @@ export function createApiHandler(deps) {
             request,
             result,
             strategyMeta: request.strategyMeta ?? null,
-            durationMs: Date.now() - startedAt,
+            startedAt,
           });
           return sendJson(res, 200, {
             run,
@@ -393,27 +393,28 @@ export function createApiHandler(deps) {
             },
           });
         } catch (err) {
+          const failedResult = err.partialResult || {
+            strategy: request.strategyLabel || request.strategy,
+            source: 'lakehouse',
+            underlying: request.underlying,
+            interval: request.interval,
+            bookDepth: request.bookDepth,
+            from: new Date(request.from).toISOString(),
+            to: new Date(request.to).toISOString(),
+            ticks: 0,
+            batches: 0,
+            summary: { failed: true, error: err.message },
+            events: [],
+            equity: [],
+            log: [],
+          };
           const run = createBacktestRun(db, {
             request,
-            result: {
-              strategy: request.strategyLabel || request.strategy,
-              source: 'lakehouse',
-              underlying: request.underlying,
-              interval: request.interval,
-              bookDepth: request.bookDepth,
-              from: new Date(request.from).toISOString(),
-              to: new Date(request.to).toISOString(),
-              ticks: 0,
-              batches: 0,
-              summary: {},
-              events: [],
-              equity: [],
-              log: [],
-            },
+            result: failedResult,
             strategyMeta: request.strategyMeta ?? null,
             status: 'failed_runtime',
             error: err.message,
-            durationMs: Date.now() - startedAt,
+            startedAt,
           });
           return sendJson(res, 500, { error: { code: 'REQUEST_FAILED', message: err.message }, run });
         }

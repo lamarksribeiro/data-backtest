@@ -329,7 +329,7 @@ function renderRunsTablePanel(ctx) {
           el('td', { style: { fontWeight: '600' } }, strategyName(run)),
           el('td', {}, versionLabel(run)),
           el('td', {}, periodLabel(run)),
-          el('td', {}, statusBadge(run.status)),
+          el('td', {}, statusBadge(run.status, run.error)),
           el('td', {}, String(run.ticks ?? 0)),
           el('td', {}, renderPnlBadge(summary.totalPnl ?? 0)),
           el('td', {}, el('button', {
@@ -439,10 +439,10 @@ function statusLabel(status) {
   return status || '-';
 }
 
-function statusBadge(status) {
+function statusBadge(status, error = '') {
   const value = status || 'completed';
   const tone = value === 'completed' ? 'ok' : 'err';
-  return el('span', { class: `badge badge--${tone}` }, statusLabel(value));
+  return el('span', { class: `badge badge--${tone}`, title: error || statusLabel(value) }, statusLabel(value));
 }
 
 function renderPnlBadge(value) {

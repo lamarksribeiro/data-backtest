@@ -1,39 +1,66 @@
 import { persistEventTraces } from '../backtestStudio/state/eventTraces.js';
 
-export function createBacktestRun(db, { request, result, strategyMeta = null, status = 'completed', error = null, durationMs = null }) {
+export function createBacktestRun(db, { request, result, strategyMeta = null, status = 'completed', error = null, durationMs = null, startedAt = null }) {
   const meta = strategyMeta ?? result?.strategyMeta ?? null;
-  const inserted = db.prepare(`
-    INSERT INTO backtest_runs (
-      strategy, source, underlying, interval, book_depth, from_ts, to_ts, batch_size,
-      params_json, ticks, batches, summary_json, result_json,
-      strategy_id, strategy_version_id, strategy_snapshot_json, dataset_request_json,
-      status, error, duration_ms
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(
-    result.strategy,
-    result.source,
-    result.underlying,
-    result.interval,
-    result.bookDepth ?? null,
-    result.from,
-    result.to,
-    request.batchSize,
-    JSON.stringify(request.params ?? {}),
-    result.ticks,
-    result.batches,
-    JSON.stringify(result.summary ?? {}),
-    JSON.stringify(slimResultForStorage(result)),
-    meta?.strategy_id ?? null,
-    meta?.strategy_version_id ?? null,
-    meta ? JSON.stringify(meta) : null,
-    JSON.stringify(stripRequestForSnapshot(request)),
-    status,
-    error,
-    durationMs,
-  );
-  const runId = inserted.lastInsertRowid;
-  persistEventTraces(db, runId, result);
-  return getBacktestRun(db, runId, { includeResult: false, includeEquity: false });
+  const storageStartedAt = Date.now();
+  result.summary = {
+    ...(result.summary || {}),
+    timings: {
+      ...(result.summary?.timings || result.timings || {}),
+      sqliteWriteMs: null,
+    },
+  };
+  db.exec('BEGIN IMMEDIATE');
+  try {
+    const inserted = db.prepare(`
+      INSERT INTO backtest_runs (
+        strategy, source, underlying, interval, book_depth, from_ts, to_ts, batch_size,
+        params_json, ticks, batches, summary_json, result_json,
+        strategy_id, strategy_version_id, strategy_snapshot_json, dataset_request_json,
+        status, error, duration_ms
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      result.strategy,
+      result.source,
+      result.underlying,
+      result.interval,
+      result.bookDepth ?? null,
+      result.from,
+      result.to,
+      request.batchSize,
+      JSON.stringify(request.params ?? {}),
+      result.ticks,
+      result.batches,
+      JSON.stringify(result.summary ?? {}),
+      JSON.stringify(slimResultForStorage(result)),
+      meta?.strategy_id ?? null,
+      meta?.strategy_version_id ?? null,
+      meta ? JSON.stringify(meta) : null,
+      JSON.stringify(stripRequestForSnapshot(request)),
+      status,
+      error,
+      durationMs,
+    );
+    const runId = inserted.lastInsertRowid;
+    persistEventTraces(db, runId, result, { transaction: false });
+    result.summary.timings.sqliteWriteMs = Date.now() - storageStartedAt;
+    const finalDurationMs = durationMs ?? (startedAt ? Date.now() - startedAt : null);
+    db.prepare(`
+      UPDATE backtest_runs
+      SET summary_json = ?, result_json = ?, duration_ms = ?
+      WHERE id = ?
+    `).run(
+      JSON.stringify(result.summary ?? {}),
+      JSON.stringify(slimResultForStorage(result)),
+      finalDurationMs,
+      runId,
+    );
+    db.exec('COMMIT');
+    return getBacktestRun(db, runId, { includeResult: false, includeEquity: false });
+  } catch (err) {
+    db.exec('ROLLBACK');
+    throw err;
+  }
 }
 
 export function getBacktestRun(db, id, { includeResult = false, includeEquity = true } = {}) {

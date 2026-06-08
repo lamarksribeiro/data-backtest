@@ -69,10 +69,9 @@ export function createOrderSimulator({ limits = {} } = {}) {
       if (!position) return false;
       const bid = Number(options.price);
       const side = position.side;
-      const libBook = createStandardLibrary().book;
       const price = Number.isFinite(bid)
         ? bid
-        : libBook.bid(side, options.tick || {});
+        : lib.book.bid(side, options.tick || {});
       return api.exit({ price, reason: options.reason ?? 'close', ts: options.ts });
     },
     reset() {

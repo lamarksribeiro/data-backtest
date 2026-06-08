@@ -36,6 +36,7 @@ export async function renderRunDetail(ctx, params) {
       ]),
     ]),
     el('div', { class: 'grid grid--4' }, metricCards(run, summary)),
+    run.status === 'failed_runtime' ? failedRunCard(run, summary) : null,
     equity.length ? el('section', { class: 'card chart-card' }, [
       el('h2', { class: 'card__title' }, 'Curva de desempenho'),
       el('p', { class: 'muted' }, 'PnL acumulado ao final de cada evento simulado.'),
@@ -89,6 +90,27 @@ function metricCards(run, summary) {
     stat('Drawdown', formatPnl(summary.maxDrawdown ?? 0), 'fa-solid fa-arrow-trend-down'),
     stat('Profit factor', formatMetric(summary.profitFactor ?? 0), 'fa-solid fa-arrow-trend-up'),
   ];
+}
+
+function failedRunCard(run, summary) {
+  const timings = summary.timings || run.result?.timings || {};
+  return el('section', { class: 'card card--error' }, [
+    el('h2', { class: 'card__title' }, 'Falha da execução'),
+    el('p', {}, escapeHtml(run.error || summary.error || 'Erro não registrado.')),
+    el('div', { class: 'grid grid--4', style: { marginTop: '12px' } }, [
+      stat('Ticks processados', summary.ticksProcessed ?? run.ticks ?? 0, 'fa-solid fa-wave-square'),
+      stat('Carga DuckDB', formatDuration(timings.loadMs), 'fa-solid fa-database'),
+      stat('Processamento', formatDuration(timings.processMs), 'fa-solid fa-stopwatch'),
+      stat('Escrita SQLite', formatDuration(timings.sqliteWriteMs), 'fa-solid fa-hard-drive'),
+    ]),
+  ]);
+}
+
+function formatDuration(ms) {
+  if (ms == null || !Number.isFinite(Number(ms))) return '-';
+  const value = Number(ms);
+  if (value < 1000) return `${Math.round(value)}ms`;
+  return `${(value / 1000).toFixed(value >= 10000 ? 1 : 2)}s`;
 }
 
 function formatMetric(value) {

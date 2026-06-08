@@ -1,5 +1,5 @@
 export function createStandardLibrary() {
-  return {
+  const lib = {
     market: {
       distanceFromPtb(price, ptb) {
         const p = Number(price);
@@ -56,8 +56,8 @@ export function createStandardLibrary() {
         return side === 'DOWN' ? Number(tick?.down_best_bid ?? tick?.downBestBid) : Number(tick?.up_best_bid ?? tick?.upBestBid);
       },
       spread(side, tick) {
-        const ask = createStandardLibrary().book.ask(side, tick);
-        const bid = createStandardLibrary().book.bid(side, tick);
+        const ask = lib.book.ask(side, tick);
+        const bid = lib.book.bid(side, tick);
         if (!Number.isFinite(ask) || !Number.isFinite(bid)) return null;
         return ask - bid;
       },
@@ -73,8 +73,8 @@ export function createStandardLibrary() {
         return total;
       },
       liquidityRatio(side, tick, budget) {
-        const ask = createStandardLibrary().book.ask(side, tick);
-        const qty = createStandardLibrary().book.availableQty(side, ask, tick);
+        const ask = lib.book.ask(side, tick);
+        const qty = lib.book.availableQty(side, ask, tick);
         const needed = budget / Math.max(ask, 0.001);
         return needed > 0 ? qty / needed : 0;
       },
@@ -134,24 +134,23 @@ export function createStandardLibrary() {
         if (!Number.isFinite(btc) || !Number.isFinite(ptb)) return 0.5;
         const secsLeft = Math.max(0, (new Date(event.end || tick.event_end).getTime() - new Date(tick.ts).getTime()) / 1000);
         const distance = btc - ptb;
-        const fastMove = createStandardLibrary().signals.momentum(samples, params.momentumSec ?? 6);
-        const slowMove = createStandardLibrary().signals.slowMomentum(samples, params.slowMomentumSec ?? 18);
-        const recentVol = createStandardLibrary().signals.volatility(samples, params.volLookbackSec ?? 45);
+        const fastMove = lib.signals.momentum(samples, params.momentumSec ?? 6);
+        const slowMove = lib.signals.slowMomentum(samples, params.slowMomentumSec ?? 18);
+        const recentVol = lib.signals.volatility(samples, params.volLookbackSec ?? 45);
         const minSigma = Number(params.minSigma ?? 10);
         const sigmaMultiplier = Number(params.sigmaMultiplier ?? 1);
         const sigma = Math.max(minSigma, recentVol * Math.sqrt(Math.max(1, secsLeft)) * sigmaMultiplier);
         const distanceZ = distance / sigma;
         const momentumZ = (fastMove + (Number(params.slowMomentumWeight ?? 0.35) * slowMove)) / sigma;
-        const marketProbability = createStandardLibrary().prices.marketProbUp(tick);
+        const marketProbability = lib.prices.marketProbUp(tick);
         const marketLag = Math.min(0.5, Math.max(-0.5, (distance > 0 ? 1 - marketProbability : marketProbability) - 0.5));
         const distanceWeight = Number(params.distanceWeight ?? 2);
         const momentumWeight = Number(params.momentumWeight ?? 0.65);
         const lagWeight = Number(params.lagWeight ?? 0.45);
         const score = (distanceWeight * distanceZ) + (momentumWeight * momentumZ) + (lagWeight * marketLag);
-        return Math.min(0.999, Math.max(0.001, createStandardLibrary().math.logistic(score)));
+        return Math.min(0.999, Math.max(0.001, lib.math.logistic(score)));
       },
       scoreSides(samples, tick, event, params = {}) {
-        const lib = createStandardLibrary();
         const probUp = lib.model.directionProbability(samples, tick, event, params);
         const candidates = ['UP', 'DOWN'].map((side) => {
           const ask = lib.book.ask(side, tick);
@@ -213,6 +212,7 @@ export function createStandardLibrary() {
       metric() {},
     },
   };
+  return lib;
 }
 
 function recentValues(samples, seconds, pick) {

@@ -3,7 +3,22 @@ import { downsamplePoints } from '../../utils/downsample.js';
 
 const CHART_MAX_POINTS = 400;
 
-export function persistEventTraces(db, runId, result) {
+export function persistEventTraces(db, runId, result, { transaction = true } = {}) {
+  if (transaction) {
+    db.exec('BEGIN IMMEDIATE');
+    try {
+      const rows = persistEventTracesRows(db, runId, result);
+      db.exec('COMMIT');
+      return rows;
+    } catch (err) {
+      db.exec('ROLLBACK');
+      throw err;
+    }
+  }
+  return persistEventTracesRows(db, runId, result);
+}
+
+function persistEventTracesRows(db, runId, result) {
   db.prepare('DELETE FROM backtest_event_traces WHERE run_id = ?').run(runId);
   const rows = normalizeEventsFromResult(runId, result);
   const insert = db.prepare(`
