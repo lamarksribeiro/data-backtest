@@ -167,14 +167,7 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
 
     return {
       strategy: ast.name,
-      summary: {
-        totalEvents: events.length,
-        totalEntries,
-        wins,
-        losses,
-        totalPnl,
-        ticksProcessed,
-      },
+      summary: buildSummary({ events, equity, totalEntries, wins, losses, totalPnl, ticksProcessed }),
       events,
       equity,
       log,
@@ -182,6 +175,57 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
   }
 
   return { processTick, finish };
+}
+
+function buildSummary({ events, equity, totalEntries, wins, losses, totalPnl, ticksProcessed }) {
+  const traded = events.filter((event) => event.reason !== 'no_entry');
+  const pnls = traded.map((event) => Number(event.finalPnl || 0));
+  const winPnls = pnls.filter((pnl) => pnl > 0);
+  const lossPnls = pnls.filter((pnl) => pnl < 0);
+  const grossProfit = winPnls.reduce((sum, pnl) => sum + pnl, 0);
+  const grossLoss = Math.abs(lossPnls.reduce((sum, pnl) => sum + pnl, 0));
+  const maxDrawdown = maxEquityDrawdown(equity);
+  const totalVolume = traded.reduce((sum, event) => {
+    const orderVolume = [...(event.orders || []), ...(event.exits || [])]
+      .reduce((orderSum, order) => orderSum + Math.abs(Number(order.notional || 0)), 0);
+    return sum + orderVolume;
+  }, 0);
+
+  return {
+    totalEvents: events.length,
+    eventsWithEntries: traded.length,
+    totalEntries,
+    entries: totalEntries,
+    wins,
+    losses,
+    totalWins: wins,
+    totalLosses: losses,
+    winRate: totalEntries ? (wins / totalEntries) * 100 : 0,
+    totalPnl,
+    avgPnl: pnls.length ? pnls.reduce((sum, pnl) => sum + pnl, 0) / pnls.length : 0,
+    avgWin: winPnls.length ? grossProfit / winPnls.length : 0,
+    avgLoss: lossPnls.length ? -grossLoss / lossPnls.length : 0,
+    maxWin: winPnls.length ? Math.max(...winPnls) : 0,
+    maxLoss: lossPnls.length ? Math.min(...lossPnls) : 0,
+    profitFactor: grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? 999 : 0,
+    winLossRatio: grossLoss > 0 && winPnls.length && lossPnls.length
+      ? (grossProfit / winPnls.length) / (grossLoss / lossPnls.length)
+      : 0,
+    maxDrawdown,
+    volume: totalVolume,
+    ticksProcessed,
+  };
+}
+
+function maxEquityDrawdown(equity) {
+  let peak = 0;
+  let maxDrawdown = 0;
+  for (const point of equity || []) {
+    const pnl = Number(point.pnl || 0);
+    peak = Math.max(peak, pnl);
+    maxDrawdown = Math.max(maxDrawdown, peak - pnl);
+  }
+  return maxDrawdown;
 }
 
 function createInterpreter(ctx) {

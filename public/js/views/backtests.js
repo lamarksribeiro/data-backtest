@@ -120,6 +120,7 @@ export async function renderBacktests(ctx) {
   }
 
   updateDashboard(ctx);
+  resumeRunningBacktests(ctx);
 
   const form = document.getElementById('backtest-form');
   form?.addEventListener('submit', async (event) => {
@@ -179,6 +180,15 @@ export async function renderBacktests(ctx) {
   });
 }
 
+function resumeRunningBacktests(ctx) {
+  const running = state.runs.filter((run) => run.status === 'running');
+  if (!running.length) return;
+  const resultPanel = document.getElementById('backtest-run-result');
+  const latest = running[0];
+  if (resultPanel) mount(resultPanel, runningBacktestCard(latest.progress || {}));
+  for (const run of running) pollBacktestRun(ctx, run.id, run.id === latest.id ? resultPanel : null);
+}
+
 async function pollBacktestRun(ctx, runId, resultPanel) {
   let done = false;
   while (!done) {
@@ -189,13 +199,13 @@ async function pollBacktestRun(ctx, runId, resultPanel) {
     upsertRunInState(run);
     updateDashboard(ctx);
     if (run.status === 'running') {
-      mount(resultPanel, runningBacktestCard(run.progress || {}));
+      if (resultPanel?.isConnected) mount(resultPanel, runningBacktestCard(run.progress || {}));
       continue;
     }
     done = true;
     if (run.status === 'completed') {
       ctx.toast.ok(`Backtest #${run.id} concluído · PnL ${formatPnl(run.summary?.totalPnl ?? 0)}`);
-      mount(resultPanel, el('div', { class: 'row row--wrap' }, [
+      if (resultPanel?.isConnected) mount(resultPanel, el('div', { class: 'row row--wrap' }, [
         el('span', { class: 'badge badge--ok' }, `Run #${run.id}`),
         el('button', {
           class: 'btn btn--ghost btn--sm',
@@ -205,7 +215,7 @@ async function pollBacktestRun(ctx, runId, resultPanel) {
       ]));
     } else {
       ctx.toast.err(`Backtest #${run.id} falhou`);
-      mount(resultPanel, failedRunInlineCard(run, ctx));
+      if (resultPanel?.isConnected) mount(resultPanel, failedRunInlineCard(run, ctx));
     }
   }
 }

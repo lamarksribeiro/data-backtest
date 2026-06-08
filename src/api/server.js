@@ -4,6 +4,7 @@ import { readFile, readdir, stat } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { Worker } from 'node:worker_threads';
 
 import { cleanupOrphanParquetFiles, listActiveParquetRelativePaths } from '../lake/cleanup.js';
 import { createAuthMiddleware } from '../middleware/auth.js';
@@ -391,7 +392,7 @@ export function createApiHandler(deps) {
             strategyMeta: request.strategyMeta ?? null,
             totalTicks: estimatedTicks,
           });
-          queueMicrotask(() => runBacktestInBackground({ db, runId: run.id, request, startedAt, estimatedTicks }));
+          startBacktestWorker({ config, db, runId: run.id, request, startedAt });
           return sendJson(res, 202, { run });
         }
         try {
@@ -747,6 +748,43 @@ async function runBacktestInBackground({ db, runId, request, startedAt }) {
       startedAt,
     });
   }
+}
+
+function startBacktestWorker({ config, db, runId, request, startedAt }) {
+  const worker = new Worker(new URL('../backtest/worker.js', import.meta.url), {
+    workerData: {
+      stateDbPath: config.stateDbPath,
+      runId,
+      request,
+      startedAt,
+    },
+  });
+  worker.on('error', (err) => {
+    const failedResult = {
+      strategy: request.strategyLabel || request.strategy,
+      source: 'lakehouse',
+      underlying: request.underlying,
+      interval: request.interval,
+      bookDepth: request.bookDepth,
+      from: new Date(request.from).toISOString(),
+      to: new Date(request.to).toISOString(),
+      ticks: 0,
+      batches: 0,
+      summary: { failed: true, error: err.message },
+      events: [],
+      equity: [],
+      log: [],
+    };
+    failBacktestRun(db, runId, {
+      request,
+      result: failedResult,
+      strategyMeta: request.strategyMeta ?? null,
+      error: err.message,
+      startedAt,
+    });
+  });
+  worker.unref();
+  return worker;
 }
 
 function estimateTicks(availability) {

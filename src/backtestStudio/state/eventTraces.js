@@ -61,7 +61,12 @@ export function listEventTraces(db, runId, { result, limit = 100, offset = 0 } =
     sql += ' AND result = ?';
     params.push(String(result));
   }
-  sql += ' ORDER BY event_start ASC LIMIT ? OFFSET ?';
+  sql += `
+    ORDER BY
+      CASE WHEN entries_count > 0 OR result IN ('win', 'loss') THEN 0 ELSE 1 END ASC,
+      ABS(final_pnl) DESC,
+      event_start ASC
+    LIMIT ? OFFSET ?`;
   params.push(safeLimit, safeOffset);
   return db.prepare(sql).all(...params).map(toApiEventSummary);
 }

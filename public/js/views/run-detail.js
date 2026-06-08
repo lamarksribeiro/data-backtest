@@ -14,7 +14,7 @@ export async function renderRunDetail(ctx, params) {
 
   const [runRes, eventsRes] = await Promise.all([
     ctx.api.get(`/api/backtest/runs/${runId}`),
-    ctx.api.get(`/api/backtest/runs/${runId}/events?limit=200`),
+    ctx.api.get(`/api/backtest/runs/${runId}/events?limit=500`),
   ]);
 
   if (!runRes.ok) {
@@ -57,7 +57,8 @@ export async function renderRunDetail(ctx, params) {
       ]) : null,
     ]),
     el('section', { class: 'card' }, [
-      el('h2', { class: 'card__title' }, `Eventos (${events.length})`),
+      el('h2', { class: 'card__title' }, `Eventos relevantes (${events.length})`),
+      el('p', { class: 'muted' }, 'Ordenado por eventos com entrada e maior impacto primeiro. Use os filtros da tabela para investigar no_entry.'),
       events.length ? eventTable(ctx, runId, events) : emptyState('Nenhum evento neste run.'),
     ]),
   ]);
