@@ -65,6 +65,40 @@ test('strict mode accepts manually accepted warning partitions', async () => {
   }
 });
 
+test('prepare mode with rebuild plans already valid partitions', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-mode-rebuild-'));
+  try {
+    const db = openStateDatabase(path.join(dir, 'state.db'));
+    try {
+      upsertManifestPartition(db, {
+        dataset: 'backtest_ticks',
+        underlying: 'BTC',
+        interval: '5m',
+        bookDepth: 10,
+        dt: '2026-05-31',
+        activePath: '/lake/backtest_ticks/valid.parquet',
+        status: 'valid',
+      });
+
+      const request = {
+        ...requestFor('backtest_ticks', '2026-05-31T00:00:00.000Z', '2026-06-01T00:00:00.000Z'),
+        rebuild: true,
+      };
+      const result = resolveDataRequest(db, request, 'prepare');
+
+      assert.equal(result.ready, false);
+      assert.equal(result.status, 'prepare_required');
+      assert.equal(result.preparation.length, 1);
+      assert.equal(result.preparation[0].command, 'sync:backfill-backtest-ticks');
+      assert.ok(result.preparation[0].args.includes('--rebuild'));
+    } finally {
+      closeStateDatabase(db);
+    }
+  } finally {
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
+  }
+});
+
 test('prepare mode returns sync plan for missing backtest_ticks partitions', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-prepare-'));
   try {

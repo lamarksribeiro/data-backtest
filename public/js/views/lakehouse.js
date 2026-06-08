@@ -67,7 +67,7 @@ export async function renderLakehouse(ctx) {
           el('label', { class: 'switch-field' }, [
             el('input', { class: 'switch-field__input', type: 'checkbox', name: 'rebuild' }),
             el('span', { class: 'switch-field__slider' }),
-            el('span', { class: 'switch-field__label' }, 'Reprocessar indisponíveis'),
+            el('span', { class: 'switch-field__label' }, 'Forçar reprocessamento'),
           ]),
           el('div', { class: 'form-actions' }, [
             el('button', { class: 'btn btn--ghost', type: 'button', id: 'lake-one-day-btn' }, '1 dia'),
@@ -416,12 +416,12 @@ async function runPrepareJob(plan, ctx) {
   ctx.navigate('jobs');
 }
 
-async function quickRebuildPartition(ctx, p, availability) {
+async function quickRebuildPartition(ctx, p, availability, confirmLabel = 'Reprocessar') {
   const ok = await confirmDialog({
     title: 'Reprocessar partição',
     message: `Deseja criar um job de preparação para reprocessar a partição de dt=${p.dt}?`,
-    detail: `Isso disparará o reprocessamento imediato deste dia (${p.dt}) e ativo (${availability.underlying}) no banco coletor.`,
-    confirmLabel: 'Reprocessar',
+    detail: `Isso relê este dia (${p.dt}) do banco coletor, reescreve o Parquet e grava os detalhes de qualidade no manifesto.`,
+    confirmLabel,
     tone: 'danger'
   });
   if (!ok) return;
@@ -589,12 +589,20 @@ function availablePartitionsTable(partitions, ctx, availability) {
         el('td', {}, formatCoverage(p.coverage_min)),
         el('td', {}, qualityBadge(p)),
         el('td', { class: 'mono truncate', title: p.active_path || '' }, p.active_path || '-'),
-        el('td', {}, p.status === 'accepted' ? el('button', {
-          class: 'btn btn--ghost btn--sm',
-          type: 'button',
-          title: p.error || p.hint || 'Partição aceita com aviso',
-          onclick: () => revokeAcceptedPartition(ctx, p, availability),
-        }, 'Bloquear') : null),
+        el('td', {}, el('div', { class: 'lake-partition-actions' }, [
+          p.has_degraded ? el('button', {
+            class: 'btn btn--ghost btn--sm btn--primary-hover',
+            type: 'button',
+            title: p.quality_details ? 'Reprocessar e atualizar detalhes de qualidade' : 'Reprocessar para gerar detalhes de qualidade',
+            onclick: () => quickRebuildPartition(ctx, p, availability, p.quality_details ? 'Atualizar detalhes' : 'Gerar detalhes'),
+          }, p.quality_details ? 'Atualizar detalhes' : 'Gerar detalhes') : null,
+          p.status === 'accepted' ? el('button', {
+            class: 'btn btn--ghost btn--sm',
+            type: 'button',
+            title: p.error || p.hint || 'Partição aceita com aviso',
+            onclick: () => revokeAcceptedPartition(ctx, p, availability),
+          }, 'Bloquear') : null,
+        ])),
       ]))),
     ])
   ]);

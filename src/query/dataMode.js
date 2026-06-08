@@ -6,7 +6,7 @@ export function resolveDataRequest(db, request, mode = 'strict') {
   if (!VALID_QUERY_MODES.has(mode)) throw new Error(`Unsupported data mode for query resolution: ${mode}`);
   const availability = checkDatasetAvailability(db, request);
 
-  if (availability.ok) {
+  if (availability.ok && !(mode === 'prepare' && request.rebuild)) {
     return {
       mode,
       ready: true,
@@ -48,7 +48,9 @@ export function requireStrictDataRequest(db, request) {
 }
 
 export function buildPreparationPlan(request, availability) {
-  const dates = [...availability.missing, ...availability.unavailable.map((item) => item.dt)];
+  const dates = request.rebuild
+    ? availability.expected_partitions
+    : [...availability.missing, ...availability.unavailable.map((item) => item.dt)];
   const uniqueDates = [...new Set(dates)].sort();
   if (!uniqueDates.length) return [];
 

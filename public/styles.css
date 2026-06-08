@@ -4203,6 +4203,11 @@ kbd {
   font-size: 11px;
   color: var(--warn);
 }
+.lake-partition-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 .lake-quality-details { position: relative; }
 .lake-quality-details summary {
   display: inline-flex;
