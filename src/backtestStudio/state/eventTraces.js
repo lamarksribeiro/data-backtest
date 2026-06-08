@@ -241,6 +241,7 @@ function point(ts, value) {
 }
 
 function toApiEventSummary(row) {
+  const summary = JSON.parse(row.summary_json || '{}');
   return {
     id: Number(row.id),
     run_id: Number(row.run_id),
@@ -254,6 +255,7 @@ function toApiEventSummary(row) {
     final_pnl: row.final_pnl,
     result: row.result,
     reason: row.reason,
+    reason_detail: summary?.diagnostics?.lastNoEntryReason ?? null,
     ticks_count: row.ticks_count,
     created_at: row.created_at,
   };

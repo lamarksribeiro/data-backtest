@@ -53,6 +53,7 @@ strategy "Edge Sniper V2 GLS" {
     state.closed = false
     state.stopReverseCount = 0
     state.maxBid = 0
+    state.lastNoEntryReason = "outside_entry_window"
   }
 
   onTick(tick, event) {
@@ -136,24 +137,43 @@ strategy "Edge Sniper V2 GLS" {
         }
       }
     } else {
+      state.lastSecsLeft = secsLeft
+      state.lastElapsed = elapsed
+      state.lastNoEntryReason = "outside_entry_window"
+      if (state.closed) {
+        state.lastNoEntryReason = "event_closed_after_exit"
+      }
       if (!state.closed && time.inWindow(secsLeft, params.entryWindowStart, params.entryWindowEnd)) {
+        state.lastNoEntryReason = "waiting_momentum"
         if (elapsed >= math.max(4, params.momentumSec)) {
           let minDist = signals.effectiveMinDistance(secsLeft, params.minDistanceAbs, params.minDistanceNearExpiry, params.nearExpiryThresholdSec)
           let dist = market.distanceFromPtb(tick.underlyingPrice, event.priceToBeat)
+          state.lastDistance = dist
+          state.lastMinDistance = minDist
+          state.lastNoEntryReason = "distance_below_min"
           if (dist >= minDist) {
+            state.lastNoEntryReason = "no_candidate"
             let scored = model.scoreSides(samples, tick, event, params)
             let best = scored.best
             if (best) {
+              state.lastCandidateSide = best.side
+              state.lastCandidateAsk = best.ask
+              state.lastCandidateEdge = best.edge
+              state.lastCandidateProbability = best.probability
               let maxFillPrice = math.min(params.maxAsk, best.ask + params.entrySlippageMax)
               state.orderValueCap = params.maxOrderValue
               if (params.sizePriceAware && best.ask > params.sizePriceThreshold) {
                 state.orderValueCap = params.maxOrderValue * params.sizePriceFactor
               }
               let liq = book.liquidityRatio(best.side, tick, state.orderValueCap, maxFillPrice)
+              state.lastLiquidityRatio = liq
+              state.lastNoEntryReason = "liquidity_below_min"
               if (liq >= params.minLiquidityRatio) {
                 let budget = math.min(risk.capOrderValue(state.orderValueCap, params.maxOrderValue), params.walletSize + runState.totalPnl)
+                state.lastNoEntryReason = "entry_rejected"
                 let bought = enter(best.side, { price: best.ask, maxPrice: maxFillPrice, budget: budget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "entry" })
                 if (bought) {
+                  state.lastNoEntryReason = "entered"
                   state.entered = true
                   mark("entry", { side: best.side, ask: best.ask, edge: best.edge })
                   metric("edge", best.edge)

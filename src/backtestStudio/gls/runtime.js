@@ -82,6 +82,7 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
       marks: traces.marks,
       logs: traces.logs,
       metrics: traces.metrics,
+      diagnostics: buildDiagnosticsFromState(state),
       expirationResult: settlement.expirationResult,
       winnerSide: settlement.winnerSide ?? null,
       expiryPnl: settlement.expiryPnl ?? 0,
@@ -195,8 +196,33 @@ function closedAtForEvent(snapshot, lastTick, currentEvent) {
   return lastTick?.ts ?? currentEvent.eventEnd;
 }
 
+function buildDiagnosticsFromState(sourceState) {
+  if (!sourceState || typeof sourceState !== 'object') return null;
+  const allowed = [
+    'lastNoEntryReason',
+    'lastNoEntryDetail',
+    'lastCandidateSide',
+    'lastCandidateAsk',
+    'lastCandidateEdge',
+    'lastCandidateProbability',
+    'lastLiquidityRatio',
+    'lastDistance',
+    'lastMinDistance',
+    'lastSecsLeft',
+    'lastElapsed',
+  ];
+  const diagnostics = {};
+  for (const key of allowed) {
+    const value = sourceState[key];
+    if (value != null && Number.isFinite(Number(value))) diagnostics[key] = Number(value);
+    else if (value != null && typeof value !== 'object') diagnostics[key] = value;
+  }
+  return Object.keys(diagnostics).length ? diagnostics : null;
+}
+
 function buildSummary({ events, equity, totalEntries, wins, losses, totalPnl, ticksProcessed }) {
   const traded = events.filter((event) => event.reason !== 'no_entry');
+  const noEntryReasons = countNoEntryReasons(events);
   const pnls = traded.map((event) => Number(event.finalPnl || 0));
   const winPnls = pnls.filter((pnl) => pnl > 0);
   const lossPnls = pnls.filter((pnl) => pnl < 0);
@@ -211,6 +237,8 @@ function buildSummary({ events, equity, totalEntries, wins, losses, totalPnl, ti
 
   return {
     totalEvents: events.length,
+    totalNoEntry: events.length - traded.length,
+    noEntryReasons,
     eventsWithEntries: traded.length,
     totalEntries,
     entries: totalEntries,
@@ -233,6 +261,16 @@ function buildSummary({ events, equity, totalEntries, wins, losses, totalPnl, ti
     volume: totalVolume,
     ticksProcessed,
   };
+}
+
+function countNoEntryReasons(events) {
+  const counts = {};
+  for (const event of events || []) {
+    if (event.reason !== 'no_entry') continue;
+    const reason = event.diagnostics?.lastNoEntryReason || 'unknown';
+    counts[reason] = (counts[reason] || 0) + 1;
+  }
+  return counts;
 }
 
 function maxEquityDrawdown(equity) {

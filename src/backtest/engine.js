@@ -10,7 +10,7 @@ const STRATEGIES = {
 export async function runBacktest(db, request, { onProgress } = {}) {
   const createRunner = resolveRunnerFactory(request);
   if (!createRunner) throw new Error(`Unsupported strategy: ${request.strategy}`);
-  const timings = { startedAt: Date.now(), firstBatchAt: null, completedAt: null };
+  const timings = { startedAt: Date.now(), firstBatchAt: null, completedAt: null, duckdbReadMs: 0, processMs: 0, finishMs: 0 };
 
   const provider = new DuckDbTickProvider(db, {
     underlying: request.underlying,
@@ -24,26 +24,38 @@ export async function runBacktest(db, request, { onProgress } = {}) {
   const progressStartedAt = Date.now();
   onProgress?.(buildProgress({ phase: 'loading', ticks, batches, totalTicks, startedAt: progressStartedAt }));
 
+  let iterator = null;
   try {
-    for await (const batch of provider.streamTicks({
+    iterator = provider.streamTicks({
       from: request.from,
       to: request.to,
       batchSize: request.batchSize,
       legacy: !request.glsAst,
-    })) {
+    })[Symbol.asyncIterator]();
+    while (true) {
+      const readStartedAt = Date.now();
+      const next = await iterator.next();
+      timings.duckdbReadMs += Date.now() - readStartedAt;
+      if (next.done) break;
+      const batch = next.value;
       if (timings.firstBatchAt == null) timings.firstBatchAt = Date.now();
       batches += 1;
       ticks += batch.length;
+      const processStartedAt = Date.now();
       for (const tick of batch) runner.processTick(tick);
+      timings.processMs += Date.now() - processStartedAt;
       onProgress?.(buildProgress({ phase: 'processing', ticks, batches, totalTicks, startedAt: progressStartedAt }));
     }
   } catch (err) {
+    await iterator?.return?.();
     timings.completedAt = Date.now();
     err.partialResult = buildPartialResult({ request, ticks, batches, timings, error: err.message });
     throw err;
   }
 
+  const finishStartedAt = Date.now();
   const result = runner.finish();
+  timings.finishMs = Date.now() - finishStartedAt;
   timings.completedAt = Date.now();
   onProgress?.(buildProgress({ phase: 'finalizing', ticks, batches, totalTicks, startedAt: progressStartedAt }));
   return {
@@ -104,10 +116,17 @@ function buildPartialResult({ request, ticks, batches, timings, error }) {
 
 function formatTimings(timings) {
   const end = timings.completedAt ?? Date.now();
+  const totalMs = end - timings.startedAt;
+  const duckdbReadMs = Math.max(0, Number(timings.duckdbReadMs || 0));
+  const processMs = Math.max(0, Number(timings.processMs || 0));
+  const finishMs = Math.max(0, Number(timings.finishMs || 0));
   return {
     loadMs: timings.firstBatchAt == null ? null : timings.firstBatchAt - timings.startedAt,
-    processMs: timings.firstBatchAt == null ? null : end - timings.firstBatchAt,
-    totalMs: end - timings.startedAt,
+    duckdbReadMs,
+    processMs: timings.firstBatchAt == null ? null : processMs,
+    finishMs,
+    overheadMs: Math.max(0, totalMs - duckdbReadMs - processMs - finishMs),
+    totalMs,
   };
 }
 

@@ -36,6 +36,8 @@ export async function renderRunDetail(ctx, params) {
       ]),
     ]),
     el('div', { class: 'grid grid--4' }, metricCards(run, summary)),
+    timingSection(run, summary),
+    noEntryDiagnosticSection(summary, events),
     run.status === 'failed_runtime' ? failedRunCard(run, summary) : null,
     equity.length ? el('section', { class: 'card chart-card' }, [
       el('h2', { class: 'card__title' }, 'Curva de desempenho'),
@@ -107,6 +109,69 @@ function failedRunCard(run, summary) {
   ]);
 }
 
+function timingSection(run, summary) {
+  const timings = summary.timings || run.result?.timings || {};
+  const totalMs = timings.totalMs ?? run.duration_ms;
+  const hasTiming = [totalMs, timings.duckdbReadMs, timings.processMs, timings.finishMs, timings.sqliteWriteMs].some((value) => value != null);
+  if (!hasTiming) return null;
+  const ticks = Number(run.ticks || summary.ticksProcessed || 0);
+  const totalSeconds = Number(totalMs || 0) / 1000;
+  const ticksPerSecond = ticks > 0 && totalSeconds > 0 ? ticks / totalSeconds : null;
+  return el('section', { class: 'card' }, [
+    el('h2', { class: 'card__title' }, 'Tempo por etapa'),
+    el('p', { class: 'muted' }, 'Medições do backtest para separar leitura DuckDB, processamento da estratégia e persistência SQLite.'),
+    el('div', { class: 'grid grid--4', style: { marginTop: '12px' } }, [
+      stat('Total', formatDuration(totalMs), 'fa-solid fa-stopwatch'),
+      stat('Leitura DuckDB', formatDuration(timings.duckdbReadMs ?? timings.loadMs), 'fa-solid fa-database'),
+      stat('Processamento', formatDuration(timings.processMs), 'fa-solid fa-microchip'),
+      stat('Finalização', formatDuration(timings.finishMs), 'fa-solid fa-flag-checkered'),
+      stat('Escrita SQLite', formatDuration(timings.sqliteWriteMs), 'fa-solid fa-hard-drive'),
+      stat('Overhead/API', formatDuration(timings.overheadMs), 'fa-solid fa-network-wired'),
+      stat('Batches', run.batches ?? 0, 'fa-solid fa-layer-group'),
+      stat('Ticks/s', ticksPerSecond == null ? '-' : formatMetric(ticksPerSecond), 'fa-solid fa-gauge-high'),
+    ]),
+  ]);
+}
+
+function noEntryDiagnosticSection(summary, events) {
+  const totalEntries = summary.totalEntries ?? summary.entries ?? 0;
+  const totalEvents = summary.totalEvents ?? events.length ?? 0;
+  if (totalEntries > 0 || totalEvents <= 0) return null;
+  const reasons = summary.noEntryReasons || countEventReasonDetails(events);
+  const reasonEntries = Object.entries(reasons).sort((left, right) => right[1] - left[1]);
+  return el('section', { class: 'card card--warning' }, [
+    el('h2', { class: 'card__title' }, 'Diagnóstico: nenhuma entrada'),
+    el('p', {}, `A estratégia processou ${totalEvents} eventos e não abriu nenhuma posição.`),
+    reasonEntries.length ? el('div', { class: 'grid grid--4', style: { marginTop: '12px' } }, reasonEntries.slice(0, 8).map(([reason, count]) => (
+      stat(noEntryReasonLabel(reason), count, 'fa-solid fa-circle-info')
+    ))) : el('p', { class: 'muted' }, 'Este run não tem motivos detalhados salvos. Rode novamente com a versão atual para gravar diagnósticos de no_entry.'),
+  ]);
+}
+
+function countEventReasonDetails(events) {
+  const counts = {};
+  for (const event of events || []) {
+    const reason = event.reason_detail;
+    if (!reason) continue;
+    counts[reason] = (counts[reason] || 0) + 1;
+  }
+  return counts;
+}
+
+function noEntryReasonLabel(reason) {
+  const labels = {
+    outside_entry_window: 'Fora da janela',
+    waiting_momentum: 'Aguardando momentum',
+    distance_below_min: 'Distância abaixo do mínimo',
+    no_candidate: 'Sem candidato',
+    liquidity_below_min: 'Liquidez insuficiente',
+    entry_rejected: 'Entrada rejeitada',
+    event_closed_after_exit: 'Evento já fechado',
+    unknown: 'Sem diagnóstico',
+  };
+  return labels[reason] || String(reason).replaceAll('_', ' ');
+}
+
 function formatDuration(ms) {
   if (ms == null || !Number.isFinite(Number(ms))) return '-';
   const value = Number(ms);
@@ -125,7 +190,7 @@ function eventTable(ctx, runId, events) {
     el('table', { class: 'table' }, [
       el('thead', {}, el('tr', {}, [
         el('th', {}, 'Condition'), el('th', {}, 'Início'), el('th', {}, 'Resultado'), el('th', {}, 'PnL'),
-        el('th', {}, 'Lado'), el('th', {}, 'Entradas'), el('th', {}, 'Saídas'), el('th', {}, 'Ticks'), el('th', {}, 'Motivo'),
+        el('th', {}, 'Lado'), el('th', {}, 'Entradas'), el('th', {}, 'Saídas'), el('th', {}, 'Ticks'), el('th', {}, 'Motivo'), el('th', {}, 'Diagnóstico'),
       ])),
       el('tbody', {}, events.map((event) => el('tr', {}, [
         el('td', {}, el('button', {
@@ -141,6 +206,7 @@ function eventTable(ctx, runId, events) {
         el('td', {}, String(event.exits_count)),
         el('td', {}, String(event.ticks_count ?? 0)),
         el('td', {}, escapeHtml(event.reason || '-')),
+        el('td', {}, escapeHtml(event.reason_detail ? noEntryReasonLabel(event.reason_detail) : '-')),
       ]))),
     ])
   ]);
