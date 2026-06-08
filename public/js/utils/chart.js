@@ -145,10 +145,22 @@ function buildChartMarkers(chartData, underlyingSeries) {
     if (index == null) return;
     markers.push({ index, label, color });
   };
-  for (const order of chartData.orders || []) {
+  const orders = chartData.orders || [];
+  const hasExitOrders = orders.some((order) => order?.type === 'exit');
+  for (const order of orders) {
     const ts = order.createdAt || order.ts || order.time;
     const kind = order.type === 'exit' || order.reason?.includes('exit') || order.reason?.includes('stop') || order.reason?.includes('trail') ? 'exit' : 'entry';
     pushMarker(ts, `${kind}: ${order.side || ''} @ ${order.price ?? order.avgPrice ?? '-'}`, kind === 'entry' ? '#22c55e' : '#fb7185');
+  }
+  for (const exit of hasExitOrders ? [] : (chartData.exits || [])) {
+    const ts = exit.ts || exit.time;
+    pushMarker(ts, `exit: ${exit.reason || ''} @ ${exit.price ?? exit.avgPrice ?? '-'}`, '#fb7185');
+  }
+  for (const order of chartData.summary?.profitOrders || []) {
+    pushMarker(order.fillTime || order.time, `partial: @ ${order.price ?? '-'}`, '#fbbf24');
+  }
+  for (const reversal of chartData.summary?.reversals || []) {
+    pushMarker(reversal.time, `reverse: ${reversal.fromSide || ''} → ${reversal.toSide || ''}`, '#a78bfa');
   }
   for (const mark of chartData.marks || []) {
     pushMarker(mark.ts, `mark: ${mark.name}`, '#a78bfa');

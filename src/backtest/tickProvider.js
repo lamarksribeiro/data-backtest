@@ -17,6 +17,7 @@ export class DuckDbTickProvider {
       ...request,
       bookDepth: this.defaults.bookDepth ?? request.bookDepth ?? 25,
       validBacktestRows: true,
+      jsonSafe: legacy,
     });
 
     try {

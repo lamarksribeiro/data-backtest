@@ -44,11 +44,12 @@ export async function openBacktestTickSession(db, request) {
     dataset: 'backtest_ticks',
   });
   const bookDepth = request.bookDepth ?? 25;
+  const jsonSafe = request.jsonSafe !== false;
   const selectCols = backtestTickSelectColumns(bookDepth);
   const sourceSql = buildTicksSql(availability, {
     ...request,
     dataset: 'backtest_ticks',
-  }, { select: selectCols });
+  }, { select: selectCols, order: false });
 
   const instance = await DuckDBInstance.create(':memory:');
   const connection = await instance.connect();
@@ -77,7 +78,8 @@ export async function openBacktestTickSession(db, request) {
         ORDER BY _bt_rn ASC
       `;
       const result = await connection.runAndReadAll(sql);
-      return result.getRowObjectsJS().map(jsonSafeRow);
+      const rows = result.getRowObjectsJS();
+      return jsonSafe ? rows.map(jsonSafeRow) : rows;
     },
     close() {
       connection.closeSync();
@@ -101,7 +103,7 @@ export async function queryCandles(db, request) {
   return runDuckQuery(sql);
 }
 
-function buildTicksSql(availability, request, { select = '*' } = {}) {
+function buildTicksSql(availability, request, { select = '*', order = true } = {}) {
   const tsColumn = 'ts';
   const qualityClause = request.validBacktestRows ? `
       AND underlying_price IS NOT NULL
@@ -113,6 +115,7 @@ function buildTicksSql(availability, request, { select = '*' } = {}) {
   const limitClause = request.limit != null
     ? `LIMIT ${safeLimit(request.limit)} OFFSET ${safeOffset(request.offset)}`
     : '';
+  const orderClause = order ? `ORDER BY CAST(${tsColumn} AS TIMESTAMP) ASC, condition_id ASC` : '';
   return `
     SELECT ${select}
     FROM read_parquet(${parquetList(availability.files)})
@@ -120,7 +123,7 @@ function buildTicksSql(availability, request, { select = '*' } = {}) {
       AND CAST(${tsColumn} AS TIMESTAMP) < CAST(${quotedString(new Date(request.to).toISOString())} AS TIMESTAMP)
       ${conditionClause}
       ${qualityClause}
-    ORDER BY CAST(${tsColumn} AS TIMESTAMP) ASC, condition_id ASC
+    ${orderClause}
     ${limitClause}
   `;
 }

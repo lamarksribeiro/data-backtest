@@ -111,6 +111,8 @@ export async function getChartData(db, config, run, conditionId) {
     event: toApiEventSummaryFromDetail(event),
     series,
     series_meta: meta,
+    summary: event.summary,
+    exits: event.summary?.exits ?? [],
     orders: event.orders,
     marks: event.marks,
     logs: event.logs,
@@ -144,7 +146,10 @@ function normalizeEventsFromResult(runId, result) {
       expirationResult: event.expirationResult ?? null,
       winnerSide: event.winnerSide ?? null,
       expiryPnl: event.expiryPnl ?? 0,
+      finalPnlBeforeFees: event.finalPnlBeforeFees ?? null,
+      fees: event.fees ?? null,
       closedAt,
+      exits: event.exits ?? [],
       profitOrders: event.profitOrders ?? [],
       reversals: event.reversals ?? [],
       diagnostics: event.diagnostics ?? null,
@@ -156,7 +161,7 @@ function normalizeEventsFromResult(runId, result) {
       event_start: eventStart,
       event_end: eventEnd,
       side: event.positionType ?? null,
-      entries_count: orders.length,
+      entries_count: orders.filter((order) => !order?.type || order.type === 'entry').length,
       exits_count: exits.length,
       final_pnl: Number(event.finalPnl || 0),
       result: deriveEventResult(event),
@@ -211,6 +216,9 @@ function collectMarkerTimestamps(event) {
   const stamps = [];
   for (const mark of event.marks || []) if (mark?.ts) stamps.push(mark.ts);
   for (const order of event.orders || []) if (order?.ts || order?.createdAt) stamps.push(order.ts || order.createdAt);
+  for (const exit of event.summary?.exits || []) if (exit?.ts || exit?.time) stamps.push(exit.ts || exit.time);
+  for (const order of event.summary?.profitOrders || []) if (order?.fillTime || order?.time) stamps.push(order.fillTime || order.time);
+  for (const reversal of event.summary?.reversals || []) if (reversal?.time) stamps.push(reversal.time);
   return stamps;
 }
 

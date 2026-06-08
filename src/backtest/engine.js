@@ -1,4 +1,5 @@
 import { DuckDbTickProvider } from './tickProvider.js';
+import { applyPolymarketFeesToBacktestResult } from './fees.js';
 import { createEdgeSniperBacktestRunner } from '../strategies/edgeSniperV2.js';
 import { createGlsBacktestRunner } from '../backtestStudio/gls/runtime.js';
 
@@ -55,6 +56,7 @@ export async function runBacktest(db, request, { onProgress } = {}) {
 
   const finishStartedAt = Date.now();
   const result = runner.finish();
+  applyPolymarketFeesToBacktestResult(result, request.feeOptions);
   timings.finishMs = Date.now() - finishStartedAt;
   timings.completedAt = Date.now();
   onProgress?.(buildProgress({ phase: 'finalizing', ticks, batches, totalTicks, startedAt: progressStartedAt }));

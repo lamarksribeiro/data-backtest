@@ -27,6 +27,8 @@ export async function renderRunDetail(ctx, params) {
   const summary = run.summary || {};
   const paramsObj = run.params || {};
   const equity = Array.isArray(run.equity) ? run.equity : (Array.isArray(run.result?.equity) ? run.result.equity : []);
+  const tradedEvents = events.filter((event) => event.entries_count > 0 || event.result === 'win' || event.result === 'loss');
+  const noEntryEvents = events.filter((event) => event.result === 'no_entry' && !tradedEvents.includes(event));
 
   mount(ctx.contentEl, [
     el('div', { class: 'page-header' }, [
@@ -59,10 +61,11 @@ export async function renderRunDetail(ctx, params) {
       ]) : null,
     ]),
     el('section', { class: 'card' }, [
-      el('h2', { class: 'card__title' }, `Eventos relevantes (${events.length})`),
-      el('p', { class: 'muted' }, 'Ordenado por eventos com entrada e maior impacto primeiro. Use os filtros da tabela para investigar no_entry.'),
-      events.length ? eventTable(ctx, runId, events) : emptyState('Nenhum evento neste run.'),
+      el('h2', { class: 'card__title' }, `Operações (${tradedEvents.length})`),
+      el('p', { class: 'muted' }, 'Tabela focada em eventos com entrada, saída, win/loss ou impacto financeiro.'),
+      tradedEvents.length ? eventTable(ctx, runId, tradedEvents) : emptyState('Nenhuma operação neste run.'),
     ]),
+    noEntrySummarySection(noEntryEvents, summary),
   ]);
 
   if (equity.length) renderEquityChart(document.getElementById('equity-chart'), equity);
@@ -117,19 +120,47 @@ function timingSection(run, summary) {
   const ticks = Number(run.ticks || summary.ticksProcessed || 0);
   const totalSeconds = Number(totalMs || 0) / 1000;
   const ticksPerSecond = ticks > 0 && totalSeconds > 0 ? ticks / totalSeconds : null;
-  return el('section', { class: 'card' }, [
-    el('h2', { class: 'card__title' }, 'Tempo por etapa'),
-    el('p', { class: 'muted' }, 'Medições do backtest para separar leitura DuckDB, processamento da estratégia e persistência SQLite.'),
-    el('div', { class: 'grid grid--4', style: { marginTop: '12px' } }, [
-      stat('Total', formatDuration(totalMs), 'fa-solid fa-stopwatch'),
-      stat('Leitura DuckDB', formatDuration(timings.duckdbReadMs ?? timings.loadMs), 'fa-solid fa-database'),
-      stat('Processamento', formatDuration(timings.processMs), 'fa-solid fa-microchip'),
+  return el('details', { class: 'card timing-compact' }, [
+    el('summary', { class: 'timing-compact__summary' }, [
+      el('strong', {}, 'Tempo'),
+      el('span', {}, `Total ${formatDuration(totalMs)}`),
+      el('span', {}, `DuckDB ${formatDuration(timings.duckdbReadMs ?? timings.loadMs)}`),
+      el('span', {}, `Processamento ${formatDuration(timings.processMs)}`),
+      el('span', {}, `Ticks/s ${ticksPerSecond == null ? '-' : formatMetric(ticksPerSecond)}`),
+    ]),
+    el('div', { class: 'timing-compact__details' }, [
       stat('Finalização', formatDuration(timings.finishMs), 'fa-solid fa-flag-checkered'),
-      stat('Escrita SQLite', formatDuration(timings.sqliteWriteMs), 'fa-solid fa-hard-drive'),
+      stat('SQLite', formatDuration(timings.sqliteWriteMs), 'fa-solid fa-hard-drive'),
       stat('Overhead/API', formatDuration(timings.overheadMs), 'fa-solid fa-network-wired'),
       stat('Batches', run.batches ?? 0, 'fa-solid fa-layer-group'),
-      stat('Ticks/s', ticksPerSecond == null ? '-' : formatMetric(ticksPerSecond), 'fa-solid fa-gauge-high'),
     ]),
+  ]);
+}
+
+function noEntrySummarySection(noEntryEvents, summary = {}) {
+  if (!noEntryEvents.length) return null;
+  const totalNoEntry = summary.totalNoEntry ?? noEntryEvents.length;
+  const counts = countEventReasonDetails(noEntryEvents);
+  const entries = Object.entries(counts).sort((left, right) => right[1] - left[1]);
+  return el('section', { class: 'card no-entry-summary' }, [
+    el('div', { class: 'card__header' }, [
+      el('h2', { class: 'card__title' }, `Sem entrada (${totalNoEntry})`),
+      el('span', { class: 'badge badge--idle' }, 'resumido'),
+    ]),
+    entries.length
+      ? el('div', { class: 'no-entry-reason-grid' }, entries.slice(0, 8).map(([reason, count]) => detailReason(reason, count, noEntryEvents.length)))
+      : el('p', { class: 'muted' }, 'Eventos sem entrada foram ocultados da tabela principal.'),
+  ]);
+}
+
+function detailReason(reason, count, total) {
+  const pct = total > 0 ? (count / total) * 100 : 0;
+  return el('div', { class: 'no-entry-reason' }, [
+    el('div', { class: 'no-entry-reason__head' }, [
+      el('span', {}, noEntryReasonLabel(reason)),
+      el('strong', {}, String(count)),
+    ]),
+    el('div', { class: 'no-entry-reason__bar' }, el('span', { style: { width: `${Math.min(100, pct)}%` } })),
   ]);
 }
 
@@ -262,10 +293,10 @@ function renderMetricsSection(summary) {
       el('div', { class: 'metrics-grid' }, [
         metricItem('PnL Líquido', formatPnl(summary.totalPnl ?? 0), (summary.totalPnl ?? 0) > 0 ? 'good' : (summary.totalPnl ?? 0) < 0 ? 'bad' : ''),
         metricItem('Drawdown Máximo', formatPnl(summary.maxDrawdown ?? 0), 'bad'),
-        metricItem('Volume Operado', formatVolume(summary.volume ?? 0)),
-        metricItem('Taxas Pagas', formatPnl(summary.feesPaid ?? summary.totalFees ?? 0)),
-        metricItem('Sharpe Ratio', formatRateValue(summary.sharpeRatio)),
-        metricItem('Sortino Ratio', formatRateValue(summary.sortinoRatio)),
+        metricItem('Volume Operado', formatVolume(summary.volume ?? summary.fees?.volume ?? 0)),
+        metricItem('Taxas Pagas', formatPnl(summary.feesPaid ?? summary.totalFees ?? summary.fees?.totalFee ?? 0)),
+        metricItem('Sharpe Ratio', formatRateValue(summary.sharpeRatio ?? summary.sharpe)),
+        metricItem('Sortino Ratio', formatRateValue(summary.sortinoRatio ?? summary.sortino)),
       ])
     ]),
     // Group 2: Trades

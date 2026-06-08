@@ -695,6 +695,11 @@ function backtestRequestFromBody(body, config, db) {
     if (!version.validation?.ok) throw new Error('Strategy version failed validation');
     return {
       ...base,
+      feeOptions: {
+        category: body.polymarketFeeCategory || body.feeCategory,
+        feeRate: body.polymarketFeeRate ?? body.feeRate,
+        enabled: body.applyPolymarketFees !== false,
+      },
       strategy: `gls:${strategy.slug}`,
       strategyLabel: version.source_code.match(/strategy\s+"([^"]+)"/)?.[1] || strategy.name,
       glsAst: parse(version.source_code),
