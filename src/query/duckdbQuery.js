@@ -59,6 +59,7 @@ export async function openBacktestTickSession(db, request) {
       SELECT row_number() OVER (ORDER BY CAST(ts AS TIMESTAMP) ASC, condition_id ASC) AS _bt_rn, *
       FROM (${sourceSql.trim()})
     `);
+    await connection.run('CREATE INDEX _bt_ticks_rn_idx ON _bt_ticks(_bt_rn)');
   } catch (err) {
     connection.closeSync();
     instance.closeSync();
