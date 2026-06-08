@@ -11,6 +11,7 @@ export class DuckDbTickProvider {
 
   async *streamTicks(request = {}) {
     const batchSize = normalizeBatchSize(request.batchSize ?? request.limit ?? DEFAULT_BATCH_SIZE);
+    const legacy = request.legacy !== false;
     const session = await openBacktestTickSession(this.db, {
       ...this.defaults,
       ...request,
@@ -23,10 +24,12 @@ export class DuckDbTickProvider {
       while (true) {
         const rows = await session.readBatch(offset, batchSize);
         if (!rows.length) break;
-        yield rows.map((row, index) => toLegacyBacktestTick(row, {
-          index: offset + index,
-          bookDepth: session.bookDepth,
-        }));
+        yield legacy
+          ? rows.map((row, index) => toLegacyBacktestTick(row, {
+            index: offset + index,
+            bookDepth: session.bookDepth,
+          }))
+          : rows;
         offset += rows.length;
         if (rows.length < batchSize) break;
       }

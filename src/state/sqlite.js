@@ -150,6 +150,7 @@ const BACKTEST_RUNS_MIGRATIONS = [
   'ALTER TABLE backtest_runs ADD COLUMN status TEXT NOT NULL DEFAULT \'completed\'',
   'ALTER TABLE backtest_runs ADD COLUMN error TEXT NULL',
   'ALTER TABLE backtest_runs ADD COLUMN duration_ms INTEGER NULL',
+  'ALTER TABLE backtest_runs ADD COLUMN progress_json TEXT NULL',
 ];
 
 const PREPARE_JOBS_MIGRATIONS = [

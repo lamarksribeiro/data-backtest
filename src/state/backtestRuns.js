@@ -63,6 +63,127 @@ export function createBacktestRun(db, { request, result, strategyMeta = null, st
   }
 }
 
+export function createRunningBacktestRun(db, { request, strategyMeta = null, totalTicks = null }) {
+  const meta = strategyMeta ?? request.strategyMeta ?? null;
+  const nowProgress = {
+    phase: 'queued',
+    ticks: 0,
+    batches: 0,
+    total_ticks: totalTicks,
+    percent: totalTicks ? 0 : null,
+    started_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    eta_ms: null,
+  };
+  const result = minimalResultForRequest(request, { summary: { timings: {}, progress: nowProgress } });
+  const inserted = db.prepare(`
+    INSERT INTO backtest_runs (
+      strategy, source, underlying, interval, book_depth, from_ts, to_ts, batch_size,
+      params_json, ticks, batches, summary_json, result_json,
+      strategy_id, strategy_version_id, strategy_snapshot_json, dataset_request_json,
+      status, error, duration_ms, progress_json
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    result.strategy,
+    result.source,
+    result.underlying,
+    result.interval,
+    result.bookDepth ?? null,
+    result.from,
+    result.to,
+    request.batchSize,
+    JSON.stringify(request.params ?? {}),
+    0,
+    0,
+    JSON.stringify(result.summary ?? {}),
+    JSON.stringify(slimResultForStorage(result)),
+    meta?.strategy_id ?? null,
+    meta?.strategy_version_id ?? null,
+    meta ? JSON.stringify(meta) : null,
+    JSON.stringify(stripRequestForSnapshot(request)),
+    'running',
+    null,
+    null,
+    JSON.stringify(nowProgress),
+  );
+  return getBacktestRun(db, inserted.lastInsertRowid, { includeResult: false, includeEquity: false });
+}
+
+export function updateBacktestRunProgress(db, id, progress) {
+  db.prepare(`
+    UPDATE backtest_runs
+    SET ticks = ?, batches = ?, progress_json = ?
+    WHERE id = ? AND status = 'running'
+  `).run(
+    Number(progress.ticks || 0),
+    Number(progress.batches || 0),
+    JSON.stringify(progress),
+    id,
+  );
+}
+
+export function completeBacktestRun(db, id, { request, result, strategyMeta = null, startedAt = null }) {
+  return finishExistingBacktestRun(db, id, { request, result, strategyMeta, status: 'completed', error: null, startedAt });
+}
+
+export function failBacktestRun(db, id, { request, result, strategyMeta = null, error, startedAt = null }) {
+  return finishExistingBacktestRun(db, id, { request, result, strategyMeta, status: 'failed_runtime', error, startedAt });
+}
+
+function finishExistingBacktestRun(db, id, { request, result, strategyMeta = null, status, error, startedAt = null }) {
+  const meta = strategyMeta ?? result?.strategyMeta ?? null;
+  const storageStartedAt = Date.now();
+  result.summary = {
+    ...(result.summary || {}),
+    timings: {
+      ...(result.summary?.timings || result.timings || {}),
+      sqliteWriteMs: null,
+    },
+  };
+  db.exec('BEGIN IMMEDIATE');
+  try {
+    persistEventTraces(db, id, result, { transaction: false });
+    result.summary.timings.sqliteWriteMs = Date.now() - storageStartedAt;
+    const durationMs = startedAt ? Date.now() - startedAt : null;
+    db.prepare(`
+      UPDATE backtest_runs
+      SET strategy = ?, source = ?, underlying = ?, interval = ?, book_depth = ?, from_ts = ?, to_ts = ?, batch_size = ?,
+          params_json = ?, ticks = ?, batches = ?, summary_json = ?, result_json = ?,
+          strategy_id = ?, strategy_version_id = ?, strategy_snapshot_json = ?, dataset_request_json = ?,
+          status = ?, error = ?, duration_ms = ?, progress_json = ?
+      WHERE id = ?
+    `).run(
+      result.strategy,
+      result.source,
+      result.underlying,
+      result.interval,
+      result.bookDepth ?? null,
+      result.from,
+      result.to,
+      request.batchSize,
+      JSON.stringify(request.params ?? {}),
+      result.ticks,
+      result.batches,
+      JSON.stringify(result.summary ?? {}),
+      JSON.stringify(slimResultForStorage(result)),
+      meta?.strategy_id ?? null,
+      meta?.strategy_version_id ?? null,
+      meta ? JSON.stringify(meta) : null,
+      JSON.stringify(stripRequestForSnapshot(request)),
+      status,
+      error,
+      durationMs,
+      null,
+      id,
+    );
+    db.exec('COMMIT');
+    return getBacktestRun(db, id, { includeResult: false, includeEquity: false });
+  } catch (err) {
+    db.exec('ROLLBACK');
+    throw err;
+  }
+}
+
 export function getBacktestRun(db, id, { includeResult = false, includeEquity = true } = {}) {
   const row = db.prepare('SELECT * FROM backtest_runs WHERE id = ?').get(id);
   return row ? toApiRun(row, { includeResult, includeEquity }) : null;
@@ -122,6 +243,7 @@ function toApiRun(row, { includeResult = false, includeEquity = false } = {}) {
     status: row.status ?? 'completed',
     error: row.error ?? null,
     duration_ms: row.duration_ms ?? null,
+    progress: row.progress_json ? JSON.parse(row.progress_json) : null,
   };
   if (includeResult) {
     run.result = JSON.parse(row.result_json);
@@ -135,6 +257,25 @@ function toApiRun(row, { includeResult = false, includeEquity = false } = {}) {
 function stripRequestForSnapshot(request) {
   const { glsAst, strategyMeta, ...rest } = request;
   return rest;
+}
+
+function minimalResultForRequest(request, { summary = {} } = {}) {
+  return {
+    strategy: request.strategyLabel || request.strategy,
+    source: 'lakehouse',
+    underlying: request.underlying,
+    interval: request.interval,
+    bookDepth: request.bookDepth,
+    from: new Date(request.from).toISOString(),
+    to: new Date(request.to).toISOString(),
+    ticks: 0,
+    batches: 0,
+    summary,
+    events: [],
+    equity: [],
+    log: [],
+    strategyMeta: request.strategyMeta ?? null,
+  };
 }
 
 function slimResultForStorage(result) {

@@ -194,10 +194,10 @@ export function createStandardLibrary() {
     },
     time: {
       secondsUntil(end, ts) {
-        return Math.max(0, (new Date(end).getTime() - new Date(ts).getTime()) / 1000);
+        return Math.max(0, (timestampMs(end) - timestampMs(ts)) / 1000);
       },
       secondsSince(start, ts) {
-        return Math.max(0, (new Date(ts).getTime() - new Date(start).getTime()) / 1000);
+        return Math.max(0, (timestampMs(ts) - timestampMs(start)) / 1000);
       },
       inWindow(secondsLeft, start, end) {
         return Number(secondsLeft) <= Number(start) && Number(secondsLeft) > Number(end);
@@ -217,9 +217,16 @@ export function createStandardLibrary() {
 
 function recentValues(samples, seconds, pick) {
   if (!samples?.length) return [];
-  const latestTs = new Date(samples[samples.length - 1].ts).getTime();
+  const latest = samples[samples.length - 1];
+  const latestTs = latest._tsMs ?? timestampMs(latest.ts);
   const cutoff = latestTs - Number(seconds) * 1000;
-  return samples.filter((row) => new Date(row.ts).getTime() >= cutoff).map(pick).filter(Number.isFinite);
+  return samples.filter((row) => (row._tsMs ?? timestampMs(row.ts)) >= cutoff).map(pick).filter(Number.isFinite);
+}
+
+function timestampMs(value) {
+  if (value == null) return 0;
+  if (typeof value === 'number') return value;
+  return new Date(value).getTime();
 }
 
 function sampleDelta(samples, seconds, pick) {
@@ -241,7 +248,10 @@ function clamp01(value) {
 export function normalizeTick(tick) {
   return {
     ts: tick.ts,
-    underlyingPrice: Number(tick.btc_price ?? tick.underlyingPrice),
+    _tsMs: tick._tsMs ?? timestampMs(tick.ts),
+    _eventStartMs: tick._eventStartMs ?? timestampMs(tick.event_start),
+    _eventEndMs: tick._eventEndMs ?? timestampMs(tick.event_end),
+    underlyingPrice: Number(tick.btc_price ?? tick.underlyingPrice ?? tick.underlying_price),
     priceToBeat: Number(tick.price_to_beat ?? tick.priceToBeat),
     up_price: Number(tick.up_price ?? tick.upPrice),
     down_price: Number(tick.down_price ?? tick.downPrice),

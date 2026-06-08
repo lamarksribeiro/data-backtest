@@ -375,6 +375,17 @@ export function createApiHandler(deps) {
             preparation: prepare.preparation,
           });
         }
+        const estimatedTicks = estimateTicks(strict.availability);
+        request.estimatedTicks = estimatedTicks;
+        if (body.async === true) {
+          const run = createRunningBacktestRun(db, {
+            request,
+            strategyMeta: request.strategyMeta ?? null,
+            totalTicks: estimatedTicks,
+          });
+          queueMicrotask(() => runBacktestInBackground({ db, runId: run.id, request, startedAt, estimatedTicks }));
+          return sendJson(res, 202, { run });
+        }
         try {
           const result = await runBacktest(db, request);
           const run = createBacktestRun(db, {
@@ -691,6 +702,51 @@ function backtestRequestFromBody(body, config, db) {
       },
     };
   }
+}
+
+async function runBacktestInBackground({ db, runId, request, startedAt }) {
+  try {
+    const result = await runBacktest(db, request, {
+      onProgress: (progress) => updateBacktestRunProgress(db, runId, progress),
+    });
+    completeBacktestRun(db, runId, {
+      request,
+      result,
+      strategyMeta: request.strategyMeta ?? null,
+      startedAt,
+    });
+  } catch (err) {
+    const failedResult = err.partialResult || {
+      strategy: request.strategyLabel || request.strategy,
+      source: 'lakehouse',
+      underlying: request.underlying,
+      interval: request.interval,
+      bookDepth: request.bookDepth,
+      from: new Date(request.from).toISOString(),
+      to: new Date(request.to).toISOString(),
+      ticks: 0,
+      batches: 0,
+      summary: { failed: true, error: err.message },
+      events: [],
+      equity: [],
+      log: [],
+    };
+    failBacktestRun(db, runId, {
+      request,
+      result: failedResult,
+      strategyMeta: request.strategyMeta ?? null,
+      error: err.message,
+      startedAt,
+    });
+  }
+}
+
+function estimateTicks(availability) {
+  const rows = availability?.partitions || [];
+  const total = rows
+    .filter((partition) => partition.usable)
+    .reduce((sum, partition) => sum + Number(partition.rows || 0), 0);
+  return total > 0 ? total : null;
 }
 
 function manifestPartitionFromBody(body) {

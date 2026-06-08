@@ -141,8 +141,9 @@ export async function renderBacktests(ctx) {
     }
 
     const payload = backtestPayloadFromPick(String(pick), ctxSaved);
+    payload.async = true;
     const resultPanel = document.getElementById('backtest-run-result');
-    mount(resultPanel, el('p', { class: 'muted' }, 'Executando backtest...'));
+    mount(resultPanel, runningBacktestCard({ phase: 'queued', percent: 0, ticks: 0 }));
 
     const res = await ctx.api.post('/api/backtest/run', payload);
     if (!res.ok) {
@@ -152,6 +153,12 @@ export async function renderBacktests(ctx) {
       } else {
         mount(resultPanel, el('p', { class: 'bad' }, res.error?.message || 'Falha ao executar'));
       }
+      return;
+    }
+    if (res.data.run?.status === 'running') {
+      upsertRunInState(res.data.run);
+      updateDashboard(ctx);
+      pollBacktestRun(ctx, res.data.run.id, resultPanel);
       return;
     }
     
@@ -170,6 +177,97 @@ export async function renderBacktests(ctx) {
     state.runs = runsRes.ok ? runsRes.data.runs || [] : [];
     updateDashboard(ctx);
   });
+}
+
+async function pollBacktestRun(ctx, runId, resultPanel) {
+  let done = false;
+  while (!done) {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const res = await ctx.api.get(`/api/backtest/runs/${runId}`);
+    if (!res.ok) continue;
+    const run = res.data.run;
+    upsertRunInState(run);
+    updateDashboard(ctx);
+    if (run.status === 'running') {
+      mount(resultPanel, runningBacktestCard(run.progress || {}));
+      continue;
+    }
+    done = true;
+    if (run.status === 'completed') {
+      ctx.toast.ok(`Backtest #${run.id} concluído · PnL ${formatPnl(run.summary?.totalPnl ?? 0)}`);
+      mount(resultPanel, el('div', { class: 'row row--wrap' }, [
+        el('span', { class: 'badge badge--ok' }, `Run #${run.id}`),
+        el('button', {
+          class: 'btn btn--ghost btn--sm',
+          type: 'button',
+          onclick: () => ctx.navigate(`backtests/${run.id}`),
+        }, 'Ver detalhes'),
+      ]));
+    } else {
+      ctx.toast.err(`Backtest #${run.id} falhou`);
+      mount(resultPanel, failedRunInlineCard(run, ctx));
+    }
+  }
+}
+
+function upsertRunInState(run) {
+  const index = state.runs.findIndex((item) => item.id === run.id);
+  if (index >= 0) state.runs[index] = run;
+  else state.runs = [run, ...state.runs];
+}
+
+function runningBacktestCard(progress = {}) {
+  const percent = Number(progress.percent ?? 0);
+  const width = Math.max(2, Math.min(100, Number.isFinite(percent) ? percent : 5));
+  return el('div', { class: 'backtest-progress-card' }, [
+    el('div', { class: 'backtest-progress-card__head' }, [
+      el('span', { class: 'badge badge--warn' }, phaseLabel(progress.phase)),
+      el('strong', {}, percent ? `${percent.toFixed(1)}%` : 'Preparando...'),
+    ]),
+    el('div', { class: 'backtest-progress-card__bar' }, [
+      el('span', { style: { width: `${width}%` } }),
+    ]),
+    el('div', { class: 'backtest-progress-card__meta' }, [
+      el('span', {}, `${formatInteger(progress.ticks)} / ${formatInteger(progress.total_ticks)} ticks`),
+      el('span', {}, `ETA ${formatEta(progress.eta_ms)}`),
+    ]),
+  ]);
+}
+
+function failedRunInlineCard(run, ctx) {
+  return el('div', { class: 'backtest-data-blocker' }, [
+    el('div', { class: 'backtest-data-blocker__head' }, [
+      el('span', { class: 'badge badge--err' }, 'falhou'),
+      el('strong', {}, `Run #${run.id}`),
+    ]),
+    el('p', {}, run.error || 'Erro não registrado.'),
+    el('button', {
+      class: 'btn btn--ghost btn--sm',
+      type: 'button',
+      onclick: () => ctx.navigate(`backtests/${run.id}`),
+    }, 'Ver detalhes'),
+  ]);
+}
+
+function phaseLabel(phase) {
+  if (phase === 'loading') return 'carregando dados';
+  if (phase === 'processing') return 'executando';
+  if (phase === 'finalizing') return 'finalizando';
+  return 'na fila';
+}
+
+function formatInteger(value) {
+  if (value == null || !Number.isFinite(Number(value))) return '-';
+  return Number(value).toLocaleString('pt-BR');
+}
+
+function formatEta(ms) {
+  if (ms == null || !Number.isFinite(Number(ms))) return '-';
+  const seconds = Math.max(0, Math.round(Number(ms) / 1000));
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  const rest = seconds % 60;
+  return `${minutes}m ${String(rest).padStart(2, '0')}s`;
 }
 
 function dataNotReadyCard(availability, payload, ctx) {
@@ -434,6 +532,7 @@ function periodLabel(run) {
 }
 
 function statusLabel(status) {
+  if (status === 'running') return 'Executando';
   if (status === 'failed_runtime') return 'Falhou';
   if (status === 'completed') return 'Concluído';
   return status || '-';
@@ -441,7 +540,7 @@ function statusLabel(status) {
 
 function statusBadge(status, error = '') {
   const value = status || 'completed';
-  const tone = value === 'completed' ? 'ok' : 'err';
+  const tone = value === 'completed' ? 'ok' : value === 'running' ? 'warn' : 'err';
   return el('span', { class: `badge badge--${tone}`, title: error || statusLabel(value) }, statusLabel(value));
 }
 

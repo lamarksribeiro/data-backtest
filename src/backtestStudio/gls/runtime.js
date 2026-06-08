@@ -5,7 +5,7 @@ import { DEBUG_FUNCTIONS, ORDER_FUNCTIONS } from './blocks.js';
 import { parse } from './parser.js';
 
 const DEFAULT_LIMITS = {
-  maxRuntimeMs: 120000,
+  maxRuntimeMs: 900000,
   maxEventRuntimeMs: 5000,
   maxLogsPerEvent: 200,
   maxMarksPerEvent: 200,

@@ -4400,6 +4400,39 @@ kbd {
   background: color-mix(in srgb, var(--bg-2) 72%, transparent);
   font-size: 11px;
 }
+.backtest-progress-card {
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 7%, var(--bg-1));
+}
+.backtest-progress-card__head,
+.backtest-progress-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.backtest-progress-card__head strong { color: var(--text-0); }
+.backtest-progress-card__bar {
+  height: 9px;
+  margin: 10px 0;
+  border-radius: 999px;
+  background: var(--bg-2);
+  overflow: hidden;
+}
+.backtest-progress-card__bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--warn));
+  transition: width 0.25s ease;
+}
+.backtest-progress-card__meta {
+  color: var(--text-3);
+  font-size: 12px;
+  font-weight: 700;
+}
 .lake-missing-dates__range {
   font-size: 12px;
 }
