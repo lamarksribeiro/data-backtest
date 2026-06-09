@@ -1,4 +1,6 @@
-import { initRouter, navigate } from './js/router.js';
+import { initRouter, navigate, getRouteToken } from './js/router.js';
+import { destroyActiveChart } from './js/utils/chart.js';
+import { cancelBacktestPolls } from './js/views/backtests.js';
 import { api } from './js/api.js';
 import { toast } from './js/utils/toast.js';
 import { applyContextOptions, contextBarOptions, loadContext, renderContextBar as renderContextControls } from './js/utils/context.js';
@@ -108,6 +110,7 @@ const ctx = {
   toast,
   api,
   navigate,
+  getRouteToken,
 };
 
 ctx.setConnection('idle', 'Conectando…');
@@ -133,6 +136,11 @@ async function bootstrap() {
       'strategies/:id/:versionId': (params) => renderStrategies(ctx, params),
     },
     fallback: 'overview',
+    onLeave(path) {
+      const top = String(path || '').split('?')[0].split('/')[0];
+      if (top !== 'backtests') cancelBacktestPolls();
+      if (!String(path || '').startsWith('backtests/')) destroyActiveChart();
+    },
     onChange: highlightNav,
   });
 }

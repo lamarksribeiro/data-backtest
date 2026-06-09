@@ -23,8 +23,10 @@ export async function runBacktest(db, request, { onProgress } = {}) {
   let batches = 0;
   const totalTicks = Number(request.estimatedTicks || 0) || null;
   const progressStartedAt = Date.now();
-  onProgress?.(buildProgress({ phase: 'loading', ticks, batches, totalTicks, startedAt: progressStartedAt }));
+  const emitProgress = createProgressEmitter(onProgress, progressStartedAt);
+  emitProgress({ phase: 'loading', ticks, batches, totalTicks, force: true });
 
+  const YIELD_EVERY_TICKS = 2000;
   let iterator = null;
   try {
     iterator = provider.streamTicks({
@@ -43,9 +45,17 @@ export async function runBacktest(db, request, { onProgress } = {}) {
       batches += 1;
       ticks += batch.length;
       const processStartedAt = Date.now();
-      for (const tick of batch) runner.processTick(tick);
+      let ticksInSlice = 0;
+      for (const tick of batch) {
+        runner.processTick(tick);
+        ticksInSlice += 1;
+        if (ticksInSlice >= YIELD_EVERY_TICKS) {
+          ticksInSlice = 0;
+          await new Promise((resolve) => setImmediate(resolve));
+        }
+      }
       timings.processMs += Date.now() - processStartedAt;
-      onProgress?.(buildProgress({ phase: 'processing', ticks, batches, totalTicks, startedAt: progressStartedAt }));
+      emitProgress({ phase: 'processing', ticks, batches, totalTicks });
     }
   } catch (err) {
     await iterator?.return?.();
@@ -59,7 +69,7 @@ export async function runBacktest(db, request, { onProgress } = {}) {
   applyPolymarketFeesToBacktestResult(result, request.feeOptions);
   timings.finishMs = Date.now() - finishStartedAt;
   timings.completedAt = Date.now();
-  onProgress?.(buildProgress({ phase: 'finalizing', ticks, batches, totalTicks, startedAt: progressStartedAt }));
+  emitProgress({ phase: 'finalizing', ticks, batches, totalTicks, force: true });
   return {
     strategy: result.strategy,
     source: 'lakehouse',
@@ -76,6 +86,19 @@ export async function runBacktest(db, request, { onProgress } = {}) {
     log: result.log,
     timings: formatTimings(timings),
     strategyMeta: request.strategyMeta ?? null,
+  };
+}
+
+const PROGRESS_MIN_MS = 1500;
+
+function createProgressEmitter(onProgress, startedAt) {
+  let lastEmitAt = 0;
+  return ({ phase, ticks, batches, totalTicks, force = false }) => {
+    if (!onProgress) return;
+    const now = Date.now();
+    if (!force && now - lastEmitAt < PROGRESS_MIN_MS) return;
+    lastEmitAt = now;
+    onProgress(buildProgress({ phase, ticks, batches, totalTicks, startedAt }));
   };
 }
 

@@ -2,10 +2,13 @@ import { el, mount, emptyState } from '../utils/dom.js';
 import { escapeHtml, formatPnl, shortId, resultBadgeClass } from '../utils/format.js';
 import { destroyActiveChart, renderEquityChart } from '../utils/chart.js';
 
+const EVENTS_PAGE = 100;
+
 let metricsViewMode = 'panel';
 
-export async function renderRunDetail(ctx, params) {
-  metricsViewMode = 'panel'; // Reset status on load
+export async function renderRunDetail(ctx, params, routeMeta = {}) {
+  const routeToken = routeMeta.routeToken ?? ctx.getRouteToken?.() ?? 0;
+  metricsViewMode = 'panel';
   const runId = Number(params.id);
   ctx.setBreadcrumb('backtests', `Run #${runId}`);
   destroyActiveChart();
@@ -14,8 +17,10 @@ export async function renderRunDetail(ctx, params) {
 
   const [runRes, eventsRes] = await Promise.all([
     ctx.api.get(`/api/backtest/runs/${runId}`),
-    ctx.api.get(`/api/backtest/runs/${runId}/events?limit=500`),
+    ctx.api.get(`/api/backtest/runs/${runId}/events?limit=${EVENTS_PAGE}&offset=0`),
   ]);
+
+  if (routeToken !== ctx.getRouteToken?.()) return;
 
   if (!runRes.ok) {
     mount(ctx.contentEl, el('section', { class: 'card card--error' }, el('p', {}, runRes.error?.message || 'Run não encontrado')));
@@ -23,12 +28,15 @@ export async function renderRunDetail(ctx, params) {
   }
 
   const run = runRes.data.run;
-  const events = eventsRes.ok ? eventsRes.data.events || [] : [];
+  const eventState = {
+    all: eventsRes.ok ? eventsRes.data.events || [] : [],
+    offset: eventsRes.ok ? (eventsRes.data.events || []).length : 0,
+    hasMore: eventsRes.ok ? (eventsRes.data.events || []).length === EVENTS_PAGE : false,
+  };
   const summary = run.summary || {};
   const paramsObj = run.params || {};
   const equity = Array.isArray(run.equity) ? run.equity : (Array.isArray(run.result?.equity) ? run.result.equity : []);
-  const tradedEvents = events.filter((event) => event.entries_count > 0 || event.result === 'win' || event.result === 'loss');
-  const noEntryEvents = events.filter((event) => event.result === 'no_entry' && !tradedEvents.includes(event));
+  const { tradedEvents, noEntryEvents } = partitionEvents(eventState.all);
 
   mount(ctx.contentEl, [
     el('div', { class: 'page-header' }, [
@@ -60,15 +68,79 @@ export async function renderRunDetail(ctx, params) {
         el('pre', { class: 'code-block' }, escapeHtml(JSON.stringify(run.strategy_snapshot, null, 2))),
       ]) : null,
     ]),
-    el('section', { class: 'card' }, [
-      el('h2', { class: 'card__title' }, `Operações (${tradedEvents.length})`),
-      el('p', { class: 'muted' }, 'Tabela focada em eventos com entrada, saída, win/loss ou impacto financeiro.'),
-      tradedEvents.length ? eventTable(ctx, runId, tradedEvents) : emptyState('Nenhuma operação neste run.'),
-    ]),
+    operationsSection(ctx, runId, tradedEvents, eventState, summary, routeToken),
     noEntrySummarySection(noEntryEvents, summary),
   ]);
 
   if (equity.length) renderEquityChart(document.getElementById('equity-chart'), equity);
+}
+
+function partitionEvents(events) {
+  const tradedIds = new Set();
+  const tradedEvents = [];
+  for (const event of events) {
+    if (event.entries_count > 0 || event.result === 'win' || event.result === 'loss') {
+      tradedIds.add(event.condition_id);
+      tradedEvents.push(event);
+    }
+  }
+  const noEntryEvents = events.filter((event) => event.result === 'no_entry' && !tradedIds.has(event.condition_id));
+  return { tradedEvents, noEntryEvents };
+}
+
+function operationsSection(ctx, runId, tradedEvents, eventState, summary, routeToken) {
+  return el('section', { class: 'card', id: 'run-operations-section' }, [
+    el('h2', { class: 'card__title', id: 'run-operations-title' }, `Operações (${tradedEvents.length})`),
+    el('p', { class: 'muted' }, 'Tabela focada em eventos com entrada, saída, win/loss ou impacto financeiro.'),
+    tradedEvents.length ? eventTable(ctx, runId, tradedEvents) : emptyState('Nenhuma operação neste run.'),
+    eventState.hasMore ? el('div', { style: { marginTop: '12px' } }, [
+      el('button', {
+        class: 'btn btn--ghost btn--sm',
+        type: 'button',
+        id: 'run-events-load-more',
+        onclick: () => loadMoreRunEvents(ctx, runId, eventState, routeToken),
+      }, 'Carregar mais eventos'),
+    ]) : null,
+  ]);
+}
+
+async function loadMoreRunEvents(ctx, runId, eventState, routeToken) {
+  const button = document.getElementById('run-events-load-more');
+  if (button) {
+    button.disabled = true;
+    button.textContent = 'Carregando...';
+  }
+  const res = await ctx.api.get(`/api/backtest/runs/${runId}/events?limit=${EVENTS_PAGE}&offset=${eventState.offset}`);
+  if (routeToken !== ctx.getRouteToken?.()) return;
+  if (!res.ok) {
+    if (button) {
+      button.disabled = false;
+      button.textContent = 'Carregar mais eventos';
+    }
+    return;
+  }
+  const page = res.data.events || [];
+  eventState.all.push(...page);
+  eventState.offset += page.length;
+  eventState.hasMore = page.length === EVENTS_PAGE;
+  const { tradedEvents } = partitionEvents(eventState.all);
+  const title = document.getElementById('run-operations-title');
+  if (title) title.textContent = `Operações (${tradedEvents.length})`;
+  const section = document.getElementById('run-operations-section');
+  if (section) {
+    const tbody = section.querySelector('tbody');
+    if (tbody && tradedEvents.length) {
+      tbody.replaceChildren(...eventTableRows(ctx, runId, tradedEvents));
+    }
+    if (button) {
+      if (eventState.hasMore) {
+        button.disabled = false;
+        button.textContent = 'Carregar mais eventos';
+      } else {
+        button.remove();
+      }
+    }
+  }
 }
 
 function stat(label, value, iconClass) {
@@ -216,6 +288,25 @@ function formatMetric(value) {
   return num.toFixed(Math.abs(num) >= 100 ? 1 : 2);
 }
 
+function eventTableRows(ctx, runId, events) {
+  return events.map((event) => el('tr', {}, [
+    el('td', {}, el('button', {
+      class: 'btn btn--link',
+      type: 'button',
+      onclick: () => ctx.navigate(`backtests/${runId}/events/${event.id}`),
+    }, el('code', {}, shortId(event.condition_id)))),
+    el('td', {}, formatTime(event.event_start)),
+    el('td', {}, el('span', { class: `badge ${resultBadgeClass(event.result)}` }, event.result || 'n/a')),
+    el('td', {}, formatPnl(event.final_pnl)),
+    el('td', {}, event.side || '-'),
+    el('td', {}, String(event.entries_count)),
+    el('td', {}, String(event.exits_count)),
+    el('td', {}, String(event.ticks_count ?? 0)),
+    el('td', {}, escapeHtml(event.reason || '-')),
+    el('td', {}, escapeHtml(event.reason_detail ? noEntryReasonLabel(event.reason_detail) : '-')),
+  ]));
+}
+
 function eventTable(ctx, runId, events) {
   return el('div', { class: 'table-wrap' }, [
     el('table', { class: 'table' }, [
@@ -223,22 +314,7 @@ function eventTable(ctx, runId, events) {
         el('th', {}, 'Condition'), el('th', {}, 'Início'), el('th', {}, 'Resultado'), el('th', {}, 'PnL'),
         el('th', {}, 'Lado'), el('th', {}, 'Entradas'), el('th', {}, 'Saídas'), el('th', {}, 'Ticks'), el('th', {}, 'Motivo'), el('th', {}, 'Diagnóstico'),
       ])),
-      el('tbody', {}, events.map((event) => el('tr', {}, [
-        el('td', {}, el('button', {
-          class: 'btn btn--link',
-          type: 'button',
-          onclick: () => ctx.navigate(`backtests/${runId}/events/${event.id}`),
-        }, el('code', {}, shortId(event.condition_id)))),
-        el('td', {}, formatTime(event.event_start)),
-        el('td', {}, el('span', { class: `badge ${resultBadgeClass(event.result)}` }, event.result || 'n/a')),
-        el('td', {}, formatPnl(event.final_pnl)),
-        el('td', {}, event.side || '-'),
-        el('td', {}, String(event.entries_count)),
-        el('td', {}, String(event.exits_count)),
-        el('td', {}, String(event.ticks_count ?? 0)),
-        el('td', {}, escapeHtml(event.reason || '-')),
-        el('td', {}, escapeHtml(event.reason_detail ? noEntryReasonLabel(event.reason_detail) : '-')),
-      ]))),
+      el('tbody', {}, eventTableRows(ctx, runId, events)),
     ])
   ]);
 }

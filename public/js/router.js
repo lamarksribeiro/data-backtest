@@ -1,4 +1,9 @@
 let _config = null;
+let routeToken = 0;
+
+export function getRouteToken() {
+  return routeToken;
+}
 
 export function initRouter(config) {
   _config = config;
@@ -44,14 +49,16 @@ function matchRoute(path) {
 async function resolve() {
   const path = currentPath();
   const matched = matchRoute(path);
+  const token = ++routeToken;
+  if (_config.onLeave) _config.onLeave(path);
   if (_config.onChange) _config.onChange(path);
   if (matched) {
     try {
-      await matched.handler(matched.params);
+      await matched.handler(matched.params, { routeToken: token });
     } catch (err) {
       console.error('Route handler error:', err);
     }
-  } else {
+  } else if (token === routeToken) {
     navigate(_config.fallback);
   }
 }

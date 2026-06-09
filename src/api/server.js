@@ -264,9 +264,10 @@ export function createApiHandler(deps) {
         }
         if (req.method === 'GET' && backtestRunRoute.kind === 'detail') {
           const full = url.searchParams.get('full') === '1';
+          const slim = url.searchParams.get('slim') === '1';
           const slimRun = getBacktestRun(db, backtestRunRoute.runId, {
             includeResult: full,
-            includeEquity: !full,
+            includeEquity: !full && !slim,
           });
           return sendJson(res, 200, { run: slimRun ?? run });
         }
@@ -516,10 +517,15 @@ async function serveStaticAsset(relative, req, res) {
   try {
     await stat(filePath);
     const cache = new Map();
-    const body = await staticAssetBody(relative, cache);
+    const versionedBodies = new Map();
     const extension = path.extname(filePath);
     const isHtml = extension === '.html';
-    const version = isHtml ? null : await staticAssetVersion(relative, cache);
+    const version = isHtml
+      ? null
+      : await staticAssetVersion(relative, cache, new Set(), versionedBodies);
+    const body = isHtml
+      ? await staticAssetBody(relative, cache)
+      : versionedBodies.get(toPublicRelative(relative)) ?? await staticAssetBody(relative, cache);
     const requestedVersion = new URL(req.url || '/', 'http://localhost').searchParams.get(VERSION_PARAM);
     const etag = version ? `"${version}"` : null;
     const headers = {
@@ -565,7 +571,7 @@ async function staticAssetBody(relative, cache) {
   return body;
 }
 
-async function staticAssetVersion(relative, cache, stack = new Set()) {
+async function staticAssetVersion(relative, cache, stack = new Set(), versionedBodies = null) {
   const normalized = toPublicRelative(relative);
   const cached = cache.get(normalized);
   if (cached) return cached;
@@ -577,9 +583,13 @@ async function staticAssetVersion(relative, cache, stack = new Set()) {
   const versionedBody = extension === '.js'
     ? await versionJsModule(normalized, body.toString('utf8'), cache, stack)
     : body;
-  const version = hashBuffer(Buffer.isBuffer(versionedBody) ? versionedBody : Buffer.from(versionedBody, 'utf8'));
+  const versionedBuffer = Buffer.isBuffer(versionedBody)
+    ? versionedBody
+    : Buffer.from(versionedBody, 'utf8');
+  const version = hashBuffer(versionedBuffer);
   stack.delete(normalized);
   cache.set(normalized, version);
+  if (versionedBodies) versionedBodies.set(normalized, versionedBuffer);
   return version;
 }
 
@@ -619,13 +629,12 @@ async function versionedAbsoluteUrl(urlPath, cache) {
 
 async function replaceAsync(value, regex, replacer) {
   const matches = [...value.matchAll(regex)];
-  const replacements = await Promise.all(matches.map((match) => replacer(...match)));
   let result = '';
   let offset = 0;
 
-  for (let i = 0; i < matches.length; i += 1) {
-    const match = matches[i];
-    result += value.slice(offset, match.index) + replacements[i];
+  for (const match of matches) {
+    const replacement = await replacer(...match);
+    result += value.slice(offset, match.index) + replacement;
     offset = match.index + match[0].length;
   }
 

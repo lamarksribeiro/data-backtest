@@ -36,10 +36,27 @@ export function clear(node) {
   while (node.firstChild) node.removeChild(node.firstChild);
 }
 
+const tableEnhancements = new WeakMap();
+
 export function mount(target, content) {
+  teardownEnhancedTables(target);
   clear(target);
   appendChildren(target, content);
   enhanceResponsiveTables(target);
+}
+
+export function teardownEnhancedTables(root) {
+  if (!root) return;
+  const tables = [];
+  if (root instanceof HTMLTableElement) tables.push(root);
+  if (root.querySelectorAll) tables.push(...root.querySelectorAll('table'));
+  for (const table of tables) {
+    const cleanup = tableEnhancements.get(table);
+    if (cleanup) {
+      cleanup();
+      tableEnhancements.delete(table);
+    }
+  }
 }
 
 export function enhanceResponsiveTables(root = document) {
@@ -132,6 +149,13 @@ function enhanceDataTable(table) {
 
   const observer = new MutationObserver(() => render());
   observer.observe(tbody, { childList: true });
+  tableEnhancements.set(table, () => {
+    observer.disconnect();
+    controls.remove();
+    filterRow.remove();
+    delete table.dataset.controlsEnhanced;
+    delete table.dataset.responsiveCard;
+  });
   render();
 
   function render() {

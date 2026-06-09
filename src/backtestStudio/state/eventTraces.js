@@ -1,4 +1,4 @@
-import { queryTicks } from '../../query/duckdbQuery.js';
+import { queryChartTicks } from '../../query/duckdbQuery.js';
 import { downsamplePoints } from '../../utils/downsample.js';
 
 const CHART_MAX_POINTS = 400;
@@ -90,11 +90,12 @@ export async function getChartData(db, config, run, conditionId) {
   const event = getEventTraceByConditionId(db, run.id, conditionId);
   if (!event) return null;
 
-  const rows = await queryTicks(db, {
-    dataset: 'backtest_ticks',
+  const side = event.side || 'UP';
+  const rows = await queryChartTicks(db, {
     underlying: run.underlying,
     interval: run.interval,
     bookDepth: run.bookDepth,
+    chartSide: side,
     conditionId,
     from: event.event_start,
     to: event.event_end,
@@ -102,7 +103,6 @@ export async function getChartData(db, config, run, conditionId) {
     offset: 0,
     validBacktestRows: true,
   });
-  const side = event.side || 'UP';
   const fullSeries = buildChartSeries(rows, side);
   const keepTs = collectMarkerTimestamps(event);
   const { series, meta } = downsampleChartSeries(fullSeries, keepTs);

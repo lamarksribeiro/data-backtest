@@ -15,7 +15,14 @@ const state = {
   }
 };
 
+let pollToken = 0;
+
+export function cancelBacktestPolls() {
+  pollToken += 1;
+}
+
 export async function renderBacktests(ctx) {
+  cancelBacktestPolls();
   ctx.setBreadcrumb('backtests', null);
   ctx.renderContextBar?.();
 
@@ -190,19 +197,23 @@ function resumeRunningBacktests(ctx) {
 }
 
 async function pollBacktestRun(ctx, runId, resultPanel) {
+  const token = pollToken;
   let done = false;
   while (!done) {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    const res = await ctx.api.get(`/api/backtest/runs/${runId}`);
-    if (!res.ok) continue;
+    if (token !== pollToken) return;
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    if (token !== pollToken) return;
+    const res = await ctx.api.get(`/api/backtest/runs/${runId}?slim=1`);
+    if (!res.ok || token !== pollToken) continue;
     const run = res.data.run;
     upsertRunInState(run);
-    updateDashboard(ctx);
+    syncRunRowInTable(run);
     if (run.status === 'running') {
       if (resultPanel?.isConnected) mount(resultPanel, runningBacktestCard(run.progress || {}));
       continue;
     }
     done = true;
+    updateDashboard(ctx);
     if (run.status === 'completed') {
       ctx.toast.ok(`Backtest #${run.id} concluído · PnL ${formatPnl(run.summary?.totalPnl ?? 0)}`);
       if (resultPanel?.isConnected) mount(resultPanel, el('div', { class: 'row row--wrap' }, [
@@ -218,6 +229,16 @@ async function pollBacktestRun(ctx, runId, resultPanel) {
       if (resultPanel?.isConnected) mount(resultPanel, failedRunInlineCard(run, ctx));
     }
   }
+}
+
+function syncRunRowInTable(run) {
+  const row = document.querySelector(`tr[data-run-id="${run.id}"]`);
+  if (!row || row.children.length < 7) return false;
+  const summary = run.summary || {};
+  row.children[4].replaceChildren(statusBadge(run.status, run.error));
+  row.children[5].textContent = String(run.ticks ?? 0);
+  row.children[6].replaceChildren(renderPnlBadge(summary.totalPnl ?? 0));
+  return true;
 }
 
 function upsertRunInState(run) {
@@ -432,7 +453,7 @@ function renderRunsTablePanel(ctx) {
       ])),
       el('tbody', {}, filteredRuns.map((run) => {
         const summary = run.summary || {};
-        return el('tr', {}, [
+        return el('tr', { dataset: { runId: String(run.id) } }, [
           el('td', {}, `#${run.id}`),
           el('td', { style: { fontWeight: '600' } }, strategyName(run)),
           el('td', {}, versionLabel(run)),

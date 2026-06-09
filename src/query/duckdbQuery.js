@@ -1,6 +1,7 @@
-import { DuckDBInstance, quotedString } from '@duckdb/node-api';
+import { quotedString } from '@duckdb/node-api';
 
 import { requireDatasetAvailability } from './availability.js';
+import { openSharedConnection } from './duckdbPool.js';
 
 const MAX_BACKTEST_ROWS = 5_000_000;
 
@@ -20,18 +21,41 @@ export function backtestTickSelectColumns(bookDepth = 25) {
   return cols.join(', ');
 }
 
+/** Colunas mínimas para gráficos de evento (sem book depth). */
+export function chartTickSelectColumns(side = 'UP') {
+  const prefix = side === 'DOWN' ? 'down' : 'up';
+  return [
+    'ts',
+    'underlying_price',
+    'price_to_beat',
+    'up_price',
+    'down_price',
+    `${prefix}_best_bid`,
+    `${prefix}_best_ask`,
+  ].join(', ');
+}
+
 export async function queryTicks(db, request) {
   const dataset = request.dataset || 'backtest_ticks';
   if (!['scalars', 'backtest_ticks'].includes(dataset)) {
     throw new Error(`Unsupported tick dataset: ${dataset}`);
   }
   const availability = requireDatasetAvailability(db, { ...request, dataset });
-  const sql = buildTicksSql(availability, request, {
-    select: dataset === 'backtest_ticks'
+  const select = request.select
+    ?? (dataset === 'backtest_ticks'
       ? backtestTickSelectColumns(request.bookDepth ?? 25)
-      : '*',
-  });
+      : '*');
+  const sql = buildTicksSql(availability, request, { select });
   return runDuckQuery(sql);
+}
+
+export async function queryChartTicks(db, request) {
+  const side = request.chartSide || 'UP';
+  return queryTicks(db, {
+    ...request,
+    dataset: 'backtest_ticks',
+    select: chartTickSelectColumns(side),
+  });
 }
 
 /**
@@ -51,8 +75,7 @@ export async function openBacktestTickSession(db, request) {
     dataset: 'backtest_ticks',
   }, { select: selectCols, order: true });
 
-  const instance = await DuckDBInstance.create(':memory:');
-  const connection = await instance.connect();
+  const connection = await openSharedConnection();
   let result = null;
   let iterator = null;
   let buffer = [];
@@ -60,7 +83,6 @@ export async function openBacktestTickSession(db, request) {
   let done = false;
   let closed = false;
   try {
-    await connection.run('SET threads TO 4');
     result = await connection.stream(sourceSql);
     iterator = result.yieldRowObjectJs()[Symbol.asyncIterator]();
   } catch (err) {
@@ -101,7 +123,7 @@ export async function openBacktestTickSession(db, request) {
         break;
       }
       const rows = next.value.map(jsonSafe ? jsonSafeRow : enrichRawRow);
-      buffer.push(...rows);
+      for (const row of rows) buffer.push(row);
     }
   }
 
@@ -111,7 +133,6 @@ export async function openBacktestTickSession(db, request) {
     done = true;
     buffer = [];
     connection.closeSync();
-    instance.closeSync();
   }
 }
 
@@ -156,15 +177,12 @@ function buildTicksSql(availability, request, { select = '*', order = true } = {
 }
 
 async function runDuckQuery(sql) {
-  const instance = await DuckDBInstance.create(':memory:');
-  const connection = await instance.connect();
+  const connection = await openSharedConnection();
   try {
-    await connection.run('SET threads TO 4');
     const result = await connection.runAndReadAll(sql);
     return result.getRowObjectsJS().map(jsonSafeRow);
   } finally {
     connection.closeSync();
-    instance.closeSync();
   }
 }
 
