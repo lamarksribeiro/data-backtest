@@ -1,5 +1,6 @@
 import { el, mount, emptyState } from '../utils/dom.js';
 import { applyContextOptions, contextBarOptions, loadContext, saveContext, contextQueryParams, selectField } from '../utils/context.js';
+import { fetchContextOptionsCached } from '../utils/contextOptionsCache.js';
 import { escapeHtml, shellQuote } from '../utils/format.js';
 import { confirmDialog, promptDialog } from '../utils/confirm.js';
 
@@ -10,8 +11,7 @@ export async function renderLakehouse(ctx) {
   ctx.setBreadcrumb('data', null);
   ctx.renderContextBar?.();
 
-  const optionsRes = await ctx.api.get('/api/context-options');
-  const apiOptions = optionsRes.ok ? (optionsRes.data.options || {}) : {};
+  const apiOptions = await fetchContextOptionsCached(ctx.api);
   const fieldOptions = contextBarOptions(apiOptions);
   const formCtx = applyContextOptions(loadContext(), fieldOptions);
   const underlyingOptions = fieldOptions.underlyings?.length ? fieldOptions.underlyings : [formCtx.underlying];

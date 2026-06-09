@@ -1,6 +1,7 @@
 import { el, mount, emptyState } from '../utils/dom.js';
 import { fieldLabelWithHelp } from '../utils/fieldHelp.js';
 import { applyContextOptions, contextBarOptions, loadContext, saveContext, selectField } from '../utils/context.js';
+import { fetchContextOptionsCached } from '../utils/contextOptionsCache.js';
 import { escapeHtml, formatPnl } from '../utils/format.js';
 import { loadStrategyOptions, renderStrategySelect, backtestPayloadFromPick } from '../utils/strategyPicker.js';
 
@@ -26,8 +27,7 @@ export async function renderBacktests(ctx) {
   ctx.setBreadcrumb('backtests', null);
   ctx.renderContextBar?.();
 
-  const optionsRes = await ctx.api.get('/api/context-options');
-  const apiOptions = optionsRes.ok ? (optionsRes.data.options || {}) : {};
+  const apiOptions = await fetchContextOptionsCached(ctx.api);
   const fieldOptions = contextBarOptions(apiOptions);
   const formCtx = applyContextOptions(loadContext(), fieldOptions);
   const underlyingOptions = fieldOptions.underlyings?.length ? fieldOptions.underlyings : [formCtx.underlying];
