@@ -35,8 +35,8 @@ export async function queryTicks(db, request) {
 }
 
 /**
- * Sessão DuckDB com uma varredura Parquet → tabela temporária em memória.
- * Batches subsequentes usam OFFSET na tabela (rápido) sem reabrir DuckDB nem reescanear Parquet.
+ * Sessão de ticks do backtest com leitura única Parquet → memória.
+ * Evita o overhead de múltiplas consultas com LIMIT/OFFSET e fecha a conexão do DuckDB imediatamente.
  */
 export async function openBacktestTickSession(db, request) {
   const availability = requireDatasetAvailability(db, {
@@ -49,22 +49,19 @@ export async function openBacktestTickSession(db, request) {
   const sourceSql = buildTicksSql(availability, {
     ...request,
     dataset: 'backtest_ticks',
-  }, { select: selectCols, order: false });
+  }, { select: selectCols, order: true });
 
   const instance = await DuckDBInstance.create(':memory:');
   const connection = await instance.connect();
+  let rows = [];
   try {
     await connection.run('SET threads TO 4');
-    await connection.run(`
-      CREATE TEMP TABLE _bt_ticks AS
-      SELECT row_number() OVER (ORDER BY CAST(ts AS TIMESTAMP) ASC, condition_id ASC) AS _bt_rn, *
-      FROM (${sourceSql.trim()})
-    `);
-    await connection.run('CREATE INDEX _bt_ticks_rn_idx ON _bt_ticks(_bt_rn)');
-  } catch (err) {
+    const result = await connection.runAndReadAll(sourceSql);
+    const rawRows = result.getRowObjectsJS();
+    rows = jsonSafe ? rawRows.map(jsonSafeRow) : rawRows.map(enrichRawRow);
+  } finally {
     connection.closeSync();
     instance.closeSync();
-    throw err;
   }
 
   return {
@@ -72,18 +69,10 @@ export async function openBacktestTickSession(db, request) {
     async readBatch(offset, limit) {
       const safeLimit = Math.min(Math.max(Number.parseInt(String(limit), 10) || 1, 1), MAX_BACKTEST_ROWS);
       const safeOffset = Math.max(Number.parseInt(String(offset), 10) || 0, 0);
-      const sql = `
-        SELECT * EXCLUDE (_bt_rn) FROM _bt_ticks
-        WHERE _bt_rn > ${safeOffset} AND _bt_rn <= ${safeOffset + safeLimit}
-        ORDER BY _bt_rn ASC
-      `;
-      const result = await connection.runAndReadAll(sql);
-      const rows = result.getRowObjectsJS();
-      return jsonSafe ? rows.map(jsonSafeRow) : rows;
+      return rows.slice(safeOffset, safeOffset + safeLimit);
     },
     close() {
-      connection.closeSync();
-      instance.closeSync();
+      rows = []; // Libera memória
     },
   };
 }
@@ -157,11 +146,32 @@ function safeOffset(value) {
 }
 
 function jsonSafeRow(row) {
-  return Object.fromEntries(Object.entries(row).map(([key, value]) => [key, jsonSafeValue(value)]));
+  const safe = {};
+  for (const [key, value] of Object.entries(row)) {
+    if (value instanceof Date) {
+      const ms = value.getTime();
+      safe[key] = value.toISOString();
+      if (key === 'ts') safe._tsMs = ms;
+      else if (key === 'event_start') safe._eventStartMs = ms;
+      else if (key === 'event_end') safe._eventEndMs = ms;
+    } else if (typeof value === 'bigint') {
+      safe[key] = Number(value);
+    } else {
+      safe[key] = value;
+    }
+  }
+  return safe;
 }
 
-function jsonSafeValue(value) {
-  if (typeof value === 'bigint') return Number(value);
-  if (value instanceof Date) return value.toISOString();
-  return value;
+function enrichRawRow(row) {
+  if (row.ts instanceof Date) row._tsMs = row.ts.getTime();
+  else if (typeof row.ts === 'string') row._tsMs = new Date(row.ts).getTime();
+
+  if (row.event_start instanceof Date) row._eventStartMs = row.event_start.getTime();
+  else if (typeof row.event_start === 'string') row._eventStartMs = new Date(row.event_start).getTime();
+
+  if (row.event_end instanceof Date) row._eventEndMs = row.event_end.getTime();
+  else if (typeof row.event_end === 'string') row._eventEndMs = new Date(row.event_end).getTime();
+
+  return row;
 }

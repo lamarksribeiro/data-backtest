@@ -9,7 +9,7 @@ export function createTraceCollector({ limits = {} } = {}) {
     log(name, value, ts) {
       if (logs.length >= maxLogs) return;
       logs.push({
-        ts: new Date(ts).toISOString(),
+        ts: typeof ts === 'string' ? ts : new Date(ts).toISOString(),
         level: 'info',
         name: String(name),
         value,
@@ -18,7 +18,7 @@ export function createTraceCollector({ limits = {} } = {}) {
     mark(name, data, ts) {
       if (marks.length >= maxMarks) return;
       marks.push({
-        ts: new Date(ts).toISOString(),
+        ts: typeof ts === 'string' ? ts : new Date(ts).toISOString(),
         name: String(name),
         data: data ?? {},
       });
@@ -26,13 +26,16 @@ export function createTraceCollector({ limits = {} } = {}) {
     metric(name, value, ts) {
       const key = String(name);
       if (!metrics[key]) metrics[key] = [];
-      metrics[key].push({ ts: new Date(ts).toISOString(), value: Number(value) });
+      metrics[key].push({
+        ts: typeof ts === 'string' ? ts : new Date(ts).toISOString(),
+        value: Number(value)
+      });
     },
     snapshot() {
       return {
-        logs: logs.map((entry) => ({ ...entry })),
-        marks: marks.map((entry) => ({ ...entry })),
-        metrics: JSON.parse(JSON.stringify(metrics)),
+        logs,
+        marks,
+        metrics,
       };
     },
     reset() {

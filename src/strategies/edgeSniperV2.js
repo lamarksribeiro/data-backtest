@@ -149,6 +149,7 @@ export function mergeEdgeSniperParams(raw = {}) {
 }
 
 function parseBookLevels(rawLevels) {
+  if (rawLevels && rawLevels._isParsed) return rawLevels;
   let levels = rawLevels;
   if (typeof rawLevels === 'string') {
     try {
@@ -158,11 +159,16 @@ function parseBookLevels(rawLevels) {
     }
   }
   if (!Array.isArray(levels)) return [];
-  return levels
+  if (levels._isParsed) return levels;
+
+  const result = levels
     .map((level) => ({ price: toFiniteNumber(level?.price), size: toFiniteNumber(level?.size) }))
     .filter((level) => level.price != null && level.size != null && level.size > 0)
     .map((level) => ({ ...level, key: String(level.price) }))
     .sort((left, right) => left.price - right.price);
+
+  Object.defineProperty(result, '_isParsed', { value: true, enumerable: false });
+  return result;
 }
 
 function withFallbackAsk(levels, fallbackBestAsk) {
@@ -201,10 +207,20 @@ function consumeAsksFromTick(rawAsks, maxPrice, requestedQty, consumedByPrice, f
 function sideFields(tick, side) {
   if (side === 'UP') {
     const fallbackPrice = toFiniteNumber(tick.up_price);
-    return { ask: toFiniteNumber(tick.up_best_ask) ?? fallbackPrice, bid: toFiniteNumber(tick.up_best_bid) ?? fallbackPrice, rawAsks: tick.up_book_asks, price: fallbackPrice };
+    return {
+      ask: toFiniteNumber(tick.up_best_ask) ?? fallbackPrice,
+      bid: toFiniteNumber(tick.up_best_bid) ?? fallbackPrice,
+      rawAsks: tick._parsed_up_book_asks || tick.up_book_asks,
+      price: fallbackPrice
+    };
   }
   const fallbackPrice = toFiniteNumber(tick.down_price);
-  return { ask: toFiniteNumber(tick.down_best_ask) ?? fallbackPrice, bid: toFiniteNumber(tick.down_best_bid) ?? fallbackPrice, rawAsks: tick.down_book_asks, price: fallbackPrice };
+  return {
+    ask: toFiniteNumber(tick.down_best_ask) ?? fallbackPrice,
+    bid: toFiniteNumber(tick.down_best_bid) ?? fallbackPrice,
+    rawAsks: tick._parsed_down_book_asks || tick.down_book_asks,
+    price: fallbackPrice
+  };
 }
 
 function sideMid(fields) {
@@ -224,11 +240,15 @@ function eventKey(tickOrState) {
 }
 
 function secondsRemaining(state, tick) {
-  return Math.max(0, (state.eventEnd - new Date(tick.ts)) / 1000);
+  const tsMs = tick._tsMs ?? new Date(tick.ts).getTime();
+  const endMs = state._eventEndMs ?? state.eventEnd.getTime();
+  return Math.max(0, (endMs - tsMs) / 1000);
 }
 
 function eventElapsedSec(state, tick) {
-  return Math.max(0, (new Date(tick.ts) - new Date(state.eventStart)) / 1000);
+  const tsMs = tick._tsMs ?? new Date(tick.ts).getTime();
+  const startMs = state._eventStartMs ?? new Date(state.eventStart).getTime();
+  return Math.max(0, (tsMs - startMs) / 1000);
 }
 
 function sampleAgo(samples, seconds) {
@@ -251,10 +271,14 @@ function recentVol(samples, lookbackSec) {
 
 function createEventState(tick) {
   const eventStart = tick.event_start;
+  const startMs = tick._eventStartMs ?? new Date(eventStart).getTime();
+  const endMs = startMs + 300000;
   return {
     eventId: tick.condition_id,
     eventStart,
-    eventEnd: new Date(new Date(eventStart).getTime() + 300000),
+    eventEnd: new Date(endMs),
+    _eventStartMs: startMs,
+    _eventEndMs: endMs,
     priceToBeat: toFiniteNumber(tick.price_to_beat),
     lastTick: tick,
     samples: [],
@@ -277,7 +301,7 @@ function createEventState(tick) {
 }
 
 function addSample(state, tick) {
-  const tickTime = new Date(tick.ts).getTime();
+  const tickTime = tick._tsMs ?? new Date(tick.ts).getTime();
   state.samples.push({ timeMs: tickTime, ts: tick.ts, btc: toFiniteNumber(tick.btc_price) });
   while (state.samples.length > 1 && tickTime - state.samples[0].timeMs > 120000) state.samples.shift();
 }

@@ -74,7 +74,7 @@ export function createStandardLibrary() {
       },
       liquidityRatio(side, tick, budget, maxPrice = null) {
         const ask = lib.book.ask(side, tick);
-        const limitPrice = Number.isFinite(Number(maxPrice)) ? Number(maxPrice) : ask;
+        const limitPrice = maxPrice != null && Number.isFinite(Number(maxPrice)) ? Number(maxPrice) : ask;
         const qty = lib.book.availableQty(side, limitPrice, tick);
         const needed = budget / Math.max(limitPrice, 0.001);
         return needed > 0 ? qty / needed : 0;

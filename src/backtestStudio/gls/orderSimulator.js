@@ -222,17 +222,31 @@ function fillAsks(side, tick, maxPrice, requestedQty, consumedByPrice, fallbackB
 
 function askLevels(side, tick, fallbackBestAsk) {
   const prefix = side === 'DOWN' ? 'down_ask' : 'up_ask';
-  const rawLevels = side === 'DOWN' ? tick?.down_book_asks : tick?.up_book_asks;
+  const cacheKey = `_parsed_${prefix}`;
+  if (tick && tick[cacheKey]) return tick[cacheKey];
+
+  const rawLevels = side === 'DOWN'
+    ? (tick?._parsed_down_book_asks || tick?.down_book_asks)
+    : (tick?._parsed_up_book_asks || tick?.up_book_asks);
   const parsed = parseBookLevels(rawLevels);
-  if (parsed.length) return parsed;
+  if (parsed.length) {
+    if (tick) tick[cacheKey] = parsed;
+    return parsed;
+  }
 
   const flattened = [];
-  for (let i = 1; i <= 25; i += 1) {
+  const depth = tick?.book_depth ?? 25;
+  for (let i = 1; i <= depth; i += 1) {
     const price = finiteNumber(tick?.[`${prefix}_px_${i}`]);
     const size = finiteNumber(tick?.[`${prefix}_sz_${i}`]);
     if (price != null && size != null && size > 0) flattened.push({ price, size, key: String(price) });
   }
-  if (flattened.length) return flattened.sort((left, right) => left.price - right.price);
+  const result = flattened.length ? flattened.sort((left, right) => left.price - right.price) : [];
+  if (result.length > 0) {
+    Object.defineProperty(result, '_isParsed', { value: true, enumerable: false });
+    if (tick) tick[cacheKey] = result;
+    return result;
+  }
 
   const fallback = finiteNumber(fallbackBestAsk);
   return fallback == null ? [] : [{ price: fallback, size: Number.POSITIVE_INFINITY, key: String(fallback) }];
@@ -263,23 +277,40 @@ function fillBids(side, tick, minPrice, requestedQty, consumedByPrice) {
 
 function bidLevels(side, tick, fallbackBestBid) {
   const prefix = side === 'DOWN' ? 'down_bid' : 'up_bid';
-  const rawLevels = side === 'DOWN' ? tick?.down_book_bids : tick?.up_book_bids;
+  const cacheKey = `_parsed_${prefix}`;
+  if (tick && tick[cacheKey]) return tick[cacheKey];
+
+  const rawLevels = side === 'DOWN'
+    ? (tick?._parsed_down_book_bids || tick?.down_book_bids)
+    : (tick?._parsed_up_book_bids || tick?.up_book_bids);
   const parsed = parseBookLevels(rawLevels, 'bid');
-  if (parsed.length) return parsed;
+  if (parsed.length) {
+    if (tick) tick[cacheKey] = parsed;
+    return parsed;
+  }
 
   const flattened = [];
-  for (let i = 1; i <= 25; i += 1) {
+  const depth = tick?.book_depth ?? 25;
+  for (let i = 1; i <= depth; i += 1) {
     const price = finiteNumber(tick?.[`${prefix}_px_${i}`]);
     const size = finiteNumber(tick?.[`${prefix}_sz_${i}`]);
     if (price != null && size != null && size > 0) flattened.push({ price, size, key: String(price) });
   }
-  if (flattened.length) return flattened.sort((left, right) => right.price - left.price);
+  const result = flattened.length ? flattened.sort((left, right) => right.price - left.price) : [];
+  if (result.length > 0) {
+    Object.defineProperty(result, '_isParsed', { value: true, enumerable: false });
+    if (tick) tick[cacheKey] = result;
+    return result;
+  }
 
   const fallback = finiteNumber(fallbackBestBid);
   return fallback == null ? [] : [{ price: fallback, size: Number.POSITIVE_INFINITY, key: String(fallback) }];
 }
 
 function parseBookLevels(rawLevels, side = 'ask') {
+  if (rawLevels && rawLevels._isParsed) {
+    return rawLevels;
+  }
   let levels = rawLevels;
   if (typeof levels === 'string') {
     try {
@@ -289,11 +320,17 @@ function parseBookLevels(rawLevels, side = 'ask') {
     }
   }
   if (!Array.isArray(levels)) return [];
-  return levels
+  if (levels._isParsed) {
+    return levels;
+  }
+  const result = levels
     .map((level) => ({ price: finiteNumber(level?.price), size: finiteNumber(level?.size) }))
     .filter((level) => level.price != null && level.size != null && level.size > 0)
     .map((level) => ({ ...level, key: String(level.price) }))
     .sort((left, right) => (side === 'bid' ? right.price - left.price : left.price - right.price));
+
+  Object.defineProperty(result, '_isParsed', { value: true, enumerable: false });
+  return result;
 }
 
 function trimFills(fills, targetShares) {

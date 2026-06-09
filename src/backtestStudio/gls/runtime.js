@@ -22,6 +22,7 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
   const events = [];
   const equity = [];
   const log = [];
+  const completedEvents = new Set();
   let totalPnl = 0;
   let totalEntries = 0;
   let wins = 0;
@@ -93,6 +94,7 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
     };
     events.push(eventRecord);
     equity.push({ ts: eventRecord.closedAt, pnl: totalPnl });
+    completedEvents.add(currentKey);
     currentEvent = null;
     currentKey = null;
   }
@@ -144,6 +146,8 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
 
     const tick = normalizeTick(rawTick);
     const key = eventKey(tick);
+    if (completedEvents.has(key)) return;
+
     if (key !== currentKey) {
       if (currentEvent) {
         runHook('onEventEnd', buildRuntimeContext(tick, currentEvent));
@@ -168,6 +172,11 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
     const ctx = buildRuntimeContext(tick, currentEvent);
     runHook('onTick', ctx);
     currentLastTick = tick;
+
+    if (currentEvent && orderSim.snapshot().orders.some((o) => o.type === 'entry') && !orderSim.positionView.open) {
+      runHook('onEventEnd', ctx);
+      finalizeEvent(tick);
+    }
   }
 
   function finish() {

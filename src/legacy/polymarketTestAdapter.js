@@ -79,7 +79,16 @@ export function toLegacyBacktestTick(row, { index = 0, bookDepth = 25 } = {}) {
   const downBookAsks = levelsFromFlattened(row, 'down_ask', bookDepth);
   const downBookBids = levelsFromFlattened(row, 'down_bid', bookDepth);
 
-  return {
+  const upBookAsksParsed = upBookAsks.map(l => ({ price: l.price, size: l.size, key: String(l.price) }));
+  Object.defineProperty(upBookAsksParsed, '_isParsed', { value: true, enumerable: false });
+  const upBookBidsParsed = upBookBids.map(l => ({ price: l.price, size: l.size, key: String(l.price) }));
+  Object.defineProperty(upBookBidsParsed, '_isParsed', { value: true, enumerable: false });
+  const downBookAsksParsed = downBookAsks.map(l => ({ price: l.price, size: l.size, key: String(l.price) }));
+  Object.defineProperty(downBookAsksParsed, '_isParsed', { value: true, enumerable: false });
+  const downBookBidsParsed = downBookBids.map(l => ({ price: l.price, size: l.size, key: String(l.price) }));
+  Object.defineProperty(downBookBidsParsed, '_isParsed', { value: true, enumerable: false });
+
+  const tick = {
     id: index + 1,
     event_start: row.event_start,
     event_end: row.event_end,
@@ -99,6 +108,17 @@ export function toLegacyBacktestTick(row, { index = 0, bookDepth = 25 } = {}) {
     down_book_asks: JSON.stringify(downBookAsks),
     down_book_bids: JSON.stringify(downBookBids),
   };
+
+  tick._parsed_up_book_asks = upBookAsksParsed;
+  tick._parsed_up_book_bids = upBookBidsParsed;
+  tick._parsed_down_book_asks = downBookAsksParsed;
+  tick._parsed_down_book_bids = downBookBidsParsed;
+
+  if (row._tsMs !== undefined) tick._tsMs = row._tsMs;
+  if (row._eventStartMs !== undefined) tick._eventStartMs = row._eventStartMs;
+  if (row._eventEndMs !== undefined) tick._eventEndMs = row._eventEndMs;
+
+  return tick;
 }
 
 function levelsFromFlattened(row, prefix, depth) {
