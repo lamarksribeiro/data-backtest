@@ -35,8 +35,8 @@ export async function queryTicks(db, request) {
 }
 
 /**
- * Sessão de ticks do backtest com leitura única Parquet → memória.
- * Evita o overhead de múltiplas consultas com LIMIT/OFFSET e fecha a conexão do DuckDB imediatamente.
+ * Sessão de ticks do backtest com leitura streaming Parquet → JS.
+ * Evita materializar milhões de linhas em objetos JS antes do backtest começar.
  */
 export async function openBacktestTickSession(db, request) {
   const availability = requireDatasetAvailability(db, {
@@ -53,15 +53,19 @@ export async function openBacktestTickSession(db, request) {
 
   const instance = await DuckDBInstance.create(':memory:');
   const connection = await instance.connect();
-  let rows = [];
+  let result = null;
+  let iterator = null;
+  let buffer = [];
+  let cursor = 0;
+  let done = false;
+  let closed = false;
   try {
     await connection.run('SET threads TO 4');
-    const result = await connection.runAndReadAll(sourceSql);
-    const rawRows = result.getRowObjectsJS();
-    rows = jsonSafe ? rawRows.map(jsonSafeRow) : rawRows.map(enrichRawRow);
-  } finally {
-    connection.closeSync();
-    instance.closeSync();
+    result = await connection.stream(sourceSql);
+    iterator = result.yieldRowObjectJs()[Symbol.asyncIterator]();
+  } catch (err) {
+    closeSession();
+    throw err;
   }
 
   return {
@@ -69,12 +73,46 @@ export async function openBacktestTickSession(db, request) {
     async readBatch(offset, limit) {
       const safeLimit = Math.min(Math.max(Number.parseInt(String(limit), 10) || 1, 1), MAX_BACKTEST_ROWS);
       const safeOffset = Math.max(Number.parseInt(String(offset), 10) || 0, 0);
-      return rows.slice(safeOffset, safeOffset + safeLimit);
+      if (closed) return [];
+      if (safeOffset < cursor) throw new Error('Backtest tick session cannot rewind already streamed rows');
+
+      const skipRows = safeOffset - cursor;
+      if (skipRows > 0) {
+        await fillBuffer(skipRows);
+        const skipped = buffer.splice(0, skipRows).length;
+        cursor += skipped;
+      }
+
+      await fillBuffer(safeLimit);
+      const batch = buffer.splice(0, safeLimit);
+      cursor += batch.length;
+      return batch;
     },
     close() {
-      rows = []; // Libera memória
+      closeSession();
     },
   };
+
+  async function fillBuffer(targetRows) {
+    while (!done && buffer.length < targetRows) {
+      const next = await iterator.next();
+      if (next.done) {
+        done = true;
+        break;
+      }
+      const rows = next.value.map(jsonSafe ? jsonSafeRow : enrichRawRow);
+      buffer.push(...rows);
+    }
+  }
+
+  function closeSession() {
+    if (closed) return;
+    closed = true;
+    done = true;
+    buffer = [];
+    connection.closeSync();
+    instance.closeSync();
+  }
 }
 
 export async function queryCandles(db, request) {
