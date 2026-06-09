@@ -166,6 +166,7 @@ export async function renderBacktests(ctx) {
     if (res.data.run?.status === 'running') {
       upsertRunInState(res.data.run);
       updateDashboard(ctx);
+      mount(resultPanel, runningBacktestCard(res.data.run.progress || {}, { runId: res.data.run.id, ctx }));
       pollBacktestRun(ctx, res.data.run.id, resultPanel);
       return;
     }
@@ -192,7 +193,7 @@ function resumeRunningBacktests(ctx) {
   if (!running.length) return;
   const resultPanel = document.getElementById('backtest-run-result');
   const latest = running[0];
-  if (resultPanel) mount(resultPanel, runningBacktestCard(latest.progress || {}));
+  if (resultPanel) mount(resultPanel, runningBacktestCard(latest.progress || {}, { runId: latest.id, ctx }));
   for (const run of running) pollBacktestRun(ctx, run.id, run.id === latest.id ? resultPanel : null);
 }
 
@@ -209,7 +210,7 @@ async function pollBacktestRun(ctx, runId, resultPanel) {
     upsertRunInState(run);
     syncRunRowInTable(run);
     if (run.status === 'running') {
-      if (resultPanel?.isConnected) mount(resultPanel, runningBacktestCard(run.progress || {}));
+      if (resultPanel?.isConnected) mount(resultPanel, runningBacktestCard(run.progress || {}, { runId: run.id, ctx }));
       continue;
     }
     done = true;
@@ -224,11 +225,27 @@ async function pollBacktestRun(ctx, runId, resultPanel) {
           onclick: () => ctx.navigate(`backtests/${run.id}`),
         }, 'Ver detalhes'),
       ]));
+    } else if (run.status === 'cancelled') {
+      ctx.toast.warn(`Backtest #${run.id} cancelado`);
+      if (resultPanel?.isConnected) mount(resultPanel, cancelledRunInlineCard(run));
     } else {
       ctx.toast.err(`Backtest #${run.id} falhou`);
       if (resultPanel?.isConnected) mount(resultPanel, failedRunInlineCard(run, ctx));
     }
   }
+}
+
+async function cancelBacktestRun(ctx, runId) {
+  const ok = window.confirm(`Cancelar o backtest #${runId}?`);
+  if (!ok) return;
+  const res = await ctx.api.post(`/api/backtest/runs/${runId}/cancel`, {});
+  if (!res.ok) {
+    ctx.toast.err(res.error?.message || 'Falha ao cancelar backtest');
+    return;
+  }
+  upsertRunInState(res.data.run);
+  updateDashboard(ctx);
+  ctx.toast.warn(`Backtest #${runId} cancelado`);
 }
 
 function syncRunRowInTable(run) {
@@ -247,13 +264,16 @@ function upsertRunInState(run) {
   else state.runs = [run, ...state.runs];
 }
 
-function runningBacktestCard(progress = {}) {
+function runningBacktestCard(progress = {}, { runId = null, ctx = null } = {}) {
   const percent = Number(progress.percent ?? 0);
   const width = Math.max(2, Math.min(100, Number.isFinite(percent) ? percent : 5));
   return el('div', { class: 'backtest-progress-card' }, [
     el('div', { class: 'backtest-progress-card__head' }, [
       el('span', { class: 'badge badge--warn' }, phaseLabel(progress.phase)),
-      el('strong', {}, percent ? `${percent.toFixed(1)}%` : 'Preparando...'),
+      el('div', { class: 'row', style: { gap: '8px', alignItems: 'center' } }, [
+        el('strong', {}, percent ? `${percent.toFixed(1)}%` : 'Preparando...'),
+        runId && ctx ? cancelRunButton(runId, ctx) : null,
+      ]),
     ]),
     el('div', { class: 'backtest-progress-card__bar' }, [
       el('span', { style: { width: `${width}%` } }),
@@ -262,6 +282,24 @@ function runningBacktestCard(progress = {}) {
       el('span', {}, `${formatInteger(progress.ticks)} / ${formatInteger(progress.total_ticks)} ticks`),
       el('span', {}, `ETA ${formatEta(progress.eta_ms)}`),
     ]),
+  ]);
+}
+
+function cancelRunButton(runId, ctx) {
+  return el('button', {
+    class: 'btn btn--ghost btn--sm',
+    type: 'button',
+    onclick: () => cancelBacktestRun(ctx, runId),
+  }, 'Cancelar');
+}
+
+function cancelledRunInlineCard(run) {
+  return el('div', { class: 'backtest-data-blocker' }, [
+    el('div', { class: 'backtest-data-blocker__head' }, [
+      el('span', { class: 'badge badge--idle' }, 'cancelado'),
+      el('strong', {}, `Run #${run.id}`),
+    ]),
+    el('p', {}, run.error || 'Cancelado pelo usuário.'),
   ]);
 }
 
@@ -461,14 +499,17 @@ function renderRunsTablePanel(ctx) {
           el('td', {}, statusBadge(run.status, run.error)),
           el('td', {}, String(run.ticks ?? 0)),
           el('td', {}, renderPnlBadge(summary.totalPnl ?? 0)),
-          el('td', {}, el('button', {
-            class: 'btn btn--ghost btn--sm',
-            type: 'button',
-            style: { display: 'inline-flex', alignItems: 'center', gap: '4px' },
-            onclick: () => ctx.navigate(`backtests/${run.id}`),
-          }, [
-            'Detalhes ',
-            el('i', { class: 'fa-solid fa-chart-line' })
+          el('td', {}, el('div', { class: 'row row--wrap', style: { gap: '6px' } }, [
+            run.status === 'running' ? cancelRunButton(run.id, ctx) : null,
+            el('button', {
+              class: 'btn btn--ghost btn--sm',
+              type: 'button',
+              style: { display: 'inline-flex', alignItems: 'center', gap: '4px' },
+              onclick: () => ctx.navigate(`backtests/${run.id}`),
+            }, [
+              'Detalhes ',
+              el('i', { class: 'fa-solid fa-chart-line' })
+            ]),
           ])),
         ]);
       })),
@@ -502,9 +543,11 @@ function renderRunsTablePanel(ctx) {
       
       el('div', { style: { flex: 1 } }),
 
-      filterSelectMini('Status', state.historyFilters.status, ['all', 'completed', 'failed_runtime'], (value) => {
+      filterSelectMini('Status', state.historyFilters.status, ['all', 'running', 'completed', 'failed_runtime', 'cancelled'], (value) => {
         if (value === 'all') return 'Todos';
+        if (value === 'running') return 'Executando';
         if (value === 'completed') return 'Concluídos';
+        if (value === 'cancelled') return 'Cancelados';
         return 'Falhados';
       }, (e) => {
         state.historyFilters.status = e.target.value;
@@ -564,6 +607,7 @@ function periodLabel(run) {
 
 function statusLabel(status) {
   if (status === 'running') return 'Executando';
+  if (status === 'cancelled') return 'Cancelado';
   if (status === 'failed_runtime') return 'Falhou';
   if (status === 'completed') return 'Concluído';
   return status || '-';
@@ -571,7 +615,7 @@ function statusLabel(status) {
 
 function statusBadge(status, error = '') {
   const value = status || 'completed';
-  const tone = value === 'completed' ? 'ok' : value === 'running' ? 'warn' : 'err';
+  const tone = value === 'completed' ? 'ok' : value === 'running' ? 'warn' : value === 'cancelled' ? 'idle' : 'err';
   return el('span', { class: `badge badge--${tone}`, title: error || statusLabel(value) }, statusLabel(value));
 }
 

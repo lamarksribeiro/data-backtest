@@ -19,6 +19,7 @@ import { datasetRequestFromObject, datasetRequestFromParams } from '../query/req
 import { createPrepareJobRunner } from '../prepare/runner.js';
 import { runBacktest } from '../backtest/engine.js';
 import {
+  cancelBacktestRun,
   completeBacktestRun,
   createBacktestRun,
   createRunningBacktestRun,
@@ -64,6 +65,7 @@ export function createApiHandler(deps) {
     prepareRunner = createPrepareJobRunner({ config, db }),
   } = deps;
   const authMiddleware = deps.authMiddleware || createAuthMiddleware({ authService, config });
+  const activeBacktestWorkers = new Map();
 
   let sharedSourcePool = null;
   function getSourcePool() {
@@ -275,6 +277,17 @@ export function createApiHandler(deps) {
           });
           return sendJson(res, 200, { run: slimRun ?? run });
         }
+        if (req.method === 'POST' && backtestRunRoute.kind === 'cancel') {
+          if (run.status !== 'running') {
+            return sendJson(res, 409, {
+              error: { code: 'CANCEL_FAILED', message: `Backtest cannot be cancelled while ${run.status}` },
+            });
+          }
+          const worker = activeBacktestWorkers.get(backtestRunRoute.runId);
+          if (worker) await worker.terminate();
+          const cancelled = cancelBacktestRun(db, backtestRunRoute.runId) || getBacktestRun(db, backtestRunRoute.runId, { includeEquity: false });
+          return sendJson(res, 200, { ok: true, run: cancelled });
+        }
         if (req.method === 'GET' && backtestRunRoute.kind === 'events') {
           return sendJson(res, 200, {
             events: listEventTraces(db, backtestRunRoute.runId, {
@@ -397,7 +410,7 @@ export function createApiHandler(deps) {
             strategyMeta: request.strategyMeta ?? null,
             totalTicks: estimatedTicks,
           });
-          startBacktestWorker({ config, db, runId: run.id, request, startedAt });
+          startBacktestWorker({ config, db, runId: run.id, request, startedAt, activeBacktestWorkers });
           return sendJson(res, 202, { run });
         }
         try {
@@ -802,7 +815,7 @@ async function runBacktestInBackground({ db, runId, request, startedAt }) {
   }
 }
 
-function startBacktestWorker({ config, db, runId, request, startedAt }) {
+function startBacktestWorker({ config, db, runId, request, startedAt, activeBacktestWorkers }) {
   const worker = new Worker(new URL('../backtest/worker.js', import.meta.url), {
     workerData: {
       stateDbPath: config.stateDbPath,
@@ -811,6 +824,7 @@ function startBacktestWorker({ config, db, runId, request, startedAt }) {
       startedAt,
     },
   });
+  activeBacktestWorkers?.set(runId, worker);
   worker.on('error', (err) => {
     const failedResult = {
       strategy: request.strategyLabel || request.strategy,
@@ -835,6 +849,7 @@ function startBacktestWorker({ config, db, runId, request, startedAt }) {
       startedAt,
     });
   });
+  worker.on('exit', () => activeBacktestWorkers?.delete(runId));
   worker.unref();
   return worker;
 }
@@ -903,6 +918,7 @@ function matchBacktestRunRoute(pathname) {
   const runId = Number.parseInt(parts[3], 10);
   if (!Number.isFinite(runId)) return null;
   if (parts.length === 4) return { kind: 'detail', runId };
+  if (parts.length === 5 && parts[4] === 'cancel') return { kind: 'cancel', runId };
   if (parts[4] === 'events' && parts.length === 5) return { kind: 'events', runId };
   if (parts[4] === 'events' && parts.length === 6) {
     const eventTraceId = Number.parseInt(parts[5], 10);

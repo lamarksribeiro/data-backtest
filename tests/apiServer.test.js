@@ -12,6 +12,7 @@ import { upsertManifestPartition } from '../src/state/manifest.js';
 import { toPortablePath } from '../src/lake/paths.js';
 import { writeBacktestTicksParquet } from '../src/sync/duckdbParquet.js';
 import { createStrategy, createStrategyVersion } from '../src/backtestStudio/state/strategies.js';
+import { createRunningBacktestRun } from '../src/state/backtestRuns.js';
 
 test('data-backtest API exposes health, availability and prepare plan', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-api-'));
@@ -109,6 +110,51 @@ test('data-backtest API returns 400 for invalid requests', async () => {
       const badIntervalBody = await badInterval.json();
       assert.equal(badInterval.status, 400);
       assert.match(badIntervalBody.error.message, /Invalid interval/);
+    } finally {
+      if (server) await new Promise((resolve) => server.close(resolve));
+      closeStateDatabase(db);
+    }
+  } finally {
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
+  }
+});
+
+test('data-backtest API cancels running backtest runs', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-api-cancel-run-'));
+  let server = null;
+  try {
+    const config = testServerConfig({
+      lakeRoot: path.join(dir, 'lake'),
+      stateDbPath: path.join(dir, 'state.db'),
+    });
+    const db = openStateDatabase(config.stateDbPath);
+    const authService = createTestAuthService(db);
+    try {
+      server = createApiServer({ config, db, authService });
+      await new Promise((resolve) => server.listen(0, resolve));
+      const baseUrl = `http://127.0.0.1:${server.address().port}`;
+      const run = createRunningBacktestRun(db, {
+        request: {
+          strategy: 'edge-sniper-v2',
+          underlying: 'BTC',
+          interval: '5m',
+          bookDepth: 25,
+          from: '2026-05-31T00:00:00.000Z',
+          to: '2026-05-31T00:05:00.000Z',
+          batchSize: 5000,
+          params: {},
+        },
+        totalTicks: 100,
+      });
+
+      const cancelled = await postJson(`${baseUrl}/api/backtest/runs/${run.id}/cancel`, {});
+      assert.equal(cancelled.ok, true);
+      assert.equal(cancelled.run.status, 'cancelled');
+      assert.equal(cancelled.run.progress, null);
+
+      const detail = await getJson(`${baseUrl}/api/backtest/runs/${run.id}?slim=1`);
+      assert.equal(detail.run.status, 'cancelled');
+      assert.equal(detail.run.summary.cancelled, 1);
     } finally {
       if (server) await new Promise((resolve) => server.close(resolve));
       closeStateDatabase(db);

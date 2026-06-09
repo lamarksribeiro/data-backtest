@@ -122,6 +122,18 @@ export function updateBacktestRunProgress(db, id, progress) {
   );
 }
 
+export function cancelBacktestRun(db, id, { error = 'Backtest cancelled by user', startedAt = null } = {}) {
+  const durationMs = startedAt ? Date.now() - startedAt : null;
+  const changes = db.prepare(`
+    UPDATE backtest_runs
+    SET status = 'cancelled', error = ?, duration_ms = COALESCE(duration_ms, ?), progress_json = NULL,
+        summary_json = json_set(summary_json, '$.cancelled', 1, '$.error', ?),
+        result_json = json_set(result_json, '$.summary.cancelled', 1, '$.summary.error', ?)
+    WHERE id = ? AND status = 'running'
+  `).run(error, durationMs, error, error, id).changes;
+  return changes ? getBacktestRun(db, id, { includeResult: false, includeEquity: false }) : null;
+}
+
 export function completeBacktestRun(db, id, { request, result, strategyMeta = null, startedAt = null }) {
   return finishExistingBacktestRun(db, id, { request, result, strategyMeta, status: 'completed', error: null, startedAt });
 }
@@ -131,6 +143,8 @@ export function failBacktestRun(db, id, { request, result, strategyMeta = null, 
 }
 
 function finishExistingBacktestRun(db, id, { request, result, strategyMeta = null, status, error, startedAt = null }) {
+  const existing = getBacktestRun(db, id, { includeResult: false, includeEquity: false });
+  if (!existing || existing.status !== 'running') return existing;
   const meta = strategyMeta ?? result?.strategyMeta ?? null;
   const storageStartedAt = Date.now();
   result.summary = {

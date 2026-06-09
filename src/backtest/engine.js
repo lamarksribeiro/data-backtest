@@ -26,7 +26,6 @@ export async function runBacktest(db, request, { onProgress } = {}) {
   const emitProgress = createProgressEmitter(onProgress, progressStartedAt);
   emitProgress({ phase: 'loading', ticks, batches, totalTicks, force: true });
 
-  const YIELD_EVERY_TICKS = 2000;
   let iterator = null;
   try {
     iterator = provider.streamTicks({
@@ -45,14 +44,8 @@ export async function runBacktest(db, request, { onProgress } = {}) {
       batches += 1;
       ticks += batch.length;
       const processStartedAt = Date.now();
-      let ticksInSlice = 0;
       for (const tick of batch) {
         runner.processTick(tick);
-        ticksInSlice += 1;
-        if (ticksInSlice >= YIELD_EVERY_TICKS) {
-          ticksInSlice = 0;
-          await new Promise((resolve) => setImmediate(resolve));
-        }
       }
       timings.processMs += Date.now() - processStartedAt;
       emitProgress({ phase: 'processing', ticks, batches, totalTicks });
