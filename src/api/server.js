@@ -11,7 +11,7 @@ import { createAuthMiddleware } from '../middleware/auth.js';
 import { getHealth } from '../health.js';
 import { acceptManifestPartition, listBacktestContextOptions, listManifest, manifestStats, revokeAcceptedManifestPartition } from '../state/manifest.js';
 import { emptyContextOptions, mergeContextOptions } from '../state/contextOptions.js';
-import { closeSourcePool, createSourcePool, listSourceContextOptions } from '../source/postgres.js';
+import { createSourcePool, listSourceContextOptions } from '../source/postgres.js';
 import { getPrepareJob, listPrepareJobs } from '../state/prepareJobs.js';
 import { checkDatasetAvailability } from '../query/availability.js';
 import { resolveDataRequest } from '../query/dataMode.js';
@@ -64,6 +64,13 @@ export function createApiHandler(deps) {
     prepareRunner = createPrepareJobRunner({ config, db }),
   } = deps;
   const authMiddleware = deps.authMiddleware || createAuthMiddleware({ authService, config });
+
+  let sharedSourcePool = null;
+  function getSourcePool() {
+    if (!config.dataCollectorDatabaseUrl) return null;
+    if (!sharedSourcePool) sharedSourcePool = createSourcePool(config);
+    return sharedSourcePool;
+  }
 
   return async function handleRequest(req, res) {
     try {
@@ -142,13 +149,10 @@ export function createApiHandler(deps) {
         const lake = listBacktestContextOptions(db);
         let source = emptyContextOptions();
         if (config.dataCollectorDatabaseUrl) {
-          const pool = createSourcePool(config);
           try {
-            source = await listSourceContextOptions(pool, config);
+            source = await listSourceContextOptions(getSourcePool(), config);
           } catch (error) {
             console.warn('[context-options] source query failed:', error.message);
-          } finally {
-            await closeSourcePool(pool);
           }
         }
         return sendJson(res, 200, { options: mergeContextOptions(lake, source, config) });
@@ -510,45 +514,39 @@ async function tryServeStatic(urlPath, req, res) {
   return serveStaticAsset(relative, req, res);
 }
 
+const assetCache = new Map();
+
 async function serveStaticAsset(relative, req, res) {
   if (!isSafePublicRelative(relative)) return false;
-  const filePath = publicFilePath(relative);
 
+  let asset;
   try {
-    await stat(filePath);
-    const cache = new Map();
-    const versionedBodies = new Map();
-    const extension = path.extname(filePath);
-    const isHtml = extension === '.html';
-    const version = isHtml
-      ? null
-      : await staticAssetVersion(relative, cache, new Set(), versionedBodies);
-    const body = isHtml
-      ? await staticAssetBody(relative, cache)
-      : versionedBodies.get(toPublicRelative(relative)) ?? await staticAssetBody(relative, cache);
-    const requestedVersion = new URL(req.url || '/', 'http://localhost').searchParams.get(VERSION_PARAM);
-    const etag = version ? `"${version}"` : null;
-    const headers = {
-      'content-type': STATIC_TYPES.get(extension) || 'application/octet-stream',
-      'cache-control': cacheControlForAsset({ isHtml, version, requestedVersion }),
-    };
-
-    if (etag) headers.etag = etag;
-
-    if (!isHtml && req.headers['if-none-match'] === etag) {
-      res.writeHead(304, headers);
-      res.end();
-      return true;
-    }
-
-    headers['content-length'] = body.length;
-    res.writeHead(200, headers);
-    res.end(body);
-    return true;
+    asset = await loadVersionedAsset(relative);
   } catch (err) {
     if (err.code === 'ENOENT') return false;
     throw err;
   }
+
+  const { isHtml, version, contentType, versionedBuffer: body } = asset;
+  const requestedVersion = new URL(req.url || '/', 'http://localhost').searchParams.get(VERSION_PARAM);
+  const etag = version ? `"${version}"` : null;
+  const headers = {
+    'content-type': contentType,
+    'cache-control': cacheControlForAsset({ isHtml, version, requestedVersion }),
+  };
+
+  if (etag) headers.etag = etag;
+
+  if (!isHtml && req.headers['if-none-match'] === etag) {
+    res.writeHead(304, headers);
+    res.end();
+    return true;
+  }
+
+  headers['content-length'] = body.length;
+  res.writeHead(200, headers);
+  res.end(body);
+  return true;
 }
 
 function cacheControlForAsset({ isHtml, version, requestedVersion }) {
@@ -556,51 +554,91 @@ function cacheControlForAsset({ isHtml, version, requestedVersion }) {
   return version && requestedVersion === version ? IMMUTABLE : REVALIDATE;
 }
 
-async function staticAssetBody(relative, cache) {
-  const body = await readFile(publicFilePath(relative));
-  const extension = path.posix.extname(toPublicRelative(relative));
-
-  if (extension === '.html') {
-    return Buffer.from(await versionHtml(body.toString('utf8'), cache), 'utf8');
-  }
-
-  if (extension === '.js') {
-    return Buffer.from(await versionJsModule(toPublicRelative(relative), body.toString('utf8'), cache), 'utf8');
-  }
-
-  return body;
-}
-
-async function staticAssetVersion(relative, cache, stack = new Set(), versionedBodies = null) {
+/**
+ * Resolve (and version) a static asset, caching the result in module scope.
+ * The cached entry is reused while the asset and every transitive dependency
+ * keep the same mtime, avoiding per-request file reads and SHA-256 hashing.
+ */
+async function loadVersionedAsset(relative) {
   const normalized = toPublicRelative(relative);
-  const cached = cache.get(normalized);
-  if (cached) return cached;
-  if (stack.has(normalized)) return hashBuffer(await readFile(publicFilePath(normalized)));
+  const selfMtime = await fileMtimeMs(normalized);
+  const cached = assetCache.get(normalized);
+  if (cached && cached.selfMtime === selfMtime && await depsFresh(cached.deps)) {
+    return cached;
+  }
 
-  stack.add(normalized);
-  const body = await readFile(publicFilePath(normalized));
+  const memo = new Map();
+  const deps = new Map();
+  const built = await resolveVersionedAsset(normalized, memo, deps, new Set());
   const extension = path.posix.extname(normalized);
-  const versionedBody = extension === '.js'
-    ? await versionJsModule(normalized, body.toString('utf8'), cache, stack)
-    : body;
-  const versionedBuffer = Buffer.isBuffer(versionedBody)
-    ? versionedBody
-    : Buffer.from(versionedBody, 'utf8');
-  const version = hashBuffer(versionedBuffer);
-  stack.delete(normalized);
-  cache.set(normalized, version);
-  if (versionedBodies) versionedBodies.set(normalized, versionedBuffer);
-  return version;
+  const isHtml = extension === '.html';
+  const entry = {
+    isHtml,
+    contentType: STATIC_TYPES.get(extension) || 'application/octet-stream',
+    version: isHtml ? null : built.version,
+    versionedBuffer: built.versionedBuffer,
+    selfMtime,
+    deps: [...deps.entries()],
+  };
+  assetCache.set(normalized, entry);
+  return entry;
 }
 
-async function versionHtml(html, cache) {
+async function fileMtimeMs(normalized) {
+  const stats = await stat(publicFilePath(normalized));
+  return stats.mtimeMs;
+}
+
+async function depsFresh(deps) {
+  for (const [depPath, depMtime] of deps) {
+    let current;
+    try {
+      current = await fileMtimeMs(depPath);
+    } catch {
+      return false;
+    }
+    if (current !== depMtime) return false;
+  }
+  return true;
+}
+
+async function resolveVersionedAsset(normalized, memo, deps, stack) {
+  const cached = memo.get(normalized);
+  if (cached) return cached;
+
+  const stats = await stat(publicFilePath(normalized));
+  deps.set(normalized, stats.mtimeMs);
+  const body = await readFile(publicFilePath(normalized));
+
+  if (stack.has(normalized)) {
+    return { version: hashBuffer(body), versionedBuffer: body };
+  }
+  stack.add(normalized);
+
+  const extension = path.posix.extname(normalized);
+  let versionedBuffer;
+  if (extension === '.html') {
+    versionedBuffer = Buffer.from(await versionHtml(body.toString('utf8'), memo, deps, stack), 'utf8');
+  } else if (extension === '.js') {
+    versionedBuffer = Buffer.from(await versionJsModule(normalized, body.toString('utf8'), memo, deps, stack), 'utf8');
+  } else {
+    versionedBuffer = body;
+  }
+
+  stack.delete(normalized);
+  const result = { version: hashBuffer(versionedBuffer), versionedBuffer };
+  memo.set(normalized, result);
+  return result;
+}
+
+async function versionHtml(html, memo, deps, stack) {
   return replaceAsync(html, /\b(href|src)=(['"])(\/[^'"?#]+)(?:\?[^'"]*)?\2/g, async (match, attr, quote, urlPath) => {
-    const versioned = await versionedAbsoluteUrl(urlPath, cache);
+    const versioned = await versionedAbsoluteUrl(urlPath, memo, deps, stack);
     return versioned ? `${attr}=${quote}${versioned}${quote}` : match;
   });
 }
 
-async function versionJsModule(relative, source, cache, stack = new Set()) {
+async function versionJsModule(relative, source, memo, deps, stack) {
   return replaceAsync(source, /\b(from\s+['"]|import\s*['"])(\.{1,2}\/[^'"]+)(['"])/g, async (match, prefix, specifier, suffix) => {
     const [specifierPath] = specifier.split('?');
     if (path.posix.extname(specifierPath) !== '.js') return match;
@@ -608,18 +646,18 @@ async function versionJsModule(relative, source, cache, stack = new Set()) {
     const dependency = path.posix.normalize(path.posix.join(path.posix.dirname(relative), specifierPath));
     if (!isSafePublicRelative(dependency)) return match;
 
-    const version = await staticAssetVersion(dependency, cache, stack);
+    const { version } = await resolveVersionedAsset(dependency, memo, deps, stack);
     return `${prefix}${specifierPath}?${VERSION_PARAM}=${version}${suffix}`;
   });
 }
 
-async function versionedAbsoluteUrl(urlPath, cache) {
+async function versionedAbsoluteUrl(urlPath, memo, deps, stack) {
   const relative = urlPath.replace(/^\/+/, '');
   if (!isSafePublicRelative(relative)) return null;
   if (!STATIC_TYPES.has(path.posix.extname(relative))) return null;
 
   try {
-    const version = await staticAssetVersion(relative, cache);
+    const { version } = await resolveVersionedAsset(toPublicRelative(relative), memo, deps, stack);
     return `${urlPath}?${VERSION_PARAM}=${version}`;
   } catch (err) {
     if (err.code === 'ENOENT') return null;

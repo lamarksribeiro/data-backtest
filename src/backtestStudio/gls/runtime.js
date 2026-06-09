@@ -35,8 +35,13 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
   let samples = [];
   let orderSim = null;
   let trace = null;
+  let ordersApi = null;
+  let debugApi = null;
+  let normalizedHolder = null;
+  let sharedCtx = null;
   let currentLastTick = null;
   let startedAt = null;
+  const interpreter = createInterpreter();
 
   function mergeParams(declarations, overrides) {
     const merged = {};
@@ -54,6 +59,30 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
     orderSim = createOrderSimulator({ limits });
     trace = createTraceCollector({ limits });
     currentLastTick = null;
+    normalizedHolder = { tick: null };
+    ordersApi = {
+      enter: (side, opts = {}) => orderSim.enter(side, { ...opts, ts: normalizedHolder.tick.ts }),
+      exit: (opts = {}) => orderSim.exit({ ...opts, tick: normalizedHolder.tick, ts: normalizedHolder.tick.ts }),
+      reverse: (side, opts = {}) => orderSim.reverse(side, { ...opts, ts: normalizedHolder.tick.ts }),
+      closeOpenPosition: (opts = {}) => orderSim.closeOpenPosition({ ...opts, tick: normalizedHolder.tick, ts: normalizedHolder.tick.ts }),
+    };
+    debugApi = {
+      log: (name, value) => trace.log(name, value, normalizedHolder.tick.ts),
+      mark: (name, data) => trace.mark(name, data, normalizedHolder.tick.ts),
+      metric: (name, value) => trace.metric(name, value, normalizedHolder.tick.ts),
+    };
+    sharedCtx = {
+      params,
+      state,
+      runState,
+      position: orderSim.positionView,
+      tick: null,
+      event: null,
+      samples,
+      lib,
+      orders: ordersApi,
+      debug: debugApi,
+    };
   }
 
   function finalizeEvent(lastTick) {
@@ -102,39 +131,17 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
   function buildRuntimeContext(tick, event) {
     const normalized = tick?.underlyingPrice != null && tick?.priceToBeat != null ? tick : normalizeTick(tick);
     orderSim.updatePeakBid(normalized, lib);
-
-    const ordersApi = {
-      enter: (side, opts = {}) => orderSim.enter(side, { ...opts, ts: normalized.ts }),
-      exit: (opts = {}) => orderSim.exit({ ...opts, tick: normalized, ts: normalized.ts }),
-      reverse: (side, opts = {}) => orderSim.reverse(side, { ...opts, ts: normalized.ts }),
-      closeOpenPosition: (opts = {}) => orderSim.closeOpenPosition({ ...opts, tick: normalized, ts: normalized.ts }),
-    };
-
-    const debugApi = {
-      log: (name, value) => trace.log(name, value, normalized.ts),
-      mark: (name, data) => trace.mark(name, data, normalized.ts),
-      metric: (name, value) => trace.metric(name, value, normalized.ts),
-    };
-
-    return {
-      params,
-      state,
-      runState,
-      position: orderSim.positionView,
-      tick: normalized,
-      event,
-      samples,
-      lib,
-      orders: ordersApi,
-      debug: debugApi,
-    };
+    normalizedHolder.tick = normalized;
+    sharedCtx.tick = normalized;
+    sharedCtx.event = event;
+    sharedCtx.position = orderSim.positionView;
+    return sharedCtx;
   }
 
   function runHook(name, ctx, extraArgs = []) {
     const hook = ast.hooks?.[name];
     if (!hook?.body?.length) return;
-    const interpreter = createInterpreter(ctx);
-    interpreter.runBlock(hook.body);
+    interpreter.run(hook.body, ctx);
   }
 
   function processTick(rawTick) {
@@ -293,8 +300,17 @@ function maxEquityDrawdown(equity) {
   return maxDrawdown;
 }
 
-function createInterpreter(ctx) {
+function createInterpreter() {
+  let ctx = null;
   let ops = 0;
+  const locals = new Map();
+
+  function run(body, runCtx) {
+    ctx = runCtx;
+    ops = 0;
+    locals.clear();
+    runBlock(body);
+  }
 
   function runBlock(body) {
     for (const stmt of body) runStatement(stmt);
@@ -319,8 +335,6 @@ function createInterpreter(ctx) {
         break;
     }
   }
-
-  const locals = new Map();
 
   function setLocal(name, value) {
     locals.set(name, value);
@@ -415,7 +429,7 @@ function createInterpreter(ctx) {
     throw new Error(`Unknown function: ${path}`);
   }
 
-  return { runBlock };
+  return { run };
 }
 
 function objectArg(value) {
