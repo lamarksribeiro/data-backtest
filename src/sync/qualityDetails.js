@@ -1,6 +1,14 @@
 const DEGRADED_COVERAGE_THRESHOLD = 0.8;
 
-export function buildPartitionQualityDetails({ partition, events, actualRows, expectedRows, quality, sampleLimit = 8 }) {
+export function buildPartitionQualityDetails({
+  partition,
+  events,
+  actualRows,
+  expectedRows,
+  quality,
+  normalization = null,
+  sampleLimit = 8,
+}) {
   const eventList = Array.isArray(events) ? events : [];
   const coverageValues = eventList
     .map((event) => numberOrNull(event.coverage))
@@ -13,8 +21,20 @@ export function buildPartitionQualityDetails({ partition, events, actualRows, ex
   const sourceTicksRecorded = sum(eventList, 'ticksRecorded');
   const sourceTicksExpected = sum(eventList, 'ticksExpected');
   const sourceMissingTicks = Math.max(sourceTicksExpected - sourceTicksRecorded, 0);
-  const countMismatch = quality?.diverged || Number(actualRows ?? 0) !== Number(expectedRows ?? 0);
+  const countMismatch = !normalization?.applied
+    && (quality?.diverged || Number(actualRows ?? 0) !== Number(expectedRows ?? 0));
   const issues = [];
+
+  if (normalization?.applied) {
+    issues.push({
+      code: 'normalization',
+      label: 'Normalização automática no sync',
+      events_omitted: normalization.events_omitted,
+      events_trimmed: normalization.events_trimmed,
+      ticks_removed: normalization.ticks_removed,
+      hours_affected: normalization.hours_affected?.length ?? 0,
+    });
+  }
 
   if (degradedEvents.length || lowCoverageEvents.length) {
     issues.push({
@@ -68,11 +88,12 @@ export function buildPartitionQualityDetails({ partition, events, actualRows, ex
       missing_ticks: Math.max(Number(event.ticksExpected || 0) - Number(event.ticksRecorded || 0), 0),
     }));
 
-  if (!issues.length && !samples.length) return null;
+  if (!issues.length && !samples.length && !normalization?.applied) return null;
 
   return {
-    version: 1,
+    version: normalization?.applied ? 2 : 1,
     generated_at: new Date().toISOString(),
+    normalization: normalization?.applied ? normalization : null,
     degraded_threshold: DEGRADED_COVERAGE_THRESHOLD,
     events_total: eventList.length,
     events_degraded: degradedEvents.length,

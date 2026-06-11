@@ -51,6 +51,12 @@ import {
 import { getStrategyStats, listStrategiesWithStats } from '../backtestStudio/state/strategyStats.js';
 import { getDataCoverage } from '../query/coverageUi.js';
 import { runDataFix } from '../data/fixPipeline.js';
+import {
+  handleQualityDayEvents,
+  handleQualityExclude,
+  handleQualityListExclusions,
+  handleQualityRestore,
+} from './qualityHandlers.js';
 import { parse } from '../backtestStudio/gls/parser.js';
 import { listBlockSignatures } from '../backtestStudio/gls/blocks.js';
 
@@ -218,6 +224,30 @@ export function createApiHandler(deps) {
           return sendJson(res, 400, { error: { code: result.code || 'FIX_FAILED', message: result.message }, ...result });
         }
         return sendJson(res, result.job ? 202 : 200, result);
+      }
+      if (url.pathname.startsWith('/api/quality/')) {
+        const pool = getSourcePool();
+        if (!pool) {
+          return sendJson(res, 503, { error: { code: 'SOURCE_UNAVAILABLE', message: 'DATA_COLLECTOR_DATABASE_URL is not configured' } });
+        }
+        if (req.method === 'GET' && url.pathname === '/api/quality/day-events') {
+          const result = await handleQualityDayEvents(pool, db, config, url.searchParams);
+          return sendJson(res, result.status, result.body);
+        }
+        if (req.method === 'GET' && url.pathname === '/api/quality/exclusions') {
+          const result = handleQualityListExclusions(db, url.searchParams);
+          return sendJson(res, result.status, result.body);
+        }
+        if (req.method === 'POST' && url.pathname === '/api/quality/exclude') {
+          const body = await readJson(req);
+          const result = await handleQualityExclude(db, config, resolvedPrepareRunner, pool, body, req.user?.username ?? null);
+          return sendJson(res, result.status, result.body);
+        }
+        if (req.method === 'POST' && url.pathname === '/api/quality/restore') {
+          const body = await readJson(req);
+          const result = await handleQualityRestore(db, config, resolvedPrepareRunner, pool, body);
+          return sendJson(res, result.status, result.body);
+        }
       }
       if (req.method === 'GET' && url.pathname === '/api/prepare') {
         const request = datasetRequestFromParams(url.searchParams, config);

@@ -8,7 +8,9 @@ import { countTicksByEvent, getPartitionEvents, getScalarTicksForEvents, listSea
 import { markPartitionArchiveStatusStale } from '../source/archiveApi.js';
 import { createRunId, createScalarRowsChecksum, createSourceFingerprint } from './fingerprint.js';
 import { writeScalarsParquet } from './duckdbParquet.js';
-import { classifyTickCountQuality } from './qualityPolicy.js';
+import { listExcludedConditionIdsForDay } from '../state/eventExclusions.js';
+import { applyTickNormalization } from './applyNormalization.js';
+import { classifyExportQuality } from './qualityPolicy.js';
 import { buildPartitionQualityDetails } from './qualityDetails.js';
 
 export async function listScalarPartitions(pool, opts) {
@@ -146,24 +148,12 @@ export async function exportScalarsPartition({
     return { ...event, actualCount: actual.count, minTs: actual.minTs, maxTs: actual.maxTs };
   });
 
-  const actualRows = eventsWithCounts.reduce((sum, event) => sum + event.actualCount, 0);
+  const sourceRows = eventsWithCounts.reduce((sum, event) => sum + event.actualCount, 0);
   const expectedRows = eventsWithCounts.reduce((sum, event) => sum + event.ticksRecorded, 0);
-  const quality = classifyTickCountQuality({
-    actualRows,
-    expectedRows,
-    acceptMismatchRatio: config.syncAcceptCountMismatchRatio,
-  });
-  const qualityDetails = buildPartitionQualityDetails({
-    partition,
-    events: eventsWithCounts,
-    actualRows,
-    expectedRows,
-    quality,
-  });
   const countOnlyFingerprint = createSourceFingerprint({
     dataset,
     ...partition,
-    rows: actualRows,
+    rows: sourceRows,
     events: eventsWithCounts,
   });
 
@@ -171,10 +161,10 @@ export async function exportScalarsPartition({
     return {
       dryRun: true,
       partition,
-      rows: actualRows,
+      rows: sourceRows,
       expectedRows,
       eventsCount: events.length,
-      status: quality.status,
+      status: 'valid',
       sourceFingerprint: countOnlyFingerprint,
     };
   }
@@ -182,7 +172,32 @@ export async function exportScalarsPartition({
   const runId = createRunId('scalars');
   const tempPath = buildTempParquetPath(config.lakeRoot, dataset, runId);
   const finalPath = buildFinalParquetPath(config.lakeRoot, manifestPartition, runId);
-  const ticks = await getScalarTicksForEvents(pool, partition, conditionIds);
+  const rawTicks = await getScalarTicksForEvents(pool, partition, conditionIds);
+  const manualExcludedConditionIds = listExcludedConditionIdsForDay(db, {
+    dt: partition.dt,
+    underlying: partition.underlying,
+    interval: partition.interval,
+    marketId: partition.marketId,
+  });
+  const normalized = applyTickNormalization(rawTicks, config, { manualExcludedConditionIds });
+  const ticks = normalized.ticks;
+  const normalization = normalized.normalization;
+  const actualRows = ticks.length;
+  const quality = classifyExportQuality({
+    actualRows,
+    expectedRows,
+    acceptMismatchRatio: config.syncAcceptCountMismatchRatio,
+    normalization,
+    maxDayOmitRatio: config.syncNormalizeDayOmitRatio,
+  });
+  const qualityDetails = buildPartitionQualityDetails({
+    partition,
+    events: eventsWithCounts,
+    actualRows,
+    expectedRows,
+    quality,
+    normalization,
+  });
   const valueChecksum = createScalarRowsChecksum(ticks);
   const sourceFingerprint = createSourceFingerprint({
     dataset,
@@ -240,6 +255,8 @@ export async function exportScalarsPartition({
       eventsCount: events.length,
       status: quality.status,
       sourceFingerprint,
+      normalization,
+      qualityClassifyMs: normalized.qualityClassifyMs,
     };
   } catch (err) {
     await mkdir(path.dirname(tempPath), { recursive: true });

@@ -8,7 +8,9 @@ import { countTicksByEvent, getPartitionEvents, getTicksWithBooksForEvents, list
 import { writeBacktestTicksParquetFromBookRows, writeBooksParquet } from './duckdbParquet.js';
 import { createBooksRowsChecksum, createRunId, createSourceFingerprint } from './fingerprint.js';
 import { publishPartitionArchiveStatus } from '../source/archiveApi.js';
-import { classifyTickCountQuality } from './qualityPolicy.js';
+import { listExcludedConditionIdsForDay } from '../state/eventExclusions.js';
+import { applyTickNormalization } from './applyNormalization.js';
+import { classifyExportQuality } from './qualityPolicy.js';
 import { buildPartitionQualityDetails } from './qualityDetails.js';
 
 export async function listBookPartitions(pool, opts) {
@@ -135,19 +137,7 @@ async function exportBookDatasetPartition({
     return { ...event, actualCount: actual.count, minTs: actual.minTs, maxTs: actual.maxTs };
   });
 
-  const actualRows = eventsWithCounts.reduce((sum, event) => sum + event.actualCount, 0);
-  const quality = classifyTickCountQuality({
-    actualRows,
-    expectedRows,
-    acceptMismatchRatio: config.syncAcceptCountMismatchRatio,
-  });
-  const qualityDetails = buildPartitionQualityDetails({
-    partition,
-    events: eventsWithCounts,
-    actualRows,
-    expectedRows,
-    quality,
-  });
+  const sourceRows = eventsWithCounts.reduce((sum, event) => sum + event.actualCount, 0);
 
   const runId = createRunId(dataset.replace('_', '-'));
   const manifestPartition = {
@@ -163,12 +153,36 @@ async function exportBookDatasetPartition({
 
   report('fetching_rows');
   const rawRows = await getTicksWithBooksForEvents(pool, partition, conditionIds);
-  const rows = transformRows ? transformRows(rawRows) : rawRows;
+  const manualExcludedConditionIds = listExcludedConditionIdsForDay(db, {
+    dt: partition.dt,
+    underlying: partition.underlying,
+    interval: partition.interval,
+    marketId: partition.marketId,
+  });
+  const normalized = applyTickNormalization(rawRows, config, { manualExcludedConditionIds });
+  const rows = transformRows ? transformRows(normalized.ticks) : normalized.ticks;
+  const normalization = normalized.normalization;
+  const actualRows = rows.length;
+  const quality = classifyExportQuality({
+    actualRows,
+    expectedRows,
+    acceptMismatchRatio: config.syncAcceptCountMismatchRatio,
+    normalization,
+    maxDayOmitRatio: config.syncNormalizeDayOmitRatio,
+  });
+  const qualityDetails = buildPartitionQualityDetails({
+    partition,
+    events: eventsWithCounts,
+    actualRows,
+    expectedRows,
+    quality,
+    normalization,
+  });
   let valueChecksum = checksumRows ? checksumRows(rows) : null;
   const countOnlyFingerprint = createSourceFingerprint({
     dataset,
     ...partition,
-    rows: actualRows,
+    rows: sourceRows,
     events: eventsWithCounts,
   });
   let sourceFingerprint = valueChecksum

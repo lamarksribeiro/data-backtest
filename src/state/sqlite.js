@@ -63,6 +63,22 @@ CREATE TABLE IF NOT EXISTS prepare_jobs (
 
 CREATE INDEX IF NOT EXISTS prepare_jobs_status_idx ON prepare_jobs(status, created_at);
 
+CREATE TABLE IF NOT EXISTS event_exclusions (
+  market_id TEXT NOT NULL,
+  condition_id TEXT NOT NULL,
+  event_start TEXT NOT NULL,
+  dt TEXT NOT NULL,
+  underlying TEXT NOT NULL,
+  interval TEXT NOT NULL,
+  reason TEXT NOT NULL DEFAULT 'manual',
+  notes TEXT,
+  excluded_by TEXT,
+  excluded_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  PRIMARY KEY (market_id, condition_id)
+);
+
+CREATE INDEX IF NOT EXISTS event_exclusions_day_idx ON event_exclusions(dt, underlying, interval);
+
 CREATE TABLE IF NOT EXISTS backtest_runs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   strategy TEXT NOT NULL,

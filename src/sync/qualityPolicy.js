@@ -6,6 +6,58 @@ export function normalizeAcceptCountMismatchRatio(value, fallback = DEFAULT_ACCE
   return Math.min(Math.max(parsed, 0), 1);
 }
 
+export function classifyExportQuality({
+  actualRows,
+  expectedRows,
+  acceptMismatchRatio = DEFAULT_ACCEPT_MISMATCH_RATIO,
+  normalization = null,
+  maxDayOmitRatio = 0.5,
+}) {
+  const exportedRows = Math.max(Number(actualRows || 0), 0);
+  const expected = Math.max(Number(expectedRows || 0), 0);
+
+  if (normalization?.applied) {
+    if (normalization.events_exported === 0 && normalization.events_total > 0) {
+      return {
+        status: 'needs_review',
+        diverged: true,
+        error: 'Normalization omitted every event in the partition',
+        mismatchRatio: 1,
+        normalizationApplied: true,
+      };
+    }
+    if ((normalization.skip_ratio ?? 0) > maxDayOmitRatio) {
+      return {
+        status: 'needs_review',
+        diverged: true,
+        error: `Normalization omitted ${(normalization.skip_ratio * 100).toFixed(1)}% of events (> ${(maxDayOmitRatio * 100).toFixed(0)}%)`,
+        mismatchRatio: normalization.skip_ratio,
+        normalizationApplied: true,
+      };
+    }
+    if (exportedRows === 0) {
+      return {
+        status: 'needs_review',
+        diverged: true,
+        error: 'Normalization produced no exportable ticks',
+        mismatchRatio: expected > 0 ? 1 : 0,
+        normalizationApplied: true,
+      };
+    }
+    return {
+      status: 'valid',
+      diverged: exportedRows !== expected,
+      error: exportedRows !== expected
+        ? `Normalized export: ${exportedRows} rows (${normalization.ticks_removed} ticks removed, ${normalization.events_omitted} events omitted)`
+        : null,
+      mismatchRatio: expected > 0 ? Math.abs(exportedRows - expected) / expected : 0,
+      normalizationApplied: true,
+    };
+  }
+
+  return classifyTickCountQuality({ actualRows, expectedRows, acceptMismatchRatio });
+}
+
 export function classifyTickCountQuality({ actualRows, expectedRows, acceptMismatchRatio = DEFAULT_ACCEPT_MISMATCH_RATIO }) {
   const actual = Math.max(Number(actualRows || 0), 0);
   const expected = Math.max(Number(expectedRows || 0), 0);

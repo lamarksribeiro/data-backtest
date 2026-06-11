@@ -13,7 +13,7 @@ import { createBacktestTicksRowsChecksum, createBooksRowsChecksum, createScalarR
 import { flattenBookTick, parseBookLevels } from '../src/sync/bookFlatten.js';
 import { normalizeOhlcResolutions } from '../src/sync/ohlc.js';
 import { incrementalRange, markScalarsPartitionStale, shouldProcessScalarsPartition } from '../src/sync/scalars.js';
-import { classifyTickCountQuality } from '../src/sync/qualityPolicy.js';
+import { classifyExportQuality, classifyTickCountQuality } from '../src/sync/qualityPolicy.js';
 import { intervalFromMarketType, marketTypeFromInterval } from '../src/source/postgres.js';
 import { canPublishArchiveStatus, markPartitionArchiveStatusStale, publishPartitionArchiveStatus } from '../src/source/archiveApi.js';
 
@@ -33,9 +33,31 @@ test('config loads sync defaults and validates data mode', () => {
   assert.equal(config.syncStatementTimeoutMs, 120000);
   assert.equal(config.syncMarginMinutes, 2);
   assert.equal(config.syncAcceptCountMismatchRatio, 0.02);
+  assert.equal(config.syncNormalizeOmitEventRatio, 0.5);
+  assert.equal(config.syncNormalizeDayOmitRatio, 0.5);
+  assert.equal(config.syncNormalizeMinStaleSec, 30);
   assert.equal(config.backtestBookDepth, 25);
   assert.equal(loadConfig({ SYNC_ACCEPT_COUNT_MISMATCH_RATIO: '0.005' }).syncAcceptCountMismatchRatio, 0.005);
   assert.throws(() => loadConfig({ BACKTEST_DATA_MODE: 'invalid' }), /Invalid BACKTEST_DATA_MODE/);
+});
+
+test('export quality stays valid after normalization even with count mismatch', () => {
+  const quality = classifyExportQuality({
+    actualRows: 800,
+    expectedRows: 1000,
+    normalization: {
+      applied: true,
+      events_total: 12,
+      events_exported: 11,
+      events_omitted: 1,
+      events_trimmed: 2,
+      skip_ratio: 1 / 12,
+      ticks_removed: 200,
+    },
+    maxDayOmitRatio: 0.5,
+  });
+  assert.equal(quality.status, 'valid');
+  assert.equal(quality.normalizationApplied, true);
 });
 
 test('tick count quality auto-accepts small event_quality mismatches only', () => {

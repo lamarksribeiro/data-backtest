@@ -83,6 +83,19 @@ export async function listSealedScalarPartitions(pool, opts) {
   }));
 }
 
+export async function resolveMarketId(pool, { underlying, interval }) {
+  const { rows } = await pool.query(`
+    SELECT id
+    FROM markets
+    WHERE underlying = $1
+      AND type = $2
+      AND deleted_at IS NULL
+    ORDER BY created_at DESC
+    LIMIT 1
+  `, [String(underlying).toUpperCase(), marketTypeFromInterval(interval)]);
+  return rows[0]?.id ?? null;
+}
+
 export async function getPartitionEvents(pool, partition) {
   const { rows } = await pool.query(`
     SELECT

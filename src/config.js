@@ -30,6 +30,11 @@ export function loadConfig(env = process.env) {
     syncStatementTimeoutMs: Math.max(Number.parseInt(String(env.SYNC_STATEMENT_TIMEOUT_MS || '120000'), 10) || 120000, 1000),
     syncMarginMinutes: Math.max(Number.parseInt(String(env.SYNC_MARGIN_MINUTES || '2'), 10) || 2, 0),
     syncAcceptCountMismatchRatio: normalizeAcceptCountMismatchRatio(env.SYNC_ACCEPT_COUNT_MISMATCH_RATIO),
+    syncNormalizeOmitEventRatio: clampRatio(env.SYNC_NORMALIZE_OMIT_EVENT_RATIO, 0.5),
+    syncNormalizeDayOmitRatio: clampRatio(env.SYNC_NORMALIZE_DAY_OMIT_RATIO, 0.5),
+    syncNormalizeMinStaleSec: Math.max(Number.parseInt(String(env.SYNC_NORMALIZE_MIN_STALE_SEC || '30'), 10) || 30, 1),
+    syncNormalizeMinPtb: Math.max(Number.parseFloat(String(env.SYNC_NORMALIZE_MIN_PTB || '1000')) || 1000, 1),
+    syncNormalizeUnderlyingEpsilon: Math.max(Number.parseFloat(String(env.SYNC_NORMALIZE_UNDERLYING_EPSILON || '0.01')) || 0.01, 0),
     backtestBookDepth: Math.max(Number.parseInt(String(env.BACKTEST_BOOK_DEPTH || '25'), 10) || 25, 1),
     apiPort: Math.max(Number.parseInt(String(env.DATA_BACKTEST_PORT || env.PORT || '3100'), 10) || 3100, 1),
     NODE_ENV: env.NODE_ENV || 'development',
@@ -46,6 +51,12 @@ export function loadConfig(env = process.env) {
     datasetCacheMaxMb: resolveDatasetCacheMaxMb(env),
     prepareMaxConcurrent: Math.max(Number.parseInt(String(env.PREPARE_MAX_CONCURRENT || '2'), 10) || 2, 1),
   };
+}
+
+function clampRatio(value, fallback = 0.5) {
+  const parsed = Number.parseFloat(String(value ?? ''));
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(Math.max(parsed, 0), 1);
 }
 
 function normalizeGlsExecution(value) {

@@ -130,6 +130,32 @@ const dataStyles = `
     border-color: rgba(255, 255, 255, 0.03);
   }
 
+  .quality-hours {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 12px 0;
+  }
+
+  .quality-hour {
+    min-width: 42px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.03);
+    font-size: 11px;
+    cursor: pointer;
+    text-align: center;
+  }
+
+  .quality-hour--kept { border-color: rgba(80, 200, 120, 0.35); }
+  .quality-hour--trim { border-color: rgba(240, 180, 60, 0.45); }
+  .quality-hour--omit { border-color: rgba(240, 90, 90, 0.5); }
+  .quality-hour--manual { border-color: rgba(140, 160, 255, 0.55); }
+  .quality-hour.is-active { outline: 2px solid var(--accent); }
+
+  .data-event-row--excluded { opacity: 0.72; }
+
   .coverage-day--ready {
     background: rgba(16, 185, 129, 0.2);
     border-color: rgba(16, 185, 129, 0.35);
@@ -428,31 +454,123 @@ function renderMonthlyHeatmap(ctx, days) {
   }));
 }
 
-function openPartitionDrawer(ctx, day) {
-  const drawer = document.getElementById('data-partition-drawer');
-  if (!drawer) return;
-  drawer.hidden = false;
-  mount(drawer, el('div', { class: 'card' }, [
+function formatEventTime(iso) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  return `${String(date.getUTCHours()).padStart(2, '0')}:${String(date.getUTCMinutes()).padStart(2, '0')} UTC`;
+}
+
+function shortConditionId(value) {
+  const text = String(value || '');
+  if (text.length <= 14) return text;
+  return `${text.slice(0, 8)}…${text.slice(-4)}`;
+}
+
+function hourTone(bucket) {
+  if (bucket.manual > 0) return 'manual';
+  if (bucket.omitted > 0) return 'omit';
+  if (bucket.trimmed > 0) return 'trim';
+  return 'kept';
+}
+
+function eventStatusLabel(event) {
+  if (event.manually_excluded) return 'manual';
+  if (event.normalization_action === 'omit') return 'auto omit';
+  if (event.normalization_action === 'trim') return 'auto trim';
+  return 'ok';
+}
+
+async function setEventExclusion(ctx, day, eventData, marketId, excluded) {
+  const ctxSaved = loadContext();
+  const endpoint = excluded ? '/api/quality/restore' : '/api/quality/exclude';
+  const body = {
+    dt: day.dt,
+    underlying: ctxSaved.underlying,
+    interval: ctxSaved.interval,
+    book_depth: Number(ctxSaved.book_depth),
+    market_id: marketId,
+    condition_id: eventData.condition_id,
+    event_start: eventData.event_start,
+  };
+  const res = await ctx.api.post(endpoint, body);
+  if (!res.ok) {
+    ctx.toast.err(res.error?.message || 'Falha ao atualizar exclusão');
+    return false;
+  }
+  ctx.toast.ok(excluded ? 'Evento restaurado — re-sync enfileirado' : 'Evento excluído — re-sync enfileirado');
+  return true;
+}
+
+function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = null) {
+  const events = (eventPayload.events || []).filter((event) => selectedHour == null || event.hour_utc === selectedHour);
+  const hourButtons = (eventPayload.hours || []).map((bucket) => el('button', {
+    type: 'button',
+    class: `quality-hour quality-hour--${hourTone(bucket)}${selectedHour === bucket.hour ? ' is-active' : ''}`,
+    title: `${bucket.total} evento(s) · omit: ${bucket.omitted} · trim: ${bucket.trimmed} · manual: ${bucket.manual}`,
+    onclick: () => {
+      const drawer = document.getElementById('data-partition-drawer');
+      mount(drawer, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour === bucket.hour ? null : bucket.hour));
+    },
+  }, `${bucket.hour}h`));
+
+  return el('div', { class: 'card' }, [
     el('header', { class: 'card__header' }, [
       el('h3', {}, day.dt),
-      el('button', { type: 'button', class: 'btn btn--ghost', onclick: () => { drawer.hidden = true; } }, 'Fechar'),
+      el('button', { type: 'button', class: 'btn btn--ghost', onclick: () => { document.getElementById('data-partition-drawer').hidden = true; } }, 'Fechar'),
     ]),
     el('p', {}, `Estado UI: ${UI_LABELS[day.ui_state]} · status bruto: ${day.raw_status}`),
+    ...(day.partitions || []).flatMap((p) => {
+      const norm = p.quality_details?.normalization;
+      if (!norm?.applied && !(eventPayload.exclusions || []).length) return [];
+      const hours = (norm?.hours_affected || []).map((entry) => `${entry.hour}h (${entry.events})`).join(', ');
+      return [el('p', { class: 'data-normalization-summary' },
+        `Normalização: ${norm?.events_omitted ?? 0} omitido(s), ${norm?.events_trimmed ?? 0} aparado(s), ${norm?.events_manual_omitted ?? 0} manual(is)${hours ? ` · horas: ${hours}` : ''}`)];
+    }),
+    hourButtons.length ? el('div', { class: 'quality-hours' }, [
+      el('button', {
+        type: 'button',
+        class: `quality-hour${selectedHour == null ? ' is-active' : ''}`,
+        onclick: () => {
+          const drawer = document.getElementById('data-partition-drawer');
+          mount(drawer, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, null));
+        },
+      }, 'Todas'),
+      ...hourButtons,
+    ]) : null,
     el('div', { class: 'table-wrap' }, [
       el('table', { class: 'table table--compact' }, [
-        el('thead', {}, el('tr', {}, [el('th', {}, 'Status'), el('th', {}, 'Linhas'), el('th', {}, 'Degradada')])),
-        el('tbody', {}, (day.partitions || []).map((p) => el('tr', {}, [
-          el('td', {}, p.status),
-          el('td', {}, String(p.rows)),
-          el('td', {}, p.has_degraded ? 'sim' : 'não'),
-        ]))),
+        el('thead', {}, el('tr', {}, [
+          el('th', {}, 'Hora'),
+          el('th', {}, 'Status'),
+          el('th', {}, 'Cobertura'),
+          el('th', {}, 'Evento'),
+          el('th', {}, ''),
+        ])),
+        el('tbody', {}, events.map((event) => {
+          const excluded = event.manually_excluded;
+          return el('tr', { class: excluded ? 'data-event-row--excluded' : '' }, [
+            el('td', {}, formatEventTime(event.event_start)),
+            el('td', {}, eventStatusLabel(event)),
+            el('td', {}, event.coverage != null ? `${Math.round(event.coverage * 100)}%` : '—'),
+            el('td', { title: event.condition_id }, shortConditionId(event.condition_id)),
+            el('td', {}, el('button', {
+              type: 'button',
+              class: `btn btn--ghost btn--sm${excluded ? '' : ' btn--danger'}`,
+              onclick: async () => {
+                const ok = await setEventExclusion(ctx, day, event, eventPayload.market_id, excluded);
+                if (!ok) return;
+                await openPartitionDrawer(ctx, day);
+                refreshJobs(ctx);
+              },
+            }, excluded ? 'Restaurar' : 'Excluir')),
+          ]);
+        })),
       ]),
     ]),
     day.ui_state === 'attention' ? el('button', {
       type: 'button',
       class: 'btn btn--primary btn--sm',
       onclick: async () => {
-        const ctxSaved = loadContext();
         const fix = await ctx.api.post('/api/data/fix', {
           request: {
             dataset: 'backtest_ticks',
@@ -466,7 +584,29 @@ function openPartitionDrawer(ctx, day) {
         ctx.toast.ok(fix.ok ? 'Correção enfileirada' : (fix.error?.message || 'Falha'));
       },
     }, 'Corrigir este dia') : null,
-  ]));
+  ]);
+}
+
+async function openPartitionDrawer(ctx, day) {
+  const drawer = document.getElementById('data-partition-drawer');
+  if (!drawer) return;
+  drawer.hidden = false;
+  const ctxSaved = loadContext();
+  mount(drawer, el('div', { class: 'card' }, [el('p', { class: 'muted' }, 'Carregando eventos do dia…')]));
+
+  const query = new URLSearchParams({
+    dt: day.dt,
+    underlying: ctxSaved.underlying,
+    interval: ctxSaved.interval,
+  });
+  const res = await ctx.api.get(`/api/quality/day-events?${query.toString()}`);
+  if (!res.ok) {
+    mount(drawer, el('div', { class: 'card' }, [
+      el('p', {}, `Falha ao carregar eventos: ${res.error?.message || 'erro desconhecido'}`),
+    ]));
+    return;
+  }
+  mount(drawer, buildPartitionDrawer(ctx, day, res.data, ctxSaved, null));
 }
 
 async function refreshJobs(ctx) {
