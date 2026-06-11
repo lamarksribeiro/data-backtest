@@ -93,7 +93,8 @@ export function createBacktestQueue({ config, db, onEvent }) {
 
     worker.on('exit', (code) => {
       activeWorkers.delete(run.id);
-      if (code !== 0 && getBacktestRun(db, run.id)?.status === 'running') {
+      const current = getBacktestRun(db, run.id);
+      if (code !== 0 && current?.status === 'running') {
         handleFailure(run.id, request, startedAt, `Worker exited with code ${code}`);
       }
       queueMicrotask(() => drain());

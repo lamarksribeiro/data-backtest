@@ -199,9 +199,9 @@ export function cancelBacktestRun(db, id, { error = 'Backtest cancelled by user'
   const changes = db.prepare(`
     UPDATE backtest_runs
     SET status = 'cancelled', error = ?, duration_ms = COALESCE(duration_ms, ?), progress_json = NULL,
-        summary_json = json_set(summary_json, '$.cancelled', 1, '$.error', ?),
-        result_json = json_set(result_json, '$.summary.cancelled', 1, '$.summary.error', ?)
-    WHERE id = ? AND status = 'running'
+        summary_json = json_set(COALESCE(summary_json, '{}'), '$.cancelled', 1, '$.error', ?),
+        result_json = json_set(COALESCE(result_json, '{}'), '$.summary.cancelled', 1, '$.summary.error', ?)
+    WHERE id = ? AND status IN ('running', 'queued')
   `).run(error, durationMs, error, error, id).changes;
   return changes ? getBacktestRun(db, id, { includeResult: false, includeEquity: false }) : null;
 }

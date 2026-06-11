@@ -37,6 +37,7 @@ const studioState = {
   strategyOptions: [],
   selectedStrategyPick: '',
   coverageUi: null,
+  cancellingRunId: null,
 };
 
 function debounce(fn, delay) {
@@ -86,9 +87,73 @@ function applyProgressUi(progress) {
   if (eta) eta.textContent = formatProgressEta(progress);
 }
 
+function showStudioEmptyMain(main) {
+  mount(main, el('div', { class: 'card' }, [
+    el('p', { class: 'muted' }, 'Selecione um run à direita ou rode um novo backtest (⌘↵).'),
+  ]));
+}
+
+async function exitRunSelection(ctx) {
+  clearProgressPoll();
+  studioState.cancellingRunId = null;
+  studioState.selectedRunId = null;
+  studioState.selectedEventId = null;
+  studioState.compareIds = [];
+  pushStudioQuery({ run: null, event: null, compare: [] });
+  const main = document.getElementById('studio-main');
+  if (main) showStudioEmptyMain(main);
+  await refreshRuns(ctx);
+}
+
+async function cancelRunFromStudio(ctx, run) {
+  const ok = await confirmDialog({
+    title: 'Cancelar backtest',
+    message: `Cancelar o backtest #${run.id}?`,
+    detail: 'O processamento será interrompido. Runs já concluídos não são afetados.',
+    confirmLabel: 'Cancelar backtest',
+    cancelLabel: 'Continuar',
+    tone: 'danger',
+  });
+  if (!ok) return;
+
+  clearProgressPoll();
+  studioState.cancellingRunId = run.id;
+  const cancelBtn = document.querySelector('.studio-progress-card .btn--danger');
+  if (cancelBtn) {
+    cancelBtn.disabled = true;
+    cancelBtn.textContent = 'Cancelando…';
+  }
+
+  const cancelRes = await ctx.api.post(`/api/backtest/runs/${run.id}/cancel`);
+  studioState.cancellingRunId = null;
+
+  if (cancelRes.ok && cancelRes.data?.run) {
+    cacheInvalidate('runs');
+    ctx.toast.ok('Backtest cancelado');
+    await exitRunSelection(ctx);
+    return;
+  }
+
+  if (cancelRes.status === 409) {
+    cacheInvalidate('runs');
+    const detail = await ctx.api.get(`/api/backtest/runs/${run.id}?slim=1`);
+    if (detail.ok && !['running', 'queued'].includes(detail.data.run.status)) {
+      ctx.toast.ok('Backtest já finalizado');
+      await exitRunSelection(ctx);
+      return;
+    }
+  }
+
+  ctx.toast.err(cancelRes.error?.message || 'Falha ao cancelar');
+  if (studioState.selectedRunId === run.id) {
+    await loadRunDetail(ctx, run.id);
+  }
+}
+
 function startProgressPoll(ctx, runId) {
   clearProgressPoll();
   progressPollTimer = setInterval(async () => {
+    if (studioState.cancellingRunId === runId) return;
     if (studioState.selectedRunId !== runId) {
       clearProgressPoll();
       return;
@@ -116,7 +181,7 @@ function parseStudioQuery() {
     event: params.get('event') ? Number(params.get('event')) : null,
     strategy: params.get('strategy') ? Number(params.get('strategy')) : null,
     version: params.get('version') ? Number(params.get('version')) : null,
-    compare: (params.get('compare') || '').split(',').map((v) => Number(v)).filter((n) => Number.isFinite(n)),
+    compare: (params.get('compare') || '').split(',').map((v) => Number(v)).filter((n) => Number.isFinite(n) && n > 0),
   };
 }
 
@@ -152,6 +217,7 @@ export async function renderStudio(ctx) {
   const query = parseStudioQuery();
   studioState.selectedRunId = query.run;
   studioState.selectedEventId = query.event;
+  studioState.compareIds = query.compare;
 
   mount(ctx.contentEl, el('div', { class: 'studio-layout' }, [
     el('section', { class: 'studio-config', id: 'studio-config' }, Skeleton({ lines: 6 })),
@@ -175,9 +241,7 @@ export async function renderStudio(ctx) {
     await refreshCoverageIndicator(ctx, formCtx);
     await refreshRuns(ctx);
     if (studioState.selectedRunId) await loadRunDetail(ctx, studioState.selectedRunId);
-    else mount(document.getElementById('studio-main'), el('div', { class: 'card' }, [
-      el('p', { class: 'muted' }, 'Selecione um run à direita ou rode um novo backtest (⌘↵).'),
-    ]));
+    else showStudioEmptyMain(document.getElementById('studio-main'));
     bindSse(ctx);
     if (!shortcutsBound) {
       bindShortcuts(ctx);
@@ -445,6 +509,7 @@ function runListItem(run, ctx) {
   let pnlText = formatPnl(run.summary?.totalPnl);
   if (run.status === 'running') pnlText = `Rodando (${run.progress?.percent?.toFixed(0) || 0}%)`;
   else if (run.status === 'queued') pnlText = run.progress?.depends_on_job ? 'Aguardando dados' : 'Fila';
+  else if (run.status === 'cancelled') pnlText = 'Cancelado';
 
   return el('button', {
     type: 'button',
@@ -638,28 +703,9 @@ function renderProgressPanel(container, run, ctx) {
       el('button', {
         type: 'button',
         class: 'btn btn--danger btn--sm',
-        onclick: async () => {
-          const ok = await confirmDialog({
-            title: 'Cancelar backtest',
-            message: `Cancelar o backtest #${run.id}?`,
-            detail: 'O processamento será interrompido. Runs já concluídos não são afetados.',
-            confirmLabel: 'Cancelar backtest',
-            cancelLabel: 'Continuar',
-            tone: 'danger',
-          });
-          if (!ok) return;
-          clearProgressPoll();
-          const cancelRes = await ctx.api.post(`/api/backtest/runs/${run.id}/cancel`);
-          if (cancelRes.ok) {
-            cacheInvalidate('runs');
-            await refreshRuns(ctx);
-            await loadRunDetail(ctx, run.id);
-            ctx.toast.ok('Backtest cancelado');
-          } else {
-            ctx.toast.err(cancelRes.error?.message || 'Falha ao cancelar');
-          }
-        },
-      }, 'Cancelar'),
+        disabled: studioState.cancellingRunId === run.id,
+        onclick: () => cancelRunFromStudio(ctx, run),
+      }, studioState.cancellingRunId === run.id ? 'Cancelando…' : 'Cancelar'),
     ]),
   ]));
   if (run.status === 'running' || run.status === 'queued') startProgressPoll(ctx, run.id);
@@ -808,6 +854,11 @@ function bindSse(ctx) {
       if (pnlEl && event.progress?.percent != null) {
         pnlEl.textContent = `Rodando (${event.progress.percent.toFixed(0)}%)`;
       }
+    }
+    if (event.type === 'run:cancelled') {
+      cacheInvalidate('runs');
+      refreshRuns(ctx);
+      if (event.runId === studioState.selectedRunId) exitRunSelection(ctx);
     }
     if (event.type === 'run:completed' || event.type === 'run:failed') {
       cacheInvalidate('runs');

@@ -329,15 +329,21 @@ export function createApiHandler(deps) {
           return sendJson(res, 200, { run: slimRun ?? run });
         }
         if (req.method === 'POST' && backtestRunRoute.kind === 'cancel') {
-          if (run.status !== 'running') {
+          if (!['running', 'queued'].includes(run.status)) {
             return sendJson(res, 409, {
               error: { code: 'CANCEL_FAILED', message: `Backtest cannot be cancelled while ${run.status}` },
             });
           }
+          const cancelled = cancelBacktestRun(db, backtestRunRoute.runId);
+          if (!cancelled) {
+            return sendJson(res, 409, {
+              error: { code: 'CANCEL_FAILED', message: 'Backtest could not be cancelled' },
+            });
+          }
           backtestQueue.cancel(backtestRunRoute.runId);
           const worker = activeBacktestWorkers.get(backtestRunRoute.runId);
-          if (worker) await worker.terminate();
-          const cancelled = cancelBacktestRun(db, backtestRunRoute.runId) || getBacktestRun(db, backtestRunRoute.runId, { includeEquity: false });
+          if (worker) worker.terminate();
+          onSseEvent({ type: 'run:cancelled', runId: backtestRunRoute.runId, run: cancelled });
           return sendJson(res, 200, { ok: true, run: cancelled });
         }
         if (req.method === 'GET' && backtestRunRoute.kind === 'analysis') {
