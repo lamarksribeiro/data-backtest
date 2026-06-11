@@ -78,16 +78,21 @@ function formatProgressPhase(phase) {
   }
 }
 
+function resolveProgressElapsedMs(progress) {
+  const startedAt = progress?.started_at ?? progress?.startedAt;
+  if (startedAt) {
+    const started = new Date(startedAt).getTime();
+    if (Number.isFinite(started)) return Math.max(Date.now() - started, 0);
+  }
+  const ms = progress?.elapsed_ms ?? progress?.elapsedMs;
+  return ms != null && Number.isFinite(ms) ? ms : null;
+}
+
 function startProgressElapsedTicker() {
   if (progressElapsedTimer) return;
   progressElapsedTimer = setInterval(() => {
     if (!lastProgressSnapshot?.started_at) return;
-    const started = new Date(lastProgressSnapshot.started_at).getTime();
-    if (!Number.isFinite(started)) return;
-    applyProgressUi({
-      ...lastProgressSnapshot,
-      elapsed_ms: Math.max(Date.now() - started, 1),
-    }, { skipSnapshot: true });
+    applyProgressUi(lastProgressSnapshot, { skipSnapshot: true });
   }, 500);
 }
 
@@ -109,7 +114,7 @@ function formatProgressRemaining(progress) {
 }
 
 function formatProgressElapsed(progress) {
-  return formatDurationMs(progress?.elapsed_ms ?? progress?.elapsedMs, '0s');
+  return formatDurationMs(resolveProgressElapsedMs(progress), '0s');
 }
 
 function applyProgressUi(progress, { skipSnapshot = false } = {}) {
@@ -118,7 +123,17 @@ function applyProgressUi(progress, { skipSnapshot = false } = {}) {
   const previousPercent = lastProgressSnapshot?.percent != null ? Number(lastProgressSnapshot.percent) : 0;
   const displayPercent = Math.max(previousPercent, percent);
   if (!skipSnapshot) {
-    lastProgressSnapshot = { ...progress, percent: displayPercent };
+    const prevStarted = lastProgressSnapshot?.started_at ?? lastProgressSnapshot?.startedAt;
+    const nextStarted = progress.started_at ?? progress.startedAt;
+    let started_at = nextStarted ?? prevStarted ?? null;
+    if (prevStarted && nextStarted) {
+      const prevMs = new Date(prevStarted).getTime();
+      const nextMs = new Date(nextStarted).getTime();
+      if (Number.isFinite(prevMs) && Number.isFinite(nextMs)) {
+        started_at = prevMs <= nextMs ? prevStarted : nextStarted;
+      }
+    }
+    lastProgressSnapshot = { ...progress, percent: displayPercent, ...(started_at ? { started_at } : {}) };
     startProgressElapsedTicker();
   }
   const fill = document.getElementById('studio-progress-fill');
