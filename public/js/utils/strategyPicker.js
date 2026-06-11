@@ -1,49 +1,117 @@
 import { el } from './dom.js';
 import { escapeHtml } from './format.js';
 
-/**
- * Carrega estratégias com todas as versões (exceto archived por padrão).
- */
-export async function loadStrategyOptions(api, { includeArchived = false, stats = false } = {}) {
-  const url = stats ? '/api/strategies?stats=1' : '/api/strategies';
-  const savedRes = await api.get(url);
-  const saved = savedRes.ok ? savedRes.data.strategies || [] : [];
+const PICKER_CACHE_TTL_MS = 30_000;
+/** @type {{ options: object[], at: number } | null} */
+let pickerCache = null;
+/** @type {Promise<object[]> | null} */
+let pickerInflight = null;
+
+function mapPickerRows(rows, { includeArchived = false } = {}) {
   const options = [];
-
-  for (const strategy of saved) {
-    if (!includeArchived && strategy.status === 'archived') continue;
-    const versionsRes = await api.get(`/api/strategies/${strategy.id}/versions`);
-    const versions = versionsRes.ok ? versionsRes.data.versions || [] : [];
-    const versionStats = strategy.stats?.by_version || [];
-    const statByVid = Object.fromEntries(versionStats.map((v) => [v.version_id, v]));
-
-    for (const version of versions) {
-      const st = statByVid[version.id];
-      const wr = st ? `${Math.round(st.win_rate * 100)}% WR` : '';
-      const runs = st ? `${st.runs} runs` : '';
-      const meta = [wr, runs].filter(Boolean).join(' · ');
-      const notes = version.notes ? ` — ${version.notes}` : '';
-      options.push({
-        value: `gls:${strategy.id}:${version.id}`,
-        label: `${strategy.name} · v${version.version}${meta ? ` · ${meta}` : ''}${notes}`,
-        kind: 'gls',
-        strategyId: strategy.id,
-        versionId: version.id,
-        versionNum: version.version,
-        slug: strategy.slug,
-        status: strategy.status,
-        pinned: strategy.pinned,
-        notes: version.notes,
-      });
-    }
+  for (const row of rows) {
+    if (!includeArchived && row.status === 'archived') continue;
+    options.push({
+      value: `gls:${row.strategy_id}:${row.version_id}`,
+      label: `${row.name} · v${row.version}${row.notes ? ` — ${row.notes}` : ''}`,
+      kind: 'gls',
+      strategyId: row.strategy_id,
+      versionId: row.version_id,
+      versionNum: row.version,
+      slug: row.slug,
+      status: row.status,
+      pinned: row.pinned,
+      notes: row.notes,
+    });
   }
-
   options.sort((a, b) => {
     if (a.pinned !== b.pinned) return b.pinned ? 1 : -1;
     return (b.versionNum ?? 0) - (a.versionNum ?? 0);
   });
-
   return options;
+}
+
+/**
+ * Carrega estratégias com todas as versões (uma requisição via ?picker=1).
+ */
+export async function loadStrategyOptions(api, { includeArchived = false, stats = false, force = false } = {}) {
+  const now = Date.now();
+  if (!force && !stats && pickerCache && now - pickerCache.at < PICKER_CACHE_TTL_MS) {
+    return filterPickerCache(pickerCache.options, includeArchived);
+  }
+
+  if (!force && !stats && pickerInflight) {
+    const rows = await pickerInflight;
+    return filterPickerCache(rows, includeArchived);
+  }
+
+  const fetchPromise = (async () => {
+    const pickerRes = await api.get('/api/strategies?picker=1');
+    if (pickerRes.ok && Array.isArray(pickerRes.data.options)) {
+      const options = mapPickerRows(pickerRes.data.options, { includeArchived: true });
+      pickerCache = { options, at: Date.now() };
+      return options;
+    }
+
+    const url = stats ? '/api/strategies?stats=1' : '/api/strategies';
+    const savedRes = await api.get(url);
+    const saved = savedRes.ok ? savedRes.data.strategies || [] : [];
+    const versionLists = await Promise.all(
+      saved.map((strategy) => api.get(`/api/strategies/${strategy.id}/versions`).then((res) => ({
+        strategy,
+        versions: res.ok ? res.data.versions || [] : [],
+      }))),
+    );
+
+    const options = [];
+    for (const { strategy, versions } of versionLists) {
+      if (!includeArchived && strategy.status === 'archived') continue;
+      const versionStats = strategy.stats?.by_version || [];
+      const statByVid = Object.fromEntries(versionStats.map((v) => [v.version_id, v]));
+      for (const version of versions) {
+        const st = statByVid[version.id];
+        const wr = st ? `${Math.round(st.win_rate * 100)}% WR` : '';
+        const runs = st ? `${st.runs} runs` : '';
+        const meta = [wr, runs].filter(Boolean).join(' · ');
+        const notes = version.notes ? ` — ${version.notes}` : '';
+        options.push({
+          value: `gls:${strategy.id}:${version.id}`,
+          label: `${strategy.name} · v${version.version}${meta ? ` · ${meta}` : ''}${notes}`,
+          kind: 'gls',
+          strategyId: strategy.id,
+          versionId: version.id,
+          versionNum: version.version,
+          slug: strategy.slug,
+          status: strategy.status,
+          pinned: strategy.pinned,
+          notes: version.notes,
+        });
+      }
+    }
+    options.sort((a, b) => {
+      if (a.pinned !== b.pinned) return b.pinned ? 1 : -1;
+      return (b.versionNum ?? 0) - (a.versionNum ?? 0);
+    });
+    if (!stats) pickerCache = { options, at: Date.now() };
+    return options;
+  })();
+
+  if (!stats) pickerInflight = fetchPromise;
+  try {
+    const options = await fetchPromise;
+    return filterPickerCache(options, includeArchived);
+  } finally {
+    if (!stats) pickerInflight = null;
+  }
+}
+
+function filterPickerCache(options, includeArchived) {
+  if (includeArchived) return options;
+  return options.filter((opt) => opt.status !== 'archived');
+}
+
+export function invalidateStrategyPickerCache() {
+  pickerCache = null;
 }
 
 export function renderStrategySelect(options, selectedValue = '') {

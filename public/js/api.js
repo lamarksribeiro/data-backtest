@@ -1,4 +1,6 @@
-async function request(method, path, body) {
+const DEFAULT_TIMEOUT_MS = 30_000;
+
+async function request(method, path, body, { timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
   const init = {
     method,
     headers: { Accept: 'application/json' },
@@ -9,11 +11,20 @@ async function request(method, path, body) {
     init.body = JSON.stringify(body);
   }
 
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  init.signal = controller.signal;
+
   let res;
   try {
     res = await fetch(path, init);
   } catch (err) {
+    if (err.name === 'AbortError') {
+      return { ok: false, status: 0, error: { code: 'TIMEOUT', message: 'A requisição demorou demais. Tente novamente.' } };
+    }
     return { ok: false, status: 0, error: { code: 'NETWORK_ERROR', message: err.message || 'Network error' } };
+  } finally {
+    clearTimeout(timer);
   }
 
   if (res.status === 401) {

@@ -43,6 +43,7 @@ import {
   getStrategy,
   getStrategyVersion,
   listStrategies as listSavedStrategies,
+  listStrategiesForPicker,
   listStrategyVersions,
   updateStrategy,
   validateStrategySource,
@@ -97,6 +98,28 @@ export function createApiHandler(deps) {
     if (!config.dataCollectorDatabaseUrl) return null;
     if (!sharedSourcePool) sharedSourcePool = createSourcePool(config);
     return sharedSourcePool;
+  }
+
+  const CONTEXT_OPTIONS_TTL_MS = 60_000;
+  let contextOptionsCache = null;
+  async function getContextOptions() {
+    const now = Date.now();
+    if (contextOptionsCache && now - contextOptionsCache.at < CONTEXT_OPTIONS_TTL_MS) {
+      return contextOptionsCache.value;
+    }
+    const lake = listBacktestContextOptions(db);
+    let source = emptyContextOptions();
+    const pool = getSourcePool();
+    if (pool) {
+      try {
+        source = await listSourceContextOptions(pool, config);
+      } catch (error) {
+        console.warn('[context-options] source query failed:', error.message);
+      }
+    }
+    const value = mergeContextOptions(lake, source, config);
+    contextOptionsCache = { at: now, value };
+    return value;
   }
 
   return async function handleRequest(req, res) {
@@ -177,16 +200,7 @@ export function createApiHandler(deps) {
           : sendJson(res, 409, { error: { code: 'REVOKE_ACCEPTANCE_FAILED', message: manifestActionError(result) } });
       }
       if (req.method === 'GET' && url.pathname === '/api/context-options') {
-        const lake = listBacktestContextOptions(db);
-        let source = emptyContextOptions();
-        if (config.dataCollectorDatabaseUrl) {
-          try {
-            source = await listSourceContextOptions(getSourcePool(), config);
-          } catch (error) {
-            console.warn('[context-options] source query failed:', error.message);
-          }
-        }
-        return sendJson(res, 200, { options: mergeContextOptions(lake, source, config) });
+        return sendJson(res, 200, { options: await getContextOptions() });
       }
       if (req.method === 'GET' && url.pathname === '/api/availability') {
         const request = datasetRequestFromParams(url.searchParams, config);
@@ -395,6 +409,9 @@ export function createApiHandler(deps) {
         return sendJson(res, 200, { blocks: listBlockSignatures() });
       }
       if (req.method === 'GET' && url.pathname === '/api/strategies') {
+        if (url.searchParams.get('picker') === '1') {
+          return sendJson(res, 200, { options: listStrategiesForPicker(db) });
+        }
         if (url.searchParams.get('stats') === '1') {
           return sendJson(res, 200, { strategies: listStrategiesWithStats(db) });
         }

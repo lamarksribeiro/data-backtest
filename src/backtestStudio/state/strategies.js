@@ -72,6 +72,35 @@ export function listStrategyVersions(db, strategyId) {
   `).all(strategyId).map(toApiVersion);
 }
 
+/** Uma query para o picker do Estúdio (evita N+1 de /versions por estratégia). */
+export function listStrategiesForPicker(db) {
+  const rows = db.prepare(`
+    SELECT
+      sd.id AS strategy_id,
+      sd.slug,
+      sd.name,
+      sd.status,
+      sd.pinned,
+      sv.id AS version_id,
+      sv.version,
+      sv.notes
+    FROM strategy_definitions sd
+    JOIN strategy_versions sv ON sv.strategy_id = sd.id
+    ORDER BY sd.pinned DESC, sd.updated_at DESC, sd.id DESC, sv.version DESC, sv.id DESC
+  `).all();
+
+  return rows.map((row) => ({
+    strategy_id: Number(row.strategy_id),
+    version_id: Number(row.version_id),
+    version: Number(row.version),
+    slug: row.slug,
+    name: row.name,
+    status: row.status,
+    pinned: Boolean(row.pinned),
+    notes: row.notes || null,
+  }));
+}
+
 export function getStrategyVersion(db, strategyId, versionId) {
   const row = db.prepare('SELECT * FROM strategy_versions WHERE strategy_id = ? AND id = ?').get(strategyId, versionId);
   return row ? toApiVersion(row) : null;

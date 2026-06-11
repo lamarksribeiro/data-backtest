@@ -105,7 +105,11 @@ export function listEventTraces(db, runId, {
 } = {}) {
   const safeLimit = Math.min(Math.max(Number.parseInt(String(limit), 10) || 100, 1), 5000);
   const safeOffset = Math.max(Number.parseInt(String(offset), 10) || 0, 0);
-  let sql = 'SELECT * FROM backtest_event_traces WHERE run_id = ?';
+  let sql = `SELECT
+    id, run_id, condition_id, market_id, event_start, event_end, side,
+    entries_count, exits_count, final_pnl, result, reason, ticks_count,
+    summary_json, created_at
+    FROM backtest_event_traces WHERE run_id = ?`;
   const params = [runId];
   if (result) {
     sql += ' AND result = ?';

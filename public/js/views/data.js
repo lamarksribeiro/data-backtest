@@ -13,10 +13,7 @@ export async function renderData(ctx) {
   ctx.setBreadcrumb('data', 'Dados');
   ctx.renderContextBar?.();
 
-  const apiOptions = await fetchContextOptionsCached(ctx.api);
-  const fieldOptions = contextBarOptions(apiOptions);
-  const formCtx = applyContextOptions(loadContext(), fieldOptions);
-
+  const fallbackCtx = loadContext();
   mount(ctx.contentEl, [
     el('div', { class: 'page-header' }, [
       el('div', {}, [
@@ -26,14 +23,19 @@ export async function renderData(ctx) {
     ]),
     el('section', { class: 'card', id: 'data-coverage-section' }, el('p', { class: 'muted' }, 'Carregando cobertura…')),
     el('section', { class: 'card', id: 'data-actions-section' }),
-    el('section', { class: 'card', id: 'data-jobs-section' }),
+    el('section', { class: 'card', id: 'data-jobs-section' }, el('p', { class: 'muted' }, 'Carregando jobs…')),
     el('div', { class: 'data-partition-drawer', id: 'data-partition-drawer', hidden: true }),
   ]);
 
-  renderActions(ctx, formCtx, fieldOptions);
+  renderActions(ctx, fallbackCtx, contextBarOptions({}));
   bindJobsSse(ctx);
+  void refreshJobs(ctx);
+
+  const apiOptions = await fetchContextOptionsCached(ctx.api);
+  const fieldOptions = contextBarOptions(apiOptions);
+  const formCtx = applyContextOptions(fallbackCtx, fieldOptions);
+  renderActions(ctx, formCtx, fieldOptions);
   await refreshCoverage(ctx, formCtx);
-  await refreshJobs(ctx);
 }
 
 function dataFormFromDom() {

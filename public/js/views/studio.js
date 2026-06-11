@@ -327,10 +327,13 @@ export async function renderStudio(ctx) {
   ]));
 
   try {
-    const apiOptions = await fetchContextOptionsCached(ctx.api);
+    const [apiOptions, strategyOptions] = await Promise.all([
+      fetchContextOptionsCached(ctx.api),
+      loadStrategyOptions(ctx.api, { includeArchived: false }),
+    ]);
     const fieldOptions = contextBarOptions(apiOptions);
     const formCtx = applyContextOptions(loadContext(), fieldOptions);
-    studioState.strategyOptions = await loadStrategyOptions(ctx.api, { includeArchived: false });
+    studioState.strategyOptions = strategyOptions;
     if (query.strategy && query.version) {
       studioState.selectedStrategyPick = `gls:${query.strategy}:${query.version}`;
     } else if (!studioState.selectedStrategyPick && studioState.strategyOptions[0]) {
@@ -338,10 +341,15 @@ export async function renderStudio(ctx) {
     }
 
     renderConfigPanel(ctx, { formCtx, fieldOptions });
-    await refreshCoverageIndicator(ctx, formCtx);
-    await refreshRuns(ctx);
-    if (studioState.selectedRunId) await loadRunDetail(ctx, studioState.selectedRunId);
-    else showStudioEmptyMain(document.getElementById('studio-main'));
+    void refreshCoverageIndicator(ctx, formCtx);
+
+    const runsPromise = refreshRuns(ctx);
+    if (studioState.selectedRunId) {
+      await Promise.all([runsPromise, loadRunDetail(ctx, studioState.selectedRunId)]);
+    } else {
+      await runsPromise;
+      showStudioEmptyMain(document.getElementById('studio-main'));
+    }
     bindSse(ctx);
     if (!shortcutsBound) {
       bindShortcuts(ctx);
@@ -644,8 +652,7 @@ async function selectRun(ctx, id) {
   studioState.selectedEventId = null;
   studioState.eventsOffset = 0;
   pushStudioQuery({ run: id, event: null });
-  await refreshRuns(ctx);
-  await loadRunDetail(ctx, id);
+  await Promise.all([refreshRuns(ctx), loadRunDetail(ctx, id)]);
 }
 
 async function loadRunDetail(ctx, runId) {
@@ -689,10 +696,13 @@ async function loadRunDetail(ctx, runId) {
     renderUplotLine(document.getElementById('studio-equity-chart'), run.equity.map((p) => [new Date(p.ts).getTime(), p.pnl]));
   }
   studioState.eventsOffset = 0;
-  await loadEvents(ctx, runId, { append: false });
-  if (studioState.selectedEventId) {
-    openEventDrawer(ctx, runId, studioState.selectedEventId, 0, { syncUrl: false });
-  }
+  const eventsContainer = document.getElementById('studio-events-table-container');
+  if (eventsContainer) mount(eventsContainer, Skeleton({ lines: 4 }));
+  void loadEvents(ctx, runId, { append: false }).then(() => {
+    if (studioState.selectedEventId && studioState.selectedRunId === runId) {
+      openEventDrawer(ctx, runId, studioState.selectedEventId, 0, { syncUrl: false });
+    }
+  });
 }
 
 function buildEventFilters(ctx, runId) {
@@ -764,16 +774,24 @@ async function loadEvents(ctx, runId, { append = false } = {}) {
 
 async function showAnalysisTab(ctx, runId, run, summary) {
   const main = document.getElementById('studio-main');
-  const analysisRes = await ctx.api.get(`/api/backtest/runs/${runId}/analysis`);
-  const a = analysisRes.ok ? analysisRes.data.analysis : {};
   mount(main, el('div', { class: 'studio-analysis' }, [
     renderTimingSection(run, summary),
+    el('p', { class: 'muted', id: 'studio-analysis-loading' }, 'Carregando análise…'),
+    el('div', { id: 'studio-analysis-content' }),
+    el('button', { type: 'button', class: 'btn btn--ghost', onclick: () => loadRunDetail(ctx, runId) }, '← Voltar ao resultado'),
+  ]));
+  const analysisRes = await ctx.api.get(`/api/backtest/runs/${runId}/analysis`);
+  const a = analysisRes.ok ? analysisRes.data.analysis : {};
+  const content = document.getElementById('studio-analysis-content');
+  const loading = document.getElementById('studio-analysis-loading');
+  if (loading) loading.remove();
+  if (!content) return;
+  mount(content, el('div', {}, [
     el('h3', {}, 'Piores eventos'),
     el('ul', {}, (a.worst_events || []).map((ev) => el('li', {}, [
       el('button', { type: 'button', class: 'btn btn--ghost', onclick: () => openEventDrawer(ctx, runId, ev.id) },
         `${ev.condition_id} · ${formatPnl(ev.final_pnl)}`),
     ]))),
-    el('button', { type: 'button', class: 'btn btn--ghost', onclick: () => loadRunDetail(ctx, runId) }, '← Voltar ao resultado'),
   ]));
 }
 
@@ -895,11 +913,7 @@ async function openEventDrawer(ctx, runId, eventId, index = 0, { syncUrl = true 
 
   const hasSidecarSeries = Boolean(event.series?.underlying?.length);
   let chartData = hasSidecarSeries ? { series: event.series, series_meta: event.series_meta } : null;
-  if (event.condition_id && !hasSidecarSeries) {
-    const chartRes = await ctx.api.get(`/api/backtest/runs/${runId}/chart-data?condition_id=${encodeURIComponent(event.condition_id)}`);
-    if (token !== openEventToken) return;
-    chartData = chartRes.ok ? chartRes.data : null;
-  }
+  let chartLoading = Boolean(event.condition_id && !hasSidecarSeries);
 
   const tabs = [
     { id: 'chart', label: 'Gráfico' },
@@ -940,7 +954,9 @@ async function openEventDrawer(ctx, runId, eventId, index = 0, { syncUrl = true 
       const payload = chartData?.series
         ? chartData
         : (event.series?.underlying?.length ? { series: event.series, series_meta: event.series_meta } : null);
-      if (payload?.series?.underlying?.length) {
+      if (chartLoading && container) {
+        mount(container, Skeleton({ lines: 3 }));
+      } else if (payload?.series?.underlying?.length) {
         void renderEventChartWithMarkers(container, event, payload);
       } else if (container) {
         mount(container, el('p', { class: 'muted' }, 'Série de preços indisponível para este evento.'));
@@ -949,6 +965,16 @@ async function openEventDrawer(ctx, runId, eventId, index = 0, { syncUrl = true 
   }
 
   renderDrawerContent();
+
+  if (chartLoading && event.condition_id) {
+    void ctx.api.get(`/api/backtest/runs/${runId}/chart-data?condition_id=${encodeURIComponent(event.condition_id)}`)
+      .then((chartRes) => {
+        if (token !== openEventToken) return;
+        chartLoading = false;
+        chartData = chartRes.ok ? chartRes.data : null;
+        if (activeTab === 'chart') renderDrawerContent();
+      });
+  }
 }
 
 function renderCompare(main, data) {
