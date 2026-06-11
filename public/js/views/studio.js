@@ -63,12 +63,19 @@ function clearProgressPoll() {
 
 function formatProgressEta(progress) {
   const ms = progress?.eta_ms ?? (progress?.eta != null ? Number(progress.eta) * 1000 : null);
-  if (ms == null || !Number.isFinite(ms) || ms <= 0) return 'Calculando…';
-  const sec = Math.max(1, Math.round(ms / 1000));
-  if (sec < 60) return `~${sec}s`;
-  const min = Math.floor(sec / 60);
-  const rem = sec % 60;
-  return rem ? `~${min}m ${rem}s` : `~${min}m`;
+  if (ms != null && Number.isFinite(ms) && ms > 0) {
+    const sec = Math.max(1, Math.round(ms / 1000));
+    if (sec < 60) return `~${sec}s`;
+    const min = Math.floor(sec / 60);
+    const rem = sec % 60;
+    return rem ? `~${min}m ${rem}s` : `~${min}m`;
+  }
+  const elapsed = progress?.elapsed_ms ?? progress?.elapsedMs;
+  if (elapsed != null && Number.isFinite(elapsed) && elapsed > 0) {
+    const sec = Math.max(1, Math.round(elapsed / 1000));
+    return sec < 60 ? `${sec}s decorridos` : `${Math.floor(sec / 60)}m ${sec % 60}s`;
+  }
+  return 'Calculando…';
 }
 
 function applyProgressUi(progress) {
@@ -153,8 +160,7 @@ async function cancelRunFromStudio(ctx, run) {
 
 function startProgressPoll(ctx, runId) {
   clearProgressPoll();
-  if (typeof EventSource !== 'undefined') return;
-  progressPollTimer = setInterval(async () => {
+  const pollOnce = async () => {
     if (studioState.cancellingRunId === runId) return;
     if (studioState.selectedRunId !== runId) {
       clearProgressPoll();
@@ -171,7 +177,10 @@ function startProgressPoll(ctx, runId) {
       return;
     }
     if (run.progress) applyProgressUi(run.progress);
-  }, 2000);
+  };
+  pollOnce();
+  // Poll complementa SSE (Cloudflare/buffer e runs rápidos podem perder eventos).
+  progressPollTimer = setInterval(pollOnce, 1000);
 }
 
 function parseStudioQuery() {

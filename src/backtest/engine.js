@@ -112,6 +112,14 @@ async function runSoAEngine(db, request, ctx) {
   let columnSet = cache.get(cacheKey);
   const useCompiledSoa = ctx.runner.executionMode === 'compiled-soa' && typeof ctx.runner.bindColumnSet === 'function';
 
+  ctx.emitProgress({
+    phase: 'loading',
+    ticks: 0,
+    batches: 0,
+    totalTicks: ctx.totalTicks,
+    force: true,
+  });
+
   if (!columnSet) {
     const readStartedAt = Date.now();
     columnSet = await loadBacktestColumnSet(db, {
@@ -131,6 +139,22 @@ async function runSoAEngine(db, request, ctx) {
   if (ctx.timings.firstBatchAt == null) ctx.timings.firstBatchAt = Date.now();
   const ticks = columnSet.length;
   const batches = 1;
+  ctx.totalTicks = ticks;
+
+  ctx.emitProgress({
+    phase: 'loading',
+    ticks,
+    batches: 1,
+    totalTicks: ticks,
+    force: true,
+  });
+  ctx.emitProgress({
+    phase: 'processing',
+    ticks: 0,
+    batches: 1,
+    totalTicks: ticks,
+    force: true,
+  });
 
   const processStartedAt = Date.now();
   const workerCount = Number(request.backtestWorkers ?? ctx.config.backtestWorkers ?? 1);
@@ -142,6 +166,7 @@ async function runSoAEngine(db, request, ctx) {
     && typeof ctx.runner.importParallelSlices === 'function';
 
   if (canParallelize) {
+    ctx.emitProgress({ phase: 'processing', ticks: 0, batches: 1, totalTicks: ticks, force: true });
     const slices = await runParallelEventSlices({
       ast: request.glsAst,
       params: request.params ?? {},
@@ -152,36 +177,57 @@ async function runSoAEngine(db, request, ctx) {
     });
     if (slices?.length) {
       ctx.runner.importParallelSlices(slices);
+      ctx.emitProgress({ phase: 'processing', ticks: ticks, batches: 1, totalTicks: ticks, force: true });
     } else {
-      runSequentialSoA(ctx.runner, columnSet, useCompiledSoa);
+      runSequentialSoA(ctx.runner, columnSet, useCompiledSoa, (processed, total) => {
+        ctx.emitProgress({ phase: 'processing', ticks: processed, batches: 1, totalTicks: total });
+      });
     }
   } else if (useCompiledSoa) {
     ctx.runner.bindColumnSet(columnSet);
-    runSequentialSoA(ctx.runner, columnSet, true);
+    runSequentialSoA(ctx.runner, columnSet, true, (processed, total) => {
+      ctx.emitProgress({ phase: 'processing', ticks: processed, batches: 1, totalTicks: total });
+    });
   } else {
-    runSequentialSoA(ctx.runner, columnSet, false);
+    runSequentialSoA(ctx.runner, columnSet, false, (processed, total) => {
+      ctx.emitProgress({ phase: 'processing', ticks: processed, batches: 1, totalTicks: total });
+    });
   }
   ctx.timings.processMs += Date.now() - processStartedAt;
-  ctx.emitProgress({ phase: 'processing', ticks, batches, totalTicks: ctx.totalTicks });
+  ctx.emitProgress({ phase: 'processing', ticks, batches, totalTicks: ticks, force: true });
 
   return { ticks, batches };
 }
 
-export function runSequentialSoA(runner, columnSet, compiledSoa) {
+export function runSequentialSoA(runner, columnSet, compiledSoa, onProgress = null) {
+  const total = columnSet.length;
+  let lastEmitAt = 0;
+
+  const emitProgress = (processed) => {
+    if (!onProgress || total <= 0) return;
+    const now = Date.now();
+    if (processed < total && now - lastEmitAt < 350) return;
+    lastEmitAt = now;
+    onProgress(processed, total);
+  };
+
   if (compiledSoa) {
     for (const ev of columnSet.events) {
       runner.beginEvent(ev);
       for (let i = ev.startRow; i < ev.endRow; i += 1) {
         runner.processIndex(i);
+        emitProgress(i + 1);
       }
       runner.endEvent(ev);
     }
+    emitProgress(total);
     return;
   }
   const cursor = createTickCursorView(columnSet);
   for (let i = 0; i < columnSet.length; i += 1) {
     cursor.setIndex(i);
     runner.processTick(cursor);
+    emitProgress(i + 1);
   }
 }
 
@@ -224,7 +270,7 @@ async function runRowsEngine(db, request, ctx) {
   return { ticks, batches };
 }
 
-const PROGRESS_MIN_MS = 1500;
+const PROGRESS_MIN_MS = 400;
 
 function createProgressEmitter(onProgress, startedAt) {
   let lastEmitAt = 0;
