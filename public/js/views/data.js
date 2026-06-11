@@ -6,12 +6,132 @@ import { connectSse, disconnectSse } from '../utils/sse.js';
 const UI_LABELS = { ready: 'Pronto', processing: 'Processando', attention: 'Atenção' };
 const UI_CLASS = { ready: 'ok', processing: 'warn', attention: 'warn' };
 
+const dataStyles = `
+  .coverage-heatmap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .coverage-month {
+    background: rgba(22, 28, 45, 0.4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    min-width: 196px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: var(--shadow-1);
+  }
+
+  .coverage-month__header {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-0);
+    margin-bottom: 8px;
+    text-align: center;
+    text-transform: capitalize;
+  }
+
+  .coverage-month__weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 22px);
+    gap: 4px;
+    margin-bottom: 6px;
+    text-align: center;
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--text-3);
+    text-transform: uppercase;
+  }
+
+  .coverage-month__days {
+    display: grid;
+    grid-template-columns: repeat(7, 22px);
+    grid-auto-rows: 22px;
+    gap: 4px;
+  }
+
+  .coverage-day {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 10px;
+    font-weight: 600;
+    font-family: var(--font-mono, monospace);
+    cursor: pointer;
+    transition: transform 0.1s ease, border-color 0.1s ease, background-color 0.1s ease;
+    user-select: none;
+    padding: 0;
+  }
+
+  .coverage-day--empty {
+    background: rgba(255, 255, 255, 0.015);
+    border-color: rgba(255, 255, 255, 0.03);
+    color: rgba(255, 255, 255, 0.15);
+    cursor: default;
+  }
+  .coverage-day--empty:hover {
+    transform: none;
+    border-color: rgba(255, 255, 255, 0.03);
+  }
+
+  .coverage-day--ready {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: rgba(16, 185, 129, 0.35);
+    color: var(--ok);
+  }
+  .coverage-day--ready:hover {
+    background: rgba(16, 185, 129, 0.3);
+    border-color: var(--ok);
+    transform: translateY(-1px);
+  }
+
+  .coverage-day--processing {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.3);
+    color: var(--warn);
+  }
+  .coverage-day--processing:hover {
+    background: rgba(245, 158, 11, 0.25);
+    border-color: var(--warn);
+    transform: translateY(-1px);
+  }
+
+  .coverage-day--attention {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: var(--err);
+  }
+  .coverage-day--attention:hover {
+    background: rgba(239, 68, 68, 0.25);
+    border-color: var(--err);
+    transform: translateY(-1px);
+  }
+
+  .coverage-day__pad {
+    width: 22px;
+    height: 22px;
+  }
+`;
+
 let sseHandler = null;
 let latestJobs = [];
 
 export async function renderData(ctx) {
   ctx.setBreadcrumb('data', 'Dados');
   ctx.renderContextBar?.();
+
+  // Injetar a tag de estilos para os mini-calendários se ainda não foi criada
+  if (!document.getElementById('data-custom-styles')) {
+    const styleEl = el('style', { id: 'data-custom-styles' }, dataStyles);
+    document.head.appendChild(styleEl);
+  }
 
   const fallbackCtx = loadContext();
   mount(ctx.contentEl, [
@@ -129,19 +249,92 @@ async function refreshCoverage(ctx, formCtx) {
         legendChip('attention', coverage.summary?.attention ?? 0),
       ]),
     ]),
-    days.length
-      ? el('div', { class: 'coverage-heatmap' }, days.map((day) => el('button', {
-        type: 'button',
-        class: `coverage-day coverage-day--${day.ui_state}`,
-        title: `${day.dt}: ${UI_LABELS[day.ui_state]} (${day.raw_status})`,
-        onclick: () => openPartitionDrawer(ctx, day),
-      }, day.dt.slice(8, 10))))
-      : emptyState('Nenhuma partição no intervalo.'),
+    renderMonthlyHeatmap(ctx, days)
   ]));
 }
 
 function legendChip(state, count) {
   return el('span', { class: `badge badge--${UI_CLASS[state]}` }, `${UI_LABELS[state]}: ${count}`);
+}
+
+// Determina o intervalo de meses que aparecem nas partições de cobertura de dados
+function getMonthsRange(days) {
+  if (days.length === 0) return [];
+
+  const sortedDts = days.map(d => d.dt).sort();
+  const firstDt = sortedDts[0];
+  const lastDt = sortedDts[sortedDts.length - 1];
+
+  const minYear = parseInt(firstDt.slice(0, 4), 10);
+  const minMonth = parseInt(firstDt.slice(5, 7), 10);
+  const maxYear = parseInt(lastDt.slice(0, 4), 10);
+  const maxMonth = parseInt(lastDt.slice(5, 7), 10);
+
+  const months = [];
+  let currentYear = minYear;
+  let currentMonth = minMonth;
+
+  while (currentYear < maxYear || (currentYear === maxYear && currentMonth <= maxMonth)) {
+    months.push({ year: currentYear, month: currentMonth });
+    currentMonth++;
+    if (currentMonth > 12) {
+      currentMonth = 1;
+      currentYear++;
+    }
+  }
+  return months;
+}
+
+// Renderiza a cobertura de dados no formato de mini-calendários agrupados por mês
+function renderMonthlyHeatmap(ctx, days) {
+  if (days.length === 0) {
+    return emptyState('Nenhuma partição no intervalo.');
+  }
+
+  const monthsRange = getMonthsRange(days);
+  const MONTH_NAMES = ["", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+  const WEEKDAYS = ["D", "S", "T", "Q", "Q", "S", "S"];
+
+  return el('div', { class: 'coverage-heatmap' }, monthsRange.map(({ year, month }) => {
+    // 0 = Domingo, 1 = Segunda, etc.
+    const firstDayOfWeek = new Date(year, month - 1, 1).getDay();
+    const daysInMonth = new Date(year, month, 0).getDate();
+    
+    const dayElements = [];
+    
+    // Adicionar células vazias de alinhamento antes do primeiro dia
+    for (let i = 0; i < firstDayOfWeek; i++) {
+      dayElements.push(el('div', { class: 'coverage-day__pad' }));
+    }
+    
+    // Adicionar os quadradinhos dos dias
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dayStr = String(d).padStart(2, '0');
+      const monthStr = String(month).padStart(2, '0');
+      const dateKey = `${year}-${monthStr}-${dayStr}`;
+      
+      const dayData = days.find(x => x.dt === dateKey);
+      if (dayData) {
+        dayElements.push(el('button', {
+          type: 'button',
+          class: `coverage-day coverage-day--${dayData.ui_state}`,
+          title: `${dateKey}: ${UI_LABELS[dayData.ui_state]} (${dayData.raw_status})`,
+          onclick: () => openPartitionDrawer(ctx, dayData),
+        }, String(d)));
+      } else {
+        dayElements.push(el('div', {
+          class: 'coverage-day coverage-day--empty',
+          title: `${dateKey}: Sem cobertura de dados`,
+        }, String(d)));
+      }
+    }
+
+    return el('div', { class: 'coverage-month' }, [
+      el('div', { class: 'coverage-month__header' }, `${MONTH_NAMES[month]} ${year}`),
+      el('div', { class: 'coverage-month__weekdays' }, WEEKDAYS.map(w => el('span', {}, w))),
+      el('div', { class: 'coverage-month__days' }, dayElements)
+    ]);
+  }));
 }
 
 function openPartitionDrawer(ctx, day) {
@@ -167,7 +360,7 @@ function openPartitionDrawer(ctx, day) {
     day.ui_state === 'attention' ? el('button', {
       type: 'button',
       class: 'btn btn--primary btn--sm',
-        onclick: async () => {
+      onclick: async () => {
         const ctxSaved = loadContext();
         const fix = await ctx.api.post('/api/data/fix', {
           request: {
