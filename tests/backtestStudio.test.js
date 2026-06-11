@@ -347,6 +347,55 @@ test('GLS strategy runs on lakehouse via strategy_id/version', async () => {
   }
 });
 
+test('repairs strategy_versions FK after status migration rebuild', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-fk-'));
+  const dbPath = path.join(dir, 'state.db');
+  try {
+    const seed = openStateDatabase(dbPath);
+    const strategy = createStrategy(seed, { slug: 'fk-test', name: 'FK Test' });
+    createStrategyVersion(seed, strategy.id, { source_code: 'strategy "FK Test" {}' });
+    closeStateDatabase(seed);
+
+    const { DatabaseSync } = await import('node:sqlite');
+    const broken = new DatabaseSync(dbPath);
+    broken.exec('PRAGMA foreign_keys = OFF');
+    broken.exec(`
+      ALTER TABLE strategy_definitions RENAME TO strategy_definitions_old;
+      CREATE TABLE strategy_definitions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        slug TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL,
+        description TEXT,
+        status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'validated', 'failed', 'archived')),
+        tags_json TEXT NOT NULL DEFAULT '[]',
+        pinned INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT 'now',
+        updated_at TEXT NOT NULL DEFAULT 'now'
+      );
+      INSERT INTO strategy_definitions (
+        id, slug, name, description, status, tags_json, pinned, created_at, updated_at
+      )
+      SELECT id, slug, name, description, status, tags_json, 0, created_at, updated_at
+      FROM strategy_definitions_old;
+      DROP TABLE strategy_definitions_old;
+    `);
+    broken.exec('PRAGMA foreign_keys = ON');
+    broken.close();
+
+    const db = openStateDatabase(dbPath);
+    try {
+      const fk = db.prepare('PRAGMA foreign_key_list(strategy_versions)').all()[0];
+      assert.equal(fk.table, 'strategy_definitions');
+      deleteStrategy(db, strategy.id);
+      assert.equal(listStrategies(db).length, 0);
+    } finally {
+      closeStateDatabase(db);
+    }
+  } finally {
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
+  }
+});
+
 async function getJson(url) {
   const res = await fetch(url);
   assert.equal(res.status, 200);

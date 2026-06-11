@@ -204,6 +204,7 @@ export function openStateDatabase(stateDbPath) {
   migratePrepareJobs(db);
   migrateStrategyV3(db);
   migrateStrategyDefinitions(db);
+  repairStrategyDefinitionsForeignKeys(db);
   migrateBacktestRunsV3Indexes(db);
   applyColumnMigrations(db, 'backtest_runs', BACKTEST_RUNS_V3_COLUMNS);
   return db;
@@ -253,37 +254,93 @@ function migrateLakeManifest(db) {
   db.exec(SCHEMA_SQL);
 }
 
+function strategyVersionsForeignKeyTarget(db) {
+  const fks = db.prepare('PRAGMA foreign_key_list(strategy_versions)').all();
+  return fks.find((fk) => fk.from === 'strategy_id')?.table ?? null;
+}
+
+function rebuildStrategyVersionsForeignKey(db) {
+  if (strategyVersionsForeignKeyTarget(db) === 'strategy_definitions') return;
+
+  const cols = db.prepare('PRAGMA table_info(strategy_versions)').all().map((row) => row.name);
+  const selectList = cols.join(', ');
+
+  db.exec('PRAGMA foreign_keys = OFF');
+  try {
+    db.exec(`
+      CREATE TABLE strategy_versions_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        strategy_id INTEGER NOT NULL REFERENCES strategy_definitions(id),
+        version INTEGER NOT NULL,
+        language TEXT NOT NULL DEFAULT 'gls-v1',
+        source_code TEXT NOT NULL,
+        params_schema_json TEXT NOT NULL DEFAULT '{}',
+        compiled_json TEXT,
+        validation_json TEXT NOT NULL DEFAULT '{}',
+        checksum TEXT NOT NULL,
+        notes TEXT NULL,
+        created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+        UNIQUE(strategy_id, version)
+      );
+
+      INSERT INTO strategy_versions_new (${selectList})
+      SELECT ${selectList}
+      FROM strategy_versions;
+
+      DROP TABLE strategy_versions;
+      ALTER TABLE strategy_versions_new RENAME TO strategy_versions;
+    `);
+  } finally {
+    db.exec('PRAGMA foreign_keys = ON');
+  }
+}
+
+function repairStrategyDefinitionsForeignKeys(db) {
+  const versionsTable = db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'strategy_versions'").get();
+  if (!versionsTable) return;
+
+  db.exec('DROP TABLE IF EXISTS strategy_definitions_old');
+  rebuildStrategyVersionsForeignKey(db);
+}
+
 function migrateStrategyDefinitions(db) {
   const table = db.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'strategy_definitions'").get();
   if (!table?.sql) return;
 
   if (!table.sql.includes("'failed'")) {
-    db.exec(`
-      PRAGMA foreign_keys = OFF;
-      ALTER TABLE strategy_definitions RENAME TO strategy_definitions_old;
-      
-      CREATE TABLE strategy_definitions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        slug TEXT NOT NULL UNIQUE,
-        name TEXT NOT NULL,
-        description TEXT,
-        status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'validated', 'failed', 'archived')),
-        tags_json TEXT NOT NULL DEFAULT '[]',
-        pinned INTEGER NOT NULL DEFAULT 0,
-        created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-        updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
-      );
+    const oldCols = new Set(db.prepare('PRAGMA table_info(strategy_definitions)').all().map((row) => row.name));
+    const pinnedExpr = oldCols.has('pinned') ? 'pinned' : '0';
 
-      INSERT INTO strategy_definitions (
-        id, slug, name, description, status, tags_json, pinned, created_at, updated_at
-      )
-      SELECT
-        id, slug, name, description, status, tags_json, pinned, created_at, updated_at
-      FROM strategy_definitions_old;
+    db.exec('PRAGMA foreign_keys = OFF');
+    try {
+      db.exec(`
+        ALTER TABLE strategy_definitions RENAME TO strategy_definitions_old;
 
-      DROP TABLE strategy_definitions_old;
-      PRAGMA foreign_keys = ON;
-    `);
+        CREATE TABLE strategy_definitions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          slug TEXT NOT NULL UNIQUE,
+          name TEXT NOT NULL,
+          description TEXT,
+          status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'validated', 'failed', 'archived')),
+          tags_json TEXT NOT NULL DEFAULT '[]',
+          pinned INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+          updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+        );
+
+        INSERT INTO strategy_definitions (
+          id, slug, name, description, status, tags_json, pinned, created_at, updated_at
+        )
+        SELECT
+          id, slug, name, description, status, tags_json, ${pinnedExpr}, created_at, updated_at
+        FROM strategy_definitions_old;
+
+        DROP TABLE strategy_definitions_old;
+      `);
+      rebuildStrategyVersionsForeignKey(db);
+    } finally {
+      db.exec('PRAGMA foreign_keys = ON');
+    }
   }
 }
 
