@@ -36,6 +36,19 @@ export async function renderData(ctx) {
   await refreshJobs(ctx);
 }
 
+function dataFormFromDom() {
+  const form = document.getElementById('data-prepare-form');
+  if (!form) return loadContext();
+  const fd = new FormData(form);
+  return {
+    from: fd.get('from'),
+    to: fd.get('to'),
+    underlying: fd.get('underlying'),
+    interval: fd.get('interval'),
+    book_depth: fd.get('book_depth'),
+  };
+}
+
 function renderActions(ctx, formCtx, fieldOptions) {
   const section = document.getElementById('data-actions-section');
   if (!section) return;
@@ -50,7 +63,17 @@ function renderActions(ctx, formCtx, fieldOptions) {
       el('button', { class: 'btn btn--primary', type: 'submit' }, 'Corrigir / Preparar'),
     ]),
   ]));
-  document.getElementById('data-prepare-form')?.addEventListener('submit', async (ev) => {
+
+  const form = document.getElementById('data-prepare-form');
+  form?.querySelectorAll('input, select').forEach((input) => {
+    input.addEventListener('change', () => {
+      const current = dataFormFromDom();
+      saveContext(current);
+      refreshCoverage(ctx, current);
+    });
+  });
+
+  form?.addEventListener('submit', async (ev) => {
     ev.preventDefault();
     const fd = new FormData(ev.target);
     const request = {

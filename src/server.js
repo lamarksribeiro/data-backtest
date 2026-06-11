@@ -5,7 +5,6 @@ import { loadConfig } from './config.js';
 import { openStateDatabase, closeStateDatabase } from './state/sqlite.js';
 import { recoverStalePrepareJobs } from './state/prepareJobs.js';
 import { createApiServer } from './api/server.js';
-import { createPrepareJobRunner } from './prepare/runner.js';
 import { createAuthService } from './auth/authService.js';
 import { seedEdgeSniperV2Strategy } from './backtestStudio/gls/seedStrategies.js';
 
@@ -28,8 +27,7 @@ if (!config.TEST_MODE) {
   }
 }
 
-const prepareRunner = createPrepareJobRunner({ config, db });
-const server = createApiServer({ config, db, prepareRunner, authService });
+const server = createApiServer({ config, db, authService });
 
 server.listen(config.apiPort, () => {
   console.log(JSON.stringify({ ok: true, port: config.apiPort }));

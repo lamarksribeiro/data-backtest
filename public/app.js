@@ -17,17 +17,19 @@ const crumbSep = document.getElementById('crumb-sep');
 const topbarActions = document.getElementById('topbar-actions');
 
 const SECTIONS = {
-  studio: 'Estúdio',
   overview: 'Visão Geral',
-  data: 'Dados',
+  studio: 'Estúdio',
   strategies: 'Estratégias',
+  data: 'Dados',
+  backtests: 'Explorar',
 };
 
 const SECTION_ROUTES = {
-  studio: 'studio',
   overview: 'overview',
-  data: 'data',
+  studio: 'studio',
   strategies: 'strategies',
+  data: 'data',
+  backtests: 'backtests',
 };
 
 let currentRoute = '';
@@ -42,8 +44,8 @@ function topLevelRoute(route) {
 function parentRouteFor(route) {
   const path = String(route || '').split('?')[0];
   if (path.startsWith('strategies/')) return 'strategies';
-  if (path.startsWith('backtests')) return 'studio';
-  return SECTION_ROUTES[currentSection] || 'studio';
+  if (path.startsWith('backtests')) return 'backtests';
+  return SECTION_ROUTES[currentSection] || 'overview';
 }
 
 function navigateBack() {
@@ -125,18 +127,18 @@ async function bootstrap() {
   startSidebarStatus(ctx);
   initRouter({
     routes: {
-      studio: () => renderStudio(ctx),
       overview: () => renderOverview(ctx),
-      data: () => renderData(ctx),
-      jobs: () => { navigate('data'); },
-      backtests: () => navigate('studio'),
-      'backtests/:id': (params) => redirectLegacyBacktestRoute({ id: params.id }),
-      'backtests/:id/events/:eventId': (params) => redirectLegacyBacktestRoute({ id: params.id, eventId: params.eventId }),
+      studio: () => renderStudio(ctx),
       strategies: () => renderStrategies(ctx),
       'strategies/:id': (params) => renderStrategies(ctx, params),
       'strategies/:id/:versionId': (params) => renderStrategies(ctx, params),
+      data: () => renderData(ctx),
+      jobs: () => { navigate('data'); },
+      backtests: () => renderStudio(ctx),
+      'backtests/:id': (params) => redirectLegacyBacktestRoute({ id: params.id }),
+      'backtests/:id/events/:eventId': (params) => redirectLegacyBacktestRoute({ id: params.id, eventId: params.eventId }),
     },
-    fallback: 'studio',
+    fallback: 'overview',
     onChange: highlightNav,
   });
 }

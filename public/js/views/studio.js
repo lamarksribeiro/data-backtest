@@ -88,7 +88,8 @@ let shortcutsBound = false;
 
 export async function renderStudio(ctx) {
   studioCtx = ctx;
-  ctx.setBreadcrumb('studio', 'Estúdio');
+  const isExplore = location.hash.startsWith('#/backtests');
+  ctx.setBreadcrumb(isExplore ? 'backtests' : 'studio', isExplore ? 'Explorar' : 'Estúdio');
   ctx.renderContextBar?.();
 
   const query = parseStudioQuery();
@@ -550,11 +551,31 @@ function renderProgressPanel(container, run, ctx) {
   const percentVal = progress.percent != null ? progress.percent : 0;
   mount(container, el('div', { class: 'studio-progress-panel' }, [
     el('div', { class: 'studio-progress-card' }, [
-      el('strong', {}, `Backtest #${run.id}`),
-      StatusBadge({ status: run.status }),
-      progress.depends_on_job ? el('p', { class: 'muted' }, `Aguardando job #${progress.depends_on_job}`) : null,
+      el('div', { class: 'studio-progress-card__head' }, [
+        el('strong', {}, `Backtest #${run.id}`),
+        StatusBadge({ status: run.status }),
+      ]),
+      progress.depends_on_job ? el('p', { class: 'muted', id: 'studio-progress-depends' }, `Aguardando job #${progress.depends_on_job}`) : null,
       el('div', { class: 'studio-progress-bar' }, [
         el('span', { class: 'studio-progress-fill', id: 'studio-progress-fill', style: { width: `${percentVal}%` } }),
+      ]),
+      el('div', { class: 'studio-progress-metrics' }, [
+        el('div', { class: 'studio-progress-metric' }, [
+          el('span', { class: 'studio-progress-metric__label' }, 'Progresso'),
+          el('div', { class: 'studio-progress-metric__value', id: 'studio-progress-pct' }, `${percentVal.toFixed(0)}%`),
+        ]),
+        el('div', { class: 'studio-progress-metric' }, [
+          el('span', { class: 'studio-progress-metric__label' }, 'Fase'),
+          el('div', { class: 'studio-progress-metric__value', id: 'studio-progress-phase', style: { textTransform: 'capitalize' } }, progress.phase || 'Aguardando'),
+        ]),
+        el('div', { class: 'studio-progress-metric' }, [
+          el('span', { class: 'studio-progress-metric__label' }, 'Ticks Processados'),
+          el('div', { class: 'studio-progress-metric__value', id: 'studio-progress-ticks' }, `${progress.ticks || 0}${progress.total_ticks ? ` / ${progress.total_ticks}` : ''}`),
+        ]),
+        el('div', { class: 'studio-progress-metric' }, [
+          el('span', { class: 'studio-progress-metric__label' }, 'ETA'),
+          el('div', { class: 'studio-progress-metric__value', id: 'studio-progress-eta' }, progress.eta != null ? `${progress.eta}s` : 'Calculando…'),
+        ]),
       ]),
       el('button', {
         type: 'button',
@@ -695,6 +716,23 @@ function bindSse(ctx) {
     if (event.type === 'run:progress' && event.runId === studioState.selectedRunId) {
       const fill = document.getElementById('studio-progress-fill');
       if (fill) fill.style.width = `${event.progress?.percent || 0}%`;
+      const pct = document.getElementById('studio-progress-pct');
+      if (pct) pct.textContent = `${(event.progress?.percent || 0).toFixed(0)}%`;
+      const phase = document.getElementById('studio-progress-phase');
+      if (phase) phase.textContent = event.progress?.phase || 'Aguardando';
+      const ticks = document.getElementById('studio-progress-ticks');
+      if (ticks) ticks.textContent = `${event.progress?.ticks || 0}${event.progress?.total_ticks ? ` / ${event.progress?.total_ticks}` : ''}`;
+      const eta = document.getElementById('studio-progress-eta');
+      if (eta) eta.textContent = event.progress?.eta != null ? `${event.progress?.eta}s` : 'Calculando…';
+      const depends = document.getElementById('studio-progress-depends');
+      if (depends) {
+        if (event.progress?.depends_on_job) {
+          depends.textContent = `Aguardando job #${event.progress.depends_on_job}`;
+          depends.hidden = false;
+        } else {
+          depends.hidden = true;
+        }
+      }
     }
     if (event.type === 'run:completed' || event.type === 'run:failed') {
       cacheInvalidate('runs');
