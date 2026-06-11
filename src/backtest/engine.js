@@ -29,7 +29,7 @@ export function availabilityRequestForBacktest(request, columnAnalysis) {
   };
 }
 
-export async function runBacktest(db, request, { onProgress } = {}) {
+export async function runBacktest(db, request, { onProgress, progressStartedAt: progressStartedAtInput } = {}) {
   const config = loadConfig();
   const useSoA = config.backtestEngine === 'soa';
   const createRunner = resolveRunnerFactory(request, config, useSoA);
@@ -53,7 +53,7 @@ export async function runBacktest(db, request, { onProgress } = {}) {
   let ticks = 0;
   let batches = 0;
   const totalTicks = Number(request.estimatedTicks || 0) || null;
-  const progressStartedAt = Date.now();
+  const progressStartedAt = Number(progressStartedAtInput) > 0 ? Number(progressStartedAtInput) : Date.now();
   const emitProgress = createProgressEmitter(onProgress, progressStartedAt);
   emitProgress({ phase: 'loading', ticks, batches, totalTicks, force: true });
 
@@ -122,18 +122,52 @@ async function runSoAEngine(db, request, ctx) {
 
   if (!columnSet) {
     const readStartedAt = Date.now();
-    columnSet = await loadBacktestColumnSet(db, {
-      from: request.from,
-      to: request.to,
-      underlying: request.underlying,
-      interval: request.interval,
-      bookDepth: ctx.effectiveBookDepth,
-      selectColumns: ctx.columnAnalysis?.scalarColumns,
-      dataset: ctx.dataset,
-      validBacktestRows: true,
-    });
+    const estimatedLoad = ctx.totalTicks || 0;
+    let loadedRows = 0;
+    const heartbeat = setInterval(() => {
+      ctx.emitProgress({
+        phase: 'loading',
+        ticks: loadedRows,
+        batches: 0,
+        totalTicks: estimatedLoad || null,
+        force: true,
+      });
+    }, 1000);
+
+    try {
+      columnSet = await loadBacktestColumnSet(db, {
+        from: request.from,
+        to: request.to,
+        underlying: request.underlying,
+        interval: request.interval,
+        bookDepth: ctx.effectiveBookDepth,
+        selectColumns: ctx.columnAnalysis?.scalarColumns,
+        dataset: ctx.dataset,
+        validBacktestRows: true,
+      }, {
+        onProgress: ({ loadedRows: nextLoaded }) => {
+          loadedRows = nextLoaded;
+          ctx.emitProgress({
+            phase: 'loading',
+            ticks: loadedRows,
+            batches: 0,
+            totalTicks: estimatedLoad || null,
+          });
+        },
+      });
+    } finally {
+      clearInterval(heartbeat);
+    }
     ctx.timings.duckdbReadMs += Date.now() - readStartedAt;
     cache.set(cacheKey, columnSet);
+  } else {
+    ctx.emitProgress({
+      phase: 'loading',
+      ticks: columnSet.length,
+      batches: 0,
+      totalTicks: columnSet.length,
+      force: true,
+    });
   }
 
   if (ctx.timings.firstBatchAt == null) ctx.timings.firstBatchAt = Date.now();
@@ -271,6 +305,8 @@ async function runRowsEngine(db, request, ctx) {
 }
 
 const PROGRESS_MIN_MS = 400;
+const LOADING_PHASE_WEIGHT = 0.12;
+const PROCESSING_PHASE_WEIGHT = 0.87;
 
 function createProgressEmitter(onProgress, startedAt) {
   let lastEmitAt = 0;
@@ -283,19 +319,58 @@ function createProgressEmitter(onProgress, startedAt) {
   };
 }
 
-function buildProgress({ phase, ticks, batches, totalTicks, startedAt }) {
+export function buildProgress({ phase, ticks, batches, totalTicks, startedAt }) {
   const elapsedMs = Math.max(Date.now() - startedAt, 1);
-  const percent = totalTicks ? Math.min(99, Math.max(0, (ticks / totalTicks) * 100)) : null;
-  const rate = ticks > 0 ? ticks / elapsedMs : 0;
-  const remainingTicks = totalTicks ? Math.max(totalTicks - ticks, 0) : null;
+  const safeTotal = totalTicks > 0 ? totalTicks : null;
+  const safeTicks = Math.max(Number(ticks) || 0, 0);
+  let percent = null;
+
+  if (phase === 'loading') {
+    const loadingIdlePercent = Math.min(
+      LOADING_PHASE_WEIGHT * 100 * 0.2,
+      (elapsedMs / 120_000) * LOADING_PHASE_WEIGHT * 100,
+    );
+    if (safeTotal && safeTicks > 0) {
+      const loadRatio = Math.min(1, safeTicks / safeTotal);
+      percent = Math.max(loadRatio * LOADING_PHASE_WEIGHT * 100, loadingIdlePercent);
+    } else if (safeTotal) {
+      // DuckDB ainda não devolveu chunks — barra mínima até o primeiro batch.
+      percent = loadingIdlePercent;
+    } else if (safeTicks > 0) {
+      percent = Math.min(LOADING_PHASE_WEIGHT * 100, 1);
+    } else {
+      percent = loadingIdlePercent;
+    }
+  } else if (phase === 'processing' && safeTotal) {
+    const processRatio = Math.min(1, safeTicks / safeTotal);
+    percent = (LOADING_PHASE_WEIGHT + processRatio * PROCESSING_PHASE_WEIGHT) * 100;
+  } else if (phase === 'finalizing') {
+    percent = 99;
+  } else if (safeTotal) {
+    percent = Math.min(99, (safeTicks / safeTotal) * 100);
+  }
+
+  const processingTicks = phase === 'loading' ? 0 : safeTicks;
+  const rate = processingTicks > 0 ? processingTicks / elapsedMs : 0;
+  const remainingTicks = phase === 'processing' && safeTotal
+    ? Math.max(safeTotal - safeTicks, 0)
+    : null;
+  const loadRemainingMs = phase === 'loading' && safeTotal && safeTicks > 0
+    ? ((safeTotal - safeTicks) / (safeTicks / elapsedMs))
+    : null;
+  const processEtaMs = rate > 0 && remainingTicks != null
+    ? (remainingTicks / rate) + (LOADING_PHASE_WEIGHT * elapsedMs)
+    : null;
+
   return {
     phase,
-    ticks,
+    ticks: safeTicks,
     batches,
-    total_ticks: totalTicks,
-    percent,
+    total_ticks: safeTotal,
+    percent: percent != null ? Math.min(99, Math.max(0, percent)) : null,
     elapsed_ms: elapsedMs,
-    eta_ms: rate > 0 && remainingTicks != null ? remainingTicks / rate : null,
+    eta_ms: phase === 'loading' ? loadRemainingMs : processEtaMs,
+    started_at: new Date(startedAt).toISOString(),
     updated_at: new Date().toISOString(),
   };
 }

@@ -8,6 +8,7 @@ import { getEdgeSniperV2GlsSource } from '../src/backtestStudio/gls/loadStrategy
 import { createColumnSetBuilder, columnSetToShared, wrapSharedColumnSet } from '../src/backtest/columnStore.js';
 import { runParallelEventSlices } from '../src/backtest/eventPool.js';
 import { runBacktestSweep } from '../src/backtest/sweep.js';
+import { applyPolymarketFeesToBacktestResult } from '../src/backtest/fees.js';
 import path from 'node:path';
 import os from 'node:os';
 import { mkdtemp, rm } from 'node:fs/promises';
@@ -67,6 +68,28 @@ test('fast-run matches full summary on simple strategy', () => {
   assert.equal(fast.summary.totalEvents, full.summary.totalEvents);
   assert.equal(fast.summary.totalEntries, full.summary.totalEntries);
   assert.equal(fast.events.length, full.events.length);
+});
+
+test('fast-run keeps order data for polymarket fees', () => {
+  const ast = parse(SIMPLE);
+  const columnSet = buildMultiEventColumnSet();
+  const runner = createGlsBacktestRunner(ast, {}, { executionMode: 'compiled-soa', bookDepth: 25, fastRun: true });
+  runner.bindColumnSet(columnSet);
+  for (const ev of columnSet.events) {
+    runner.beginEvent(ev);
+    for (let i = ev.startRow; i < ev.endRow; i += 1) runner.processIndex(i);
+    runner.endEvent(ev);
+  }
+  const result = runner.finish();
+  const traded = result.events.filter((event) => event.reason !== 'no_entry');
+  assert.ok(traded.length > 0);
+  for (const event of traded) {
+    assert.ok(Array.isArray(event.orders) && event.orders.length > 0, 'fast-run must persist entry orders for fees');
+    assert.ok(event.cost > 0 || event.quantity > 0);
+  }
+  applyPolymarketFeesToBacktestResult(result);
+  assert.ok((result.summary.feesPaid ?? 0) > 0 || (result.summary.fees?.totalFee ?? 0) > 0);
+  assert.ok((result.summary.volume ?? 0) > 0);
 });
 
 test('parallel event slices match sequential compiled-soa', async () => {

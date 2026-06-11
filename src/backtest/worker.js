@@ -47,6 +47,7 @@ try {
   };
 
   const result = await runBacktest(db, request, {
+    progressStartedAt: workerData.startedAt,
     onProgress: (progress) => parentPort?.postMessage({ type: 'progress', progress }),
   });
 

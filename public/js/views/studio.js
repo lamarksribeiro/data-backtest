@@ -53,33 +53,76 @@ let sseHandler = null;
 let studioCtx = null;
 let openEventToken = 0;
 let progressPollTimer = null;
+let progressElapsedTimer = null;
+let lastProgressSnapshot = null;
 
 function clearProgressPoll() {
   if (progressPollTimer) {
     clearInterval(progressPollTimer);
     progressPollTimer = null;
   }
+  if (progressElapsedTimer) {
+    clearInterval(progressElapsedTimer);
+    progressElapsedTimer = null;
+  }
+  lastProgressSnapshot = null;
+}
+
+function formatProgressPhase(phase) {
+  switch (String(phase || '').toLowerCase()) {
+    case 'loading': return 'Carregando dados';
+    case 'processing': return 'Processando';
+    case 'finalizing': return 'Finalizando';
+    case 'queued': return 'Na fila';
+    default: return phase || 'Aguardando';
+  }
+}
+
+function startProgressElapsedTicker() {
+  if (progressElapsedTimer) return;
+  progressElapsedTimer = setInterval(() => {
+    if (!lastProgressSnapshot?.started_at) return;
+    const started = new Date(lastProgressSnapshot.started_at).getTime();
+    if (!Number.isFinite(started)) return;
+    applyProgressUi({
+      ...lastProgressSnapshot,
+      elapsed_ms: Math.max(Date.now() - started, 1),
+    }, { skipSnapshot: true });
+  }, 500);
 }
 
 function formatProgressEta(progress) {
+  const elapsed = progress?.elapsed_ms ?? progress?.elapsedMs;
+  const elapsedSec = elapsed != null && Number.isFinite(elapsed) && elapsed > 0
+    ? Math.max(1, Math.round(elapsed / 1000))
+    : null;
+  const elapsedLabel = elapsedSec == null
+    ? null
+    : (elapsedSec < 60 ? `${elapsedSec}s decorridos` : `${Math.floor(elapsedSec / 60)}m ${elapsedSec % 60}s`);
+
   const ms = progress?.eta_ms ?? (progress?.eta != null ? Number(progress.eta) * 1000 : null);
   if (ms != null && Number.isFinite(ms) && ms > 0) {
     const sec = Math.max(1, Math.round(ms / 1000));
-    if (sec < 60) return `~${sec}s`;
-    const min = Math.floor(sec / 60);
-    const rem = sec % 60;
-    return rem ? `~${min}m ${rem}s` : `~${min}m`;
+    const etaLabel = sec < 60
+      ? `~${sec}s restantes`
+      : (() => {
+        const min = Math.floor(sec / 60);
+        const rem = sec % 60;
+        return rem ? `~${min}m ${rem}s restantes` : `~${min}m restantes`;
+      })();
+    return elapsedLabel ? `${etaLabel} · ${elapsedLabel}` : etaLabel;
   }
-  const elapsed = progress?.elapsed_ms ?? progress?.elapsedMs;
-  if (elapsed != null && Number.isFinite(elapsed) && elapsed > 0) {
-    const sec = Math.max(1, Math.round(elapsed / 1000));
-    return sec < 60 ? `${sec}s decorridos` : `${Math.floor(sec / 60)}m ${sec % 60}s`;
-  }
+
+  if (elapsedLabel) return elapsedLabel;
   return 'Calculando…';
 }
 
-function applyProgressUi(progress) {
+function applyProgressUi(progress, { skipSnapshot = false } = {}) {
   if (!progress) return;
+  if (!skipSnapshot) {
+    lastProgressSnapshot = { ...progress };
+    startProgressElapsedTicker();
+  }
   const percent = progress.percent != null ? Number(progress.percent) : 0;
   const fill = document.getElementById('studio-progress-fill');
   if (fill) fill.style.width = `${Math.min(100, Math.max(0, percent))}%`;
@@ -88,7 +131,7 @@ function applyProgressUi(progress) {
   const pct = document.getElementById('studio-progress-pct');
   if (pct) pct.textContent = `${percent.toFixed(0)}%`;
   const phase = document.getElementById('studio-progress-phase');
-  if (phase) phase.textContent = progress.phase || 'Aguardando';
+  if (phase) phase.textContent = formatProgressPhase(progress.phase);
   const ticks = document.getElementById('studio-progress-ticks');
   if (ticks) {
     ticks.textContent = `${progress.ticks || 0}${progress.total_ticks ? ` / ${progress.total_ticks}` : ''}`;
@@ -669,7 +712,7 @@ function buildEventFilters(ctx, runId) {
       el('select', {
         class: 'field__input',
         onchange: (ev) => { studioState.filterResult = ev.target.value; studioState.eventsOffset = 0; loadEvents(ctx, runId); },
-      }, ['all', 'win', 'loss', 'no_entry'].map((v) => el('option', { value: v, selected: studioState.filterResult === v }, v))),
+      }, ['all', 'win', 'loss', 'breakeven', 'no_entry'].map((v) => el('option', { value: v, selected: studioState.filterResult === v }, v))),
     ]),
     el('div', { class: 'field' }, [
       el('span', { class: 'field__label' }, 'Ordenar'),
@@ -752,7 +795,7 @@ function renderProgressPanel(container, run, ctx) {
         ]),
         el('div', { class: 'studio-progress-metric' }, [
           el('span', { class: 'studio-progress-metric__label' }, 'Fase'),
-          el('div', { class: 'studio-progress-metric__value', id: 'studio-progress-phase', style: { textTransform: 'capitalize' } }, progress.phase || 'Aguardando'),
+          el('div', { class: 'studio-progress-metric__value', id: 'studio-progress-phase' }, formatProgressPhase(progress.phase)),
         ]),
         el('div', { class: 'studio-progress-metric' }, [
           el('span', { class: 'studio-progress-metric__label' }, 'Ticks Processados'),
@@ -891,8 +934,14 @@ async function openEventDrawer(ctx, runId, eventId, index = 0, { syncUrl = true 
 
     if (activeTab === 'chart') {
       const container = document.getElementById('studio-event-chart');
-      if (chartData?.series) renderEventChartWithMarkers(container, event, chartData);
-      else if (event.series?.underlying?.length) renderEventChartWithMarkers(container, event, { series: event.series });
+      const payload = chartData?.series
+        ? chartData
+        : (event.series?.underlying?.length ? { series: event.series, series_meta: event.series_meta } : null);
+      if (payload?.series?.underlying?.length) {
+        void renderEventChartWithMarkers(container, event, payload);
+      } else if (container) {
+        mount(container, el('p', { class: 'muted' }, 'Série de preços indisponível para este evento.'));
+      }
     }
   }
 

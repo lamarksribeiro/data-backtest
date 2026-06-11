@@ -1,0 +1,49 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+
+import { buildProgress } from '../src/backtest/engine.js';
+
+test('buildProgress advances loading percent from loaded rows', () => {
+  const startedAt = Date.now() - 5000;
+  const early = buildProgress({
+    phase: 'loading',
+    ticks: 0,
+    batches: 0,
+    totalTicks: 1_000_000,
+    startedAt,
+  });
+  assert.ok((early.percent ?? 0) > 0, 'loading without rows still shows minimal activity');
+
+  const mid = buildProgress({
+    phase: 'loading',
+    ticks: 500_000,
+    batches: 0,
+    totalTicks: 1_000_000,
+    startedAt,
+  });
+  assert.ok(mid.percent > early.percent);
+  assert.ok(mid.percent < 12);
+
+  const doneLoad = buildProgress({
+    phase: 'processing',
+    ticks: 0,
+    batches: 1,
+    totalTicks: 1_000_000,
+    startedAt,
+  });
+  assert.ok(doneLoad.percent >= 12);
+});
+
+test('buildProgress maps processing ticks into weighted percent', () => {
+  const startedAt = Date.now() - 10_000;
+  const half = buildProgress({
+    phase: 'processing',
+    ticks: 500_000,
+    batches: 1,
+    totalTicks: 1_000_000,
+    startedAt,
+  });
+  assert.ok(half.percent > 50);
+  assert.ok(half.percent < 99);
+  assert.ok(half.eta_ms != null);
+});

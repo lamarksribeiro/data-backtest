@@ -183,6 +183,13 @@ function insertBacktestRunRow(db, { request, strategyMeta, totalTicks, status, p
 }
 
 export function updateBacktestRunProgress(db, id, progress) {
+  const existing = db.prepare('SELECT progress_json FROM backtest_runs WHERE id = ?').get(id);
+  const prev = existing?.progress_json ? JSON.parse(existing.progress_json) : {};
+  const merged = {
+    ...progress,
+    started_at: prev.started_at || progress.started_at || new Date().toISOString(),
+    total_ticks: progress.total_ticks ?? prev.total_ticks ?? null,
+  };
   db.prepare(`
     UPDATE backtest_runs
     SET ticks = ?, batches = ?, progress_json = ?
@@ -190,7 +197,7 @@ export function updateBacktestRunProgress(db, id, progress) {
   `).run(
     Number(progress.ticks || 0),
     Number(progress.batches || 0),
-    JSON.stringify(progress),
+    JSON.stringify(merged),
     id,
   );
 }

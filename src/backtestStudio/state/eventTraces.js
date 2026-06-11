@@ -273,7 +273,7 @@ function deriveEventResult(event) {
   const pnl = Number(event.finalPnl || 0);
   if (pnl > 0) return 'win';
   if (pnl < 0) return 'loss';
-  return 'loss';
+  return 'breakeven';
 }
 
 function buildEventMetrics(event) {

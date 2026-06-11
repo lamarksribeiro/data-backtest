@@ -136,40 +136,33 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
     else if (pnl < 0 && hadEntry) losses += 1;
 
     const closedAt = closedAtForEvent(snap, lastTick, currentEvent);
-    const eventRecord = fastRun
-      ? {
-        eventId: currentEvent.eventId,
-        eventStart: currentEvent.eventStart,
-        eventEnd: currentEvent.eventEnd,
-        finalPnl: pnl,
-        reason: snap.orders.length ? settlement.reason : 'no_entry',
-        closedAt,
-        positionType: snap.position?.side ?? (snap.orders.find((o) => o.type === 'entry')?.side ?? null),
-      }
-      : {
-        eventId: currentEvent.eventId,
-        eventStart: currentEvent.eventStart,
-        eventEnd: currentEvent.eventEnd,
+    const entryOrder = snap.orders.find((o) => o.type === 'entry');
+    const eventRecord = {
+      eventId: currentEvent.eventId,
+      eventStart: currentEvent.eventStart,
+      eventEnd: currentEvent.eventEnd,
+      positionType: snap.position?.side ?? entryOrder?.side ?? null,
+      entryTime: entryOrder?.ts ?? null,
+      quantity: entryOrder?.shares ?? 0,
+      cost: entryOrder?.notional ?? 0,
+      avgEntryPrice: entryOrder?.price ?? null,
+      orders: snap.orders,
+      exits: snap.exits,
+      expirationResult: settlement.expirationResult,
+      winnerSide: settlement.winnerSide ?? null,
+      expiryPnl: settlement.expiryPnl ?? 0,
+      finalPnl: pnl,
+      reason: snap.orders.length ? settlement.reason : 'no_entry',
+      closedAt,
+      ...(fastRun ? {} : {
         marketId: lastTick?.market_id ?? null,
-        positionType: snap.position?.side ?? (snap.orders.find((o) => o.type === 'entry')?.side ?? null),
-        entryTime: snap.orders.find((o) => o.type === 'entry')?.ts ?? null,
-        quantity: snap.orders.find((o) => o.type === 'entry')?.shares ?? 0,
-        cost: snap.orders.find((o) => o.type === 'entry')?.notional ?? 0,
-        avgEntryPrice: snap.orders.find((o) => o.type === 'entry')?.price ?? null,
-        orders: snap.orders,
-        exits: snap.exits,
         marks: trace.snapshot().marks,
         logs: trace.snapshot().logs,
         metrics: trace.snapshot().metrics,
         diagnostics: buildDiagnosticsFromState(state),
-        expirationResult: settlement.expirationResult,
-        winnerSide: settlement.winnerSide ?? null,
-        expiryPnl: settlement.expiryPnl ?? 0,
-        finalPnl: pnl,
-        reason: snap.orders.length ? settlement.reason : 'no_entry',
-        closedAt,
         ticksProcessed: samples.length,
-      };
+      }),
+    };
     events.push(eventRecord);
     equity.push({ ts: closedAt, pnl: totalPnl });
     if (!fastRun && onEventFinalized) {
