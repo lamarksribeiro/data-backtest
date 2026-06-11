@@ -768,11 +768,11 @@ Response:
 
 ### `lake_manifest`
 
-Ver `docs/implementacao-lakehouse.md` para detalhes completos.
+Ver `docs/implementacao/implementacao-lakehouse.md` para detalhes completos.
 
 ### `prepare_jobs`
 
-Ver `docs/implementacao-lakehouse.md` para detalhes completos.
+Ver `docs/implementacao/implementacao-lakehouse.md` para detalhes completos.
 
 ### `backtest_runs`
 

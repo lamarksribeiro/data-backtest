@@ -29,18 +29,18 @@ Este documento foca no lakehouse, sync, manifest, query layer e arquivamento val
 A documentacao de implementacao foi separada por area para evitar ambiguidade:
 
 ```text
-docs/implementacao-lakehouse.md          guia pratico para implementar lakehouse
-docs/operacao-lakehouse.md               runbook operacional do lakehouse
-docs/contrato-archive-retencao.md        contrato com data-colector e retencao opcional
-docs/contratos-api-schemas.md            contratos de API e schemas SQLite
-docs/paridade-edge-sniper-v2.md          evidencia do golden test nativo
+docs/implementacao/implementacao-lakehouse.md      guia pratico para implementar lakehouse
+docs/operacao/operacao-lakehouse.md                runbook operacional do lakehouse
+docs/referencia/contrato-archive-retencao.md       contrato com data-colector e retencao opcional
+docs/referencia/contratos-api-schemas.md           contratos de API e schemas SQLite
+docs/referencia/paridade-edge-sniper-v2.md         evidencia do golden test nativo
 ```
 
 A arquitetura detalhada do Backtest Studio (linguagem GLS, blocos, runtime, traces e visualizacao) esta em:
 
 ```text
-docs/arquitetura-editor-estrategias.md
-docs/implementacao-editor-backtest.md
+docs/arquitetura/arquitetura-editor-estrategias.md
+docs/implementacao/implementacao-editor-backtest.md
 ```
 
 Resumo da decisao:
@@ -669,7 +669,7 @@ audit_log completo
 
 ## Fases De Implementacao
 
-Status snapshot (jun/2026). O README e `docs/implementacao-lakehouse.md` sao a referencia operacional do que ja esta no codigo.
+Status snapshot (jun/2026). O README e `docs/implementacao/implementacao-lakehouse.md` sao a referencia operacional do que ja esta no codigo.
 
 | Fase (este doc) | Lakehouse | Status |
 |---|---|---|
@@ -844,7 +844,7 @@ Capacidade administrativa opcional. Deve nascer desativada e nao deve apagar dad
 
 ### Fase 9.2: Backtest Studio Programavel — concluida (MVP: Pre-B1 + B1–B7)
 
-> Status (jun/2026): MVP implementado no codigo. O detalhamento autoritativo (schema SQLite, linguagem GLS v1, biblioteca de blocos, runtime, traces e fases B1-B7) vive em `docs/arquitetura-editor-estrategias.md` e `docs/implementacao-editor-backtest.md`. Lacunas pos-MVP: autocomplete rico, diff entre versoes, comparador de runs, otimizador de parametros.
+> Status (jun/2026): MVP implementado no codigo. O detalhamento autoritativo (schema SQLite, linguagem GLS v1, biblioteca de blocos, runtime, traces e fases B1-B7) vive em `docs/arquitetura/arquitetura-editor-estrategias.md` e `docs/implementacao/implementacao-editor-backtest.md`. Lacunas pos-MVP: autocomplete rico, diff entre versoes, comparador de runs, otimizador de parametros.
 
 - [x] Criar tabelas `strategy_definitions` e `strategy_versions`.
 - [x] Criar CRUD de estrategias pela API.
@@ -880,7 +880,7 @@ Nao e objetivo padrao do projeto. Fazer apenas se houver decisao operacional exp
 
 ### Fase 11: Operacao No Coolify — parcial (L8)
 
-> Status (jun/2026): `Dockerfile`, `docker-compose.yml` e runbooks em `docs/operacao-lakehouse.md` existem no repositorio. Deploy Coolify, backup/restore conjunto e smoke em producao ainda **nao foram validados**.
+> Status (jun/2026): `Dockerfile`, `docker-compose.yml` e runbooks em `docs/operacao/operacao-lakehouse.md` existem no repositorio. Deploy Coolify, backup/restore conjunto e smoke em producao ainda **nao foram validados**.
 
 - [ ] Criar volume persistente `/data/goldenlens/lakehouse` (documentado; pendente validacao em producao).
 - [ ] Criar volume persistente `/data/goldenlens/backtest-state` (documentado; pendente validacao em producao).
@@ -889,9 +889,9 @@ Nao e objetivo padrao do projeto. Fazer apenas se houver decisao operacional exp
 - [ ] Configurar credenciais read-only do Postgres (ambiente dependente).
 - [x] Configurar healthcheck do `data-backtest` (`GET /healthz`, `npm run health`, `npm run ops:check`).
 - [ ] Configurar backup do lakehouse ou snapshot do disco (documentado; nao validado em producao).
-- [x] Documentar restauracao (`docs/operacao-lakehouse.md`).
-- [x] Documentar rebuild do lakehouse (`docs/operacao-lakehouse.md`).
-- [x] Documentar limpeza manual segura (`docs/operacao-lakehouse.md`).
+- [x] Documentar restauracao (`docs/operacao/operacao-lakehouse.md`).
+- [x] Documentar rebuild do lakehouse (`docs/operacao/operacao-lakehouse.md`).
+- [x] Documentar limpeza manual segura (`docs/operacao/operacao-lakehouse.md`).
 
 ### Fase 12: Opcional - Live-Tail Futuro
 

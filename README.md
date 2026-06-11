@@ -6,19 +6,23 @@ O Postgres continua como fonte de verdade operacional; o lakehouse é derivado, 
 
 ## Documentação
 
-- [Arquitetura e plano de implementação](docs/arquitetura-lakehouse-backtest.md)
-- [Implementação do lakehouse](docs/implementacao-lakehouse.md)
-- [Operação do lakehouse](docs/operacao-lakehouse.md)
-- [Contrato de archive e retenção opcional](docs/contrato-archive-retencao.md)
-- [Arquitetura do Backtest Studio programável](docs/arquitetura-editor-estrategias.md)
-- [Implementação do Backtest Studio](docs/implementacao-editor-backtest.md)
-- [Manual do Backtest Studio](docs/manual-backtest-studio.md)
-- [Contratos de API e schemas](docs/contratos-api-schemas.md)
-- [Paridade Edge Sniper V2](docs/paridade-edge-sniper-v2.md)
+Índice completo em [docs/README.md](docs/README.md).
+
+- **[Arquitetura V2 — backtest rápido, UX de estúdio](docs/arquitetura/arquitetura-v2-performance-ux.md)** (plano diretor atual)
+- [Arquitetura e plano de implementação](docs/arquitetura/arquitetura-lakehouse-backtest.md)
+- [Implementação do lakehouse](docs/implementacao/implementacao-lakehouse.md)
+- [Operação do lakehouse](docs/operacao/operacao-lakehouse.md)
+- [Deploy via Coolify](docs/operacao/deploy-coolify.md)
+- [Contrato de archive e retenção opcional](docs/referencia/contrato-archive-retencao.md)
+- [Arquitetura do Backtest Studio programável](docs/arquitetura/arquitetura-editor-estrategias.md)
+- [Implementação do Backtest Studio](docs/implementacao/implementacao-editor-backtest.md)
+- [Manual do Backtest Studio](docs/referencia/manual-backtest-studio.md)
+- [Contratos de API e schemas](docs/referencia/contratos-api-schemas.md)
+- [Paridade Edge Sniper V2](docs/referencia/paridade-edge-sniper-v2.md)
 
 ## Status atual
 
-Snapshot operacional: lakehouse **L1–L7 concluído**; Backtest Studio **Pre-B1, B1–B7 concluídos**; pendente **L5** e validação **L8** em produção. Detalhes por fase em [Implementação do lakehouse](docs/implementacao-lakehouse.md) e [Implementação do Backtest Studio](docs/implementacao-editor-backtest.md).
+Snapshot operacional: lakehouse **L1–L7 concluído**; Backtest Studio **Pre-B1, B1–B7 concluídos**; pendente **L5** e validação **L8** em produção. Detalhes por fase em [Implementação do lakehouse](docs/implementacao/implementacao-lakehouse.md) e [Implementação do Backtest Studio](docs/implementacao/implementacao-editor-backtest.md).
 
 Os paths `arquitetura-editor-estrategias.md` e `implementacao-editor-backtest.md` são históricos; o conteúdo descreve o Backtest Studio.
 
@@ -54,9 +58,9 @@ Os paths `arquitetura-editor-estrategias.md` e `implementacao-editor-backtest.md
 - Engine de backtest no `data-backtest` com `DuckDbTickProvider` em batches.
 - Estratégias salvas/versionadas executadas pelo Backtest Studio sobre `backtest_ticks` do lakehouse.
 
-Paridade da estratégia seed Edge Sniper V2 GLS contra a referência legada já validada (ver [Paridade Edge Sniper V2](docs/paridade-edge-sniper-v2.md)). A API HTTP e a UI do lakehouse (`src/api/server.js`, `public/`) já estão no ar com disponibilidade, prepare jobs e execução de estratégias versionadas.
+Paridade da estratégia seed Edge Sniper V2 GLS contra a referência legada já validada (ver [Paridade Edge Sniper V2](docs/referencia/paridade-edge-sniper-v2.md)). A API HTTP e a UI do lakehouse (`src/api/server.js`, `public/`) já estão no ar com disponibilidade, prepare jobs e execução de estratégias versionadas.
 
-Runs são normalizados em `backtest_event_traces` após cada execução. A UI inclui **Run Detail & Event Explorer** (resumo do run, params, snapshot, tabela de eventos, gráfico BTC vs PTB com markers, logs) e endpoints `GET /api/backtest/runs/:id`, `/events`, `/events/:eventTraceId` e `/chart-data`. CRUD de `strategy_definitions` / `strategy_versions` (B1), editor GLS (B2), validador/runtime GLS (B3–B4), execução de estratégias salvas sobre o lakehouse (B5), visualização completa (B6) e seed GLS Edge Sniper V2 (B7) também estão disponíveis. Ver [Implementação do Backtest Studio](docs/implementacao-editor-backtest.md) e [Paridade Edge Sniper V2](docs/paridade-edge-sniper-v2.md).
+Runs são normalizados em `backtest_event_traces` após cada execução. A UI inclui **Run Detail & Event Explorer** (resumo do run, params, snapshot, tabela de eventos, gráfico BTC vs PTB com markers, logs) e endpoints `GET /api/backtest/runs/:id`, `/events`, `/events/:eventTraceId` e `/chart-data`. CRUD de `strategy_definitions` / `strategy_versions` (B1), editor GLS (B2), validador/runtime GLS (B3–B4), execução de estratégias salvas sobre o lakehouse (B5), visualização completa (B6) e seed GLS Edge Sniper V2 (B7) também estão disponíveis. Ver [Implementação do Backtest Studio](docs/implementacao/implementacao-editor-backtest.md) e [Paridade Edge Sniper V2](docs/referencia/paridade-edge-sniper-v2.md).
 
 ### Backtest Studio concluído (Pre-B1, B1–B7)
 
@@ -72,10 +76,10 @@ Runs são normalizados em `backtest_event_traces` após cada execução. A UI in
 
 ### Pendente
 
-- **L8 (produção):** `Dockerfile` e `docker-compose.yml` existem no repositório com volumes `/lake` e `/state`, mas deploy Coolify, backup/restore conjunto e smoke em produção ainda **não foram validados**. Use `npm run ops:check` para validar health + `active_path` antes de backup; ver [Operação do lakehouse](docs/operacao-lakehouse.md). No Docker local, defina também `SESSION_SECRET` e credenciais admin (ver seção Login).
+- **L8 (produção):** `Dockerfile` e `docker-compose.yml` existem no repositório com volumes `/lake` e `/state`, mas deploy Coolify, backup/restore conjunto e smoke em produção ainda **não foram validados**. Use `npm run ops:check` para validar health + `active_path` antes de backup; ver [Operação do lakehouse](docs/operacao/operacao-lakehouse.md). No Docker local, defina também `SESSION_SECRET` e credenciais admin (ver seção Login).
 - **L5:** `PostgresTickProvider`, `HybridTickProvider`, `streamEvents` e `streamCandles` ainda pendentes (`queryCandles` pontual ja existe).
 - **Archive `data-colector`:** endpoints e migracao `event_archive_status` no coletor ainda pendentes; o `data-backtest` ja publica status validado.
-- **Pós-MVP Backtest Studio:** autocomplete rico, diff entre versões, comparador visual de runs, otimizador de parâmetros. Ver [Manual do Backtest Studio](docs/manual-backtest-studio.md).
+- **Pós-MVP Backtest Studio:** autocomplete rico, diff entre versões, comparador visual de runs, otimizador de parâmetros. Roteiro detalhado em [Arquitetura V2](docs/arquitetura/arquitetura-v2-performance-ux.md); ver também [Manual do Backtest Studio](docs/referencia/manual-backtest-studio.md).
 
 ### Mapa de fases
 
@@ -172,9 +176,9 @@ npm test
 
 `npm run health` inicializa o banco local de estado, garante o layout básico do lakehouse e retorna estatísticas do manifest.
 
-`npm run api` sobe a API HTTP do `data-backtest` em `DATA_BACKTEST_PORT` (default `3100`) e serve a UI **Data Runner · Backtest** (sidebar, login, rotas hash) em `http://localhost:3100`. Endpoints principais: auth (`POST /api/login`, `POST /api/logout`, `GET /api/me`), lakehouse (`/healthz`, `/api/manifest`, `/api/availability`, `/api/prepare`, `/api/prepare/run`, jobs), backtest (`/api/backtest/run`, `/api/backtest/runs`, eventos, chart-data) e estratégias GLS (`/api/strategies`, versões, `/api/strategies/validate`, `/api/strategy-blocks`). Fluxo de uso: [Manual do Backtest Studio](docs/manual-backtest-studio.md).
+`npm run api` sobe a API HTTP do `data-backtest` em `DATA_BACKTEST_PORT` (default `3100`) e serve a UI **Data Runner · Backtest** (sidebar, login, rotas hash) em `http://localhost:3100`. Endpoints principais: auth (`POST /api/login`, `POST /api/logout`, `GET /api/me`), lakehouse (`/healthz`, `/api/manifest`, `/api/availability`, `/api/prepare`, `/api/prepare/run`, jobs), backtest (`/api/backtest/run`, `/api/backtest/runs`, eventos, chart-data) e estratégias GLS (`/api/strategies`, versões, `/api/strategies/validate`, `/api/strategy-blocks`). Fluxo de uso: [Manual do Backtest Studio](docs/referencia/manual-backtest-studio.md).
 
-Deploy local com Docker: `docker compose up --build` monta volumes nomeados em `/lake` e `/state`. Para Coolify, mapear volumes persistentes conforme [Operação do lakehouse](docs/operacao-lakehouse.md); validação de backup local: `npm run ops:check`.
+Deploy local com Docker: `docker compose up --build` monta volumes nomeados em `/lake` e `/state`. Para Coolify, mapear volumes persistentes conforme [Operação do lakehouse](docs/operacao/operacao-lakehouse.md); validação de backup local: `npm run ops:check`.
 
 Exemplo de disponibilidade via API:
 

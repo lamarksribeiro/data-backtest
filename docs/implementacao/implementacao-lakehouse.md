@@ -6,9 +6,9 @@ Este documento e o guia de implementacao do lakehouse do `data-backtest`.
 
 Ele complementa:
 
-- `docs/arquitetura-lakehouse-backtest.md`
-- `docs/operacao-lakehouse.md`
-- `docs/contrato-archive-retencao.md`
+- `docs/arquitetura/arquitetura-lakehouse-backtest.md`
+- `docs/operacao/operacao-lakehouse.md`
+- `docs/referencia/contrato-archive-retencao.md`
 
 Objetivo pratico: permitir implementar ou revisar o lakehouse sem depender de contexto de conversa.
 
@@ -37,7 +37,7 @@ Fora do escopo deste documento:
 - visualizacao detalhada de backtest;
 - retencao real do Postgres.
 
-Esses pontos ficam em `docs/arquitetura-editor-estrategias.md` e `docs/implementacao-editor-backtest.md`.
+Esses pontos ficam em `docs/arquitetura/arquitetura-editor-estrategias.md` e `docs/implementacao/implementacao-editor-backtest.md`.
 
 ## Estado Atual Esperado
 
@@ -79,7 +79,7 @@ Snapshot jun/2026. Detalhes no README.
 | L7 Backtest basico | concluida |
 | L8 Operacao | parcial (docs prontos; validacao Coolify/backup pendente) |
 
-Proximo trabalho documentado: **L8** (validar deploy Coolify, backup/restore de `/lake` + `/state`) e **L5** (`PostgresTickProvider`, `HybridTickProvider`, `streamEvents`). Backtest Studio Pre-B1 + B1–B7 concluidos (MVP); ver `docs/implementacao-editor-backtest.md`.
+Proximo trabalho documentado: **L8** (validar deploy Coolify, backup/restore de `/lake` + `/state`) e **L5** (`PostgresTickProvider`, `HybridTickProvider`, `streamEvents`). Backtest Studio Pre-B1 + B1–B7 concluidos (MVP); ver `docs/implementacao/implementacao-editor-backtest.md`.
 
 ## Estrutura De Diretorios
 
@@ -803,7 +803,7 @@ GET  /api/backtest/runs
 POST /api/backtest/run
 ```
 
-Contratos completos de request/response em `docs/contratos-api-schemas.md`.
+Contratos completos de request/response em `docs/referencia/contratos-api-schemas.md`.
 
 Regras:
 
@@ -961,11 +961,11 @@ Esta fase valida que o lakehouse alimenta um backtest real. Ela nao torna `edge-
 
 ### Fase L8: Operacao — parcial
 
-> Status (jun/2026): artefatos de container (`Dockerfile`, `docker-compose.yml`) e runbooks em `docs/operacao-lakehouse.md` prontos no repo. Validacao operacional em Coolify/producao ainda pendente.
+> Status (jun/2026): artefatos de container (`Dockerfile`, `docker-compose.yml`) e runbooks em `docs/operacao/operacao-lakehouse.md` prontos no repo. Validacao operacional em Coolify/producao ainda pendente.
 
 - [x] Documentar backfill.
 - [x] Criar `Dockerfile` e `docker-compose.yml` com volumes `/lake` e `/state`.
-- [x] Documentar auth da UI (`SESSION_SECRET`, login obrigatorio) em README e `docs/operacao-lakehouse.md`.
+- [x] Documentar auth da UI (`SESSION_SECRET`, login obrigatorio) em README e `docs/operacao/operacao-lakehouse.md`.
 - [ ] Validar ambiente temporario end-to-end.
 - [ ] Validar Coolify volumes e deploy real.
 - [x] Configurar healthcheck (`GET /healthz`, `npm run ops:check`).

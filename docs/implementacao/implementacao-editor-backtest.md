@@ -76,7 +76,7 @@ Status revisado em 2026-06-05: a implementacao MVP do Backtest Studio ja existe 
 
 Hoje, runs nativos ja persistem `events`, `equity` e `log` dentro de `backtest_runs.result_json`. O pre-B1 normaliza isso em `backtest_event_traces` e expoe endpoints de detalhe antes do CRUD de estrategias.
 
-Equivalencia com `docs/arquitetura-editor-estrategias.md`: A→B1, B→B3, C→B4, D→B5, E→pre-B1+B6, F→B7, G→pos-MVP.
+Equivalencia com `docs/arquitetura/arquitetura-editor-estrategias.md`: A→B1, B→B3, C→B4, D→B5, E→pre-B1+B6, F→B7, G→pos-MVP.
 
 ## Principios
 
@@ -363,7 +363,7 @@ Formato de erro:
 
 Bloco = funcao reutilizavel, documentada e testada.
 
-> Fonte de verdade: esta secao e o catalogo canonico das assinaturas da biblioteca padrao GLS v1. O documento `docs/arquitetura-editor-estrategias.md` descreve a intencao conceitual e deve seguir estas assinaturas. Se houver divergencia, vale o que esta aqui.
+> Fonte de verdade: esta secao e o catalogo canonico das assinaturas da biblioteca padrao GLS v1. O documento `docs/arquitetura/arquitetura-editor-estrategias.md` descreve a intencao conceitual e deve seguir estas assinaturas. Se houver divergencia, vale o que esta aqui.
 
 Convencoes:
 
@@ -921,7 +921,7 @@ Response:
 - [x] Adicionar blocos faltantes.
 - [x] Reescrever edge-sniper em GLS (`src/backtestStudio/gls/strategies/edgeSniperV2.gls`).
 - [x] Rodar paridade com runner nativo (`tests/edgeSniperGlsParity.test.js`).
-- [x] Documentar divergencias (`docs/paridade-edge-sniper-v2.md`).
+- [x] Documentar divergencias (`docs/referencia/paridade-edge-sniper-v2.md`).
 
 ## Estrategia De Testes
 

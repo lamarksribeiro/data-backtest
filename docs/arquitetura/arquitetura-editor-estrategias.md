@@ -251,7 +251,7 @@ Assim, a estrategia fica didatica e modificavel, mas a parte dificil fica encaps
 
 ## Categorias De Blocos
 
-> As assinaturas canonicas (com argumentos e a separacao MVP vs estendido) ficam em `docs/implementacao-editor-backtest.md`, secao "Biblioteca Padrao De Blocos". Esta secao e a visao conceitual por categoria. Em caso de divergencia, vale o documento de implementacao.
+> As assinaturas canonicas (com argumentos e a separacao MVP vs estendido) ficam em `docs/implementacao/implementacao-editor-backtest.md`, secao "Biblioteca Padrao De Blocos". Esta secao e a visao conceitual por categoria. Em caso de divergencia, vale o documento de implementacao.
 
 ### `market`
 
@@ -800,7 +800,7 @@ Detalhe de evento usa `eventTraceId` (PK de `backtest_event_traces`). `chart-dat
 
 ## Fases De Implementacao
 
-> Equivalencia com `docs/implementacao-editor-backtest.md`: Fase A→B1, B→B3, C→B4, D→B5, E→pre-B1+B6, F→B7, G→pos-MVP.
+> Equivalencia com `docs/implementacao/implementacao-editor-backtest.md`: Fase A→B1, B→B3, C→B4, D→B5, E→pre-B1+B6, F→B7, G→pos-MVP.
 
 Status (jun/2026):
 
