@@ -102,7 +102,17 @@ function syncAction(command, params, request, extra = {}) {
   if (params.bookDepth != null) args.push('--book-depth', String(params.bookDepth));
   if (params.resolution) args.push('--resolution', params.resolution);
   if (request.rebuild) args.push('--rebuild');
-  return { command, args, ...extra };
+  return {
+    command,
+    args,
+    from: params.from,
+    to: params.to,
+    underlying: params.underlying,
+    interval: params.interval,
+    book_depth: params.bookDepth ?? null,
+    resolution: params.resolution ?? null,
+    ...extra,
+  };
 }
 
 function collapseDatesToRanges(dates) {

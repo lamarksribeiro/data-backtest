@@ -54,14 +54,26 @@ export function buildDataFixPlan(db, request, config) {
   };
 }
 
+function actionDateLabel(action, field) {
+  const direct = action?.[field];
+  if (direct) return String(direct).slice(0, 10);
+  const args = action?.args || [];
+  const flag = field === 'from' ? '--from' : '--to';
+  const idx = args.indexOf(flag);
+  if (idx >= 0 && args[idx + 1]) return String(args[idx + 1]).slice(0, 10);
+  return '?';
+}
+
 export function describeFixActions(preparation = []) {
   return preparation.map((action) => {
+    const from = actionDateLabel(action, 'from');
+    const to = actionDateLabel(action, 'to');
     const cmd = action.command || '';
-    if (cmd.includes('scalars') || cmd === 'sync:backfill') return `Re-exportar scalars de ${action.from?.slice(0, 10)} a ${action.to?.slice(0, 10)}`;
-    if (cmd.includes('books')) return `Sincronizar books de ${action.from?.slice(0, 10)} a ${action.to?.slice(0, 10)}`;
-    if (cmd.includes('backtest-ticks')) return `Gerar backtest_ticks de ${action.from?.slice(0, 10)} a ${action.to?.slice(0, 10)}`;
-    if (cmd.includes('ohlc')) return `Gerar OHLC de ${action.from?.slice(0, 10)} a ${action.to?.slice(0, 10)}`;
-    return `Preparar ${action.from?.slice(0, 10)} → ${action.to?.slice(0, 10)}`;
+    if (cmd.includes('scalars') || cmd === 'sync:backfill') return `Re-exportar scalars de ${from} a ${to}`;
+    if (cmd.includes('books')) return `Sincronizar books de ${from} a ${to}`;
+    if (cmd.includes('backtest-ticks')) return `Gerar backtest_ticks de ${from} a ${to}`;
+    if (cmd.includes('ohlc')) return `Gerar OHLC de ${from} a ${to}`;
+    return `Preparar ${from} → ${to}`;
   });
 }
 

@@ -7,7 +7,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { openStateDatabase, closeStateDatabase } from '../src/state/sqlite.js';
 import { upsertManifestPartition } from '../src/state/manifest.js';
 import { getDataCoverage, mapStatusToUiState, aggregateCoverageDays } from '../src/query/coverageUi.js';
-import { buildDataFixPlan } from '../src/data/fixPipeline.js';
+import { buildDataFixPlan, describeFixActions } from '../src/data/fixPipeline.js';
 import { testServerConfig } from './testAuth.js';
 
 test('mapStatusToUiState maps 9 statuses to 3 UI states', () => {
@@ -68,6 +68,17 @@ test('getDataCoverage aggregates days with derived ui_state', async () => {
   }
 });
 
+test('describeFixActions reads dates from preparation args', () => {
+  const lines = describeFixActions([{
+    command: 'sync:backfill-backtest-ticks',
+    args: ['--from', '2026-05-01T00:00:00.000Z', '--to', '2026-05-08T00:00:00.000Z', '--underlying', 'BTC', '--interval', '5m', '--book-depth', '25'],
+  }]);
+  assert.equal(lines.length, 1);
+  assert.match(lines[0], /2026-05-01/);
+  assert.match(lines[0], /2026-05-08/);
+  assert.doesNotMatch(lines[0], /undefined/);
+});
+
 test('buildDataFixPlan returns summary for unavailable window', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'fix-plan-'));
   const config = testServerConfig({ stateDbPath: path.join(dir, 'state.db') });
@@ -83,6 +94,8 @@ test('buildDataFixPlan returns summary for unavailable window', async () => {
     }, config);
     assert.equal(built.ready, false);
     assert.ok(built.summary);
+    const lines = describeFixActions(built.preparation);
+    for (const line of lines) assert.doesNotMatch(line, /undefined/);
   } finally {
     closeStateDatabase(db);
     await rm(dir, { recursive: true, force: true });
