@@ -17,6 +17,7 @@ import { connectSse, disconnectSse } from '../utils/sse.js';
 import { cacheInvalidate, cachedFetch } from '../utils/apiCache.js';
 import { navigate as routerNavigate } from '../router.js';
 import { renderUplotLine } from '../utils/uplotChart.js';
+import { confirmDialog } from '../utils/confirm.js';
 
 const EVENTS_PAGE = 100;
 
@@ -49,6 +50,62 @@ function debounce(fn, delay) {
 let sseHandler = null;
 let studioCtx = null;
 let openEventToken = 0;
+let progressPollTimer = null;
+
+function clearProgressPoll() {
+  if (progressPollTimer) {
+    clearInterval(progressPollTimer);
+    progressPollTimer = null;
+  }
+}
+
+function formatProgressEta(progress) {
+  const ms = progress?.eta_ms ?? (progress?.eta != null ? Number(progress.eta) * 1000 : null);
+  if (ms == null || !Number.isFinite(ms) || ms <= 0) return 'Calculando…';
+  const sec = Math.max(1, Math.round(ms / 1000));
+  if (sec < 60) return `~${sec}s`;
+  const min = Math.floor(sec / 60);
+  const rem = sec % 60;
+  return rem ? `~${min}m ${rem}s` : `~${min}m`;
+}
+
+function applyProgressUi(progress) {
+  if (!progress) return;
+  const percent = progress.percent != null ? Number(progress.percent) : 0;
+  const fill = document.getElementById('studio-progress-fill');
+  if (fill) fill.style.width = `${Math.min(100, Math.max(0, percent))}%`;
+  const pct = document.getElementById('studio-progress-pct');
+  if (pct) pct.textContent = `${percent.toFixed(0)}%`;
+  const phase = document.getElementById('studio-progress-phase');
+  if (phase) phase.textContent = progress.phase || 'Aguardando';
+  const ticks = document.getElementById('studio-progress-ticks');
+  if (ticks) {
+    ticks.textContent = `${progress.ticks || 0}${progress.total_ticks ? ` / ${progress.total_ticks}` : ''}`;
+  }
+  const eta = document.getElementById('studio-progress-eta');
+  if (eta) eta.textContent = formatProgressEta(progress);
+}
+
+function startProgressPoll(ctx, runId) {
+  clearProgressPoll();
+  progressPollTimer = setInterval(async () => {
+    if (studioState.selectedRunId !== runId) {
+      clearProgressPoll();
+      return;
+    }
+    const res = await ctx.api.get(`/api/backtest/runs/${runId}?slim=1`);
+    if (!res.ok) return;
+    const run = res.data.run;
+    if (run.status !== 'running' && run.status !== 'queued') {
+      clearProgressPoll();
+      cacheInvalidate('runs');
+      await refreshRuns(ctx);
+      await loadRunDetail(ctx, runId);
+      return;
+    }
+    if (run.progress) applyProgressUi(run.progress);
+  }, 2000);
+}
 
 function parseStudioQuery() {
   const hash = location.hash.replace(/^#\/?/, '');
@@ -88,6 +145,7 @@ let shortcutsBound = false;
 
 export async function renderStudio(ctx) {
   studioCtx = ctx;
+  clearProgressPoll();
   ctx.setBreadcrumb('studio', 'Estúdio');
   ctx.renderContextBar?.();
 
@@ -429,6 +487,7 @@ async function loadRunDetail(ctx, runId) {
   const main = document.getElementById('studio-main');
   if (!main) return;
   resetMetricsViewMode();
+  clearProgressPoll();
 
   if (studioState.compareIds.length >= 2) {
     const res = await ctx.api.get(`/api/backtest/compare?ids=${studioState.compareIds.join(',')}`);
@@ -547,7 +606,7 @@ async function showAnalysisTab(ctx, runId, run, summary) {
 
 function renderProgressPanel(container, run, ctx) {
   const progress = run.progress || { phase: 'queued', ticks: 0, total_ticks: null, percent: 0 };
-  const percentVal = progress.percent != null ? progress.percent : 0;
+  const percentVal = progress.percent != null ? Number(progress.percent) : 0;
   mount(container, el('div', { class: 'studio-progress-panel' }, [
     el('div', { class: 'studio-progress-card' }, [
       el('div', { class: 'studio-progress-card__head' }, [
@@ -555,9 +614,6 @@ function renderProgressPanel(container, run, ctx) {
         StatusBadge({ status: run.status }),
       ]),
       progress.depends_on_job ? el('p', { class: 'muted', id: 'studio-progress-depends' }, `Aguardando job #${progress.depends_on_job}`) : null,
-      el('div', { class: 'studio-progress-bar' }, [
-        el('span', { class: 'studio-progress-fill', id: 'studio-progress-fill', style: { width: `${percentVal}%` } }),
-      ]),
       el('div', { class: 'studio-progress-metrics' }, [
         el('div', { class: 'studio-progress-metric' }, [
           el('span', { class: 'studio-progress-metric__label' }, 'Progresso'),
@@ -573,20 +629,40 @@ function renderProgressPanel(container, run, ctx) {
         ]),
         el('div', { class: 'studio-progress-metric' }, [
           el('span', { class: 'studio-progress-metric__label' }, 'ETA'),
-          el('div', { class: 'studio-progress-metric__value', id: 'studio-progress-eta' }, progress.eta != null ? `${progress.eta}s` : 'Calculando…'),
+          el('div', { class: 'studio-progress-metric__value', id: 'studio-progress-eta' }, formatProgressEta(progress)),
         ]),
+      ]),
+      el('div', { class: 'studio-progress-bar', role: 'progressbar', 'aria-valuenow': String(Math.round(percentVal)), 'aria-valuemin': '0', 'aria-valuemax': '100' }, [
+        el('span', { class: 'studio-progress-fill', id: 'studio-progress-fill', style: { width: `${Math.min(100, Math.max(0, percentVal))}%` } }),
       ]),
       el('button', {
         type: 'button',
         class: 'btn btn--danger btn--sm',
         onclick: async () => {
-          if (!confirm('Cancelar backtest?')) return;
+          const ok = await confirmDialog({
+            title: 'Cancelar backtest',
+            message: `Cancelar o backtest #${run.id}?`,
+            detail: 'O processamento será interrompido. Runs já concluídos não são afetados.',
+            confirmLabel: 'Cancelar backtest',
+            cancelLabel: 'Continuar',
+            tone: 'danger',
+          });
+          if (!ok) return;
+          clearProgressPoll();
           const cancelRes = await ctx.api.post(`/api/backtest/runs/${run.id}/cancel`);
-          if (cancelRes.ok) { cacheInvalidate('runs'); await refreshRuns(ctx); await loadRunDetail(ctx, run.id); }
+          if (cancelRes.ok) {
+            cacheInvalidate('runs');
+            await refreshRuns(ctx);
+            await loadRunDetail(ctx, run.id);
+            ctx.toast.ok('Backtest cancelado');
+          } else {
+            ctx.toast.err(cancelRes.error?.message || 'Falha ao cancelar');
+          }
         },
       }, 'Cancelar'),
     ]),
   ]));
+  if (run.status === 'running' || run.status === 'queued') startProgressPoll(ctx, run.id);
 }
 
 function renderVirtualEventTable(events, ctx, runId) {
@@ -713,16 +789,11 @@ function bindSse(ctx) {
   if (sseHandler) disconnectSse(sseHandler);
   sseHandler = (event) => {
     if (event.type === 'run:progress' && event.runId === studioState.selectedRunId) {
-      const fill = document.getElementById('studio-progress-fill');
-      if (fill) fill.style.width = `${event.progress?.percent || 0}%`;
-      const pct = document.getElementById('studio-progress-pct');
-      if (pct) pct.textContent = `${(event.progress?.percent || 0).toFixed(0)}%`;
-      const phase = document.getElementById('studio-progress-phase');
-      if (phase) phase.textContent = event.progress?.phase || 'Aguardando';
-      const ticks = document.getElementById('studio-progress-ticks');
-      if (ticks) ticks.textContent = `${event.progress?.ticks || 0}${event.progress?.total_ticks ? ` / ${event.progress?.total_ticks}` : ''}`;
-      const eta = document.getElementById('studio-progress-eta');
-      if (eta) eta.textContent = event.progress?.eta != null ? `${event.progress?.eta}s` : 'Calculando…';
+      applyProgressUi(event.progress);
+      const bar = document.querySelector('.studio-progress-bar');
+      if (bar && event.progress?.percent != null) {
+        bar.setAttribute('aria-valuenow', String(Math.round(event.progress.percent)));
+      }
       const depends = document.getElementById('studio-progress-depends');
       if (depends) {
         if (event.progress?.depends_on_job) {
@@ -731,6 +802,11 @@ function bindSse(ctx) {
         } else {
           depends.hidden = true;
         }
+      }
+      const item = document.getElementById(`run-item-${event.runId}`);
+      const pnlEl = item?.querySelector('.studio-run-item__pnl');
+      if (pnlEl && event.progress?.percent != null) {
+        pnlEl.textContent = `Rodando (${event.progress.percent.toFixed(0)}%)`;
       }
     }
     if (event.type === 'run:completed' || event.type === 'run:failed') {

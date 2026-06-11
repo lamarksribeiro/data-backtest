@@ -4915,11 +4915,14 @@ i.fa-solid, i.fa-regular, i.fa-brands {
   border: 1px solid rgba(255, 255, 255, 0.04);
 }
 .studio-progress-fill {
+  display: block;
   height: 100%;
+  min-width: 0;
   background: linear-gradient(90deg, var(--accent, #f97316), var(--warn, #f59e0b));
   border-radius: 99px;
   width: 0%;
-  transition: width 0.2s ease;
+  transition: width 0.25s ease;
+  box-shadow: 0 0 8px rgba(249, 115, 22, 0.35);
 }
 .studio-progress-metrics {
   display: grid;
