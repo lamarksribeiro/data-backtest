@@ -77,6 +77,12 @@ function actionsForRange(request, range) {
   if (request.dataset === 'backtest_ticks') {
     return [syncAction('sync:backfill-backtest-ticks', { ...base, bookDepth: request.bookDepth }, request)];
   }
+  if (request.dataset === 'backtest_ticks_lite') {
+    return [
+      syncAction('sync:backfill-backtest-ticks', { ...base, bookDepth: request.bookDepth }, request, { prerequisite: true }),
+      syncAction('sync:backfill-backtest-ticks-lite', { ...base, bookDepth: request.bookDepth }, request),
+    ];
+  }
   if (request.dataset === 'ohlc') {
     return [
       syncAction('sync:backfill', base, request, { prerequisite: true }),

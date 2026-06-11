@@ -1,3 +1,6 @@
+import path from 'node:path';
+
+import { readChartSidecarForEvent } from '../../backtest/chartSidecar.js';
 import { queryChartTicks } from '../../query/duckdbQuery.js';
 import { downsamplePoints } from '../../utils/downsample.js';
 
@@ -18,16 +21,55 @@ export function persistEventTraces(db, runId, result, { transaction = true } = {
   return persistEventTracesRows(db, runId, result);
 }
 
+const INSERT_TRACE_SQL = `
+  INSERT INTO backtest_event_traces (
+    run_id, condition_id, market_id, event_start, event_end, side,
+    entries_count, exits_count, final_pnl, result, reason, ticks_count,
+    summary_json, orders_json, marks_json, logs_json, metrics_json, chart_series_path
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`;
+
+export function appendEventTraceBatch(db, runId, result, { chartSeriesPath = null } = {}) {
+  const rows = normalizeEventsFromResult(runId, result);
+  if (!rows.length) return 0;
+  const insert = db.prepare(INSERT_TRACE_SQL);
+  db.exec('BEGIN IMMEDIATE');
+  try {
+    for (const row of rows) {
+      const seriesPath = row.chart_series_path ?? chartSeriesPath;
+      insert.run(
+        row.run_id,
+        row.condition_id,
+        row.market_id,
+        row.event_start,
+        row.event_end,
+        row.side,
+        row.entries_count,
+        row.exits_count,
+        row.final_pnl,
+        row.result,
+        row.reason,
+        row.ticks_count,
+        JSON.stringify(row.summary),
+        JSON.stringify(row.orders),
+        JSON.stringify(row.marks),
+        JSON.stringify(row.logs),
+        JSON.stringify(row.metrics),
+        seriesPath,
+      );
+    }
+    db.exec('COMMIT');
+    return rows.length;
+  } catch (err) {
+    db.exec('ROLLBACK');
+    throw err;
+  }
+}
+
 function persistEventTracesRows(db, runId, result) {
   db.prepare('DELETE FROM backtest_event_traces WHERE run_id = ?').run(runId);
   const rows = normalizeEventsFromResult(runId, result);
-  const insert = db.prepare(`
-    INSERT INTO backtest_event_traces (
-      run_id, condition_id, market_id, event_start, event_end, side,
-      entries_count, exits_count, final_pnl, result, reason, ticks_count,
-      summary_json, orders_json, marks_json, logs_json, metrics_json
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
+  const insert = db.prepare(INSERT_TRACE_SQL);
   for (const row of rows) {
     insert.run(
       row.run_id,
@@ -47,13 +89,21 @@ function persistEventTracesRows(db, runId, result) {
       JSON.stringify(row.marks),
       JSON.stringify(row.logs),
       JSON.stringify(row.metrics),
+      row.chart_series_path ?? null,
     );
   }
   return listEventTraces(db, runId);
 }
 
-export function listEventTraces(db, runId, { result, limit = 100, offset = 0 } = {}) {
-  const safeLimit = Math.min(Math.max(Number.parseInt(String(limit), 10) || 100, 1), 500);
+export function listEventTraces(db, runId, {
+  result,
+  reason,
+  q,
+  sort = 'default',
+  limit = 100,
+  offset = 0,
+} = {}) {
+  const safeLimit = Math.min(Math.max(Number.parseInt(String(limit), 10) || 100, 1), 5000);
   const safeOffset = Math.max(Number.parseInt(String(offset), 10) || 0, 0);
   let sql = 'SELECT * FROM backtest_event_traces WHERE run_id = ?';
   const params = [runId];
@@ -61,19 +111,43 @@ export function listEventTraces(db, runId, { result, limit = 100, offset = 0 } =
     sql += ' AND result = ?';
     params.push(String(result));
   }
-  sql += `
-    ORDER BY
-      CASE WHEN entries_count > 0 OR result IN ('win', 'loss') THEN 0 ELSE 1 END ASC,
-      ABS(final_pnl) DESC,
-      event_start ASC
-    LIMIT ? OFFSET ?`;
+  if (reason) {
+    sql += ' AND reason = ?';
+    params.push(String(reason));
+  }
+  if (q) {
+    sql += ' AND condition_id LIKE ?';
+    params.push(`%${String(q)}%`);
+  }
+  sql += ` ORDER BY ${orderClauseForSort(sort)} LIMIT ? OFFSET ?`;
   params.push(safeLimit, safeOffset);
   return db.prepare(sql).all(...params).map(toApiEventSummary);
 }
 
-export function getEventTrace(db, runId, eventTraceId) {
+function orderClauseForSort(sort) {
+  switch (String(sort)) {
+    case 'pnl_asc': return 'final_pnl ASC, event_start ASC';
+    case 'pnl_desc': return 'final_pnl DESC, event_start ASC';
+    case 'event_start': return 'event_start ASC';
+    case 'event_start_desc': return 'event_start DESC';
+    default:
+      return `CASE WHEN entries_count > 0 OR result IN ('win', 'loss') THEN 0 ELSE 1 END ASC,
+        ABS(final_pnl) DESC, event_start ASC`;
+  }
+}
+
+export function getEventTrace(db, runId, eventTraceId, { stateDbPath = null } = {}) {
   const row = db.prepare('SELECT * FROM backtest_event_traces WHERE run_id = ? AND id = ?').get(runId, eventTraceId);
-  return row ? toApiEventDetail(row) : null;
+  if (!row) return null;
+  const detail = toApiEventDetail(row);
+  if (stateDbPath && row.chart_series_path) {
+    const sidecar = readChartSidecarForEvent(row.chart_series_path, row.condition_id);
+    if (sidecar?.series) {
+      detail.series = sidecar.series;
+      detail.series_meta = sidecar.meta;
+    }
+  }
+  return detail;
 }
 
 export function getEventTraceByConditionId(db, runId, conditionId) {
@@ -172,6 +246,7 @@ function normalizeEventsFromResult(runId, result) {
       marks: Array.isArray(event.marks) ? event.marks : [],
       logs,
       metrics: buildEventMetrics(event),
+      chart_series_path: event.chart_series_path ?? null,
     };
   });
 }

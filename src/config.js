@@ -38,7 +38,16 @@ export function loadConfig(env = process.env) {
     INITIAL_ADMIN_USERNAME: String(env.INITIAL_ADMIN_USERNAME || 'admin').trim(),
     INITIAL_ADMIN_PASSWORD: String(env.INITIAL_ADMIN_PASSWORD || '').trim(),
     TEST_MODE: testMode,
+    glsExecution: normalizeGlsExecution(env.GLS_EXECUTION),
+    maxConcurrentBacktests: Math.max(Number.parseInt(String(env.MAX_CONCURRENT_BACKTESTS || '1'), 10) || 1, 1),
+    datasetCacheMaxMb: Math.max(Number.parseInt(String(env.DATASET_CACHE_MAX_MB ?? '512'), 10) || 0, 0),
+    prepareMaxConcurrent: Math.max(Number.parseInt(String(env.PREPARE_MAX_CONCURRENT || '2'), 10) || 2, 1),
   };
+}
+
+function normalizeGlsExecution(value) {
+  const mode = String(value || 'compiled').trim().toLowerCase();
+  return mode === 'interpreter' ? 'interpreter' : 'compiled';
 }
 
 export function requireSourceDatabaseUrl(config) {

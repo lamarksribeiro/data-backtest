@@ -3,7 +3,9 @@ export function el(tag, attrs = {}, children = []) {
   for (const [k, v] of Object.entries(attrs)) {
     if (v == null || v === false) continue;
     if (k === 'class') node.className = v;
-    else if (k === 'dataset' && typeof v === 'object') {
+    else if (k === 'innerHTML') {
+      node.innerHTML = v;
+    } else if (k === 'dataset' && typeof v === 'object') {
       for (const [dk, dv] of Object.entries(v)) node.dataset[dk] = dv;
     } else if (k === 'style' && typeof v === 'object') {
       Object.assign(node.style, v);

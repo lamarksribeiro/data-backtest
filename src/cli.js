@@ -15,6 +15,7 @@ import {
   reconcileScalarsPartition,
 } from './sync/scalars.js';
 import { exportBacktestTicksPartition, exportBooksPartition, listBookPartitions } from './sync/bookDatasets.js';
+import { exportBacktestTicksLitePartition, listValidBacktestTicksManifestPartitions } from './sync/backtestTicksLite.js';
 import { exportOhlcFromScalarsPartition, listValidScalarManifestPartitions, normalizeOhlcResolutions } from './sync/ohlc.js';
 import { checkDatasetAvailability } from './query/availability.js';
 import { resolveDataRequest } from './query/dataMode.js';
@@ -73,6 +74,7 @@ Commands:
   sync:backfill   Exports sealed scalars partitions to Parquet
   sync:backfill-books Exports raw books partitions to Parquet
   sync:backfill-backtest-ticks Exports flattened backtest tick partitions to Parquet
+  sync:backfill-backtest-ticks-lite Derives scalar-only backtest_ticks_lite from valid backtest_ticks
   sync:backfill-ohlc Exports OHLC candles from valid scalars Parquet
   sync:incremental Exports recent sealed scalars partitions using SYNC_MARGIN_MINUTES
   sync:reconcile-scalars Recomputes source fingerprints and marks changed scalars stale
@@ -82,6 +84,7 @@ Sync examples:
   node src/cli.js sync:backfill --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --dry-run
   node src/cli.js sync:backfill-books --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --dry-run
   node src/cli.js sync:backfill-backtest-ticks --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --dry-run
+  node src/cli.js sync:backfill-backtest-ticks-lite --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --dry-run
   node src/cli.js sync:backfill-ohlc --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --resolution 1m --dry-run
   node src/cli.js sync:incremental --lookback-days 2 --underlying BTC --interval 5m
   node src/cli.js sync:reconcile-scalars --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --dry-run
@@ -330,7 +333,8 @@ async function main() {
               allowNeedsReview: optionalBoolFlag(flags, 'allow-needs-review'),
             }));
           } else {
-            results.push(await exportBacktestTicksPartition({
+            const bookDepth = optionalIntFlag(flags, 'book-depth') ?? config.backtestBookDepth;
+            const tickResult = await exportBacktestTicksPartition({
               config,
               db,
               pool,
@@ -338,14 +342,52 @@ async function main() {
               dryRun: optionalBoolFlag(flags, 'dry-run'),
               rebuild: optionalBoolFlag(flags, 'rebuild'),
               allowNeedsReview: optionalBoolFlag(flags, 'allow-needs-review'),
-              bookDepth: optionalIntFlag(flags, 'book-depth') ?? config.backtestBookDepth,
-            }));
+              bookDepth,
+            });
+            results.push(tickResult);
+            if (!optionalBoolFlag(flags, 'dry-run') && !tickResult?.skipped) {
+              results.push(await exportBacktestTicksLitePartition({
+                config,
+                db,
+                partition: { ...partition, bookDepth },
+                dryRun: false,
+                rebuild: optionalBoolFlag(flags, 'rebuild'),
+              }));
+            }
           }
         }
         printJson({ partitions: results });
       } finally {
         await closeSourcePool(pool);
       }
+      return;
+    }
+
+    if (command === 'sync:backfill-backtest-ticks-lite') {
+      const range = toRange(flags);
+      const bookDepth = optionalIntFlag(flags, 'book-depth') ?? config.backtestBookDepth;
+      const partitions = listValidBacktestTicksManifestPartitions(db, {
+        ...range,
+        underlying: flags.underlying ? String(flags.underlying).toUpperCase() : null,
+        interval: flags.interval ? String(flags.interval) : null,
+        bookDepth,
+      });
+      const results = [];
+      for (const row of partitions) {
+        results.push(await exportBacktestTicksLitePartition({
+          config,
+          db,
+          partition: {
+            underlying: row.underlying,
+            interval: row.interval,
+            bookDepth: row.book_depth,
+            dt: row.dt,
+          },
+          dryRun: optionalBoolFlag(flags, 'dry-run'),
+          rebuild: optionalBoolFlag(flags, 'rebuild'),
+        }));
+      }
+      printJson({ partitions: results });
       return;
     }
 

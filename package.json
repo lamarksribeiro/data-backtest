@@ -25,12 +25,14 @@
     "sync:backfill": "node src/cli.js sync:backfill",
     "sync:backfill-books": "node src/cli.js sync:backfill-books",
     "sync:backfill-backtest-ticks": "node src/cli.js sync:backfill-backtest-ticks",
+    "sync:backfill-backtest-ticks-lite": "node src/cli.js sync:backfill-backtest-ticks-lite",
     "sync:backfill-ohlc": "node src/cli.js sync:backfill-ohlc",
     "sync:incremental": "node src/cli.js sync:incremental",
     "sync:reconcile-scalars": "node src/cli.js sync:reconcile-scalars",
     "storage:check": "node src/cli.js storage:check",
     "ops:check": "node src/cli.js ops:check",
-    "test": "node --test tests/*.test.js"
+    "test": "node --test tests/*.test.js",
+    "bench:backtest": "node scripts/bench-backtest.js"
   },
   "dependencies": {
     "@duckdb/node-api": "^1.5.3-r.2",

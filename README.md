@@ -8,6 +8,12 @@ O Postgres continua como fonte de verdade operacional; o lakehouse é derivado, 
 
 Índice completo em [docs/README.md](docs/README.md).
 
+### Arquitetura e evolução
+- [Arquitetura Backtest v2](arquitetura-backtest-v2.md)
+- [Refatoração e melhorias](refatoracao-melhorias.md)
+
+### Guia de docs
+
 - **[Arquitetura V2 — backtest rápido, UX de estúdio](docs/arquitetura/arquitetura-v2-performance-ux.md)** (plano diretor atual)
 - [Arquitetura e plano de implementação](docs/arquitetura/arquitetura-lakehouse-backtest.md)
 - [Implementação do lakehouse](docs/implementacao/implementacao-lakehouse.md)

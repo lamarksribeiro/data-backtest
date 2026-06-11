@@ -1,5 +1,6 @@
 import { exportScalarsPartition, listScalarPartitions } from '../sync/scalars.js';
 import { exportBacktestTicksPartition, exportBooksPartition, listBookPartitions } from '../sync/bookDatasets.js';
+import { exportBacktestTicksLitePartition, listValidBacktestTicksManifestPartitions } from '../sync/backtestTicksLite.js';
 import { exportOhlcFromScalarsPartition, listValidScalarManifestPartitions } from '../sync/ohlc.js';
 import { closeSourcePool, createSourcePool } from '../source/postgres.js';
 import { PrepareJobCancelledError } from './errors.js';
@@ -57,10 +58,8 @@ async function executePreparationAction({
     return withSourcePool(config, async (pool) => {
       const partitions = await listScalarPartitions(pool, range);
       onProgress?.({ partitions_total: partitions.length, partitions_done: 0 });
-      const partitionsResult = [];
-      for (let partitionIndex = 0; partitionIndex < partitions.length; partitionIndex += 1) {
+      const partitionsResult = await mapPool(partitions, config.prepareMaxConcurrent || 2, async (partition, partitionIndex) => {
         assertNotCancelled(shouldCancel);
-        const partition = partitions[partitionIndex];
         onProgress?.({
           action_index: actionIndex,
           actions_total: actionsTotal,
@@ -69,7 +68,7 @@ async function executePreparationAction({
           partitions_done: partitionIndex,
           current: { dt: partition.dt, phase: 'starting', partition_index: partitionIndex + 1 },
         });
-        const result = await exportScalarsPartition({
+        return exportScalarsPartition({
           config,
           db,
           pool,
@@ -87,8 +86,9 @@ async function executePreparationAction({
             ...(patch.files ? { files: patch.files } : {}),
           }),
         });
-        partitionsResult.push(result);
-        appendFileProgress(onProgress, result, partitionIndex + 1, partitions.length, actionIndex, actionsTotal, action.command);
+      });
+      for (let i = 0; i < partitionsResult.length; i += 1) {
+        appendFileProgress(onProgress, partitionsResult[i], i + 1, partitions.length, actionIndex, actionsTotal, action.command);
       }
       onProgress?.({ partitions_done: partitions.length, current: null });
       return { command: action.command, dryRun, partitions: partitionsResult };
@@ -99,48 +99,101 @@ async function executePreparationAction({
     return withSourcePool(config, async (pool) => {
       const partitions = await listBookPartitions(pool, range);
       onProgress?.({ partitions_total: partitions.length, partitions_done: 0 });
-      const partitionsResult = [];
-      for (let partitionIndex = 0; partitionIndex < partitions.length; partitionIndex += 1) {
-        assertNotCancelled(shouldCancel);
-        const partition = partitions[partitionIndex];
-        const exportFn = action.command === 'sync:backfill-books'
-          ? exportBooksPartition
-          : exportBacktestTicksPartition;
-        const exportArgs = {
-          config,
-          db,
-          pool,
-          partition,
-          dryRun,
-          rebuild: Boolean(flags.rebuild),
-          allowNeedsReview: Boolean(flags['allow-needs-review']),
-          onProgress: (patch) => onProgress?.({
+      const bookDepth = Number(flags['book-depth'] || flags.bookDepth || config.backtestBookDepth);
+      const partitionsResult = await mapPool(
+        partitions,
+        action.command === 'sync:backfill-backtest-ticks' ? (config.prepareMaxConcurrent || 2) : 1,
+        async (partition, partitionIndex) => {
+          assertNotCancelled(shouldCancel);
+          const exportFn = action.command === 'sync:backfill-books'
+            ? exportBooksPartition
+            : exportBacktestTicksPartition;
+          const exportArgs = {
+            config,
+            db,
+            pool,
+            partition,
+            dryRun,
+            rebuild: Boolean(flags.rebuild),
+            allowNeedsReview: Boolean(flags['allow-needs-review']),
+            onProgress: (patch) => onProgress?.({
+              action_index: actionIndex,
+              actions_total: actionsTotal,
+              action_command: action.command,
+              partitions_total: partitions.length,
+              partitions_done: partitionIndex,
+              current: { dt: partition.dt, partition_index: partitionIndex + 1, ...patch.current },
+            }),
+          };
+          if (action.command === 'sync:backfill-backtest-ticks') {
+            exportArgs.bookDepth = bookDepth;
+          }
+          onProgress?.({
             action_index: actionIndex,
             actions_total: actionsTotal,
             action_command: action.command,
             partitions_total: partitions.length,
             partitions_done: partitionIndex,
-            current: { dt: partition.dt, partition_index: partitionIndex + 1, ...patch.current },
-          }),
-        };
-        if (action.command === 'sync:backfill-backtest-ticks') {
-          exportArgs.bookDepth = Number(flags['book-depth'] || flags.bookDepth || config.backtestBookDepth);
-        }
-        onProgress?.({
-          action_index: actionIndex,
-          actions_total: actionsTotal,
-          action_command: action.command,
-          partitions_total: partitions.length,
-          partitions_done: partitionIndex,
-          current: { dt: partition.dt, phase: 'starting', partition_index: partitionIndex + 1 },
-        });
-        const result = await exportFn(exportArgs);
-        partitionsResult.push(result);
-        appendFileProgress(onProgress, result, partitionIndex + 1, partitions.length, actionIndex, actionsTotal, action.command);
-      }
+            current: { dt: partition.dt, phase: 'starting', partition_index: partitionIndex + 1 },
+          });
+          const result = await exportFn(exportArgs);
+          if (action.command === 'sync:backfill-backtest-ticks' && !dryRun && !result?.skipped) {
+            await exportBacktestTicksLitePartition({
+              config,
+              db,
+              partition: { ...partition, bookDepth },
+              dryRun: false,
+              rebuild: Boolean(flags.rebuild),
+            });
+          }
+          appendFileProgress(onProgress, result, partitionIndex + 1, partitions.length, actionIndex, actionsTotal, action.command);
+          return result;
+        },
+      );
       onProgress?.({ partitions_done: partitions.length, current: null });
       return { command: action.command, dryRun, partitions: partitionsResult };
     });
+  }
+
+  if (action.command === 'sync:backfill-backtest-ticks-lite') {
+    const bookDepth = Number(flags['book-depth'] || flags.bookDepth || config.backtestBookDepth);
+    const manifestPartitions = listValidBacktestTicksManifestPartitions(db, {
+      from: range.from,
+      to: range.to,
+      underlying: range.underlying,
+      interval: range.interval,
+      bookDepth,
+    });
+    onProgress?.({ partitions_total: manifestPartitions.length, partitions_done: 0 });
+    const partitionsResult = [];
+    for (let partitionIndex = 0; partitionIndex < manifestPartitions.length; partitionIndex += 1) {
+      assertNotCancelled(shouldCancel);
+      const row = manifestPartitions[partitionIndex];
+      onProgress?.({
+        action_index: actionIndex,
+        actions_total: actionsTotal,
+        action_command: action.command,
+        partitions_total: manifestPartitions.length,
+        partitions_done: partitionIndex,
+        current: { dt: row.dt, phase: 'starting', partition_index: partitionIndex + 1 },
+      });
+      const result = await exportBacktestTicksLitePartition({
+        config,
+        db,
+        partition: {
+          underlying: row.underlying,
+          interval: row.interval,
+          bookDepth: row.book_depth,
+          dt: row.dt,
+        },
+        dryRun,
+        rebuild: Boolean(flags.rebuild),
+      });
+      partitionsResult.push(result);
+      appendFileProgress(onProgress, result, partitionIndex + 1, manifestPartitions.length, actionIndex, actionsTotal, action.command);
+    }
+    onProgress?.({ partitions_done: manifestPartitions.length, current: null });
+    return { command: action.command, dryRun, partitions: partitionsResult };
   }
 
   if (action.command === 'sync:backfill-ohlc') {
@@ -232,4 +285,18 @@ function flagsFromArgs(args) {
 function requiredFlag(flags, key) {
   if (!flags[key]) throw new Error(`Missing preparation arg: --${key}`);
   return String(flags[key]);
+}
+
+async function mapPool(items, concurrency, mapper) {
+  const results = new Array(items.length);
+  let nextIndex = 0;
+  const workers = Array.from({ length: Math.min(concurrency, items.length) }, async () => {
+    while (nextIndex < items.length) {
+      const index = nextIndex;
+      nextIndex += 1;
+      results[index] = await mapper(items[index], index);
+    }
+  });
+  await Promise.all(workers);
+  return results;
 }

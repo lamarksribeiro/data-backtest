@@ -17,7 +17,11 @@ import { checkDatasetAvailability } from '../query/availability.js';
 import { resolveDataRequest } from '../query/dataMode.js';
 import { datasetRequestFromObject, datasetRequestFromParams } from '../query/request.js';
 import { createPrepareJobRunner } from '../prepare/runner.js';
-import { runBacktest } from '../backtest/engine.js';
+import { compareBacktestRuns, getRunAnalysis } from '../backtest/analysis.js';
+import { createBacktestQueue } from '../backtest/queue.js';
+import { analyzeStrategyColumns } from '../backtestStudio/gls/compiler.js';
+import { availabilityRequestForBacktest, runBacktest } from '../backtest/engine.js';
+import { addSseClient, broadcastSse } from './sseHub.js';
 import {
   cancelBacktestRun,
   completeBacktestRun,
@@ -62,10 +66,17 @@ export function createApiHandler(deps) {
     config,
     db,
     authService,
-    prepareRunner = createPrepareJobRunner({ config, db }),
+    prepareRunner,
   } = deps;
   const authMiddleware = deps.authMiddleware || createAuthMiddleware({ authService, config });
   const activeBacktestWorkers = new Map();
+  const onSseEvent = (event) => broadcastSse(event);
+  const resolvedPrepareRunner = prepareRunner ?? createPrepareJobRunner({ config, db, onEvent: onSseEvent });
+  const backtestQueue = createBacktestQueue({
+    config,
+    db,
+    onEvent: onSseEvent,
+  });
 
   let sharedSourcePool = null;
   function getSourcePool() {
@@ -117,6 +128,10 @@ export function createApiHandler(deps) {
       if (pathname.startsWith('/api/')) {
         const allowed = await authMiddleware.requireApiAuth(req, res, pathname);
         if (!allowed) return;
+      }
+
+      if (req.method === 'GET' && pathname === '/api/stream') {
+        return addSseClient(res);
       }
 
       if (req.method === 'GET' && (pathname === '/' || pathname === '/index.html')) {
@@ -249,6 +264,16 @@ export function createApiHandler(deps) {
       if (req.method === 'GET' && url.pathname === '/api/prepare/jobs') {
         return sendJson(res, 200, { jobs: listPrepareJobs(db, { limit: url.searchParams.get('limit') }) });
       }
+      if (req.method === 'GET' && url.pathname === '/api/backtest/compare') {
+        const ids = String(url.searchParams.get('ids') || '')
+          .split(',')
+          .map((v) => Number.parseInt(v.trim(), 10))
+          .filter((v) => Number.isFinite(v));
+        if (ids.length < 2) {
+          return sendJson(res, 400, { error: { code: 'REQUEST_FAILED', message: 'ids must list at least 2 run ids' } });
+        }
+        return sendJson(res, 200, compareBacktestRuns(db, ids.slice(0, 4)));
+      }
       if (req.method === 'GET' && url.pathname === '/api/backtest/runs') {
         return sendJson(res, 200, { runs: listBacktestRuns(db, {
           limit: url.searchParams.get('limit'),
@@ -283,22 +308,36 @@ export function createApiHandler(deps) {
               error: { code: 'CANCEL_FAILED', message: `Backtest cannot be cancelled while ${run.status}` },
             });
           }
+          backtestQueue.cancel(backtestRunRoute.runId);
           const worker = activeBacktestWorkers.get(backtestRunRoute.runId);
           if (worker) await worker.terminate();
           const cancelled = cancelBacktestRun(db, backtestRunRoute.runId) || getBacktestRun(db, backtestRunRoute.runId, { includeEquity: false });
           return sendJson(res, 200, { ok: true, run: cancelled });
         }
+        if (req.method === 'GET' && backtestRunRoute.kind === 'analysis') {
+          return sendJson(res, 200, { analysis: getRunAnalysis(db, backtestRunRoute.runId) });
+        }
         if (req.method === 'GET' && backtestRunRoute.kind === 'events') {
-          return sendJson(res, 200, {
-            events: listEventTraces(db, backtestRunRoute.runId, {
-              result: url.searchParams.get('result') || undefined,
-              limit: url.searchParams.get('limit') || undefined,
-              offset: url.searchParams.get('offset') || undefined,
-            }),
-          });
+          const listOpts = {
+            result: url.searchParams.get('filter[result]') || url.searchParams.get('result') || undefined,
+            reason: url.searchParams.get('filter[reason]') || undefined,
+            q: url.searchParams.get('q') || undefined,
+            sort: url.searchParams.get('sort') || undefined,
+            limit: url.searchParams.get('limit') || undefined,
+            offset: url.searchParams.get('offset') || undefined,
+          };
+          const events = listEventTraces(db, backtestRunRoute.runId, listOpts);
+          if (url.searchParams.get('format') === 'csv') {
+            res.writeHead(200, { 'Content-Type': 'text/csv; charset=utf-8' });
+            res.end(eventsToCsv(events));
+            return;
+          }
+          return sendJson(res, 200, { events });
         }
         if (req.method === 'GET' && backtestRunRoute.kind === 'event-detail') {
-          const event = getEventTrace(db, backtestRunRoute.runId, backtestRunRoute.eventTraceId);
+          const event = getEventTrace(db, backtestRunRoute.runId, backtestRunRoute.eventTraceId, {
+            stateDbPath: config.stateDbPath,
+          });
           return event
             ? sendJson(res, 200, { event: toEventDetailResponse(event) })
             : sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Event trace not found' } });
@@ -390,9 +429,13 @@ export function createApiHandler(deps) {
         } catch (err) {
           return sendJson(res, 400, { error: { code: 'REQUEST_FAILED', message: err.message } });
         }
-        const strict = resolveDataRequest(db, request, 'strict');
+        const dataRequest = availabilityRequestForBacktest(
+          request,
+          request.columnAnalysis ?? (request.glsAst ? analyzeStrategyColumns(request.glsAst, request.bookDepth ?? 25) : null),
+        );
+        const strict = resolveDataRequest(db, dataRequest, 'strict');
         if (!strict.ready) {
-          const prepare = resolveDataRequest(db, request, 'prepare');
+          const prepare = resolveDataRequest(db, dataRequest, 'prepare');
           return sendJson(res, 409, {
             error: {
               code: 'DATA_NOT_READY',
@@ -405,13 +448,13 @@ export function createApiHandler(deps) {
         const estimatedTicks = estimateTicks(strict.availability);
         request.estimatedTicks = estimatedTicks;
         if (body.async === true) {
-          const run = createRunningBacktestRun(db, {
+          const run = backtestQueue.enqueue({
             request,
             strategyMeta: request.strategyMeta ?? null,
             totalTicks: estimatedTicks,
+            startedAt,
           });
-          startBacktestWorker({ config, db, runId: run.id, request, startedAt, activeBacktestWorkers });
-          return sendJson(res, 202, { run });
+          return sendJson(res, 202, { run, queuePosition: run.queuePosition ?? null });
         }
         try {
           const result = await runBacktest(db, request);
@@ -450,7 +493,7 @@ export function createApiHandler(deps) {
             request,
             result: failedResult,
             strategyMeta: request.strategyMeta ?? null,
-            status: 'failed_runtime',
+            status: failedResult.ticks > 0 ? 'partial' : 'failed_runtime',
             error: err.message,
             startedAt,
           });
@@ -467,7 +510,7 @@ export function createApiHandler(deps) {
           return sendJson(res, 200, { job });
         }
         if (req.method === 'POST' && prepareJobRoute.kind === 'cancel') {
-          const result = prepareRunner.cancel(prepareJobRoute.jobId);
+          const result = resolvedPrepareRunner.cancel(prepareJobRoute.jobId);
           if (!result.ok) {
             return sendJson(res, 409, {
               error: {
@@ -492,7 +535,7 @@ export function createApiHandler(deps) {
             },
           });
         }
-        const job = prepareRunner.enqueue({
+        const job = resolvedPrepareRunner.enqueue({
           request,
           mode: body.mode || 'prepare',
           dryRun,
@@ -739,6 +782,7 @@ function backtestRequestFromBody(body, config, db) {
     ...dataRequest,
     batchSize: positiveIntValue(body.batch_size ?? body.batchSize, 10_000),
     params: parseParams(body.params),
+    fastRun: body.fast_run === true || body.fastRun === true,
   };
 
   const strategyId = positiveOptionalInt(body.strategy_id);
@@ -747,35 +791,45 @@ function backtestRequestFromBody(body, config, db) {
     throw new Error('strategy_id and strategy_version_id are required');
   }
 
-  if (strategyId && strategyVersionId) {
-    const strategy = getStrategy(db, strategyId);
-    if (!strategy) throw new Error('Strategy not found');
-    const version = getStrategyVersion(db, strategyId, strategyVersionId);
-    if (!version) throw new Error('Strategy version not found');
-    if (!version.validation?.ok) throw new Error('Strategy version failed validation');
-    return {
-      ...base,
-      feeOptions: {
-        category: body.polymarketFeeCategory || body.feeCategory,
-        feeRate: body.polymarketFeeRate ?? body.feeRate,
-        enabled: body.applyPolymarketFees !== false,
-      },
-      strategy: `gls:${strategy.slug}`,
-      strategyLabel: version.source_code.match(/strategy\s+"([^"]+)"/)?.[1] || strategy.name,
-      glsAst: parse(version.source_code),
-      strategyMeta: {
-        strategy_id: strategyId,
-        strategy_version_id: strategyVersionId,
-        slug: strategy.slug,
-        name: strategy.name,
-        version: version.version,
-        language: version.language,
-        source_code: version.source_code,
-        params_schema: version.params_schema,
-        checksum: version.checksum,
-      },
-    };
-  }
+  const strategy = getStrategy(db, strategyId);
+  if (!strategy) throw new Error('Strategy not found');
+  const version = getStrategyVersion(db, strategyId, strategyVersionId);
+  if (!version) throw new Error('Strategy version not found');
+  if (!version.validation?.ok) throw new Error('Strategy version failed validation');
+  const glsAst = parse(version.source_code);
+  const columnAnalysis = analyzeStrategyColumns(glsAst, dataRequest.bookDepth ?? 25);
+  const glsExecution = normalizeOptionalGlsExecution(body.gls_execution ?? body.glsExecution);
+  return {
+    ...base,
+    feeOptions: {
+      category: body.polymarketFeeCategory || body.feeCategory,
+      feeRate: body.polymarketFeeRate ?? body.feeRate,
+      enabled: body.applyPolymarketFees !== false,
+    },
+    strategy: `gls:${strategy.slug}`,
+    strategyLabel: version.source_code.match(/strategy\s+"([^"]+)"/)?.[1] || strategy.name,
+    glsAst,
+    columnAnalysis,
+    glsExecution,
+    strategyMeta: {
+      strategy_id: strategyId,
+      strategy_version_id: strategyVersionId,
+      slug: strategy.slug,
+      name: strategy.name,
+      version: version.version,
+      language: version.language,
+      source_code: version.source_code,
+      params_schema: version.params_schema,
+      checksum: version.checksum,
+    },
+  };
+}
+
+function normalizeOptionalGlsExecution(value) {
+  if (value == null || value === '') return undefined;
+  const mode = String(value).trim().toLowerCase();
+  if (mode === 'compiled' || mode === 'interpreter') return mode;
+  throw new Error('gls_execution must be compiled or interpreter');
 }
 
 async function runBacktestInBackground({ db, runId, request, startedAt }) {
@@ -925,7 +979,28 @@ function matchBacktestRunRoute(pathname) {
     return Number.isFinite(eventTraceId) ? { kind: 'event-detail', runId, eventTraceId } : null;
   }
   if (parts[4] === 'chart-data' && parts.length === 5) return { kind: 'chart-data', runId };
+  if (parts[4] === 'analysis' && parts.length === 5) return { kind: 'analysis', runId };
   return null;
+}
+
+function eventsToCsv(events) {
+  const header = 'id,condition_id,event_start,side,final_pnl,result,reason,ticks_count';
+  const rows = (events || []).map((e) => [
+    e.id,
+    e.condition_id,
+    e.event_start,
+    e.side ?? '',
+    e.final_pnl,
+    e.result ?? '',
+    e.reason ?? '',
+    e.ticks_count ?? 0,
+  ].map(csvEscape).join(','));
+  return `${header}\n${rows.join('\n')}\n`;
+}
+
+function csvEscape(value) {
+  const s = String(value ?? '');
+  return s.includes(',') || s.includes('"') ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
 function matchStrategyRoute(pathname) {

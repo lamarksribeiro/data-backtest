@@ -366,6 +366,25 @@ function formatNumber(value) {
   return Number(value).toFixed(8);
 }
 
+export async function writeParquetFromSelect({ sql, tempPath, finalPath }) {
+  await mkdir(path.dirname(tempPath), { recursive: true });
+  await mkdir(path.dirname(finalPath), { recursive: true });
+  await rm(tempPath, { force: true });
+
+  const instance = await DuckDBInstance.create(':memory:');
+  const connection = await instance.connect();
+  try {
+    await configureDuckDb(connection);
+    await connection.run(`COPY (${sql}) TO ${quotedString(tempPath)} (FORMAT PARQUET, COMPRESSION ZSTD)`);
+  } finally {
+    connection.closeSync();
+    instance.closeSync();
+  }
+
+  await rm(finalPath, { force: true });
+  await rename(tempPath, finalPath);
+}
+
 function appendScalarColumns(appender, row) {
   appender.appendVarchar(row.marketId);
   appender.appendVarchar(row.underlying);

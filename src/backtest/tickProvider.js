@@ -1,7 +1,7 @@
 import { toLegacyBacktestTick } from '../legacy/polymarketTestAdapter.js';
 import { openBacktestTickSession } from '../query/duckdbQuery.js';
 
-const DEFAULT_BATCH_SIZE = 10_000;
+const DEFAULT_BATCH_SIZE = 25_000;
 
 export class DuckDbTickProvider {
   constructor(db, defaults = {}) {
@@ -15,7 +15,9 @@ export class DuckDbTickProvider {
     const session = await openBacktestTickSession(this.db, {
       ...this.defaults,
       ...request,
+      dataset: request.dataset ?? this.defaults.dataset ?? 'backtest_ticks',
       bookDepth: this.defaults.bookDepth ?? request.bookDepth ?? 25,
+      selectColumns: request.selectColumns ?? this.defaults.selectColumns,
       validBacktestRows: true,
       jsonSafe: legacy,
     });

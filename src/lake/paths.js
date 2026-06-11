@@ -4,6 +4,7 @@ const DATASET_PATHS = new Map([
   ['scalars', 'scalars'],
   ['books', 'books'],
   ['backtest_ticks', 'backtest_ticks'],
+  ['backtest_ticks_lite', 'backtest_ticks_lite'],
   ['ohlc', 'ohlc'],
 ]);
 

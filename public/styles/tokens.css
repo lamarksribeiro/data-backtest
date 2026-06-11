@@ -1,0 +1,17 @@
+:root {
+  --ds-bg: #090d16;
+  --ds-surface: #111827;
+  --ds-accent: #f97316;
+  --ds-ok: #10b981;
+  --ds-warn: #f59e0b;
+  --ds-err: #ef4444;
+  --ds-text: #e5e7eb;
+  --ds-muted: #9ca3af;
+  --ds-radius: 10px;
+  --ds-space-1: 4px;
+  --ds-space-2: 8px;
+  --ds-space-3: 12px;
+  --ds-space-4: 16px;
+  --ds-font: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --ds-mono: 'JetBrains Mono', ui-monospace, monospace;
+}

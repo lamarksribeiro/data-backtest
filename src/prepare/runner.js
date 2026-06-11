@@ -12,7 +12,7 @@ import {
 import { executePreparationActions } from './executor.js';
 import { PrepareJobCancelledError } from './errors.js';
 
-export function createPrepareJobRunner({ config, db, executeActions = executePreparationActions }) {
+export function createPrepareJobRunner({ config, db, executeActions = executePreparationActions, onEvent }) {
   let running = false;
   let idleResolvers = [];
   let currentJobId = null;
@@ -39,7 +39,7 @@ export function createPrepareJobRunner({ config, db, executeActions = executePre
     return { ok: false, reason: 'not_cancellable', status: job.status };
   }
 
-  function createProgressReporter(job) {
+  function createProgressReporter(job, emitEvent) {
     const startedAt = job.started_at || new Date().toISOString();
     let progress = {
       started_at: startedAt,
@@ -70,6 +70,7 @@ export function createPrepareJobRunner({ config, db, executeActions = executePre
       if (!force && now - lastPersistMs < 1000) return;
       lastPersistMs = now;
       updatePrepareJobProgress(db, job.id, progress);
+      emitEvent?.({ type: 'job:progress', jobId: job.id, status: 'running', progress });
     };
   }
 
@@ -82,7 +83,7 @@ export function createPrepareJobRunner({ config, db, executeActions = executePre
     currentJobId = job.id;
     cancelRequested = false;
     markPrepareJobRunning(db, job.id);
-    const reportProgress = createProgressReporter(job);
+    const reportProgress = createProgressReporter(job, onEvent);
 
     try {
       if (cancelRequested) throw new PrepareJobCancelledError();
@@ -101,11 +102,14 @@ export function createPrepareJobRunner({ config, db, executeActions = executePre
           }),
         };
       markPrepareJobCompleted(db, job.id, result);
+      onEvent?.({ type: 'job:completed', jobId: job.id, status: 'completed' });
     } catch (err) {
       if (err instanceof PrepareJobCancelledError || cancelRequested) {
         markPrepareJobCancelled(db, job.id, err.message || 'cancelado pelo operador');
+        onEvent?.({ type: 'job:completed', jobId: job.id, status: 'cancelled' });
       } else {
         markPrepareJobFailed(db, job.id, err);
+        onEvent?.({ type: 'job:failed', jobId: job.id, status: 'failed', error: err.message });
       }
     } finally {
       running = false;

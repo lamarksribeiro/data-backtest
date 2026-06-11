@@ -2,7 +2,9 @@ import { createStandardLibrary, normalizeTick, buildEventFromTick } from './stan
 import { createOrderSimulator, settleEventPnl } from './orderSimulator.js';
 import { createTraceCollector } from './traceCollector.js';
 import { DEBUG_FUNCTIONS, ORDER_FUNCTIONS } from './blocks.js';
+import { compileStrategy } from './compiler.js';
 import { parse } from './parser.js';
+import { loadConfig } from '../../config.js';
 
 const DEFAULT_LIMITS = {
   maxRuntimeMs: 900000,
@@ -16,7 +18,13 @@ const DEFAULT_LIMITS = {
 export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
   if (!ast || ast.type !== 'Strategy') throw new Error('Invalid GLS strategy AST');
   const params = mergeParams(ast.params, rawParams);
-  const limits = { ...DEFAULT_LIMITS, ...options.limits };
+  const fastRun = Boolean(options.fastRun);
+  const limits = {
+    ...DEFAULT_LIMITS,
+    ...options.limits,
+    ...(fastRun ? { maxLogsPerEvent: 20, maxMarksPerEvent: 20 } : {}),
+  };
+  const onEventFinalized = typeof options.onEventFinalized === 'function' ? options.onEventFinalized : null;
   const lib = createStandardLibrary();
 
   const events = [];
@@ -41,7 +49,9 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
   let sharedCtx = null;
   let currentLastTick = null;
   let startedAt = null;
-  const interpreter = createInterpreter();
+  const executionMode = options.executionMode ?? loadConfig().glsExecution;
+  const compiled = executionMode === 'compiled' ? compileStrategy(ast) : null;
+  const interpreter = executionMode === 'interpreter' ? createInterpreter() : null;
 
   function mergeParams(declarations, overrides) {
     const merged = {};
@@ -123,6 +133,9 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
     };
     events.push(eventRecord);
     equity.push({ ts: eventRecord.closedAt, pnl: totalPnl });
+    if (onEventFinalized) {
+      onEventFinalized(eventRecord, [...samples]);
+    }
     completedEvents.add(currentKey);
     currentEvent = null;
     currentKey = null;
@@ -138,9 +151,13 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
     return sharedCtx;
   }
 
-  function runHook(name, ctx, extraArgs = []) {
+  function runHook(name, ctx) {
+    if (compiled?.[name]) {
+      compiled[name](ctx, lib, ordersApi, debugApi);
+      return;
+    }
     const hook = ast.hooks?.[name];
-    if (!hook?.body?.length) return;
+    if (!hook?.body?.length || !interpreter) return;
     interpreter.run(hook.body, ctx);
   }
 

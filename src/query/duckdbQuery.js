@@ -5,20 +5,25 @@ import { openSharedConnection } from './duckdbPool.js';
 
 const MAX_BACKTEST_ROWS = 5_000_000;
 
-export function backtestTickSelectColumns(bookDepth = 25) {
-  const cols = [
-    'market_id', 'underlying', 'interval', 'condition_id', 'event_start', 'event_end', 'ts',
-    'underlying_price', 'price_to_beat', 'up_price', 'down_price',
-    'up_best_bid', 'up_best_ask', 'down_best_bid', 'down_best_ask',
-    'coverage', 'degraded', 'book_depth',
-  ];
+export const BASE_SCALAR_COLUMNS = [
+  'market_id', 'underlying', 'interval', 'condition_id', 'event_start', 'event_end', 'ts',
+  'underlying_price', 'price_to_beat', 'up_price', 'down_price',
+  'up_best_bid', 'up_best_ask', 'down_best_bid', 'down_best_ask',
+  'coverage', 'degraded', 'book_depth',
+];
+
+export function backtestTickSelectColumns(bookDepth = 25, { scalarColumns, includeBook = true } = {}) {
+  const cols = scalarColumns?.length
+    ? [...new Set(scalarColumns)]
+    : [...BASE_SCALAR_COLUMNS];
+  if (!includeBook) return cols.join(', ');
   const depth = Math.max(1, Number.parseInt(String(bookDepth), 10) || 25);
   for (const side of ['up_ask', 'up_bid', 'down_ask', 'down_bid']) {
     for (let i = 1; i <= depth; i += 1) {
       cols.push(`${side}_px_${i}`, `${side}_sz_${i}`);
     }
   }
-  return cols.join(', ');
+  return [...new Set(cols)].join(', ');
 }
 
 /** Colunas mínimas para gráficos de evento (sem book depth). */
@@ -37,14 +42,16 @@ export function chartTickSelectColumns(side = 'UP') {
 
 export async function queryTicks(db, request) {
   const dataset = request.dataset || 'backtest_ticks';
-  if (!['scalars', 'backtest_ticks'].includes(dataset)) {
+  if (!['scalars', 'backtest_ticks', 'backtest_ticks_lite'].includes(dataset)) {
     throw new Error(`Unsupported tick dataset: ${dataset}`);
   }
   const availability = requireDatasetAvailability(db, { ...request, dataset });
   const select = request.select
-    ?? (dataset === 'backtest_ticks'
-      ? backtestTickSelectColumns(request.bookDepth ?? 25)
-      : '*');
+    ?? (dataset === 'backtest_ticks_lite'
+      ? BASE_SCALAR_COLUMNS.join(', ')
+      : dataset === 'backtest_ticks'
+        ? backtestTickSelectColumns(request.bookDepth ?? 25)
+        : '*');
   const sql = buildTicksSql(availability, request, { select });
   return runDuckQuery(sql);
 }
@@ -63,16 +70,21 @@ export async function queryChartTicks(db, request) {
  * Evita materializar milhões de linhas em objetos JS antes do backtest começar.
  */
 export async function openBacktestTickSession(db, request) {
+  const dataset = request.dataset || 'backtest_ticks';
   const availability = requireDatasetAvailability(db, {
     ...request,
-    dataset: 'backtest_ticks',
+    dataset,
   });
   const bookDepth = request.bookDepth ?? 25;
   const jsonSafe = request.jsonSafe !== false;
-  const selectCols = backtestTickSelectColumns(bookDepth);
+  const selectCols = request.select
+    ?? backtestTickSelectColumns(bookDepth, {
+      scalarColumns: request.selectColumns,
+      includeBook: request.includeBook !== false,
+    });
   const sourceSql = buildTicksSql(availability, {
     ...request,
-    dataset: 'backtest_ticks',
+    dataset,
   }, { select: selectCols, order: true });
 
   const connection = await openSharedConnection();

@@ -4,6 +4,7 @@ import { applyContextOptions, contextBarOptions, loadContext, saveContext, selec
 import { fetchContextOptionsCached } from '../utils/contextOptionsCache.js';
 import { escapeHtml, formatPnl } from '../utils/format.js';
 import { loadStrategyOptions, renderStrategySelect, backtestPayloadFromPick } from '../utils/strategyPicker.js';
+import { connectSse, disconnectSse } from '../utils/sse.js';
 
 const state = {
   runs: [],
@@ -17,9 +18,12 @@ const state = {
 };
 
 let pollToken = 0;
+const sseWatchers = new Map();
 
 export function cancelBacktestPolls() {
   pollToken += 1;
+  for (const handler of sseWatchers.values()) disconnectSse(handler);
+  sseWatchers.clear();
 }
 
 export async function renderBacktests(ctx) {
@@ -197,41 +201,84 @@ function resumeRunningBacktests(ctx) {
   for (const run of running) pollBacktestRun(ctx, run.id, run.id === latest.id ? resultPanel : null);
 }
 
+function finalizeBacktestRun(ctx, run, resultPanel) {
+  updateDashboard(ctx);
+  if (run.status === 'completed') {
+    ctx.toast.ok(`Backtest #${run.id} concluído · PnL ${formatPnl(run.summary?.totalPnl ?? 0)}`);
+    if (resultPanel?.isConnected) mount(resultPanel, el('div', { class: 'row row--wrap' }, [
+      el('span', { class: 'badge badge--ok' }, `Run #${run.id}`),
+      el('button', {
+        class: 'btn btn--ghost btn--sm',
+        type: 'button',
+        onclick: () => ctx.navigate(`backtests/${run.id}`),
+      }, 'Ver detalhes'),
+    ]));
+    return;
+  }
+  if (run.status === 'cancelled') {
+    ctx.toast.warn(`Backtest #${run.id} cancelado`);
+    if (resultPanel?.isConnected) mount(resultPanel, cancelledRunInlineCard(run));
+    return;
+  }
+  if (run.status === 'partial') {
+    ctx.toast.warn(`Backtest #${run.id} parcial · ticks ${run.ticks ?? 0}`);
+    if (resultPanel?.isConnected) mount(resultPanel, failedRunInlineCard(run, ctx));
+    return;
+  }
+  ctx.toast.err(`Backtest #${run.id} falhou`);
+  if (resultPanel?.isConnected) mount(resultPanel, failedRunInlineCard(run, ctx));
+}
+
 async function pollBacktestRun(ctx, runId, resultPanel) {
   const token = pollToken;
   let done = false;
+
+  const sseHandler = async (event) => {
+    if (token !== pollToken || event.runId !== runId) return;
+    if (event.type === 'run:progress') {
+      const res = await ctx.api.get(`/api/backtest/runs/${runId}?slim=1`);
+      if (!res.ok || token !== pollToken) return;
+      const run = res.data.run;
+      upsertRunInState(run);
+      syncRunRowInTable(run);
+      if (resultPanel?.isConnected) mount(resultPanel, runningBacktestCard(run.progress || {}, { runId: run.id, ctx }));
+      return;
+    }
+    if (event.type === 'run:completed' || event.type === 'run:failed') {
+      done = true;
+      disconnectSse(sseHandler);
+      sseWatchers.delete(runId);
+      const run = event.run || (await ctx.api.get(`/api/backtest/runs/${runId}?slim=1`)).data?.run;
+      if (run) {
+        upsertRunInState(run);
+        syncRunRowInTable(run);
+        finalizeBacktestRun(ctx, run, resultPanel);
+      }
+    }
+  };
+
+  if (typeof EventSource !== 'undefined') {
+    sseWatchers.set(runId, sseHandler);
+    connectSse(sseHandler);
+  }
+
   while (!done) {
     if (token !== pollToken) return;
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    if (token !== pollToken) return;
+    await new Promise((resolve) => setTimeout(resolve, typeof EventSource !== 'undefined' ? 8000 : 1500));
+    if (token !== pollToken || done) return;
     const res = await ctx.api.get(`/api/backtest/runs/${runId}?slim=1`);
     if (!res.ok || token !== pollToken) continue;
     const run = res.data.run;
     upsertRunInState(run);
     syncRunRowInTable(run);
-    if (run.status === 'running') {
+    if (run.status === 'running' || run.status === 'queued') {
       if (resultPanel?.isConnected) mount(resultPanel, runningBacktestCard(run.progress || {}, { runId: run.id, ctx }));
       continue;
     }
     done = true;
-    updateDashboard(ctx);
-    if (run.status === 'completed') {
-      ctx.toast.ok(`Backtest #${run.id} concluído · PnL ${formatPnl(run.summary?.totalPnl ?? 0)}`);
-      if (resultPanel?.isConnected) mount(resultPanel, el('div', { class: 'row row--wrap' }, [
-        el('span', { class: 'badge badge--ok' }, `Run #${run.id}`),
-        el('button', {
-          class: 'btn btn--ghost btn--sm',
-          type: 'button',
-          onclick: () => ctx.navigate(`backtests/${run.id}`),
-        }, 'Ver detalhes'),
-      ]));
-    } else if (run.status === 'cancelled') {
-      ctx.toast.warn(`Backtest #${run.id} cancelado`);
-      if (resultPanel?.isConnected) mount(resultPanel, cancelledRunInlineCard(run));
-    } else {
-      ctx.toast.err(`Backtest #${run.id} falhou`);
-      if (resultPanel?.isConnected) mount(resultPanel, failedRunInlineCard(run, ctx));
-    }
+    disconnectSse(sseHandler);
+    sseWatchers.delete(runId);
+    finalizeBacktestRun(ctx, run, resultPanel);
   }
 }
 

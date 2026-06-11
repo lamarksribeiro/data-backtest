@@ -1,8 +1,10 @@
 import { el, mount, emptyState } from '../utils/dom.js';
 import { escapeHtml } from '../utils/format.js';
 import { delay } from '../utils/format.js';
+import { connectSse, disconnectSse } from '../utils/sse.js';
 
 let pollToken = 0;
+let jobsSseHandler = null;
 let creepToken = 0;
 let initialLoadDone = false;
 let expandedJobId = null;
@@ -39,6 +41,28 @@ export async function renderJobs(ctx) {
   latestJobs = [];
   pollToken += 1;
   creepToken += 1;
+  if (jobsSseHandler) disconnectSse(jobsSseHandler);
+  jobsSseHandler = (event) => {
+    if (!['job:progress', 'job:completed', 'job:failed'].includes(event.type)) return;
+    const jobId = event.jobId;
+    const idx = latestJobs.findIndex((j) => j.id === jobId);
+    if (idx < 0) return;
+    latestJobs[idx] = {
+      ...latestJobs[idx],
+      status: event.status || latestJobs[idx].status,
+      progress: event.progress || latestJobs[idx].progress,
+      error: event.error || latestJobs[idx].error,
+    };
+    const tbody = document.getElementById('jobs-table-body');
+    if (tbody) {
+      syncJobsTable(tbody, latestJobs, ctx);
+      refreshExpandedJobDetail(ctx, latestJobs);
+    }
+    if (event.type === 'job:completed' || event.type === 'job:failed') {
+      refreshJobs(ctx, { force: true });
+    }
+  };
+  connectSse(jobsSseHandler);
 
   mount(ctx.contentEl, [
     el('div', { class: 'page-header' }, [
@@ -339,7 +363,7 @@ function startPolling(ctx) {
   const token = ++pollToken;
   (async () => {
     while (token === pollToken) {
-      await delay(2000);
+      await delay(typeof EventSource !== 'undefined' ? 12000 : 2000);
       if (token !== pollToken) return;
       const res = await ctx.api.get('/api/prepare/jobs?limit=30');
       if (!res.ok || token !== pollToken) return;

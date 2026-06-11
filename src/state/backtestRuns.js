@@ -63,10 +63,57 @@ export function createBacktestRun(db, { request, result, strategyMeta = null, st
   }
 }
 
+export function createQueuedBacktestRun(db, { request, strategyMeta = null, totalTicks = null }) {
+  return insertBacktestRunRow(db, {
+    request,
+    strategyMeta,
+    totalTicks,
+    status: 'queued',
+    phase: 'queued',
+  });
+}
+
 export function createRunningBacktestRun(db, { request, strategyMeta = null, totalTicks = null }) {
+  return insertBacktestRunRow(db, {
+    request,
+    strategyMeta,
+    totalTicks,
+    status: 'running',
+    phase: 'queued',
+  });
+}
+
+export function markBacktestRunRunning(db, id) {
+  const existing = db.prepare('SELECT progress_json FROM backtest_runs WHERE id = ?').get(id);
+  const prev = existing?.progress_json ? JSON.parse(existing.progress_json) : {};
+  const nowProgress = {
+    ...prev,
+    phase: 'loading',
+    ticks: 0,
+    batches: 0,
+    started_at: prev.started_at || new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  const changes = db.prepare(`
+    UPDATE backtest_runs
+    SET status = 'running', progress_json = ?
+    WHERE id = ? AND status = 'queued'
+  `).run(JSON.stringify(nowProgress), id).changes;
+  return changes ? getBacktestRun(db, id, { includeResult: false, includeEquity: false }) : null;
+}
+
+export function listQueuedBacktestRuns(db) {
+  return db.prepare(`
+    SELECT * FROM backtest_runs
+    WHERE status = 'queued'
+    ORDER BY id ASC
+  `).all().map((row) => toApiRun(row));
+}
+
+function insertBacktestRunRow(db, { request, strategyMeta, totalTicks, status, phase }) {
   const meta = strategyMeta ?? request.strategyMeta ?? null;
   const nowProgress = {
-    phase: 'queued',
+    phase,
     ticks: 0,
     batches: 0,
     total_ticks: totalTicks,
@@ -101,7 +148,7 @@ export function createRunningBacktestRun(db, { request, strategyMeta = null, tot
     meta?.strategy_version_id ?? null,
     meta ? JSON.stringify(meta) : null,
     JSON.stringify(stripRequestForSnapshot(request)),
-    'running',
+    status,
     null,
     null,
     JSON.stringify(nowProgress),
@@ -138,14 +185,18 @@ export function completeBacktestRun(db, id, { request, result, strategyMeta = nu
   return finishExistingBacktestRun(db, id, { request, result, strategyMeta, status: 'completed', error: null, startedAt });
 }
 
-export function failBacktestRun(db, id, { request, result, strategyMeta = null, error, startedAt = null }) {
-  return finishExistingBacktestRun(db, id, { request, result, strategyMeta, status: 'failed_runtime', error, startedAt });
+export function failBacktestRun(db, id, { request, result, strategyMeta = null, error, startedAt = null, partial = false }) {
+  const status = partial ? 'partial' : 'failed_runtime';
+  return finishExistingBacktestRun(db, id, { request, result, strategyMeta, status, error, startedAt });
 }
 
 function finishExistingBacktestRun(db, id, { request, result, strategyMeta = null, status, error, startedAt = null }) {
   const existing = getBacktestRun(db, id, { includeResult: false, includeEquity: false });
   if (!existing || existing.status !== 'running') return existing;
-  const meta = strategyMeta ?? result?.strategyMeta ?? null;
+  const meta = strategyMeta
+    ?? result?.strategyMeta
+    ?? existing.strategy_snapshot
+    ?? null;
   const storageStartedAt = Date.now();
   result.summary = {
     ...(result.summary || {}),
@@ -156,7 +207,10 @@ function finishExistingBacktestRun(db, id, { request, result, strategyMeta = nul
   };
   db.exec('BEGIN IMMEDIATE');
   try {
-    persistEventTraces(db, id, result, { transaction: false });
+    const existingTraces = db.prepare('SELECT COUNT(*) AS c FROM backtest_event_traces WHERE run_id = ?').get(id);
+    if (!existingTraces?.c) {
+      persistEventTraces(db, id, result, { transaction: false });
+    }
     result.summary.timings.sqliteWriteMs = Date.now() - storageStartedAt;
     const durationMs = startedAt ? Date.now() - startedAt : null;
     db.prepare(`
@@ -180,9 +234,9 @@ function finishExistingBacktestRun(db, id, { request, result, strategyMeta = nul
       result.batches,
       JSON.stringify(result.summary ?? {}),
       JSON.stringify(slimResultForStorage(result)),
-      meta?.strategy_id ?? null,
-      meta?.strategy_version_id ?? null,
-      meta ? JSON.stringify(meta) : null,
+      meta?.strategy_id ?? existing.strategy_id ?? null,
+      meta?.strategy_version_id ?? existing.strategy_version_id ?? null,
+      meta ? JSON.stringify(meta) : (existing.strategy_snapshot ? JSON.stringify(existing.strategy_snapshot) : null),
       JSON.stringify(stripRequestForSnapshot(request)),
       status,
       error,

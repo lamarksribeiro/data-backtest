@@ -4,6 +4,7 @@ import { cancelBacktestPolls } from './js/views/backtests.js';
 import { api } from './js/api.js';
 import { toast } from './js/utils/toast.js';
 import { applyContextOptions, contextBarOptions, loadContext, renderContextBar as renderContextControls } from './js/utils/context.js';
+import { fetchContextOptionsCached } from './js/utils/contextOptionsCache.js';
 import { startSidebarStatus } from './js/utils/sidebarStatus.js';
 import { renderOverview } from './js/views/overview.js';
 import { renderLakehouse } from './js/views/lakehouse.js';
@@ -11,6 +12,7 @@ import { renderJobs } from './js/views/jobs.js';
 import { renderBacktests } from './js/views/backtests.js';
 import { renderRunDetail } from './js/views/run-detail.js';
 import { renderEventDetail } from './js/views/event-detail.js';
+import { renderStudio, redirectLegacyBacktestRoute } from './js/views/studio.js';
 import { renderStrategies } from './js/views/strategies.js';
 
 const contentEl = document.getElementById('content');
@@ -21,6 +23,7 @@ const crumbSep = document.getElementById('crumb-sep');
 const topbarActions = document.getElementById('topbar-actions');
 
 const SECTIONS = {
+  studio: 'Estúdio',
   overview: 'Visão Geral',
   data: 'Dados',
   jobs: 'Jobs',
@@ -29,6 +32,7 @@ const SECTIONS = {
 };
 
 const SECTION_ROUTES = {
+  studio: 'studio',
   overview: 'overview',
   data: 'data',
   jobs: 'jobs',
@@ -105,7 +109,7 @@ const ctx = {
     });
   },
   renderContextBar() {
-    if (topbarActions) topbarActions.innerHTML = '';
+    renderTopContextBar();
   },
   toast,
   api,
@@ -114,6 +118,23 @@ const ctx = {
 };
 
 ctx.setConnection('idle', 'Conectando…');
+
+async function renderTopContextBar() {
+  if (!topbarActions) return;
+  const route = String(currentRoute || '').split('?')[0].split('/')[0];
+  if (route !== 'studio' && route !== 'backtests') {
+    topbarActions.innerHTML = '';
+    return;
+  }
+  const apiOptions = await fetchContextOptionsCached(api);
+  const fieldOptions = contextBarOptions(apiOptions);
+  const formCtx = applyContextOptions(loadContext(), fieldOptions);
+  topbarActions.innerHTML = '';
+  topbarActions.appendChild(renderContextControls(formCtx, (next) => {
+    if (route === 'studio') renderStudio(ctx);
+    else renderBacktests(ctx);
+  }, fieldOptions));
+}
 
 async function bootstrap() {
   const meRes = await api.get('/api/me');
@@ -125,17 +146,18 @@ async function bootstrap() {
   startSidebarStatus(ctx);
   initRouter({
     routes: {
+      studio: () => renderStudio(ctx),
       overview: () => renderOverview(ctx),
       data: () => renderLakehouse(ctx),
       jobs: () => renderJobs(ctx),
       backtests: () => renderBacktests(ctx),
-      'backtests/:id': (params) => renderRunDetail(ctx, params),
-      'backtests/:id/events/:eventId': (params) => renderEventDetail(ctx, params),
+      'backtests/:id': (params) => redirectLegacyBacktestRoute({ id: params.id }),
+      'backtests/:id/events/:eventId': (params) => redirectLegacyBacktestRoute({ id: params.id, eventId: params.eventId }),
       strategies: () => renderStrategies(ctx),
       'strategies/:id': (params) => renderStrategies(ctx, params),
       'strategies/:id/:versionId': (params) => renderStrategies(ctx, params),
     },
-    fallback: 'overview',
+    fallback: 'studio',
     onLeave(path) {
       const top = String(path || '').split('?')[0].split('/')[0];
       if (top !== 'backtests') cancelBacktestPolls();

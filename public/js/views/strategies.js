@@ -307,6 +307,10 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
                 el('i', { class: 'fa-solid fa-circle-check', style: { marginRight: '4px' } }),
                 'Validar Código'
               ]),
+              el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => testStrategyQuick(ctx, strategy.id) }, [
+                el('i', { class: 'fa-solid fa-bolt', style: { marginRight: '4px' } }),
+                'Testar'
+              ]),
               el('button', { class: 'btn btn--primary btn--sm', type: 'button', onclick: () => saveTabCodeVersion(ctx, strategy.id) }, [
                 el('i', { class: 'fa-solid fa-floppy-disk', style: { marginRight: '6px' } }),
                 'Salvar Versão'
@@ -539,6 +543,42 @@ async function validateTabCode(ctx) {
   if (!validation) return;
   if (validation.ok) ctx.toast.ok('Código GLS válido');
   else ctx.toast.err(`Código inválido: ${validation.errors?.length || 0} erro(s)`);
+}
+
+async function testStrategyQuick(ctx, strategyId) {
+  if (state.focusedEditor) state.sourceCode = state.focusedEditor.getValue();
+  const validation = await validateStrategySource(ctx, state.sourceCode);
+  if (!validation?.ok) {
+    ctx.toast.warn('Valide e corrija o código GLS antes de testar');
+    return;
+  }
+  if (!state.selectedVersionId) {
+    ctx.toast.warn('Salve uma versão antes de testar');
+    return;
+  }
+  if (hasSourceChanged(state.sourceCode, state.currentVersion?.source_code)) {
+    ctx.toast.warn('Salve as alterações antes de testar a versão atual');
+    return;
+  }
+  const saved = loadContext();
+  const res = await ctx.api.post('/api/backtest/run', {
+    strategy_id: strategyId,
+    strategy_version_id: state.selectedVersionId,
+    from: saved.from,
+    to: saved.to,
+    underlying: saved.underlying,
+    interval: saved.interval,
+    book_depth: Number(saved.book_depth),
+    batch_size: 25000,
+    fast_run: true,
+    async: true,
+  });
+  if (!res.ok) {
+    ctx.toast.err(res.error?.message || 'Falha ao iniciar teste');
+    return;
+  }
+  ctx.toast.ok(`Teste enfileirado · run #${res.data.run.id}`);
+  ctx.navigate(`studio?run=${res.data.run.id}`);
 }
 
 async function saveSourceVersion(ctx, strategyId, source) {

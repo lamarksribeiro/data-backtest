@@ -2,9 +2,26 @@ import { createEdgeSniperBacktestRunner } from '../../strategies/edgeSniperV2.js
 import { createGlsRunnerFromSource } from './runtime.js';
 import { getEdgeSniperV2GlsSource } from './loadStrategySource.js';
 
-export function compareEdgeSniperParity(ticks, params = {}) {
+export function compareGlsExecutionParity(source, ticks, params = {}, options = {}) {
+  const interpreter = createGlsRunnerFromSource(source, params, { ...options, executionMode: 'interpreter' });
+  const compiled = createGlsRunnerFromSource(source, params, { ...options, executionMode: 'compiled' });
+  for (const tick of ticks) {
+    interpreter.processTick(tick);
+    compiled.processTick(tick);
+  }
+  const interpreterResult = interpreter.finish();
+  const compiledResult = compiled.finish();
+  return {
+    interpreter: summarize(interpreterResult),
+    compiled: summarize(compiledResult),
+    match: parityMatch(interpreterResult, compiledResult),
+    divergences: collectDivergences(interpreterResult, compiledResult),
+  };
+}
+
+export function compareEdgeSniperParity(ticks, params = {}, options = {}) {
   const native = createEdgeSniperBacktestRunner(params);
-  const gls = createGlsRunnerFromSource(getEdgeSniperV2GlsSource(), params);
+  const gls = createGlsRunnerFromSource(getEdgeSniperV2GlsSource(), params, options);
   for (const tick of ticks) {
     native.processTick(tick);
     gls.processTick(tick);

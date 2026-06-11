@@ -109,6 +109,7 @@ CREATE TABLE IF NOT EXISTS backtest_event_traces (
 
 CREATE INDEX IF NOT EXISTS backtest_event_traces_run_idx ON backtest_event_traces(run_id, event_start);
 CREATE INDEX IF NOT EXISTS backtest_event_traces_condition_idx ON backtest_event_traces(condition_id);
+CREATE INDEX IF NOT EXISTS backtest_event_traces_pnl_idx ON backtest_event_traces(run_id, final_pnl);
 
 CREATE TABLE IF NOT EXISTS strategy_definitions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

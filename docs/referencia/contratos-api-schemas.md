@@ -420,7 +420,26 @@ Request:
   "interval": "5m",
   "book_depth": 10,
   "batch_size": 5000,
-  "params": {}
+  "params": {},
+  "async": true,
+  "fast_run": false
+}
+```
+
+Campos opcionais V2:
+
+```text
+async          — enfileira run (202) em vez de executar inline
+fast_run       — reduz traces/logs no worker
+gls_execution  — compiled | interpreter (default: env GLS_EXECUTION)
+```
+
+Response async (`202`):
+
+```json
+{
+  "run": { "id": 1, "status": "running", "progress": {} },
+  "queuePosition": 1
 }
 ```
 
@@ -468,7 +487,7 @@ Query params:
 limit optional
 strategy_id optional
 strategy_version_id optional
-status optional: completed/failed_runtime
+status optional: queued/running/completed/partial/failed_runtime/cancelled
 underlying optional
 interval optional
 pnl optional: positive/negative/zero
@@ -573,6 +592,36 @@ Response:
   }
 }
 ```
+
+### `GET /api/stream`
+
+SSE autenticado (cookie de sessão). Eventos:
+
+```text
+run:progress   — { runId, progress }
+run:completed  — { runId, run }
+run:failed     — { runId, run, error }
+job:progress   — { jobId, status, progress }
+job:completed  — { jobId, status }
+job:failed     — { jobId, status, error }
+```
+
+### `GET /api/backtest/compare`
+
+Query: `ids=1,2` (2–4 runs).
+
+Response:
+
+```json
+{
+  "runs": [{ "id": 1, "summary": {}, "equity": [] }],
+  "delta_events": [{ "condition_id": "...", "pnl_a": 1, "pnl_b": 2, "delta": 1 }]
+}
+```
+
+### `GET /api/backtest/runs/:id/analysis`
+
+Response: `{ "analysis": { "by_reason": [], "worst_events": [], "pnl_by_hour": [], "histogram": [] } }`
 
 ### `GET /api/backtest/runs/:id/chart-data`
 

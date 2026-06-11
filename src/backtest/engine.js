@@ -2,23 +2,54 @@ import { DuckDbTickProvider } from './tickProvider.js';
 import { applyPolymarketFeesToBacktestResult } from './fees.js';
 import { createEdgeSniperBacktestRunner } from '../strategies/edgeSniperV2.js';
 import { createGlsBacktestRunner } from '../backtestStudio/gls/runtime.js';
+import { loadConfig } from '../config.js';
+import { analyzeStrategyColumns } from '../backtestStudio/gls/compiler.js';
+import { datasetCacheKey, getDatasetCache } from './datasetCache.js';
 
 const STRATEGIES = {
   'edge-sniper-v2': createEdgeSniperBacktestRunner,
   edgeSniperV2: createEdgeSniperBacktestRunner,
 };
 
+export function resolveBacktestDataset(request, columnAnalysis) {
+  if (request.dataset) return request.dataset;
+  if (columnAnalysis && !columnAnalysis.needsBookLevels) return 'backtest_ticks_lite';
+  return 'backtest_ticks';
+}
+
+export function availabilityRequestForBacktest(request, columnAnalysis) {
+  const dataset = resolveBacktestDataset(request, columnAnalysis);
+  return {
+    ...request,
+    dataset,
+    bookDepth: dataset === 'backtest_ticks_lite' ? null : request.bookDepth,
+  };
+}
+
 export async function runBacktest(db, request, { onProgress } = {}) {
   const createRunner = resolveRunnerFactory(request);
   if (!createRunner) throw new Error(`Unsupported strategy: ${request.strategy}`);
   const timings = { startedAt: Date.now(), firstBatchAt: null, completedAt: null, duckdbReadMs: 0, processMs: 0, finishMs: 0 };
 
+  const columnAnalysis = request.columnAnalysis
+    ?? (request.glsAst ? analyzeStrategyColumns(request.glsAst, request.bookDepth ?? 25) : null);
+  const dataset = resolveBacktestDataset(request, columnAnalysis);
+  const effectiveBookDepth = columnAnalysis?.needsBookLevels
+    ? (columnAnalysis.bookDepth || request.bookDepth)
+    : request.bookDepth;
+
   const provider = new DuckDbTickProvider(db, {
     underlying: request.underlying,
     interval: request.interval,
-    bookDepth: request.bookDepth,
+    bookDepth: effectiveBookDepth,
+    selectColumns: columnAnalysis?.scalarColumns,
+    dataset,
   });
-  const runner = createRunner(request.params ?? {});
+  const runner = createRunner(request.params ?? {}, {
+    fastRun: Boolean(request.fastRun),
+    onEventFinalized: request.onEventFinalized,
+    chartSeriesWriter: request.chartSeriesWriter,
+  });
   let ticks = 0;
   let batches = 0;
   const totalTicks = Number(request.estimatedTicks || 0) || null;
@@ -26,29 +57,49 @@ export async function runBacktest(db, request, { onProgress } = {}) {
   const emitProgress = createProgressEmitter(onProgress, progressStartedAt);
   emitProgress({ phase: 'loading', ticks, batches, totalTicks, force: true });
 
+  const cache = getDatasetCache(loadConfig().datasetCacheMaxMb);
+  const cacheKey = datasetCacheKey({ ...request, dataset }, columnAnalysis?.scalarColumns?.join(','));
+  const cachedBatches = cache.get(cacheKey);
+  const capturedBatches = cachedBatches ? null : [];
+
   let iterator = null;
   try {
-    iterator = provider.streamTicks({
-      from: request.from,
-      to: request.to,
-      batchSize: request.batchSize,
-      legacy: !request.glsAst,
-    })[Symbol.asyncIterator]();
-    while (true) {
-      const readStartedAt = Date.now();
-      const next = await iterator.next();
-      timings.duckdbReadMs += Date.now() - readStartedAt;
-      if (next.done) break;
-      const batch = next.value;
-      if (timings.firstBatchAt == null) timings.firstBatchAt = Date.now();
-      batches += 1;
-      ticks += batch.length;
-      const processStartedAt = Date.now();
-      for (const tick of batch) {
-        runner.processTick(tick);
+    if (cachedBatches) {
+      for (const batch of cachedBatches) {
+        if (timings.firstBatchAt == null) timings.firstBatchAt = Date.now();
+        batches += 1;
+        ticks += batch.length;
+        const processStartedAt = Date.now();
+        for (const tick of batch) runner.processTick(tick);
+        timings.processMs += Date.now() - processStartedAt;
+        emitProgress({ phase: 'processing', ticks, batches, totalTicks });
       }
-      timings.processMs += Date.now() - processStartedAt;
-      emitProgress({ phase: 'processing', ticks, batches, totalTicks });
+    } else {
+      const asyncIter = provider.streamTicks({
+        from: request.from,
+        to: request.to,
+        batchSize: request.batchSize,
+        legacy: !request.glsAst,
+        dataset,
+      })[Symbol.asyncIterator]();
+      let pending = asyncIter.next();
+      while (true) {
+        const readStartedAt = Date.now();
+        const next = await pending;
+        timings.duckdbReadMs += Date.now() - readStartedAt;
+        if (next.done) break;
+        pending = asyncIter.next();
+        const batch = next.value;
+        if (capturedBatches) capturedBatches.push(batch);
+        if (timings.firstBatchAt == null) timings.firstBatchAt = Date.now();
+        batches += 1;
+        ticks += batch.length;
+        const processStartedAt = Date.now();
+        for (const tick of batch) runner.processTick(tick);
+        timings.processMs += Date.now() - processStartedAt;
+        emitProgress({ phase: 'processing', ticks, batches, totalTicks });
+      }
+      if (capturedBatches?.length) cache.set(cacheKey, capturedBatches);
     }
   } catch (err) {
     await iterator?.return?.();
@@ -150,7 +201,10 @@ function formatTimings(timings) {
 
 function resolveRunnerFactory(request) {
   if (request.glsAst) {
-    return (params) => createGlsBacktestRunner(request.glsAst, params);
+    return (params, options) => createGlsBacktestRunner(request.glsAst, params, {
+      ...options,
+      executionMode: request.glsExecution,
+    });
   }
   return STRATEGIES[request.strategy];
 }

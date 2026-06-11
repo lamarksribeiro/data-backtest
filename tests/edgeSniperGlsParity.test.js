@@ -11,7 +11,7 @@ import { writeBacktestTicksParquet } from '../src/sync/duckdbParquet.js';
 import { runBacktest } from '../src/backtest/engine.js';
 import { parse } from '../src/backtestStudio/gls/parser.js';
 import { validate } from '../src/backtestStudio/gls/validator.js';
-import { compareEdgeSniperParity } from '../src/backtestStudio/gls/parity.js';
+import { compareEdgeSniperParity, compareGlsExecutionParity } from '../src/backtestStudio/gls/parity.js';
 import { getEdgeSniperV2GlsSource } from '../src/backtestStudio/gls/loadStrategySource.js';
 import { seedEdgeSniperV2Strategy } from '../src/backtestStudio/gls/seedStrategies.js';
 import { createStrategyVersion, listStrategyVersions } from '../src/backtestStudio/state/strategies.js';
@@ -239,6 +239,40 @@ test('edge-sniper GLS parity matches native multi-event expiry and equity cap', 
   assert.equal(report.gls.totalPnl, -7.35);
 });
 
+const GLS_EXECUTION_SCENARIOS = [
+  { name: 'default synthetic', ticks: () => buildSyntheticEventTicks({ distance: 120, ask: 0.45, bid: 0.43, ptb: 73000 }), params: RELAXED_PARAMS },
+  { name: 'partial take-profit', ticks: buildPartialTakeProfitTicks, params: {
+    ...RELAXED_PARAMS,
+    stopBid: 0.01,
+    takeProfitBid: 0.92,
+    takeProfitPct: 0.35,
+    trailAfterBid: 0.99,
+    lateExitSec: 0,
+    lateExitMinBid: 0.99,
+  } },
+  { name: 'multi-event equity', ticks: buildMultiEventEquityTicks, params: {
+    ...RELAXED_PARAMS,
+    walletSize: 20,
+    maxOrderValue: 15,
+    stopReverseEnabled: false,
+    stopBid: 0.01,
+    takeProfitBid: 0.99,
+    trailAfterBid: 0.99,
+    lateExitSec: 0,
+    lateExitMinBid: 0.99,
+  } },
+];
+
+test('edge-sniper GLS interpreter and compiled execution match on key scenarios', () => {
+  const source = getEdgeSniperV2GlsSource();
+  for (const scenario of GLS_EXECUTION_SCENARIOS) {
+    const ticks = typeof scenario.ticks === 'function' ? scenario.ticks() : scenario.ticks;
+    const report = compareGlsExecutionParity(source, ticks, scenario.params);
+    assert.equal(report.match, true, `${scenario.name}: ${JSON.stringify(report.divergences)}`);
+    assert.deepEqual(report.interpreter, report.compiled, scenario.name);
+  }
+});
+
 test('seed edge-sniper-v2-gls strategy and run via lakehouse engine', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-gls-seed-'));
   try {
@@ -299,8 +333,20 @@ test('seed edge-sniper-v2-gls strategy and run via lakehouse engine', async () =
         to: '2026-05-31T00:00:12.000Z',
         batchSize: 5,
       });
+      const glsAst = parse(getEdgeSniperV2GlsSource());
       const gls = await runBacktest(db, {
-        glsAst: parse(getEdgeSniperV2GlsSource()),
+        glsAst,
+        glsExecution: 'interpreter',
+        underlying: 'BTC',
+        interval: '5m',
+        bookDepth: 2,
+        from: '2026-05-31T00:00:00.000Z',
+        to: '2026-05-31T00:00:12.000Z',
+        batchSize: 5,
+      });
+      const glsCompiled = await runBacktest(db, {
+        glsAst,
+        glsExecution: 'compiled',
         underlying: 'BTC',
         interval: '5m',
         bookDepth: 2,
@@ -310,6 +356,8 @@ test('seed edge-sniper-v2-gls strategy and run via lakehouse engine', async () =
       });
       assert.equal(native.summary.totalEntries, gls.summary.totalEntries);
       assert.equal(native.summary.totalPnl, gls.summary.totalPnl);
+      assert.equal(gls.summary.totalEntries, glsCompiled.summary.totalEntries);
+      assert.equal(gls.summary.totalPnl, glsCompiled.summary.totalPnl);
       assert.equal(version.validation.ok, true);
     } finally {
       closeStateDatabase(db);
