@@ -3,7 +3,7 @@ import { loadContext } from '../utils/context.js';
 import { backtestPayloadFromPick } from '../utils/strategyPicker.js';
 import { promptDialog, confirmDialog } from '../utils/confirm.js';
 import { formatPnl } from '../utils/format.js';
-import { renderUplotLine } from '../utils/uplotChart.js';
+import { renderUplotSparkline } from '../utils/uplotChart.js';
 
 const GLS_TEMPLATE = `strategy "Nova Estrategia" {
   param minDistanceAbs = 50
@@ -155,24 +155,29 @@ function renderLibrary(ctx) {
 }
 
 function strategyCard(ctx, strategy) {
-  const stats = strategy.stats?.totals || {};
-  const spark = strategy.stats?.sparkline || [];
+  const stats = strategy.stats?.totals || strategy.totals || {};
+  const spark = strategy.stats?.sparkline || strategy.sparkline || [];
+  const versionNum = strategy.latest_version ?? strategy.stats?.by_version?.[0]?.version;
   return el('article', { class: 'strategy-card' }, [
     el('header', { class: 'strategy-card__head' }, [
       el('button', {
         type: 'button',
         class: `strategy-card__star${strategy.pinned ? ' is-pinned' : ''}`,
         title: 'Favorito',
+        'aria-label': strategy.pinned ? 'Remover favorito' : 'Marcar favorito',
         onclick: async (e) => {
           e.stopPropagation();
           await ctx.api.patch(`/api/strategies/${strategy.id}`, { pinned: !strategy.pinned });
           renderStrategies(ctx);
         },
       }, '★'),
-      el('strong', {}, strategy.name),
-      el('span', { class: `badge badge--${strategy.status === 'validated' ? 'ok' : 'idle'}` }, `${strategy.status} · v${strategy.latest_version ?? '-'}`),
+      el('strong', { class: 'strategy-card__title' }, strategy.name),
+      el('span', { class: `badge badge--${strategy.status === 'validated' ? 'ok' : 'idle'}` },
+        `${strategy.status}${versionNum != null ? ` · v${versionNum}` : ''}`),
     ]),
-    spark.length ? el('div', { class: 'strategy-card__spark', id: `spark-${strategy.id}` }) : el('p', { class: 'muted' }, stats.runs ? '' : 'Sem runs ainda'),
+    spark.length
+      ? el('div', { class: 'strategy-card__spark', id: `spark-${strategy.id}`, 'aria-hidden': 'true' })
+      : el('p', { class: 'muted strategy-card__empty' }, stats.runs ? 'Sem histórico de PnL' : 'Sem runs ainda'),
     el('div', { class: 'strategy-card__stats' }, [
       el('span', {}, `${stats.runs ?? 0} runs`),
       el('span', {}, stats.runs ? `${Math.round((stats.win_rate ?? 0) * 100)}% WR` : '—'),
@@ -205,12 +210,9 @@ function strategyCard(ctx, strategy) {
 // Render sparklines after cards mount
 export function _renderLibrarySparklines() {
   for (const strategy of state.libraryStats || []) {
-    const spark = strategy.stats?.sparkline || [];
+    const spark = strategy.stats?.sparkline || strategy.sparkline || [];
     const container = document.getElementById(`spark-${strategy.id}`);
-    if (container && spark.length) {
-      const data = spark.map((p, i) => [i, p]);
-      renderUplotLine(container, data);
-    }
+    if (container && spark.length) renderUplotSparkline(container, spark);
   }
 }
 

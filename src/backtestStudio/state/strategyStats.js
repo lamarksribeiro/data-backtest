@@ -94,12 +94,21 @@ export function listStrategiesWithStats(db) {
 
   const result = strategies.map((row) => {
     const stats = getStrategyStats(db, row.id);
+    const latest = db.prepare(`
+      SELECT id, version
+      FROM strategy_versions
+      WHERE strategy_id = ?
+      ORDER BY version DESC, id DESC
+      LIMIT 1
+    `).get(row.id);
     return {
       id: Number(row.id),
       slug: row.slug,
       name: row.name,
       status: row.status,
       pinned: Boolean(row.pinned),
+      latest_version: latest?.version != null ? Number(latest.version) : null,
+      latest_version_id: latest?.id != null ? Number(latest.id) : null,
       totals: stats.totals,
       sparkline: stats.sparkline,
       stats,

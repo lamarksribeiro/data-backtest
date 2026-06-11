@@ -34,7 +34,7 @@ export async function renderOverview(ctx) {
     detailRow('Lake root', health.lake_root || '-'),
     detailRow('State DB', health.state_db_path || '-'),
     detailRow('Fingerprint lake', health.lake_fingerprint || '-'),
-    detailRow('Uptime', health.uptime_sec != null ? `${Math.round(health.uptime_sec)}s` : '-'),
+    detailRow('Uptime', formatUptime(health.uptime_sec)),
   ]));
 }
 
@@ -46,9 +46,19 @@ function statCard(label, value, tone, hint) {
   ]);
 }
 
+function formatUptime(sec) {
+  if (sec == null || !Number.isFinite(sec)) return '-';
+  const s = Math.round(sec);
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ${s % 60}s`;
+  const h = Math.floor(m / 60);
+  return `${h}h ${m % 60}m`;
+}
+
 function detailRow(label, value) {
   return el('div', { class: 'detail-row' }, [
-    el('span', { class: 'muted' }, label),
-    el('code', {}, String(value)),
+    el('span', { class: 'detail-row__label muted' }, label),
+    el('code', { class: 'detail-row__value' }, String(value)),
   ]);
 }

@@ -5002,3 +5002,181 @@ i.fa-solid, i.fa-regular, i.fa-brands {
   font-family: var(--ds-mono, monospace);
   margin-top: 2px;
 }
+
+/* ── V3: Biblioteca de estratégias ── */
+.strategy-library {
+  width: 100%;
+  max-width: 1280px;
+}
+.strategy-library__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+.strategy-library__toolbar .field__input {
+  min-width: 140px;
+}
+.strategy-library__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+.strategy-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.strategy-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.strategy-card__title {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.strategy-card__star {
+  flex: 0 0 auto;
+  background: transparent;
+  border: none;
+  color: var(--text-3, #6b7280);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 2px 4px;
+}
+.strategy-card__star.is-pinned {
+  color: #fbbf24;
+}
+.strategy-card__spark {
+  height: 56px;
+  min-height: 56px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.2);
+}
+.strategy-card__empty {
+  font-size: 12px;
+  margin: 0;
+}
+.strategy-card__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text-2, #9ca3af);
+}
+.strategy-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* ── V3: Dados (cobertura + formulário) ── */
+.coverage-heatmap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 12px;
+}
+.coverage-day {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 4px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 10px;
+  font-weight: 600;
+  font-family: var(--ds-mono, monospace);
+  cursor: pointer;
+  transition: transform 0.1s ease, border-color 0.1s ease;
+}
+.coverage-day:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+.coverage-day--ready {
+  background: rgba(34, 197, 94, 0.35);
+  border-color: rgba(34, 197, 94, 0.45);
+}
+.coverage-day--processing {
+  background: rgba(56, 189, 248, 0.28);
+  border-color: rgba(56, 189, 248, 0.4);
+}
+.coverage-day--attention {
+  background: rgba(251, 191, 36, 0.32);
+  border-color: rgba(251, 191, 36, 0.45);
+}
+#data-actions-section .studio-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px 16px;
+  align-items: end;
+}
+#data-actions-section .studio-form .btn--primary {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+.data-jobs-inline {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+}
+.data-job-card {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.data-partition-drawer {
+  position: fixed;
+  inset: auto 0 0 0;
+  max-height: 50vh;
+  overflow: auto;
+  padding: 12px 16px;
+  background: #0f172a;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 35;
+}
+
+/* ── V3: Visão geral (detalhes de saúde) ── */
+.health-detail-grid {
+  display: grid;
+  gap: 0;
+}
+.detail-row {
+  display: grid;
+  grid-template-columns: minmax(130px, 180px) 1fr;
+  gap: 16px;
+  align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.detail-row:last-child {
+  border-bottom: none;
+}
+.detail-row__label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.detail-row__value {
+  font-size: 12px;
+  word-break: break-all;
+  color: var(--text-1, #e5e7eb);
+}

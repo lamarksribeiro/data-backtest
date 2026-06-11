@@ -295,8 +295,8 @@ async function runBacktest(ctx, form) {
   ctx.toast.ok('Backtest enfileirado');
 }
 
-function computeRunStats(runs, strategyName) {
-  const filtered = runs.filter((r) => !strategyName || strategyName(r) === strategyName);
+function computeRunStats(runs, strategyLabel) {
+  const filtered = runs.filter((r) => !strategyLabel || strategyName(r) === strategyLabel);
   const completed = filtered.filter((r) => (r.status || 'completed') === 'completed');
   const profitable = completed.filter((r) => Number(r.summary?.totalPnl ?? 0) > 0);
   const totalPnl = completed.reduce((s, r) => s + Number(r.summary?.totalPnl ?? 0), 0);

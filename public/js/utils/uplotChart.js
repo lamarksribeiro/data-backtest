@@ -17,6 +17,31 @@ function loadUplot() {
   return uplotReady;
 }
 
+/** Mini sparkline: valores numéricos no eixo X (sem converter para data). */
+export async function renderUplotSparkline(container, values) {
+  if (!container || !values?.length) return null;
+  const uPlot = await loadUplot();
+  container.innerHTML = '';
+  const xs = values.map((_, i) => i);
+  const ys = values.map((v) => Number(v) || 0);
+  const chart = new uPlot({
+    width: container.clientWidth || 200,
+    height: 52,
+    series: [{}, { stroke: '#f97316', width: 1.5, points: { show: false } }],
+    axes: [{ show: false }, { show: false }],
+    cursor: { show: false },
+    legend: { show: false },
+    padding: [4, 4, 0, 0],
+  }, [xs, ys], container);
+  const onResize = () => chart.setSize({ width: container.clientWidth || 200, height: 52 });
+  window.addEventListener('resize', onResize);
+  chart.destroy = ((orig) => () => {
+    window.removeEventListener('resize', onResize);
+    orig.call(chart);
+  })(chart.destroy);
+  return chart;
+}
+
 export async function renderUplotLine(container, primarySeries, extraSeries = [], opts = {}) {
   if (!container) return null;
   const uPlot = await loadUplot();
