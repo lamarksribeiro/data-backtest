@@ -21,7 +21,6 @@ const SECTIONS = {
   studio: 'Estúdio',
   strategies: 'Estratégias',
   data: 'Dados',
-  backtests: 'Explorar',
 };
 
 const SECTION_ROUTES = {
@@ -29,7 +28,6 @@ const SECTION_ROUTES = {
   studio: 'studio',
   strategies: 'strategies',
   data: 'data',
-  backtests: 'backtests',
 };
 
 let currentRoute = '';
@@ -44,7 +42,7 @@ function topLevelRoute(route) {
 function parentRouteFor(route) {
   const path = String(route || '').split('?')[0];
   if (path.startsWith('strategies/')) return 'strategies';
-  if (path.startsWith('backtests')) return 'backtests';
+  if (path.startsWith('backtests')) return 'studio';
   return SECTION_ROUTES[currentSection] || 'overview';
 }
 
@@ -134,7 +132,7 @@ async function bootstrap() {
       'strategies/:id/:versionId': (params) => renderStrategies(ctx, params),
       data: () => renderData(ctx),
       jobs: () => { navigate('data'); },
-      backtests: () => renderStudio(ctx),
+      backtests: () => navigate('studio'),
       'backtests/:id': (params) => redirectLegacyBacktestRoute({ id: params.id }),
       'backtests/:id/events/:eventId': (params) => redirectLegacyBacktestRoute({ id: params.id, eventId: params.eventId }),
     },

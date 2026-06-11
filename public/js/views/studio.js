@@ -88,8 +88,7 @@ let shortcutsBound = false;
 
 export async function renderStudio(ctx) {
   studioCtx = ctx;
-  const isExplore = location.hash.startsWith('#/backtests');
-  ctx.setBreadcrumb(isExplore ? 'backtests' : 'studio', isExplore ? 'Explorar' : 'Estúdio');
+  ctx.setBreadcrumb('studio', 'Estúdio');
   ctx.renderContextBar?.();
 
   const query = parseStudioQuery();
