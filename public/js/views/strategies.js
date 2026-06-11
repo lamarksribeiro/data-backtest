@@ -5,7 +5,7 @@ import { promptDialog, confirmDialog } from '../utils/confirm.js';
 import { formatPnl } from '../utils/format.js';
 import { renderUplotSparkline } from '../utils/uplotChart.js';
 
-const GLS_TEMPLATE = `strategy "Nova Estrategia" {
+const GLS_TEMPLATE_BODY = `{
   param minDistanceAbs = 50
   param maxAsk = 0.58
   param budget = 15
@@ -29,6 +29,11 @@ const GLS_TEMPLATE = `strategy "Nova Estrategia" {
     closeOpenPosition({ reason: "event_end" })
   }
 }`;
+
+function buildGlsTemplate(name = 'Nova Estrategia') {
+  const safeName = String(name || 'Nova Estrategia').replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  return `strategy "${safeName}" ${GLS_TEMPLATE_BODY}`;
+}
 
 /** @type {{ list: object[], selectedId: number|null, selectedVersionId: number|null, focusedEditor: object|null, sourceCode: string, validation: object|null, blocks: object[], currentStrategy: object|null, currentVersion: object|null, strategyQuery: string, statusFilter: string }} */
 const state = {
@@ -437,7 +442,7 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
   state.selectedVersionId = version?.id ?? null;
   state.currentVersion = version ?? null;
 
-  state.sourceCode = version?.source_code || GLS_TEMPLATE;
+  state.sourceCode = version?.source_code || buildGlsTemplate(strategy.name);
   state.validation = version?.validation || null;
   state.blocks = blocksRes.data?.blocks || [];
   
@@ -1030,7 +1035,6 @@ async function createStrategyFlow(ctx) {
     ctx.toast.err(created.error?.message || 'Falha ao criar');
     return;
   }
-  await ctx.api.post(`/api/strategies/${created.data.strategy.id}/versions`, { source_code: GLS_TEMPLATE });
   state.selectedId = created.data.strategy.id;
   ctx.navigate(`strategies/${state.selectedId}`);
   await renderStrategies(ctx, { id: state.selectedId });
