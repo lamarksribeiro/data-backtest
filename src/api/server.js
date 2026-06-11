@@ -924,6 +924,7 @@ function normalizeOptionalGlsExecution(value) {
 async function runBacktestInBackground({ db, runId, request, startedAt }) {
   try {
     const result = await runBacktest(db, request, {
+      progressStartedAt: startedAt,
       onProgress: (progress) => updateBacktestRunProgress(db, runId, progress),
     });
     completeBacktestRun(db, runId, {

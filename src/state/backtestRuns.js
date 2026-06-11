@@ -93,7 +93,7 @@ export function markBacktestRunRunning(db, id) {
     phase: 'loading',
     ticks: 0,
     batches: 0,
-    started_at: prev.started_at || new Date().toISOString(),
+    started_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
   const changes = db.prepare(`
@@ -185,10 +185,15 @@ function insertBacktestRunRow(db, { request, strategyMeta, totalTicks, status, p
 export function updateBacktestRunProgress(db, id, progress) {
   const existing = db.prepare('SELECT progress_json FROM backtest_runs WHERE id = ?').get(id);
   const prev = existing?.progress_json ? JSON.parse(existing.progress_json) : {};
+  const nextPercent = Number(progress.percent);
+  const prevPercent = Number(prev.percent);
   const merged = {
     ...progress,
-    started_at: prev.started_at || progress.started_at || new Date().toISOString(),
+    started_at: progress.started_at || prev.started_at || new Date().toISOString(),
     total_ticks: progress.total_ticks ?? prev.total_ticks ?? null,
+    percent: progress.percent == null
+      ? (prev.percent ?? null)
+      : Math.max(Number.isFinite(prevPercent) ? prevPercent : 0, Number.isFinite(nextPercent) ? nextPercent : 0),
   };
   db.prepare(`
     UPDATE backtest_runs

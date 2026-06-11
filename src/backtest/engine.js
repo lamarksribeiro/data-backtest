@@ -127,7 +127,8 @@ async function runSoAEngine(db, request, ctx) {
     const heartbeat = setInterval(() => {
       ctx.emitProgress({
         phase: 'loading',
-        ticks: loadedRows,
+        ticks: 0,
+        loadedTicks: loadedRows,
         batches: 0,
         totalTicks: estimatedLoad || null,
         force: true,
@@ -149,7 +150,8 @@ async function runSoAEngine(db, request, ctx) {
           loadedRows = nextLoaded;
           ctx.emitProgress({
             phase: 'loading',
-            ticks: loadedRows,
+            ticks: 0,
+            loadedTicks: loadedRows,
             batches: 0,
             totalTicks: estimatedLoad || null,
           });
@@ -163,7 +165,8 @@ async function runSoAEngine(db, request, ctx) {
   } else {
     ctx.emitProgress({
       phase: 'loading',
-      ticks: columnSet.length,
+      ticks: 0,
+      loadedTicks: columnSet.length,
       batches: 0,
       totalTicks: columnSet.length,
       force: true,
@@ -177,7 +180,8 @@ async function runSoAEngine(db, request, ctx) {
 
   ctx.emitProgress({
     phase: 'loading',
-    ticks,
+    ticks: 0,
+    loadedTicks: ticks,
     batches: 1,
     totalTicks: ticks,
     force: true,
@@ -310,19 +314,28 @@ const PROCESSING_PHASE_WEIGHT = 0.87;
 
 function createProgressEmitter(onProgress, startedAt) {
   let lastEmitAt = 0;
-  return ({ phase, ticks, batches, totalTicks, force = false }) => {
+  let processingStartedAt = null;
+  let lastPercent = 0;
+  return ({ phase, ticks, loadedTicks, batches, totalTicks, force = false }) => {
     if (!onProgress) return;
     const now = Date.now();
     if (!force && now - lastEmitAt < PROGRESS_MIN_MS) return;
     lastEmitAt = now;
-    onProgress(buildProgress({ phase, ticks, batches, totalTicks, startedAt }));
+    if (phase === 'processing' && processingStartedAt == null) processingStartedAt = now;
+    const progress = buildProgress({ phase, ticks, loadedTicks, batches, totalTicks, startedAt, processingStartedAt });
+    if (progress.percent != null) {
+      progress.percent = Math.max(lastPercent, progress.percent);
+      lastPercent = progress.percent;
+    }
+    onProgress(progress);
   };
 }
 
-export function buildProgress({ phase, ticks, batches, totalTicks, startedAt }) {
+export function buildProgress({ phase, ticks, loadedTicks = null, batches, totalTicks, startedAt, processingStartedAt = null }) {
   const elapsedMs = Math.max(Date.now() - startedAt, 1);
   const safeTotal = totalTicks > 0 ? totalTicks : null;
   const safeTicks = Math.max(Number(ticks) || 0, 0);
+  const safeLoadedTicks = Math.max(Number(loadedTicks) || 0, 0);
   let percent = null;
 
   if (phase === 'loading') {
@@ -330,13 +343,13 @@ export function buildProgress({ phase, ticks, batches, totalTicks, startedAt }) 
       LOADING_PHASE_WEIGHT * 100 * 0.2,
       (elapsedMs / 120_000) * LOADING_PHASE_WEIGHT * 100,
     );
-    if (safeTotal && safeTicks > 0) {
-      const loadRatio = Math.min(1, safeTicks / safeTotal);
+    if (safeTotal && safeLoadedTicks > 0) {
+      const loadRatio = Math.min(1, safeLoadedTicks / safeTotal);
       percent = Math.max(loadRatio * LOADING_PHASE_WEIGHT * 100, loadingIdlePercent);
     } else if (safeTotal) {
       // DuckDB ainda não devolveu chunks — barra mínima até o primeiro batch.
       percent = loadingIdlePercent;
-    } else if (safeTicks > 0) {
+    } else if (safeLoadedTicks > 0) {
       percent = Math.min(LOADING_PHASE_WEIGHT * 100, 1);
     } else {
       percent = loadingIdlePercent;
@@ -350,27 +363,29 @@ export function buildProgress({ phase, ticks, batches, totalTicks, startedAt }) 
     percent = Math.min(99, (safeTicks / safeTotal) * 100);
   }
 
-  const processingTicks = phase === 'loading' ? 0 : safeTicks;
-  const rate = processingTicks > 0 ? processingTicks / elapsedMs : 0;
+  const effectiveProcessingStartedAt = processingStartedAt ?? (phase === 'processing' ? startedAt : null);
+  const processingElapsedMs = effectiveProcessingStartedAt ? Math.max(Date.now() - effectiveProcessingStartedAt, 1) : null;
+  const processingTicks = phase === 'processing' ? safeTicks : 0;
+  const rate = processingTicks > 0 && processingElapsedMs ? processingTicks / processingElapsedMs : 0;
   const remainingTicks = phase === 'processing' && safeTotal
     ? Math.max(safeTotal - safeTicks, 0)
     : null;
-  const loadRemainingMs = phase === 'loading' && safeTotal && safeTicks > 0
-    ? ((safeTotal - safeTicks) / (safeTicks / elapsedMs))
-    : null;
   const processEtaMs = rate > 0 && remainingTicks != null
-    ? (remainingTicks / rate) + (LOADING_PHASE_WEIGHT * elapsedMs)
+    ? (remainingTicks / rate)
     : null;
 
   return {
     phase,
     ticks: safeTicks,
+    loaded_ticks: safeLoadedTicks || null,
     batches,
     total_ticks: safeTotal,
     percent: percent != null ? Math.min(99, Math.max(0, percent)) : null,
     elapsed_ms: elapsedMs,
-    eta_ms: phase === 'loading' ? loadRemainingMs : processEtaMs,
+    processing_elapsed_ms: processingElapsedMs,
+    eta_ms: processEtaMs,
     started_at: new Date(startedAt).toISOString(),
+    processing_started_at: effectiveProcessingStartedAt ? new Date(effectiveProcessingStartedAt).toISOString() : null,
     updated_at: new Date().toISOString(),
   };
 }

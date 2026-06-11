@@ -91,45 +91,42 @@ function startProgressElapsedTicker() {
   }, 500);
 }
 
-function formatProgressEta(progress) {
-  const elapsed = progress?.elapsed_ms ?? progress?.elapsedMs;
-  const elapsedSec = elapsed != null && Number.isFinite(elapsed) && elapsed > 0
-    ? Math.max(1, Math.round(elapsed / 1000))
-    : null;
-  const elapsedLabel = elapsedSec == null
-    ? null
-    : (elapsedSec < 60 ? `${elapsedSec}s decorridos` : `${Math.floor(elapsedSec / 60)}m ${elapsedSec % 60}s`);
+function formatDurationMs(ms, fallback = 'Calculando...') {
+  if (ms == null || !Number.isFinite(ms) || ms <= 0) return fallback;
+  const sec = Math.max(1, Math.round(ms / 1000));
+  if (sec < 60) return `${sec}s`;
+  const min = Math.floor(sec / 60);
+  const rem = sec % 60;
+  return rem ? `${min}m ${rem}s` : `${min}m`;
+}
 
+function formatProgressRemaining(progress) {
   const ms = progress?.eta_ms ?? (progress?.eta != null ? Number(progress.eta) * 1000 : null);
-  if (ms != null && Number.isFinite(ms) && ms > 0) {
-    const sec = Math.max(1, Math.round(ms / 1000));
-    const etaLabel = sec < 60
-      ? `~${sec}s restantes`
-      : (() => {
-        const min = Math.floor(sec / 60);
-        const rem = sec % 60;
-        return rem ? `~${min}m ${rem}s restantes` : `~${min}m restantes`;
-      })();
-    return elapsedLabel ? `${etaLabel} · ${elapsedLabel}` : etaLabel;
-  }
+  if (ms != null && Number.isFinite(ms) && ms > 0) return `~${formatDurationMs(ms)}`;
+  if (progress?.phase === 'queued') return 'Aguardando';
+  if (progress?.phase === 'loading') return 'Após carregar';
+  return 'Calculando...';
+}
 
-  if (elapsedLabel) return elapsedLabel;
-  return 'Calculando…';
+function formatProgressElapsed(progress) {
+  return formatDurationMs(progress?.elapsed_ms ?? progress?.elapsedMs, '0s');
 }
 
 function applyProgressUi(progress, { skipSnapshot = false } = {}) {
   if (!progress) return;
+  const percent = progress.percent != null ? Number(progress.percent) : 0;
+  const previousPercent = lastProgressSnapshot?.percent != null ? Number(lastProgressSnapshot.percent) : 0;
+  const displayPercent = Math.max(previousPercent, percent);
   if (!skipSnapshot) {
-    lastProgressSnapshot = { ...progress };
+    lastProgressSnapshot = { ...progress, percent: displayPercent };
     startProgressElapsedTicker();
   }
-  const percent = progress.percent != null ? Number(progress.percent) : 0;
   const fill = document.getElementById('studio-progress-fill');
-  if (fill) fill.style.width = `${Math.min(100, Math.max(0, percent))}%`;
+  if (fill) fill.style.width = `${Math.min(100, Math.max(0, displayPercent))}%`;
   const bar = document.querySelector('.studio-progress-bar');
-  if (bar) bar.setAttribute('aria-valuenow', String(Math.round(percent)));
+  if (bar) bar.setAttribute('aria-valuenow', String(Math.round(displayPercent)));
   const pct = document.getElementById('studio-progress-pct');
-  if (pct) pct.textContent = `${percent.toFixed(0)}%`;
+  if (pct) pct.textContent = `${displayPercent.toFixed(0)}%`;
   const phase = document.getElementById('studio-progress-phase');
   if (phase) phase.textContent = formatProgressPhase(progress.phase);
   const ticks = document.getElementById('studio-progress-ticks');
@@ -137,7 +134,9 @@ function applyProgressUi(progress, { skipSnapshot = false } = {}) {
     ticks.textContent = `${progress.ticks || 0}${progress.total_ticks ? ` / ${progress.total_ticks}` : ''}`;
   }
   const eta = document.getElementById('studio-progress-eta');
-  if (eta) eta.textContent = formatProgressEta(progress);
+  if (eta) eta.textContent = formatProgressRemaining(progress);
+  const elapsed = document.getElementById('studio-progress-elapsed');
+  if (elapsed) elapsed.textContent = formatProgressElapsed(progress);
   const depends = document.getElementById('studio-progress-depends');
   if (depends) {
     if (progress.depends_on_job) {
@@ -802,8 +801,12 @@ function renderProgressPanel(container, run, ctx) {
           el('div', { class: 'studio-progress-metric__value', id: 'studio-progress-ticks' }, `${progress.ticks || 0}${progress.total_ticks ? ` / ${progress.total_ticks}` : ''}`),
         ]),
         el('div', { class: 'studio-progress-metric' }, [
-          el('span', { class: 'studio-progress-metric__label' }, 'ETA'),
-          el('div', { class: 'studio-progress-metric__value', id: 'studio-progress-eta' }, formatProgressEta(progress)),
+          el('span', { class: 'studio-progress-metric__label' }, 'Tempo restante'),
+          el('div', { class: 'studio-progress-metric__value', id: 'studio-progress-eta' }, formatProgressRemaining(progress)),
+        ]),
+        el('div', { class: 'studio-progress-metric' }, [
+          el('span', { class: 'studio-progress-metric__label' }, 'Tempo decorrido'),
+          el('div', { class: 'studio-progress-metric__value', id: 'studio-progress-elapsed' }, formatProgressElapsed(progress)),
         ]),
       ]),
       el('div', { class: 'studio-progress-bar', role: 'progressbar', 'aria-valuenow': String(Math.round(percentVal)), 'aria-valuemin': '0', 'aria-valuemax': '100' }, [
@@ -828,7 +831,7 @@ function renderCancelledPanel(container, run, ctx) {
         StatusBadge({ status: run.status }),
       ]),
       el('p', { class: 'muted' }, run.error || 'Backtest cancelado pelo operador.'),
-      run.duration_ms ? el('p', { class: 'muted' }, `Duração até o cancelamento: ${formatProgressEta({ elapsed_ms: run.duration_ms })}`) : null,
+      run.duration_ms ? el('p', { class: 'muted' }, `Duração até o cancelamento: ${formatDurationMs(run.duration_ms)}`) : null,
       el('button', {
         type: 'button',
         class: 'btn btn--ghost btn--sm',

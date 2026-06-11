@@ -16,13 +16,17 @@ test('buildProgress advances loading percent from loaded rows', () => {
 
   const mid = buildProgress({
     phase: 'loading',
-    ticks: 500_000,
+    ticks: 0,
+    loadedTicks: 500_000,
     batches: 0,
     totalTicks: 1_000_000,
     startedAt,
   });
   assert.ok(mid.percent > early.percent);
   assert.ok(mid.percent < 12);
+  assert.equal(mid.ticks, 0);
+  assert.equal(mid.loaded_ticks, 500_000);
+  assert.equal(mid.eta_ms, null);
 
   const doneLoad = buildProgress({
     phase: 'processing',
@@ -46,4 +50,5 @@ test('buildProgress maps processing ticks into weighted percent', () => {
   assert.ok(half.percent > 50);
   assert.ok(half.percent < 99);
   assert.ok(half.eta_ms != null);
+  assert.ok(half.processing_elapsed_ms != null);
 });
