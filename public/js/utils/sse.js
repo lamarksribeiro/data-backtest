@@ -14,7 +14,7 @@ export function connectSse(onEvent) {
       for (const fn of listeners) fn(data);
     } catch { /* ignore */ }
   };
-  for (const type of ['run:progress', 'run:completed', 'run:failed', 'job:progress', 'job:completed', 'job:failed']) {
+  for (const type of ['run:queued', 'run:progress', 'run:completed', 'run:failed', 'run:cancelled', 'job:progress', 'job:completed', 'job:failed']) {
     source.addEventListener(type, (ev) => {
       try {
         const data = JSON.parse(ev.data);

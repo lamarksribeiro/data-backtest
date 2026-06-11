@@ -5295,3 +5295,180 @@ i.fa-solid, i.fa-regular, i.fa-brands {
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================================
+   Kanban de Estratégias (Trello Style)
+   ============================================================ */
+
+.editor-layout--full-width {
+  grid-template-columns: 1fr !important;
+}
+
+.editor-main--full-width {
+  grid-column: 1 / -1 !important;
+}
+
+.strategy-kanban {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(260px, 1fr));
+  gap: 16px;
+  align-items: start;
+  margin-top: 20px;
+  padding-bottom: 20px;
+  overflow-x: auto;
+}
+
+.kanban-column {
+  background: rgba(13, 19, 32, 0.45);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  min-height: 350px;
+  max-height: calc(100vh - var(--topbar-h) - 160px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-1);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.kanban-column:hover {
+  border-color: rgba(249, 115, 22, 0.15);
+}
+
+.kanban-column--warn {
+  border-top: 4px solid var(--warn);
+}
+.kanban-column--ok {
+  border-top: 4px solid var(--ok);
+}
+.kanban-column--err {
+  border-top: 4px solid var(--err);
+}
+.kanban-column--idle {
+  border-top: 4px solid var(--idle);
+}
+
+.kanban-column__header {
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.kanban-column__header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-0);
+  letter-spacing: -0.01em;
+}
+
+.kanban-column__count {
+  font-size: 11px;
+  background: var(--bg-hover);
+  color: var(--text-2);
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-weight: 600;
+}
+
+.kanban-column__cards {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 250px;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.kanban-column__cards.is-drag-over {
+  background: rgba(249, 115, 22, 0.05);
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+
+.kanban-empty-column {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-3);
+  font-size: 12px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.01);
+}
+
+/* Ajustes Premium nos Cards da Estratégia no Kanban */
+.strategy-card {
+  cursor: grab;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.2s ease;
+}
+
+.strategy-card:active {
+  cursor: grabbing;
+}
+
+.strategy-card.is-dragging {
+  opacity: 0.45;
+  border: 1px dashed var(--accent) !important;
+  box-shadow: 0 0 12px var(--accent-glow) !important;
+  transform: scale(0.98);
+}
+
+/* Card Favoritado */
+.strategy-card.is-pinned-card {
+  border: 1px solid rgba(249, 115, 22, 0.45);
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.04), var(--bg-1));
+  box-shadow: 0 4px 15px rgba(249, 115, 22, 0.08);
+}
+
+.strategy-card.is-pinned-card:hover {
+  border-color: var(--accent);
+}
+
+.strategy-card__title {
+  cursor: pointer;
+}
+
+.strategy-card__title:hover {
+  color: var(--accent) !important;
+}
+
+.btn--back-library {
+  border: 1px solid var(--border-strong) !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--text-2) !important;
+  background: rgba(22, 31, 48, 0.32) !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease !important;
+}
+
+.btn--back-library:hover {
+  color: var(--text-0) !important;
+  background: var(--bg-hover) !important;
+  border-color: rgba(249, 115, 22, 0.55) !important;
+}
+
+/* Responsividade Kanban */
+@media (max-width: 1024px) {
+  .strategy-kanban {
+    grid-template-columns: repeat(2, minmax(240px, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .strategy-kanban {
+    grid-template-columns: 1fr;
+  }
+}
+
+.strategy-library {
+  max-width: none !important;
+  width: 100% !important;
+}
+
+

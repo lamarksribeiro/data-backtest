@@ -116,7 +116,7 @@ CREATE TABLE IF NOT EXISTS strategy_definitions (
   slug TEXT NOT NULL UNIQUE,
   name TEXT NOT NULL,
   description TEXT,
-  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'validated', 'archived')),
+  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'validated', 'failed', 'archived')),
   tags_json TEXT NOT NULL DEFAULT '[]',
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
@@ -187,6 +187,7 @@ export function openStateDatabase(stateDbPath) {
   migrateBacktestRuns(db);
   migratePrepareJobs(db);
   migrateStrategyV3(db);
+  migrateStrategyDefinitions(db);
   migrateBacktestRunsV3Indexes(db);
   applyColumnMigrations(db, 'backtest_runs', BACKTEST_RUNS_V3_COLUMNS);
   return db;
@@ -234,6 +235,40 @@ function migrateLakeManifest(db) {
   }
   applyColumnMigrations(db, 'lake_manifest', LAKE_MANIFEST_MIGRATIONS);
   db.exec(SCHEMA_SQL);
+}
+
+function migrateStrategyDefinitions(db) {
+  const table = db.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'strategy_definitions'").get();
+  if (!table?.sql) return;
+
+  if (!table.sql.includes("'failed'")) {
+    db.exec(`
+      PRAGMA foreign_keys = OFF;
+      ALTER TABLE strategy_definitions RENAME TO strategy_definitions_old;
+      
+      CREATE TABLE strategy_definitions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        slug TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL,
+        description TEXT,
+        status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'validated', 'failed', 'archived')),
+        tags_json TEXT NOT NULL DEFAULT '[]',
+        pinned INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+        updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+      );
+
+      INSERT INTO strategy_definitions (
+        id, slug, name, description, status, tags_json, pinned, created_at, updated_at
+      )
+      SELECT
+        id, slug, name, description, status, tags_json, pinned, created_at, updated_at
+      FROM strategy_definitions_old;
+
+      DROP TABLE strategy_definitions_old;
+      PRAGMA foreign_keys = ON;
+    `);
+  }
 }
 
 function migrateBacktestRuns(db) {

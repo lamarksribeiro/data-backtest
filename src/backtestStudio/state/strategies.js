@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { validate as validateGls } from '../gls/validator.js';
 import { invalidateStrategyStatsCache } from './strategyStats.js';
 
-const ALLOWED_STATUS = new Set(['draft', 'validated', 'archived']);
+const ALLOWED_STATUS = new Set(['draft', 'validated', 'failed', 'archived']);
 
 export function listStrategies(db, { withStats = false } = {}) {
   const rows = db.prepare('SELECT * FROM strategy_definitions ORDER BY pinned DESC, updated_at DESC, id DESC').all();

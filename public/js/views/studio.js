@@ -83,6 +83,8 @@ function applyProgressUi(progress) {
   const percent = progress.percent != null ? Number(progress.percent) : 0;
   const fill = document.getElementById('studio-progress-fill');
   if (fill) fill.style.width = `${Math.min(100, Math.max(0, percent))}%`;
+  const bar = document.querySelector('.studio-progress-bar');
+  if (bar) bar.setAttribute('aria-valuenow', String(Math.round(percent)));
   const pct = document.getElementById('studio-progress-pct');
   if (pct) pct.textContent = `${percent.toFixed(0)}%`;
   const phase = document.getElementById('studio-progress-phase');
@@ -93,6 +95,24 @@ function applyProgressUi(progress) {
   }
   const eta = document.getElementById('studio-progress-eta');
   if (eta) eta.textContent = formatProgressEta(progress);
+  const depends = document.getElementById('studio-progress-depends');
+  if (depends) {
+    if (progress.depends_on_job) {
+      depends.textContent = `Aguardando job #${progress.depends_on_job}`;
+      depends.hidden = false;
+    } else {
+      depends.hidden = true;
+    }
+  }
+}
+
+function updateRunListProgress(runId, status, progress) {
+  const item = document.getElementById(`run-item-${runId}`);
+  const pnlEl = item?.querySelector('.studio-run-item__pnl');
+  if (!pnlEl) return;
+  if (status === 'queued') pnlEl.textContent = progress?.depends_on_job ? 'Aguardando dados' : 'Fila';
+  else if (status === 'running') pnlEl.textContent = `Rodando (${Number(progress?.percent || 0).toFixed(0)}%)`;
+  else if (status === 'cancelled') pnlEl.textContent = 'Cancelado';
 }
 
 function showStudioEmptyMain(main) {
@@ -132,13 +152,20 @@ async function cancelRunFromStudio(ctx, run) {
     cancelBtn.textContent = 'Cancelando…';
   }
 
-  const cancelRes = await ctx.api.post(`/api/backtest/runs/${run.id}/cancel`);
-  studioState.cancellingRunId = null;
+  let cancelRes;
+  try {
+    cancelRes = await ctx.api.post(`/api/backtest/runs/${run.id}/cancel`);
+  } catch (err) {
+    cancelRes = { ok: false, error: { message: err?.message || 'Falha ao cancelar' } };
+  } finally {
+    studioState.cancellingRunId = null;
+  }
 
   if (cancelRes.ok && cancelRes.data?.run) {
     cacheInvalidate('runs');
     ctx.toast.ok('Backtest cancelado');
-    await exitRunSelection(ctx);
+    await refreshRuns(ctx);
+    if (studioState.selectedRunId === run.id) await loadRunDetail(ctx, run.id);
     return;
   }
 
@@ -147,7 +174,8 @@ async function cancelRunFromStudio(ctx, run) {
     const detail = await ctx.api.get(`/api/backtest/runs/${run.id}?slim=1`);
     if (detail.ok && !['running', 'queued'].includes(detail.data.run.status)) {
       ctx.toast.ok('Backtest já finalizado');
-      await exitRunSelection(ctx);
+      await refreshRuns(ctx);
+      if (studioState.selectedRunId === run.id) await loadRunDetail(ctx, run.id);
       return;
     }
   }
@@ -177,6 +205,7 @@ function startProgressPoll(ctx, runId) {
       return;
     }
     if (run.progress) applyProgressUi(run.progress);
+    updateRunListProgress(runId, run.status, run.progress);
   };
   pollOnce();
   // Poll complementa SSE (Cloudflare/buffer e runs rápidos podem perder eventos).
@@ -596,6 +625,10 @@ async function loadRunDetail(ctx, runId) {
     renderProgressPanel(main, run, ctx);
     return;
   }
+  if (run.status === 'cancelled') {
+    renderCancelledPanel(main, run, ctx);
+    return;
+  }
 
   const summary = run.summary || {};
   mount(main, el('div', { class: 'studio-result' }, [
@@ -711,7 +744,7 @@ function renderProgressPanel(container, run, ctx) {
         el('strong', {}, `Backtest #${run.id}`),
         StatusBadge({ status: run.status }),
       ]),
-      progress.depends_on_job ? el('p', { class: 'muted', id: 'studio-progress-depends' }, `Aguardando job #${progress.depends_on_job}`) : null,
+      el('p', { class: 'muted', id: 'studio-progress-depends', hidden: !progress.depends_on_job }, progress.depends_on_job ? `Aguardando job #${progress.depends_on_job}` : ''),
       el('div', { class: 'studio-progress-metrics' }, [
         el('div', { class: 'studio-progress-metric' }, [
           el('span', { class: 'studio-progress-metric__label' }, 'Progresso'),
@@ -742,6 +775,24 @@ function renderProgressPanel(container, run, ctx) {
     ]),
   ]));
   if (run.status === 'running' || run.status === 'queued') startProgressPoll(ctx, run.id);
+}
+
+function renderCancelledPanel(container, run, ctx) {
+  mount(container, el('div', { class: 'studio-progress-panel' }, [
+    el('div', { class: 'studio-progress-card' }, [
+      el('div', { class: 'studio-progress-card__head' }, [
+        el('strong', {}, `Backtest #${run.id}`),
+        StatusBadge({ status: run.status }),
+      ]),
+      el('p', { class: 'muted' }, run.error || 'Backtest cancelado pelo operador.'),
+      run.duration_ms ? el('p', { class: 'muted' }, `Duração até o cancelamento: ${formatProgressEta({ elapsed_ms: run.duration_ms })}`) : null,
+      el('button', {
+        type: 'button',
+        class: 'btn btn--ghost btn--sm',
+        onclick: () => exitRunSelection(ctx),
+      }, 'Voltar para seleção'),
+    ]),
+  ]));
 }
 
 function renderVirtualEventTable(events, ctx, runId) {
@@ -876,29 +927,12 @@ function bindSse(ctx) {
     if (!isStudioRouteActive()) return;
     if (event.type === 'run:progress' && event.runId === studioState.selectedRunId) {
       applyProgressUi(event.progress);
-      const bar = document.querySelector('.studio-progress-bar');
-      if (bar && event.progress?.percent != null) {
-        bar.setAttribute('aria-valuenow', String(Math.round(event.progress.percent)));
-      }
-      const depends = document.getElementById('studio-progress-depends');
-      if (depends) {
-        if (event.progress?.depends_on_job) {
-          depends.textContent = `Aguardando job #${event.progress.depends_on_job}`;
-          depends.hidden = false;
-        } else {
-          depends.hidden = true;
-        }
-      }
-      const item = document.getElementById(`run-item-${event.runId}`);
-      const pnlEl = item?.querySelector('.studio-run-item__pnl');
-      if (pnlEl && event.progress?.percent != null) {
-        pnlEl.textContent = `Rodando (${event.progress.percent.toFixed(0)}%)`;
-      }
+      updateRunListProgress(event.runId, 'running', event.progress);
     }
     if (event.type === 'run:cancelled') {
       cacheInvalidate('runs');
       refreshRuns(ctx);
-      if (event.runId === studioState.selectedRunId) exitRunSelection(ctx);
+      if (event.runId === studioState.selectedRunId) loadRunDetail(ctx, event.runId);
     }
     if (event.type === 'run:completed' || event.type === 'run:failed') {
       cacheInvalidate('runs');

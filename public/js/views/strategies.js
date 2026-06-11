@@ -71,7 +71,7 @@ export async function renderStrategies(ctx, params = {}) {
         el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => renderStrategies(ctx) }, 'Recarregar'),
       ]),
     ]),
-    el('div', { class: 'editor-layout editor-layout--two-cols', id: 'strategies-root' }, el('p', { class: 'muted' }, 'Carregando...')),
+    el('div', { class: 'editor-layout editor-layout--full-width', id: 'strategies-root' }, el('p', { class: 'muted' }, 'Carregando...')),
   ]);
 
   const res = await ctx.api.get('/api/strategies?stats=1');
@@ -97,8 +97,7 @@ export async function renderStrategies(ctx, params = {}) {
   ctx.setBreadcrumb('strategies', selected?.name || null);
 
   mount(document.getElementById('strategies-root'), [
-    el('aside', { class: 'editor-sidebar card', id: 'strategy-list-panel' }, renderStrategyList(ctx)),
-    el('div', { class: 'editor-main card', id: 'strategy-editor' }, el('p', { class: 'muted' }, 'Selecione uma estratégia.')),
+    el('div', { class: 'editor-main card editor-main--full-width', id: 'strategy-editor' }, el('p', { class: 'muted' }, 'Selecione uma estratégia.')),
   ]);
 
   await openStrategyEditor(ctx, state.selectedId, params.versionId ? Number(params.versionId) : null);
@@ -107,9 +106,7 @@ export async function renderStrategies(ctx, params = {}) {
 function renderLibrary(ctx) {
   const filtered = state.list.filter((s) => {
     const q = state.strategyQuery.toLowerCase();
-    const matchQ = s.name.toLowerCase().includes(q) || s.slug.toLowerCase().includes(q);
-    const matchStatus = state.statusFilter === 'all' || s.status === state.statusFilter;
-    return matchQ && matchStatus;
+    return s.name.toLowerCase().includes(q) || s.slug.toLowerCase().includes(q);
   }).sort((a, b) => {
     const sa = a.stats?.totals || {};
     const sb = b.stats?.totals || {};
@@ -119,23 +116,32 @@ function renderLibrary(ctx) {
     return String(sb.last_run_at || '').localeCompare(String(sa.last_run_at || ''));
   });
 
-  const archived = filtered.filter((s) => s.status === 'archived');
-  const active = filtered.filter((s) => s.status !== 'archived');
+  const columns = {
+    draft: { title: 'Em Teste', class: 'warn', items: [] },
+    validated: { title: 'Aprovadas', class: 'ok', items: [] },
+    failed: { title: 'Falharam', class: 'err', items: [] },
+    archived: { title: 'Arquivadas', class: 'idle', items: [] }
+  };
+
+  for (const s of filtered) {
+    const status = s.status || 'draft';
+    if (columns[status]) {
+      columns[status].items.push(s);
+    } else {
+      columns.draft.items.push(s);
+    }
+  }
 
   return el('div', { class: 'strategy-library' }, [
     el('div', { class: 'strategy-library__toolbar' }, [
       el('input', {
-        class: 'field__input',
-        placeholder: 'Buscar…',
+        class: 'field__input search-field-library',
+        placeholder: 'Buscar estratégias…',
         value: state.strategyQuery,
-        oninput: (e) => { state.strategyQuery = e.target.value; renderStrategies(ctx); },
+        oninput: (e) => { state.strategyQuery = e.target.value; updateKanbanCards(ctx); },
       }),
       el('select', {
-        class: 'field__input',
-        onchange: (e) => { state.statusFilter = e.target.value; renderStrategies(ctx); },
-      }, ['all', 'validated', 'draft', 'archived'].map((v) => el('option', { value: v, selected: state.statusFilter === v }, v))),
-      el('select', {
-        class: 'field__input',
+        class: 'field__input sort-field-library',
         onchange: (e) => { state.librarySort = e.target.value; renderStrategies(ctx); },
       }, [
         el('option', { value: 'last_use', selected: state.librarySort === 'last_use' }, 'Último uso'),
@@ -144,21 +150,91 @@ function renderLibrary(ctx) {
         el('option', { value: 'name', selected: state.librarySort === 'name' }, 'Nome'),
       ]),
     ]),
-    el('div', { class: 'strategy-library__grid' }, active.length
-      ? active.map((s) => strategyCard(ctx, s))
-      : [emptyState('Nenhuma estratégia encontrada.')]),
-    archived.length ? el('details', { class: 'strategy-library__archived' }, [
-      el('summary', {}, `Arquivadas (${archived.length})`),
-      el('div', { class: 'strategy-library__grid' }, archived.map((s) => strategyCard(ctx, s))),
-    ]) : null,
+    el('div', { class: 'strategy-kanban' }, Object.entries(columns).map(([statusKey, col]) => {
+      return el('div', { class: `kanban-column kanban-column--${col.class}`, dataset: { status: statusKey } }, [
+        el('div', { class: 'kanban-column__header' }, [
+          el('div', { class: 'row' }, [
+            el('span', { class: `dot dot--${col.class}` }),
+            el('h3', {}, col.title),
+          ]),
+          el('div', { class: 'row' }, [
+            el('span', { class: 'kanban-column__count' }, String(col.items.length)),
+            statusKey === 'draft' ? el('button', {
+              class: 'btn btn--ghost btn--sm btn--icon',
+              style: { width: '24px', height: '24px', padding: 0 },
+              title: 'Nova estratégia rápida',
+              onclick: () => createStrategyFlow(ctx)
+            }, '+') : null
+          ])
+        ]),
+        el('div', {
+          class: 'kanban-column__cards',
+          ondragover: (e) => {
+            e.preventDefault();
+            e.currentTarget.classList.add('is-drag-over');
+          },
+          ondragleave: (e) => {
+            e.currentTarget.classList.remove('is-drag-over');
+          },
+          ondrop: async (e) => {
+            e.preventDefault();
+            e.currentTarget.classList.remove('is-drag-over');
+            const strategyId = Number(e.dataTransfer.getData('text/plain'));
+            const nextStatus = statusKey;
+            if (strategyId) {
+              const strategy = state.list.find(s => s.id === strategyId);
+              if (strategy && strategy.status !== nextStatus) {
+                const patchRes = await ctx.api.patch(`/api/strategies/${strategyId}`, { status: nextStatus });
+                if (patchRes.ok) {
+                  ctx.toast.ok(`"${strategy.name}" movida para ${col.title}`);
+                  const listRes = await ctx.api.get('/api/strategies?stats=1');
+                  if (listRes.ok) {
+                    state.list = listRes.data.strategies || [];
+                    state.libraryStats = state.list;
+                  }
+                  renderStrategies(ctx);
+                } else {
+                  ctx.toast.err(patchRes.error?.message || 'Falha ao mover estratégia');
+                }
+              }
+            }
+          }
+        }, col.items.length
+          ? col.items.map((s) => strategyCard(ctx, s))
+          : [el('div', { class: 'kanban-empty-column' }, 'Arraste estratégias aqui')])
+      ]);
+    }))
   ]);
+}
+
+function updateKanbanCards(ctx) {
+  const q = state.strategyQuery.toLowerCase();
+  document.querySelectorAll('.strategy-card').forEach((card) => {
+    const titleEl = card.querySelector('.strategy-card__title');
+    if (titleEl) {
+      const name = titleEl.textContent.toLowerCase();
+      const match = name.includes(q);
+      card.style.display = match ? 'flex' : 'none';
+    }
+  });
 }
 
 function strategyCard(ctx, strategy) {
   const stats = strategy.stats?.totals || strategy.totals || {};
   const spark = strategy.stats?.sparkline || strategy.sparkline || [];
   const versionNum = strategy.latest_version ?? strategy.stats?.by_version?.[0]?.version;
-  return el('article', { class: 'strategy-card' }, [
+  return el('article', {
+    class: `strategy-card${strategy.pinned ? ' is-pinned-card' : ''}`,
+    draggable: 'true',
+    dataset: { id: String(strategy.id) },
+    ondragstart: (e) => {
+      e.dataTransfer.setData('text/plain', String(strategy.id));
+      e.currentTarget.classList.add('is-dragging');
+    },
+    ondragend: (e) => {
+      e.currentTarget.classList.remove('is-dragging');
+    }
+  }, [
     el('header', { class: 'strategy-card__head' }, [
       el('button', {
         type: 'button',
@@ -168,12 +244,17 @@ function strategyCard(ctx, strategy) {
         onclick: async (e) => {
           e.stopPropagation();
           await ctx.api.patch(`/api/strategies/${strategy.id}`, { pinned: !strategy.pinned });
+          const res = await ctx.api.get('/api/strategies?stats=1');
+          if (res.ok) {
+            state.list = res.data.strategies || [];
+            state.libraryStats = state.list;
+          }
           renderStrategies(ctx);
         },
       }, '★'),
-      el('strong', { class: 'strategy-card__title' }, strategy.name),
-      el('span', { class: `badge badge--${strategy.status === 'validated' ? 'ok' : 'idle'}` },
-        `${strategy.status}${versionNum != null ? ` · v${versionNum}` : ''}`),
+      el('strong', { class: 'strategy-card__title', onclick: () => ctx.navigate(`strategies/${strategy.id}`) }, strategy.name),
+      el('span', { class: `badge badge--${strategyStatusTone(strategy.status)}` },
+        `${translateStatus(strategy.status)}${versionNum != null ? ` · v${versionNum}` : ''}`),
     ]),
     spark.length
       ? el('div', { class: 'strategy-card__spark', id: `spark-${strategy.id}`, 'aria-hidden': 'true' })
@@ -193,7 +274,7 @@ function strategyCard(ctx, strategy) {
         type: 'button',
         class: 'btn btn--ghost btn--sm',
         onclick: () => ctx.navigate(`strategies/${strategy.id}`),
-      }, 'Abrir'),
+      }, 'Editar'),
       el('button', {
         type: 'button',
         class: 'btn btn--ghost btn--sm',
@@ -298,7 +379,16 @@ function statusTab(ctx, status, label) {
 function strategyStatusTone(status) {
   if (status === 'validated') return 'ok';
   if (status === 'archived') return 'idle';
+  if (status === 'failed') return 'err';
   return 'warn';
+}
+
+function translateStatus(status) {
+  if (status === 'draft') return 'Em Teste';
+  if (status === 'validated') return 'Aprovada';
+  if (status === 'failed') return 'Falhou';
+  if (status === 'archived') return 'Arquivada';
+  return status;
 }
 
 function renderStrategyHeaderMeta(strategy) {
@@ -356,9 +446,17 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
 
   mount(editorPanel, [
     el('div', { class: 'strategy-header-row' }, [
-      el('div', { class: 'editor-title-block' }, [
-        el('h2', { class: 'card__title', id: 'strategy-title' }, strategy.name),
-        renderStrategyHeaderMeta(strategy),
+      el('div', { class: 'editor-title-block', style: { display: 'flex', alignItems: 'center', gap: '12px' } }, [
+        el('button', {
+          class: 'btn btn--ghost btn--sm btn--back-library',
+          style: { padding: '6px 10px' },
+          title: 'Voltar para o Kanban',
+          onclick: () => ctx.navigate('strategies')
+        }, el('i', { class: 'fa-solid fa-arrow-left' })),
+        el('div', {}, [
+          el('h2', { class: 'card__title', id: 'strategy-title', style: { margin: 0 } }, strategy.name),
+          renderStrategyHeaderMeta(strategy),
+        ]),
       ]),
       el('div', { class: 'strategy-header-toolbar' }, [
         el('div', { class: 'strategy-version-control' }, [
@@ -678,8 +776,8 @@ function renderStrategyMetaForm(ctx, strategy) {
     ]),
     el('label', { class: 'field' }, [
       el('span', { class: 'field__label' }, 'Status'),
-      el('select', { class: 'field__input', name: 'status' }, ['draft', 'validated', 'archived'].map((status) => (
-        el('option', { value: status, selected: status === strategy.status }, status)
+      el('select', { class: 'field__input', name: 'status' }, ['draft', 'validated', 'failed', 'archived'].map((status) => (
+        el('option', { value: status, selected: status === strategy.status }, translateStatus(status))
       ))),
     ]),
     el('label', { class: 'field' }, [
@@ -907,11 +1005,27 @@ function buildHintWords() {
   return [...base, ...blocks];
 }
 
+function slugify(text) {
+  return text
+    .toString()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/\-\-+/g, '-');
+}
+
 async function createStrategyFlow(ctx) {
-  const slug = await promptDialog({ title: 'Nova estratégia', message: 'Slug (ex: simple-ptb):', placeholder: 'minha-estrategia' });
-  if (!slug?.trim()) return;
-  const name = await promptDialog({ title: 'Nome', message: 'Nome da estratégia:', placeholder: slug }) || slug;
-  const created = await ctx.api.post('/api/strategies', { slug: slug.trim(), name: name.trim() });
+  const name = await promptDialog({ title: 'Nova estratégia', message: 'Nome da estratégia:', placeholder: 'Ex: Minha Estratégia' });
+  if (!name?.trim()) return;
+  const slug = slugify(name);
+  if (!slug) {
+    ctx.toast.err('Nome inválido para gerar slug');
+    return;
+  }
+  const created = await ctx.api.post('/api/strategies', { slug, name: name.trim() });
   if (!created.ok) {
     ctx.toast.err(created.error?.message || 'Falha ao criar');
     return;

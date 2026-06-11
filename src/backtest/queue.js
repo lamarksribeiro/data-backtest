@@ -16,6 +16,7 @@ export function createBacktestQueue({ config, db, onEvent }) {
   const maxConcurrent = config.maxConcurrentBacktests ?? 1;
   const activeWorkers = new Map();
   const pendingRequests = new Map();
+  const terminalRuns = new Set();
   let draining = false;
 
   function emit(type, payload) {
@@ -24,6 +25,7 @@ export function createBacktestQueue({ config, db, onEvent }) {
 
   function enqueue({ request, strategyMeta, totalTicks, startedAt, dependsOnJob = null }) {
     const run = createQueuedBacktestRun(db, { request, strategyMeta, totalTicks, dependsOnJob });
+    terminalRuns.delete(run.id);
     pendingRequests.set(run.id, request);
     const position = listQueuedBacktestRuns(db).findIndex((r) => r.id === run.id) + 1;
     emit('run:queued', { runId: run.id, queuePosition: position });
@@ -72,17 +74,27 @@ export function createBacktestQueue({ config, db, onEvent }) {
 
     worker.on('message', (msg) => {
       if (msg?.type === 'progress') {
-        updateBacktestRunProgress(db, run.id, msg.progress);
+        if (terminalRuns.has(run.id)) return;
+        const current = safeGetBacktestRun(db, run.id);
+        if (!current || current.status !== 'running') {
+          if (current && !['running', 'queued'].includes(current.status)) terminalRuns.add(run.id);
+          return;
+        }
+        if (!safeUpdateBacktestRunProgress(db, run.id, msg.progress)) return;
         emit('run:progress', { runId: run.id, progress: msg.progress });
         return;
       }
       if (msg?.ok === true) {
-        const completed = getBacktestRun(db, run.id);
+        terminalRuns.add(run.id);
+        const completed = safeGetBacktestRun(db, run.id);
+        if (!completed) return;
         emit('run:completed', { runId: run.id, run: completed });
         return;
       }
       if (msg?.ok === false) {
-        const failed = getBacktestRun(db, run.id);
+        terminalRuns.add(run.id);
+        const failed = safeGetBacktestRun(db, run.id);
+        if (!failed) return;
         emit('run:failed', { runId: run.id, run: failed, error: msg.error });
       }
     });
@@ -93,10 +105,11 @@ export function createBacktestQueue({ config, db, onEvent }) {
 
     worker.on('exit', (code) => {
       activeWorkers.delete(run.id);
-      const current = getBacktestRun(db, run.id);
+      const current = safeGetBacktestRun(db, run.id);
       if (code !== 0 && current?.status === 'running') {
         handleFailure(run.id, request, startedAt, `Worker exited with code ${code}`);
       }
+      if (current && !['running', 'queued'].includes(current.status)) terminalRuns.add(run.id);
       queueMicrotask(() => drain());
     });
 
@@ -119,14 +132,20 @@ export function createBacktestQueue({ config, db, onEvent }) {
       equity: [],
       log: [],
     };
-    const run = failBacktestRun(db, runId, {
-      request,
-      result: failedResult,
-      strategyMeta: request.strategyMeta ?? null,
-      error,
-      startedAt,
-    });
-    emit('run:failed', { runId, run, error });
+    let run = null;
+    try {
+      run = failBacktestRun(db, runId, {
+        request,
+        result: failedResult,
+        strategyMeta: request.strategyMeta ?? null,
+        error,
+        startedAt,
+      });
+    } catch (err) {
+      if (!isClosedDbError(err)) throw err;
+    }
+    terminalRuns.add(runId);
+    if (run) emit('run:failed', { runId, run, error });
   }
 
   function onWorkerComplete(runId, request, startedAt) {
@@ -135,6 +154,7 @@ export function createBacktestQueue({ config, db, onEvent }) {
   }
 
   function cancel(runId) {
+    terminalRuns.add(runId);
     const worker = activeWorkers.get(runId);
     if (worker) {
       worker.terminate();
@@ -156,4 +176,27 @@ export function createBacktestQueue({ config, db, onEvent }) {
   }
 
   return { enqueue, drain, cancel, activeCount, onWorkerComplete, releaseWaitingRuns };
+}
+
+function safeGetBacktestRun(db, runId) {
+  try {
+    return getBacktestRun(db, runId);
+  } catch (err) {
+    if (isClosedDbError(err)) return null;
+    throw err;
+  }
+}
+
+function safeUpdateBacktestRunProgress(db, runId, progress) {
+  try {
+    updateBacktestRunProgress(db, runId, progress);
+    return true;
+  } catch (err) {
+    if (isClosedDbError(err)) return false;
+    throw err;
+  }
+}
+
+function isClosedDbError(err) {
+  return err?.code === 'ERR_INVALID_STATE' && /database is not open/i.test(err.message || '');
 }
