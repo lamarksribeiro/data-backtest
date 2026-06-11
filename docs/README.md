@@ -9,7 +9,8 @@ documentação por finalidade: **arquitetura** (decisões e planos), **implement
 
 | Quero… | Documento |
 |--------|-----------|
-| Entender o plano de evolução atual (performance + UX) | [arquitetura/arquitetura-v2-performance-ux.md](arquitetura/arquitetura-v2-performance-ux.md) |
+| Entender o plano de evolução atual (Estúdio único, Dados simples, biblioteca de estratégias) | [arquitetura/arquitetura-v3-consolidacao-ux.md](arquitetura/arquitetura-v3-consolidacao-ux.md) |
+| Ver o que a V2 entregou (motor rápido, SSE, Estúdio) | [arquitetura/arquitetura-v2-performance-ux.md](arquitetura/arquitetura-v2-performance-ux.md) |
 | Usar o Backtest Studio (escrever estratégias GLS, rodar backtests) | [referencia/manual-backtest-studio.md](referencia/manual-backtest-studio.md) |
 | Operar o lakehouse (sync, validação, rebuild, backup) | [operacao/operacao-lakehouse.md](operacao/operacao-lakehouse.md) |
 | Consultar endpoints e schemas | [referencia/contratos-api-schemas.md](referencia/contratos-api-schemas.md) |
@@ -18,9 +19,12 @@ documentação por finalidade: **arquitetura** (decisões e planos), **implement
 
 | Documento | Conteúdo |
 |-----------|----------|
-| [arquitetura-v2-performance-ux.md](arquitetura/arquitetura-v2-performance-ux.md) | **Plano diretor atual**: diagnóstico de gargalos, compilador GLS→JS, pipeline com prefetch, fila + SSE, Estúdio de painel único, comparador de runs, fases R1–R9 |
+| [arquitetura-v3-consolidacao-ux.md](arquitetura/arquitetura-v3-consolidacao-ux.md) | **Plano diretor atual**: Estúdio como tela única de backtest, view Dados com 3 estados derivados + correção em 1 clique, biblioteca de estratégias com stats/fork/diff/versões, fases U1–U7 |
+| [arquitetura-v2-performance-ux.md](arquitetura/arquitetura-v2-performance-ux.md) | Plano V2 (implementado): compilador GLS→JS, pipeline com prefetch, fila + SSE, Estúdio de painel único, comparador de runs, fases R1–R9 |
 | [arquitetura-lakehouse-backtest.md](arquitetura/arquitetura-lakehouse-backtest.md) | Visão original do lakehouse: Postgres → Parquet/DuckDB, manifest, validação, fases 0–13 |
 | [arquitetura-editor-estrategias.md](arquitetura/arquitetura-editor-estrategias.md) | Visão original do Backtest Studio: linguagem GLS v1, blocos, runtime, traces |
+| [arquitetura-backtest-v2.md](arquitetura/arquitetura-backtest-v2.md) | Nota histórica: direção inicial da V2 (Data/Execution/Experience Plane); superseded pela V2/V3 |
+| [refatoracao-melhorias.md](arquitetura/refatoracao-melhorias.md) | Nota histórica: backlog de melhorias que originou a V2; superseded pela V2/V3 |
 
 ## Implementação — o que está construído
 

@@ -1,10 +1,13 @@
 # Arquitetura V2 — Backtest rápido, UX de estúdio e design profissional
 
-> Status: **proposta aprovada para implementação** (jun/2026).
-> Este documento é o plano diretor da evolução do `data-backtest`. Ele parte de um
-> diagnóstico concreto do código atual (arquivos e linhas citados) e define a
-> arquitetura alvo em duas frentes: **motor de backtest** (velocidade) e
-> **experiência de uso** (navegação, visualização e design).
+> Status: **implementado** (jun/2026) — motor (compilador GLS, prefetch, fila, SSE,
+> traces incrementais) e Estúdio entregues. A evolução seguinte (Estúdio como tela
+> única, simplificação da view Dados e biblioteca de estratégias) está em
+> [arquitetura-v3-consolidacao-ux.md](arquitetura-v3-consolidacao-ux.md), o plano
+> diretor atual.
+> Este documento parte de um diagnóstico concreto do código da época (arquivos e
+> linhas citados) e define a arquitetura em duas frentes: **motor de backtest**
+> (velocidade) e **experiência de uso** (navegação, visualização e design).
 
 ---
 
