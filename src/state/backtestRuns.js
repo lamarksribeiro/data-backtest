@@ -63,13 +63,14 @@ export function createBacktestRun(db, { request, result, strategyMeta = null, st
   }
 }
 
-export function createQueuedBacktestRun(db, { request, strategyMeta = null, totalTicks = null }) {
+export function createQueuedBacktestRun(db, { request, strategyMeta = null, totalTicks = null, dependsOnJob = null }) {
   return insertBacktestRunRow(db, {
     request,
     strategyMeta,
     totalTicks,
     status: 'queued',
     phase: 'queued',
+    dependsOnJob,
   });
 }
 
@@ -110,7 +111,30 @@ export function listQueuedBacktestRuns(db) {
   `).all().map((row) => toApiRun(row));
 }
 
-function insertBacktestRunRow(db, { request, strategyMeta, totalTicks, status, phase }) {
+export function listBacktestRunsWaitingForJob(db, jobId) {
+  const rows = db.prepare(`
+    SELECT * FROM backtest_runs WHERE status = 'queued' ORDER BY id ASC
+  `).all();
+  return rows
+    .filter((row) => {
+      const progress = row.progress_json ? JSON.parse(row.progress_json) : {};
+      return Number(progress.depends_on_job) === Number(jobId);
+    })
+    .map((row) => toApiRun(row));
+}
+
+export function clearRunJobDependency(db, runId) {
+  const row = db.prepare('SELECT progress_json FROM backtest_runs WHERE id = ?').get(runId);
+  if (!row?.progress_json) return null;
+  const progress = JSON.parse(row.progress_json);
+  if (!progress.depends_on_job) return null;
+  delete progress.depends_on_job;
+  progress.updated_at = new Date().toISOString();
+  db.prepare('UPDATE backtest_runs SET progress_json = ? WHERE id = ?').run(JSON.stringify(progress), runId);
+  return getBacktestRun(db, runId, { includeResult: false, includeEquity: false });
+}
+
+function insertBacktestRunRow(db, { request, strategyMeta, totalTicks, status, phase, dependsOnJob = null }) {
   const meta = strategyMeta ?? request.strategyMeta ?? null;
   const nowProgress = {
     phase,
@@ -121,6 +145,7 @@ function insertBacktestRunRow(db, { request, strategyMeta, totalTicks, status, p
     started_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     eta_ms: null,
+    ...(dependsOnJob != null ? { depends_on_job: Number(dependsOnJob) } : {}),
   };
   const result = minimalResultForRequest(request, { summary: { timings: {}, progress: nowProgress } });
   const inserted = db.prepare(`

@@ -923,6 +923,70 @@ chart_series_path
 created_at
 ```
 
+## Data Coverage API (V3)
+
+### `GET /api/data/coverage`
+
+Query: `underlying`, `interval`, `dataset` (default `backtest_ticks`), `book_depth`, `from`, `to`.
+
+Response:
+
+```json
+{
+  "coverage": {
+    "underlying": "BTC",
+    "interval": "5m",
+    "days": [
+      { "dt": "2026-06-01", "ui_state": "ready", "raw_status": "valid", "rows": 12000, "partitions": [] }
+    ],
+    "summary": { "ready": 1, "processing": 0, "attention": 0, "total": 1 }
+  }
+}
+```
+
+`ui_state` deriva de `manifest.status`: `ready` = valid|accepted; `processing` = pending|writing|rebuilding; `attention` = missing|invalid|needs_review|stale.
+
+### `POST /api/data/fix`
+
+Body: `{ "request": { dataset, from, to, underlying, interval, book_depth }, "dry_run": false, "confirm_rebuild": true }`.
+
+Executa auto-accept (`acceptEligibleReviewPartitions`), monta plano prepare e enfileira job unico. Resposta inclui `summary_lines[]` legiveis.
+
+## Strategy Stats API (V3)
+
+### `GET /api/strategies?stats=1`
+
+Lista estrategias com `stats` embutido (totals, sparkline, by_version).
+
+### `GET /api/strategies/:id/stats`
+
+```json
+{
+  "stats": {
+    "strategy_id": 5,
+    "totals": { "runs": 42, "win_rate": 0.58, "best_pnl": 812.4, "last_run_at": "..." },
+    "sparkline": [12.5, -4.2],
+    "by_version": [{ "version": 7, "runs": 9, "win_rate": 0.61, "avg_pnl": 34.2, "best_pnl": 812.4 }]
+  }
+}
+```
+
+### `POST /api/strategies/:id/fork`
+
+Body opcional: `{ "versionId": 12, "name": "..." }`. Cria slug `*-fork` em status `draft` com v1 = codigo da versao escolhida.
+
+### `strategy_versions.notes`
+
+Campo opcional ao `POST /api/strategies/:id/versions` (`notes` texto).
+
+### `strategy_definitions.pinned`
+
+`PATCH /api/strategies/:id` com `{ "pinned": true }` para favoritos na biblioteca.
+
+### Backtest run dependente de job
+
+`POST /api/backtest/run` aceita `depends_on_job` (ou `wait_for_job`) quando `async: true`; o run permanece `queued` ate `job:completed`.
+
 ## Compatibility Rules
 
 - Nao remover campos existentes de resposta sem migracao clara.

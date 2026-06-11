@@ -1,17 +1,11 @@
 import { initRouter, navigate, getRouteToken } from './js/router.js';
-import { destroyActiveChart } from './js/utils/chart.js';
-import { cancelBacktestPolls } from './js/views/backtests.js';
 import { api } from './js/api.js';
 import { toast } from './js/utils/toast.js';
 import { applyContextOptions, contextBarOptions, loadContext, renderContextBar as renderContextControls } from './js/utils/context.js';
 import { fetchContextOptionsCached } from './js/utils/contextOptionsCache.js';
 import { startSidebarStatus } from './js/utils/sidebarStatus.js';
 import { renderOverview } from './js/views/overview.js';
-import { renderLakehouse } from './js/views/lakehouse.js';
-import { renderJobs } from './js/views/jobs.js';
-import { renderBacktests } from './js/views/backtests.js';
-import { renderRunDetail } from './js/views/run-detail.js';
-import { renderEventDetail } from './js/views/event-detail.js';
+import { renderData } from './js/views/data.js';
 import { renderStudio, redirectLegacyBacktestRoute } from './js/views/studio.js';
 import { renderStrategies } from './js/views/strategies.js';
 
@@ -26,8 +20,6 @@ const SECTIONS = {
   studio: 'Estúdio',
   overview: 'Visão Geral',
   data: 'Dados',
-  jobs: 'Jobs',
-  backtests: 'Backtests',
   strategies: 'Estratégias',
 };
 
@@ -35,14 +27,12 @@ const SECTION_ROUTES = {
   studio: 'studio',
   overview: 'overview',
   data: 'data',
-  jobs: 'jobs',
-  backtests: 'backtests',
   strategies: 'strategies',
 };
 
 let currentRoute = '';
 let previousRoute = '';
-let currentSection = 'overview';
+let currentSection = 'studio';
 
 function topLevelRoute(route) {
   const path = String(route || '').split('?')[0].replace(/^\/+/, '');
@@ -51,13 +41,9 @@ function topLevelRoute(route) {
 
 function parentRouteFor(route) {
   const path = String(route || '').split('?')[0];
-  if (path.startsWith('backtests/') && path.includes('/events/')) {
-    const runId = path.split('/')[1];
-    return `backtests/${runId}`;
-  }
-  if (path.startsWith('backtests/')) return 'backtests';
   if (path.startsWith('strategies/')) return 'strategies';
-  return SECTION_ROUTES[currentSection] || 'overview';
+  if (path.startsWith('backtests')) return 'studio';
+  return SECTION_ROUTES[currentSection] || 'studio';
 }
 
 function navigateBack() {
@@ -72,11 +58,7 @@ function updateBackButton(route) {
   if (!backButton) return;
   const show = !topLevelRoute(route);
   backButton.hidden = !show;
-  
-  const appEl = document.getElementById('app');
-  if (appEl) {
-    appEl.classList.toggle('has-back-route', show);
-  }
+  document.getElementById('app')?.classList.toggle('has-back-route', show);
 }
 
 backButton?.addEventListener('click', navigateBack);
@@ -88,7 +70,7 @@ const ctx = {
     currentSection = section;
     const route = SECTION_ROUTES[section] || section;
     crumbSection.textContent = SECTIONS[section] || section;
-    crumbSection.disabled = !route || currentRoute === route;
+    crumbSection.disabled = !route || currentRoute.split('?')[0] === route;
     crumbSection.onclick = route ? () => navigate(route) : null;
     if (detail) {
       crumbDetail.hidden = false;
@@ -122,7 +104,7 @@ ctx.setConnection('idle', 'Conectando…');
 async function renderTopContextBar() {
   if (!topbarActions) return;
   const route = String(currentRoute || '').split('?')[0].split('/')[0];
-  if (route !== 'studio' && route !== 'backtests') {
+  if (route !== 'studio') {
     topbarActions.innerHTML = '';
     return;
   }
@@ -130,10 +112,7 @@ async function renderTopContextBar() {
   const fieldOptions = contextBarOptions(apiOptions);
   const formCtx = applyContextOptions(loadContext(), fieldOptions);
   topbarActions.innerHTML = '';
-  topbarActions.appendChild(renderContextControls(formCtx, (next) => {
-    if (route === 'studio') renderStudio(ctx);
-    else renderBacktests(ctx);
-  }, fieldOptions));
+  topbarActions.appendChild(renderContextControls(formCtx, () => renderStudio(ctx), fieldOptions));
 }
 
 async function bootstrap() {
@@ -148,9 +127,9 @@ async function bootstrap() {
     routes: {
       studio: () => renderStudio(ctx),
       overview: () => renderOverview(ctx),
-      data: () => renderLakehouse(ctx),
-      jobs: () => renderJobs(ctx),
-      backtests: () => renderBacktests(ctx),
+      data: () => renderData(ctx),
+      jobs: () => { navigate('data'); },
+      backtests: () => navigate('studio'),
       'backtests/:id': (params) => redirectLegacyBacktestRoute({ id: params.id }),
       'backtests/:id/events/:eventId': (params) => redirectLegacyBacktestRoute({ id: params.id, eventId: params.eventId }),
       strategies: () => renderStrategies(ctx),
@@ -158,11 +137,6 @@ async function bootstrap() {
       'strategies/:id/:versionId': (params) => renderStrategies(ctx, params),
     },
     fallback: 'studio',
-    onLeave(path) {
-      const top = String(path || '').split('?')[0].split('/')[0];
-      if (top !== 'backtests') cancelBacktestPolls();
-      if (!String(path || '').startsWith('backtests/')) destroyActiveChart();
-    },
     onChange: highlightNav,
   });
 }
@@ -203,7 +177,8 @@ function highlightNav(route) {
   updateBackButton(route);
   const top = route.split('?')[0].split('/')[0];
   document.querySelectorAll('.navlink').forEach((el) => {
-    el.classList.toggle('is-active', el.dataset.route === top);
+    const r = el.dataset.route;
+    el.classList.toggle('is-active', r === top || (r === 'data' && top === 'jobs'));
   });
 }
 

@@ -159,8 +159,21 @@ const PREPARE_JOBS_MIGRATIONS = [
   'ALTER TABLE prepare_jobs ADD COLUMN progress_json TEXT NULL',
 ];
 
+const STRATEGY_V3_MIGRATIONS = [
+  'ALTER TABLE strategy_definitions ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0',
+  'ALTER TABLE strategy_versions ADD COLUMN notes TEXT NULL',
+];
+
+const BACKTEST_RUNS_V3_INDEXES = [
+  'CREATE INDEX IF NOT EXISTS backtest_runs_strategy_stats_idx ON backtest_runs(strategy_id, strategy_version_id, created_at)',
+];
+
 const LAKE_MANIFEST_MIGRATIONS = [
   'ALTER TABLE lake_manifest ADD COLUMN quality_details_json TEXT NULL',
+];
+
+const BACKTEST_RUNS_V3_COLUMNS = [
+  'ALTER TABLE backtest_runs ADD COLUMN depends_on_job_id INTEGER NULL',
 ];
 
 export function openStateDatabase(stateDbPath) {
@@ -173,7 +186,25 @@ export function openStateDatabase(stateDbPath) {
   migrateLakeManifest(db);
   migrateBacktestRuns(db);
   migratePrepareJobs(db);
+  migrateStrategyV3(db);
+  migrateBacktestRunsV3Indexes(db);
+  applyColumnMigrations(db, 'backtest_runs', BACKTEST_RUNS_V3_COLUMNS);
   return db;
+}
+
+function migrateStrategyV3(db) {
+  applyColumnMigrations(db, 'strategy_definitions', STRATEGY_V3_MIGRATIONS.filter((s) => s.includes('strategy_definitions')));
+  applyColumnMigrations(db, 'strategy_versions', STRATEGY_V3_MIGRATIONS.filter((s) => s.includes('strategy_versions')));
+}
+
+function migrateBacktestRunsV3Indexes(db) {
+  for (const sql of BACKTEST_RUNS_V3_INDEXES) {
+    try {
+      db.exec(sql);
+    } catch {
+      // index may already exist
+    }
+  }
 }
 
 function migrateLakeManifest(db) {

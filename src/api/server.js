@@ -38,6 +38,7 @@ import {
   createStrategyVersion,
   deleteStrategy,
   deleteStrategyVersion,
+  forkStrategy,
   getStrategy,
   getStrategyVersion,
   listStrategies as listSavedStrategies,
@@ -45,6 +46,9 @@ import {
   updateStrategy,
   validateStrategySource,
 } from '../backtestStudio/state/strategies.js';
+import { getStrategyStats, listStrategiesWithStats } from '../backtestStudio/state/strategyStats.js';
+import { getDataCoverage } from '../query/coverageUi.js';
+import { runDataFix } from '../data/fixPipeline.js';
 import { parse } from '../backtestStudio/gls/parser.js';
 import { listBlockSignatures } from '../backtestStudio/gls/blocks.js';
 
@@ -70,9 +74,18 @@ export function createApiHandler(deps) {
   } = deps;
   const authMiddleware = deps.authMiddleware || createAuthMiddleware({ authService, config });
   const activeBacktestWorkers = new Map();
-  const onSseEvent = (event) => broadcastSse(event);
+  let backtestQueue;
+  const onSseEvent = (event) => {
+    broadcastSse(event);
+    if (event.type === 'job:completed' && event.status === 'completed') {
+      backtestQueue?.releaseWaitingRuns?.(event.jobId);
+    }
+    if (event.type === 'data:stale') {
+      broadcastSse(event);
+    }
+  };
   const resolvedPrepareRunner = prepareRunner ?? createPrepareJobRunner({ config, db, onEvent: onSseEvent });
-  const backtestQueue = createBacktestQueue({
+  backtestQueue = createBacktestQueue({
     config,
     db,
     onEvent: onSseEvent,
@@ -177,6 +190,19 @@ export function createApiHandler(deps) {
       if (req.method === 'GET' && url.pathname === '/api/availability') {
         const request = datasetRequestFromParams(url.searchParams, config);
         return sendJson(res, 200, { availability: checkDatasetAvailability(db, request) });
+      }
+      if (req.method === 'GET' && url.pathname === '/api/data/coverage') {
+        const coverage = getDataCoverage(db, url.searchParams, config);
+        return sendJson(res, 200, { coverage });
+      }
+      if (req.method === 'POST' && url.pathname === '/api/data/fix') {
+        const body = await readJson(req);
+        const dryRun = body.dry_run === true;
+        const result = runDataFix(db, config, { body, prepareRunner: resolvedPrepareRunner, dryRun });
+        if (!result.ok) {
+          return sendJson(res, 400, { error: { code: result.code || 'FIX_FAILED', message: result.message }, ...result });
+        }
+        return sendJson(res, result.job ? 202 : 200, result);
       }
       if (req.method === 'GET' && url.pathname === '/api/prepare') {
         const request = datasetRequestFromParams(url.searchParams, config);
@@ -361,6 +387,9 @@ export function createApiHandler(deps) {
         return sendJson(res, 200, { blocks: listBlockSignatures() });
       }
       if (req.method === 'GET' && url.pathname === '/api/strategies') {
+        if (url.searchParams.get('stats') === '1') {
+          return sendJson(res, 200, { strategies: listStrategiesWithStats(db) });
+        }
         return sendJson(res, 200, { strategies: listSavedStrategies(db) });
       }
       if (req.method === 'POST' && url.pathname === '/api/strategies') {
@@ -388,6 +417,24 @@ export function createApiHandler(deps) {
           return strategy
             ? sendJson(res, 200, { deleted: true, strategy })
             : sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Strategy not found' } });
+        }
+        if (req.method === 'GET' && strategyRoute.kind === 'stats') {
+          const strategy = getStrategy(db, strategyRoute.strategyId);
+          if (!strategy) {
+            return sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Strategy not found' } });
+          }
+          return sendJson(res, 200, { stats: getStrategyStats(db, strategyRoute.strategyId) });
+        }
+        if (req.method === 'POST' && strategyRoute.kind === 'fork') {
+          try {
+            const body = await readJson(req);
+            const strategy = forkStrategy(db, strategyRoute.strategyId, body);
+            return strategy
+              ? sendJson(res, 200, { strategy })
+              : sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Strategy not found' } });
+          } catch (err) {
+            return sendJson(res, 400, { error: { code: 'REQUEST_FAILED', message: err.message } });
+          }
         }
         if (req.method === 'GET' && strategyRoute.kind === 'versions') {
           const strategy = getStrategy(db, strategyRoute.strategyId);
@@ -453,6 +500,7 @@ export function createApiHandler(deps) {
             strategyMeta: request.strategyMeta ?? null,
             totalTicks: estimatedTicks,
             startedAt,
+            dependsOnJob: body.depends_on_job ?? body.wait_for_job ?? null,
           });
           return sendJson(res, 202, { run, queuePosition: run.queuePosition ?? null });
         }
@@ -1010,6 +1058,8 @@ function matchStrategyRoute(pathname) {
   const strategyId = Number.parseInt(parts[2], 10);
   if (!Number.isFinite(strategyId)) return null;
   if (parts.length === 3) return { kind: 'detail', strategyId };
+  if (parts[3] === 'stats' && parts.length === 4) return { kind: 'stats', strategyId };
+  if (parts[3] === 'fork' && parts.length === 4) return { kind: 'fork', strategyId };
   if (parts[3] === 'versions' && parts.length === 4) return { kind: 'versions', strategyId };
   if (parts[3] === 'versions' && parts.length === 5) {
     const versionId = Number.parseInt(parts[4], 10);

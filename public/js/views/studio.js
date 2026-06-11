@@ -2,12 +2,23 @@ import { el, mount } from '../utils/dom.js';
 import { applyContextOptions, contextBarOptions, loadContext, saveContext, selectField } from '../utils/context.js';
 import { fetchContextOptionsCached } from '../utils/contextOptionsCache.js';
 import { formatPnl } from '../utils/format.js';
-import { loadStrategyOptions, renderStrategySelect, backtestPayloadFromPick } from '../utils/strategyPicker.js';
+import { loadStrategyOptions, renderStrategyPicker, backtestPayloadFromPick } from '../utils/strategyPicker.js';
 import { MetricCard, Skeleton, StatusBadge } from '../components/Skeleton.js';
+import { renderRunMetricsPanel, renderTimingSection, resetMetricsViewMode } from '../components/runMetrics.js';
+import { renderNoEntryDiagnostic, partitionNoEntryEvents } from '../components/noEntryDiagnostic.js';
+import {
+  renderEventOverview,
+  renderExecutionTimeline,
+  renderDiagnosticsPanel,
+  renderLogList,
+} from '../components/executionTimeline.js';
+import { renderEventChartWithMarkers } from '../components/eventChartMarkers.js';
 import { connectSse, disconnectSse } from '../utils/sse.js';
 import { cacheInvalidate, cachedFetch } from '../utils/apiCache.js';
 import { navigate as routerNavigate } from '../router.js';
 import { renderUplotLine } from '../utils/uplotChart.js';
+
+const EVENTS_PAGE = 100;
 
 const studioState = {
   runs: [],
@@ -15,15 +26,21 @@ const studioState = {
   selectedEventId: null,
   compareIds: [],
   events: [],
+  eventsOffset: 0,
+  eventsHasMore: false,
   eventIndex: 0,
   filterQ: '',
   filterResult: 'all',
   filterSort: 'default',
+  runFilters: { status: 'all', sort: 'newest', strategyOnly: true },
+  strategyOptions: [],
+  selectedStrategyPick: '',
+  coverageUi: null,
 };
 
 function debounce(fn, delay) {
   let timer = null;
-  return function(...args) {
+  return function (...args) {
     clearTimeout(timer);
     timer = setTimeout(() => fn.apply(this, args), delay);
   };
@@ -31,6 +48,7 @@ function debounce(fn, delay) {
 
 let sseHandler = null;
 let studioCtx = null;
+let openEventToken = 0;
 
 function parseStudioQuery() {
   const hash = location.hash.replace(/^#\/?/, '');
@@ -39,19 +57,31 @@ function parseStudioQuery() {
   return {
     run: params.get('run') ? Number(params.get('run')) : null,
     event: params.get('event') ? Number(params.get('event')) : null,
+    strategy: params.get('strategy') ? Number(params.get('strategy')) : null,
+    version: params.get('version') ? Number(params.get('version')) : null,
     compare: (params.get('compare') || '').split(',').map((v) => Number(v)).filter((n) => Number.isFinite(n)),
   };
 }
 
-function pushStudioQuery(patch) {
+function buildStudioPath(patch) {
   const cur = parseStudioQuery();
   const next = { ...cur, ...patch };
   const params = new URLSearchParams();
   if (next.run) params.set('run', String(next.run));
   if (next.event) params.set('event', String(next.event));
+  if (next.strategy) params.set('strategy', String(next.strategy));
+  if (next.version) params.set('version', String(next.version));
   if (next.compare?.length) params.set('compare', next.compare.join(','));
   const qs = params.toString();
-  routerNavigate(`studio${qs ? `?${qs}` : ''}`);
+  return `studio${qs ? `?${qs}` : ''}`;
+}
+
+/** Atualiza query string sem re-montar a rota (evita loop com openEventDrawer). */
+function pushStudioQuery(patch) {
+  const path = buildStudioPath(patch);
+  const current = location.hash.replace(/^#\/?/, '');
+  if (current === path) return;
+  history.replaceState(null, '', `#/${path}`);
 }
 
 let shortcutsBound = false;
@@ -64,7 +94,6 @@ export async function renderStudio(ctx) {
   const query = parseStudioQuery();
   studioState.selectedRunId = query.run;
   studioState.selectedEventId = query.event;
-  studioState.compareIds = query.compare || [];
 
   mount(ctx.contentEl, el('div', { class: 'studio-layout' }, [
     el('section', { class: 'studio-config', id: 'studio-config' }, Skeleton({ lines: 6 })),
@@ -77,13 +106,19 @@ export async function renderStudio(ctx) {
     const apiOptions = await fetchContextOptionsCached(ctx.api);
     const fieldOptions = contextBarOptions(apiOptions);
     const formCtx = applyContextOptions(loadContext(), fieldOptions);
-    const strategyOptions = await loadStrategyOptions(ctx.api);
+    studioState.strategyOptions = await loadStrategyOptions(ctx.api, { includeArchived: false });
+    if (query.strategy && query.version) {
+      studioState.selectedStrategyPick = `gls:${query.strategy}:${query.version}`;
+    } else if (!studioState.selectedStrategyPick && studioState.strategyOptions[0]) {
+      studioState.selectedStrategyPick = studioState.strategyOptions[0].value;
+    }
 
-    renderConfigPanel(ctx, { formCtx, fieldOptions, strategyOptions });
+    renderConfigPanel(ctx, { formCtx, fieldOptions });
+    await refreshCoverageIndicator(ctx, formCtx);
     await refreshRuns(ctx);
     if (studioState.selectedRunId) await loadRunDetail(ctx, studioState.selectedRunId);
     else mount(document.getElementById('studio-main'), el('div', { class: 'card' }, [
-      el('p', { class: 'muted' }, 'Selecione um run à direita ou rode um novo backtest.'),
+      el('p', { class: 'muted' }, 'Selecione um run à direita ou rode um novo backtest (⌘↵).'),
     ]));
     bindSse(ctx);
     if (!shortcutsBound) {
@@ -99,7 +134,7 @@ export async function renderStudio(ctx) {
   }
 }
 
-function renderConfigPanel(ctx, { formCtx, fieldOptions, strategyOptions }) {
+function renderConfigPanel(ctx, { formCtx, fieldOptions }) {
   const wrap = document.getElementById('studio-config');
   if (!wrap) return;
   mount(wrap, el('div', { class: 'card' }, [
@@ -109,56 +144,149 @@ function renderConfigPanel(ctx, { formCtx, fieldOptions, strategyOptions }) {
         el('span', { class: 'field__label' }, 'Estratégia'),
         el('div', { id: 'studio-strategy-pick' }),
       ]),
-      el('label', { class: 'field' }, ['De ', el('input', { type: 'date', name: 'from', value: formCtx.from, class: 'field__input' })]),
-      el('label', { class: 'field' }, ['Até ', el('input', { type: 'date', name: 'to', value: formCtx.to, class: 'field__input' })]),
+      el('div', { class: 'row row--wrap', id: 'studio-coverage-indicator' }),
+      el('label', { class: 'field' }, ['De ', el('input', { type: 'date', name: 'from', value: formCtx.from, class: 'field__input', onchange: () => refreshCoverageIndicator(ctx, formFromDom()) })]),
+      el('label', { class: 'field' }, ['Até ', el('input', { type: 'date', name: 'to', value: formCtx.to, class: 'field__input', onchange: () => refreshCoverageIndicator(ctx, formFromDom()) })]),
       el('label', { class: 'field' }, ['Ativo ', selectField('underlying', fieldOptions.underlyings || [formCtx.underlying], formCtx.underlying)]),
       el('label', { class: 'field' }, ['Intervalo ', selectField('interval', fieldOptions.intervals || [formCtx.interval], formCtx.interval)]),
       el('label', { class: 'field' }, ['Book ', selectField('book_depth', fieldOptions.book_depths || [formCtx.book_depth], formCtx.book_depth)]),
       el('label', { class: 'field field--checkbox' }, [
         el('input', { type: 'checkbox', name: 'fast_run', value: '1' }),
-        ' Modo rápido (menos traces)',
+        ' Modo rápido',
+      ]),
+      el('details', { class: 'advanced-settings-details' }, [
+        el('summary', {}, 'Avançado'),
+        el('label', { class: 'field' }, [
+          'Batch size ',
+          el('input', { type: 'number', name: 'batch_size', min: '1', value: formCtx.batch_size || 5000, class: 'field__input' }),
+        ]),
       ]),
       el('button', { class: 'btn btn--primary', type: 'submit' }, 'Rodar backtest'),
-      el('button', { class: 'btn btn--ghost', type: 'button', id: 'studio-prepare-btn' }, 'Preparar dados'),
+      el('button', { class: 'btn btn--ghost', type: 'button', id: 'studio-fix-btn' }, 'Corrigir dados'),
     ]),
   ]));
 
   const strategyPickWrap = document.getElementById('studio-strategy-pick');
   if (strategyPickWrap) {
-    strategyPickWrap.innerHTML = renderStrategySelect(strategyOptions, strategyOptions[0]?.value || '');
+    strategyPickWrap.innerHTML = '';
+    strategyPickWrap.appendChild(renderStrategyPicker(studioState.strategyOptions, studioState.selectedStrategyPick, (value) => {
+      studioState.selectedStrategyPick = value;
+      const [, sid, vid] = String(value).split(':');
+      pushStudioQuery({ strategy: Number(sid) || null, version: Number(vid) || null });
+      refreshRuns(ctx);
+    }));
   }
 
-  const form = document.getElementById('studio-form');
-  form?.addEventListener('submit', (ev) => {
+  document.getElementById('studio-form')?.addEventListener('submit', (ev) => {
     ev.preventDefault();
     runBacktest(ctx, ev.target);
   });
-  document.getElementById('studio-prepare-btn')?.addEventListener('click', () => prepareData(ctx));
+  document.getElementById('studio-fix-btn')?.addEventListener('click', () => fixDataFromStudio(ctx));
 }
 
-async function runBacktest(ctx, form) {
+function formFromDom() {
+  const form = document.getElementById('studio-form');
+  if (!form) return loadContext();
   const fd = new FormData(form);
-  saveContext({
+  return {
     from: fd.get('from'),
     to: fd.get('to'),
     underlying: fd.get('underlying'),
     interval: fd.get('interval'),
     book_depth: fd.get('book_depth'),
+  };
+}
+
+async function refreshCoverageIndicator(ctx, formCtx) {
+  const elWrap = document.getElementById('studio-coverage-indicator');
+  if (!elWrap) return;
+  const q = new URLSearchParams({
+    underlying: formCtx.underlying,
+    interval: formCtx.interval,
+    book_depth: formCtx.book_depth,
+    from: formCtx.from,
+    to: formCtx.to,
   });
-  const pick = form.querySelector('[name="strategy_pick"]')?.value;
-  const payload = backtestPayloadFromPick(pick, {
+  const res = await ctx.api.get(`/api/data/coverage?${q}`);
+  if (!res.ok) {
+    mount(elWrap, el('span', { class: 'badge badge--idle' }, 'Cobertura indisponível'));
+    return;
+  }
+  const summary = res.data.coverage?.summary || {};
+  studioState.coverageUi = res.data.coverage;
+  let state = 'ready';
+  if (summary.attention > 0) state = 'attention';
+  else if (summary.processing > 0) state = 'processing';
+  const labels = { ready: 'Dados prontos', processing: 'Sincronizando…', attention: 'Atenção nos dados' };
+  mount(elWrap, [
+    el('span', { class: `badge badge--${state === 'ready' ? 'ok' : 'warn'}` }, labels[state]),
+    state === 'attention' ? el('button', {
+      type: 'button',
+      class: 'btn btn--ghost btn--sm',
+      onclick: () => fixDataFromStudio(ctx),
+    }, 'Corrigir agora') : null,
+  ]);
+}
+
+async function fixDataFromStudio(ctx) {
+  const form = document.getElementById('studio-form');
+  const fd = new FormData(form);
+  const request = {
+    dataset: 'backtest_ticks',
     from: fd.get('from'),
     to: fd.get('to'),
     underlying: fd.get('underlying'),
     interval: fd.get('interval'),
     book_depth: Number(fd.get('book_depth')),
-    batch_size: 25000,
+  };
+  const preview = await ctx.api.post('/api/data/fix', { request, dry_run: true });
+  if (!preview.ok) return ctx.toast.err(preview.error?.message || 'Erro');
+  const msg = (preview.data.summary_lines || []).join('\n') || 'Executar correção?';
+  if (!confirm(msg)) return;
+  const fix = await ctx.api.post('/api/data/fix', { request, confirm_rebuild: preview.data.needs_rebuild_confirm || undefined });
+  if (!fix.ok) return ctx.toast.err(fix.error?.message || 'Falha');
+  ctx.toast.ok(fix.data.job ? `Job #${fix.data.job.id} criado` : 'Dados prontos');
+  await refreshCoverageIndicator(ctx, formFromDom());
+}
+
+async function runBacktest(ctx, form) {
+  const fd = new FormData(form);
+  const ctxSaved = saveContext({
+    from: fd.get('from'),
+    to: fd.get('to'),
+    underlying: fd.get('underlying'),
+    interval: fd.get('interval'),
+    book_depth: fd.get('book_depth'),
+    batch_size: fd.get('batch_size'),
+  });
+  const pick = studioState.selectedStrategyPick || form.querySelector('[name="strategy_pick"]')?.value;
+  const payload = backtestPayloadFromPick(pick, ctxSaved, {
     fast_run: fd.get('fast_run') === '1',
     async: true,
   });
   if (!payload) return ctx.toast.warn('Selecione uma estratégia');
   const res = await ctx.api.post('/api/backtest/run', payload);
-  if (!res.ok) return ctx.toast.err(res.error?.message || 'Falha ao rodar');
+  if (!res.ok) {
+    if (res.data?.availability) {
+      const fix = confirm('Dados não prontos. Corrigir e enfileirar o backtest?');
+      if (fix) {
+        const fixRes = await ctx.api.post('/api/data/fix', { request: {
+          dataset: 'backtest_ticks', ...ctxSaved, book_depth: Number(ctxSaved.book_depth),
+        }});
+        if (fixRes.ok && fixRes.data.job) {
+          const retry = await ctx.api.post('/api/backtest/run', { ...payload, depends_on_job: fixRes.data.job.id });
+          if (retry.ok) {
+            studioState.selectedRunId = retry.data.run.id;
+            pushStudioQuery({ run: studioState.selectedRunId, event: null });
+            await refreshRuns(ctx);
+            await loadRunDetail(ctx, studioState.selectedRunId);
+            return ctx.toast.ok('Backtest aguardando dados');
+          }
+        }
+      }
+    }
+    return ctx.toast.err(res.error?.message || 'Falha ao rodar');
+  }
   cacheInvalidate('runs');
   studioState.selectedRunId = res.data.run.id;
   pushStudioQuery({ run: studioState.selectedRunId, event: null });
@@ -167,49 +295,98 @@ async function runBacktest(ctx, form) {
   ctx.toast.ok('Backtest enfileirado');
 }
 
-async function prepareData(ctx) {
-  const form = document.getElementById('studio-form');
-  const fd = new FormData(form);
-  const q = new URLSearchParams({
-    dataset: 'backtest_ticks',
-    from: String(fd.get('from')),
-    to: String(fd.get('to')),
-    underlying: String(fd.get('underlying')),
-    interval: String(fd.get('interval')),
-    book_depth: String(fd.get('book_depth')),
+function computeRunStats(runs, strategyName) {
+  const filtered = runs.filter((r) => !strategyName || strategyName(r) === strategyName);
+  const completed = filtered.filter((r) => (r.status || 'completed') === 'completed');
+  const profitable = completed.filter((r) => Number(r.summary?.totalPnl ?? 0) > 0);
+  const totalPnl = completed.reduce((s, r) => s + Number(r.summary?.totalPnl ?? 0), 0);
+  const bestPnl = completed.length ? Math.max(...completed.map((r) => Number(r.summary?.totalPnl ?? 0))) : 0;
+  const winRate = filtered.length ? Math.round((profitable.length / filtered.length) * 100) : 0;
+  return { total: filtered.length, totalPnl, bestPnl, winRate };
+}
+
+function filterRuns(runs) {
+  const pick = studioState.strategyOptions.find((o) => o.value === studioState.selectedStrategyPick);
+  const strategyLabel = pick?.label?.split(' · ')[0];
+  return runs.filter((run) => {
+    if (studioState.runFilters.strategyOnly && strategyLabel && strategyName(run) !== strategyLabel) return false;
+    if (studioState.runFilters.status !== 'all' && (run.status || 'completed') !== studioState.runFilters.status) return false;
+    return true;
+  }).sort((a, b) => {
+    if (studioState.runFilters.sort === 'best_pnl') return Number(b.summary?.totalPnl ?? 0) - Number(a.summary?.totalPnl ?? 0);
+    if (studioState.runFilters.sort === 'worst_pnl') return Number(a.summary?.totalPnl ?? 0) - Number(b.summary?.totalPnl ?? 0);
+    return Number(b.id) - Number(a.id);
   });
-  const res = await ctx.api.get(`/api/prepare?${q}`);
-  if (!res.ok) return ctx.toast.err(res.error?.message || 'Erro');
-  if (res.data.ready) return ctx.toast.ok('Dados já prontos');
-  const job = await ctx.api.post('/api/prepare/run', { request: res.data.request, dry_run: false, confirm_rebuild: false });
-  if (job.ok) ctx.toast.ok('Job de preparação criado');
-  else ctx.toast.err(job.error?.message || 'Falha ao criar job');
+}
+
+function strategyName(run) {
+  return run.strategy_snapshot?.name || run.strategy || '-';
+}
+
+function versionLabel(run) {
+  return run.strategy_snapshot?.version != null ? `v${run.strategy_snapshot.version}` : (run.strategy_version_id ? `#${run.strategy_version_id}` : '-');
 }
 
 async function refreshRuns(ctx) {
   const runs = await cachedFetch('runs:list', async () => {
-    const res = await ctx.api.get('/api/backtest/runs?limit=30');
+    const res = await ctx.api.get('/api/backtest/runs?limit=50');
     return res.ok ? res.data.runs : [];
   }, 15_000);
   studioState.runs = runs;
   const panel = document.getElementById('studio-runs');
   if (!panel) return;
+
+  const pick = studioState.strategyOptions.find((o) => o.value === studioState.selectedStrategyPick);
+  const stats = computeRunStats(runs, studioState.runFilters.strategyOnly ? pick?.label?.split(' · ')[0] : null);
+  const filtered = filterRuns(runs);
+
   mount(panel, el('div', { class: 'card studio-runs-card' }, [
-    el('h3', { class: 'card__title' }, 'Runs'),
-    el('div', { class: 'studio-run-list' }, runs.map((run) => runListItem(run, ctx))),
+    el('details', { class: 'studio-run-stats', open: false }, [
+      el('summary', { class: 'studio-run-stats__summary' }, [
+        el('span', {}, `${stats.total} runs`),
+        el('span', {}, formatPnl(stats.totalPnl)),
+        el('span', {}, `${stats.winRate}% WR`),
+        el('span', {}, `best ${formatPnl(stats.bestPnl)}`),
+      ]),
+    ]),
+    el('div', { class: 'studio-run-filters' }, [
+      filterSelect('Status', studioState.runFilters.status, ['all', 'running', 'completed', 'failed_runtime', 'cancelled'], (v) => {
+        studioState.runFilters.status = v;
+        refreshRuns(ctx);
+      }),
+      filterSelect('Ordem', studioState.runFilters.sort, ['newest', 'best_pnl', 'worst_pnl'], (v) => {
+        studioState.runFilters.sort = v;
+        refreshRuns(ctx);
+      }),
+      el('label', { class: 'switch-field' }, [
+        el('input', {
+          type: 'checkbox',
+          checked: studioState.runFilters.strategyOnly,
+          onchange: (e) => { studioState.runFilters.strategyOnly = e.target.checked; refreshRuns(ctx); },
+        }),
+        ' Só esta estratégia',
+      ]),
+    ]),
+    el('div', { class: 'studio-run-list' }, filtered.map((run) => runListItem(run, ctx))),
   ]));
+}
+
+function filterSelect(label, value, options, onChange) {
+  return el('label', { class: 'field field--inline' }, [
+    el('span', { class: 'muted' }, label),
+    el('select', {
+      class: 'field__input field__input--sm',
+      onchange: (e) => onChange(e.target.value),
+    }, options.map((opt) => el('option', { value: opt, selected: opt === value }, opt))),
+  ]);
 }
 
 function runListItem(run, ctx) {
   const active = studioState.selectedRunId === run.id;
   const compareOn = studioState.compareIds.includes(run.id);
-  
   let pnlText = formatPnl(run.summary?.totalPnl);
-  if (run.status === 'running') {
-    pnlText = `Rodando (${run.progress?.percent?.toFixed(0) || 0}%)`;
-  } else if (run.status === 'queued') {
-    pnlText = 'Fila';
-  }
+  if (run.status === 'running') pnlText = `Rodando (${run.progress?.percent?.toFixed(0) || 0}%)`;
+  else if (run.status === 'queued') pnlText = run.progress?.depends_on_job ? 'Aguardando dados' : 'Fila';
 
   return el('button', {
     type: 'button',
@@ -222,6 +399,7 @@ function runListItem(run, ctx) {
   }, [
     el('span', { class: 'studio-run-item__id' }, `#${run.id}`),
     StatusBadge({ status: run.status }),
+    el('span', { class: 'studio-run-item__meta muted' }, `${versionLabel(run)} · ${run.from?.slice(5, 10) || ''}–${run.to?.slice(5, 10) || ''}`),
     el('span', { class: 'studio-run-item__pnl' }, pnlText),
   ]);
 }
@@ -241,6 +419,7 @@ function toggleCompare(id) {
 async function selectRun(ctx, id) {
   studioState.selectedRunId = id;
   studioState.selectedEventId = null;
+  studioState.eventsOffset = 0;
   pushStudioQuery({ run: id, event: null });
   await refreshRuns(ctx);
   await loadRunDetail(ctx, id);
@@ -249,6 +428,7 @@ async function selectRun(ctx, id) {
 async function loadRunDetail(ctx, runId) {
   const main = document.getElementById('studio-main');
   if (!main) return;
+  resetMetricsViewMode();
 
   if (studioState.compareIds.length >= 2) {
     const res = await ctx.api.get(`/api/backtest/compare?ids=${studioState.compareIds.join(',')}`);
@@ -264,176 +444,129 @@ async function loadRunDetail(ctx, runId) {
     return;
   }
 
-  const kpis = [
-    MetricCard({ label: 'PnL', value: formatPnl(run.summary?.totalPnl), tone: (run.summary?.totalPnl || 0) >= 0 ? 'ok' : 'err' }),
-    MetricCard({ label: 'Win rate', value: `${(run.summary?.winRate || 0).toFixed(1)}%` }),
-    MetricCard({ label: 'Eventos', value: String(run.summary?.totalEvents ?? '—') }),
-    MetricCard({ label: 'Ticks', value: String(run.ticks ?? '—') }),
-  ];
-
+  const summary = run.summary || {};
   mount(main, el('div', { class: 'studio-result' }, [
-    el('div', { class: 'studio-kpis' }, kpis),
+    renderRunMetricsPanel(summary, { cardId: 'studio-metrics-card' }),
     el('div', { class: 'studio-equity', id: 'studio-equity-chart' }),
+    renderNoEntryDiagnostic(summary, studioState.events),
     el('div', { class: 'studio-tabs' }, [
-      el('button', { class: 'btn btn--ghost', type: 'button', onclick: () => loadAnalysis(ctx, runId) }, 'Análise'),
+      el('button', { class: 'btn btn--ghost', type: 'button', onclick: () => showAnalysisTab(ctx, runId, run, summary) }, 'Análise'),
+      el('button', { class: 'btn btn--ghost is-active', type: 'button' }, 'Eventos'),
     ]),
-    el('div', { class: 'studio-events-filter-bar' }, [
-      el('div', { class: 'field' }, [
-        el('span', { class: 'field__label' }, 'Buscar ID'),
-        el('input', {
-          type: 'text',
-          class: 'field__input',
-          placeholder: 'Buscar condição...',
-          value: studioState.filterQ,
-          oninput: debounce((ev) => {
-            studioState.filterQ = ev.target.value;
-            loadEvents(ctx, runId);
-          }, 250),
-        }),
-      ]),
-      el('div', { class: 'field' }, [
-        el('span', { class: 'field__label' }, 'Resultado'),
-        el('select', {
-          class: 'field__input',
-          onchange: (ev) => {
-            studioState.filterResult = ev.target.value;
-            loadEvents(ctx, runId);
-          }
-        }, [
-          el('option', { value: 'all', selected: studioState.filterResult === 'all' }, 'Todos'),
-          el('option', { value: 'win', selected: studioState.filterResult === 'win' }, 'Vitória'),
-          el('option', { value: 'loss', selected: studioState.filterResult === 'loss' }, 'Derrota'),
-          el('option', { value: 'no_entry', selected: studioState.filterResult === 'no_entry' }, 'Sem entrada'),
-        ]),
-      ]),
-      el('div', { class: 'field' }, [
-        el('span', { class: 'field__label' }, 'Ordenar'),
-        el('select', {
-          class: 'field__input',
-          onchange: (ev) => {
-            studioState.filterSort = ev.target.value;
-            loadEvents(ctx, runId);
-          }
-        }, [
-          el('option', { value: 'default', selected: studioState.filterSort === 'default' }, 'Padrão'),
-          el('option', { value: 'pnl_desc', selected: studioState.filterSort === 'pnl_desc' }, 'Melhor PnL'),
-          el('option', { value: 'pnl_asc', selected: studioState.filterSort === 'pnl_asc' }, 'Pior PnL'),
-          el('option', { value: 'event_start_desc', selected: studioState.filterSort === 'event_start_desc' }, 'Mais novos'),
-          el('option', { value: 'event_start', selected: studioState.filterSort === 'event_start' }, 'Mais antigos'),
-        ]),
-      ]),
-      el('button', {
-        type: 'button',
-        class: 'btn btn--ghost',
-        onclick: () => {
-          const params = new URLSearchParams({
-            format: 'csv',
-            limit: '5000',
-            q: studioState.filterQ,
-            result: studioState.filterResult,
-            sort: studioState.filterSort,
-          });
-          window.open(`/api/backtest/runs/${runId}/events?${params.toString()}`, '_blank');
-        }
-      }, [
-        el('i', { class: 'fa-solid fa-download' }),
-        ' Exportar CSV'
-      ]),
-    ]),
+    el('div', { class: 'studio-events-filter-bar' }, buildEventFilters(ctx, runId)),
     el('div', { id: 'studio-events-table-container' }),
   ]));
 
   if (run.equity?.length) {
     renderUplotLine(document.getElementById('studio-equity-chart'), run.equity.map((p) => [new Date(p.ts).getTime(), p.pnl]));
   }
-  await loadEvents(ctx, runId);
-  if (studioState.selectedEventId) openEventDrawer(ctx, runId, studioState.selectedEventId);
+  studioState.eventsOffset = 0;
+  await loadEvents(ctx, runId, { append: false });
+  if (studioState.selectedEventId) {
+    openEventDrawer(ctx, runId, studioState.selectedEventId, 0, { syncUrl: false });
+  }
 }
 
-async function loadEvents(ctx, runId) {
+function buildEventFilters(ctx, runId) {
+  return [
+    el('div', { class: 'field' }, [
+      el('span', { class: 'field__label' }, 'Buscar'),
+      el('input', {
+        type: 'text',
+        class: 'field__input',
+        value: studioState.filterQ,
+        oninput: debounce((ev) => { studioState.filterQ = ev.target.value; studioState.eventsOffset = 0; loadEvents(ctx, runId); }, 250),
+      }),
+    ]),
+    el('div', { class: 'field' }, [
+      el('span', { class: 'field__label' }, 'Resultado'),
+      el('select', {
+        class: 'field__input',
+        onchange: (ev) => { studioState.filterResult = ev.target.value; studioState.eventsOffset = 0; loadEvents(ctx, runId); },
+      }, ['all', 'win', 'loss', 'no_entry'].map((v) => el('option', { value: v, selected: studioState.filterResult === v }, v))),
+    ]),
+    el('div', { class: 'field' }, [
+      el('span', { class: 'field__label' }, 'Ordenar'),
+      el('select', {
+        class: 'field__input',
+        onchange: (ev) => { studioState.filterSort = ev.target.value; studioState.eventsOffset = 0; loadEvents(ctx, runId); },
+      }, ['default', 'pnl_desc', 'pnl_asc', 'event_start_desc', 'event_start'].map((v) => el('option', { value: v, selected: studioState.filterSort === v }, v))),
+    ]),
+    el('button', {
+      type: 'button',
+      class: 'btn btn--ghost',
+      onclick: () => {
+        const params = new URLSearchParams({ format: 'csv', limit: '5000', q: studioState.filterQ, result: studioState.filterResult, sort: studioState.filterSort });
+        window.open(`/api/backtest/runs/${runId}/events?${params}`, '_blank');
+      },
+    }, 'CSV'),
+  ];
+}
+
+async function loadEvents(ctx, runId, { append = false } = {}) {
   const q = new URLSearchParams();
-  q.set('limit', '500');
+  q.set('limit', String(EVENTS_PAGE));
+  q.set('offset', String(append ? studioState.eventsOffset : 0));
   if (studioState.filterQ) q.set('q', studioState.filterQ);
   if (studioState.filterResult !== 'all') q.set('result', studioState.filterResult);
   if (studioState.filterSort) q.set('sort', studioState.filterSort);
-  
+
   const res = await ctx.api.get(`/api/backtest/runs/${runId}/events?${q.toString()}`);
-  studioState.events = res.ok ? res.data.events : [];
-  
+  const page = res.ok ? res.data.events : [];
+  if (append) studioState.events.push(...page);
+  else studioState.events = page;
+  studioState.eventsOffset = studioState.events.length;
+  studioState.eventsHasMore = page.length === EVENTS_PAGE;
+
   const tableContainer = document.getElementById('studio-events-table-container');
-  if (tableContainer) {
-    mount(tableContainer, renderVirtualEventTable(studioState.events, ctx, runId));
-  }
+  if (!tableContainer) return;
+  mount(tableContainer, el('div', {}, [
+    renderVirtualEventTable(studioState.events, ctx, runId),
+    studioState.eventsHasMore ? el('button', {
+      type: 'button',
+      class: 'btn btn--ghost btn--sm',
+      onclick: () => loadEvents(ctx, runId, { append: true }),
+    }, 'Carregar mais eventos') : null,
+  ]));
+}
+
+async function showAnalysisTab(ctx, runId, run, summary) {
+  const main = document.getElementById('studio-main');
+  const analysisRes = await ctx.api.get(`/api/backtest/runs/${runId}/analysis`);
+  const a = analysisRes.ok ? analysisRes.data.analysis : {};
+  mount(main, el('div', { class: 'studio-analysis' }, [
+    renderTimingSection(run, summary),
+    el('h3', {}, 'Piores eventos'),
+    el('ul', {}, (a.worst_events || []).map((ev) => el('li', {}, [
+      el('button', { type: 'button', class: 'btn btn--ghost', onclick: () => openEventDrawer(ctx, runId, ev.id) },
+        `${ev.condition_id} · ${formatPnl(ev.final_pnl)}`),
+    ]))),
+    el('button', { type: 'button', class: 'btn btn--ghost', onclick: () => loadRunDetail(ctx, runId) }, '← Voltar ao resultado'),
+  ]));
 }
 
 function renderProgressPanel(container, run, ctx) {
   const progress = run.progress || { phase: 'queued', ticks: 0, total_ticks: null, percent: 0 };
   const percentVal = progress.percent != null ? progress.percent : 0;
-  const etaText = progress.eta_ms != null ? `${Math.round(progress.eta_ms / 1000)}s` : 'calculando...';
-  
   mount(container, el('div', { class: 'studio-progress-panel' }, [
     el('div', { class: 'studio-progress-card' }, [
-      el('div', { class: 'studio-progress-card__head' }, [
-        el('strong', {}, `Rodando Backtest #${run.id}`),
-        StatusBadge({ status: run.status }),
-      ]),
+      el('strong', {}, `Backtest #${run.id}`),
+      StatusBadge({ status: run.status }),
+      progress.depends_on_job ? el('p', { class: 'muted' }, `Aguardando job #${progress.depends_on_job}`) : null,
       el('div', { class: 'studio-progress-bar' }, [
         el('span', { class: 'studio-progress-fill', id: 'studio-progress-fill', style: { width: `${percentVal}%` } }),
       ]),
-      el('div', { class: 'studio-progress-metrics' }, [
-        el('div', { class: 'studio-progress-metric' }, [
-          el('span', { class: 'studio-progress-metric__label' }, 'Progresso'),
-          el('span', { class: 'studio-progress-metric__value', id: 'studio-progress-pct' }, `${percentVal.toFixed(1)}%`),
-        ]),
-        el('div', { class: 'studio-progress-metric' }, [
-          el('span', { class: 'studio-progress-metric__label' }, 'Fase'),
-          el('span', { class: 'studio-progress-metric__value', id: 'studio-progress-phase' }, progress.phase || 'queued'),
-        ]),
-        el('div', { class: 'studio-progress-metric' }, [
-          el('span', { class: 'studio-progress-metric__label' }, 'Ticks Processados'),
-          el('span', { class: 'studio-progress-metric__value', id: 'studio-progress-ticks' }, `${progress.ticks} / ${progress.total_ticks || 'estimando...'}`),
-        ]),
-        el('div', { class: 'studio-progress-metric' }, [
-          el('span', { class: 'studio-progress-metric__label' }, 'Tempo Restante (ETA)'),
-          el('span', { class: 'studio-progress-metric__value', id: 'studio-progress-eta' }, etaText),
-        ]),
-      ]),
       el('button', {
         type: 'button',
-        class: 'btn btn--danger',
-        style: { marginTop: '10px' },
+        class: 'btn btn--danger btn--sm',
         onclick: async () => {
-          const ok = confirm('Deseja realmente cancelar este backtest?');
-          if (!ok) return;
+          if (!confirm('Cancelar backtest?')) return;
           const cancelRes = await ctx.api.post(`/api/backtest/runs/${run.id}/cancel`);
-          if (cancelRes.ok) {
-            ctx.toast.ok('Backtest cancelado');
-            cacheInvalidate('runs');
-            await refreshRuns(ctx);
-            await loadRunDetail(ctx, run.id);
-          } else {
-            ctx.toast.err(cancelRes.error?.message || 'Falha ao cancelar');
-          }
-        }
-      }, 'Cancelar Backtest'),
+          if (cancelRes.ok) { cacheInvalidate('runs'); await refreshRuns(ctx); await loadRunDetail(ctx, run.id); }
+        },
+      }, 'Cancelar'),
     ]),
   ]));
-}
-
-function updateProgressUI(runId, progress) {
-  if (studioState.selectedRunId !== runId) return;
-  const fill = document.getElementById('studio-progress-fill');
-  const pct = document.getElementById('studio-progress-pct');
-  const phase = document.getElementById('studio-progress-phase');
-  const ticks = document.getElementById('studio-progress-ticks');
-  const eta = document.getElementById('studio-progress-eta');
-  
-  const percentVal = progress.percent != null ? progress.percent : 0;
-  if (fill) fill.style.width = `${percentVal}%`;
-  if (pct) pct.textContent = `${percentVal.toFixed(1)}%`;
-  if (phase) phase.textContent = progress.phase || 'running';
-  if (ticks) ticks.textContent = `${progress.ticks} / ${progress.total_ticks || 'estimando...'}`;
-  if (eta) eta.textContent = progress.eta_ms != null ? `${Math.round(progress.eta_ms / 1000)}s` : 'calculando...';
 }
 
 function renderVirtualEventTable(events, ctx, runId) {
@@ -473,115 +606,70 @@ function eventRow(ev, ctx, runId, index) {
   ]);
 }
 
-async function openEventDrawer(ctx, runId, eventId, index = 0) {
+async function openEventDrawer(ctx, runId, eventId, index = 0, { syncUrl = true } = {}) {
+  const token = ++openEventToken;
   studioState.selectedEventId = eventId;
   studioState.eventIndex = index;
-  pushStudioQuery({ event: eventId });
+  if (syncUrl) pushStudioQuery({ run: runId, event: eventId });
   const drawer = document.getElementById('studio-drawer');
   if (!drawer) return;
   drawer.hidden = false;
   mount(drawer, Skeleton({ lines: 4 }));
-  
+
   const res = await ctx.api.get(`/api/backtest/runs/${runId}/events/${eventId}`);
+  if (token !== openEventToken) return;
   if (!res.ok) return mount(drawer, el('p', {}, 'Evento não encontrado'));
   const event = res.data.event;
 
+  let chartData = null;
+  if (event.condition_id) {
+    const chartRes = await ctx.api.get(`/api/backtest/runs/${runId}/chart-data?condition_id=${encodeURIComponent(event.condition_id)}`);
+    if (token !== openEventToken) return;
+    chartData = chartRes.ok ? chartRes.data : null;
+  }
+
   const tabs = [
     { id: 'chart', label: 'Gráfico' },
-    { id: 'orders', label: 'Ordens' },
+    { id: 'timeline', label: 'Timeline' },
+    { id: 'diagnostics', label: 'Diagnóstico' },
     { id: 'logs', label: 'Logs' },
-    { id: 'diagnostics', label: 'Diagnósticos' },
   ];
-
   let activeTab = 'chart';
 
   function renderDrawerContent() {
-    const header = el('header', { class: 'studio-drawer__head' }, [
-      el('strong', {}, `${event.condition_id} (${event.side || 'N/A'})`),
-      el('button', { type: 'button', class: 'btn btn--ghost', onclick: () => { drawer.hidden = true; } }, 'Fechar'),
-    ]);
-
-    const tabLinks = el('div', { class: 'drawer-tabs' }, tabs.map((t) => {
-      const active = t.id === activeTab;
-      return el('button', {
-        type: 'button',
-        class: `drawer-tab-link${active ? ' is-active' : ''}`,
-        onclick: () => {
-          activeTab = t.id;
-          renderDrawerContent();
-        }
-      }, t.label);
-    }));
-
-    const panelChart = el('div', { class: `drawer-tab-panel${activeTab === 'chart' ? ' is-active' : ''}` }, [
-      el('div', { id: 'studio-event-chart', class: 'studio-event-chart' }),
-    ]);
-
-    const panelOrders = el('div', { class: `drawer-tab-panel${activeTab === 'orders' ? ' is-active' : ''}` }, [
-      event.orders?.length ? el('table', { class: 'studio-drawer__orders-table' }, [
-        el('thead', {}, [
-          el('tr', {}, [
-            el('th', {}, 'Lado'),
-            el('th', {}, 'Shares'),
-            el('th', {}, 'Preço'),
-            el('th', {}, 'Valor'),
-            el('th', {}, 'Tipo'),
-            el('th', {}, 'Timestamp'),
-          ])
-        ]),
-        el('tbody', {}, event.orders.map((o) => el('tr', {}, [
-          el('td', {}, o.side || ''),
-          el('td', {}, String(o.shares || '')),
-          el('td', {}, formatPnl(o.price)),
-          el('td', {}, formatPnl(o.notional)),
-          el('td', {}, o.type || ''),
-          el('td', {}, new Date(o.ts).toLocaleTimeString()),
-        ])))
-      ]) : el('p', { class: 'muted' }, 'Nenhuma ordem executada.')
-    ]);
-
-    const panelLogs = el('div', { class: `drawer-tab-panel${activeTab === 'logs' ? ' is-active' : ''}`, style: { maxHeight: '30vh', overflow: 'auto' } }, [
-      event.logs?.length ? el('pre', { class: 'studio-drawer__logs' }, event.logs.map((l) => `[${new Date(l.ts).toLocaleTimeString()}] ${l.message}`).join('\n')) : el('p', { class: 'muted' }, 'Nenhum log gravado.')
-    ]);
-
-    const panelDiag = el('div', { class: `drawer-tab-panel${activeTab === 'diagnostics' ? ' is-active' : ''}` }, [
-      event.diagnostics ? el('div', { class: 'diagnostics-grid' }, Object.entries(event.diagnostics).map(([k, v]) => el('div', { class: 'diagnostic-item' }, [
-        el('div', { class: 'diagnostic-item__label' }, k),
-        el('div', { class: 'diagnostic-item__value' }, typeof v === 'number' ? v.toFixed(4) : String(v)),
-      ]))) : el('p', { class: 'muted' }, 'Nenhum diagnóstico disponível.')
-    ]);
-
     mount(drawer, el('div', { class: 'studio-drawer__inner' }, [
-      header,
-      tabLinks,
-      panelChart,
-      panelOrders,
-      panelLogs,
-      panelDiag,
+      el('header', { class: 'studio-drawer__head' }, [
+        el('strong', {}, `${event.condition_id?.slice(0, 16)} (${event.side || 'N/A'})`),
+        el('button', { type: 'button', class: 'btn btn--ghost', onclick: () => { drawer.hidden = true; } }, 'Fechar'),
+      ]),
+      renderEventOverview(event),
+      el('div', { class: 'drawer-tabs' }, tabs.map((t) => el('button', {
+        type: 'button',
+        class: `drawer-tab-link${activeTab === t.id ? ' is-active' : ''}`,
+        onclick: () => { activeTab = t.id; renderDrawerContent(); },
+      }, t.label))),
+      el('div', { class: `drawer-tab-panel${activeTab === 'chart' ? ' is-active' : ''}` }, [
+        el('div', { id: 'studio-event-chart', class: 'studio-event-chart' }),
+      ]),
+      el('div', { class: `drawer-tab-panel${activeTab === 'timeline' ? ' is-active' : ''}` }, [
+        renderExecutionTimeline(event),
+      ]),
+      el('div', { class: `drawer-tab-panel${activeTab === 'diagnostics' ? ' is-active' : ''}` }, [
+        renderDiagnosticsPanel(event),
+      ]),
+      el('div', { class: `drawer-tab-panel${activeTab === 'logs' ? ' is-active' : ''}` }, [
+        renderLogList(event.logs || []),
+      ]),
     ]));
 
-    if (activeTab === 'chart' && event.series?.underlying?.length) {
-      const pts = event.series.underlying.map((p) => [new Date(p.ts).getTime(), p.value]);
-      const ptb = event.series.priceToBeat?.map((p) => [new Date(p.ts).getTime(), p.value]) || [];
-      renderUplotLine(document.getElementById('studio-event-chart'), pts, [{ label: 'BTC', data: pts }, { label: 'PTB', data: ptb }]);
+    if (activeTab === 'chart') {
+      const container = document.getElementById('studio-event-chart');
+      if (chartData?.series) renderEventChartWithMarkers(container, event, chartData);
+      else if (event.series?.underlying?.length) renderEventChartWithMarkers(container, event, { series: event.series });
     }
   }
 
   renderDrawerContent();
-}
-
-async function loadAnalysis(ctx, runId) {
-  const res = await ctx.api.get(`/api/backtest/runs/${runId}/analysis`);
-  if (!res.ok) return ctx.toast.err('Análise indisponível');
-  const main = document.getElementById('studio-main');
-  const a = res.data.analysis;
-  mount(main, el('div', { class: 'studio-analysis' }, [
-    el('h3', {}, 'Piores eventos'),
-    el('ul', {}, (a.worst_events || []).map((ev) => el('li', {}, [
-      el('button', { type: 'button', class: 'btn btn--ghost', onclick: () => openEventDrawer(ctx, runId, ev.id) },
-        `${ev.condition_id} · ${formatPnl(ev.final_pnl)}`),
-    ]))),
-  ]));
 }
 
 function renderCompare(main, data) {
@@ -593,44 +681,27 @@ function renderCompare(main, data) {
       tone: (r.summary?.totalPnl || 0) >= 0 ? 'ok' : 'err',
     }))),
     el('div', { class: 'studio-equity', id: 'studio-compare-chart' }),
-    el('p', { class: 'muted' }, `${(data.delta_events || []).length} eventos divergentes`),
-    el('div', { class: 'studio-compare-delta' }, (data.delta_events || []).slice(0, 12).map((row) => el('div', { class: 'studio-event-row' }, [
-      el('span', {}, row.condition_id?.slice(0, 14) || '—'),
-      el('span', {}, formatPnl(row.pnl_a)),
-      el('span', {}, formatPnl(row.pnl_b)),
-      el('span', { class: 'muted' }, formatPnl(row.delta)),
-    ]))),
   ]));
-  const runs = data.runs || [];
-  const series = runs
-    .filter((r) => r.equity?.length)
-    .map((r) => ({
-      label: `#${r.id}`,
-      data: r.equity.map((p) => [new Date(p.ts).getTime(), p.pnl]),
-    }));
-  if (series.length) {
-    renderUplotLine(document.getElementById('studio-compare-chart'), series[0].data, series.slice(1));
-  }
+  const series = (data.runs || []).filter((r) => r.equity?.length).map((r) => ({
+    label: `#${r.id}`,
+    data: r.equity.map((p) => [new Date(p.ts).getTime(), p.pnl]),
+  }));
+  if (series.length) renderUplotLine(document.getElementById('studio-compare-chart'), series[0].data, series.slice(1));
 }
 
 function bindSse(ctx) {
   if (sseHandler) disconnectSse(sseHandler);
   sseHandler = (event) => {
-    if (event.type === 'run:progress') {
-      if (event.runId === studioState.selectedRunId) {
-        updateProgressUI(event.runId, event.progress);
-      }
-      const itemEl = document.getElementById(`run-item-${event.runId}`);
-      if (itemEl) {
-        const pnlEl = itemEl.querySelector('.studio-run-item__pnl');
-        if (pnlEl) pnlEl.textContent = `Rodando (${event.progress?.percent?.toFixed(0) || 0}%)`;
-      }
+    if (event.type === 'run:progress' && event.runId === studioState.selectedRunId) {
+      const fill = document.getElementById('studio-progress-fill');
+      if (fill) fill.style.width = `${event.progress?.percent || 0}%`;
     }
     if (event.type === 'run:completed' || event.type === 'run:failed') {
       cacheInvalidate('runs');
       refreshRuns(ctx);
       if (event.runId === studioState.selectedRunId) loadRunDetail(ctx, event.runId);
     }
+    if (event.type === 'job:completed') refreshCoverageIndicator(ctx, formFromDom());
   };
   connectSse(sseHandler);
 }
@@ -649,8 +720,7 @@ function bindShortcuts(ctx) {
       }
     }
     if ((ev.metaKey || ev.ctrlKey) && ev.key === 'Enter') {
-      const form = document.getElementById('studio-form');
-      if (form) form.requestSubmit();
+      document.getElementById('studio-form')?.requestSubmit();
     }
   });
 }

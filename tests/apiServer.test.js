@@ -70,6 +70,30 @@ test('data-backtest API exposes health, availability and prepare plan', async ()
       assert.equal(prepare.result.status, 'prepare_required');
       assert.equal(prepare.result.preparation[0].command, 'sync:backfill-backtest-ticks');
 
+      const coverage = await getJson(`${baseUrl}/api/data/coverage?underlying=BTC&interval=5m&book_depth=25&from=2026-05-31&to=2026-06-02`);
+      assert.equal(coverage.coverage.underlying, 'BTC');
+      assert.ok(Array.isArray(coverage.coverage.days));
+      assert.ok(coverage.coverage.summary.total >= 2);
+
+      const fixDry = await fetch(`${baseUrl}/api/data/fix`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          dry_run: true,
+          request: {
+            dataset: 'backtest_ticks',
+            from: '2026-05-31',
+            to: '2026-06-02',
+            underlying: 'BTC',
+            interval: '5m',
+            book_depth: 25,
+          },
+        }),
+      });
+      assert.equal(fixDry.status, 200);
+      const fixBody = await fixDry.json();
+      assert.ok(fixBody.summary_lines?.length);
+
       const contextOptions = await getJson(`${baseUrl}/api/context-options`);
       assert.deepEqual(contextOptions.options.lake.underlyings, ['BTC']);
       assert.deepEqual(contextOptions.options.lake.intervals, ['5m']);

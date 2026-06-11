@@ -17,7 +17,7 @@ function loadUplot() {
   return uplotReady;
 }
 
-export async function renderUplotLine(container, primarySeries, extraSeries = []) {
+export async function renderUplotLine(container, primarySeries, extraSeries = [], opts = {}) {
   if (!container) return null;
   const uPlot = await loadUplot();
   container.innerHTML = '';
@@ -29,6 +29,7 @@ export async function renderUplotLine(container, primarySeries, extraSeries = []
   const xs = labeled[0].data.map((p) => p[0] / 1000);
   const data = [xs, ...labeled.map((s) => s.data.map((p) => p[1]))];
   const colors = ['#f97316', '#38bdf8', '#a78bfa', '#34d399', '#f472b6'];
+  const markers = Array.isArray(opts.markers) ? opts.markers : [];
   const chart = new uPlot({
     width: container.clientWidth || 600,
     height: 220,
@@ -36,6 +37,7 @@ export async function renderUplotLine(container, primarySeries, extraSeries = []
     axes: [{}, {}],
     cursor: { drag: { x: true, y: false, setScale: true } },
     hooks: {
+      draw: markers.length ? [(u) => drawMarkers(u, markers, colors[0])] : [],
       setSelect: [(u) => {
         if (u.select.width <= 0) return;
         const min = u.posToVal(u.select.left, 'x');
@@ -56,4 +58,21 @@ export async function renderUplotLine(container, primarySeries, extraSeries = []
   })(chart.destroy);
 
   return chart;
+}
+
+function drawMarkers(u, markers, defaultColor) {
+  const ctx = u.ctx;
+  const { left, top, width, height } = u.bbox;
+  for (const marker of markers) {
+    const x = u.valToPos(marker.ts / 1000, 'x', true);
+    if (x < left || x > left + width) continue;
+    const yVal = marker.price != null ? Number(String(marker.price).replace(/[^0-9.-]/g, '')) : null;
+    const y = yVal != null && Number.isFinite(yVal)
+      ? u.valToPos(yVal, 'y0', true)
+      : top + height * 0.15;
+    ctx.fillStyle = marker.color || defaultColor;
+    ctx.font = '11px JetBrains Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText((marker.label || '●').slice(0, 2), x, Math.max(top + 10, y - 4));
+  }
 }

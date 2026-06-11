@@ -3,9 +3,9 @@ import { validate as validateGls } from '../gls/validator.js';
 
 const ALLOWED_STATUS = new Set(['draft', 'validated', 'archived']);
 
-export function listStrategies(db) {
-  return db.prepare('SELECT * FROM strategy_definitions ORDER BY updated_at DESC, id DESC').all()
-    .map((row) => toApiStrategy(db, row));
+export function listStrategies(db, { withStats = false } = {}) {
+  const rows = db.prepare('SELECT * FROM strategy_definitions ORDER BY pinned DESC, updated_at DESC, id DESC').all();
+  return rows.map((row) => toApiStrategy(db, row));
 }
 
 export function getStrategy(db, id) {
@@ -32,13 +32,14 @@ export function updateStrategy(db, id, patch = {}) {
     description: patch.description !== undefined ? patch.description : current.description,
     status: patch.status != null ? normalizeStatus(patch.status) : current.status,
     tags: patch.tags != null ? normalizeTags(patch.tags) : current.tags,
+    pinned: patch.pinned != null ? (patch.pinned ? 1 : 0) : (current.pinned ? 1 : 0),
   };
 
   db.prepare(`
     UPDATE strategy_definitions
-    SET name = ?, description = ?, status = ?, tags_json = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+    SET name = ?, description = ?, status = ?, tags_json = ?, pinned = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
     WHERE id = ?
-  `).run(next.name, next.description, next.status, JSON.stringify(next.tags), id);
+  `).run(next.name, next.description, next.status, JSON.stringify(next.tags), next.pinned, id);
 
   return getStrategy(db, id);
 }
@@ -91,7 +92,47 @@ export function deleteStrategyVersion(db, strategyId, versionId) {
   return version;
 }
 
-export function createStrategyVersion(db, strategyId, { language = 'gls-v1', source_code: sourceCode }) {
+export function forkStrategy(db, strategyId, { versionId = null, name = null } = {}) {
+  const source = getStrategy(db, strategyId);
+  if (!source) return null;
+  const versions = listStrategyVersions(db, strategyId);
+  const fromVersion = versionId
+    ? versions.find((v) => v.id === Number(versionId))
+    : versions[0];
+  if (!fromVersion) throw new Error('No version to fork from');
+
+  let forkIndex = 1;
+  let slug = `${source.slug}-fork`;
+  while (db.prepare('SELECT id FROM strategy_definitions WHERE slug = ?').get(slug)) {
+    slug = `${source.slug}-fork-${forkIndex++}`;
+  }
+
+  const forked = createStrategy(db, {
+    slug,
+    name: name || `${source.name} (fork)`,
+    description: source.description,
+    tags: source.tags,
+  });
+  updateStrategy(db, forked.id, { status: 'draft' });
+
+  const result = db.prepare(`
+    INSERT INTO strategy_versions (
+      strategy_id, version, language, source_code, params_schema_json, validation_json, checksum, notes
+    ) VALUES (?, 1, ?, ?, ?, ?, ?, ?)
+  `).run(
+    forked.id,
+    fromVersion.language,
+    fromVersion.source_code,
+    JSON.stringify(fromVersion.params_schema || {}),
+    JSON.stringify(fromVersion.validation || {}),
+    checksumSource(fromVersion.source_code),
+    `Fork de ${source.slug} v${fromVersion.version}`,
+  );
+
+  return getStrategy(db, forked.id);
+}
+
+export function createStrategyVersion(db, strategyId, { language = 'gls-v1', source_code: sourceCode, notes = null }) {
   const strategy = getStrategy(db, strategyId);
   if (!strategy) return null;
   const code = String(sourceCode || '').trim();
@@ -111,8 +152,8 @@ export function createStrategyVersion(db, strategyId, { language = 'gls-v1', sou
   const validation = validateStrategySource({ language, source_code: code });
   const result = db.prepare(`
     INSERT INTO strategy_versions (
-      strategy_id, version, language, source_code, params_schema_json, validation_json, checksum
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      strategy_id, version, language, source_code, params_schema_json, validation_json, checksum, notes
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     strategyId,
     version,
@@ -121,6 +162,7 @@ export function createStrategyVersion(db, strategyId, { language = 'gls-v1', sou
     JSON.stringify(validation.params_schema || {}),
     JSON.stringify(validation),
     checksumSource(code),
+    notes != null ? String(notes).trim() || null : null,
   );
 
   db.prepare(`
@@ -153,6 +195,7 @@ function toApiStrategy(db, row) {
     description: row.description,
     status: row.status,
     tags: JSON.parse(row.tags_json),
+    pinned: Boolean(row.pinned),
     latest_version: latest?.version != null ? Number(latest.version) : null,
     latest_version_id: latest?.id != null ? Number(latest.id) : null,
     created_at: row.created_at,
@@ -175,6 +218,7 @@ function toApiVersion(row) {
     params_schema: JSON.parse(row.params_schema_json),
     validation,
     checksum: row.checksum,
+    notes: row.notes || null,
     created_at: row.created_at,
   };
 }

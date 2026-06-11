@@ -1,10 +1,12 @@
 import { Worker } from 'node:worker_threads';
 
 import {
+  clearRunJobDependency,
   completeBacktestRun,
   createQueuedBacktestRun,
   failBacktestRun,
   getBacktestRun,
+  listBacktestRunsWaitingForJob,
   listQueuedBacktestRuns,
   markBacktestRunRunning,
   updateBacktestRunProgress,
@@ -20,8 +22,8 @@ export function createBacktestQueue({ config, db, onEvent }) {
     onEvent?.({ type, ...payload });
   }
 
-  function enqueue({ request, strategyMeta, totalTicks, startedAt }) {
-    const run = createQueuedBacktestRun(db, { request, strategyMeta, totalTicks });
+  function enqueue({ request, strategyMeta, totalTicks, startedAt, dependsOnJob = null }) {
+    const run = createQueuedBacktestRun(db, { request, strategyMeta, totalTicks, dependsOnJob });
     pendingRequests.set(run.id, request);
     const position = listQueuedBacktestRuns(db).findIndex((r) => r.id === run.id) + 1;
     emit('run:queued', { runId: run.id, queuePosition: position });
@@ -35,7 +37,7 @@ export function createBacktestQueue({ config, db, onEvent }) {
     draining = true;
     try {
       while (activeWorkers.size < maxConcurrent) {
-        const queued = listQueuedBacktestRuns(db)[0];
+        const queued = listQueuedBacktestRuns(db).find((r) => !r.progress?.depends_on_job);
         if (!queued) break;
         startWorker(queued);
       }
@@ -143,5 +145,14 @@ export function createBacktestQueue({ config, db, onEvent }) {
     return activeWorkers.size;
   }
 
-  return { enqueue, drain, cancel, activeCount, onWorkerComplete };
+  function releaseWaitingRuns(jobId) {
+    const waiting = listBacktestRunsWaitingForJob(db, jobId);
+    for (const run of waiting) {
+      clearRunJobDependency(db, run.id);
+    }
+    if (waiting.length) drain();
+    return waiting.length;
+  }
+
+  return { enqueue, drain, cancel, activeCount, onWorkerComplete, releaseWaitingRuns };
 }

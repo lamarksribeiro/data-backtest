@@ -9,18 +9,16 @@ O `data-backtest` e dividido em duas partes:
 
 O sistema nao executa backtest direto no Postgres. Primeiro os dados precisam existir no lakehouse como `backtest_ticks` validos no `lake_manifest`.
 
-## Fluxo Normal De Uso
+## Fluxo Normal De Uso (V3 — Estudio-first)
 
 1. Abra `http://localhost:3100` (sem sessao, redireciona para `/login`).
-2. Entre com o usuario configurado em `INITIAL_ADMIN_USERNAME` e `INITIAL_ADMIN_PASSWORD` (`SESSION_SECRET` obrigatorio em producao).
-3. Ajuste o contexto global no topo da UI: ativo, intervalo, datas, book depth e batch size.
-4. Va em **Dados** e confira se o periodo esta disponivel.
-5. Se faltar dado, crie um job de prepare/sync antes do backtest.
-6. Va em **Estrategias** para criar ou editar uma estrategia GLS.
-7. Valide o codigo.
-8. Salve uma nova versao.
-9. Execute o backtest pela aba **Estrategias** ou pela aba **Backtests**.
-10. Abra o run gerado para ver desempenho, equity, eventos e detalhe grafico de cada evento.
+2. Entre com `INITIAL_ADMIN_USERNAME` / `INITIAL_ADMIN_PASSWORD`.
+3. **Estudio** e a unica tela de backtest: configure estrategia (com versao), janela e rode com **Rodar backtest** ou `Ctrl+Enter`.
+4. O indicador de cobertura no painel CONFIG mostra se a janela esta pronta (verde), sincronizando (azul) ou precisa de atencao (ambar). Use **Corrigir dados** para enfileirar preparacao em um clique.
+5. **Dados** mostra calendario de cobertura, preparar periodo e jobs ativos (a rota `#/jobs` redireciona para aqui).
+6. **Estrategias** abre na **Biblioteca** com cards, sparkline e stats; abra uma estrategia para editar GLS, salvar versao com notas, diff e evolucao por versao.
+7. Clique em um evento na tabela para abrir o drawer: grafico com markers, timeline, diagnostico e logs — sem sair do Estudio (`j`/`k` percorre eventos).
+8. **Visao Geral** mostra apenas saude do sistema; cobertura detalhada fica em **Dados**.
 
 ## O Que E Uma Estrategia
 
@@ -77,27 +75,20 @@ Conceitos importantes:
 
 ## Como Executar Um Backtest
 
-Na aba **Backtests**:
+No **Estudio**:
 
-1. Escolha uma estrategia versionada.
-2. Confira o contexto global no topo: datas, ativo, intervalo e book depth. Esses seletores usam combinacoes disponiveis no manifest do lakehouse.
-3. Ajuste `Batch size` somente se precisar mexer em performance/memoria. Ele define quantos ticks o engine le por lote; nao altera a logica nem o resultado esperado da estrategia.
-4. Clique em **Executar**.
-5. Se aparecer `DATA_NOT_READY`, va para **Dados** e prepare o periodo.
-6. Use os filtros do **Historico** para localizar runs por estrategia, versao, periodo, status e PnL.
+1. Selecione estrategia e **versao** (dropdown secundario).
+2. Confira datas, ativo, intervalo e book depth; o badge de cobertura indica prontidao.
+3. Opcional: expanda **Avancado** para `Batch size`.
+4. **Rodar backtest** ou `Ctrl+Enter`. Se os dados nao estiverem prontos, confirme corrigir e enfileirar o run dependente do job.
+5. Painel de runs: chips de stats, filtros por status/ordem e sublinha `vN · periodo`.
+6. Deep-links: `#/studio?run=ID`, `#/studio?strategy=5&version=12`, `#/backtests/ID` (redirect legado).
 
-Parametros da estrategia nao sao alterados na tela de backtest. Edite os parametros na aba **Estrategias** e salve uma nova versao antes de executar.
-
-Na aba **Estrategias**:
-
-1. Abra a estrategia.
-2. Valide o codigo.
-3. Salve uma versao.
-4. Clique em **Executar backtest**.
+Na **Biblioteca de Estrategias**: botao **Rodar** abre o Estudio com a estrategia pre-selecionada.
 
 ## Como Ler O Resultado
 
-Na tela do run:
+No **Estudio** (painel central + drawer de evento):
 
 - `Ticks`: linhas de `backtest_ticks` processadas.
 - `Eventos`: mercados/eventos simulados.
@@ -107,16 +98,16 @@ Na tela do run:
 - `Drawdown`: queda maxima registrada quando a estrategia fornece essa metrica.
 - `Profit factor`: lucro bruto dividido por perda bruta quando disponivel.
 - `Curva de desempenho`: PnL acumulado ao fim de cada evento.
-- `Eventos`: tabela para abrir cada evento individual.
+- Metricas agrupadas (Visao Geral / Assertividade / Medias) com toggle JSON.
+- Tab **Analise**: piores eventos e timing de execucao (DuckDB, processamento, ticks/s).
+- `Eventos`: tabela virtual com paginacao; clique abre o drawer.
 
-Na tela do evento:
+No drawer do evento:
 
-- Grafico BTC vs PTB mostra preco do ativo e price-to-beat.
-- Series de bid/ask do lado negociado aparecem no eixo direito.
-- Markers indicam entradas, saidas e `mark()` da estrategia.
-- `Ordens & marks` mostra o JSON de execucao.
-- `Logs` mostra mensagens emitidas por `log()` ou logs normalizados do runner.
-- `Summary` mostra dados do evento, como lado, entrada, quantidade, custo, resultado e diagnosticos.
+- **Grafico**: BTC vs PTB com markers tipados (entrada, saida, parcial, reversao, mark).
+- **Timeline**: ordens e marcas em ordem cronologica.
+- **Diagnostico** e **Logs** enriquecidos; resumo inclui breakdown de taxas.
+- Atalhos `j` / `k` para navegar entre eventos sem fechar o drawer.
 
 ## Apagar Estrategias
 
@@ -145,7 +136,6 @@ npm test
 
 ## O Que Ainda Falta
 
-- Validar deploy, backup e restore em producao/Coolify.
-- Implementar `PostgresTickProvider`, `HybridTickProvider` e `streamEvents` se o sistema precisar de providers alem do DuckDB/lakehouse.
-- Melhorar o editor com autocomplete rico, diff entre versoes e comparacao visual entre runs.
-- Criar otimizador/tuning de parametros dentro ou ao lado do Backtest Studio.
+- Validar deploy, backup e restore em producao/Coolify (ver `docs/implementacao/implementacao-v3.md`).
+- Implementar `PostgresTickProvider`, `HybridTickProvider` e `streamEvents` se necessario.
+- Autocomplete GLS mais rico e otimizador de parametros.
