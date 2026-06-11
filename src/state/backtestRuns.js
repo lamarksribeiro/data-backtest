@@ -1,4 +1,5 @@
 import { persistEventTraces } from '../backtestStudio/state/eventTraces.js';
+import { downsamplePoints } from '../utils/downsample.js';
 
 export function createBacktestRun(db, { request, result, strategyMeta = null, status = 'completed', error = null, durationMs = null, startedAt = null }) {
   const meta = strategyMeta ?? result?.strategyMeta ?? null;
@@ -314,6 +315,8 @@ function addTextFilter(filters, params, column, value) {
   params.push(String(value));
 }
 
+const MAX_STORED_EQUITY_POINTS = 1500;
+
 function toApiRun(row, { includeResult = false, includeEquity = false } = {}) {
   const run = {
     id: Number(row.id),
@@ -341,8 +344,7 @@ function toApiRun(row, { includeResult = false, includeEquity = false } = {}) {
   if (includeResult) {
     run.result = JSON.parse(row.result_json);
   } else if (includeEquity && row.result_json) {
-    const parsed = JSON.parse(row.result_json);
-    run.equity = Array.isArray(parsed.equity) ? parsed.equity : [];
+    run.equity = extractEquityFromResultJson(row.result_json);
   }
   return run;
 }
@@ -373,5 +375,57 @@ function minimalResultForRequest(request, { summary = {} } = {}) {
 
 function slimResultForStorage(result) {
   const { events, log, ...rest } = result;
+  if (Array.isArray(rest.equity) && rest.equity.length > MAX_STORED_EQUITY_POINTS) {
+    const points = rest.equity.map((p) => ({ ts: p.ts, value: p.pnl }));
+    rest.equity = downsamplePoints(points, { maxPoints: MAX_STORED_EQUITY_POINTS })
+      .map((p) => ({ ts: p.ts, pnl: p.value }));
+  }
   return rest;
+}
+
+/** Extrai só o array equity sem parsear o JSON inteiro do result. */
+export function extractEquityFromResultJson(json) {
+  if (!json) return [];
+  const key = '"equity":';
+  const start = json.indexOf(key);
+  if (start < 0) {
+    try {
+      const parsed = JSON.parse(json);
+      return Array.isArray(parsed.equity) ? parsed.equity : [];
+    } catch {
+      return [];
+    }
+  }
+  let i = start + key.length;
+  while (i < json.length && /\s/.test(json[i])) i += 1;
+  if (json[i] !== '[') return [];
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let j = i; j < json.length; j += 1) {
+    const ch = json[j];
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (ch === '\\') escaped = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+      continue;
+    }
+    if (ch === '[') depth += 1;
+    else if (ch === ']') {
+      depth -= 1;
+      if (depth === 0) {
+        try {
+          const equity = JSON.parse(json.slice(i, j + 1));
+          return Array.isArray(equity) ? equity : [];
+        } catch {
+          return [];
+        }
+      }
+    }
+  }
+  return [];
 }

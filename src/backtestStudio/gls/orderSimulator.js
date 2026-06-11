@@ -51,25 +51,40 @@ export function createOrderSimulator({ limits = {} } = {}) {
     };
   }
 
+  const positionView = {
+    open: false,
+    side: null,
+    shares: 0,
+    totalShares: 0,
+    totalCost: 0,
+    openCost: 0,
+    avgPrice: null,
+    avgEntryPrice: null,
+    peakBid: null,
+  };
+
+  function syncPositionView() {
+    positionView.open = Boolean(position);
+    positionView.side = position?.side ?? null;
+    positionView.shares = position?.remainingShares ?? 0;
+    positionView.totalShares = position?.totalShares ?? 0;
+    positionView.totalCost = position?.totalCost ?? 0;
+    positionView.openCost = position?.openCost ?? 0;
+    positionView.avgPrice = position ? currentOpenAveragePrice(position) : null;
+    positionView.avgEntryPrice = position?.avgEntryPrice ?? null;
+    positionView.peakBid = position?.peakBid ?? null;
+  }
+
   const api = {
     get positionView() {
-      return {
-        open: Boolean(position),
-        side: position?.side ?? null,
-        shares: position?.remainingShares ?? 0,
-        totalShares: position?.totalShares ?? 0,
-        totalCost: position?.totalCost ?? 0,
-        openCost: position?.openCost ?? 0,
-        avgPrice: position ? currentOpenAveragePrice(position) : null,
-        avgEntryPrice: position?.avgEntryPrice ?? null,
-        peakBid: position?.peakBid ?? null,
-      };
+      return positionView;
     },
     enter(side, options = {}) {
       if (position || orders.filter((o) => o.type === 'entry').length >= maxOrders) return false;
       const planned = planEntry(side, options, true);
       if (!planned) return false;
       position = planned.position;
+      syncPositionView();
       const order = planned.order;
       orders.push(order);
       return order;
@@ -117,6 +132,7 @@ export function createOrderSimulator({ limits = {} } = {}) {
       exits.push(order);
       orders.push(order);
       if (position.remainingShares <= 0) position = null;
+      syncPositionView();
       return order;
     },
     reverse(side, options = {}) {
@@ -131,6 +147,7 @@ export function createOrderSimulator({ limits = {} } = {}) {
       const committed = planEntry(side, options, true);
       if (!committed) return false;
       position = committed.position;
+      syncPositionView();
       orders.push(committed.order);
       return committed.order;
     },
@@ -148,6 +165,7 @@ export function createOrderSimulator({ limits = {} } = {}) {
       orders = [];
       exits = [];
       realizedPnl = 0;
+      syncPositionView();
       consumedAsksBySide.UP.clear();
       consumedAsksBySide.DOWN.clear();
       consumedBidsBySide.UP.clear();
@@ -164,7 +182,10 @@ export function createOrderSimulator({ limits = {} } = {}) {
     updatePeakBid(tick, lib) {
       if (!position) return;
       const bid = lib.book.bid(position.side, tick);
-      if (Number.isFinite(bid)) position.peakBid = Math.max(position.peakBid ?? bid, bid);
+      if (Number.isFinite(bid)) {
+        position.peakBid = Math.max(position.peakBid ?? bid, bid);
+        positionView.peakBid = position.peakBid;
+      }
     },
   };
 

@@ -34,14 +34,16 @@ try {
   const request = {
     ...workerData.request,
     fastRun: Boolean(workerData.fastRun),
-    onEventFinalized: (eventRecord, samples) => {
-      const side = eventRecord.positionType || 'UP';
-      const { series, meta } = buildEventChartSeries(samples, side);
-      appendChartSidecarLine(sidecarFile, eventRecord.eventId, { series, meta });
-      const row = normalizeEventForTrace(runId, eventRecord, sidecarFile);
-      pendingEvents.push(row);
-      if (pendingEvents.length >= FLUSH_BATCH_EVENTS) flushTraces();
-    },
+    onEventFinalized: workerData.fastRun
+      ? null
+      : (eventRecord, samples) => {
+        const side = eventRecord.positionType || 'UP';
+        const { series, meta } = buildEventChartSeries(samples, side);
+        appendChartSidecarLine(sidecarFile, eventRecord.eventId, { series, meta });
+        const row = normalizeEventForTrace(runId, eventRecord, sidecarFile);
+        pendingEvents.push(row);
+        if (pendingEvents.length >= FLUSH_BATCH_EVENTS) flushTraces();
+      },
   };
 
   const result = await runBacktest(db, request, {

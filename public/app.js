@@ -6,7 +6,7 @@ import { fetchContextOptionsCached } from './js/utils/contextOptionsCache.js';
 import { startSidebarStatus } from './js/utils/sidebarStatus.js';
 import { renderOverview } from './js/views/overview.js';
 import { renderData } from './js/views/data.js';
-import { renderStudio, redirectLegacyBacktestRoute } from './js/views/studio.js';
+import { renderStudio, leaveStudio, redirectLegacyBacktestRoute } from './js/views/studio.js';
 import { renderStrategies } from './js/views/strategies.js';
 
 const contentEl = document.getElementById('content');
@@ -124,6 +124,10 @@ async function bootstrap() {
 
   startSidebarStatus(ctx);
   initRouter({
+    onLeave(path) {
+      const top = String(path || '').split('?')[0].split('/')[0];
+      if (top !== 'studio') leaveStudio();
+    },
     routes: {
       overview: () => renderOverview(ctx),
       studio: () => renderStudio(ctx),

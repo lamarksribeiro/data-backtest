@@ -1,5 +1,23 @@
 let uplotReady = null;
 
+/** @type {WeakMap<HTMLElement, import('uplot').default[]>} */
+const containerCharts = new WeakMap();
+
+export function destroyChartsIn(container) {
+  if (!container) return;
+  const charts = containerCharts.get(container);
+  if (!charts?.length) return;
+  for (const chart of charts) chart?.destroy?.();
+  containerCharts.delete(container);
+}
+
+function trackChart(container, chart) {
+  if (!container || !chart) return;
+  const list = containerCharts.get(container) || [];
+  list.push(chart);
+  containerCharts.set(container, list);
+}
+
 function loadUplot() {
   if (window.uPlot) return Promise.resolve(window.uPlot);
   if (uplotReady) return uplotReady;
@@ -39,12 +57,14 @@ export async function renderUplotSparkline(container, values) {
     window.removeEventListener('resize', onResize);
     orig.call(chart);
   })(chart.destroy);
+  trackChart(container, chart);
   return chart;
 }
 
 export async function renderUplotLine(container, primarySeries, extraSeries = [], opts = {}) {
   if (!container) return null;
   const uPlot = await loadUplot();
+  destroyChartsIn(container);
   container.innerHTML = '';
   const labeled = [
     { label: 'primary', data: primarySeries },
@@ -81,6 +101,7 @@ export async function renderUplotLine(container, primarySeries, extraSeries = []
     window.removeEventListener('resize', onResize);
     orig.call(chart);
   })(chart.destroy);
+  trackChart(container, chart);
 
   return chart;
 }

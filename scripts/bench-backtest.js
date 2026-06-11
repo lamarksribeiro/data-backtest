@@ -122,6 +122,7 @@ async function main() {
     const report = {
       at: new Date().toISOString(),
       glsExecution: config.glsExecution,
+      backtestEngine: config.backtestEngine,
       request: { from, to, underlying, interval, bookDepth, batchSize, runs },
       ticks: lastResult.ticks,
       batches: lastResult.batches,

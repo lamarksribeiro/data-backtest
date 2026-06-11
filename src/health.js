@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { getDatasetCacheStats } from './backtest/datasetCache.js';
 import { manifestStats } from './state/manifest.js';
 import { checkLakeStorage } from './lake/storage.js';
 
@@ -21,6 +22,7 @@ export async function getHealth(config, db) {
     FROM lake_manifest
     WHERE source_fingerprint IS NOT NULL AND source_fingerprint != ''
   `).get();
+  const mem = process.memoryUsage();
   return {
     status: 'ok',
     app_version: APP_VERSION,
@@ -32,5 +34,13 @@ export async function getHealth(config, db) {
       ? `${fingerprintRow.distinct_fps} fingerprints distintos`
       : null,
     manifest,
+    runtime: {
+      rss_mb: Math.round(mem.rss / 1024 / 1024),
+      heap_used_mb: Math.round(mem.heapUsed / 1024 / 1024),
+      dataset_cache: getDatasetCacheStats(),
+      backtest_engine: config.backtestEngine,
+      dataset_cache_max_mb: config.datasetCacheMaxMb,
+      duckdb_threads: Number.parseInt(process.env.DUCKDB_THREADS || '4', 10) || 4,
+    },
   };
 }

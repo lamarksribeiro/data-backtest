@@ -163,7 +163,7 @@ export async function queryCandles(db, request) {
   return runDuckQuery(sql);
 }
 
-function buildTicksSql(availability, request, { select = '*', order = true } = {}) {
+export function buildTicksSql(availability, request, { select = '*', order = true } = {}) {
   const tsColumn = 'ts';
   const qualityClause = request.validBacktestRows ? `
       AND underlying_price IS NOT NULL

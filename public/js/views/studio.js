@@ -20,6 +20,7 @@ import { renderUplotLine } from '../utils/uplotChart.js';
 import { confirmDialog } from '../utils/confirm.js';
 
 const EVENTS_PAGE = 100;
+const MAX_STUDIO_EVENTS = 500;
 
 const studioState = {
   runs: [],
@@ -152,6 +153,7 @@ async function cancelRunFromStudio(ctx, run) {
 
 function startProgressPoll(ctx, runId) {
   clearProgressPoll();
+  if (typeof EventSource !== 'undefined') return;
   progressPollTimer = setInterval(async () => {
     if (studioState.cancellingRunId === runId) return;
     if (studioState.selectedRunId !== runId) {
@@ -207,6 +209,24 @@ function pushStudioQuery(patch) {
 }
 
 let shortcutsBound = false;
+
+/** Libera listeners, SSE do estúdio e estado pesado ao sair da rota. */
+export function leaveStudio() {
+  openEventToken += 1;
+  clearProgressPoll();
+  if (sseHandler) {
+    disconnectSse(sseHandler);
+    sseHandler = null;
+  }
+  studioState.events = [];
+  studioState.eventsOffset = 0;
+  studioState.eventsHasMore = false;
+  const drawer = document.getElementById('studio-drawer');
+  if (drawer) {
+    drawer.hidden = true;
+    mount(drawer, []);
+  }
+}
 
 export async function renderStudio(ctx) {
   studioCtx = ctx;
@@ -559,7 +579,7 @@ async function loadRunDetail(ctx, runId) {
     if (res.ok) return renderCompare(main, res.data);
   }
 
-  const runRes = await ctx.api.get(`/api/backtest/runs/${runId}?slim=1`);
+  const runRes = await ctx.api.get(`/api/backtest/runs/${runId}?slim=1&equity=1`);
   if (!runRes.ok) return mount(main, el('p', { class: 'muted' }, 'Run não encontrado'));
   const run = runRes.data.run;
 
@@ -637,10 +657,14 @@ async function loadEvents(ctx, runId, { append = false } = {}) {
 
   const res = await ctx.api.get(`/api/backtest/runs/${runId}/events?${q.toString()}`);
   const page = res.ok ? res.data.events : [];
-  if (append) studioState.events.push(...page);
-  else studioState.events = page;
+  if (append) {
+    const room = Math.max(0, MAX_STUDIO_EVENTS - studioState.events.length);
+    studioState.events.push(...page.slice(0, room));
+  } else {
+    studioState.events = page.slice(0, MAX_STUDIO_EVENTS);
+  }
   studioState.eventsOffset = studioState.events.length;
-  studioState.eventsHasMore = page.length === EVENTS_PAGE;
+  studioState.eventsHasMore = page.length === EVENTS_PAGE && studioState.events.length < MAX_STUDIO_EVENTS;
 
   const tableContainer = document.getElementById('studio-events-table-container');
   if (!tableContainer) return;
@@ -763,8 +787,9 @@ async function openEventDrawer(ctx, runId, eventId, index = 0, { syncUrl = true 
   if (!res.ok) return mount(drawer, el('p', {}, 'Evento não encontrado'));
   const event = res.data.event;
 
-  let chartData = null;
-  if (event.condition_id) {
+  const hasSidecarSeries = Boolean(event.series?.underlying?.length);
+  let chartData = hasSidecarSeries ? { series: event.series, series_meta: event.series_meta } : null;
+  if (event.condition_id && !hasSidecarSeries) {
     const chartRes = await ctx.api.get(`/api/backtest/runs/${runId}/chart-data?condition_id=${encodeURIComponent(event.condition_id)}`);
     if (token !== openEventToken) return;
     chartData = chartRes.ok ? chartRes.data : null;
@@ -831,9 +856,15 @@ function renderCompare(main, data) {
   if (series.length) renderUplotLine(document.getElementById('studio-compare-chart'), series[0].data, series.slice(1));
 }
 
+function isStudioRouteActive() {
+  const top = location.hash.replace(/^#\/?/, '').split('?')[0].split('/')[0];
+  return top === 'studio';
+}
+
 function bindSse(ctx) {
   if (sseHandler) disconnectSse(sseHandler);
   sseHandler = (event) => {
+    if (!isStudioRouteActive()) return;
     if (event.type === 'run:progress' && event.runId === studioState.selectedRunId) {
       applyProgressUi(event.progress);
       const bar = document.querySelector('.studio-progress-bar');

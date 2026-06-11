@@ -164,6 +164,23 @@ export async function getChartData(db, config, run, conditionId) {
   const event = getEventTraceByConditionId(db, run.id, conditionId);
   if (!event) return null;
 
+  if (config?.stateDbPath && event.chart_series_path) {
+    const sidecar = readChartSidecarForEvent(event.chart_series_path, conditionId);
+    if (sidecar?.series) {
+      return {
+        event: toApiEventSummaryFromDetail(event),
+        series: sidecar.series,
+        series_meta: sidecar.meta ?? { source: 'sidecar' },
+        summary: event.summary,
+        exits: event.summary?.exits ?? [],
+        orders: event.orders,
+        marks: event.marks,
+        logs: event.logs,
+        metrics: event.metrics,
+      };
+    }
+  }
+
   const side = event.side || 'UP';
   const rows = await queryChartTicks(db, {
     underlying: run.underlying,

@@ -3,6 +3,12 @@ import { createOrderSimulator, settleEventPnl } from './orderSimulator.js';
 import { createTraceCollector } from './traceCollector.js';
 import { DEBUG_FUNCTIONS, ORDER_FUNCTIONS } from './blocks.js';
 import { compileStrategy } from './compiler.js';
+import { compileStrategySoa } from './compilerSoa.js';
+import {
+  createTickCursorView,
+  eventRecordFromColumnSet,
+  msToIso,
+} from '../../backtest/columnStore.js';
 import { parse } from './parser.js';
 import { loadConfig } from '../../config.js';
 
@@ -15,6 +21,14 @@ const DEFAULT_LIMITS = {
   maxOperationsPerTick: 10000,
 };
 
+const NOOP_TRACE = {
+  log() {},
+  mark() {},
+  metric() {},
+  snapshot: () => ({ logs: [], marks: [], metrics: {} }),
+  reset() {},
+};
+
 export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
   if (!ast || ast.type !== 'Strategy') throw new Error('Invalid GLS strategy AST');
   const params = mergeParams(ast.params, rawParams);
@@ -22,7 +36,7 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
   const limits = {
     ...DEFAULT_LIMITS,
     ...options.limits,
-    ...(fastRun ? { maxLogsPerEvent: 20, maxMarksPerEvent: 20 } : {}),
+    ...(fastRun ? { maxLogsPerEvent: 0, maxMarksPerEvent: 0 } : {}),
   };
   const onEventFinalized = typeof options.onEventFinalized === 'function' ? options.onEventFinalized : null;
   const lib = createStandardLibrary();
@@ -51,7 +65,13 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
   let startedAt = null;
   const executionMode = options.executionMode ?? loadConfig().glsExecution;
   const compiled = executionMode === 'compiled' ? compileStrategy(ast) : null;
+  const compiledSoa = executionMode === 'compiled-soa'
+    ? compileStrategySoa(ast, options.bookDepth ?? 25)
+    : null;
   const interpreter = executionMode === 'interpreter' ? createInterpreter() : null;
+  let columnSet = null;
+  let tickCursor = null;
+  let soaEvent = null;
 
   function mergeParams(declarations, overrides) {
     const merged = {};
@@ -63,24 +83,32 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
     return `${tick.condition_id}|${tick.event_start}`;
   }
 
+  function tickTimestamp(tick) {
+    if (tick?._tsMs != null && Number.isFinite(tick._tsMs)) return tick._tsMs;
+    if (typeof tick?.ts === 'number') return tick.ts;
+    return tick?.ts ?? null;
+  }
+
   function resetEventContext() {
     state = {};
     samples = [];
     orderSim = createOrderSimulator({ limits });
-    trace = createTraceCollector({ limits });
+    trace = fastRun ? NOOP_TRACE : createTraceCollector({ limits });
     currentLastTick = null;
     normalizedHolder = { tick: null };
     ordersApi = {
-      enter: (side, opts = {}) => orderSim.enter(side, { ...opts, ts: normalizedHolder.tick.ts }),
-      exit: (opts = {}) => orderSim.exit({ ...opts, tick: normalizedHolder.tick, ts: normalizedHolder.tick.ts }),
-      reverse: (side, opts = {}) => orderSim.reverse(side, { ...opts, ts: normalizedHolder.tick.ts }),
-      closeOpenPosition: (opts = {}) => orderSim.closeOpenPosition({ ...opts, tick: normalizedHolder.tick, ts: normalizedHolder.tick.ts }),
+      enter: (side, opts = {}) => orderSim.enter(side, { ...opts, ts: tickTimestamp(normalizedHolder.tick) }),
+      exit: (opts = {}) => orderSim.exit({ ...opts, tick: normalizedHolder.tick, ts: tickTimestamp(normalizedHolder.tick) }),
+      reverse: (side, opts = {}) => orderSim.reverse(side, { ...opts, ts: tickTimestamp(normalizedHolder.tick) }),
+      closeOpenPosition: (opts = {}) => orderSim.closeOpenPosition({ ...opts, tick: normalizedHolder.tick, ts: tickTimestamp(normalizedHolder.tick) }),
     };
-    debugApi = {
-      log: (name, value) => trace.log(name, value, normalizedHolder.tick.ts),
-      mark: (name, data) => trace.mark(name, data, normalizedHolder.tick.ts),
-      metric: (name, value) => trace.metric(name, value, normalizedHolder.tick.ts),
-    };
+    debugApi = fastRun
+      ? { log() {}, mark() {}, metric() {} }
+      : {
+        log: (name, value) => trace.log(name, value, tickTimestamp(normalizedHolder.tick)),
+        mark: (name, data) => trace.mark(name, data, tickTimestamp(normalizedHolder.tick)),
+        metric: (name, value) => trace.metric(name, value, tickTimestamp(normalizedHolder.tick)),
+      };
     sharedCtx = {
       params,
       state,
@@ -99,41 +127,52 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
     if (!currentEvent) return;
     const snap = orderSim.snapshot();
     const settlement = settleEventPnl(orderSim, lastTick, currentEvent);
-    const traces = trace.snapshot();
     const pnl = settlement.finalPnl;
     totalPnl += pnl;
     runState.totalPnl = totalPnl;
-    if (snap.orders.some((o) => o.type === 'entry')) totalEntries += 1;
+    const hadEntry = snap.orders.some((o) => o.type === 'entry');
+    if (hadEntry) totalEntries += 1;
     if (pnl > 0) wins += 1;
-    else if (pnl < 0 && snap.orders.some((o) => o.type === 'entry')) losses += 1;
+    else if (pnl < 0 && hadEntry) losses += 1;
 
-    const eventRecord = {
-      eventId: currentEvent.eventId,
-      eventStart: currentEvent.eventStart,
-      eventEnd: currentEvent.eventEnd,
-      marketId: lastTick?.market_id ?? null,
-      positionType: snap.position?.side ?? (snap.orders.find((o) => o.type === 'entry')?.side ?? null),
-      entryTime: snap.orders.find((o) => o.type === 'entry')?.ts ?? null,
-      quantity: snap.orders.find((o) => o.type === 'entry')?.shares ?? 0,
-      cost: snap.orders.find((o) => o.type === 'entry')?.notional ?? 0,
-      avgEntryPrice: snap.orders.find((o) => o.type === 'entry')?.price ?? null,
-      orders: snap.orders,
-      exits: snap.exits,
-      marks: traces.marks,
-      logs: traces.logs,
-      metrics: traces.metrics,
-      diagnostics: buildDiagnosticsFromState(state),
-      expirationResult: settlement.expirationResult,
-      winnerSide: settlement.winnerSide ?? null,
-      expiryPnl: settlement.expiryPnl ?? 0,
-      finalPnl: pnl,
-      reason: snap.orders.length ? settlement.reason : 'no_entry',
-      closedAt: closedAtForEvent(snap, lastTick, currentEvent),
-      ticksProcessed: samples.length,
-    };
+    const closedAt = closedAtForEvent(snap, lastTick, currentEvent);
+    const eventRecord = fastRun
+      ? {
+        eventId: currentEvent.eventId,
+        eventStart: currentEvent.eventStart,
+        eventEnd: currentEvent.eventEnd,
+        finalPnl: pnl,
+        reason: snap.orders.length ? settlement.reason : 'no_entry',
+        closedAt,
+        positionType: snap.position?.side ?? (snap.orders.find((o) => o.type === 'entry')?.side ?? null),
+      }
+      : {
+        eventId: currentEvent.eventId,
+        eventStart: currentEvent.eventStart,
+        eventEnd: currentEvent.eventEnd,
+        marketId: lastTick?.market_id ?? null,
+        positionType: snap.position?.side ?? (snap.orders.find((o) => o.type === 'entry')?.side ?? null),
+        entryTime: snap.orders.find((o) => o.type === 'entry')?.ts ?? null,
+        quantity: snap.orders.find((o) => o.type === 'entry')?.shares ?? 0,
+        cost: snap.orders.find((o) => o.type === 'entry')?.notional ?? 0,
+        avgEntryPrice: snap.orders.find((o) => o.type === 'entry')?.price ?? null,
+        orders: snap.orders,
+        exits: snap.exits,
+        marks: trace.snapshot().marks,
+        logs: trace.snapshot().logs,
+        metrics: trace.snapshot().metrics,
+        diagnostics: buildDiagnosticsFromState(state),
+        expirationResult: settlement.expirationResult,
+        winnerSide: settlement.winnerSide ?? null,
+        expiryPnl: settlement.expiryPnl ?? 0,
+        finalPnl: pnl,
+        reason: snap.orders.length ? settlement.reason : 'no_entry',
+        closedAt,
+        ticksProcessed: samples.length,
+      };
     events.push(eventRecord);
-    equity.push({ ts: eventRecord.closedAt, pnl: totalPnl });
-    if (onEventFinalized) {
+    equity.push({ ts: closedAt, pnl: totalPnl });
+    if (!fastRun && onEventFinalized) {
       onEventFinalized(eventRecord, [...samples]);
     }
     completedEvents.add(currentKey);
@@ -147,11 +186,14 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
     normalizedHolder.tick = normalized;
     sharedCtx.tick = normalized;
     sharedCtx.event = event;
-    sharedCtx.position = orderSim.positionView;
     return sharedCtx;
   }
 
   function runHook(name, ctx) {
+    if (compiledSoa?.[name]) {
+      compiledSoa[name](ctx, columnSet.columns, lib, ordersApi, debugApi);
+      return;
+    }
     if (compiled?.[name]) {
       compiled[name](ctx, lib, ordersApi, debugApi);
       return;
@@ -159,6 +201,59 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
     const hook = ast.hooks?.[name];
     if (!hook?.body?.length || !interpreter) return;
     interpreter.run(hook.body, ctx);
+  }
+
+  function bindColumnSet(nextColumnSet) {
+    columnSet = nextColumnSet;
+    tickCursor = createTickCursorView(columnSet);
+  }
+
+  function beginEvent(eventMeta) {
+    if (!columnSet || !compiledSoa) return;
+    soaEvent = eventRecordFromColumnSet(columnSet, eventMeta);
+    resetEventContext();
+    currentKey = `${columnSet.dictionaries.get('condition_id')?.[eventMeta.conditionCode] ?? ''}|${msToIso(eventMeta.eventStart)}`;
+    currentEvent = soaEvent;
+    const ctx = buildRuntimeContext(tickCursor, soaEvent);
+    ctx.__i = eventMeta.startRow;
+    runHook('onEventStart', ctx);
+  }
+
+  function endEvent(eventMeta) {
+    if (!columnSet || !compiledSoa || !currentEvent) return;
+    const lastIndex = Math.max(eventMeta.endRow - 1, eventMeta.startRow);
+    tickCursor.setIndex(lastIndex);
+    const ctx = buildRuntimeContext(tickCursor, currentEvent);
+    ctx.__i = lastIndex;
+    runHook('onEventEnd', ctx);
+    finalizeEvent(tickCursor);
+  }
+
+  function processIndex(rowIndex) {
+    if (!columnSet || !tickCursor || !compiledSoa) return;
+    // Espelha processTick: após fechamento antecipado do evento, ignorar ticks restantes.
+    if (!currentEvent) return;
+    if (startedAt == null) startedAt = Date.now();
+    ticksProcessed += 1;
+    if (Date.now() - startedAt > limits.maxRuntimeMs) {
+      throw new Error('failed_resource_limit: maxRuntimeMs exceeded');
+    }
+
+    tickCursor.setIndex(rowIndex);
+    if (!fastRun) {
+      samples.push(tickCursor);
+      if (samples.length > 500) samples.shift();
+    }
+
+    const ctx = buildRuntimeContext(tickCursor, currentEvent);
+    ctx.__i = rowIndex;
+    runHook('onTick', ctx);
+    currentLastTick = tickCursor;
+
+    if (currentEvent && orderSim.snapshot().orders.some((o) => o.type === 'entry') && !orderSim.positionView.open) {
+      runHook('onEventEnd', ctx);
+      finalizeEvent(tickCursor);
+    }
   }
 
   function processTick(rawTick) {
@@ -190,8 +285,10 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
       return;
     }
 
-    samples.push(tick);
-    if (samples.length > 500) samples.shift();
+    if (!fastRun) {
+      samples.push(tick);
+      if (samples.length > 500) samples.shift();
+    }
 
     const ctx = buildRuntimeContext(tick, currentEvent);
     runHook('onTick', ctx);
@@ -201,6 +298,32 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
       runHook('onEventEnd', ctx);
       finalizeEvent(tick);
     }
+  }
+
+  function importParallelSlices(slices) {
+    const ordered = slices.slice().sort((left, right) => left.eventIndexOffset - right.eventIndexOffset);
+    events.length = 0;
+    equity.length = 0;
+    ticksProcessed = 0;
+    totalEntries = 0;
+    wins = 0;
+    losses = 0;
+
+    for (const slice of ordered) {
+      ticksProcessed += Number(slice.ticksProcessed || 0);
+      const part = slice.result;
+      totalEntries += Number(part.summary?.totalEntries ?? part.summary?.entries ?? 0);
+      wins += Number(part.summary?.wins ?? part.summary?.totalWins ?? 0);
+      losses += Number(part.summary?.losses ?? part.summary?.totalLosses ?? 0);
+      for (const eventRecord of part.events) events.push(eventRecord);
+    }
+
+    totalPnl = 0;
+    for (const eventRecord of events) {
+      totalPnl += Number(eventRecord.finalPnl || 0);
+      equity.push({ ts: eventRecord.closedAt, pnl: totalPnl });
+    }
+    runState.totalPnl = totalPnl;
   }
 
   function finish() {
@@ -219,7 +342,16 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
     };
   }
 
-  return { processTick, finish };
+  return {
+    processTick,
+    processIndex,
+    bindColumnSet,
+    beginEvent,
+    endEvent,
+    importParallelSlices,
+    finish,
+    executionMode,
+  };
 }
 
 function closedAtForEvent(snapshot, lastTick, currentEvent) {

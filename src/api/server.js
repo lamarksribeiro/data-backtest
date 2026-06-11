@@ -21,6 +21,7 @@ import { compareBacktestRuns, getRunAnalysis } from '../backtest/analysis.js';
 import { createBacktestQueue } from '../backtest/queue.js';
 import { analyzeStrategyColumns } from '../backtestStudio/gls/compiler.js';
 import { availabilityRequestForBacktest, runBacktest } from '../backtest/engine.js';
+import { parseSweepVariants, runBacktestSweep } from '../backtest/sweep.js';
 import { addSseClient, broadcastSse } from './sseHub.js';
 import {
   cancelBacktestRun,
@@ -322,9 +323,10 @@ export function createApiHandler(deps) {
         if (req.method === 'GET' && backtestRunRoute.kind === 'detail') {
           const full = url.searchParams.get('full') === '1';
           const slim = url.searchParams.get('slim') === '1';
+          const wantEquity = url.searchParams.get('equity') === '1';
           const slimRun = getBacktestRun(db, backtestRunRoute.runId, {
             includeResult: full,
-            includeEquity: !full && !slim,
+            includeEquity: wantEquity || (!full && !slim),
           });
           return sendJson(res, 200, { run: slimRun ?? run });
         }
@@ -552,6 +554,39 @@ export function createApiHandler(deps) {
             startedAt,
           });
           return sendJson(res, 500, { error: { code: 'REQUEST_FAILED', message: err.message }, run });
+        }
+      }
+      if (req.method === 'POST' && url.pathname === '/api/backtest/sweep') {
+        const body = await readJson(req);
+        let request;
+        let variants;
+        try {
+          request = backtestRequestFromBody(body, config, db);
+          variants = parseSweepVariants(body, config.sweepMaxVariants);
+        } catch (err) {
+          return sendJson(res, 400, { error: { code: 'REQUEST_FAILED', message: err.message } });
+        }
+        const dataRequest = availabilityRequestForBacktest(
+          request,
+          request.columnAnalysis ?? analyzeStrategyColumns(request.glsAst, request.bookDepth ?? 25),
+        );
+        const strict = resolveDataRequest(db, dataRequest, 'strict');
+        if (!strict.ready) {
+          const prepare = resolveDataRequest(db, dataRequest, 'prepare');
+          return sendJson(res, 409, {
+            error: {
+              code: 'DATA_NOT_READY',
+              message: 'Backtest data is not ready for strict execution',
+            },
+            availability: strict.availability,
+            preparation: prepare.preparation,
+          });
+        }
+        try {
+          const sweep = await runBacktestSweep(db, request, variants);
+          return sendJson(res, 200, { sweep });
+        } catch (err) {
+          return sendJson(res, 500, { error: { code: 'SWEEP_FAILED', message: err.message } });
         }
       }
       const prepareJobRoute = matchPrepareJobRoute(url.pathname);
@@ -882,8 +917,8 @@ function backtestRequestFromBody(body, config, db) {
 function normalizeOptionalGlsExecution(value) {
   if (value == null || value === '') return undefined;
   const mode = String(value).trim().toLowerCase();
-  if (mode === 'compiled' || mode === 'interpreter') return mode;
-  throw new Error('gls_execution must be compiled or interpreter');
+  if (mode === 'compiled' || mode === 'interpreter' || mode === 'compiled-soa') return mode;
+  throw new Error('gls_execution must be compiled, compiled-soa, or interpreter');
 }
 
 async function runBacktestInBackground({ db, runId, request, startedAt }) {

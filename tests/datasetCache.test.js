@@ -9,7 +9,7 @@ import {
   toColumnarBatch,
 } from '../src/backtest/datasetCache.js';
 
-test('dataset cache stores and returns batches', () => {
+test('dataset cache stores and returns column set without copy', () => {
   const cache = getDatasetCache(64);
   const key = datasetCacheKey({
     from: '2026-05-01T00:00:00.000Z',
@@ -18,9 +18,16 @@ test('dataset cache stores and returns batches', () => {
     interval: '5m',
     bookDepth: 10,
   }, 'cols');
-  const batches = [[{ ts: '2026-05-01T00:00:00.000Z' }]];
-  cache.set(key, batches);
-  assert.deepEqual(cache.get(key), batches);
+  const columnSet = {
+    length: 1,
+    columns: new Map([['_ts_ms', new Float64Array([Date.parse('2026-05-01T00:00:00.000Z')])]]),
+    codes: new Map(),
+    dictionaries: new Map(),
+    flags: new Map(),
+    events: [],
+  };
+  cache.set(key, columnSet);
+  assert.equal(cache.get(key), columnSet);
   cache.clear();
 });
 

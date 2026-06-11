@@ -227,4 +227,41 @@ function tickPropToColumn(prop) {
   return map[prop] || null;
 }
 
+/**
+ * Estratégias que leem ou escrevem runState entre eventos não podem rodar em paralelo (F4).
+ */
+export function analyzeStrategyParallelism(ast) {
+  let usesRunState = false;
+
+  function walk(node) {
+    if (!node || typeof node !== 'object') return;
+    if (node.type === 'Identifier' && node.name === 'runState') {
+      usesRunState = true;
+      return;
+    }
+    if (node.type === 'Member') {
+      const root = rootName(node);
+      if (root === 'runState') usesRunState = true;
+    }
+    if (node.type === 'Assign') {
+      const root = rootName(node.target);
+      if (root === 'runState') usesRunState = true;
+    }
+    for (const key of Object.keys(node)) {
+      const val = node[key];
+      if (Array.isArray(val)) val.forEach(walk);
+      else if (val && typeof val === 'object') walk(val);
+    }
+  }
+
+  for (const hook of Object.values(ast.hooks || {})) {
+    for (const stmt of hook?.body || []) walk(stmt);
+  }
+
+  return {
+    parallelSafe: !usesRunState,
+    usesRunState,
+  };
+}
+
 export { ORDER_FUNCTIONS, DEBUG_FUNCTIONS };

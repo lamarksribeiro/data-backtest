@@ -1,3 +1,5 @@
+import { destroyChartsIn } from './uplotChart.js';
+
 export function el(tag, attrs = {}, children = []) {
   const node = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) {
@@ -35,7 +37,8 @@ function appendChildren(parent, children) {
 }
 
 export function clear(node) {
-  while (node.firstChild) node.removeChild(node.firstChild);
+  if (node) destroyChartsIn(node);
+  while (node?.firstChild) node.removeChild(node.firstChild);
 }
 
 const tableEnhancements = new WeakMap();

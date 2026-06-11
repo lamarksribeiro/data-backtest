@@ -27,6 +27,11 @@ export async function openSharedConnection() {
   const instance = await getSharedDuckInstance();
   const connection = await instance.connect();
   await connection.run(`SET threads TO ${THREAD_COUNT}`);
+  const memoryLimit = String(process.env.DUCKDB_MEMORY_LIMIT || '').trim();
+  if (memoryLimit) {
+    const quoted = memoryLimit.replace(/'/g, "''");
+    await connection.run(`SET memory_limit='${quoted}'`);
+  }
   return connection;
 }
 

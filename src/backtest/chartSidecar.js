@@ -1,9 +1,13 @@
-import { mkdirSync, appendFileSync, readFileSync, existsSync } from 'node:fs';
+import { mkdirSync, appendFileSync, readFileSync, existsSync, statSync } from 'node:fs';
 import path from 'node:path';
 
 import { downsamplePoints } from '../utils/downsample.js';
 
 const MAX_CHART_POINTS = 500;
+const MAX_SIDECAR_FILE_CACHE = 6;
+
+/** @type {Map<string, { mtimeMs: number, lines: string[] }>} */
+const sidecarFileCache = new Map();
 
 export function chartSidecarPath(stateDbPath, runId) {
   const stateDir = path.dirname(stateDbPath);
@@ -61,21 +65,42 @@ function downsampleSeries(series, keepTs) {
 export function appendChartSidecarLine(filePath, conditionId, payload) {
   const line = JSON.stringify({ condition_id: conditionId, ...payload });
   appendFileSync(filePath, `${line}\n`, 'utf8');
+  sidecarFileCache.delete(filePath);
+}
+
+function loadSidecarLines(filePath) {
+  if (!existsSync(filePath)) return null;
+  const mtimeMs = statSync(filePath).mtimeMs;
+  const cached = sidecarFileCache.get(filePath);
+  if (cached && cached.mtimeMs === mtimeMs) return cached.lines;
+
+  const content = readFileSync(filePath, 'utf8');
+  const lines = content.split('\n').filter((line) => line.trim());
+  sidecarFileCache.set(filePath, { mtimeMs, lines });
+  if (sidecarFileCache.size > MAX_SIDECAR_FILE_CACHE) {
+    const oldest = sidecarFileCache.keys().next().value;
+    sidecarFileCache.delete(oldest);
+  }
+  return lines;
 }
 
 export function readChartSidecarForEvent(filePath, conditionId) {
-  if (!existsSync(filePath)) return null;
-  const content = readFileSync(filePath, 'utf8');
-  for (const line of content.split('\n')) {
-    if (!line.trim()) continue;
+  const lines = loadSidecarLines(filePath);
+  if (!lines) return null;
+  const target = String(conditionId);
+  for (const line of lines) {
     try {
       const row = JSON.parse(line);
-      if (String(row.condition_id) === String(conditionId)) return row;
+      if (String(row.condition_id) === target) return row;
     } catch {
       // skip bad lines
     }
   }
   return null;
+}
+
+export function clearChartSidecarCache() {
+  sidecarFileCache.clear();
 }
 
 function num(value) {
