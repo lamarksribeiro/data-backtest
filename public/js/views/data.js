@@ -193,6 +193,19 @@ const dataStyles = `
     width: 22px;
     height: 22px;
   }
+
+  .coverage-day.is-out-of-range {
+    opacity: 0.35;
+    border-style: dotted;
+    filter: saturate(0.6);
+  }
+  .coverage-day.is-out-of-range:hover {
+    opacity: 0.75;
+    filter: none;
+  }
+  .coverage-day.is-selected {
+    box-shadow: 0 0 0 1px var(--accent);
+  }
 `;
 
 let sseHandler = null;
@@ -314,17 +327,21 @@ async function refreshCoverage(ctx, formCtx) {
     return;
   }
   const { coverage } = res.data;
-  const days = coverage.days || [];
   mount(section, el('div', {}, [
     el('div', { class: 'card__header' }, [
-      el('h2', { class: 'card__title' }, `Cobertura · ${coverage.underlying} ${coverage.interval}`),
+      el('div', {}, [
+        el('h2', { class: 'card__title' }, `Cobertura · ${coverage.underlying} ${coverage.interval}`),
+        el('p', { style: { fontSize: '11.5px', color: 'var(--text-3)', marginTop: '4px', maxWidth: '600px', lineHeight: '1.4' } },
+          'Exibindo todas as partições do banco de dados para a configuração selecionada. Os dias fora do período ativo do formulário abaixo aparecem esmaecidos.'
+        ),
+      ]),
       el('div', { class: 'row row--wrap' }, [
         legendChip('ready', coverage.summary?.ready ?? 0),
         legendChip('processing', coverage.summary?.processing ?? 0),
         legendChip('attention', coverage.summary?.attention ?? 0),
       ]),
     ]),
-    renderMonthlyHeatmap(ctx, days)
+    renderMonthlyHeatmap(ctx, coverage)
   ]));
 }
 
@@ -361,10 +378,14 @@ function getMonthsRange(days) {
 }
 
 // Renderiza a cobertura de dados no formato de mini-calendários agrupados por mês e ano (colapsável)
-function renderMonthlyHeatmap(ctx, days) {
+function renderMonthlyHeatmap(ctx, coverage) {
+  const days = coverage.days || [];
   if (days.length === 0) {
     return emptyState('Nenhuma partição no intervalo.');
   }
+
+  const selectedFrom = new Date(coverage.from);
+  const selectedTo = new Date(coverage.to);
 
   const monthsRange = getMonthsRange(days);
   
@@ -413,10 +434,15 @@ function renderMonthlyHeatmap(ctx, days) {
         
         const dayData = days.find(x => x.dt === dateKey);
         if (dayData) {
+          const dtDate = new Date(`${dateKey}T00:00:00.000Z`);
+          const isSelected = dtDate >= selectedFrom && dtDate < selectedTo;
+          const rangeClass = isSelected ? 'is-selected' : 'is-out-of-range';
+          const titleSuffix = isSelected ? '' : ' (Fora do período selecionado)';
+
           dayElements.push(el('button', {
             type: 'button',
-            class: `coverage-day coverage-day--${dayData.ui_state}`,
-            title: `${dateKey}: ${UI_LABELS[dayData.ui_state]} (${dayData.raw_status})`,
+            class: `coverage-day coverage-day--${dayData.ui_state} ${rangeClass}`,
+            title: `${dateKey}: ${UI_LABELS[dayData.ui_state]} (${dayData.raw_status})${titleSuffix}`,
             onclick: () => openPartitionDrawer(ctx, dayData),
           }, String(d)));
         } else {
