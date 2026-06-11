@@ -19,6 +19,27 @@ import { navigate as routerNavigate } from '../router.js';
 import { renderUplotLine } from '../utils/uplotChart.js';
 import { confirmDialog } from '../utils/confirm.js';
 
+function formatPrice(value) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num.toFixed(3) : '-';
+}
+
+function formatQty(value) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num.toFixed(num >= 100 ? 0 : 2) : String(value ?? '-');
+}
+
+function renderSelectedEventContainerPlaceholder() {
+  const container = document.getElementById('studio-selected-event-container');
+  if (!container) return;
+  mount(container, el('div', { class: 'card card--compact studio-event-placeholder' }, [
+    el('p', { class: 'muted text-center', style: { padding: '24px 0', margin: 0 } }, [
+      el('i', { class: 'fa-solid fa-circle-info', style: { marginRight: '8px', color: 'var(--accent)' } }),
+      'Selecione um evento na tabela de resultados abaixo para visualizar o gráfico de preços e a tradução textual de sua execução.'
+    ])
+  ]));
+}
+
 const EVENTS_PAGE = 100;
 const MAX_STUDIO_EVENTS = 500;
 
@@ -32,7 +53,7 @@ const studioState = {
   eventsHasMore: false,
   eventIndex: 0,
   filterQ: '',
-  filterResult: 'all',
+  filterResult: 'all_with_entries',
   filterSort: 'default',
   runFilters: { status: 'all', sort: 'newest', strategyOnly: true },
   strategyOptions: [],
@@ -698,6 +719,7 @@ async function loadRunDetail(ctx, runId) {
   mount(main, el('div', { class: 'studio-result' }, [
     renderRunMetricsPanel(summary, { cardId: 'studio-metrics-card' }),
     el('div', { class: 'studio-equity', id: 'studio-equity-chart' }),
+    el('div', { id: 'studio-selected-event-container', class: 'studio-selected-event-container' }),
     renderNoEntryDiagnostic(summary, studioState.events),
     el('div', { class: 'studio-tabs' }, [
       el('button', { class: 'btn btn--ghost', type: 'button', onclick: () => showAnalysisTab(ctx, runId, run, summary) }, 'Análise'),
@@ -710,12 +732,16 @@ async function loadRunDetail(ctx, runId) {
   if (run.equity?.length) {
     renderUplotLine(document.getElementById('studio-equity-chart'), run.equity.map((p) => [new Date(p.ts).getTime(), p.pnl]));
   }
+  
+  renderSelectedEventContainerPlaceholder();
+
   studioState.eventsOffset = 0;
   const eventsContainer = document.getElementById('studio-events-table-container');
   if (eventsContainer) mount(eventsContainer, Skeleton({ lines: 4 }));
   void loadEvents(ctx, runId, { append: false }).then(() => {
     if (studioState.selectedEventId && studioState.selectedRunId === runId) {
-      openEventDrawer(ctx, runId, studioState.selectedEventId, 0, { syncUrl: false });
+      const idx = studioState.events.findIndex((ev) => ev.id === studioState.selectedEventId);
+      selectEventAndRenderInline(ctx, runId, studioState.selectedEventId, idx >= 0 ? idx : 0, { syncUrl: false });
     }
   });
 }
@@ -736,7 +762,13 @@ function buildEventFilters(ctx, runId) {
       el('select', {
         class: 'field__input',
         onchange: (ev) => { studioState.filterResult = ev.target.value; studioState.eventsOffset = 0; loadEvents(ctx, runId); },
-      }, ['all', 'win', 'loss', 'breakeven', 'no_entry'].map((v) => el('option', { value: v, selected: studioState.filterResult === v }, v))),
+      }, [
+        { value: 'all', label: 'Todos com Entrada' },
+        { value: 'win', label: 'Ganho' },
+        { value: 'loss', label: 'Perda' },
+        { value: 'breakeven', label: 'Empate' },
+        { value: 'no_entry', label: 'Sem Entrada (Oculto)' }
+      ].map((item) => el('option', { value: item.value, selected: studioState.filterResult === item.value }, item.label))),
     ]),
     el('div', { class: 'field' }, [
       el('span', { class: 'field__label' }, 'Ordenar'),
@@ -876,7 +908,17 @@ function renderCancelledPanel(container, run, ctx) {
 
 function renderVirtualEventTable(events, ctx, runId) {
   const rowH = 36;
-  const wrap = el('div', { class: 'studio-events-wrap' });
+  const wrap = el('div', { class: 'studio-events-wrap' }, [
+    el('div', { class: 'studio-table-header-row' }, [
+      el('span', { class: 'col-condition' }, 'Evento / Condição'),
+      el('span', { class: 'col-side' }, 'Lado'),
+      el('span', { class: 'col-price' }, 'Preço Entrada'),
+      el('span', { class: 'col-ptb' }, 'PTB Inicial'),
+      el('span', { class: 'col-fees' }, 'Taxa Paga'),
+      el('span', { class: 'col-pnl' }, 'PnL Líquido'),
+      el('span', { class: 'col-reason' }, 'Resultado')
+    ])
+  ]);
   const viewport = el('div', { class: 'studio-events-viewport', style: { maxHeight: '360px', overflow: 'auto' } });
   const spacer = el('div', { style: { height: `${events.length * rowH}px`, position: 'relative' } });
   const body = el('div', { class: 'studio-events-body', style: { position: 'absolute', top: '0', left: '0', right: '0' } });
@@ -899,31 +941,45 @@ function renderVirtualEventTable(events, ctx, runId) {
 }
 
 function eventRow(ev, ctx, runId, index) {
+  const isSelected = studioState.selectedEventId === ev.id;
+  const pnlVal = Number(ev.final_pnl || 0);
+  const pnlTone = pnlVal > 0 ? 'good' : pnlVal < 0 ? 'bad' : 'idle';
+  const sideTone = ev.side === 'UP' ? 'up' : 'down';
+  
+  const entryPrice = ev.summary?.avgEntryPrice ?? ev.summary?.cost ?? null;
+  const ptbVal = ev.summary?.priceToBeat ?? null;
+  const totalFee = ev.summary?.fees?.totalFee ?? 0;
+
   return el('button', {
     type: 'button',
-    class: 'studio-event-row',
-    onclick: () => openEventDrawer(ctx, runId, ev.id, index),
+    class: `studio-event-row${isSelected ? ' is-selected' : ''}`,
+    'data-event-id': String(ev.id),
+    onclick: () => selectEventAndRenderInline(ctx, runId, ev.id, index),
   }, [
-    el('span', {}, ev.condition_id?.slice(0, 12) || '—'),
-    el('span', {}, ev.side || '—'),
-    el('span', {}, formatPnl(ev.final_pnl)),
-    el('span', { class: 'muted' }, ev.result || ''),
+    el('span', { class: 'col-condition mono' }, ev.condition_id || '—'),
+    el('span', { class: `col-side side-${sideTone}` }, ev.side || '—'),
+    el('span', { class: 'col-price' }, entryPrice != null ? formatPrice(entryPrice) : '—'),
+    el('span', { class: 'col-ptb' }, ptbVal != null ? formatPrice(ptbVal) : '—'),
+    el('span', { class: `col-fees ${totalFee > 0 ? 'text-warn' : 'muted'}` }, formatPnl(totalFee)),
+    el('span', { class: `col-pnl pnl-${pnlTone}` }, formatPnl(pnlVal)),
+    el('span', { class: 'col-reason' }, ev.reason || '—')
   ]);
 }
 
-async function openEventDrawer(ctx, runId, eventId, index = 0, { syncUrl = true } = {}) {
+async function selectEventAndRenderInline(ctx, runId, eventId, index = 0, { syncUrl = true } = {}) {
   const token = ++openEventToken;
   studioState.selectedEventId = eventId;
   studioState.eventIndex = index;
+  studioState.activeEventTab = studioState.activeEventTab || 'chart';
+  
   if (syncUrl) pushStudioQuery({ run: runId, event: eventId });
-  const drawer = document.getElementById('studio-drawer');
-  if (!drawer) return;
-  drawer.hidden = false;
-  mount(drawer, Skeleton({ lines: 4 }));
+  const container = document.getElementById('studio-selected-event-container');
+  if (!container) return;
+  mount(container, Skeleton({ lines: 4 }));
 
   const res = await ctx.api.get(`/api/backtest/runs/${runId}/events/${eventId}`);
   if (token !== openEventToken) return;
-  if (!res.ok) return mount(drawer, el('p', {}, 'Evento não encontrado'));
+  if (!res.ok) return mount(container, el('p', {}, 'Evento não encontrado'));
   const event = res.data.event;
 
   const hasSidecarSeries = Boolean(event.series?.underlying?.length);
@@ -932,23 +988,57 @@ async function openEventDrawer(ctx, runId, eventId, index = 0, { syncUrl = true 
 
   const tabs = [
     { id: 'chart', label: 'Gráfico' },
-    { id: 'timeline', label: 'Timeline' },
+    { id: 'timeline', label: 'Linha do Tempo' },
     { id: 'diagnostics', label: 'Diagnóstico' },
-    { id: 'logs', label: 'Logs' },
+    { id: 'logs', label: 'Tradução do Gráfico (Logs)' },
   ];
-  let activeTab = 'chart';
 
-  function renderDrawerContent() {
-    mount(drawer, el('div', { class: 'studio-drawer__inner' }, [
-      el('header', { class: 'studio-drawer__head' }, [
-        el('strong', {}, `${event.condition_id?.slice(0, 16)} (${event.side || 'N/A'})`),
-        el('button', { type: 'button', class: 'btn btn--ghost', onclick: () => { drawer.hidden = true; } }, 'Fechar'),
+  function renderEventDetailContent() {
+    const activeTab = studioState.activeEventTab || 'chart';
+    mount(container, el('div', { class: 'card card--compact studio-selected-event-card' }, [
+      el('header', { class: 'studio-selected-event__head row row--between' }, [
+        el('div', { class: 'row' }, [
+          el('strong', { class: 'studio-selected-event__title' }, `Evento: ${event.condition_id} (${event.side || 'N/A'})`),
+          el('span', { class: `badge badge--${event.result === 'win' ? 'ok' : event.result === 'loss' ? 'err' : 'idle'}` }, event.result || ''),
+        ]),
+        el('div', { class: 'btn-group' }, [
+          el('button', {
+            type: 'button',
+            class: 'btn btn--ghost btn--sm',
+            disabled: index <= 0,
+            onclick: () => {
+              const prevIndex = index - 1;
+              const prevEvent = studioState.events[prevIndex];
+              if (prevEvent) selectEventAndRenderInline(ctx, runId, prevEvent.id, prevIndex);
+            }
+          }, [el('i', { class: 'fa-solid fa-arrow-left' }), ' Anterior']),
+          el('button', {
+            type: 'button',
+            class: 'btn btn--ghost btn--sm',
+            disabled: index >= studioState.events.length - 1,
+            onclick: () => {
+              const nextIndex = index + 1;
+              const nextEvent = studioState.events[nextIndex];
+              if (nextEvent) selectEventAndRenderInline(ctx, runId, nextEvent.id, nextIndex);
+            }
+          }, ['Próximo ', el('i', { class: 'fa-solid fa-arrow-right' })]),
+          el('button', {
+            type: 'button',
+            class: 'btn btn--ghost btn--sm',
+            onclick: () => {
+              studioState.selectedEventId = null;
+              pushStudioQuery({ event: null });
+              renderSelectedEventContainerPlaceholder();
+              document.querySelectorAll('.studio-event-row').forEach(r => r.classList.remove('is-selected'));
+            }
+          }, 'Limpar'),
+        ])
       ]),
       renderEventOverview(event),
       el('div', { class: 'drawer-tabs' }, tabs.map((t) => el('button', {
         type: 'button',
         class: `drawer-tab-link${activeTab === t.id ? ' is-active' : ''}`,
-        onclick: () => { activeTab = t.id; renderDrawerContent(); },
+        onclick: () => { studioState.activeEventTab = t.id; renderEventDetailContent(); },
       }, t.label))),
       el('div', { class: `drawer-tab-panel${activeTab === 'chart' ? ' is-active' : ''}` }, [
         el('div', { id: 'studio-event-chart', class: 'studio-event-chart' }),
@@ -960,26 +1050,26 @@ async function openEventDrawer(ctx, runId, eventId, index = 0, { syncUrl = true 
         renderDiagnosticsPanel(event),
       ]),
       el('div', { class: `drawer-tab-panel${activeTab === 'logs' ? ' is-active' : ''}` }, [
-        renderLogList(event.logs || []),
+        renderLogList(event.logs || [], event),
       ]),
     ]));
 
     if (activeTab === 'chart') {
-      const container = document.getElementById('studio-event-chart');
+      const containerChart = document.getElementById('studio-event-chart');
       const payload = chartData?.series
         ? chartData
         : (event.series?.underlying?.length ? { series: event.series, series_meta: event.series_meta } : null);
-      if (chartLoading && container) {
-        mount(container, Skeleton({ lines: 3 }));
+      if (chartLoading && containerChart) {
+        mount(containerChart, Skeleton({ lines: 3 }));
       } else if (payload?.series?.underlying?.length) {
-        void renderEventChartWithMarkers(container, event, payload);
-      } else if (container) {
-        mount(container, el('p', { class: 'muted' }, 'Série de preços indisponível para este evento.'));
+        void renderEventChartWithMarkers(containerChart, event, payload);
+      } else if (containerChart) {
+        mount(containerChart, el('p', { class: 'muted text-center', style: { padding: '24px 0' } }, 'Série de preços indisponível para este evento.'));
       }
     }
   }
 
-  renderDrawerContent();
+  renderEventDetailContent();
 
   if (chartLoading && event.condition_id) {
     void ctx.api.get(`/api/backtest/runs/${runId}/chart-data?condition_id=${encodeURIComponent(event.condition_id)}`)
@@ -987,9 +1077,19 @@ async function openEventDrawer(ctx, runId, eventId, index = 0, { syncUrl = true 
         if (token !== openEventToken) return;
         chartLoading = false;
         chartData = chartRes.ok ? chartRes.data : null;
-        if (activeTab === 'chart') renderDrawerContent();
+        if (studioState.activeEventTab === 'chart') renderEventDetailContent();
       });
   }
+
+  // Sincroniza destaque na tabela
+  document.querySelectorAll('.studio-event-row').forEach((row) => {
+    const rowEventId = Number(row.getAttribute('data-event-id'));
+    if (rowEventId === eventId) {
+      row.classList.add('is-selected');
+    } else {
+      row.classList.remove('is-selected');
+    }
+  });
 }
 
 function renderCompare(main, data) {
@@ -1040,14 +1140,16 @@ function bindSse(ctx) {
 function bindShortcuts(ctx) {
   document.addEventListener('keydown', (ev) => {
     if (ev.key === 'Escape') {
-      const drawer = document.getElementById('studio-drawer');
-      if (drawer) drawer.hidden = true;
+      studioState.selectedEventId = null;
+      pushStudioQuery({ event: null });
+      renderSelectedEventContainerPlaceholder();
+      document.querySelectorAll('.studio-event-row').forEach(r => r.classList.remove('is-selected'));
     }
     if (ev.key === 'j' || ev.key === 'k') {
       const delta = ev.key === 'j' ? 1 : -1;
       const next = studioState.eventIndex + delta;
       if (next >= 0 && next < studioState.events.length && studioState.selectedRunId) {
-        openEventDrawer(ctx, studioState.selectedRunId, studioState.events[next].id, next);
+        selectEventAndRenderInline(ctx, studioState.selectedRunId, studioState.events[next].id, next);
       }
     }
     if ((ev.metaKey || ev.ctrlKey) && ev.key === 'Enter') {

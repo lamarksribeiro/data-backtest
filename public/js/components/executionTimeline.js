@@ -125,12 +125,102 @@ export function renderDiagnosticsPanel(event) {
   return el('div', { class: 'event-detail-grid' }, items.map(([label, value]) => detailMetric(label, value)));
 }
 
-export function renderLogList(logs) {
-  if (!logs?.length) return el('p', { class: 'muted' }, 'Nenhum log neste evento.');
-  return el('ul', { class: 'log-list' }, logs.map((entry) => el('li', {}, [
+export function generateNarratedLogs(event) {
+  const logs = [];
+  
+  if (event.event_start) {
+    logs.push({
+      ts: event.event_start,
+      type: 'info',
+      msg: `Início do Evento detectado. PTB (Preço Limite) inicial: ${formatPrice(event.summary?.avgEntryPrice ?? event.summary?.priceToBeat ?? '-')}`,
+    });
+  }
+
+  const orders = event.orders || [];
+  for (const order of orders) {
+    const isExit = order.type === 'exit';
+    logs.push({
+      ts: order.createdAt || order.ts || order.time,
+      type: isExit ? 'warn' : 'success',
+      msg: `Ordem de ${isExit ? 'Saída' : 'Entrada'} (${order.side || ''}): Enviada e preenchida a ${formatPrice(order.price ?? order.avgPrice)} para ${formatQty(order.shares ?? order.qty)} contratos. Valor total (Notional): ${formatPnl(order.notional ?? 0)}.${order.reason ? ` Motivo: ${order.reason}` : ''}`,
+    });
+  }
+
+  const exits = event.summary?.exits || [];
+  const hasExitOrders = orders.some((o) => o?.type === 'exit');
+  if (!hasExitOrders) {
+    for (const exit of exits) {
+      logs.push({
+        ts: exit.ts || exit.time,
+        type: 'warn',
+        msg: `Saída executada a ${formatPrice(exit.price ?? exit.avgPrice)} para ${formatQty(exit.shares ?? exit.qty)} contratos. PnL da saída: ${formatPnl(exit.pnl ?? 0)}.${exit.reason ? ` Motivo: ${exit.reason}` : ''}`,
+      });
+    }
+  }
+
+  const profitOrders = event.summary?.profitOrders || [];
+  for (const profit of profitOrders) {
+    logs.push({
+      ts: profit.fillTime || profit.time,
+      type: 'success',
+      msg: `Take Profit Parcial atingido a ${formatPrice(profit.price)}. Qtd preenchida: ${formatQty(profit.qty ?? profit.filledQty)}.`,
+    });
+  }
+
+  const reversals = event.summary?.reversals || [];
+  for (const rev of reversals) {
+    logs.push({
+      ts: rev.time,
+      type: 'info',
+      msg: `Reversão de posição executada de ${rev.fromSide || ''} para ${rev.toSide || ''}. Preço de saída: ${formatPrice(rev.exitPrice)}. Novo preço médio de entrada: ${formatPrice(rev.avgEntryPrice)}. Qtd revertida: ${formatQty(rev.entryQty)}.`,
+    });
+  }
+
+  const marks = event.marks || [];
+  for (const mark of marks) {
+    let detailStr = '';
+    if (mark.data && typeof mark.data === 'object') {
+      detailStr = Object.entries(mark.data).map(([k, v]) => `${labelize(k)}: ${v}`).join(', ');
+    }
+    logs.push({
+      ts: mark.ts,
+      type: 'info',
+      msg: `Marca registrada [${mark.name || 'Mark'}]: ${detailStr || 'sem dados adicionais'}.`,
+    });
+  }
+
+  const rawLogs = event.logs || [];
+  for (const logEntry of rawLogs) {
+    const msg = logEntry.msg || logEntry.message || '';
+    if (msg) {
+      logs.push({
+        ts: logEntry.ts,
+        type: logEntry.type || 'info',
+        msg: `[Estratégia] ${msg}`,
+      });
+    }
+  }
+
+  logs.sort((a, b) => new Date(a.ts) - new Date(b.ts));
+
+  const finalPnlVal = Number(event.final_pnl ?? 0);
+  const totalFeesVal = Number(event.summary?.fees?.totalFee ?? 0);
+  logs.push({
+    ts: event.summary?.closedAt || event.event_end,
+    type: finalPnlVal > 0 ? 'success' : finalPnlVal < 0 ? 'error' : 'info',
+    msg: `Fim do Evento por '${event.reason || 'Concluído'}'. PnL Líquido Final: ${formatPnl(finalPnlVal)}. Taxas Totais: ${formatPnl(totalFeesVal)}. Lado vencedor: ${event.summary?.winnerSide || '-'}.`,
+  });
+
+  return logs;
+}
+
+export function renderLogList(logs, event = null) {
+  const unifiedLogs = event ? generateNarratedLogs(event) : logs;
+  if (!unifiedLogs?.length) return el('p', { class: 'muted' }, 'Nenhum log neste evento.');
+  return el('ul', { class: 'log-list' }, unifiedLogs.map((entry) => el('li', {}, [
     el('span', { class: 'log-ts' }, formatLogTs(entry.ts)),
     el('span', { class: `log-type log-type--${entry.type || 'info'}` }, entry.type || 'info'),
-    entry.msg || entry.message || '',
+    el('span', { class: 'log-msg' }, entry.msg || entry.message || ''),
   ])));
 }
 

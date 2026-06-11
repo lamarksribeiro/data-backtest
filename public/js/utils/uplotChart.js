@@ -113,12 +113,47 @@ function drawMarkers(u, markers, defaultColor) {
     const x = u.valToPos(marker.ts / 1000, 'x', true);
     if (x < left || x > left + width) continue;
     const yVal = marker.price != null ? Number(String(marker.price).replace(/[^0-9.-]/g, '')) : null;
+    
+    // Tenta usar a escala 'y' ou 'y0' dependendo do que estiver definido no uPlot
+    const scaleKey = u.scales.y ? 'y' : 'y0';
     const y = yVal != null && Number.isFinite(yVal)
-      ? u.valToPos(yVal, 'y0', true)
+      ? u.valToPos(yVal, scaleKey, true)
       : top + height * 0.15;
-    ctx.fillStyle = marker.color || defaultColor;
-    ctx.font = '11px JetBrains Mono, monospace';
+
+    const color = marker.color || defaultColor;
+
+    // 1. Desenhar linha vertical pontilhada bem sutil no ponto temporal
+    ctx.strokeStyle = color + '44'; // Opacidade ~25%
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(x, top);
+    ctx.lineTo(x, top + height);
+    ctx.stroke();
+    ctx.setLineDash([]); // limpa tracejado
+
+    // 2. Se temos a coordenada Y exata do preço, desenhar uma pequena marca/círculo no ponto exato
+    if (yVal != null && Number.isFinite(yVal) && y >= top && y <= top + height) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.strokeStyle = '#090d16'; // Borda escura para dar contraste
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    // 3. Desenhar o símbolo e rótulo do marcador
+    ctx.fillStyle = color;
+    ctx.font = 'bold 12px JetBrains Mono, monospace';
     ctx.textAlign = 'center';
-    ctx.fillText((marker.label || '●').slice(0, 2), x, Math.max(top + 10, y - 4));
+    
+    // Deslocar o símbolo verticalmente para não sobrepor o círculo
+    const offset = marker.label === '▲' ? 14 : -8; // Entrada abaixo, saída/outros acima
+    const textY = yVal != null && Number.isFinite(yVal) ? y + offset : top + 15;
+    
+    // Garante que o texto fique dentro dos limites do gráfico
+    const safeY = Math.min(top + height - 4, Math.max(top + 12, textY));
+    ctx.fillText((marker.label || '●').slice(0, 2), x, safeY);
   }
 }

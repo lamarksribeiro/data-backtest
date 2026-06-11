@@ -12,7 +12,7 @@ export function buildUplotMarkers(chartData, underlyingSeries = []) {
   const markers = [];
   const indexByTs = new Map(underlyingSeries.map((point, index) => [new Date(point.ts).getTime(), index]));
 
-  const push = (ts, kind, detail = '') => {
+  const push = (ts, kind, price = null, detail = '') => {
     const index = indexByTs.get(new Date(ts).getTime());
     if (index == null) return;
     const style = MARKER_STYLES[kind] || MARKER_STYLES.mark;
@@ -20,6 +20,7 @@ export function buildUplotMarkers(chartData, underlyingSeries = []) {
       index,
       ts: new Date(ts).getTime(),
       kind,
+      price,
       color: style.color,
       symbol: style.symbol,
       label: `${style.label}${detail ? `: ${detail}` : ''}`,
@@ -31,19 +32,21 @@ export function buildUplotMarkers(chartData, underlyingSeries = []) {
   for (const order of orders) {
     const ts = order.createdAt || order.ts || order.time;
     const kind = order.type === 'exit' ? 'exit' : 'entry';
-    push(ts, kind, `${order.side || ''} @ ${order.price ?? order.avgPrice ?? '-'}`);
+    const priceVal = order.price ?? order.avgPrice ?? null;
+    push(ts, kind, priceVal, `${order.side || ''} @ ${priceVal ?? '-'}`);
   }
   for (const exit of hasExitOrders ? [] : (chartData?.exits || chartData?.summary?.exits || [])) {
-    push(exit.ts || exit.time, 'exit', exit.reason || '');
+    const priceVal = exit.price ?? exit.avgPrice ?? null;
+    push(exit.ts || exit.time, 'exit', priceVal, exit.reason || '');
   }
   for (const order of chartData?.summary?.profitOrders || []) {
-    push(order.fillTime || order.time, 'partial', `@ ${order.price ?? '-'}`);
+    push(order.fillTime || order.time, 'partial', order.price ?? null, `@ ${order.price ?? '-'}`);
   }
   for (const reversal of chartData?.summary?.reversals || []) {
-    push(reversal.time, 'reverse', `${reversal.fromSide || ''}→${reversal.toSide || ''}`);
+    push(reversal.time, 'reverse', reversal.avgEntryPrice ?? reversal.exitPrice ?? null, `${reversal.fromSide || ''}→${reversal.toSide || ''}`);
   }
   for (const mark of chartData?.marks || []) {
-    push(mark.ts, 'mark', mark.name || '');
+    push(mark.ts, 'mark', mark.price ?? mark.data?.price ?? null, mark.name || '');
   }
   return markers;
 }
@@ -61,7 +64,13 @@ export async function renderEventChartWithMarkers(container, event, chartData) {
     marks: event.marks,
     summary: event.summary,
   }, underlying);
-  const markers = built.map((m) => ({ ts: m.ts, label: m.symbol, color: m.color, title: m.label }));
+  const markers = built.map((m) => ({
+    ts: m.ts,
+    price: m.price,
+    label: m.symbol,
+    color: m.color,
+    title: m.label
+  }));
   return renderUplotLine(container, pts, [
     { label: 'BTC', data: pts },
     { label: 'PTB', data: ptb },

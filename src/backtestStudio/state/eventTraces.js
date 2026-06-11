@@ -111,7 +111,9 @@ export function listEventTraces(db, runId, {
     summary_json, created_at
     FROM backtest_event_traces WHERE run_id = ?`;
   const params = [runId];
-  if (result) {
+  if (result === 'all_with_entries') {
+    sql += " AND result != 'no_entry'";
+  } else if (result && result !== 'all') {
     sql += ' AND result = ?';
     params.push(String(result));
   }
