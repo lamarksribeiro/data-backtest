@@ -252,6 +252,8 @@ test('strategy CRUD API creates definitions and versions', async () => {
       assert.equal(apiDelete.deleted, true);
       const listedAfterDelete = await getJson(`${baseUrl}/api/strategies`);
       assert.equal(listedAfterDelete.strategies.some((item) => item.id === created.strategy.id), false);
+      const listedWithStats = await getJson(`${baseUrl}/api/strategies?stats=1`);
+      assert.equal(listedWithStats.strategies.some((item) => item.id === created.strategy.id), false);
 
       const minimal = validateStrategySource({ source_code: 'strategy "X" {}' });
       assert.equal(minimal.ok, true);

@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { validate as validateGls } from '../gls/validator.js';
+import { invalidateStrategyStatsCache } from './strategyStats.js';
 
 const ALLOWED_STATUS = new Set(['draft', 'validated', 'archived']);
 
@@ -20,6 +21,7 @@ export function createStrategy(db, { slug, name, description = null, tags = [] }
     INSERT INTO strategy_definitions (slug, name, description, tags_json)
     VALUES (?, ?, ?, ?)
   `).run(normalizedSlug, normalizedName, description, JSON.stringify(normalizeTags(tags)));
+  invalidateStrategyStatsCache();
   return getStrategy(db, result.lastInsertRowid);
 }
 
@@ -41,6 +43,7 @@ export function updateStrategy(db, id, patch = {}) {
     WHERE id = ?
   `).run(next.name, next.description, next.status, JSON.stringify(next.tags), next.pinned, id);
 
+  invalidateStrategyStatsCache();
   return getStrategy(db, id);
 }
 
@@ -57,6 +60,7 @@ export function deleteStrategy(db, id) {
     db.exec('ROLLBACK');
     throw err;
   }
+  invalidateStrategyStatsCache();
   return current;
 }
 
@@ -89,6 +93,7 @@ export function deleteStrategyVersion(db, strategyId, versionId) {
     SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
     WHERE id = ?
   `).run(strategyId);
+  invalidateStrategyStatsCache();
   return version;
 }
 
@@ -129,6 +134,7 @@ export function forkStrategy(db, strategyId, { versionId = null, name = null } =
     `Fork de ${source.slug} v${fromVersion.version}`,
   );
 
+  invalidateStrategyStatsCache();
   return getStrategy(db, forked.id);
 }
 
@@ -171,6 +177,7 @@ export function createStrategyVersion(db, strategyId, { language = 'gls-v1', sou
     WHERE id = ?
   `).run(strategyId);
 
+  invalidateStrategyStatsCache();
   return getStrategyVersion(db, strategyId, result.lastInsertRowid);
 }
 

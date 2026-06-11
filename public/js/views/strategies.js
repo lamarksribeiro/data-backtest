@@ -940,6 +940,8 @@ async function deleteStrategyFlow(ctx, strategy) {
   ctx.toast.ok('Estratégia apagada');
   state.selectedId = null;
   state.selectedVersionId = null;
+  state.list = state.list.filter((s) => s.id !== strategy.id);
+  state.libraryStats = state.list;
   ctx.navigate('strategies');
   await renderStrategies(ctx);
 }
