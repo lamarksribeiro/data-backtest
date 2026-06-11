@@ -7,11 +7,60 @@ const UI_LABELS = { ready: 'Pronto', processing: 'Processando', attention: 'Aten
 const UI_CLASS = { ready: 'ok', processing: 'warn', attention: 'warn' };
 
 const dataStyles = `
-  .coverage-heatmap {
+  .coverage-years-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .coverage-year-group {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: rgba(22, 28, 45, 0.15);
+    overflow: hidden;
+  }
+
+  .coverage-year-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.02);
+    border: none;
+    border-bottom: 1px solid var(--border);
+    padding: 12px 18px;
+    color: var(--text-0);
+    font-weight: 700;
+    font-size: 13.5px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    outline: none;
+    text-align: left;
+  }
+  .coverage-year-header:hover {
+    background: var(--bg-hover);
+  }
+  
+  .coverage-year-header.is-collapsed {
+    border-bottom: none;
+  }
+
+  .coverage-year-header__chevron {
+    font-size: 11px;
+    transition: transform 0.2s ease;
+    color: var(--text-3);
+  }
+  
+  .coverage-year-header.is-collapsed .coverage-year-header__chevron {
+    transform: rotate(-90deg);
+  }
+
+  .coverage-year-content {
     display: flex;
     flex-wrap: wrap;
     gap: 16px;
-    margin-top: 16px;
+    padding: 16px;
   }
 
   .coverage-month {
@@ -285,54 +334,96 @@ function getMonthsRange(days) {
   return months;
 }
 
-// Renderiza a cobertura de dados no formato de mini-calendários agrupados por mês
+// Renderiza a cobertura de dados no formato de mini-calendários agrupados por mês e ano (colapsável)
 function renderMonthlyHeatmap(ctx, days) {
   if (days.length === 0) {
     return emptyState('Nenhuma partição no intervalo.');
   }
 
   const monthsRange = getMonthsRange(days);
+  
+  // Agrupar meses por ano
+  const yearsMap = {};
+  for (const item of monthsRange) {
+    if (!yearsMap[item.year]) {
+      yearsMap[item.year] = [];
+    }
+    yearsMap[item.year].push(item.month);
+  }
+
+  // Ordenar os anos de forma decrescente (mais recente primeiro)
+  const sortedYears = Object.keys(yearsMap).map(Number).sort((a, b) => b - a);
+
   const MONTH_NAMES = ["", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
   const WEEKDAYS = ["D", "S", "T", "Q", "Q", "S", "S"];
 
-  return el('div', { class: 'coverage-heatmap' }, monthsRange.map(({ year, month }) => {
-    // 0 = Domingo, 1 = Segunda, etc.
-    const firstDayOfWeek = new Date(year, month - 1, 1).getDay();
-    const daysInMonth = new Date(year, month, 0).getDate();
+  return el('div', { class: 'coverage-years-container' }, sortedYears.map((year, yearIndex) => {
+    const months = yearsMap[year];
     
-    const dayElements = [];
-    
-    // Adicionar células vazias de alinhamento antes do primeiro dia
-    for (let i = 0; i < firstDayOfWeek; i++) {
-      dayElements.push(el('div', { class: 'coverage-day__pad' }));
-    }
-    
-    // Adicionar os quadradinhos dos dias
-    for (let d = 1; d <= daysInMonth; d++) {
-      const dayStr = String(d).padStart(2, '0');
-      const monthStr = String(month).padStart(2, '0');
-      const dateKey = `${year}-${monthStr}-${dayStr}`;
-      
-      const dayData = days.find(x => x.dt === dateKey);
-      if (dayData) {
-        dayElements.push(el('button', {
-          type: 'button',
-          class: `coverage-day coverage-day--${dayData.ui_state}`,
-          title: `${dateKey}: ${UI_LABELS[dayData.ui_state]} (${dayData.raw_status})`,
-          onclick: () => openPartitionDrawer(ctx, dayData),
-        }, String(d)));
-      } else {
-        dayElements.push(el('div', {
-          class: 'coverage-day coverage-day--empty',
-          title: `${dateKey}: Sem cobertura de dados`,
-        }, String(d)));
-      }
-    }
+    // O primeiro ano (mais recente) inicia aberto, os demais iniciam fechados
+    const isOpen = yearIndex === 0;
 
-    return el('div', { class: 'coverage-month' }, [
-      el('div', { class: 'coverage-month__header' }, `${MONTH_NAMES[month]} ${year}`),
-      el('div', { class: 'coverage-month__weekdays' }, WEEKDAYS.map(w => el('span', {}, w))),
-      el('div', { class: 'coverage-month__days' }, dayElements)
+    const headerChevron = el('span', { class: 'coverage-year-header__chevron' }, '▼');
+    const contentEl = el('div', { 
+      class: 'coverage-year-content', 
+      style: { display: isOpen ? 'flex' : 'none' } 
+    }, months.map((month) => {
+      // 0 = Domingo, 1 = Segunda, etc.
+      const firstDayOfWeek = new Date(year, month - 1, 1).getDay();
+      const daysInMonth = new Date(year, month, 0).getDate();
+      
+      const dayElements = [];
+      
+      // Adicionar células vazias de alinhamento antes do primeiro dia
+      for (let i = 0; i < firstDayOfWeek; i++) {
+        dayElements.push(el('div', { class: 'coverage-day__pad' }));
+      }
+      
+      // Adicionar os quadradinhos dos dias
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dayStr = String(d).padStart(2, '0');
+        const monthStr = String(month).padStart(2, '0');
+        const dateKey = `${year}-${monthStr}-${dayStr}`;
+        
+        const dayData = days.find(x => x.dt === dateKey);
+        if (dayData) {
+          dayElements.push(el('button', {
+            type: 'button',
+            class: `coverage-day coverage-day--${dayData.ui_state}`,
+            title: `${dateKey}: ${UI_LABELS[dayData.ui_state]} (${dayData.raw_status})`,
+            onclick: () => openPartitionDrawer(ctx, dayData),
+          }, String(d)));
+        } else {
+          dayElements.push(el('div', {
+            class: 'coverage-day coverage-day--empty',
+            title: `${dateKey}: Sem cobertura de dados`,
+          }, String(d)));
+        }
+      }
+
+      return el('div', { class: 'coverage-month' }, [
+        el('div', { class: 'coverage-month__header' }, `${MONTH_NAMES[month]}`),
+        el('div', { class: 'coverage-month__weekdays' }, WEEKDAYS.map(w => el('span', {}, w))),
+        el('div', { class: 'coverage-month__days' }, dayElements)
+      ]);
+    }));
+
+    const headerEl = el('button', {
+      type: 'button',
+      class: `coverage-year-header${isOpen ? '' : ' is-collapsed'}`,
+      onclick: (e) => {
+        const btn = e.currentTarget;
+        const collapsed = btn.classList.toggle('is-collapsed');
+        contentEl.style.display = collapsed ? 'none' : 'flex';
+      }
+    }, [
+      el('span', { class: 'coverage-year-header__title' }, `Ano de ${year} (${months.length} ${months.length === 1 ? 'mês' : 'meses'} com cobertura)`),
+      headerChevron
+    ]);
+
+    return el('div', { class: 'coverage-year-group' }, [
+      headerEl,
+      contentEl
     ]);
   }));
 }
@@ -414,7 +505,7 @@ function bindJobsSse(ctx) {
     if (event.type === 'job:completed') {
       const formCtx = loadContext();
       refreshCoverage(ctx, formCtx);
-      ctx.toast.ok('Job concluído — cobertura atualizada');
+      ctx.toast.ok('Job concluído — cobertura updated');
     }
   };
   connectSse(sseHandler);
