@@ -507,8 +507,15 @@ async function fixDataFromStudio(ctx) {
   };
   const preview = await ctx.api.post('/api/data/fix', { request, dry_run: true });
   if (!preview.ok) return ctx.toast.err(preview.error?.message || 'Erro');
-  const msg = (preview.data.summary_lines || []).join('\n') || 'Executar correção?';
-  if (!confirm(msg)) return;
+  const lines = preview.data.summary_lines || [];
+  const ok = await confirmDialog({
+    title: 'Corrigir dados',
+    message: lines.length ? 'Revisar o plano antes de executar.' : 'Executar correção?',
+    detail: lines.length ? lines.join('\n') : undefined,
+    confirmLabel: 'Executar',
+    tone: 'primary',
+  });
+  if (!ok) return;
   const fix = await ctx.api.post('/api/data/fix', { request, confirm_rebuild: preview.data.needs_rebuild_confirm || undefined });
   if (!fix.ok) return ctx.toast.err(fix.error?.message || 'Falha');
   ctx.toast.ok(fix.data.job ? `Job #${fix.data.job.id} criado` : 'Dados prontos');
@@ -534,7 +541,12 @@ async function runBacktest(ctx, form) {
   const res = await ctx.api.post('/api/backtest/run', payload);
   if (!res.ok) {
     if (res.data?.availability) {
-      const fix = confirm('Dados não prontos. Corrigir e enfileirar o backtest?');
+      const fix = await confirmDialog({
+        title: 'Dados não prontos',
+        message: 'Corrigir e enfileirar o backtest?',
+        confirmLabel: 'Corrigir e enfileirar',
+        tone: 'primary',
+      });
       if (fix) {
         const fixRes = await ctx.api.post('/api/data/fix', { request: {
           dataset: 'backtest_ticks', ...ctxSaved, book_depth: Number(ctxSaved.book_depth),

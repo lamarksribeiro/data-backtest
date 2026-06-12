@@ -2,6 +2,7 @@ import { el, mount, emptyState } from '../utils/dom.js';
 import { applyContextOptions, contextBarOptions, loadContext, saveContext, selectField } from '../utils/context.js';
 import { fetchContextOptionsCached } from '../utils/contextOptionsCache.js';
 import { connectSse, disconnectSse } from '../utils/sse.js';
+import { confirmDialog } from '../utils/confirm.js';
 
 const UI_LABELS = { ready: 'Pronto', processing: 'Processando', attention: 'Atenção' };
 const UI_CLASS = { ready: 'ok', processing: 'warn', attention: 'err' };
@@ -667,9 +668,15 @@ async function submitDataFix(ctx, request, { rebuild = false, fieldOptions = nul
   const intro = rebuild
     ? 'Reprocessar dia(s) inteiro(s), incluindo partições já prontas.'
     : 'Preparar / corrigir dia(s) com dados faltando ou inválidos.';
-  const msg = lines.length ? lines.join('\n') : (preview.data.summary || intro);
-  const confirmMsg = `${intro}\n\n${msg}\n\nConfirmar?`;
-  if (!confirm(confirmMsg)) return false;
+  const detail = lines.length ? lines.join('\n') : (preview.data.summary || null);
+  const ok = await confirmDialog({
+    title: rebuild ? 'Reprocessar período' : 'Preparar dados',
+    message: intro,
+    detail: detail || undefined,
+    confirmLabel: 'Executar',
+    tone: rebuild ? 'danger' : 'primary',
+  });
+  if (!ok) return false;
   const fix = await ctx.api.post('/api/data/fix', {
     request: payload,
     confirm_rebuild: preview.data.needs_rebuild_confirm || rebuild ? true : undefined,
