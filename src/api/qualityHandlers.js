@@ -1,5 +1,7 @@
 import { datasetRequestFromObject } from '../query/request.js';
-import { buildNormalizationIndex, mergeDayEvents, summarizeHours } from '../quality/dayEvents.js';
+import { mergeDayEvents, summarizeHours } from '../quality/dayEvents.js';
+import { buildEventPreviewFromTicks } from '../quality/eventPreview.js';
+import { buildLiveNormalizationIndex, buildNormalizationIndexFromReport } from '../quality/eventNormalizationIndex.js';
 import { checkDatasetAvailability } from '../query/availability.js';
 import {
   addEventExclusion,
@@ -7,7 +9,7 @@ import {
   markDayManifestStale,
   removeEventExclusion,
 } from '../state/eventExclusions.js';
-import { getPartitionEvents, resolveMarketId } from '../source/postgres.js';
+import { getPartitionEvents, getScalarTicksForEvents, resolveMarketId } from '../source/postgres.js';
 
 function nextDayIso(dt) {
   const date = new Date(`${dt}T00:00:00.000Z`);
@@ -65,7 +67,14 @@ export async function handleQualityDayEvents(pool, db, config, params) {
     partition = scalarsAvailability.partitions.find((row) => row.dt === dt);
   }
 
-  const normalizationIndex = buildNormalizationIndex(partition?.quality_details);
+  let normalizationIndex = buildNormalizationIndexFromReport(partition?.quality_details?.normalization);
+  const manifestNorm = partition?.quality_details?.normalization;
+  const indexLooksIncomplete = manifestNorm?.events_omitted > 0
+    && [...normalizationIndex.values()].filter((row) => row.action === 'omit').length < manifestNorm.events_omitted;
+  if (!manifestNorm?.events_index?.length || indexLooksIncomplete) {
+    normalizationIndex = await buildLiveNormalizationIndex(pool, { marketId, dt, underlying, interval }, config);
+  }
+
   const merged = mergeDayEvents({ events, exclusions, normalizationIndex });
 
   return {
@@ -79,7 +88,43 @@ export async function handleQualityDayEvents(pool, db, config, params) {
       events: merged,
       hours: summarizeHours(merged),
       exclusions,
-      normalization: partition?.quality_details?.normalization ?? null,
+      normalization: manifestNorm ?? null,
+      normalization_live: !manifestNorm?.events_index?.length || indexLooksIncomplete,
+    },
+  };
+}
+
+export async function handleQualityEventPreview(pool, config, params) {
+  const dt = String(params.get('dt') || '').trim();
+  const underlying = String(params.get('underlying') || '').trim().toUpperCase();
+  const interval = String(params.get('interval') || '').trim();
+  const conditionId = String(params.get('condition_id') || params.get('conditionId') || '').trim();
+  if (!dt || !underlying || !interval || !conditionId) {
+    return { ok: false, status: 400, body: { error: { code: 'INVALID_REQUEST', message: 'dt, underlying, interval and condition_id are required' } } };
+  }
+
+  const marketId = await resolveMarketId(pool, { underlying, interval });
+  if (!marketId) {
+    return { ok: false, status: 404, body: { error: { code: 'MARKET_NOT_FOUND', message: 'Market not found in source database' } } };
+  }
+
+  const partition = { marketId, dt, underlying, interval };
+  const ticks = await getScalarTicksForEvents(pool, partition, [conditionId]);
+  if (!ticks.length) {
+    return { ok: false, status: 404, body: { error: { code: 'NOT_FOUND', message: 'No ticks found for event' } } };
+  }
+
+  return {
+    ok: true,
+    status: 200,
+    body: {
+      dt,
+      underlying,
+      interval,
+      condition_id: conditionId,
+      event_start: ticks[0]?.eventStart ?? null,
+      event_end: ticks[0]?.eventEnd ?? null,
+      preview: buildEventPreviewFromTicks(ticks, config),
     },
   };
 }

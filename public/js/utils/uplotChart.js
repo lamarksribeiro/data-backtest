@@ -75,14 +75,18 @@ export async function renderUplotLine(container, primarySeries, extraSeries = []
   const data = [xs, ...labeled.map((s) => s.data.map((p) => p[1]))];
   const colors = ['#f97316', '#38bdf8', '#a78bfa', '#34d399', '#f472b6'];
   const markers = Array.isArray(opts.markers) ? opts.markers : [];
+  const chartHeight = Number(opts.height) > 0 ? Number(opts.height) : 220;
   const chart = new uPlot({
     width: container.clientWidth || 600,
-    height: 220,
+    height: chartHeight,
     series: [{}, ...labeled.map((s, i) => ({ label: s.label || `s${i}`, stroke: colors[i % colors.length], width: 2 }))],
     axes: [{}, {}],
     cursor: { drag: { x: true, y: false, setScale: true } },
     hooks: {
-      draw: markers.length ? [(u) => drawMarkers(u, markers, colors[0])] : [],
+      draw: [
+        ...(Array.isArray(opts.regions) && opts.regions.length ? [(u) => drawRegions(u, opts.regions)] : []),
+        ...(markers.length ? [(u) => drawMarkers(u, markers, colors[0])] : []),
+      ],
       setSelect: [(u) => {
         if (u.select.width <= 0) return;
         const min = u.posToVal(u.select.left, 'x');
@@ -94,7 +98,7 @@ export async function renderUplotLine(container, primarySeries, extraSeries = []
   }, data, container);
 
   const onResize = () => {
-    chart.setSize({ width: container.clientWidth || 600, height: 220 });
+    chart.setSize({ width: container.clientWidth || 600, height: chartHeight });
   };
   window.addEventListener('resize', onResize);
   chart.destroy = ((orig) => () => {
@@ -104,6 +108,20 @@ export async function renderUplotLine(container, primarySeries, extraSeries = []
   trackChart(container, chart);
 
   return chart;
+}
+
+function drawRegions(u, regions = []) {
+  const ctx = u.ctx;
+  const { left, top, width, height } = u.bbox;
+  for (const region of regions) {
+    const from = region.from / 1000;
+    const to = region.to / 1000;
+    const x0 = u.valToPos(from, 'x', true);
+    const x1 = u.valToPos(to, 'x', true);
+    if (Math.max(x0, x1) < left || Math.min(x0, x1) > left + width) continue;
+    ctx.fillStyle = region.color || 'rgba(239, 68, 68, 0.14)';
+    ctx.fillRect(Math.min(x0, x1), top, Math.abs(x1 - x0), height);
+  }
 }
 
 function drawMarkers(u, markers, defaultColor) {

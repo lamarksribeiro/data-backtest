@@ -1,13 +1,7 @@
+import { buildNormalizationIndexFromReport } from './eventNormalizationIndex.js';
+
 export function buildNormalizationIndex(qualityDetails) {
-  const norm = qualityDetails?.normalization;
-  const byConditionId = new Map();
-  if (!norm) return byConditionId;
-  for (const sample of norm.samples || []) {
-    if (sample.condition_id) {
-      byConditionId.set(sample.condition_id, sample);
-    }
-  }
-  return byConditionId;
+  return buildNormalizationIndexFromReport(qualityDetails?.normalization);
 }
 
 export function mergeDayEvents({ events, exclusions, normalizationIndex }) {
@@ -24,6 +18,9 @@ export function mergeDayEvents({ events, exclusions, normalizationIndex }) {
       hour_utc: new Date(event.eventStart).getUTCHours(),
       normalization_action: norm?.action ?? null,
       normalization_issues: norm?.issues ?? [],
+      normalization_bad_ratio: norm?.bad_ratio ?? null,
+      normalization_ticks_in: norm?.ticks_in ?? null,
+      normalization_ticks_out: norm?.ticks_out ?? null,
       manually_excluded: excludedIds.has(event.conditionId),
     };
   });

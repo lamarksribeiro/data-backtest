@@ -1,3 +1,4 @@
+import { mapEventResultsToIndex } from './eventNormalizationIndex.js';
 import { normalizeEventTicks } from './normalizeEvent.js';
 
 function groupTicksByEvent(ticks) {
@@ -69,18 +70,8 @@ export function normalizePartitionTicks(ticks, opts = {}) {
       hours_affected: [...hoursAffected.entries()]
         .sort((left, right) => left[0] - right[0])
         .map(([hour, events]) => ({ hour, events })),
-      samples: eventResults
-        .filter((event) => event.action !== 'keep')
-        .slice(0, 12)
-        .map((event) => ({
-          condition_id: event.conditionId,
-          event_start: event.eventStart,
-          action: event.action,
-          issues: event.issues,
-          ticks_in: event.stats.ticksIn,
-          ticks_out: event.stats.ticksOut,
-          bad_ratio: event.stats.badRatio,
-        })),
+      events_index: mapEventResultsToIndex(eventResults),
+      samples: mapEventResultsToIndex(eventResults.filter((event) => event.action !== 'keep')).slice(0, 12),
     },
   };
 }

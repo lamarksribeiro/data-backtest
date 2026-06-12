@@ -1,3 +1,4 @@
+import { renderQualityEventChart } from '../components/qualityEventChart.js';
 import { el, mount, emptyState } from '../utils/dom.js';
 import { applyContextOptions, contextBarOptions, loadContext, saveContext, selectField } from '../utils/context.js';
 import { fetchContextOptionsCached } from '../utils/contextOptionsCache.js';
@@ -530,6 +531,62 @@ const dataStyles = `
     color: var(--text-3);
     font-family: var(--font-mono);
   }
+  .event-timeline-card.is-selected {
+    border-color: rgba(249, 115, 22, 0.45);
+    background: rgba(249, 115, 22, 0.05);
+  }
+  .event-timeline-card__issues {
+    font-size: 11px;
+    color: var(--text-3);
+  }
+  .quality-event-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .quality-event-chart__summary,
+  .quality-event-chart__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    font-size: 11px;
+  }
+  .quality-event-chart__issues { color: var(--text-2); }
+  .quality-event-chart__swatch {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+  }
+  .quality-event-chart__swatch--clob { background: rgba(239, 68, 68, 0.15); color: #fca5a5; }
+  .quality-event-chart__swatch--underlying { background: rgba(245, 158, 11, 0.15); color: #fcd34d; }
+  .quality-event-chart__swatch--omit { background: rgba(239, 68, 68, 0.22); color: #fecaca; }
+  .quality-event-chart__panel {
+    background: rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 8px;
+  }
+  .quality-event-chart__title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 6px;
+  }
+  .quality-event-chart__plot { min-height: 120px; }
+  .quality-omit-rules {
+    font-size: 12px;
+    color: var(--text-2);
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 10px 12px;
+    line-height: 1.45;
+  }
 `;
 
 let sseHandler = null;
@@ -960,13 +1017,41 @@ function hourTone(bucket) {
 function eventStatusLabel(event) {
   if (event.manually_excluded) return 'manual';
   if (event.normalization_action === 'omit') return 'omitido';
+  if (event.normalization_action === 'trim') return 'aparado';
   return 'ok';
 }
 
 function eventBadgeTone(event) {
   if (event.manually_excluded) return 'manual';
   if (event.normalization_action === 'omit') return 'omit';
+  if (event.normalization_action === 'trim') return 'trim';
   return 'ok';
+}
+
+function formatIssues(issues = []) {
+  return issues.map((issue) => {
+    if (issue === 'clob_stale') return 'CLOB travado';
+    if (issue === 'underlying_stale') return 'Spot travado';
+    return issue;
+  }).join(' · ');
+}
+
+async function loadEventPreview(ctx, day, ctxSaved, conditionId) {
+  const host = document.getElementById(`quality-preview-${conditionId}`);
+  if (!host) return;
+  mount(host, el('p', { class: 'muted', style: { padding: '8px 0' } }, 'Carregando gráfico…'));
+  const query = new URLSearchParams({
+    dt: day.dt,
+    underlying: ctxSaved.underlying,
+    interval: ctxSaved.interval,
+    condition_id: conditionId,
+  });
+  const res = await ctx.api.get(`/api/quality/event-preview?${query.toString()}`);
+  if (!res.ok) {
+    mount(host, el('p', { class: 'bad', style: { padding: '8px 0' } }, res.error?.message || 'Falha ao carregar preview'));
+    return;
+  }
+  await renderQualityEventChart(host, res.data.preview);
 }
 
 async function setEventExclusion(ctx, day, eventData, marketId, excluded) {
@@ -990,7 +1075,18 @@ async function setEventExclusion(ctx, day, eventData, marketId, excluded) {
   return true;
 }
 
-function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = null, fieldOptions = null, selectedTypeFilter = null) {
+function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, drawerUiState = {}, fieldOptions = null) {
+  const selectedHour = drawerUiState.selectedHour ?? null;
+  const selectedTypeFilter = drawerUiState.selectedTypeFilter ?? null;
+  const selectedEventId = drawerUiState.selectedEventId ?? null;
+
+  const remountDrawer = () => {
+    const container = document.getElementById('data-partition-details-container');
+    mount(container, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, drawerUiState, fieldOptions));
+    if (drawerUiState.selectedEventId) {
+      void loadEventPreview(ctx, day, ctxSaved, drawerUiState.selectedEventId);
+    }
+  };
   const events = (eventPayload.events || []).filter((event) => {
     const matchesHour = selectedHour == null || event.hour_utc === selectedHour;
     let matchesType = true;
@@ -1016,8 +1112,8 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = n
       class: `quality-hour-chip${selectedHour === bucket.hour ? ' is-active' : ''}`,
       title: `${bucket.total} evento(s) · omit: ${bucket.omitted} · aparados: ${bucket.trimmed} · manual: ${bucket.manual}`,
       onclick: () => {
-        const container = document.getElementById('data-partition-details-container');
-        mount(container, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour === bucket.hour ? null : bucket.hour, fieldOptions, selectedTypeFilter));
+        drawerUiState.selectedHour = selectedHour === bucket.hour ? null : bucket.hour;
+        remountDrawer();
       },
     }, [
       el('span', { class: `quality-hour-indicator quality-hour-indicator--${hourTone(bucket)}` }),
@@ -1045,13 +1141,23 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = n
         el('span', { class: 'muted' }, `${ctxSaved.underlying} · ${ctxSaved.interval} · book depth ${ctxSaved.book_depth}`)
       ]),
 
+      el('div', { class: 'quality-omit-rules' }, [
+        el('strong', { style: { color: 'var(--text-0)' } }, 'Omissão automática: '),
+        '≥ 50% dos ticks em trechos ',
+        el('em', {}, 'clob_stale'),
+        ' ou ',
+        el('em', {}, 'underlying_stale'),
+        ' → evento inteiro fora do Parquet. Abaixo disso, só os trechos ruins são cortados (trim).',
+      ]),
+
       // Cards de resumo de normalização
       el('div', { class: 'normalization-grid' }, [
         el('div', {
           class: `normalization-item${selectedTypeFilter === 'omit' ? ' is-active' : ''}`,
           onclick: () => {
-            const container = document.getElementById('data-partition-details-container');
-            mount(container, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour, fieldOptions, selectedTypeFilter === 'omit' ? null : 'omit'));
+            drawerUiState.selectedTypeFilter = selectedTypeFilter === 'omit' ? null : 'omit';
+            drawerUiState.selectedEventId = null;
+            remountDrawer();
           }
         }, [
           el('span', { class: 'normalization-item__value normalization-item__value--omit' }, String(countOmitted)),
@@ -1060,8 +1166,9 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = n
         el('div', {
           class: `normalization-item${selectedTypeFilter === 'trim' ? ' is-active' : ''}`,
           onclick: () => {
-            const container = document.getElementById('data-partition-details-container');
-            mount(container, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour, fieldOptions, selectedTypeFilter === 'trim' ? null : 'trim'));
+            drawerUiState.selectedTypeFilter = selectedTypeFilter === 'trim' ? null : 'trim';
+            drawerUiState.selectedEventId = null;
+            remountDrawer();
           }
         }, [
           el('span', { class: 'normalization-item__value normalization-item__value--trim' }, String(countTrimmed)),
@@ -1070,8 +1177,9 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = n
         el('div', {
           class: `normalization-item${selectedTypeFilter === 'manual' ? ' is-active' : ''}`,
           onclick: () => {
-            const container = document.getElementById('data-partition-details-container');
-            mount(container, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour, fieldOptions, selectedTypeFilter === 'manual' ? null : 'manual'));
+            drawerUiState.selectedTypeFilter = selectedTypeFilter === 'manual' ? null : 'manual';
+            drawerUiState.selectedEventId = null;
+            remountDrawer();
           }
         }, [
           el('span', { class: 'normalization-item__value normalization-item__value--manual' }, String(countManual)),
@@ -1087,8 +1195,8 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = n
             type: 'button',
             class: `quality-hour-chip${selectedHour == null ? ' is-active' : ''}`,
             onclick: () => {
-              const container = document.getElementById('data-partition-details-container');
-              mount(container, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, null, fieldOptions, selectedTypeFilter));
+              drawerUiState.selectedHour = null;
+              remountDrawer();
             },
           }, 'Todas'),
           ...hourButtons,
@@ -1101,23 +1209,39 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = n
         events.length ? el('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } }, events.map((event) => {
           const excluded = event.manually_excluded;
           const badgeTone = eventBadgeTone(event);
-          return el('div', { class: `event-timeline-card${excluded ? ' event-timeline-card--excluded' : ''}` }, [
-            el('div', { class: 'event-info-left' }, [
+          const isSelected = selectedEventId === event.condition_id;
+          return el('div', { class: `event-timeline-card${excluded ? ' event-timeline-card--excluded' : ''}${isSelected ? ' is-selected' : ''}` }, [
+            el('div', {
+              class: 'event-info-left',
+              style: { cursor: 'pointer', flex: '1' },
+              onclick: () => {
+                drawerUiState.selectedEventId = isSelected ? null : event.condition_id;
+                remountDrawer();
+              },
+            }, [
               el('span', { class: 'event-time-badge' }, formatEventTime(event.event_start)),
               el('span', { class: 'event-desc' }, shortConditionId(event.condition_id)),
               el('div', { class: 'event-meta-row' }, [
                 el('span', { class: `event-badge event-badge--${badgeTone}` }, eventStatusLabel(event)),
-                event.coverage != null ? el('span', { class: 'event-coverage-text' }, `Cob: ${Math.round(event.coverage * 100)}%`) : null
-              ])
+                event.normalization_issues?.length
+                  ? el('span', { class: 'event-timeline-card__issues' }, formatIssues(event.normalization_issues))
+                  : null,
+                event.normalization_bad_ratio != null
+                  ? el('span', { class: 'event-coverage-text' }, `Ruim: ${Math.round(event.normalization_bad_ratio * 100)}%`)
+                  : null,
+                event.coverage != null ? el('span', { class: 'event-coverage-text' }, `Cob: ${Math.round(event.coverage * 100)}%`) : null,
+              ]),
+              isSelected ? el('div', { id: `quality-preview-${event.condition_id}` }) : null,
             ]),
             el('button', {
               type: 'button',
               class: `btn btn--ghost btn--sm${excluded ? '' : ' btn--danger'}`,
               style: { padding: '6px 10px', fontSize: '11px' },
-              onclick: async () => {
+              onclick: async (ev) => {
+                ev.stopPropagation();
                 const ok = await setEventExclusion(ctx, day, event, eventPayload.market_id, excluded);
                 if (!ok) return;
-                await openPartitionDrawer(ctx, day);
+                await openPartitionDrawer(ctx, day, fieldOptions);
                 refreshJobs(ctx);
               },
             }, excluded ? 'Restaurar' : 'Excluir')
@@ -1179,7 +1303,8 @@ async function openPartitionDrawer(ctx, day, fieldOptions = null) {
     ]));
     return;
   }
-  mount(container, buildPartitionDrawer(ctx, day, res.data, ctxSaved, null, fieldOptions));
+  const drawerUiState = { selectedHour: null, selectedTypeFilter: null, selectedEventId: null };
+  mount(container, buildPartitionDrawer(ctx, day, res.data, ctxSaved, drawerUiState, fieldOptions));
 }
 
 async function refreshJobs(ctx) {

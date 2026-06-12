@@ -56,6 +56,7 @@ import { getDataCoverage } from '../query/coverageUi.js';
 import { runDataFix } from '../data/fixPipeline.js';
 import {
   handleQualityDayEvents,
+  handleQualityEventPreview,
   handleQualityExclude,
   handleQualityListExclusions,
   handleQualityRestore,
@@ -235,6 +236,10 @@ export function createApiHandler(deps) {
         }
         if (req.method === 'GET' && url.pathname === '/api/quality/day-events') {
           const result = await handleQualityDayEvents(pool, db, config, url.searchParams);
+          return sendJson(res, result.status, result.body);
+        }
+        if (req.method === 'GET' && url.pathname === '/api/quality/event-preview') {
+          const result = await handleQualityEventPreview(pool, config, url.searchParams);
           return sendJson(res, result.status, result.body);
         }
         if (req.method === 'GET' && url.pathname === '/api/quality/exclusions') {
