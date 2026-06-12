@@ -564,20 +564,21 @@ const dataStyles = `
   .quality-event-chart__swatch--clob { background: rgba(239, 68, 68, 0.15); color: #fca5a5; }
   .quality-event-chart__swatch--underlying { background: rgba(245, 158, 11, 0.15); color: #fcd34d; }
   .quality-event-chart__swatch--omit { background: rgba(239, 68, 68, 0.22); color: #fecaca; }
-  .quality-event-chart__panel {
-    background: rgba(0, 0, 0, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    padding: 8px;
+  .quality-event-chart .explorer-charts {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
-  .quality-event-chart__title {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: var(--text-3);
-    margin-bottom: 6px;
+  .quality-event-chart .explorer-charts__section {
+    margin: 0;
+    padding: 10px;
   }
-  .quality-event-chart__plot { min-height: 120px; }
+  .quality-event-chart .explorer-charts__title {
+    font-size: 12px;
+  }
+  .quality-event-chart .chart--compact .chart__viewport {
+    min-height: 140px;
+  }
   .quality-omit-rules {
     font-size: 12px;
     color: var(--text-2);
@@ -1051,7 +1052,7 @@ async function loadEventPreview(ctx, day, ctxSaved, conditionId) {
     mount(host, el('p', { class: 'bad', style: { padding: '8px 0' } }, res.error?.message || 'Falha ao carregar preview'));
     return;
   }
-  await renderQualityEventChart(host, res.data.preview);
+  renderQualityEventChart(host, res.data.preview, { assetSymbol: res.data.underlying });
 }
 
 async function setEventExclusion(ctx, day, eventData, marketId, excluded) {
