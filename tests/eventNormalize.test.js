@@ -105,7 +105,7 @@ test('normalizeEvent keeps full event when only part of ticks are underlying sta
   assert.deepEqual(result.issues, []);
 });
 
-test('normalizeEvent keeps quiet market with flat quotes and flat underlying', () => {
+test('normalizeEvent omits when majority of ticks have prolonged flat spot', () => {
   const ticks = Array.from({ length: 40 }, (_, index) => ({
     ...tick(index),
     ts: new Date(Date.parse('2026-06-01T14:00:00.000Z') + index * 1000).toISOString(),
@@ -118,8 +118,37 @@ test('normalizeEvent keeps quiet market with flat quotes and flat underlying', (
     downBestAsk: 0.49,
   }));
   const result = normalizeEventTicks(ticks, { omitEventBadRatio: 0.5, minStaleSec: 30 });
-  assert.equal(result.action, 'keep');
-  assert.equal(result.exportTicks.length, 40);
+  assert.equal(result.action, 'omit');
+  assert.equal(result.exportTicks.length, 0);
+  assert.ok(result.issues.includes('underlying_flat'));
+});
+
+test('normalizeEvent omits when spot stays flat for most of event even with late move', () => {
+  const baseMs = Date.parse('2026-06-12T06:10:00.000Z');
+  const ptb = 62_590.88;
+  const ticks = Array.from({ length: 600 }, (_, index) => {
+    const phase = index / 599;
+    const underlying = phase < 0.9 ? ptb : ptb - (phase - 0.9) * 280;
+    const up = phase < 0.55 ? 0.52 : Math.min(1, 0.52 + (phase - 0.55) * 1.1);
+    const down = 1 - up;
+    return {
+      conditionId: '0xcac407',
+      eventStart: '2026-06-12T06:10:00.000Z',
+      eventEnd: '2026-06-12T06:15:00.000Z',
+      ts: new Date(baseMs + index * 500).toISOString(),
+      underlyingPrice: underlying,
+      priceToBeat: ptb,
+      upPrice: up,
+      downPrice: down,
+      upBestBid: up - 0.01,
+      upBestAsk: up + 0.01,
+      downBestBid: down - 0.01,
+      downBestAsk: down + 0.01,
+    };
+  });
+  const result = normalizeEventTicks(ticks, { omitEventBadRatio: 0.5, minStaleSec: 30, minQuoteMove: 0.003 });
+  assert.equal(result.action, 'omit');
+  assert.ok(result.issues.includes('underlying_flat'));
 });
 
 test('normalizeEvent keeps event when spot swings materially despite underlying_stale windows', () => {

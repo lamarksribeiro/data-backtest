@@ -1,4 +1,4 @@
-import { analyzeTrimSegments } from './clobStale.js';
+import { analyzeTrimSegments, findUnderlyingFlatTickIndices } from './clobStale.js';
 import { buildChartTicksFromScalars, summarizeChartTicks } from './chartTicks.js';
 import { normalizeEventTicks } from './normalizeEvent.js';
 import { buildNormalizationOptions } from '../sync/applyNormalization.js';
@@ -26,11 +26,23 @@ export function buildSourceEventPreview(ticks, config = {}) {
   const result = normalizeEventTicks(sorted, opts);
   const segments = analyzeTrimSegments(sorted, opts);
 
+  const flatIndices = findUnderlyingFlatTickIndices(sorted, opts);
+  const minStaleSec = opts.minStaleSec ?? 30;
   const trimRegions = result.action === 'omit'
     ? segments
-      .filter((segment) => result.issues.includes(segment.classification))
+      .filter((segment) => {
+        if (result.issues.includes(segment.classification)) return true;
+        if (!result.issues.includes('underlying_flat')) return false;
+        if (segment.feed !== 'underlying' || segment.durationSec < minStaleSec) return false;
+        for (let index = segment.startIndex; index <= segment.endIndex; index += 1) {
+          if (flatIndices.has(index)) return true;
+        }
+        return false;
+      })
       .map((segment) => ({
-        kind: segment.classification,
+        kind: result.issues.includes(segment.classification)
+          ? segment.classification
+          : 'underlying_flat',
         feed: segment.feed,
         from: sorted[segment.startIndex]?.ts ?? null,
         to: sorted[segment.endIndex]?.ts ?? null,

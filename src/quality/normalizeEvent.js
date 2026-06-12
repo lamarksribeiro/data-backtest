@@ -26,8 +26,14 @@ export function normalizeEventTicks(ticks, opts = {}) {
   const omitIndices = findOmitTickIndices(sorted, opts);
   const trimCount = omitIndices.size;
   const trimRatio = trimCount / sorted.length;
-  const trimSegments = segments.filter((segment) => segment.classification === 'clob_stale'
-    || segment.classification === 'underlying_stale');
+  const trimSegments = segments.filter((segment) => {
+    if (segment.classification === 'clob_stale' || segment.classification === 'underlying_stale') return true;
+    if (segment.feed !== 'underlying') return false;
+    for (let index = segment.startIndex; index <= segment.endIndex; index += 1) {
+      if (omitIndices.has(index)) return true;
+    }
+    return false;
+  });
   const issues = collectOmitIssues(sorted, omitIndices, opts);
 
   if (trimRatio > omitEventBadRatio) {

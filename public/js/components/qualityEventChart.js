@@ -29,7 +29,11 @@ function overlayBandsFromPreview(ticks, preview) {
   const bands = (preview?.trim_regions || []).map((region) => ({
     x0: indexForTimestamp(ticks, region.from),
     x1: indexForTimestamp(ticks, region.to),
-    color: region.kind === 'underlying_stale' ? 'rgba(245, 158, 11, 0.18)' : 'rgba(239, 68, 68, 0.18)',
+    color: region.kind === 'underlying_flat'
+      ? 'rgba(148, 163, 184, 0.22)'
+      : region.kind === 'underlying_stale'
+        ? 'rgba(245, 158, 11, 0.18)'
+        : 'rgba(239, 68, 68, 0.18)',
   }));
 
   if (preview?.action === 'omit' && ticks.length >= 2) {
@@ -46,6 +50,7 @@ function overlayBandsFromPreview(ticks, preview) {
 function issueLabel(issue) {
   if (issue === 'clob_stale') return 'CLOB travado';
   if (issue === 'underlying_stale') return 'Spot travado';
+  if (issue === 'underlying_flat') return 'Spot flat prolongado';
   return issue;
 }
 
@@ -101,6 +106,9 @@ export function renderQualityEventChart(container, payload, opts = {}) {
       : null,
     trimRegions.some((region) => region.kind === 'underlying_stale')
       ? el('span', { class: 'quality-event-chart__swatch quality-event-chart__swatch--underlying' }, 'Spot stale')
+      : null,
+    trimRegions.some((region) => region.kind === 'underlying_flat')
+      ? el('span', { class: 'quality-event-chart__swatch quality-event-chart__swatch--flat' }, 'Spot flat')
       : null,
     original.action === 'omit'
       ? el('span', { class: 'quality-event-chart__swatch quality-event-chart__swatch--omit' }, 'Evento omitido')

@@ -1124,6 +1124,7 @@ function formatIssues(issues = []) {
   return issues.map((issue) => {
     if (issue === 'clob_stale') return 'CLOB travado';
     if (issue === 'underlying_stale') return 'Spot travado';
+    if (issue === 'underlying_flat') return 'Spot flat prolongado';
     return issue;
   }).join(' · ');
 }
@@ -1234,9 +1235,9 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, drawerUiState = 
         el('strong', { style: { color: 'var(--text-0)' } }, 'Omissão automática: '),
         '≥ 50% dos ticks em trechos ',
         el('em', {}, 'clob_stale'),
-        ' ou ',
+        ', ',
         el('em', {}, 'underlying_stale'),
-        ' → evento inteiro fora do Parquet. Abaixo desse limiar, o evento é exportado integralmente.',
+        ' ou spot flat prolongado → evento inteiro fora do Parquet.',
       ]),
 
       // Cards de resumo de normalização

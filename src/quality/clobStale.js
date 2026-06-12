@@ -362,10 +362,21 @@ export function eventSpotMovedMaterially(ticks, opts = {}) {
   return eventUnderlyingRange(ticks) >= minUnderlyingMove;
 }
 
+export function findUnderlyingFlatTickIndices(ticks, opts = {}) {
+  const flat = new Set();
+  const minStaleSec = opts.minStaleSec ?? 30;
+  for (const segment of analyzeFlatUnderlyingSegments(ticks, opts)) {
+    if (segment.durationSec < minStaleSec) continue;
+    for (let index = segment.startIndex; index <= segment.endIndex; index += 1) flat.add(index);
+  }
+  return flat;
+}
+
 export function collectOmitIssues(ticks, omitIndices, opts = {}) {
   const issues = [];
   const clobStale = findClobStaleTickIndices(ticks, opts);
   const underlyingStale = findUnderlyingStaleTickIndices(ticks, opts);
+  const underlyingFlat = findUnderlyingFlatTickIndices(ticks, opts);
   for (const index of omitIndices) {
     if (clobStale.has(index)) {
       issues.push('clob_stale');
@@ -378,13 +389,20 @@ export function collectOmitIssues(ticks, omitIndices, opts = {}) {
       break;
     }
   }
+  for (const index of omitIndices) {
+    if (underlyingFlat.has(index)) {
+      issues.push('underlying_flat');
+      break;
+    }
+  }
   return issues;
 }
 
 export function findOmitTickIndices(ticks, opts = {}) {
   const omit = findTrimTickIndices(ticks, opts);
-  if (!omit.size || !eventSpotMovedMaterially(ticks, opts)) return omit;
-
-  for (const index of findUnderlyingStaleTickIndices(ticks, opts)) omit.delete(index);
+  if (omit.size && eventSpotMovedMaterially(ticks, opts)) {
+    for (const index of findUnderlyingStaleTickIndices(ticks, opts)) omit.delete(index);
+  }
+  for (const index of findUnderlyingFlatTickIndices(ticks, opts)) omit.add(index);
   return omit;
 }
