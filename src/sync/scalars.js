@@ -189,7 +189,10 @@ export async function exportScalarsPartition({
     interval: partition.interval,
     marketId: partition.marketId,
   });
-  const normalized = applyTickNormalization(rawTicks, config, { manualExcludedConditionIds });
+  const normalized = applyTickNormalization(rawTicks, config, {
+    manualExcludedConditionIds,
+    partitionEvents: eventsWithCounts,
+  });
   const ticks = normalized.ticks;
   const normalization = normalized.normalization;
   const actualRows = ticks.length;

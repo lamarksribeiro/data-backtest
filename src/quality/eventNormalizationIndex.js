@@ -37,6 +37,6 @@ export async function buildLiveNormalizationIndex(pool, partition, config = {}) 
   if (!conditionIds.length) return new Map();
 
   const ticks = await getScalarTicksForEvents(pool, partition, conditionIds);
-  const { report } = normalizePartitionTicks(ticks, buildNormalizationOptions(config));
+  const { report } = normalizePartitionTicks(ticks, buildNormalizationOptions(config), events);
   return buildNormalizationIndexFromReport(report);
 }

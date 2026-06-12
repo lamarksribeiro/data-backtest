@@ -26,9 +26,16 @@ function applyManualExclusions(exportTicks, manualExcludedConditionIds) {
   return { ticks, manualEventsOmitted: omittedEvents.size };
 }
 
-export function applyTickNormalization(ticks, config = {}, { manualExcludedConditionIds = null } = {}) {
+export function applyTickNormalization(ticks, config = {}, {
+  manualExcludedConditionIds = null,
+  partitionEvents = [],
+} = {}) {
   const startedAt = Date.now();
-  const normalization = normalizePartitionTicks(ticks, buildNormalizationOptions(config));
+  const normalization = normalizePartitionTicks(
+    ticks,
+    buildNormalizationOptions(config),
+    partitionEvents,
+  );
   const manual = applyManualExclusions(normalization.exportTicks, manualExcludedConditionIds);
   const exportedConditionIds = new Set(manual.ticks.map((tick) => tick.conditionId));
   const report = {

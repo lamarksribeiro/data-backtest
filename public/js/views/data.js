@@ -1125,13 +1125,18 @@ function formatIssues(issues = []) {
     if (issue === 'clob_stale') return 'CLOB travado';
     if (issue === 'underlying_stale') return 'Spot travado';
     if (issue === 'underlying_flat') return 'Spot flat prolongado';
+    if (issue === 'missing_ticks') return 'Sem ticks no coletor';
     return issue;
   }).join(' · ');
 }
 
-async function loadEventPreview(ctx, day, ctxSaved, conditionId) {
+async function loadEventPreview(ctx, day, ctxSaved, conditionId, eventMeta = null) {
   const host = document.getElementById(`quality-preview-${conditionId}`);
   if (!host) return;
+  if (eventMeta?.ticks_recorded === 0 || eventMeta?.normalization_action === 'omit' && eventMeta?.normalization_issues?.includes('missing_ticks')) {
+    mount(host, el('p', { class: 'muted', style: { padding: '8px 0' } }, 'Evento omitido automaticamente — sem ticks no coletor.'));
+    return;
+  }
   mount(host, el('p', { class: 'muted', style: { padding: '8px 0' } }, 'Carregando gráfico…'));
   const query = new URLSearchParams({
     dt: day.dt,
@@ -1177,7 +1182,8 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, drawerUiState = 
     const container = document.getElementById('data-partition-details-container');
     mount(container, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, drawerUiState, fieldOptions));
     if (drawerUiState.selectedEventId) {
-      void loadEventPreview(ctx, day, ctxSaved, drawerUiState.selectedEventId);
+      const selectedEvent = events.find((event) => event.condition_id === drawerUiState.selectedEventId);
+      void loadEventPreview(ctx, day, ctxSaved, drawerUiState.selectedEventId, selectedEvent);
     }
   };
   const events = (eventPayload.events || []).filter((event) => {
@@ -1237,7 +1243,7 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, drawerUiState = 
         el('em', {}, 'clob_stale'),
         ', ',
         el('em', {}, 'underlying_stale'),
-        ' ou spot no mesmo valor por ≥30s → evento inteiro fora do Parquet.',
+        ', spot no mesmo valor por ≥30s ou sem ticks no coletor → evento inteiro fora do Parquet.',
       ]),
 
       // Cards de resumo de normalização

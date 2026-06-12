@@ -246,6 +246,30 @@ test('normalizeEvent omits when majority of ticks are clob_stale', () => {
   assert.equal(result.exportTicks.length, 0);
 });
 
+test('normalizePartition omits events with zero source ticks', () => {
+  const good = Array.from({ length: 20 }, (_, index) => tick(index, { up: 0.51, down: 0.49 }));
+  const partitionEvents = [
+    {
+      conditionId: '0xabc',
+      eventStart: '2026-06-01T14:00:00.000Z',
+      ticksRecorded: 20,
+      actualCount: 20,
+    },
+    {
+      conditionId: '0xempty',
+      eventStart: '2026-06-01T14:05:00.000Z',
+      ticksRecorded: 0,
+      actualCount: 0,
+    },
+  ];
+  const result = normalizePartitionTicks(good, { omitEventBadRatio: 0.5, minStaleSec: 30 }, partitionEvents);
+  assert.equal(result.report.events_total, 2);
+  assert.equal(result.report.events_omitted, 1);
+  const empty = result.report.events_index.find((row) => row.condition_id === '0xempty');
+  assert.equal(empty?.action, 'omit');
+  assert.ok(empty?.issues.includes('missing_ticks'));
+});
+
 test('normalizePartition aggregates hours affected and export quality stays valid', () => {
   const good = Array.from({ length: 20 }, (_, index) => tick(index, { up: 0.51, down: 0.49 }));
   const { ticks: badEvent, minStaleSec } = withClobStaleStreak(40, { staleFrom: 0, staleTo: 30 });

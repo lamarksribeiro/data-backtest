@@ -24,3 +24,23 @@ test('summarizeHours aggregates omit trim and manual counts', () => {
   assert.equal(hour14.manual, 1);
   assert.equal(hour15.omitted, 1);
 });
+
+test('mergeDayEvents omits events with zero ticks even without normalization index', () => {
+  const merged = mergeDayEvents({
+    events: [
+      {
+        conditionId: 'empty',
+        eventStart: '2026-06-01T19:00:00.000Z',
+        eventEnd: '2026-06-01T19:05:00.000Z',
+        coverage: 0,
+        degraded: true,
+        ticksRecorded: 0,
+      },
+    ],
+    exclusions: [],
+    normalizationIndex: new Map(),
+  });
+  assert.equal(merged.length, 1);
+  assert.equal(merged[0].normalization_action, 'omit');
+  assert.ok(merged[0].normalization_issues.includes('missing_ticks'));
+});

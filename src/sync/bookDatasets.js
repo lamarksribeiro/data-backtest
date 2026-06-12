@@ -159,7 +159,10 @@ async function exportBookDatasetPartition({
     interval: partition.interval,
     marketId: partition.marketId,
   });
-  const normalized = applyTickNormalization(rawRows, config, { manualExcludedConditionIds });
+  const normalized = applyTickNormalization(rawRows, config, {
+    manualExcludedConditionIds,
+    partitionEvents: eventsWithCounts,
+  });
   const rows = transformRows ? transformRows(normalized.ticks) : normalized.ticks;
   const normalization = normalized.normalization;
   const actualRows = rows.length;

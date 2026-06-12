@@ -16,7 +16,39 @@ function hourUtc(isoTs) {
   return Number.isFinite(date.getTime()) ? date.getUTCHours() : null;
 }
 
-export function normalizePartitionTicks(ticks, opts = {}) {
+export function eventHasSourceTicks(event) {
+  const actual = event.actualCount ?? event.actual_count ?? null;
+  if (actual != null) return Number(actual) > 0;
+  return Number(event.ticksRecorded ?? event.ticks_recorded ?? 0) > 0;
+}
+
+function appendEmptyEventOmissions(eventResults, hoursAffected, partitionEvents = []) {
+  const seen = new Set(eventResults.map((event) => event.conditionId));
+  for (const event of partitionEvents) {
+    const conditionId = event.conditionId ?? event.condition_id;
+    if (!conditionId || seen.has(conditionId) || eventHasSourceTicks(event)) continue;
+    const eventStart = event.eventStart ?? event.event_start ?? null;
+    eventResults.push({
+      conditionId,
+      eventStart,
+      action: 'omit',
+      issues: ['missing_ticks'],
+      stats: {
+        ticksIn: 0,
+        ticksOut: 0,
+        ticksRemoved: 0,
+        badRatio: 1,
+      },
+    });
+    seen.add(conditionId);
+    if (eventStart != null) {
+      const hour = hourUtc(eventStart);
+      if (hour != null) hoursAffected.set(hour, (hoursAffected.get(hour) || 0) + 1);
+    }
+  }
+}
+
+export function normalizePartitionTicks(ticks, opts = {}, partitionEvents = []) {
   const groups = groupTicksByEvent(ticks);
   const eventResults = [];
   const exportTicks = [];
@@ -43,9 +75,11 @@ export function normalizePartitionTicks(ticks, opts = {}) {
     }
   }
 
+  appendEmptyEventOmissions(eventResults, hoursAffected, partitionEvents);
+
   exportTicks.sort((left, right) => String(left.ts).localeCompare(String(right.ts)));
 
-  const eventsTotal = eventResults.length;
+  const eventsTotal = partitionEvents.length || eventResults.length;
   const eventsOmitted = eventResults.filter((event) => event.action === 'omit').length;
   const eventsTrimmed = eventResults.filter((event) => event.action === 'trim').length;
   const eventsKept = eventResults.filter((event) => event.action === 'keep').length;

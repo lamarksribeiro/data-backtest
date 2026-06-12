@@ -51,6 +51,7 @@ function issueLabel(issue) {
   if (issue === 'clob_stale') return 'CLOB travado';
   if (issue === 'underlying_stale') return 'Spot travado';
   if (issue === 'underlying_flat') return 'Spot flat prolongado';
+  if (issue === 'missing_ticks') return 'Sem ticks no coletor';
   return issue;
 }
 

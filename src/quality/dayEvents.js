@@ -8,6 +8,15 @@ export function mergeDayEvents({ events, exclusions, normalizationIndex }) {
   const excludedIds = new Set((exclusions || []).map((row) => row.conditionId));
   return events.map((event) => {
     const norm = normalizationIndex.get(event.conditionId);
+    const hasTicks = Number(event.ticksRecorded ?? 0) > 0;
+    let normalization_action = norm?.action ?? null;
+    let normalization_issues = norm?.issues ?? [];
+    if (!hasTicks) {
+      normalization_action = 'omit';
+      if (!normalization_issues.includes('missing_ticks')) {
+        normalization_issues = ['missing_ticks', ...normalization_issues];
+      }
+    }
     return {
       condition_id: event.conditionId,
       event_start: event.eventStart,
@@ -16,8 +25,8 @@ export function mergeDayEvents({ events, exclusions, normalizationIndex }) {
       degraded: event.degraded,
       ticks_recorded: event.ticksRecorded,
       hour_utc: new Date(event.eventStart).getUTCHours(),
-      normalization_action: norm?.action ?? null,
-      normalization_issues: norm?.issues ?? [],
+      normalization_action,
+      normalization_issues,
       normalization_bad_ratio: norm?.bad_ratio ?? null,
       normalization_ticks_in: norm?.ticks_in ?? null,
       normalization_ticks_out: norm?.ticks_out ?? null,
