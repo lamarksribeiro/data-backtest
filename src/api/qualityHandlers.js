@@ -1,6 +1,6 @@
 import { datasetRequestFromObject } from '../query/request.js';
 import { mergeDayEvents, summarizeHours } from '../quality/dayEvents.js';
-import { buildEventPreviewFromTicks } from '../quality/eventPreview.js';
+import { resolveDualEventPreview } from '../quality/eventPreviewSource.js';
 import { buildLiveNormalizationIndex, buildNormalizationIndexFromReport } from '../quality/eventNormalizationIndex.js';
 import { checkDatasetAvailability } from '../query/availability.js';
 import {
@@ -94,7 +94,7 @@ export async function handleQualityDayEvents(pool, db, config, params) {
   };
 }
 
-export async function handleQualityEventPreview(pool, config, params) {
+export async function handleQualityEventPreview(pool, db, config, params) {
   const dt = String(params.get('dt') || '').trim();
   const underlying = String(params.get('underlying') || '').trim().toUpperCase();
   const interval = String(params.get('interval') || '').trim();
@@ -103,30 +103,23 @@ export async function handleQualityEventPreview(pool, config, params) {
     return { ok: false, status: 400, body: { error: { code: 'INVALID_REQUEST', message: 'dt, underlying, interval and condition_id are required' } } };
   }
 
-  const marketId = await resolveMarketId(pool, { underlying, interval });
-  if (!marketId) {
-    return { ok: false, status: 404, body: { error: { code: 'MARKET_NOT_FOUND', message: 'Market not found in source database' } } };
+  const result = await resolveDualEventPreview({
+    db,
+    pool,
+    config,
+    dt,
+    underlying,
+    interval,
+    conditionId,
+  });
+  if (!result.ok) {
+    return {
+      ok: false,
+      status: result.status,
+      body: { error: { code: result.code || 'NOT_FOUND', message: result.message || 'Event preview failed' } },
+    };
   }
-
-  const partition = { marketId, dt, underlying, interval };
-  const ticks = await getScalarTicksForEvents(pool, partition, [conditionId]);
-  if (!ticks.length) {
-    return { ok: false, status: 404, body: { error: { code: 'NOT_FOUND', message: 'No ticks found for event' } } };
-  }
-
-  return {
-    ok: true,
-    status: 200,
-    body: {
-      dt,
-      underlying,
-      interval,
-      condition_id: conditionId,
-      event_start: ticks[0]?.eventStart ?? null,
-      event_end: ticks[0]?.eventEnd ?? null,
-      preview: buildEventPreviewFromTicks(ticks, config),
-    },
-  };
+  return { ok: true, status: result.status, body: result.body };
 }
 
 export async function handleQualityExclude(db, config, prepareRunner, pool, body, excludedBy = null) {

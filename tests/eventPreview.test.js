@@ -68,6 +68,7 @@ test('keep action chart uses exported ticks with movement', () => {
   assert.equal(preview.action, 'keep');
   assert.ok(preview.chart_meta.has_spot_movement);
   assert.ok(preview.chart_meta.spot_range > 5);
+  assert.equal(preview.data_role, 'source');
 });
 
 test('normalizePartition stores full events_index', () => {

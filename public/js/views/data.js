@@ -564,20 +564,63 @@ const dataStyles = `
   .quality-event-chart__swatch--clob { background: rgba(239, 68, 68, 0.15); color: #fca5a5; }
   .quality-event-chart__swatch--underlying { background: rgba(245, 158, 11, 0.15); color: #fcd34d; }
   .quality-event-chart__swatch--omit { background: rgba(239, 68, 68, 0.22); color: #fecaca; }
+  .quality-event-chart__compare {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .quality-event-chart__panel {
+    background: rgba(0, 0, 0, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 10px;
+    min-width: 0;
+  }
+  .quality-event-chart__panel--empty {
+    display: flex;
+    align-items: center;
+    min-height: 180px;
+  }
+  .quality-event-chart__panel-head {
+    margin-bottom: 8px;
+  }
+  .quality-event-chart__panel-title {
+    margin: 0 0 4px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-1);
+  }
+  .quality-event-chart__panel-hint,
+  .quality-event-chart__panel-meta {
+    margin: 0;
+    font-size: 10px;
+    line-height: 1.35;
+  }
+  .quality-event-chart__panel-empty {
+    padding: 12px 0;
+    font-size: 11px;
+  }
   .quality-event-chart .explorer-charts {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
   }
   .quality-event-chart .explorer-charts__section {
     margin: 0;
-    padding: 10px;
+    padding: 0;
+    border: none;
+    background: transparent;
   }
   .quality-event-chart .explorer-charts__title {
-    font-size: 12px;
+    font-size: 11px;
   }
   .quality-event-chart .chart--compact .chart__viewport {
-    min-height: 140px;
+    min-height: 120px;
+  }
+  @media (max-width: 960px) {
+    .quality-event-chart__compare {
+      grid-template-columns: 1fr;
+    }
   }
   .quality-omit-rules {
     font-size: 12px;
@@ -1052,7 +1095,7 @@ async function loadEventPreview(ctx, day, ctxSaved, conditionId) {
     mount(host, el('p', { class: 'bad', style: { padding: '8px 0' } }, res.error?.message || 'Falha ao carregar preview'));
     return;
   }
-  renderQualityEventChart(host, res.data.preview, { assetSymbol: res.data.underlying });
+  renderQualityEventChart(host, res.data, { assetSymbol: res.data.underlying });
 }
 
 async function setEventExclusion(ctx, day, eventData, marketId, excluded) {

@@ -20,7 +20,7 @@ function oddsPrice(value) {
   return parsed;
 }
 
-export function buildEventPreviewFromTicks(ticks, config = {}) {
+export function buildSourceEventPreview(ticks, config = {}) {
   const sorted = [...ticks].sort((left, right) => String(left.ts).localeCompare(String(right.ts)));
   const opts = buildNormalizationOptions(config);
   const result = normalizeEventTicks(sorted, opts);
@@ -38,7 +38,7 @@ export function buildEventPreviewFromTicks(ticks, config = {}) {
     }))
     .filter((region) => region.from && region.to);
 
-  const chart_ticks = buildChartTicksFromScalars(result.exportTicks, config);
+  const chart_ticks = buildChartTicksFromScalars(sorted, config);
 
   return {
     action: result.action,
@@ -64,5 +64,27 @@ export function buildEventPreviewFromTicks(ticks, config = {}) {
     },
     chart_ticks,
     chart_meta: summarizeChartTicks(chart_ticks),
+    data_role: 'source',
   };
 }
+
+export function buildParquetEventPreview(ticks, normMeta = {}, config = {}) {
+  const sorted = [...ticks].sort((left, right) => String(left.ts).localeCompare(String(right.ts)));
+  const chart_ticks = buildChartTicksFromScalars(sorted, config);
+
+  return {
+    action: normMeta.action ?? (sorted.length ? 'keep' : 'omit'),
+    issues: normMeta.issues ?? [],
+    ticks_in: normMeta.ticks_in ?? sorted.length,
+    ticks_out: sorted.length,
+    ticks_removed: Math.max(0, (normMeta.ticks_in ?? sorted.length) - sorted.length),
+    bad_ratio: normMeta.bad_ratio ?? 0,
+    trim_regions: [],
+    chart_ticks,
+    chart_meta: summarizeChartTicks(chart_ticks),
+    data_role: 'parquet',
+  };
+}
+
+/** @deprecated use buildSourceEventPreview */
+export const buildEventPreviewFromTicks = buildSourceEventPreview;

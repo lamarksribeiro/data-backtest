@@ -49,20 +49,51 @@ function issueLabel(issue) {
   return issue;
 }
 
-export function renderQualityEventChart(container, preview, opts = {}) {
-  if (!container || !preview) return null;
-
-  const asset = opts.assetSymbol || preview.underlying || 'BTC';
-  const ticks = previewToTicks(preview);
-  if ((preview.chart_meta?.spot_points ?? ticks.filter((row) => row.underlying_price != null).length) < 2) {
-    mount(container, el('p', { class: 'muted', style: { padding: '8px 0' } },
-      'Sem preço spot válido nos ticks exportados deste evento.'));
-    return container;
+function tickCountLabel(preview, sampled) {
+  if (sampled) {
+    return `${preview.chart_ticks.length} pontos amostrados de ${preview.ticks_in ?? preview.chart_ticks.length}`;
   }
-  const overlayBands = overlayBandsFromPreview(ticks, preview);
-  const trimRegions = preview?.trim_regions || [];
-  const sampled = Array.isArray(preview?.chart_ticks) && preview.chart_ticks.length > 0
+  if (preview.data_role === 'parquet') {
+    return `${preview.ticks_out ?? 0} ticks no Parquet`;
+  }
+  return `${preview.ticks_in ?? 0} ticks brutos`;
+}
+
+function renderChartPanel(title, hint, preview, asset, { overlayBands = null } = {}) {
+  const ticks = previewToTicks(preview);
+  const spotPoints = preview.chart_meta?.spot_points
+    ?? ticks.filter((row) => row.underlying_price != null).length;
+  const sampled = preview.chart_ticks?.length > 0
     && preview.chart_ticks.length < (preview.ticks_in ?? preview.chart_ticks.length);
+
+  return el('div', { class: 'quality-event-chart__panel' }, [
+    el('div', { class: 'quality-event-chart__panel-head' }, [
+      el('h4', { class: 'quality-event-chart__panel-title' }, title),
+      el('p', { class: 'quality-event-chart__panel-hint muted' }, hint),
+      el('span', { class: 'quality-event-chart__panel-meta muted' }, tickCountLabel(preview, sampled)),
+    ]),
+    spotPoints < 2
+      ? el('p', { class: 'muted quality-event-chart__panel-empty' }, 'Sem preço spot válido para gráfico.')
+      : explorerTickCharts(ticks, {
+        assetSymbol: asset,
+        yAxisDecimals: underlyingDecimals(asset),
+        overlayBands: overlayBands || [],
+        compact: true,
+      }),
+  ]);
+}
+
+export function renderQualityEventChart(container, payload, opts = {}) {
+  if (!container || !payload) return null;
+
+  const asset = opts.assetSymbol || payload.underlying || 'BTC';
+  const original = payload.original ?? payload.preview ?? payload;
+  const parquet = payload.parquet ?? null;
+  const parquetAvailable = Boolean(payload.parquet_available);
+
+  const trimRegions = original?.trim_regions || [];
+  const originalTicks = previewToTicks(original);
+  const overlayBands = overlayBandsFromPreview(originalTicks, original);
 
   const legendSwatches = [
     trimRegions.some((region) => region.kind === 'clob_stale')
@@ -71,34 +102,50 @@ export function renderQualityEventChart(container, preview, opts = {}) {
     trimRegions.some((region) => region.kind === 'underlying_stale')
       ? el('span', { class: 'quality-event-chart__swatch quality-event-chart__swatch--underlying' }, 'Spot stale')
       : null,
-    preview.action === 'omit'
+    original.action === 'omit'
       ? el('span', { class: 'quality-event-chart__swatch quality-event-chart__swatch--omit' }, 'Evento omitido')
       : null,
   ].filter(Boolean);
 
+  const parquetHint = !parquetAvailable
+    ? `Partição ${payload.partition_status || 'indisponível'} — sync ainda não exportou este dia.`
+    : parquet?.ticks_out
+      ? 'Dados já normalizados no lakehouse (trechos ruins removidos).'
+      : 'Evento omitido do export — nenhum tick no Parquet.';
+
   mount(container, el('div', { class: 'quality-event-chart' }, [
     el('div', { class: 'quality-event-chart__summary' }, [
-      el('span', { class: `event-badge event-badge--${preview.action === 'omit' ? 'omit' : preview.action === 'trim' ? 'trim' : 'ok'}` },
-        preview.action === 'omit' ? 'omitido' : preview.action === 'trim' ? 'aparado' : 'ok'),
-      preview.issues?.length
-        ? el('span', { class: 'quality-event-chart__issues' }, preview.issues.map(issueLabel).join(' · '))
+      el('span', { class: `event-badge event-badge--${original.action === 'omit' ? 'omit' : original.action === 'trim' ? 'trim' : 'ok'}` },
+        original.action === 'omit' ? 'omitido' : original.action === 'trim' ? 'aparado' : 'ok'),
+      original.issues?.length
+        ? el('span', { class: 'quality-event-chart__issues' }, original.issues.map(issueLabel).join(' · '))
         : null,
-      el('span', { class: 'muted' }, sampled
-        ? `${ticks.length} pontos amostrados de ${preview.ticks_in ?? ticks.length}`
-        : `${preview.ticks_out ?? 0}/${preview.ticks_in ?? 0} ticks exportados`),
+      el('span', { class: 'muted' },
+        `export: ${original.ticks_out ?? 0}/${original.ticks_in ?? 0} ticks`),
     ]),
     legendSwatches.length
       ? el('div', { class: 'quality-event-chart__legend' }, [
-        el('span', {}, 'Faixas: '),
+        el('span', {}, 'Faixas (coletor): '),
         ...legendSwatches,
       ])
       : null,
-    explorerTickCharts(ticks, {
-      assetSymbol: asset,
-      yAxisDecimals: underlyingDecimals(asset),
-      overlayBands,
-      compact: true,
-    }),
+    el('div', { class: 'quality-event-chart__compare' }, [
+      renderChartPanel(
+        'Coletor (bruto)',
+        'Postgres do data-colector · faixas = trechos que o sync remove ou apara.',
+        original,
+        asset,
+        { overlayBands },
+      ),
+      parquetAvailable && parquet
+        ? renderChartPanel('Parquet exportado', parquetHint, parquet, asset)
+        : el('div', { class: 'quality-event-chart__panel quality-event-chart__panel--empty' }, [
+          el('div', { class: 'quality-event-chart__panel-head' }, [
+            el('h4', { class: 'quality-event-chart__panel-title' }, 'Parquet exportado'),
+            el('p', { class: 'quality-event-chart__panel-hint muted' }, parquetHint),
+          ]),
+        ]),
+    ]),
   ]));
 
   return container;

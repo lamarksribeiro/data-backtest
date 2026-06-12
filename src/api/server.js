@@ -239,7 +239,7 @@ export function createApiHandler(deps) {
           return sendJson(res, result.status, result.body);
         }
         if (req.method === 'GET' && url.pathname === '/api/quality/event-preview') {
-          const result = await handleQualityEventPreview(pool, config, url.searchParams);
+          const result = await handleQualityEventPreview(pool, db, config, url.searchParams);
           return sendJson(res, result.status, result.body);
         }
         if (req.method === 'GET' && url.pathname === '/api/quality/exclusions') {
