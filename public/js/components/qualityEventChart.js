@@ -2,6 +2,9 @@ import { el, mount } from '../utils/dom.js';
 import { explorerTickCharts, underlyingDecimals } from '../utils/lineChart.js';
 
 function previewToTicks(preview) {
+  if (Array.isArray(preview?.chart_ticks) && preview.chart_ticks.length) {
+    return preview.chart_ticks;
+  }
   const underlying = preview?.series?.underlying || [];
   return underlying.map((row, index) => ({
     ts: row.ts,
@@ -51,8 +54,15 @@ export function renderQualityEventChart(container, preview, opts = {}) {
 
   const asset = opts.assetSymbol || preview.underlying || 'BTC';
   const ticks = previewToTicks(preview);
+  if ((preview.chart_meta?.spot_points ?? ticks.filter((row) => row.underlying_price != null).length) < 2) {
+    mount(container, el('p', { class: 'muted', style: { padding: '8px 0' } },
+      'Sem preço spot válido nos ticks exportados deste evento.'));
+    return container;
+  }
   const overlayBands = overlayBandsFromPreview(ticks, preview);
   const trimRegions = preview?.trim_regions || [];
+  const sampled = Array.isArray(preview?.chart_ticks) && preview.chart_ticks.length > 0
+    && preview.chart_ticks.length < (preview.ticks_in ?? preview.chart_ticks.length);
 
   const legendSwatches = [
     trimRegions.some((region) => region.kind === 'clob_stale')
@@ -73,7 +83,9 @@ export function renderQualityEventChart(container, preview, opts = {}) {
       preview.issues?.length
         ? el('span', { class: 'quality-event-chart__issues' }, preview.issues.map(issueLabel).join(' · '))
         : null,
-      el('span', { class: 'muted' }, `${preview.ticks_out ?? 0}/${preview.ticks_in ?? 0} ticks exportados`),
+      el('span', { class: 'muted' }, sampled
+        ? `${ticks.length} pontos amostrados de ${preview.ticks_in ?? ticks.length}`
+        : `${preview.ticks_out ?? 0}/${preview.ticks_in ?? 0} ticks exportados`),
     ]),
     legendSwatches.length
       ? el('div', { class: 'quality-event-chart__legend' }, [

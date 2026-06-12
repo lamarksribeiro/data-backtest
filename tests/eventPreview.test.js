@@ -38,6 +38,38 @@ test('buildEventPreviewFromTicks exposes trim regions and series', () => {
   assert.ok(preview.removed_ticks.length > 0);
 });
 
+test('buildEventPreviewFromTicks sanitizes chart ticks and drops zero spot', () => {
+  const ticks = Array.from({ length: 20 }, (_, index) => tick(index, {
+    underlying: index < 3 ? 0 : 63_500 + index * 2,
+    up: 0.52,
+    down: 0.48,
+  }));
+  ticks.forEach((row) => {
+    row.priceToBeat = 63_517.89;
+  });
+  const preview = buildEventPreviewFromTicks(ticks);
+  assert.equal(preview.series.underlying[0].value, null);
+  assert.equal(preview.series.underlying[3].value, 63_506);
+  assert.ok(preview.chart_ticks.length > 0);
+  assert.ok(preview.chart_ticks.every((row) => row.underlying_price == null || row.underlying_price >= 1000));
+  assert.ok(preview.chart_ticks.some((row) => row.underlying_price != null));
+});
+
+test('keep action chart uses exported ticks with movement', () => {
+  const ticks = Array.from({ length: 25 }, (_, index) => tick(index, {
+    underlying: 63_500 + index * 0.8,
+    up: 0.50 + (index % 6) * 0.008,
+    down: 0.50 - (index % 6) * 0.008,
+  }));
+  ticks.forEach((row) => {
+    row.priceToBeat = 63_517.89;
+  });
+  const preview = buildEventPreviewFromTicks(ticks);
+  assert.equal(preview.action, 'keep');
+  assert.ok(preview.chart_meta.has_spot_movement);
+  assert.ok(preview.chart_meta.spot_range > 5);
+});
+
 test('normalizePartition stores full events_index', () => {
   const good = Array.from({ length: 20 }, (_, index) => tick(index));
   const bad = Array.from({ length: 40 }, (_, index) => tick(index, { up: 0.52, down: 0.48 }));

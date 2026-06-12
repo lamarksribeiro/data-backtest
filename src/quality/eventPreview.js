@@ -1,10 +1,23 @@
 import { analyzeTrimSegments, findTrimTickIndices } from './clobStale.js';
+import { buildChartTicksFromScalars, summarizeChartTicks } from './chartTicks.js';
 import { normalizeEventTicks } from './normalizeEvent.js';
 import { buildNormalizationOptions } from '../sync/applyNormalization.js';
 
 function num(value) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+function scalarPrice(value, min = 1000) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < min) return null;
+  return parsed;
+}
+
+function oddsPrice(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0 || parsed > 1) return null;
+  return parsed;
 }
 
 export function buildEventPreviewFromTicks(ticks, config = {}) {
@@ -25,6 +38,8 @@ export function buildEventPreviewFromTicks(ticks, config = {}) {
     }))
     .filter((region) => region.from && region.to);
 
+  const chart_ticks = buildChartTicksFromScalars(result.exportTicks, config);
+
   return {
     action: result.action,
     issues: result.issues,
@@ -42,10 +57,12 @@ export function buildEventPreviewFromTicks(ticks, config = {}) {
         down: num(sorted[index]?.downPrice),
       })),
     series: {
-      underlying: sorted.map((tick) => ({ ts: tick.ts, value: num(tick.underlyingPrice) })),
-      price_to_beat: sorted.map((tick) => ({ ts: tick.ts, value: num(tick.priceToBeat) })),
-      up: sorted.map((tick) => ({ ts: tick.ts, value: num(tick.upPrice) })),
-      down: sorted.map((tick) => ({ ts: tick.ts, value: num(tick.downPrice) })),
+      underlying: sorted.map((tick) => ({ ts: tick.ts, value: scalarPrice(tick.underlyingPrice) })),
+      price_to_beat: sorted.map((tick) => ({ ts: tick.ts, value: scalarPrice(tick.priceToBeat) })),
+      up: sorted.map((tick) => ({ ts: tick.ts, value: oddsPrice(tick.upPrice) })),
+      down: sorted.map((tick) => ({ ts: tick.ts, value: oddsPrice(tick.downPrice) })),
     },
+    chart_ticks,
+    chart_meta: summarizeChartTicks(chart_ticks),
   };
 }

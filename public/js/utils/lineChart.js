@@ -2,9 +2,15 @@
 import { el } from './dom.js';
 
 const UNDERLYING_DECIMALS = { BTC: 2, ETH: 2, SOL: 2, XRP: 4, DOGE: 6, HYPE: 2, BNB: 2 };
+const MIN_SPOT_USD = { BTC: 1000, ETH: 100, SOL: 10, XRP: 0.1, DOGE: 0.001, HYPE: 1, BNB: 10 };
+const DEFAULT_MIN_PTB = 1000;
 
 export function underlyingDecimals(symbol) {
   return UNDERLYING_DECIMALS[String(symbol || '').toUpperCase()] ?? 2;
+}
+
+function minSpotUsd(symbol) {
+  return MIN_SPOT_USD[String(symbol || '').toUpperCase()] ?? DEFAULT_MIN_PTB;
 }
 
 function svgEl(tag, attrs = {}, children = []) {
@@ -29,15 +35,40 @@ function svgRoot(attrs = {}) {
   return node;
 }
 
-function finiteYs(points) {
-  return points.map((point) => point.y).filter((y) => y != null && Number.isFinite(y));
+function isValidSpotPrice(value, asset) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= minSpotUsd(asset);
 }
 
-function yScaleFromValues(values) {
-  const minY = Math.min(...values);
-  const maxY = Math.max(...values);
-  const span = maxY - minY;
-  const padY = span > 0 ? span * 0.05 : Math.max(Math.abs(maxY) * 0.001, 0.01);
+function isValidPtbPrice(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= DEFAULT_MIN_PTB;
+}
+
+function isValidOddsPrice(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 && parsed <= 1;
+}
+
+function finiteYs(points, kind = 'any', asset = 'BTC') {
+  return points
+    .map((point) => point.y)
+    .filter((value) => {
+      if (value == null || !Number.isFinite(value)) return false;
+      if (kind === 'spot') return isValidSpotPrice(value, asset);
+      if (kind === 'ptb') return isValidPtbPrice(value);
+      if (kind === 'odds') return isValidOddsPrice(value);
+      return true;
+    });
+}
+
+function yScaleFromUsdValues(values) {
+  const ys = values.filter((value) => Number.isFinite(value));
+  if (!ys.length) return { y0: 0, y1: 1 };
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+  const span = Math.max(maxY - minY, Math.abs(maxY) * 0.00005, 1);
+  const padY = Math.max(span * 0.08, 1);
   return { y0: minY - padY, y1: maxY + padY };
 }
 
@@ -59,9 +90,23 @@ function yAxisColumn(scale, decimals, side) {
   ]);
 }
 
+function buildPath(points, scale, maxX, plotW, plotH) {
+  const span = scale.y1 - scale.y0 || 1;
+  let path = '';
+  let prevX = null;
+  for (const point of points) {
+    const x = (point.x / maxX) * plotW;
+    const y = plotH - ((point.y - scale.y0) / span) * plotH;
+    const breakPath = prevX != null && point.x - prevX > 1;
+    path += `${!path || breakPath ? 'M' : 'L'}${x.toFixed(2)},${y.toFixed(2)}`;
+    prevX = point.x;
+  }
+  return path;
+}
+
 /**
  * @param {{ label: string, color: string, points: { x: number, y: number | null }[], dash?: boolean, strokeWidth?: number }[]} series
- * @param {{ title?: string, yAxisDecimals?: number, fixedScale?: { y0: number, y1: number }, compact?: boolean, refLines?: { y: number }[], xAxisLabels?: string[], overlayBands?: { x0: number, x1: number, color?: string }[] }} [opts]
+ * @param {{ title?: string, yAxisDecimals?: number, fixedScale?: { y0: number, y1: number }, compact?: boolean, refLines?: { y: number }[], xAxisLabels?: string[], overlayBands?: { x0: number, x1: number, color?: string }[], scaleMode?: 'usd' | 'unit', assetSymbol?: string, highlightCrossings?: boolean }} [opts]
  */
 export function lineChartPanel(series, opts = {}) {
   const {
@@ -73,33 +118,30 @@ export function lineChartPanel(series, opts = {}) {
     xAxisLabels = [],
     overlayBands = [],
     highlightCrossings = false,
+    scaleMode = 'unit',
+    assetSymbol = 'BTC',
   } = opts;
 
-  const active = series.filter((item) => finiteYs(item.points).length >= 2);
-  const allY = active.flatMap((item) => finiteYs(item.points));
+  const valueKind = scaleMode === 'usd' ? 'spot' : scaleMode === 'odds' ? 'odds' : 'any';
+  const active = series.filter((item) => finiteYs(item.points, valueKind, assetSymbol).length >= 2);
+  const spotSeries = active.find((item) => !item.dash) || active[0];
+  const scaleValues = scaleMode === 'usd'
+    ? finiteYs(spotSeries?.points || [], 'spot', assetSymbol)
+    : active.flatMap((item) => finiteYs(item.points, valueKind, assetSymbol));
 
-  if (!allY.length) {
+  if (!scaleValues.length) {
     return el('div', { class: 'chart chart--empty' }, [
       title ? el('div', { class: 'chart__title' }, title) : null,
       el('div', { class: 'chart__empty' }, 'Sem dados para gráfico'),
     ]);
   }
 
-  const scale = fixedScale || yScaleFromValues(allY);
+  const scale = fixedScale || (scaleMode === 'usd'
+    ? yScaleFromUsdValues(scaleValues)
+    : yScaleFromUsdValues(scaleValues));
   const plotW = 1000;
   const plotH = compact ? 120 : 280;
   const maxX = Math.max(...active.flatMap((item) => item.points.map((point) => point.x)), 1);
-
-  function toSvg(item) {
-    const points = item.points.filter((point) => point.y != null && Number.isFinite(point.y));
-    if (points.length < 2) return '';
-    const span = scale.y1 - scale.y0 || 1;
-    return points.map((point, index) => {
-      const x = (point.x / maxX) * plotW;
-      const y = plotH - ((point.y - scale.y0) / span) * plotH;
-      return `${index === 0 ? 'M' : 'L'}${x.toFixed(2)},${y.toFixed(2)}`;
-    }).join(' ');
-  }
 
   function yAt(value) {
     const span = scale.y1 - scale.y0 || 1;
@@ -206,7 +248,8 @@ export function lineChartPanel(series, opts = {}) {
   }
 
   for (const item of active) {
-    const path = toSvg(item);
+    const points = item.points.filter((point) => point.y != null && Number.isFinite(point.y));
+    const path = buildPath(points, scale, maxX, plotW, plotH);
     if (!path) continue;
 
     if (!item.dash) {
@@ -221,7 +264,6 @@ export function lineChartPanel(series, opts = {}) {
       grad.appendChild(svgEl('stop', { offset: '100%', 'stop-color': item.color, 'stop-opacity': '0.0' }));
       defs.appendChild(grad);
 
-      const points = item.points.filter((point) => point.y != null && Number.isFinite(point.y));
       if (points.length >= 2) {
         const firstX = (points[0].x / maxX) * plotW;
         const lastX = (points[points.length - 1].x / maxX) * plotW;
@@ -283,11 +325,16 @@ export function lineChartPanel(series, opts = {}) {
   ]);
 }
 
-function tickSeries(ticks, key) {
+function tickSeries(ticks, key, kind, asset) {
   return ticks.map((tick, index) => {
     const raw = tick[key];
-    const y = raw != null ? Number(raw) : null;
-    return { x: index, y: Number.isFinite(y) ? y : null };
+    const parsed = raw != null ? Number(raw) : null;
+    let y = null;
+    if (kind === 'spot') y = isValidSpotPrice(parsed, asset) ? parsed : null;
+    else if (kind === 'ptb') y = isValidPtbPrice(parsed) ? parsed : null;
+    else if (kind === 'odds') y = isValidOddsPrice(parsed) ? parsed : null;
+    else y = Number.isFinite(parsed) ? parsed : null;
+    return { x: index, y };
   });
 }
 
@@ -300,13 +347,23 @@ function formatTickTime(tsStr, sameDay = true) {
   return `${pad(date.getDate())}/${pad(date.getMonth() + 1)} ${hhmm}`;
 }
 
-function trimLeadingInvalidTicks(ticks) {
+function trimLeadingInvalidTicks(ticks, asset) {
   let firstValidIdx = 0;
-  while (firstValidIdx < ticks.length
-    && (ticks[firstValidIdx].underlying_price == null || ticks[firstValidIdx].price_to_beat == null)) {
+  while (firstValidIdx < ticks.length) {
+    const row = ticks[firstValidIdx];
+    const hasSpot = isValidSpotPrice(row.underlying_price, asset);
+    const hasPtb = isValidPtbPrice(row.price_to_beat);
+    if (hasSpot && hasPtb) break;
     firstValidIdx += 1;
   }
   return ticks.slice(firstValidIdx);
+}
+
+function resolveEventPtb(ticks) {
+  for (const tick of ticks) {
+    if (isValidPtbPrice(tick.price_to_beat)) return Number(tick.price_to_beat);
+  }
+  return null;
 }
 
 /**
@@ -316,7 +373,7 @@ function trimLeadingInvalidTicks(ticks) {
 export function explorerTickCharts(ticks, opts = {}) {
   const asset = opts.assetSymbol || 'BTC';
   const priceDecimals = opts.yAxisDecimals ?? underlyingDecimals(asset);
-  const validTicks = trimLeadingInvalidTicks(ticks);
+  const validTicks = trimLeadingInvalidTicks(ticks, asset);
 
   if (!validTicks.length) {
     return el('div', { class: 'chart chart--empty' }, [
@@ -324,6 +381,7 @@ export function explorerTickCharts(ticks, opts = {}) {
     ]);
   }
 
+  const eventPtb = resolveEventPtb(validTicks);
   const firstTs = validTicks[0]?.ts;
   const lastTs = validTicks[validTicks.length - 1]?.ts;
   const isSameDay = firstTs && lastTs
@@ -340,15 +398,21 @@ export function explorerTickCharts(ticks, opts = {}) {
   }
 
   const priceSeries = [
-    { label: `Preço ${asset}`, color: '#3b82f6', key: 'underlying_price', dash: false },
-    { label: 'PTB (price to beat)', color: '#eab308', key: 'price_to_beat', dash: true },
-  ].map((item) => ({
-    label: item.label,
-    color: item.color,
-    dash: item.dash,
-    key: item.key,
-    points: tickSeries(validTicks, item.key),
-  }));
+    {
+      label: `Preço ${asset}`,
+      color: '#3b82f6',
+      key: 'underlying_price',
+      dash: false,
+      points: tickSeries(validTicks, 'underlying_price', 'spot', asset),
+    },
+    {
+      label: 'PTB (price to beat)',
+      color: '#eab308',
+      key: 'price_to_beat',
+      dash: true,
+      points: validTicks.map((_, index) => ({ x: index, y: eventPtb })),
+    },
+  ];
 
   const oddsSeries = [
     { label: 'UP', color: '#10b981', key: 'up_price' },
@@ -357,13 +421,14 @@ export function explorerTickCharts(ticks, opts = {}) {
     label: item.label,
     color: item.color,
     key: item.key,
-    points: tickSeries(validTicks, item.key),
+    points: tickSeries(validTicks, item.key, 'odds', asset),
   }));
 
   const chartOpts = {
     xAxisLabels,
     compact: opts.compact === true,
     overlayBands: opts.overlayBands || [],
+    assetSymbol: asset,
   };
 
   return el('div', { class: 'explorer-charts' }, [
@@ -375,6 +440,7 @@ export function explorerTickCharts(ticks, opts = {}) {
       lineChartPanel(priceSeries, {
         ...chartOpts,
         yAxisDecimals: priceDecimals,
+        scaleMode: 'usd',
         highlightCrossings: true,
       }),
     ]),
@@ -386,6 +452,7 @@ export function explorerTickCharts(ticks, opts = {}) {
       lineChartPanel(oddsSeries, {
         ...chartOpts,
         yAxisDecimals: 2,
+        scaleMode: 'odds',
         fixedScale: { y0: 0, y1: 1 },
         refLines: [{ y: 0.5 }],
       }),
