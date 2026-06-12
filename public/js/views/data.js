@@ -1189,10 +1189,10 @@ async function acceptReviewPartition(ctx, day, formCtx) {
 }
 
 function legendChip(state, count) {
-  const iconClass = state === 'ready' 
-    ? 'fa-solid fa-circle-check' 
-    : state === 'processing' 
-      ? 'fa-solid fa-spinner fa-spin' 
+  const iconClass = state === 'ready'
+    ? 'fa-solid fa-circle-check'
+    : state === 'processing'
+      ? (count > 0 ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-spinner')
       : 'fa-solid fa-circle-exclamation';
   return el('span', { class: `badge badge--${UI_CLASS[state]}`, style: { display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 14px', borderRadius: '30px' } }, [
     el('i', { class: iconClass }),
