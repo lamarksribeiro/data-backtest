@@ -1,10 +1,17 @@
 import { el, mount } from '../utils/dom.js';
 import { destroyChartsIn, renderUplotLine } from '../utils/uplotChart.js';
 
-function toPoints(series = []) {
+function toAlignedPoints(series = []) {
   return series
-    .filter((point) => point?.ts != null && point.value != null && Number.isFinite(point.value))
-    .map((point) => [new Date(point.ts).getTime(), point.value]);
+    .filter((point) => point?.ts != null)
+    .map((point) => {
+      const value = point.value;
+      return [new Date(point.ts).getTime(), value != null && Number.isFinite(value) ? value : null];
+    });
+}
+
+function hasValues(points = []) {
+  return points.some((point) => point[1] != null && Number.isFinite(point[1]));
 }
 
 function regionsFromPreview(preview) {
@@ -39,10 +46,23 @@ export async function renderQualityEventChart(container, preview) {
   destroyChartsIn(container);
 
   const regions = regionsFromPreview(preview);
-  const underlyingPts = toPoints(preview.series?.underlying);
-  const ptbPts = toPoints(preview.series?.price_to_beat);
-  const upPts = toPoints(preview.series?.up);
-  const downPts = toPoints(preview.series?.down);
+  const underlyingPts = toAlignedPoints(preview.series?.underlying);
+  const ptbPts = toAlignedPoints(preview.series?.price_to_beat);
+  const upPts = toAlignedPoints(preview.series?.up);
+  const downPts = toAlignedPoints(preview.series?.down);
+
+  const trimRegions = preview?.trim_regions || [];
+  const legendSwatches = [
+    trimRegions.some((region) => region.kind === 'clob_stale')
+      ? el('span', { class: 'quality-event-chart__swatch quality-event-chart__swatch--clob' }, 'CLOB stale')
+      : null,
+    trimRegions.some((region) => region.kind === 'underlying_stale')
+      ? el('span', { class: 'quality-event-chart__swatch quality-event-chart__swatch--underlying' }, 'Spot stale')
+      : null,
+    preview.action === 'omit'
+      ? el('span', { class: 'quality-event-chart__swatch quality-event-chart__swatch--omit' }, 'Evento omitido')
+      : null,
+  ].filter(Boolean);
 
   mount(container, el('div', { class: 'quality-event-chart' }, [
     el('div', { class: 'quality-event-chart__summary' }, [
@@ -53,12 +73,12 @@ export async function renderQualityEventChart(container, preview) {
         : null,
       el('span', { class: 'muted' }, `${preview.ticks_out ?? 0}/${preview.ticks_in ?? 0} ticks exportados`),
     ]),
-    el('div', { class: 'quality-event-chart__legend' }, [
-      el('span', {}, 'Faixas: '),
-      el('span', { class: 'quality-event-chart__swatch quality-event-chart__swatch--clob' }, 'CLOB stale'),
-      el('span', { class: 'quality-event-chart__swatch quality-event-chart__swatch--underlying' }, 'Spot stale'),
-      preview.action === 'omit' ? el('span', { class: 'quality-event-chart__swatch quality-event-chart__swatch--omit' }, 'Evento omitido') : null,
-    ]),
+    legendSwatches.length
+      ? el('div', { class: 'quality-event-chart__legend' }, [
+        el('span', {}, 'Faixas: '),
+        ...legendSwatches,
+      ])
+      : null,
     el('div', { class: 'quality-event-chart__panel' }, [
       el('div', { class: 'quality-event-chart__title' }, 'Underlying × PTB'),
       el('div', { class: 'quality-event-chart__plot', id: 'quality-event-chart-spot' }),
@@ -72,20 +92,33 @@ export async function renderQualityEventChart(container, preview) {
   const spotEl = container.querySelector('#quality-event-chart-spot');
   const clobEl = container.querySelector('#quality-event-chart-clob');
 
-  if (underlyingPts.length) {
-    await renderUplotLine(spotEl, underlyingPts, [
-      { label: 'Underlying', data: underlyingPts },
-      ...(ptbPts.length ? [{ label: 'PTB', data: ptbPts }] : []),
-    ], { regions, height: 180 });
+  const spotPrimary = hasValues(underlyingPts) ? underlyingPts : ptbPts;
+  const spotExtra = hasValues(underlyingPts) && hasValues(ptbPts)
+    ? [{ label: 'PTB', data: ptbPts }]
+    : [];
+
+  if (hasValues(spotPrimary)) {
+    await renderUplotLine(spotEl, spotPrimary, spotExtra, {
+      primaryLabel: hasValues(underlyingPts) ? 'Underlying' : 'PTB',
+      regions,
+      height: 180,
+      yRange: 'tight',
+    });
   } else {
-    mount(spotEl, el('p', { class: 'muted' }, 'Sem série de underlying.'));
+    mount(spotEl, el('p', { class: 'muted' }, 'Sem série de underlying/PTB.'));
   }
 
-  if (upPts.length || downPts.length) {
-    await renderUplotLine(clobEl, upPts.length ? upPts : downPts, [
-      ...(upPts.length ? [{ label: 'UP', data: upPts }] : []),
-      ...(downPts.length ? [{ label: 'DOWN', data: downPts }] : []),
-    ], { regions, height: 160 });
+  const clobExtra = [];
+  if (hasValues(upPts) && hasValues(downPts)) clobExtra.push({ label: 'DOWN', data: downPts });
+  const clobPrimary = hasValues(upPts) ? upPts : downPts;
+
+  if (hasValues(clobPrimary)) {
+    await renderUplotLine(clobEl, clobPrimary, clobExtra, {
+      primaryLabel: hasValues(upPts) ? 'UP' : 'DOWN',
+      regions,
+      height: 160,
+      yRange: 'tight',
+    });
   } else {
     mount(clobEl, el('p', { class: 'muted' }, 'Sem série UP/DOWN.'));
   }

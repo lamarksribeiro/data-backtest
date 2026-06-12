@@ -72,7 +72,6 @@ export async function renderEventChartWithMarkers(container, event, chartData) {
     title: m.label
   }));
   return renderUplotLine(container, pts, [
-    { label: 'BTC', data: pts },
     { label: 'PTB', data: ptb },
-  ], { markers });
+  ], { markers, primaryLabel: 'BTC', yRange: 'tight' });
 }

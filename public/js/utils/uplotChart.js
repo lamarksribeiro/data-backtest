@@ -61,26 +61,54 @@ export async function renderUplotSparkline(container, values) {
   return chart;
 }
 
+function tightYRange(_u, min, max) {
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return [0, 1];
+  if (min === max) {
+    const pad = Math.abs(min) * 0.001 || 1;
+    return [min - pad, max + pad];
+  }
+  const pad = Math.max((max - min) * 0.12, Math.abs(max) * 0.00005, 1e-6);
+  return [min - pad, max + pad];
+}
+
 export async function renderUplotLine(container, primarySeries, extraSeries = [], opts = {}) {
   if (!container) return null;
   const uPlot = await loadUplot();
   destroyChartsIn(container);
   container.innerHTML = '';
   const labeled = [
-    { label: 'primary', data: primarySeries },
+    { label: opts.primaryLabel || 'primary', data: primarySeries },
     ...extraSeries,
   ].filter((s) => s?.data?.length);
   if (!labeled.length) return null;
   const xs = labeled[0].data.map((p) => p[0] / 1000);
-  const data = [xs, ...labeled.map((s) => s.data.map((p) => p[1]))];
+  const data = [xs, ...labeled.map((s) => s.data.map((p) => (p[1] != null && Number.isFinite(p[1]) ? p[1] : null)))];
   const colors = ['#f97316', '#38bdf8', '#a78bfa', '#34d399', '#f472b6'];
   const markers = Array.isArray(opts.markers) ? opts.markers : [];
   const chartHeight = Number(opts.height) > 0 ? Number(opts.height) : 220;
+  const useTightY = opts.yRange === 'tight';
   const chart = new uPlot({
     width: container.clientWidth || 600,
     height: chartHeight,
-    series: [{}, ...labeled.map((s, i) => ({ label: s.label || `s${i}`, stroke: colors[i % colors.length], width: 2 }))],
-    axes: [{}, {}],
+    scales: {
+      x: { time: true },
+      y: {
+        auto: !useTightY,
+        range: useTightY
+          ? (_u, min, max) => tightYRange(_u, min, max)
+          : undefined,
+      },
+    },
+    series: [{}, ...labeled.map((s, i) => ({
+      label: s.label || `s${i}`,
+      stroke: colors[i % colors.length],
+      width: 2,
+      spanGaps: false,
+    }))],
+    axes: [
+      { stroke: '#64748b', grid: { stroke: 'rgba(255,255,255,0.06)' } },
+      { stroke: '#64748b', grid: { stroke: 'rgba(255,255,255,0.06)' }, size: 72 },
+    ],
     cursor: { drag: { x: true, y: false, setScale: true } },
     hooks: {
       draw: [
