@@ -40,14 +40,31 @@ export async function handleQualityDayEvents(pool, db, config, params) {
 
   const events = await getPartitionEvents(pool, { marketId, dt, underlying, interval });
   const exclusions = listEventExclusionsForDay(db, { dt, underlying, interval, marketId });
+  
+  const bookDepthVal = params.get('book_depth') || params.get('bookDepth');
+  const bookDepth = bookDepthVal ? Number(bookDepthVal) : Number(config.backtestBookDepth);
+
   const availability = checkDatasetAvailability(db, {
-    dataset: 'scalars',
+    dataset: 'backtest_ticks',
     from: `${dt}T00:00:00.000Z`,
     to: `${nextDayIso(dt)}T00:00:00.000Z`,
     underlying,
     interval,
+    bookDepth,
   });
-  const partition = availability.partitions.find((row) => row.dt === dt);
+  
+  let partition = availability.partitions.find((row) => row.dt === dt && row.usable);
+  if (!partition) {
+    const scalarsAvailability = checkDatasetAvailability(db, {
+      dataset: 'scalars',
+      from: `${dt}T00:00:00.000Z`,
+      to: `${nextDayIso(dt)}T00:00:00.000Z`,
+      underlying,
+      interval,
+    });
+    partition = scalarsAvailability.partitions.find((row) => row.dt === dt);
+  }
+
   const normalizationIndex = buildNormalizationIndex(partition?.quality_details);
   const merged = mergeDayEvents({ events, exclusions, normalizationIndex });
 

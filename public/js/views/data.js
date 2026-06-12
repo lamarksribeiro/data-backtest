@@ -379,6 +379,16 @@ const dataStyles = `
     display: flex;
     flex-direction: column;
     gap: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .normalization-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+  .normalization-item.is-active {
+    background: rgba(249, 115, 22, 0.1);
+    border-color: var(--accent);
   }
   .normalization-item__value {
     font-size: 16px;
@@ -524,6 +534,8 @@ const dataStyles = `
 
 let sseHandler = null;
 let latestJobs = [];
+let jobsTimer = null;
+let displayedProgress = {};
 
 export function buildDetailsEmptyState() {
   return el('div', { class: 'card', style: { borderStyle: 'dashed', background: 'rgba(255,255,255,0.01)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', textAlign: 'center' } }, [
@@ -562,6 +574,13 @@ export function buildPartitionDrawerLoading(day) {
 export async function renderData(ctx) {
   ctx.setBreadcrumb('data', 'Dados');
   ctx.renderContextBar?.();
+
+  // Limpar timer e progresso exibido ao renderizar a tela
+  if (jobsTimer) {
+    clearInterval(jobsTimer);
+    jobsTimer = null;
+  }
+  displayedProgress = {};
 
   // Injetar a tag de estilos para os mini-calendários se ainda não foi criada
   if (!document.getElementById('data-custom-styles')) {
@@ -967,8 +986,19 @@ async function setEventExclusion(ctx, day, eventData, marketId, excluded) {
   return true;
 }
 
-function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = null, fieldOptions = null) {
-  const events = (eventPayload.events || []).filter((event) => selectedHour == null || event.hour_utc === selectedHour);
+function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = null, fieldOptions = null, selectedTypeFilter = null) {
+  const events = (eventPayload.events || []).filter((event) => {
+    const matchesHour = selectedHour == null || event.hour_utc === selectedHour;
+    let matchesType = true;
+    if (selectedTypeFilter === 'omit') {
+      matchesType = eventStatusLabel(event) === 'auto omit';
+    } else if (selectedTypeFilter === 'trim') {
+      matchesType = eventStatusLabel(event) === 'auto trim';
+    } else if (selectedTypeFilter === 'manual') {
+      matchesType = eventStatusLabel(event) === 'manual';
+    }
+    return matchesHour && matchesType;
+  });
   
   // Calcular totais de normalização para os mini cards
   const norm = day.partitions?.[0]?.quality_details?.normalization;
@@ -983,7 +1013,7 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = n
       title: `${bucket.total} evento(s) · omit: ${bucket.omitted} · trim: ${bucket.trimmed} · manual: ${bucket.manual}`,
       onclick: () => {
         const container = document.getElementById('data-partition-details-container');
-        mount(container, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour === bucket.hour ? null : bucket.hour, fieldOptions));
+        mount(container, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour === bucket.hour ? null : bucket.hour, fieldOptions, selectedTypeFilter));
       },
     }, [
       el('span', { class: `quality-hour-indicator quality-hour-indicator--${hourTone(bucket)}` }),
@@ -1013,15 +1043,33 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = n
 
       // Cards de resumo de normalização
       el('div', { class: 'normalization-grid' }, [
-        el('div', { class: 'normalization-item' }, [
+        el('div', {
+          class: `normalization-item${selectedTypeFilter === 'omit' ? ' is-active' : ''}`,
+          onclick: () => {
+            const container = document.getElementById('data-partition-details-container');
+            mount(container, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour, fieldOptions, selectedTypeFilter === 'omit' ? null : 'omit'));
+          }
+        }, [
           el('span', { class: 'normalization-item__value normalization-item__value--omit' }, String(countOmitted)),
           el('span', { class: 'normalization-item__label' }, 'Omitidos')
         ]),
-        el('div', { class: 'normalization-item' }, [
+        el('div', {
+          class: `normalization-item${selectedTypeFilter === 'trim' ? ' is-active' : ''}`,
+          onclick: () => {
+            const container = document.getElementById('data-partition-details-container');
+            mount(container, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour, fieldOptions, selectedTypeFilter === 'trim' ? null : 'trim'));
+          }
+        }, [
           el('span', { class: 'normalization-item__value normalization-item__value--trim' }, String(countTrimmed)),
           el('span', { class: 'normalization-item__label' }, 'Aparados')
         ]),
-        el('div', { class: 'normalization-item' }, [
+        el('div', {
+          class: `normalization-item${selectedTypeFilter === 'manual' ? ' is-active' : ''}`,
+          onclick: () => {
+            const container = document.getElementById('data-partition-details-container');
+            mount(container, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour, fieldOptions, selectedTypeFilter === 'manual' ? null : 'manual'));
+          }
+        }, [
           el('span', { class: 'normalization-item__value normalization-item__value--manual' }, String(countManual)),
           el('span', { class: 'normalization-item__label' }, 'Manuais')
         ]),
@@ -1036,7 +1084,7 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = n
             class: `quality-hour-chip${selectedHour == null ? ' is-active' : ''}`,
             onclick: () => {
               const container = document.getElementById('data-partition-details-container');
-              mount(container, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, null, fieldOptions));
+              mount(container, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, null, fieldOptions, selectedTypeFilter));
             },
           }, 'Todas'),
           ...hourButtons,
@@ -1070,7 +1118,7 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = n
               },
             }, excluded ? 'Restaurar' : 'Excluir')
           ]);
-        })) : el('p', { class: 'muted', style: { textAlign: 'center', padding: '20px 0' } }, 'Nenhum evento registrado nesta hora.')
+        })) : el('p', { class: 'muted', style: { textAlign: 'center', padding: '20px 0' } }, 'Nenhum evento registrado com este filtro.')
       ])
     ]),
     
@@ -1110,6 +1158,7 @@ async function openPartitionDrawer(ctx, day, fieldOptions = null) {
     dt: day.dt,
     underlying: ctxSaved.underlying,
     interval: ctxSaved.interval,
+    book_depth: ctxSaved.book_depth,
   });
   const res = await ctx.api.get(`/api/quality/day-events?${query.toString()}`);
   if (!res.ok) {
@@ -1135,23 +1184,118 @@ async function refreshJobs(ctx) {
   const res = await ctx.api.get('/api/prepare/jobs?limit=10');
   latestJobs = res.ok ? res.data.jobs || [] : [];
   const active = latestJobs.filter((j) => j.status === 'running' || j.status === 'queued');
+
+  // Inicializa o progresso exibido dos novos jobs ativos
+  active.forEach((job) => {
+    if (displayedProgress[job.id] === undefined) {
+      displayedProgress[job.id] = calculateJobProgress(job);
+    }
+  });
+
   mount(section, el('div', {}, [
     el('h2', { class: 'card__title' }, 'Jobs ativos'),
     active.length
       ? el('div', { class: 'data-jobs-inline' }, active.map((job) => jobCard(job)))
       : el('p', { class: 'muted' }, 'Nenhum job em execução.'),
   ]));
+
+  // Gerenciar o timer de atualização suave de progresso na DOM
+  if (active.length && !jobsTimer) {
+    jobsTimer = setInterval(tickJobsProgress, 500);
+  } else if (!active.length && jobsTimer) {
+    clearInterval(jobsTimer);
+    jobsTimer = null;
+  }
+}
+
+function calculateJobProgress(job) {
+  if (job.status === 'completed') return 100;
+  if (job.status === 'failed') return 0;
+  
+  const prog = job.progress;
+  if (!prog || !prog.partitions_total) return 5;
+  
+  const total = prog.partitions_total;
+  const done = prog.partitions_done;
+  
+  // Progresso base das partições completadas
+  let pct = (done / total) * 100;
+  
+  // Se houver uma partição atual rodando, estimamos seu progresso com base na fase
+  if (done < total && prog.current) {
+    const phase = prog.current.phase;
+    let phasePct = 0;
+    if (phase === 'starting' || phase === 'listing_events') phasePct = 10;
+    else if (phase === 'counting_ticks') phasePct = 25;
+    else if (phase === 'fetching_rows') phasePct = 55;
+    else if (phase === 'writing_parquet') phasePct = 85;
+    else if (phase === 'done') phasePct = 100;
+    
+    pct += (phasePct / total);
+  }
+  
+  return Math.min(Math.round(pct), 99);
+}
+
+function tickJobsProgress() {
+  const activeJobs = latestJobs.filter((j) => j.status === 'running' || j.status === 'queued');
+  // Se não houver jobs ativos ou se o container foi desmontado (mudança de tela)
+  if (!activeJobs.length || !document.getElementById('data-jobs-section')) {
+    if (jobsTimer) {
+      clearInterval(jobsTimer);
+      jobsTimer = null;
+    }
+    return;
+  }
+
+  activeJobs.forEach((job) => {
+    const cardEl = document.getElementById(`data-job-${job.id}`);
+    if (!cardEl) return;
+
+    const fillEl = cardEl.querySelector('.studio-progress-fill');
+    if (!fillEl) return;
+
+    const targetPct = calculateJobProgress(job);
+    let currentPct = displayedProgress[job.id] ?? targetPct;
+
+    // Se o target for maior (mudou de partição ou fase), a gente avança
+    if (targetPct > currentPct) {
+      currentPct = Math.min(targetPct, currentPct + 5);
+    } else if (job.status === 'running') {
+      // Incrementa suavemente na mesma fase (cerca de 0.3% por segundo)
+      const phase = job.progress?.current?.phase;
+      let maxPhasePct = 99;
+      const total = job.progress?.partitions_total || 1;
+      const done = job.progress?.partitions_done || 0;
+      const basePct = (done / total) * 100;
+
+      if (phase === 'starting' || phase === 'listing_events') {
+        maxPhasePct = basePct + (24 / total);
+      } else if (phase === 'counting_ticks') {
+        maxPhasePct = basePct + (54 / total);
+      } else if (phase === 'fetching_rows') {
+        maxPhasePct = basePct + (84 / total);
+      } else if (phase === 'writing_parquet') {
+        maxPhasePct = basePct + (98 / total);
+      }
+
+      if (currentPct < maxPhasePct) {
+        currentPct = Math.min(maxPhasePct, currentPct + 0.15);
+      }
+    }
+
+    displayedProgress[job.id] = currentPct;
+    fillEl.style.width = `${currentPct.toFixed(1)}%`;
+  });
 }
 
 function jobCard(job) {
-  const pct = job.progress?.partitions_total
-    ? Math.round((job.progress.partitions_done / job.progress.partitions_total) * 100)
-    : (job.status === 'completed' ? 100 : 5);
+  const pct = displayedProgress[job.id] ?? calculateJobProgress(job);
   return el('div', { class: 'data-job-card', id: `data-job-${job.id}` }, [
     el('strong', {}, `Job #${job.id}`),
     el('span', { class: 'badge badge--warn' }, job.status),
     el('div', { class: 'studio-progress-bar' }, [
-      el('span', { class: 'studio-progress-fill', style: { width: `${pct}%` } }),
+      el('span', { class: 'studio-progress-fill', style: { width: `${pct.toFixed(1)}%` } }),
     ]),
     el('span', { class: 'muted' }, job.progress?.current?.phase || 'aguardando'),
   ]);
