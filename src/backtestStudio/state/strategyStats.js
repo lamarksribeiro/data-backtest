@@ -81,14 +81,16 @@ export function getStrategyStats(db, strategyId) {
   return result;
 }
 
-export function listStrategiesWithStats(db) {
-  const key = 'all';
+export function listStrategiesWithStats(db, { trashed = false } = {}) {
+  const key = trashed ? 'trash' : 'all';
   const cached = cacheGet(key);
   if (cached) return cached;
 
+  const clause = trashed ? 'deleted_at IS NOT NULL' : 'deleted_at IS NULL';
   const strategies = db.prepare(`
-    SELECT id, slug, name, status, pinned, updated_at
+    SELECT id, slug, name, status, pinned, updated_at, deleted_at
     FROM strategy_definitions
+    WHERE ${clause}
     ORDER BY pinned DESC, updated_at DESC, id DESC
   `).all();
 
@@ -107,6 +109,7 @@ export function listStrategiesWithStats(db) {
       name: row.name,
       status: row.status,
       pinned: Boolean(row.pinned),
+      deleted_at: row.deleted_at ?? null,
       latest_version: latest?.version != null ? Number(latest.version) : null,
       latest_version_id: latest?.id != null ? Number(latest.id) : null,
       totals: stats.totals,
@@ -116,6 +119,10 @@ export function listStrategiesWithStats(db) {
   });
   cacheSet(key, result);
   return result;
+}
+
+export function listTrashedStrategiesWithStats(db) {
+  return listStrategiesWithStats(db, { trashed: true });
 }
 
 function aggregateRuns(runs) {

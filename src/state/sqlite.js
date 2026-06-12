@@ -178,6 +178,7 @@ const PREPARE_JOBS_MIGRATIONS = [
 const STRATEGY_V3_MIGRATIONS = [
   'ALTER TABLE strategy_definitions ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0',
   'ALTER TABLE strategy_versions ADD COLUMN notes TEXT NULL',
+  'ALTER TABLE strategy_definitions ADD COLUMN deleted_at TEXT NULL',
 ];
 
 const BACKTEST_RUNS_V3_INDEXES = [

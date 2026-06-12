@@ -132,6 +132,7 @@ async function bootstrap() {
       overview: () => renderOverview(ctx),
       studio: () => renderStudio(ctx),
       strategies: () => renderStrategies(ctx),
+      'strategies/trash': () => renderStrategies(ctx, { trash: true }),
       'strategies/:id': (params) => renderStrategies(ctx, params),
       'strategies/:id/:versionId': (params) => renderStrategies(ctx, params),
       data: () => renderData(ctx),

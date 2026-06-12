@@ -1,6 +1,6 @@
 import { el, mount, emptyState } from '../utils/dom.js';
 import { loadContext } from '../utils/context.js';
-import { backtestPayloadFromPick } from '../utils/strategyPicker.js';
+import { backtestPayloadFromPick, invalidateStrategyPickerCache } from '../utils/strategyPicker.js';
 import { promptDialog, confirmDialog } from '../utils/confirm.js';
 import { formatPnl } from '../utils/format.js';
 import { renderUplotSparkline } from '../utils/uplotChart.js';
@@ -50,9 +50,14 @@ const state = {
   statusFilter: 'all',
   librarySort: 'last_use',
   libraryStats: [],
+  trashList: [],
 };
 
 export async function renderStrategies(ctx, params = {}) {
+  if (params.trash) {
+    return renderTrashView(ctx);
+  }
+
   const strategyId = params.id ? Number(params.id) : null;
   if (strategyId) state.selectedId = strategyId;
   ctx.setBreadcrumb('strategies', null);
@@ -73,6 +78,15 @@ export async function renderStrategies(ctx, params = {}) {
       ]),
       el('div', { class: 'row' }, [
         el('button', { class: 'btn btn--primary btn--sm', type: 'button', onclick: () => createStrategyFlow(ctx) }, 'Nova'),
+        el('button', {
+          class: 'btn btn--ghost btn--sm',
+          type: 'button',
+          title: 'Estratégias removidas da biblioteca',
+          onclick: () => ctx.navigate('strategies/trash'),
+        }, [
+          el('i', { class: 'fa-solid fa-trash-can', style: { marginRight: '6px' } }),
+          'Lixeira',
+        ]),
         el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => renderStrategies(ctx) }, 'Recarregar'),
       ]),
     ]),
@@ -495,10 +509,10 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
         el('button', {
           class: 'btn btn--danger btn--sm btn--ghost',
           type: 'button',
-          onclick: () => deleteStrategyFlow(ctx, strategy),
+          onclick: () => trashStrategyFlow(ctx, strategy),
         }, [
           el('i', { class: 'fa-solid fa-trash-can' }),
-          'Apagar estratégia',
+          'Mover para lixeira',
         ]),
       ]),
     ]),
@@ -1040,28 +1054,181 @@ async function createStrategyFlow(ctx) {
   await renderStrategies(ctx, { id: state.selectedId });
 }
 
-async function deleteStrategyFlow(ctx, strategy) {
+async function trashStrategyFlow(ctx, strategy) {
   const ok = await confirmDialog({
-    title: 'Apagar estratégia',
-    message: `Apagar "${strategy.name}" e todas as versões salvas?`,
-    detail: 'Runs antigos permanecem no histórico com o snapshot já gravado.',
-    confirmLabel: 'Apagar',
+    title: 'Mover para lixeira',
+    message: `Mover "${strategy.name}" para a lixeira?`,
+    detail: 'A estratégia some da biblioteca e do Estúdio. Os backtests ficam preservados e voltam ao restaurar.',
+    confirmLabel: 'Mover para lixeira',
     tone: 'danger',
   });
   if (!ok) return;
 
   const res = await ctx.api.delete(`/api/strategies/${strategy.id}`);
   if (!res.ok) {
-    ctx.toast.err(res.error?.message || 'Falha ao apagar estratégia');
+    ctx.toast.err(res.error?.message || 'Falha ao mover para lixeira');
     return;
   }
-  ctx.toast.ok('Estratégia apagada');
+  invalidateStrategyPickerCache();
+  ctx.toast.ok('Estratégia movida para a lixeira');
   state.selectedId = null;
   state.selectedVersionId = null;
   state.list = state.list.filter((s) => s.id !== strategy.id);
   state.libraryStats = state.list;
   ctx.navigate('strategies');
   await renderStrategies(ctx);
+}
+
+async function renderTrashView(ctx) {
+  ctx.setBreadcrumb('strategies', 'Lixeira');
+
+  mount(ctx.contentEl, [
+    el('div', { class: 'page-header' }, [
+      el('div', {}, [
+        el('h1', {}, 'Lixeira'),
+        el('p', { class: 'page-header__sub' }, 'Estratégias removidas da biblioteca. Restaure ou apague permanentemente.'),
+      ]),
+      el('div', { class: 'row' }, [
+        el('button', {
+          class: 'btn btn--ghost btn--sm',
+          type: 'button',
+          onclick: () => ctx.navigate('strategies'),
+        }, [
+          el('i', { class: 'fa-solid fa-arrow-left', style: { marginRight: '6px' } }),
+          'Biblioteca',
+        ]),
+        el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => renderTrashView(ctx) }, 'Recarregar'),
+      ]),
+    ]),
+    el('div', { class: 'card trash-actions-card', id: 'strategies-trash-root' }, el('p', { class: 'muted' }, 'Carregando...')),
+  ]);
+
+  const res = await ctx.api.get('/api/strategies/trash?stats=1');
+  const root = document.getElementById('strategies-trash-root');
+  if (!res.ok) {
+    mount(root, el('p', { class: 'bad' }, res.error?.message || 'Falha ao carregar lixeira'));
+    return;
+  }
+
+  state.trashList = res.data.strategies || [];
+  if (!state.trashList.length) {
+    mount(root, emptyState('A lixeira está vazia.'));
+    return;
+  }
+
+  mount(root, [
+    el('div', { class: 'card__header card__header--inline' }, [
+      el('h2', { class: 'card__title' }, `${state.trashList.length} estratégia(s)`),
+      el('p', { class: 'muted card__subtitle' }, 'Restaurar traz de volta o histórico de runs vinculado.'),
+    ]),
+    el('div', { class: 'strategy-trash-list' }, state.trashList.map((strategy) => renderTrashItem(ctx, strategy))),
+  ]);
+}
+
+function renderTrashItem(ctx, strategy) {
+  const stats = strategy.stats?.totals || strategy.totals || {};
+  const deletedAt = strategy.deleted_at ? strategy.deleted_at.slice(0, 16).replace('T', ' ') : '—';
+
+  return el('div', { class: 'strategy-trash-item' }, [
+    el('div', { class: 'strategy-trash-item__main' }, [
+      el('div', { class: 'strategy-trash-item__title' }, strategy.name),
+      el('div', { class: 'muted mono strategy-trash-item__meta' }, `${strategy.slug} · v${strategy.latest_version ?? '-'} · removida ${deletedAt}`),
+      el('div', { class: 'strategy-trash-item__stats muted' }, `${stats.runs ?? 0} runs · best ${formatPnl(stats.best_pnl ?? 0)}`),
+    ]),
+    el('div', { class: 'btn-group strategy-trash-item__actions' }, [
+      el('button', {
+        class: 'btn btn--ghost btn--sm',
+        type: 'button',
+        onclick: () => restoreStrategyFlow(ctx, strategy),
+      }, 'Restaurar'),
+      el('button', {
+        class: 'btn btn--danger btn--sm btn--ghost',
+        type: 'button',
+        onclick: () => permanentDeleteStrategyFlow(ctx, strategy),
+      }, 'Apagar permanentemente'),
+    ]),
+  ]);
+}
+
+async function restoreStrategyFlow(ctx, strategy) {
+  const res = await ctx.api.post(`/api/strategies/${strategy.id}/restore`);
+  if (!res.ok) {
+    ctx.toast.err(res.error?.message || 'Falha ao restaurar');
+    return;
+  }
+  invalidateStrategyPickerCache();
+  ctx.toast.ok(`"${strategy.name}" restaurada`);
+  state.trashList = state.trashList.filter((s) => s.id !== strategy.id);
+  await renderTrashView(ctx);
+}
+
+async function permanentDeleteStrategyFlow(ctx, strategy) {
+  const ok = await confirmDialog({
+    title: 'Apagar permanentemente',
+    message: `Apagar "${strategy.name}" para sempre?`,
+    detail: 'Só é possível apagar estratégias que já estão na lixeira. Por padrão os backtests são mantidos como órfãos.',
+    confirmLabel: 'Continuar',
+    tone: 'danger',
+  });
+  if (!ok) return;
+
+  const deleteRuns = await confirmDeleteRunsDialog(strategy.name);
+  if (deleteRuns == null) return;
+
+  const qs = deleteRuns ? '?delete_runs=1' : '';
+  const res = await ctx.api.delete(`/api/strategies/${strategy.id}/permanent${qs}`);
+  if (!res.ok) {
+    ctx.toast.err(res.error?.message || 'Falha ao apagar permanentemente');
+    return;
+  }
+  invalidateStrategyPickerCache();
+  ctx.toast.ok(deleteRuns ? 'Estratégia e runs apagados' : 'Estratégia apagada (runs preservados)');
+  state.trashList = state.trashList.filter((s) => s.id !== strategy.id);
+  await renderTrashView(ctx);
+}
+
+function confirmDeleteRunsDialog(strategyName) {
+  return new Promise((resolve) => {
+    const root = document.getElementById('modal-root');
+    if (!root) {
+      resolve(false);
+      return;
+    }
+    const checkbox = el('input', { type: 'checkbox', id: 'trash-delete-runs' });
+    const overlay = el('div', {
+      class: 'modal-overlay',
+      onclick: (e) => { if (e.target === overlay) { overlay.remove(); resolve(null); } },
+    }, [
+      el('div', { class: 'modal modal--danger', role: 'dialog', onclick: (e) => e.stopPropagation() }, [
+        el('div', { class: 'modal__header' }, [
+          el('span', { class: 'modal__icon', 'aria-hidden': 'true' }, '⚠'),
+          el('h2', { class: 'modal__title' }, 'Apagar runs também?'),
+        ]),
+        el('div', { class: 'modal__body' }, [
+          el('p', { class: 'modal__message' }, `Confirme o que fazer com os backtests de "${strategyName}".`),
+          el('label', { class: 'switch-field', style: { marginTop: '12px' } }, [
+            checkbox,
+            ' Apagar também todos os backtests desta estratégia',
+          ]),
+          el('p', { class: 'modal__detail' }, 'Desmarcado: runs permanecem no banco, mas sem vínculo com a estratégia.'),
+        ]),
+        el('div', { class: 'modal__footer' }, [
+          el('button', {
+            class: 'btn btn--ghost',
+            type: 'button',
+            onclick: () => { overlay.remove(); resolve(null); },
+          }, 'Cancelar'),
+          el('button', {
+            class: 'btn btn--danger',
+            type: 'button',
+            onclick: () => { overlay.remove(); resolve(checkbox.checked); },
+          }, 'Apagar permanentemente'),
+        ]),
+      ]),
+    ]);
+    root.setAttribute('aria-hidden', 'false');
+    root.appendChild(overlay);
+  });
 }
 
 async function deleteVersionFlow(ctx, strategy, version) {

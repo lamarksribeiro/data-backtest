@@ -4,13 +4,28 @@ import { invalidateStrategyStatsCache } from './strategyStats.js';
 
 const ALLOWED_STATUS = new Set(['draft', 'validated', 'failed', 'archived']);
 
-export function listStrategies(db, { withStats = false } = {}) {
-  const rows = db.prepare('SELECT * FROM strategy_definitions ORDER BY pinned DESC, updated_at DESC, id DESC').all();
+export function listStrategies(db, { trashed = false } = {}) {
+  const clause = trashed ? 'deleted_at IS NOT NULL' : 'deleted_at IS NULL';
+  const rows = db.prepare(`
+    SELECT * FROM strategy_definitions
+    WHERE ${clause}
+    ORDER BY pinned DESC, updated_at DESC, id DESC
+  `).all();
   return rows.map((row) => toApiStrategy(db, row));
 }
 
-export function getStrategy(db, id) {
-  const row = db.prepare('SELECT * FROM strategy_definitions WHERE id = ?').get(id);
+export function listTrashedStrategies(db) {
+  return listStrategies(db, { trashed: true });
+}
+
+export function getStrategy(db, id, { includeTrashed = false } = {}) {
+  const clause = includeTrashed ? '' : ' AND deleted_at IS NULL';
+  const row = db.prepare(`SELECT * FROM strategy_definitions WHERE id = ?${clause}`).get(id);
+  return row ? toApiStrategy(db, row) : null;
+}
+
+export function getStrategyBySlug(db, slug) {
+  const row = db.prepare('SELECT * FROM strategy_definitions WHERE slug = ?').get(slug);
   return row ? toApiStrategy(db, row) : null;
 }
 
@@ -47,12 +62,48 @@ export function updateStrategy(db, id, patch = {}) {
   return getStrategy(db, id);
 }
 
-export function deleteStrategy(db, id) {
-  const current = getStrategy(db, id);
-  if (!current) return null;
+export function trashStrategy(db, id) {
+  const row = db.prepare('SELECT * FROM strategy_definitions WHERE id = ? AND deleted_at IS NULL').get(id);
+  if (!row) return null;
 
+  db.prepare(`
+    UPDATE strategy_definitions
+    SET deleted_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+        updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+    WHERE id = ?
+  `).run(id);
+  invalidateStrategyStatsCache();
+  return getStrategy(db, id, { includeTrashed: true });
+}
+
+export function restoreStrategy(db, id) {
+  const row = db.prepare('SELECT * FROM strategy_definitions WHERE id = ? AND deleted_at IS NOT NULL').get(id);
+  if (!row) return null;
+
+  db.prepare(`
+    UPDATE strategy_definitions
+    SET deleted_at = NULL,
+        updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+    WHERE id = ?
+  `).run(id);
+  invalidateStrategyStatsCache();
+  return getStrategy(db, id);
+}
+
+export function permanentlyDeleteStrategy(db, id, { deleteRuns = false } = {}) {
+  const row = db.prepare('SELECT * FROM strategy_definitions WHERE id = ? AND deleted_at IS NOT NULL').get(id);
+  if (!row) return null;
+
+  const snapshot = toApiStrategy(db, row);
   db.exec('BEGIN');
   try {
+    if (deleteRuns) {
+      const runIds = db.prepare('SELECT id FROM backtest_runs WHERE strategy_id = ?').all(id);
+      for (const { id: runId } of runIds) {
+        db.prepare('DELETE FROM backtest_event_traces WHERE run_id = ?').run(runId);
+      }
+      db.prepare('DELETE FROM backtest_runs WHERE strategy_id = ?').run(id);
+    }
     db.prepare('DELETE FROM strategy_versions WHERE strategy_id = ?').run(id);
     db.prepare('DELETE FROM strategy_definitions WHERE id = ?').run(id);
     db.exec('COMMIT');
@@ -61,7 +112,12 @@ export function deleteStrategy(db, id) {
     throw err;
   }
   invalidateStrategyStatsCache();
-  return current;
+  return snapshot;
+}
+
+/** @deprecated Use trashStrategy — mantido para compatibilidade interna. */
+export function deleteStrategy(db, id) {
+  return trashStrategy(db, id);
 }
 
 export function listStrategyVersions(db, strategyId) {
@@ -86,6 +142,7 @@ export function listStrategiesForPicker(db) {
       sv.notes
     FROM strategy_definitions sd
     JOIN strategy_versions sv ON sv.strategy_id = sd.id
+    WHERE sd.deleted_at IS NULL
     ORDER BY sd.pinned DESC, sd.updated_at DESC, sd.id DESC, sv.version DESC, sv.id DESC
   `).all();
 
@@ -107,6 +164,7 @@ export function getStrategyVersion(db, strategyId, versionId) {
 }
 
 export function deleteStrategyVersion(db, strategyId, versionId) {
+  if (!getStrategy(db, strategyId)) return null;
   const version = getStrategyVersion(db, strategyId, versionId);
   if (!version) return null;
 
@@ -232,6 +290,7 @@ function toApiStrategy(db, row) {
     status: row.status,
     tags: JSON.parse(row.tags_json),
     pinned: Boolean(row.pinned),
+    deleted_at: row.deleted_at ?? null,
     latest_version: latest?.version != null ? Number(latest.version) : null,
     latest_version_id: latest?.id != null ? Number(latest.id) : null,
     created_at: row.created_at,

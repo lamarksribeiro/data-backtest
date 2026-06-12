@@ -3,7 +3,10 @@ import { getEdgeSniperV2GlsSource } from './loadStrategySource.js';
 
 export function seedEdgeSniperV2Strategy(db) {
   const source = getEdgeSniperV2GlsSource();
-  const existing = db.prepare('SELECT id FROM strategy_definitions WHERE slug = ?').get('edge-sniper-v2-gls');
+  const existing = db.prepare('SELECT id, deleted_at FROM strategy_definitions WHERE slug = ?').get('edge-sniper-v2-gls');
+  if (existing?.deleted_at) {
+    return null;
+  }
   if (existing) {
     const latest = db.prepare(`
       SELECT source_code

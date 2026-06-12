@@ -37,7 +37,6 @@ import { getChartData, getEventTrace, listEventTraces } from '../backtestStudio/
 import {
   createStrategy,
   createStrategyVersion,
-  deleteStrategy,
   deleteStrategyVersion,
   forkStrategy,
   getStrategy,
@@ -45,10 +44,14 @@ import {
   listStrategies as listSavedStrategies,
   listStrategiesForPicker,
   listStrategyVersions,
+  listTrashedStrategies,
+  permanentlyDeleteStrategy,
+  restoreStrategy,
+  trashStrategy,
   updateStrategy,
   validateStrategySource,
 } from '../backtestStudio/state/strategies.js';
-import { getStrategyStats, listStrategiesWithStats } from '../backtestStudio/state/strategyStats.js';
+import { getStrategyStats, listStrategiesWithStats, listTrashedStrategiesWithStats } from '../backtestStudio/state/strategyStats.js';
 import { getDataCoverage } from '../query/coverageUi.js';
 import { runDataFix } from '../data/fixPipeline.js';
 import {
@@ -438,6 +441,12 @@ export function createApiHandler(deps) {
       if (req.method === 'GET' && url.pathname === '/api/strategy-blocks') {
         return sendJson(res, 200, { blocks: listBlockSignatures() });
       }
+      if (req.method === 'GET' && url.pathname === '/api/strategies/trash') {
+        if (url.searchParams.get('stats') === '1') {
+          return sendJson(res, 200, { strategies: listTrashedStrategiesWithStats(db) });
+        }
+        return sendJson(res, 200, { strategies: listTrashedStrategies(db) });
+      }
       if (req.method === 'GET' && url.pathname === '/api/strategies') {
         if (url.searchParams.get('picker') === '1') {
           return sendJson(res, 200, { options: listStrategiesForPicker(db) });
@@ -468,10 +477,27 @@ export function createApiHandler(deps) {
             : sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Strategy not found' } });
         }
         if (req.method === 'DELETE' && strategyRoute.kind === 'detail') {
-          const strategy = deleteStrategy(db, strategyRoute.strategyId);
+          const strategy = trashStrategy(db, strategyRoute.strategyId);
           return strategy
-            ? sendJson(res, 200, { deleted: true, strategy })
+            ? sendJson(res, 200, { trashed: true, strategy })
             : sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Strategy not found' } });
+        }
+        if (req.method === 'POST' && strategyRoute.kind === 'restore') {
+          const strategy = restoreStrategy(db, strategyRoute.strategyId);
+          return strategy
+            ? sendJson(res, 200, { restored: true, strategy })
+            : sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Strategy not found in trash' } });
+        }
+        if (req.method === 'DELETE' && strategyRoute.kind === 'permanent') {
+          const deleteRuns = url.searchParams.get('delete_runs') === '1' || url.searchParams.get('delete_runs') === 'true';
+          try {
+            const strategy = permanentlyDeleteStrategy(db, strategyRoute.strategyId, { deleteRuns });
+            return strategy
+              ? sendJson(res, 200, { deleted: true, strategy, delete_runs: deleteRuns })
+              : sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Strategy not found in trash' } });
+          } catch (err) {
+            return sendJson(res, 400, { error: { code: 'REQUEST_FAILED', message: err.message } });
+          }
         }
         if (req.method === 'GET' && strategyRoute.kind === 'stats') {
           const strategy = getStrategy(db, strategyRoute.strategyId);
@@ -1148,6 +1174,8 @@ function matchStrategyRoute(pathname) {
   if (!Number.isFinite(strategyId)) return null;
   if (parts.length === 3) return { kind: 'detail', strategyId };
   if (parts[3] === 'stats' && parts.length === 4) return { kind: 'stats', strategyId };
+  if (parts[3] === 'restore' && parts.length === 4) return { kind: 'restore', strategyId };
+  if (parts[3] === 'permanent' && parts.length === 4) return { kind: 'permanent', strategyId };
   if (parts[3] === 'fork' && parts.length === 4) return { kind: 'fork', strategyId };
   if (parts[3] === 'versions' && parts.length === 4) return { kind: 'versions', strategyId };
   if (parts[3] === 'versions' && parts.length === 5) {

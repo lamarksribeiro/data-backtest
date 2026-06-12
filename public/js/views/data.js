@@ -253,9 +253,9 @@ const dataStyles = `
   }
 
   .coverage-day--empty {
-    background: rgba(255, 255, 255, 0.01);
-    border-color: rgba(255, 255, 255, 0.02);
-    color: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.015);
+    border-color: rgba(255, 255, 255, 0.03);
+    color: rgba(255, 255, 255, 0.18);
     cursor: default;
   }
 
@@ -264,51 +264,60 @@ const dataStyles = `
   }
 
   .coverage-day--ready {
-    background: rgba(16, 185, 129, 0.12);
-    border-color: rgba(16, 185, 129, 0.35);
-    color: #34d399;
+    background: rgba(16, 185, 129, 0.28);
+    border-color: rgba(16, 185, 129, 0.65);
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
   }
 
   .coverage-day--ready:hover {
-    background: rgba(16, 185, 129, 0.25);
-    border-color: #10b981;
-    box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
-    transform: scale(1.15) translateY(-1px);
+    background: #10b981;
+    border-color: #34d399;
+    color: #090d16;
+    text-shadow: none;
+    box-shadow: 0 0 12px var(--ok-glow);
+    transform: scale(1.2) translateY(-1px);
     z-index: 2;
   }
 
   .coverage-day--processing {
-    background: rgba(245, 158, 11, 0.12);
-    border-color: rgba(245, 158, 11, 0.35);
-    color: #fbbf24;
+    background: rgba(245, 158, 11, 0.22);
+    border-color: rgba(245, 158, 11, 0.55);
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
     animation: day-pulse 2s infinite ease-in-out;
   }
 
   .coverage-day--processing:hover {
-    background: rgba(245, 158, 11, 0.25);
-    border-color: #f59e0b;
-    box-shadow: 0 0 10px rgba(245, 158, 11, 0.35);
-    transform: scale(1.15) translateY(-1px);
+    background: #f59e0b;
+    border-color: #fbbf24;
+    color: #090d16;
+    text-shadow: none;
+    box-shadow: 0 0 12px var(--warn-glow);
+    transform: scale(1.2) translateY(-1px);
     z-index: 2;
   }
 
   .coverage-day--attention {
-    background: rgba(239, 68, 68, 0.12);
-    border-color: rgba(239, 68, 68, 0.35);
-    color: #f87171;
+    background: rgba(239, 68, 68, 0.22);
+    border-color: rgba(239, 68, 68, 0.55);
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
   }
 
   .coverage-day--attention:hover {
-    background: rgba(239, 68, 68, 0.25);
-    border-color: #ef4444;
-    box-shadow: 0 0 10px rgba(239, 68, 68, 0.35);
-    transform: scale(1.15) translateY(-1px);
+    background: #ef4444;
+    border-color: #f87171;
+    color: #090d16;
+    text-shadow: none;
+    box-shadow: 0 0 12px var(--err-glow);
+    transform: scale(1.2) translateY(-1px);
     z-index: 2;
   }
 
   @keyframes day-pulse {
-    0%, 100% { opacity: 0.85; }
-    50% { opacity: 0.5; }
+    0%, 100% { opacity: 0.95; }
+    50% { opacity: 0.6; }
   }
 
   .coverage-day__pad {
@@ -317,100 +326,40 @@ const dataStyles = `
   }
 
   .coverage-day.is-out-of-range {
-    opacity: 0.25;
-    border-style: dotted;
-    filter: saturate(0.4);
+    opacity: 0.55;
+    border-style: dashed;
+    filter: saturate(0.7);
   }
 
   .coverage-day.is-out-of-range:hover {
-    opacity: 0.65;
+    opacity: 0.95;
     filter: none;
   }
 
   .coverage-day.is-selected {
     box-shadow: 0 0 0 2px var(--accent);
     border-color: var(--accent) !important;
-    transform: scale(1.1) translateY(-1px);
+    transform: scale(1.15) translateY(-1px);
     z-index: 2;
   }
 
-  /* Overlay de fundo */
-  .drawer-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(7, 10, 16, 0.5);
-    backdrop-filter: blur(4px);
-    z-index: 1000;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
-  }
-  .drawer-overlay.is-active {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  /* Drawer Lateral Deslizante */
-  .data-partition-drawer {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 480px;
-    max-width: 90vw;
-    background: rgba(15, 23, 42, 0.82);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-left: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: -10px 0 40px rgba(0, 0, 0, 0.6);
-    z-index: 1001;
-    display: flex !important;
-    flex-direction: column;
-    transform: translateX(100%);
-    visibility: hidden;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s;
-    padding: 0;
-    overflow: hidden;
-  }
-  .data-partition-drawer.is-open {
-    transform: translateX(0);
-    visibility: visible;
-  }
-  .data-partition-drawer__panel {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    width: 100%;
-  }
-  .data-partition-drawer__header {
+  /* Painel de Detalhes Integrado (Inline) */
+  .data-partition-inline-panel {
+    background: rgba(30, 41, 59, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius);
     padding: 20px 24px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: rgba(255, 255, 255, 0.01);
-  }
-  .data-partition-drawer__title {
-    font-size: 18px;
-    font-weight: 800;
-    color: var(--text-0);
-    margin: 0;
-    letter-spacing: -0.01em;
-  }
-  .data-partition-drawer__body {
-    padding: 24px;
-    flex: 1;
-    overflow-y: auto;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: var(--shadow-1);
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
+    animation: slide-down 0.25s ease-out;
   }
-  .data-partition-drawer__footer {
-    padding: 20px 24px;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-    background: rgba(7, 10, 16, 0.3);
-    display: flex;
-    gap: 12px;
+  @keyframes slide-down {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   /* Normalização em Grid de mini cards */
@@ -575,26 +524,35 @@ const dataStyles = `
 let sseHandler = null;
 let latestJobs = [];
 
+export function buildDetailsEmptyState() {
+  return el('div', { class: 'card', style: { borderStyle: 'dashed', background: 'rgba(255,255,255,0.01)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', textAlign: 'center' } }, [
+    el('div', { style: { fontSize: '24px', color: 'var(--text-3)', marginBottom: '12px' } }, [
+      el('i', { class: 'fa-solid fa-calendar-day' })
+    ]),
+    el('p', { class: 'muted', style: { margin: 0, fontSize: '13.5px' } }, 'Selecione um dia ativo no calendário para ver os detalhes da partição e eventos.')
+  ]);
+}
+
 export function closeDrawer() {
-  const drawer = document.getElementById('data-partition-drawer');
-  const overlay = document.getElementById('data-drawer-overlay');
-  if (drawer) drawer.classList.remove('is-open');
-  if (overlay) overlay.classList.remove('is-active');
   document.querySelectorAll('.coverage-day.is-selected').forEach(el => el.classList.remove('is-selected'));
+  const container = document.getElementById('data-partition-details-container');
+  if (container) {
+    mount(container, buildDetailsEmptyState());
+  }
 }
 
 export function buildPartitionDrawerLoading(day) {
-  return el('div', { class: 'data-partition-drawer__panel' }, [
-    el('header', { class: 'data-partition-drawer__header' }, [
+  return el('div', { class: 'data-partition-inline-panel' }, [
+    el('header', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '14px' } }, [
       el('div', {}, [
-        el('h3', { class: 'data-partition-drawer__title' }, day.dt),
+        el('h3', { style: { fontSize: '16px', fontWeight: '800', margin: 0, color: 'var(--text-0)' } }, `Detalhes: ${day.dt}`),
         el('p', { class: 'muted', style: { fontSize: '11px', margin: '4px 0 0' } }, 'Carregando…')
       ]),
       el('button', { type: 'button', class: 'btn btn--ghost btn--sm btn--icon', onclick: closeDrawer }, [
         el('i', { class: 'fa-solid fa-xmark' })
       ]),
     ]),
-    el('div', { class: 'data-partition-drawer__body', style: { display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '200px' } }, [
+    el('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '140px' } }, [
       el('span', { class: 'muted' }, 'Carregando eventos do dia…')
     ])
   ]);
@@ -610,12 +568,9 @@ export async function renderData(ctx) {
     document.head.appendChild(styleEl);
   }
 
-  // Criar overlay do drawer se não existir no body
-  let overlay = document.getElementById('data-drawer-overlay');
-  if (!overlay) {
-    overlay = el('div', { id: 'data-drawer-overlay', class: 'drawer-overlay', onclick: closeDrawer });
-    document.body.appendChild(overlay);
-  }
+  // Se houver overlay sobrando do drawer antigo, remove
+  const overlay = document.getElementById('data-drawer-overlay');
+  if (overlay) overlay.remove();
 
   const fallbackCtx = loadContext();
   mount(ctx.contentEl, [
@@ -633,15 +588,19 @@ export async function renderData(ctx) {
         el('section', { class: 'card', id: 'data-actions-section' }),
         el('section', { class: 'card', id: 'data-jobs-section' }, el('p', { class: 'muted' }, 'Carregando jobs…')),
       ]),
-      // Coluna principal direita (Heatmap / Cobertura)
-      el('div', { class: 'data-main-panel' }, [
+      // Coluna principal direita (Heatmap / Cobertura e Detalhes)
+      el('div', { class: 'data-main-panel', style: { display: 'flex', flexDirection: 'column', gap: '24px' } }, [
         el('section', { class: 'card', id: 'data-coverage-section', style: { margin: '0' } }, el('p', { class: 'muted' }, 'Carregando cobertura…')),
+        el('div', { id: 'data-partition-details-container' })
       ])
-    ]),
-    
-    // Drawer deslizante lateral
-    el('div', { class: 'data-partition-drawer', id: 'data-partition-drawer' }),
+    ])
   ]);
+
+  // Inicializar o estado vazio do painel integrado
+  const detailsContainer = document.getElementById('data-partition-details-container');
+  if (detailsContainer) {
+    mount(detailsContainer, buildDetailsEmptyState());
+  }
 
   renderActions(ctx, fallbackCtx, contextBarOptions({}));
   bindJobsSse(ctx);
@@ -1016,8 +975,8 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = n
       class: `quality-hour-chip${selectedHour === bucket.hour ? ' is-active' : ''}`,
       title: `${bucket.total} evento(s) · omit: ${bucket.omitted} · trim: ${bucket.trimmed} · manual: ${bucket.manual}`,
       onclick: () => {
-        const drawer = document.getElementById('data-partition-drawer');
-        mount(drawer, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour === bucket.hour ? null : bucket.hour, fieldOptions));
+        const container = document.getElementById('data-partition-details-container');
+        mount(container, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour === bucket.hour ? null : bucket.hour, fieldOptions));
       },
     }, [
       el('span', { class: `quality-hour-indicator quality-hour-indicator--${hourTone(bucket)}` }),
@@ -1025,12 +984,12 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = n
     ]);
   });
 
-  return el('div', { class: 'data-partition-drawer__panel' }, [
+  return el('div', { class: 'data-partition-inline-panel' }, [
     // Header
-    el('header', { class: 'data-partition-drawer__header' }, [
+    el('header', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '14px' } }, [
       el('div', {}, [
-        el('h3', { class: 'data-partition-drawer__title' }, day.dt),
-        el('p', { class: 'muted', style: { fontSize: '11px', margin: '4px 0 0' } }, `Status: ${day.raw_status}`)
+        el('h3', { style: { fontSize: '16px', fontWeight: '800', margin: 0, color: 'var(--text-0)' } }, `Detalhes: ${day.dt}`),
+        el('p', { class: 'muted', style: { fontSize: '11px', margin: '4px 0 0' } }, `Status Bruto: ${day.raw_status}`)
       ]),
       el('button', { type: 'button', class: 'btn btn--ghost btn--sm btn--icon', onclick: closeDrawer }, [
         el('i', { class: 'fa-solid fa-xmark' })
@@ -1038,7 +997,7 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = n
     ]),
     
     // Body
-    el('div', { class: 'data-partition-drawer__body' }, [
+    el('div', { style: { display: 'flex', flexDirection: 'column', gap: '16px' } }, [
       // Configuração rápida
       el('div', { style: { background: 'rgba(255,255,255,0.02)', padding: '10px 14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.04)', fontSize: '12.5px' } }, [
         el('strong', { style: { color: 'var(--text-0)' } }, 'Configuração ativa: '),
@@ -1069,8 +1028,8 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = n
             type: 'button',
             class: `quality-hour-chip${selectedHour == null ? ' is-active' : ''}`,
             onclick: () => {
-              const drawer = document.getElementById('data-partition-drawer');
-              mount(drawer, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, null, fieldOptions));
+              const container = document.getElementById('data-partition-details-container');
+              mount(container, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, null, fieldOptions));
             },
           }, 'Todas'),
           ...hourButtons,
@@ -1109,7 +1068,7 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = n
     ]),
     
     // Footer
-    el('footer', { class: 'data-partition-drawer__footer' }, [
+    el('div', { style: { display: 'flex', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '16px', marginTop: '4px' } }, [
       el('button', {
         type: 'button',
         class: 'btn btn--primary',
@@ -1125,21 +1084,20 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = n
 }
 
 async function openPartitionDrawer(ctx, day, fieldOptions = null) {
-  const drawer = document.getElementById('data-partition-drawer');
-  const overlay = document.getElementById('data-drawer-overlay');
-  if (!drawer) return;
+  const container = document.getElementById('data-partition-details-container');
+  if (!container) return;
   
   // Destacar o dia selecionado no calendário
   document.querySelectorAll('.coverage-day.is-selected').forEach(el => el.classList.remove('is-selected'));
   const targetDayEl = document.querySelector(`.coverage-day[title*="${day.dt}:"]`);
   if (targetDayEl) targetDayEl.classList.add('is-selected');
 
-  drawer.classList.add('is-open');
-  if (overlay) overlay.classList.add('is-active');
-  
   const ctxSaved = loadContext();
   applyDayToPrepareForm(day, ctxSaved);
-  mount(drawer, buildPartitionDrawerLoading(day));
+  mount(container, buildPartitionDrawerLoading(day));
+
+  // Focar suavemente a tela no painel de detalhes integrado
+  container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
   const query = new URLSearchParams({
     dt: day.dt,
@@ -1148,20 +1106,20 @@ async function openPartitionDrawer(ctx, day, fieldOptions = null) {
   });
   const res = await ctx.api.get(`/api/quality/day-events?${query.toString()}`);
   if (!res.ok) {
-    mount(drawer, el('div', { class: 'data-partition-drawer__panel' }, [
-      el('header', { class: 'data-partition-drawer__header' }, [
-        el('h3', { class: 'data-partition-drawer__title' }, day.dt),
+    mount(container, el('div', { class: 'data-partition-inline-panel' }, [
+      el('header', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '14px' } }, [
+        el('h3', { style: { fontSize: '16px', fontWeight: '800', margin: 0, color: 'var(--text-0)' } }, `Detalhes: ${day.dt}`),
         el('button', { type: 'button', class: 'btn btn--ghost btn--sm btn--icon', onclick: closeDrawer }, [
           el('i', { class: 'fa-solid fa-xmark' })
         ]),
       ]),
-      el('div', { class: 'data-partition-drawer__body' }, [
+      el('div', { style: { padding: '20px 0' } }, [
         el('p', { class: 'bad' }, `Falha ao carregar eventos: ${res.error?.message || 'erro desconhecido'}`)
       ])
     ]));
     return;
   }
-  mount(drawer, buildPartitionDrawer(ctx, day, res.data, ctxSaved, null, fieldOptions));
+  mount(container, buildPartitionDrawer(ctx, day, res.data, ctxSaved, null, fieldOptions));
 }
 
 async function refreshJobs(ctx) {

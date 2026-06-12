@@ -561,8 +561,8 @@ async function runBacktest(ctx, form) {
   ctx.toast.ok('Backtest enfileirado');
 }
 
-function computeRunStats(runs, strategyLabel) {
-  const filtered = runs.filter((r) => !strategyLabel || strategyName(r) === strategyLabel);
+function computeRunStats(runs, strategyId) {
+  const filtered = runs.filter((r) => !strategyId || Number(r.strategy_id) === Number(strategyId));
   const completed = filtered.filter((r) => (r.status || 'completed') === 'completed');
   const profitable = completed.filter((r) => Number(r.summary?.totalPnl ?? 0) > 0);
   const totalPnl = completed.reduce((s, r) => s + Number(r.summary?.totalPnl ?? 0), 0);
@@ -573,9 +573,8 @@ function computeRunStats(runs, strategyLabel) {
 
 function filterRuns(runs) {
   const pick = studioState.strategyOptions.find((o) => o.value === studioState.selectedStrategyPick);
-  const strategyLabel = pick?.label?.split(' · ')[0];
   return runs.filter((run) => {
-    if (studioState.runFilters.strategyOnly && strategyLabel && strategyName(run) !== strategyLabel) return false;
+    if (studioState.runFilters.strategyOnly && pick?.strategyId && Number(run.strategy_id) !== Number(pick.strategyId)) return false;
     if (studioState.runFilters.status !== 'all' && (run.status || 'completed') !== studioState.runFilters.status) return false;
     return true;
   }).sort((a, b) => {
@@ -603,7 +602,7 @@ async function refreshRuns(ctx) {
   if (!panel) return;
 
   const pick = studioState.strategyOptions.find((o) => o.value === studioState.selectedStrategyPick);
-  const stats = computeRunStats(runs, studioState.runFilters.strategyOnly ? pick?.label?.split(' · ')[0] : null);
+  const stats = computeRunStats(runs, studioState.runFilters.strategyOnly ? pick?.strategyId : null);
   const filtered = filterRuns(runs);
 
   mount(panel, el('div', { class: 'card studio-runs-card' }, [
