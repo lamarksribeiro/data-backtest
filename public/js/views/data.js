@@ -25,20 +25,26 @@ const dataStyles = `
   .data-sidebar-panel {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
     position: sticky;
-    top: calc(var(--topbar-h, 60px) + 16px);
+    top: calc(var(--topbar-h, 60px) + 12px);
     align-self: start;
-    max-height: calc(100dvh - var(--topbar-h, 60px) - 32px);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-width: thin;
-    padding-bottom: max(28px, calc(env(safe-area-inset-bottom, 0px) + 24px));
   }
 
   #data-jobs-section {
     flex-shrink: 0;
     order: -1;
+  }
+
+  #data-jobs-section.data-jobs-active {
+    border-color: rgba(245, 158, 11, 0.28);
+    box-shadow:
+      0 0 0 1px rgba(245, 158, 11, 0.06),
+      0 10px 28px rgba(15, 23, 42, 0.35);
+  }
+
+  #data-jobs-section .card__title {
+    margin-bottom: 4px;
   }
 
   #data-actions-section {
@@ -69,56 +75,101 @@ const dataStyles = `
   .data-jobs-inline {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    margin-top: 8px;
+    gap: 10px;
+    margin-top: 4px;
   }
 
   .data-job-card {
-    background: rgba(30, 41, 59, 0.45);
-    border: 1px solid rgba(245, 158, 11, 0.2);
-    border-radius: var(--radius-sm);
-    padding: 12px 14px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.25s ease;
-  }
-
-  .data-job-card::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: var(--warn);
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.55));
+    border: 1px solid rgba(245, 158, 11, 0.18);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
 
   .data-job-card:hover {
-    border-color: rgba(245, 158, 11, 0.4);
-    background: rgba(30, 41, 59, 0.6);
+    border-color: rgba(245, 158, 11, 0.32);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 6px 18px rgba(0, 0, 0, 0.18);
+  }
+
+  .data-job-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .data-job-card__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .data-job-card__id {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-0);
+    letter-spacing: 0.01em;
+  }
+
+  .data-job-card__badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #fbbf24;
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.28);
+  }
+
+  .data-job-card__pct {
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-size: 12px;
+    font-weight: 700;
+    color: #fbbf24;
+    flex-shrink: 0;
+  }
+
+  .data-job-progress-track {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
   }
 
   .data-job-progress-bar {
     width: 100%;
-    height: 8px;
+    height: 6px;
     background: rgba(255, 255, 255, 0.06);
-    border-radius: 99px;
+    border-radius: 999px;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    flex-shrink: 0;
   }
 
   .data-job-progress-fill {
     display: block;
     height: 100%;
     min-width: 0;
-    background: linear-gradient(90deg, var(--warn), #fbbf24);
-    border-radius: 99px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 55%, #fde68a 100%);
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
     transition: width 0.35s ease;
-    box-shadow: 0 0 8px var(--warn-glow);
+  }
+
+  .data-job-card__phase {
+    margin: 0;
+    font-size: 11.5px;
+    line-height: 1.35;
+    color: var(--text-2);
   }
 
   .coverage-years-container {
@@ -366,7 +417,7 @@ const dataStyles = `
   /* Normalização em Grid de mini cards */
   .normalization-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 10px;
     margin-bottom: 4px;
   }
@@ -1060,14 +1111,12 @@ function hourTone(bucket) {
 function eventStatusLabel(event) {
   if (event.manually_excluded) return 'manual';
   if (event.normalization_action === 'omit') return 'omitido';
-  if (event.normalization_action === 'trim') return 'aparado';
   return 'ok';
 }
 
 function eventBadgeTone(event) {
   if (event.manually_excluded) return 'manual';
   if (event.normalization_action === 'omit') return 'omit';
-  if (event.normalization_action === 'trim') return 'trim';
   return 'ok';
 }
 
@@ -1135,8 +1184,6 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, drawerUiState = 
     let matchesType = true;
     if (selectedTypeFilter === 'omit') {
       matchesType = event.normalization_action === 'omit';
-    } else if (selectedTypeFilter === 'trim') {
-      matchesType = event.normalization_action === 'trim';
     } else if (selectedTypeFilter === 'manual') {
       matchesType = event.manually_excluded;
     }
@@ -1146,14 +1193,13 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, drawerUiState = 
   // Calcular totais de normalização para os mini cards
   const norm = day.partitions?.[0]?.quality_details?.normalization;
   const countOmitted = norm?.events_omitted ?? 0;
-  const countTrimmed = norm?.events_trimmed ?? 0;
   const countManual = norm?.events_manual_omitted ?? (eventPayload.exclusions || []).length;
 
   const hourButtons = (eventPayload.hours || []).map((bucket) => {
     return el('button', {
       type: 'button',
       class: `quality-hour-chip${selectedHour === bucket.hour ? ' is-active' : ''}`,
-      title: `${bucket.total} evento(s) · omit: ${bucket.omitted} · aparados: ${bucket.trimmed} · manual: ${bucket.manual}`,
+      title: `${bucket.total} evento(s) · omit: ${bucket.omitted} · manual: ${bucket.manual}`,
       onclick: () => {
         drawerUiState.selectedHour = selectedHour === bucket.hour ? null : bucket.hour;
         remountDrawer();
@@ -1190,7 +1236,7 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, drawerUiState = 
         el('em', {}, 'clob_stale'),
         ' ou ',
         el('em', {}, 'underlying_stale'),
-        ' → evento inteiro fora do Parquet. Abaixo disso, só os trechos ruins são cortados (trim).',
+        ' → evento inteiro fora do Parquet. Abaixo desse limiar, o evento é exportado integralmente.',
       ]),
 
       // Cards de resumo de normalização
@@ -1205,17 +1251,6 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, drawerUiState = 
         }, [
           el('span', { class: 'normalization-item__value normalization-item__value--omit' }, String(countOmitted)),
           el('span', { class: 'normalization-item__label' }, 'Omitidos')
-        ]),
-        el('div', {
-          class: `normalization-item${selectedTypeFilter === 'trim' ? ' is-active' : ''}`,
-          onclick: () => {
-            drawerUiState.selectedTypeFilter = selectedTypeFilter === 'trim' ? null : 'trim';
-            drawerUiState.selectedEventId = null;
-            remountDrawer();
-          }
-        }, [
-          el('span', { class: 'normalization-item__value normalization-item__value--trim' }, String(countTrimmed)),
-          el('span', { class: 'normalization-item__label' }, 'Aparados')
         ]),
         el('div', {
           class: `normalization-item${selectedTypeFilter === 'manual' ? ' is-active' : ''}`,
@@ -1364,6 +1399,8 @@ async function refreshJobs(ctx) {
     }
   });
 
+  section.classList.toggle('data-jobs-active', active.length > 0);
+
   mount(section, el('div', {}, [
     el('h2', { class: 'card__title' }, 'Jobs ativos'),
     active.length
@@ -1432,6 +1469,7 @@ function tickJobsProgress() {
     if (!cardEl) return;
 
     const fillEl = cardEl.querySelector('.data-job-progress-fill');
+    const pctEl = cardEl.querySelector('.data-job-card__pct');
     if (!fillEl) return;
 
     const targetPct = calculateJobProgress(job);
@@ -1444,7 +1482,9 @@ function tickJobsProgress() {
     }
 
     displayedProgress[job.id] = currentPct;
+    const pctLabel = `${Math.round(currentPct)}%`;
     fillEl.style.width = `${currentPct}%`;
+    if (pctEl) pctEl.textContent = pctLabel;
   });
 }
 
@@ -1463,13 +1503,21 @@ function formatJobPhase(job) {
 
 function jobCard(job) {
   const pct = displayedProgress[job.id] ?? calculateJobProgress(job);
+  const pctLabel = `${Math.round(pct)}%`;
   return el('div', { class: 'data-job-card', id: `data-job-${job.id}` }, [
-    el('strong', {}, `Job #${job.id}`),
-    el('span', { class: 'badge badge--warn' }, job.status),
-    el('div', { class: 'data-job-progress-bar' }, [
-      el('span', { class: 'data-job-progress-fill', style: { width: `${pct}%` } }),
+    el('div', { class: 'data-job-card__head' }, [
+      el('div', { class: 'data-job-card__title' }, [
+        el('span', { class: 'data-job-card__id' }, `Job #${job.id}`),
+        el('span', { class: 'data-job-card__badge' }, job.status),
+      ]),
+      el('span', { class: 'data-job-card__pct' }, pctLabel),
     ]),
-    el('span', { class: 'muted' }, formatJobPhase(job)),
+    el('div', { class: 'data-job-progress-track' }, [
+      el('div', { class: 'data-job-progress-bar' }, [
+        el('span', { class: 'data-job-progress-fill', style: { width: `${pct}%` } }),
+      ]),
+    ]),
+    el('p', { class: 'data-job-card__phase' }, formatJobPhase(job)),
   ]);
 }
 
@@ -1481,7 +1529,9 @@ function bindJobsSse(ctx) {
     if (event.type === 'job:completed' && event.jobId) {
       displayedProgress[event.jobId] = 100;
       const fillEl = document.querySelector(`#data-job-${event.jobId} .data-job-progress-fill`);
+      const pctEl = document.querySelector(`#data-job-${event.jobId} .data-job-card__pct`);
       if (fillEl) fillEl.style.width = '100%';
+      if (pctEl) pctEl.textContent = '100%';
       const formCtx = loadContext();
       refreshCoverage(ctx, formCtx);
       ctx.toast.ok('Job concluído — cobertura atualizada');

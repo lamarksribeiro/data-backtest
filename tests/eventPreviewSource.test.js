@@ -35,7 +35,7 @@ function makeScalarRow(ts, underlyingPrice) {
   };
 }
 
-test('source preview charts raw ticks and keeps trim regions', () => {
+test('source preview charts raw ticks without partial-trim overlays', () => {
   const ticks = Array.from({ length: 25 }, (_, index) => ({
     conditionId: CONDITION_ID,
     eventStart: '2026-06-11T19:05:00.000Z',
@@ -61,7 +61,7 @@ test('parquet preview has no trim regions and reflects exported rows', () => {
     downPrice: 0.48,
   }));
   const preview = buildParquetEventPreview(ticks, {
-    action: 'trim',
+    action: 'keep',
     ticks_in: 600,
     ticks_out: 12,
     bad_ratio: 0.1,

@@ -22,7 +22,7 @@ function tick(index, { underlying = 100_000 + index, up = 0.52, down = 0.48 } = 
   };
 }
 
-test('buildEventPreviewFromTicks exposes trim regions and series', () => {
+test('buildEventPreviewFromTicks omits only when stale ratio crosses threshold', () => {
   const ticks = Array.from({ length: 80 }, (_, index) => {
     const desynced = index >= 20 && index < 55;
     return tick(index, {
@@ -32,10 +32,10 @@ test('buildEventPreviewFromTicks exposes trim regions and series', () => {
     });
   });
   const preview = buildEventPreviewFromTicks(ticks, { omitEventBadRatio: 0.5, minStaleSec: 30, minQuoteMove: 0.003 });
-  assert.equal(preview.action, 'trim');
-  assert.ok(preview.trim_regions.length >= 1);
-  assert.ok(preview.series.underlying.length === 80);
-  assert.ok(preview.removed_ticks.length > 0);
+  assert.equal(preview.action, 'keep');
+  assert.equal(preview.trim_regions.length, 0);
+  assert.equal(preview.series.underlying.length, 80);
+  assert.equal(preview.removed_ticks.length, 0);
 });
 
 test('buildEventPreviewFromTicks sanitizes chart ticks and drops zero spot', () => {

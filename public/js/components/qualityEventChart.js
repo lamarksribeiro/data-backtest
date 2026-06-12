@@ -113,13 +113,13 @@ export function renderQualityEventChart(container, payload, opts = {}) {
     : partitionStatus === 'needs_review'
       ? 'Parquet gerado (needs_review) — dados exportados aguardando revisão de contagem.'
       : parquet?.ticks_out
-        ? 'Dados já normalizados no lakehouse (trechos ruins removidos).'
+        ? 'Dados exportados no lakehouse.'
         : 'Evento omitido do export — nenhum tick no Parquet.';
 
   mount(container, el('div', { class: 'quality-event-chart' }, [
     el('div', { class: 'quality-event-chart__summary' }, [
-      el('span', { class: `event-badge event-badge--${original.action === 'omit' ? 'omit' : original.action === 'trim' ? 'trim' : 'ok'}` },
-        original.action === 'omit' ? 'omitido' : original.action === 'trim' ? 'aparado' : 'ok'),
+      el('span', { class: `event-badge event-badge--${original.action === 'omit' ? 'omit' : 'ok'}` },
+        original.action === 'omit' ? 'omitido' : 'ok'),
       original.issues?.length
         ? el('span', { class: 'quality-event-chart__issues' }, original.issues.map(issueLabel).join(' · '))
         : null,
@@ -135,7 +135,7 @@ export function renderQualityEventChart(container, payload, opts = {}) {
     el('div', { class: 'quality-event-chart__compare' }, [
       renderChartPanel(
         'Coletor (bruto)',
-        'Postgres do data-colector · faixas = trechos que o sync remove ou apara.',
+        'Postgres do data-colector · faixas vermelhas = motivo da omissão automática.',
         original,
         asset,
         { overlayBands },

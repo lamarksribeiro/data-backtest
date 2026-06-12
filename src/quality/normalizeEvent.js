@@ -45,22 +45,6 @@ export function normalizeEventTicks(ticks, opts = {}) {
     };
   }
 
-  if (trimCount > 0) {
-    const exportTicks = sorted.filter((_, index) => !trimIndices.has(index));
-    return {
-      action: 'trim',
-      exportTicks,
-      issues,
-      stats: {
-        ticksIn: sorted.length,
-        ticksOut: exportTicks.length,
-        ticksRemoved: trimCount,
-        badRatio: trimRatio,
-        trimSegments,
-      },
-    };
-  }
-
   return {
     action: 'keep',
     exportTicks: sorted,
@@ -69,8 +53,8 @@ export function normalizeEventTicks(ticks, opts = {}) {
       ticksIn: sorted.length,
       ticksOut: sorted.length,
       ticksRemoved: 0,
-      badRatio: 0,
-      trimSegments: [],
+      badRatio: trimRatio,
+      trimSegments: trimCount > 0 ? trimSegments : [],
     },
   };
 }

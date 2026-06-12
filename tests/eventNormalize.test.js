@@ -75,15 +75,15 @@ test('normalizeEvent keeps event when majority of ticks have incomplete feed but
   assert.equal(result.exportTicks.length, 10);
 });
 
-test('normalizeEvent trims only clob_stale streaks below omit threshold', () => {
+test('normalizeEvent keeps full event when stale ratio is below omit threshold', () => {
   const { ticks, minStaleSec } = withClobStaleStreak(80, { staleFrom: 20, staleTo: 45 });
   const result = normalizeEventTicks(ticks, { omitEventBadRatio: 0.5, minStaleSec });
-  assert.equal(result.action, 'trim');
-  assert.ok(result.exportTicks.length < ticks.length);
-  assert.ok(result.issues.includes('clob_stale'));
+  assert.equal(result.action, 'keep');
+  assert.equal(result.exportTicks.length, ticks.length);
+  assert.deepEqual(result.issues, []);
 });
 
-test('normalizeEvent trims when underlying is frozen but clob keeps updating', () => {
+test('normalizeEvent keeps full event when only part of ticks are underlying stale', () => {
   const baseMs = Date.parse('2026-06-01T14:00:00.000Z');
   const ticks = Array.from({ length: 80 }, (_, index) => {
     const desynced = index >= 20 && index < 55;
@@ -100,9 +100,9 @@ test('normalizeEvent trims when underlying is frozen but clob keeps updating', (
     };
   });
   const result = normalizeEventTicks(ticks, { omitEventBadRatio: 0.5, minStaleSec: 30, minQuoteMove: 0.003 });
-  assert.equal(result.action, 'trim');
-  assert.ok(result.exportTicks.length < ticks.length);
-  assert.ok(result.issues.includes('underlying_stale'));
+  assert.equal(result.action, 'keep');
+  assert.equal(result.exportTicks.length, ticks.length);
+  assert.deepEqual(result.issues, []);
 });
 
 test('normalizeEvent keeps quiet market with flat quotes and flat underlying', () => {

@@ -5228,17 +5228,10 @@ i.fa-solid, i.fa-regular, i.fa-brands {
   justify-self: start;
 }
 .data-jobs-inline {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
-  margin-top: 8px;
-}
-.data-job-card {
-  display: grid;
-  gap: 6px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: 4px;
 }
 .data-partition-drawer {
   position: fixed;

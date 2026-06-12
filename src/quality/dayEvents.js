@@ -37,7 +37,6 @@ export function summarizeHours(events) {
     bucket.total += 1;
     if (event.manually_excluded) bucket.manual += 1;
     else if (event.normalization_action === 'omit') bucket.omitted += 1;
-    else if (event.normalization_action === 'trim') bucket.trimmed += 1;
     else bucket.kept += 1;
   }
   return [...hours.values()].sort((left, right) => left.hour - right.hour);

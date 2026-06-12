@@ -1,4 +1,4 @@
-import { analyzeTrimSegments, findTrimTickIndices } from './clobStale.js';
+import { analyzeTrimSegments } from './clobStale.js';
 import { buildChartTicksFromScalars, summarizeChartTicks } from './chartTicks.js';
 import { normalizeEventTicks } from './normalizeEvent.js';
 import { buildNormalizationOptions } from '../sync/applyNormalization.js';
@@ -24,19 +24,20 @@ export function buildSourceEventPreview(ticks, config = {}) {
   const sorted = [...ticks].sort((left, right) => String(left.ts).localeCompare(String(right.ts)));
   const opts = buildNormalizationOptions(config);
   const result = normalizeEventTicks(sorted, opts);
-  const trimIndices = findTrimTickIndices(sorted, opts);
   const segments = analyzeTrimSegments(sorted, opts);
 
-  const trimRegions = segments
-    .filter((segment) => segment.classification === 'clob_stale' || segment.classification === 'underlying_stale')
-    .map((segment) => ({
-      kind: segment.classification,
-      feed: segment.feed,
-      from: sorted[segment.startIndex]?.ts ?? null,
-      to: sorted[segment.endIndex]?.ts ?? null,
-      duration_sec: segment.durationSec,
-    }))
-    .filter((region) => region.from && region.to);
+  const trimRegions = result.action === 'omit'
+    ? segments
+      .filter((segment) => segment.classification === 'clob_stale' || segment.classification === 'underlying_stale')
+      .map((segment) => ({
+        kind: segment.classification,
+        feed: segment.feed,
+        from: sorted[segment.startIndex]?.ts ?? null,
+        to: sorted[segment.endIndex]?.ts ?? null,
+        duration_sec: segment.durationSec,
+      }))
+      .filter((region) => region.from && region.to)
+    : [];
 
   const chart_ticks = buildChartTicksFromScalars(sorted, config);
 
@@ -48,14 +49,7 @@ export function buildSourceEventPreview(ticks, config = {}) {
     ticks_removed: result.stats?.ticksRemoved ?? 0,
     bad_ratio: result.stats?.badRatio ?? 0,
     trim_regions: trimRegions,
-    removed_ticks: [...trimIndices]
-      .sort((left, right) => left - right)
-      .map((index) => ({
-        ts: sorted[index]?.ts ?? null,
-        underlying: num(sorted[index]?.underlyingPrice),
-        up: num(sorted[index]?.upPrice),
-        down: num(sorted[index]?.downPrice),
-      })),
+    removed_ticks: [],
     series: {
       underlying: sorted.map((tick) => ({ ts: tick.ts, value: scalarPrice(tick.underlyingPrice) })),
       price_to_beat: sorted.map((tick) => ({ ts: tick.ts, value: scalarPrice(tick.priceToBeat) })),
