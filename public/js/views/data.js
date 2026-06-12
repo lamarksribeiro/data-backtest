@@ -920,7 +920,7 @@ async function reprocessDay(ctx, day, ctxSaved, { fieldOptions = null } = {}) {
     interval: ctxSaved.interval,
     book_depth: ctxSaved.book_depth,
   };
-  const rebuild = day.ui_state === 'ready';
+  const rebuild = day.ui_state === 'ready' || ['needs_review', 'stale', 'invalid'].includes(day.raw_status);
   return submitDataFix(ctx, request, { rebuild, fieldOptions });
 }
 
@@ -1085,6 +1085,7 @@ function renderPendingItem(ctx, day, tone, formCtx) {
   const activeJobs = day.active_jobs || [];
   const activeJob = activeJobs[0] || null;
   const canReprocess = tone === 'attention' || !activeJob;
+  const canAccept = day.raw_status === 'needs_review' && Boolean(day.partitions?.[0]?.active_path);
   return el('div', { class: `data-pending-item data-pending-item--${tone}` }, [
     el('div', { class: 'data-pending-item__top' }, [
       el('span', { class: 'data-pending-item__date' }, day.dt),
@@ -1102,9 +1103,14 @@ function renderPendingItem(ctx, day, tone, formCtx) {
         class: 'btn btn--ghost btn--sm',
         onclick: () => cancelPrepareJobFromData(ctx, activeJob.id, formCtx),
       }, `Cancelar #${activeJob.id}`) : null,
-      canReprocess ? el('button', {
+      canAccept ? el('button', {
         type: 'button',
         class: 'btn btn--primary btn--sm',
+        onclick: () => acceptReviewPartition(ctx, day, formCtx),
+      }, 'Aceitar e liberar') : null,
+      canReprocess ? el('button', {
+        type: 'button',
+        class: canAccept ? 'btn btn--ghost btn--sm' : 'btn btn--primary btn--sm',
         onclick: async () => {
           const ok = await reprocessDay(ctx, day, formCtx);
           if (ok) await refreshCoverage(ctx, loadContext());
@@ -1124,6 +1130,9 @@ function pendingDayDescription(day, activeJob) {
   }
   if (day.ui_state === 'processing') {
     return `Sem job ativo associado. Pode ser processamento antigo interrompido ou manifesto preso em ${day.raw_status}.`;
+  }
+  if (day.raw_status === 'needs_review' && day.partitions?.[0]?.active_path) {
+    return `${day.error || day.hint || 'Partição gerada, mas bloqueada para revisão.'} Use Aceitar se a omissão for esperada, ou reprocessar para tentar gerar novamente.`;
   }
   return day.error || day.hint || 'Partição indisponível para uso em backtest strict.';
 }
@@ -1150,6 +1159,31 @@ async function cancelPrepareJobFromData(ctx, jobId, formCtx) {
   }
   ctx.toast.ok(res.data.status === 'cancelled' ? 'Job cancelado' : 'Cancelamento solicitado');
   await refreshJobs(ctx);
+  await refreshCoverage(ctx, formCtx);
+}
+
+async function acceptReviewPartition(ctx, day, formCtx) {
+  const ok = await confirmDialog({
+    title: `Aceitar ${day.dt}`,
+    message: 'Liberar esta partição para uso em backtests?',
+    detail: day.error || 'A partição ficará como accepted mesmo com alerta de qualidade.',
+    confirmLabel: 'Aceitar e liberar',
+    tone: 'danger',
+  });
+  if (!ok) return;
+  const res = await ctx.api.post('/api/manifest/accept', {
+    dataset: 'backtest_ticks',
+    underlying: formCtx.underlying,
+    interval: formCtx.interval,
+    book_depth: Number(formCtx.book_depth),
+    dt: day.dt,
+    reason: 'accepted from data pending panel after review',
+  });
+  if (!res.ok) {
+    ctx.toast.err(res.error?.message || 'Falha ao aceitar partição');
+    return;
+  }
+  ctx.toast.ok('Partição aceita e liberada');
   await refreshCoverage(ctx, formCtx);
 }
 
