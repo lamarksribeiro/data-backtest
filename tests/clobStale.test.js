@@ -7,7 +7,9 @@ import {
   findClobStaleTickIndices,
   findTrimTickIndices,
   findUnderlyingStaleTickIndices,
+  underlyingFeedLooksStuck,
 } from '../src/quality/clobStale.js';
+import { normalizeEventTicks } from '../src/quality/normalizeEvent.js';
 
 function buildTicks({
   length,
@@ -100,6 +102,50 @@ test('underlying stale segment trims when spot freezes but up down keep moving',
   assert.equal(segments[0].classification, 'underlying_stale');
   assert.ok(findUnderlyingStaleTickIndices(ticks, { minStaleSec: 30, minQuoteMove: 0.003 }).size >= 30);
   assert.equal(findClobStaleTickIndices(ticks, { minStaleSec: 30 }).size, 0);
+});
+
+test('underlying quiet market with small spot movement is not trimmed', () => {
+  const baseMs = Date.parse('2026-06-11T22:10:00.000Z');
+  const ticks = Array.from({ length: 600 }, (_, index) => {
+    const up = 0.52 + (index % 8) * 0.01;
+    return {
+      ts: new Date(baseMs + index * 500).toISOString(),
+      underlyingPrice: 61_900 + (index % 20) * 0.4,
+      priceToBeat: 61_910,
+      upPrice: up,
+      downPrice: 1 - up,
+      upBestBid: up - 0.01,
+      upBestAsk: up + 0.01,
+      downBestBid: (1 - up) - 0.01,
+      downBestAsk: (1 - up) + 0.01,
+    };
+  });
+
+  assert.equal(findUnderlyingStaleTickIndices(ticks, { minStaleSec: 30 }).size, 0);
+  const result = normalizeEventTicks(ticks, { omitEventBadRatio: 0.5, minStaleSec: 30 });
+  assert.equal(result.action, 'keep');
+  assert.equal(result.exportTicks.length, 600);
+});
+
+test('underlyingFeedLooksStuck distinguishes frozen feed from small oscillation', () => {
+  const frozen = buildTicks({
+    length: 80,
+    underlyingForIndex: (index) => 100_000 + index * 0.02,
+    quoteForIndex: (index) => ({
+      up: 0.50 + (index % 10) * 0.004,
+      down: 0.50 - (index % 10) * 0.004,
+    }),
+  });
+  const oscillating = buildTicks({
+    length: 80,
+    underlyingForIndex: (index) => 100_000 + Math.sin(index / 4) * 6,
+    quoteForIndex: (index) => ({
+      up: 0.50 + (index % 10) * 0.004,
+      down: 0.50 - (index % 10) * 0.004,
+    }),
+  });
+  assert.equal(underlyingFeedLooksStuck(frozen, 0, frozen.length - 1, { minStaleSec: 30 }), true);
+  assert.equal(underlyingFeedLooksStuck(oscillating, 0, oscillating.length - 1, { minStaleSec: 30 }), false);
 });
 
 test('underlying stale catches slow spot drift with active odds', () => {

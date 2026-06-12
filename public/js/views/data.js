@@ -27,7 +27,22 @@ const dataStyles = `
     flex-direction: column;
     gap: 20px;
     position: sticky;
-    top: 80px;
+    top: calc(var(--topbar-h, 60px) + 16px);
+    align-self: start;
+    max-height: calc(100dvh - var(--topbar-h, 60px) - 32px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    padding-bottom: max(28px, calc(env(safe-area-inset-bottom, 0px) + 24px));
+  }
+
+  #data-jobs-section {
+    flex-shrink: 0;
+    order: -1;
+  }
+
+  #data-actions-section {
+    flex-shrink: 0;
   }
 
   .studio-form {
@@ -690,8 +705,8 @@ export async function renderData(ctx) {
     el('div', { class: 'data-dashboard-grid' }, [
       // Coluna lateral esquerda (Ações e Jobs)
       el('div', { class: 'data-sidebar-panel' }, [
-        el('section', { class: 'card', id: 'data-actions-section' }),
         el('section', { class: 'card', id: 'data-jobs-section' }, el('p', { class: 'muted' }, 'Carregando jobs…')),
+        el('section', { class: 'card', id: 'data-actions-section' }),
       ]),
       // Coluna principal direita (Heatmap / Cobertura e Detalhes)
       el('div', { class: 'data-main-panel', style: { display: 'flex', flexDirection: 'column', gap: '24px' } }, [

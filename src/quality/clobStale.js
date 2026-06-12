@@ -158,6 +158,36 @@ export function resolveSegmentMoveThresholds(ticks, startIndex, endIndex, opts =
   return { minUnderlyingMove, quietUnderlyingMax, frozenUnderlyingMax, minQuoteMove, refUnderlying: ref };
 }
 
+function medianAbsUnderlyingDelta(ticks, startIndex, endIndex) {
+  const deltas = [];
+  for (let index = startIndex + 1; index <= endIndex; index += 1) {
+    const left = ticks[index - 1].underlyingPrice;
+    const right = ticks[index].underlyingPrice;
+    if (left == null || right == null || !Number.isFinite(left) || !Number.isFinite(right)) continue;
+    deltas.push(Math.abs(right - left));
+  }
+  if (!deltas.length) return 0;
+  deltas.sort((left, right) => left - right);
+  return deltas[Math.floor(deltas.length / 2)];
+}
+
+export function underlyingFeedLooksStuck(ticks, startIndex, endIndex, opts = {}) {
+  const { quietUnderlyingMax, frozenUnderlyingMax } = resolveSegmentMoveThresholds(ticks, startIndex, endIndex, opts);
+  const underlyingRange = underlyingRangeInSegment(ticks, startIndex, endIndex);
+  const startTs = parseTsMs(ticks[startIndex]?.ts);
+  const endTs = parseTsMs(ticks[endIndex]?.ts);
+  const durationSec = startTs != null && endTs != null ? Math.max(0, (endTs - startTs) / 1000) : 0;
+  const minStaleDriftSec = opts.minStaleDriftSec ?? 45;
+  const stuckTickDelta = opts.stuckTickDelta ?? Math.max(0.02, quietUnderlyingMax * 0.004);
+
+  if (underlyingRange <= quietUnderlyingMax) return true;
+  if (durationSec < minStaleDriftSec) return false;
+
+  const medianDelta = medianAbsUnderlyingDelta(ticks, startIndex, endIndex);
+  const driftRangeMax = opts.driftRangeMax ?? Math.max(frozenUnderlyingMax, quietUnderlyingMax * 2.5);
+  return medianDelta <= stuckTickDelta && underlyingRange <= driftRangeMax;
+}
+
 export function classifyFlatQuoteSegment(ticks, startIndex, endIndex, opts = {}) {
   const startTs = parseTsMs(ticks[startIndex]?.ts);
   const endTs = parseTsMs(ticks[endIndex]?.ts);
@@ -233,7 +263,10 @@ export function classifyFlatUnderlyingSegment(ticks, startIndex, endIndex, opts 
   }
 
   if (quoteRange >= minQuoteMove || booksFlat === false) {
-    return { ...base, classification: 'underlying_stale' };
+    if (underlyingFeedLooksStuck(ticks, startIndex, endIndex, opts)) {
+      return { ...base, classification: 'underlying_stale' };
+    }
+    return { ...base, classification: 'underlying_quiet' };
   }
 
   return { ...base, classification: 'noise' };
@@ -260,23 +293,17 @@ export function analyzeFlatUnderlyingSegments(ticks, opts = {}) {
   if (ticks.length < 2) return [];
 
   const segments = [];
-  let start = 0;
+  let streakStart = 0;
 
-  while (start < ticks.length) {
-    let end = start;
-    const frozenMax = resolveSegmentMoveThresholds(ticks, start, start, opts).frozenUnderlyingMax;
+  for (let index = 1; index < ticks.length; index += 1) {
+    const epsilon = resolveSegmentMoveThresholds(ticks, streakStart, index - 1, opts).quietUnderlyingMax;
+    if (underlyingPricesMatch(ticks[index - 1], ticks[index], epsilon)) continue;
 
-    while (end + 1 < ticks.length) {
-      const nextEnd = end + 1;
-      const nextRange = underlyingRangeInSegment(ticks, start, nextEnd);
-      if (nextRange > frozenMax) break;
-      end = nextEnd;
-    }
-
-    segments.push(classifyFlatUnderlyingSegment(ticks, start, end, opts));
-    start = end + 1;
+    segments.push(classifyFlatUnderlyingSegment(ticks, streakStart, index - 1, opts));
+    streakStart = index;
   }
 
+  segments.push(classifyFlatUnderlyingSegment(ticks, streakStart, ticks.length - 1, opts));
   return segments.filter((segment) => segment.classification !== 'too_short');
 }
 
