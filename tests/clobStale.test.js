@@ -102,6 +102,35 @@ test('underlying stale segment trims when spot freezes but up down keep moving',
   assert.equal(findClobStaleTickIndices(ticks, { minStaleSec: 30 }).size, 0);
 });
 
+test('resolved market keeps flat quotes near 1/0 when underlying moved away from PTB', () => {
+  const ptb = 63_517.89;
+  const ticks = buildTicks({
+    length: 45,
+    quoteForIndex: (index) => (index < 10
+      ? { up: 0.55 + index * 0.03, down: 0.45 - index * 0.03 }
+      : { up: 0.99, down: 0.01 }),
+    underlyingForIndex: (index) => ptb + (index < 10 ? index * 2 : 180 + index),
+  }).map((tick) => ({ ...tick, priceToBeat: ptb }));
+
+  const segments = analyzeFlatQuoteSegments(ticks, { minStaleSec: 30 });
+  const resolved = segments.filter((segment) => segment.classification === 'resolved_market');
+  assert.ok(resolved.length >= 1);
+  assert.equal(findClobStaleTickIndices(ticks, { minStaleSec: 30 }).size, 0);
+});
+
+test('underlying stale is not flagged when quotes lock into resolution zone', () => {
+  const ptb = 100_000;
+  const ticks = buildTicks({
+    length: 40,
+    underlyingForIndex: () => 100_180,
+    quoteForIndex: (index) => ({ up: 0.98, down: 0.02 }),
+  }).map((tick) => ({ ...tick, priceToBeat: ptb }));
+
+  const segments = analyzeFlatUnderlyingSegments(ticks, { minStaleSec: 30, minQuoteMove: 0.003 });
+  assert.equal(segments.some((segment) => segment.classification === 'underlying_stale'), false);
+  assert.equal(findUnderlyingStaleTickIndices(ticks, { minStaleSec: 30, minQuoteMove: 0.003 }).size, 0);
+});
+
 test('findTrimTickIndices unions clob stale and underlying stale windows', () => {
   const ticks = buildTicks({
     length: 80,

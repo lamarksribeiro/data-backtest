@@ -86,40 +86,24 @@ const dataStyles = `
     background: rgba(30, 41, 59, 0.6);
   }
 
-  .studio-progress-bar {
-    height: 6px;
-    background: rgba(255, 255, 255, 0.05);
+  .data-job-progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.06);
     border-radius: 99px;
     overflow: hidden;
-    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    flex-shrink: 0;
   }
 
-  .studio-progress-fill {
+  .data-job-progress-fill {
+    display: block;
     height: 100%;
+    min-width: 0;
     background: linear-gradient(90deg, var(--warn), #fbbf24);
     border-radius: 99px;
-    display: block;
-    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
+    transition: width 0.35s ease;
     box-shadow: 0 0 8px var(--warn-glow);
-  }
-
-  .studio-progress-fill::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.25),
-      transparent
-    );
-    animation: progress-shine 1.5s infinite linear;
-  }
-
-  @keyframes progress-shine {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
   }
 
   .coverage-years-container {
@@ -1381,33 +1365,40 @@ async function refreshJobs(ctx) {
   }
 }
 
+const JOB_PHASE_WEIGHT = {
+  starting: 5,
+  listing_events: 12,
+  counting_ticks: 28,
+  fetching_rows: 58,
+  writing_parquet: 88,
+  done: 100,
+  skipped: 100,
+};
+
 function calculateJobProgress(job) {
   if (job.status === 'completed') return 100;
   if (job.status === 'failed') return 0;
-  
+
   const prog = job.progress;
-  if (!prog || !prog.partitions_total) return 5;
-  
-  const total = prog.partitions_total;
-  const done = prog.partitions_done;
-  
-  // Progresso base das partições completadas
-  let pct = (done / total) * 100;
-  
-  // Se houver uma partição atual rodando, estimamos seu progresso com base na fase
-  if (done < total && prog.current) {
-    const phase = prog.current.phase;
-    let phasePct = 0;
-    if (phase === 'starting' || phase === 'listing_events') phasePct = 10;
-    else if (phase === 'counting_ticks') phasePct = 25;
-    else if (phase === 'fetching_rows') phasePct = 55;
-    else if (phase === 'writing_parquet') phasePct = 85;
-    else if (phase === 'done') phasePct = 100;
-    
-    pct += (phasePct / total);
+  if (prog?.percent != null && Number.isFinite(Number(prog.percent))) {
+    return Math.min(99, Math.max(0, Math.round(Number(prog.percent))));
   }
-  
-  return Math.min(Math.round(pct), 99);
+  if (!prog) return job.status === 'queued' ? 2 : 5;
+
+  const actionsTotal = Math.max(1, Number(prog.actions_total) || 1);
+  const actionIndex = Math.max(0, Number(prog.action_index) || 0);
+  const actionWeight = 100 / actionsTotal;
+  const partitionsTotal = Math.max(1, Number(prog.partitions_total) || 1);
+  const partitionsDone = Math.max(0, Number(prog.partitions_done) || 0);
+
+  let currentActionFraction = partitionsDone / partitionsTotal;
+  if (partitionsDone < partitionsTotal) {
+    const phase = prog.current?.phase;
+    const phasePct = JOB_PHASE_WEIGHT[phase] ?? 20;
+    currentActionFraction += (phasePct / 100) * (1 / partitionsTotal);
+  }
+
+  return Math.min(99, Math.round((actionIndex * actionWeight) + (currentActionFraction * actionWeight)));
 }
 
 function tickJobsProgress() {
@@ -1425,41 +1416,34 @@ function tickJobsProgress() {
     const cardEl = document.getElementById(`data-job-${job.id}`);
     if (!cardEl) return;
 
-    const fillEl = cardEl.querySelector('.studio-progress-fill');
+    const fillEl = cardEl.querySelector('.data-job-progress-fill');
     if (!fillEl) return;
 
     const targetPct = calculateJobProgress(job);
     let currentPct = displayedProgress[job.id] ?? targetPct;
 
-    // Se o target for maior (mudou de partição ou fase), a gente avança
     if (targetPct > currentPct) {
-      currentPct = Math.min(targetPct, currentPct + 5);
-    } else if (job.status === 'running') {
-      // Incrementa suavemente na mesma fase (cerca de 0.3% por segundo)
-      const phase = job.progress?.current?.phase;
-      let maxPhasePct = 99;
-      const total = job.progress?.partitions_total || 1;
-      const done = job.progress?.partitions_done || 0;
-      const basePct = (done / total) * 100;
-
-      if (phase === 'starting' || phase === 'listing_events') {
-        maxPhasePct = basePct + (24 / total);
-      } else if (phase === 'counting_ticks') {
-        maxPhasePct = basePct + (54 / total);
-      } else if (phase === 'fetching_rows') {
-        maxPhasePct = basePct + (84 / total);
-      } else if (phase === 'writing_parquet') {
-        maxPhasePct = basePct + (98 / total);
-      }
-
-      if (currentPct < maxPhasePct) {
-        currentPct = Math.min(maxPhasePct, currentPct + 0.15);
-      }
+      currentPct = Math.min(targetPct, currentPct + 4);
+    } else if (job.status === 'running' && currentPct < 98) {
+      currentPct = Math.min(98, currentPct + 0.25);
     }
 
     displayedProgress[job.id] = currentPct;
-    fillEl.style.width = `${currentPct.toFixed(1)}%`;
+    fillEl.style.width = `${currentPct}%`;
   });
+}
+
+function formatJobPhase(job) {
+  const phase = job.progress?.current?.phase;
+  if (phase === 'listing_events') return 'listando eventos';
+  if (phase === 'counting_ticks') return 'contando ticks';
+  if (phase === 'fetching_rows') return 'buscando ticks';
+  if (phase === 'writing_parquet') return 'gravando parquet';
+  if (phase === 'done') return 'finalizando';
+  if (phase === 'skipped') return 'pulado';
+  if (phase === 'starting') return 'iniciando partição';
+  if (job.status === 'queued') return 'na fila';
+  return phase || 'aguardando';
 }
 
 function jobCard(job) {
@@ -1467,10 +1451,10 @@ function jobCard(job) {
   return el('div', { class: 'data-job-card', id: `data-job-${job.id}` }, [
     el('strong', {}, `Job #${job.id}`),
     el('span', { class: 'badge badge--warn' }, job.status),
-    el('div', { class: 'studio-progress-bar' }, [
-      el('span', { class: 'studio-progress-fill', style: { width: `${pct.toFixed(1)}%` } }),
+    el('div', { class: 'data-job-progress-bar' }, [
+      el('span', { class: 'data-job-progress-fill', style: { width: `${pct}%` } }),
     ]),
-    el('span', { class: 'muted' }, job.progress?.current?.phase || 'aguardando'),
+    el('span', { class: 'muted' }, formatJobPhase(job)),
   ]);
 }
 
@@ -1479,10 +1463,13 @@ function bindJobsSse(ctx) {
   sseHandler = (event) => {
     if (!['job:progress', 'job:completed', 'job:failed'].includes(event.type)) return;
     refreshJobs(ctx);
-    if (event.type === 'job:completed') {
+    if (event.type === 'job:completed' && event.jobId) {
+      displayedProgress[event.jobId] = 100;
+      const fillEl = document.querySelector(`#data-job-${event.jobId} .data-job-progress-fill`);
+      if (fillEl) fillEl.style.width = '100%';
       const formCtx = loadContext();
       refreshCoverage(ctx, formCtx);
-      ctx.toast.ok('Job concluído — cobertura updated');
+      ctx.toast.ok('Job concluído — cobertura atualizada');
     }
   };
   connectSse(sseHandler);

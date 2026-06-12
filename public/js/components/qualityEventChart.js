@@ -107,11 +107,14 @@ export function renderQualityEventChart(container, payload, opts = {}) {
       : null,
   ].filter(Boolean);
 
+  const partitionStatus = payload.partition_status || 'missing';
   const parquetHint = !parquetAvailable
-    ? `Partição ${payload.partition_status || 'indisponível'} — sync ainda não exportou este dia.`
-    : parquet?.ticks_out
-      ? 'Dados já normalizados no lakehouse (trechos ruins removidos).'
-      : 'Evento omitido do export — nenhum tick no Parquet.';
+    ? `Partição ${partitionStatus} — sync ainda não exportou este dia.`
+    : partitionStatus === 'needs_review'
+      ? 'Parquet gerado (needs_review) — dados exportados aguardando revisão de contagem.'
+      : parquet?.ticks_out
+        ? 'Dados já normalizados no lakehouse (trechos ruins removidos).'
+        : 'Evento omitido do export — nenhum tick no Parquet.';
 
   mount(container, el('div', { class: 'quality-event-chart' }, [
     el('div', { class: 'quality-event-chart__summary' }, [

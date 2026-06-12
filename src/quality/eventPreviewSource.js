@@ -1,6 +1,6 @@
 import { buildLiveNormalizationIndex, buildNormalizationIndexFromReport } from './eventNormalizationIndex.js';
 import { buildParquetEventPreview, buildSourceEventPreview } from './eventPreview.js';
-import { findScalarsPartition, loadParquetScalarTicksForEvent } from './parquetEventTicks.js';
+import { findLakePartitionForPreview, loadParquetScalarTicksForEvent } from './parquetEventTicks.js';
 import { getScalarTicksForEvents, resolveMarketId } from '../source/postgres.js';
 
 async function resolveNormalizationIndex(db, pool, partition, marketId, dt, underlying, interval, config) {
@@ -42,7 +42,12 @@ export async function resolveDualEventPreview({
   }
 
   const original = buildSourceEventPreview(sourceTicks, config);
-  const partition = findScalarsPartition(db, { dt, underlying, interval });
+  const { partition, dataset: lakeDataset } = findLakePartitionForPreview(db, {
+    dt,
+    underlying,
+    interval,
+    bookDepth: config.backtestBookDepth,
+  });
   const normalizationIndex = await resolveNormalizationIndex(
     db,
     pool,
@@ -58,13 +63,16 @@ export async function resolveDualEventPreview({
   let parquet = null;
   let parquet_available = false;
 
-  if (partition?.usable && partition.active_path) {
+  if (partition?.active_path) {
     parquet_available = true;
     const parquetTicks = await loadParquetScalarTicksForEvent(db, {
       dt,
       underlying,
       interval,
       conditionId,
+      partition,
+      dataset: lakeDataset ?? 'scalars',
+      bookDepth: config.backtestBookDepth,
     });
     parquet = buildParquetEventPreview(parquetTicks, normMeta, config);
     parquet.partition_status = partition.status;

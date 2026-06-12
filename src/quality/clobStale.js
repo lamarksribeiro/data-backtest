@@ -94,6 +94,61 @@ function medianUnderlyingInSegment(ticks, startIndex, endIndex) {
   return values[Math.floor(values.length / 2)];
 }
 
+function segmentQuoteSample(ticks, startIndex, endIndex) {
+  let resolvedTicks = 0;
+  let totalTicks = 0;
+  const upThreshold = 0.92;
+  const downThreshold = 0.08;
+
+  for (let index = startIndex; index <= endIndex; index += 1) {
+    const up = ticks[index].upPrice;
+    const down = ticks[index].downPrice;
+    if (up == null || down == null || !Number.isFinite(up) || !Number.isFinite(down)) continue;
+    totalTicks += 1;
+    const upWon = up >= upThreshold && down <= downThreshold;
+    const downWon = down >= upThreshold && up <= downThreshold;
+    if (upWon || downWon) resolvedTicks += 1;
+  }
+
+  return { resolvedTicks, totalTicks };
+}
+
+export function quotesInResolutionZone(ticks, startIndex, endIndex, opts = {}) {
+  const ratioMin = opts.resolvedQuoteRatioMin ?? 0.75;
+  const { resolvedTicks, totalTicks } = segmentQuoteSample(ticks, startIndex, endIndex, opts);
+  return totalTicks > 0 && (resolvedTicks / totalTicks) >= ratioMin;
+}
+
+export function underlyingFarFromPtb(ticks, startIndex, endIndex, opts = {}) {
+  const ratioMin = opts.farFromPtbRatioMin ?? 0.00025;
+  const shareMin = opts.farFromPtbShareMin ?? 0.7;
+  let farTicks = 0;
+  let totalTicks = 0;
+
+  for (let index = startIndex; index <= endIndex; index += 1) {
+    const underlying = ticks[index].underlyingPrice;
+    const ptb = ticks[index].priceToBeat;
+    if (underlying == null || ptb == null || !Number.isFinite(underlying) || !Number.isFinite(ptb) || ptb <= 0) {
+      continue;
+    }
+    totalTicks += 1;
+    if (Math.abs(underlying - ptb) / ptb >= ratioMin) farTicks += 1;
+  }
+
+  return totalTicks > 0 && (farTicks / totalTicks) >= shareMin;
+}
+
+function isResolvedMarketSegment(ticks, startIndex, endIndex, opts = {}) {
+  if (quotesInResolutionZone(ticks, startIndex, endIndex, opts)) return true;
+  // Spot longe do PTB só isenta trim quando as odds também estão travadas no extremo.
+  if (!underlyingFarFromPtb(ticks, startIndex, endIndex, opts)) return false;
+  const first = ticks[startIndex];
+  const last = ticks[endIndex];
+  return quotesMatch(first, last)
+    && (quotesInResolutionZone(ticks, startIndex, endIndex, { ...opts, resolvedQuoteRatioMin: 0.5 })
+      || (first.upPrice >= 0.85 || first.downPrice >= 0.85));
+}
+
 export function resolveSegmentMoveThresholds(ticks, startIndex, endIndex, opts = {}) {
   const ref = medianUnderlyingInSegment(ticks, startIndex, endIndex) ?? 100_000;
   const minUnderlyingMove = opts.minUnderlyingMove ?? Math.max(20, ref * 0.00025);
@@ -128,6 +183,10 @@ export function classifyFlatQuoteSegment(ticks, startIndex, endIndex, opts = {})
 
   if (underlyingRange <= quietUnderlyingMax) {
     return { ...base, classification: 'confirmed_quiet_market' };
+  }
+
+  if (isResolvedMarketSegment(ticks, startIndex, endIndex, opts)) {
+    return { ...base, classification: 'resolved_market' };
   }
 
   if (booksFlat === false) {
@@ -170,6 +229,10 @@ export function classifyFlatUnderlyingSegment(ticks, startIndex, endIndex, opts 
 
   if (underlyingRange > quietUnderlyingMax) {
     return { ...base, classification: 'underlying_active' };
+  }
+
+  if (isResolvedMarketSegment(ticks, startIndex, endIndex, opts)) {
+    return { ...base, classification: 'resolved_market' };
   }
 
   if (quoteRange < minQuoteMove && booksFlat !== false) {

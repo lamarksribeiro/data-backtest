@@ -119,7 +119,12 @@ export async function exportScalarsPartition({
   dryRun = false,
   rebuild = false,
   allowNeedsReview = false,
+  onProgress,
 }) {
+  const report = (phase, extra = {}) => {
+    onProgress?.({ current: { dt: partition.dt, phase, ...extra } });
+  };
+
   const dataset = 'scalars';
   const manifestPartition = {
     dataset,
@@ -131,6 +136,7 @@ export async function exportScalarsPartition({
 
   const decision = shouldProcessScalarsPartition(db, partition, { rebuild, allowNeedsReview });
   if (!decision.process) {
+    report('skipped');
     return {
       skipped: true,
       reason: decision.reason,
@@ -140,8 +146,10 @@ export async function exportScalarsPartition({
     };
   }
 
+  report('listing_events');
   const events = await getPartitionEvents(pool, partition);
   const conditionIds = events.map((event) => event.conditionId);
+  report('counting_ticks');
   const counts = await countTicksByEvent(pool, partition, conditionIds);
   const eventsWithCounts = events.map((event) => {
     const actual = counts.get(event.conditionId) || { count: 0, minTs: null, maxTs: null };
@@ -158,6 +166,7 @@ export async function exportScalarsPartition({
   });
 
   if (dryRun) {
+    report('done', { rows: sourceRows });
     return {
       dryRun: true,
       partition,
@@ -172,6 +181,7 @@ export async function exportScalarsPartition({
   const runId = createRunId('scalars');
   const tempPath = buildTempParquetPath(config.lakeRoot, dataset, runId);
   const finalPath = buildFinalParquetPath(config.lakeRoot, manifestPartition, runId);
+  report('fetching_rows');
   const rawTicks = await getScalarTicksForEvents(pool, partition, conditionIds);
   const manualExcludedConditionIds = listExcludedConditionIdsForDay(db, {
     dt: partition.dt,
@@ -220,6 +230,7 @@ export async function exportScalarsPartition({
   });
 
   try {
+    report('writing_parquet', { rows: actualRows });
     await writeScalarsParquet({ rows: ticks, tempPath, finalPath });
 
     const minTs = eventsWithCounts.map((event) => event.minTs).filter(Boolean).sort()[0] ?? null;
@@ -246,6 +257,7 @@ export async function exportScalarsPartition({
 
     await rm(path.dirname(tempPath), { recursive: true, force: true });
     await cleanupPartitionParquetFiles({ db, lakeRoot: config.lakeRoot, partition: manifestPartition });
+    report('done', { rows: actualRows });
 
     return {
       partition,

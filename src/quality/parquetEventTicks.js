@@ -1,5 +1,5 @@
 import { checkDatasetAvailability } from '../query/availability.js';
-import { queryTicks } from '../query/duckdbQuery.js';
+import { queryTicksFromPartitionPath } from '../query/duckdbQuery.js';
 
 function numberOrNull(value) {
   if (value == null) return null;
@@ -33,7 +33,8 @@ function nextDayIso(dt) {
   return date.toISOString();
 }
 
-export function findScalarsPartition(db, { dt, underlying, interval }) {
+/** @deprecated use findLakePartitionForPreview */
+export function findScalarsPartition(db, { dt, underlying, interval, bookDepth = null }) {
   const availability = checkDatasetAvailability(db, {
     dataset: 'scalars',
     from: `${dt}T00:00:00.000Z`,
@@ -44,15 +45,59 @@ export function findScalarsPartition(db, { dt, underlying, interval }) {
   return availability.partitions.find((row) => row.dt === dt) ?? null;
 }
 
-export async function loadParquetScalarTicksForEvent(db, { dt, underlying, interval, conditionId }) {
-  const rows = await queryTicks(db, {
-    dataset: 'scalars',
+export function findLakePartitionForPreview(db, { dt, underlying, interval, bookDepth = null }) {
+  const range = {
+    from: `${dt}T00:00:00.000Z`,
+    to: nextDayIso(dt),
     underlying,
     interval,
+  };
+
+  const candidates = [
+    { dataset: 'scalars' },
+    { dataset: 'backtest_ticks', bookDepth },
+  ];
+
+  let fallback = null;
+  for (const candidate of candidates) {
+    const availability = checkDatasetAvailability(db, { ...range, ...candidate });
+    const partition = availability.partitions.find((row) => row.dt === dt) ?? null;
+    if (!partition) continue;
+    if (!fallback) fallback = { partition, dataset: candidate.dataset };
+    if (partition.active_path) {
+      return { partition, dataset: candidate.dataset };
+    }
+  }
+
+  return fallback ?? { partition: null, dataset: null };
+}
+
+export async function loadParquetScalarTicksForEvent(db, {
+  dt,
+  underlying,
+  interval,
+  conditionId,
+  partition = null,
+  dataset = null,
+  bookDepth = null,
+}) {
+  let lakeDataset = dataset;
+  let resolvedPartition = partition;
+  if (!resolvedPartition?.active_path) {
+    const found = findLakePartitionForPreview(db, { dt, underlying, interval, bookDepth });
+    resolvedPartition = found.partition;
+    lakeDataset = lakeDataset ?? found.dataset ?? 'scalars';
+  }
+  const activePath = resolvedPartition?.active_path ?? null;
+  if (!activePath) return [];
+
+  const rows = await queryTicksFromPartitionPath({
+    activePath,
     from: `${dt}T00:00:00.000Z`,
     to: nextDayIso(dt),
     conditionId,
-    limit: 10_000,
+    dataset: lakeDataset ?? 'scalars',
+    bookDepth,
   });
   return rows.map(parquetRowToScalarTick);
 }

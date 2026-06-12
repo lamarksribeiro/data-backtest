@@ -40,6 +40,23 @@ export function chartTickSelectColumns(side = 'UP') {
   ].join(', ');
 }
 
+const PREVIEW_SCALAR_COLUMNS = [
+  'condition_id', 'event_start', 'event_end', 'ts',
+  'underlying_price', 'price_to_beat', 'up_price', 'down_price',
+].join(', ');
+
+export async function queryTicksFromPartitionPath(request) {
+  const activePath = request.activePath ?? request.active_path;
+  if (!activePath) return [];
+  const dataset = request.dataset || 'scalars';
+  const select = request.select
+    ?? (dataset === 'backtest_ticks'
+      ? PREVIEW_SCALAR_COLUMNS
+      : PREVIEW_SCALAR_COLUMNS);
+  const sql = buildTicksSql({ files: [activePath] }, request, { select });
+  return runDuckQuery(sql);
+}
+
 export async function queryTicks(db, request) {
   const dataset = request.dataset || 'backtest_ticks';
   if (!['scalars', 'backtest_ticks', 'backtest_ticks_lite'].includes(dataset)) {

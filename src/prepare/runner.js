@@ -11,6 +11,7 @@ import {
 } from '../state/prepareJobs.js';
 import { executePreparationActions } from './executor.js';
 import { PrepareJobCancelledError } from './errors.js';
+import { computePrepareJobPercent } from './progress.js';
 
 export function createPrepareJobRunner({ config, db, executeActions = executePreparationActions, onEvent }) {
   let running = false;
@@ -62,6 +63,7 @@ export function createPrepareJobRunner({ config, db, executeActions = executePre
         current: patch.current === undefined ? progress.current : patch.current,
         updated_at: new Date().toISOString(),
       };
+      progress.percent = computePrepareJobPercent(progress);
       const now = Date.now();
       const force = Boolean(patch.files?.length)
         || patch.current?.phase === 'done'
