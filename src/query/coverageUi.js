@@ -74,8 +74,8 @@ export function getDataCoverage(db, params, config) {
   };
 
   const availability = checkDatasetAvailability(db, wideRequest);
-  const activeJobDates = findActiveJobDates(db, wideRequest);
-  const { days, summary } = aggregateCoverageDays(availability.partitions, { activeJobDates });
+  const activeJobsByDate = findActiveJobsByDate(db, wideRequest);
+  const { days, summary } = aggregateCoverageDays(availability.partitions, { activeJobsByDate });
 
   // Calculate ok status specifically for the requested (narrow) range
   const requestedDates = new Set(partitionDatesForRange(request.from, request.to));
@@ -97,25 +97,49 @@ export function getDataCoverage(db, params, config) {
   };
 }
 
-function findActiveJobDates(db, request) {
-  const dates = new Set();
-  const jobs = db.prepare("SELECT request_json FROM prepare_jobs WHERE status IN ('queued', 'running')").all();
+function findActiveJobsByDate(db, request) {
+  const jobsByDate = new Map();
+  const visibleDates = new Set(partitionDatesForRange(request.from, request.to));
+  const jobs = db.prepare(`
+    SELECT id, status, request_json, progress_json, started_at, created_at
+    FROM prepare_jobs
+    WHERE status IN ('queued', 'running')
+    ORDER BY id ASC
+  `).all();
   for (const job of jobs) {
     try {
       const req = JSON.parse(job.request_json || '{}');
+      if (req.dataset && req.dataset !== request.dataset) continue;
       if (req.underlying !== request.underlying || req.interval !== request.interval) continue;
-      if (request.bookDepth != null && req.bookDepth !== request.bookDepth) continue;
-      const parts = checkDatasetAvailability(db, { ...request, from: req.from, to: req.to });
-      for (const p of parts.partitions || []) dates.add(p.dt);
+      const jobBookDepth = req.bookDepth ?? req.book_depth ?? null;
+      if (request.bookDepth != null && Number(jobBookDepth) !== Number(request.bookDepth)) continue;
+      const progress = job.progress_json ? JSON.parse(job.progress_json) : null;
+      const summary = {
+        id: Number(job.id),
+        status: job.status,
+        percent: progress?.percent ?? null,
+        phase: progress?.current?.phase ?? null,
+        current_dt: progress?.current?.dt ?? null,
+        updated_at: progress?.updated_at ?? null,
+        started_at: job.started_at ?? null,
+        created_at: job.created_at ?? null,
+      };
+      for (const dt of partitionDatesForRange(req.from, req.to)) {
+        if (!visibleDates.has(dt)) continue;
+        const list = jobsByDate.get(dt) || [];
+        list.push(summary);
+        jobsByDate.set(dt, list);
+      }
     } catch { /* ignore */ }
   }
-  return dates;
+  return jobsByDate;
 }
 
-export function aggregateCoverageDays(partitions, { activeJobDates = new Set() } = {}) {
+export function aggregateCoverageDays(partitions, { activeJobDates = new Set(), activeJobsByDate = new Map() } = {}) {
   const days = [];
   for (const partition of partitions) {
-    const uiState = mapStatusToUiState(partition.status, { activeJob: activeJobDates.has(partition.dt) });
+    const activeJobs = activeJobsByDate.get(partition.dt) || [];
+    const uiState = mapStatusToUiState(partition.status, { activeJob: activeJobDates.has(partition.dt) || activeJobs.length > 0 });
     days.push({
       dt: partition.dt,
       status: partition.status,
@@ -125,6 +149,8 @@ export function aggregateCoverageDays(partitions, { activeJobDates = new Set() }
       rows: partition.rows ?? null,
       has_degraded: Boolean(partition.has_degraded),
       error: partition.error ?? null,
+      hint: partition.hint ?? null,
+      active_jobs: activeJobs,
       partitions: [partition],
     });
   }

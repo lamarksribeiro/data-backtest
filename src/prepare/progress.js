@@ -23,6 +23,9 @@ export function computePrepareJobPercent(progress = {}) {
 
   const partitionsTotal = Math.max(1, Number(progress.partitions_total) || 1);
   const partitionsDone = Math.max(0, Number(progress.partitions_done) || 0);
+  if (actionIndex >= actionsTotal - 1 && partitionsDone >= partitionsTotal && progress.current == null) {
+    return 100;
+  }
 
   let currentActionFraction = partitionsDone / partitionsTotal;
   if (partitionsDone < partitionsTotal) {

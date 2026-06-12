@@ -6,6 +6,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 
 import { openStateDatabase, closeStateDatabase } from '../src/state/sqlite.js';
 import { upsertManifestPartition } from '../src/state/manifest.js';
+import { createPrepareJob } from '../src/state/prepareJobs.js';
 import { getDataCoverage, mapStatusToUiState, aggregateCoverageDays } from '../src/query/coverageUi.js';
 import { buildDataFixPlan, describeFixActions } from '../src/data/fixPipeline.js';
 import { testServerConfig } from './testAuth.js';
@@ -51,6 +52,19 @@ test('getDataCoverage aggregates days with derived ui_state', async () => {
       activePath: null,
       status: 'missing',
     });
+    createPrepareJob(db, {
+      request: {
+        dataset: 'backtest_ticks',
+        from: '2026-06-02T00:00:00.000Z',
+        to: '2026-06-03T00:00:00.000Z',
+        underlying: 'BTC',
+        interval: '5m',
+        bookDepth: 25,
+      },
+      mode: 'prepare',
+      dryRun: false,
+      plan: { ready: false, preparation: [] },
+    });
     const params = new URLSearchParams({
       underlying: 'BTC',
       interval: '5m',
@@ -61,10 +75,11 @@ test('getDataCoverage aggregates days with derived ui_state', async () => {
     const coverage = getDataCoverage(db, params, config);
     assert.equal(coverage.days.length, 2);
     assert.equal(coverage.summary.ready, 1);
-    assert.equal(coverage.summary.attention, 1);
+    assert.equal(coverage.summary.processing, 1);
+    assert.equal(coverage.days[1].active_jobs[0].id, 1);
   } finally {
     closeStateDatabase(db);
-    await rm(dir, { recursive: true, force: true });
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
   }
 });
 

@@ -2,9 +2,13 @@ import { mkdir, rename, rm } from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { availableParallelism } from 'node:os';
+import { setImmediate as yieldImmediate } from 'node:timers/promises';
 import { DuckDBInstance, quotedString } from '@duckdb/node-api';
 
 import { parseBookLevels } from './bookFlatten.js';
+import { PrepareJobCancelledError } from '../prepare/errors.js';
+
+const APPEND_YIELD_ROWS = 25000;
 
 const SCALARS_TABLE_SQL = `
 CREATE TABLE scalars (
@@ -28,10 +32,11 @@ CREATE TABLE scalars (
 )
 `;
 
-export async function writeScalarsParquet({ rows, tempPath, finalPath }) {
+export async function writeScalarsParquet({ rows, tempPath, finalPath, shouldCancel }) {
   await mkdir(path.dirname(tempPath), { recursive: true });
   await mkdir(path.dirname(finalPath), { recursive: true });
   await rm(tempPath, { force: true });
+  assertNotCancelled(shouldCancel);
 
   const instance = await DuckDBInstance.create(':memory:');
   const connection = await instance.connect();
@@ -40,27 +45,30 @@ export async function writeScalarsParquet({ rows, tempPath, finalPath }) {
     await connection.run(SCALARS_TABLE_SQL);
     const appender = await connection.createAppender('scalars');
     try {
-      for (const row of rows) appendScalarRow(appender, row);
+      await appendRowsCooperatively(rows, (row) => appendScalarRow(appender, row), shouldCancel);
       appender.flushSync();
     } finally {
       appender.closeSync();
     }
 
+    assertNotCancelled(shouldCancel);
     await connection.run(`COPY scalars TO ${quotedString(tempPath)} (FORMAT PARQUET, COMPRESSION ZSTD)`);
   } finally {
     connection.closeSync();
     instance.closeSync();
   }
 
+  assertNotCancelled(shouldCancel);
   await rm(finalPath, { force: true });
   await rename(tempPath, finalPath);
 }
 
-export async function writeBooksParquet({ rows, tempPath, finalPath }) {
+export async function writeBooksParquet({ rows, tempPath, finalPath, shouldCancel }) {
   await writeWithDuckDb({
     rows,
     tempPath,
     finalPath,
+    shouldCancel,
     tableName: 'books',
     createTableSql: `
       CREATE TABLE books (
@@ -81,23 +89,25 @@ export async function writeBooksParquet({ rows, tempPath, finalPath }) {
   });
 }
 
-export async function writeBacktestTicksParquet({ rows, tempPath, finalPath, bookDepth }) {
+export async function writeBacktestTicksParquet({ rows, tempPath, finalPath, bookDepth, shouldCancel }) {
   await writeWithDuckDb({
     rows,
     tempPath,
     finalPath,
+    shouldCancel,
     tableName: 'backtest_ticks',
     createTableSql: buildBacktestTicksTableSql(bookDepth),
     appendRow: (appender, row) => appendBacktestTickRow(appender, row, bookDepth),
   });
 }
 
-export async function writeBacktestTicksParquetFromBookRows({ rows, tempPath, finalPath, bookDepth }) {
+export async function writeBacktestTicksParquetFromBookRows({ rows, tempPath, finalPath, bookDepth, shouldCancel }) {
   const hash = crypto.createHash('sha256');
   await writeWithDuckDb({
     rows,
     tempPath,
     finalPath,
+    shouldCancel,
     tableName: 'backtest_ticks',
     createTableSql: buildBacktestTicksTableSql(bookDepth),
     appendRow: (appender, row) => appendBacktestTickBookRow(appender, row, bookDepth, hash),
@@ -191,10 +201,11 @@ export function resolutionToIntervalSql(resolution) {
   throw new Error(`Unsupported OHLC resolution: ${resolution}`);
 }
 
-async function writeWithDuckDb({ rows, tempPath, finalPath, tableName, createTableSql, appendRow }) {
+async function writeWithDuckDb({ rows, tempPath, finalPath, tableName, createTableSql, appendRow, shouldCancel }) {
   await mkdir(path.dirname(tempPath), { recursive: true });
   await mkdir(path.dirname(finalPath), { recursive: true });
   await rm(tempPath, { force: true });
+  assertNotCancelled(shouldCancel);
 
   const instance = await DuckDBInstance.create(':memory:');
   const connection = await instance.connect();
@@ -203,18 +214,20 @@ async function writeWithDuckDb({ rows, tempPath, finalPath, tableName, createTab
     await connection.run(createTableSql);
     const appender = await connection.createAppender(tableName);
     try {
-      for (const row of rows) appendRow(appender, row);
+      await appendRowsCooperatively(rows, (row) => appendRow(appender, row), shouldCancel);
       appender.flushSync();
     } finally {
       appender.closeSync();
     }
 
+    assertNotCancelled(shouldCancel);
     await connection.run(`COPY ${tableName} TO ${quotedString(tempPath)} (FORMAT PARQUET, COMPRESSION ZSTD)`);
   } finally {
     connection.closeSync();
     instance.closeSync();
   }
 
+  assertNotCancelled(shouldCancel);
   await rm(finalPath, { force: true });
   await rename(tempPath, finalPath);
 }
@@ -226,6 +239,23 @@ async function configureDuckDb(connection) {
 
   const memoryLimit = String(process.env.SYNC_DUCKDB_MEMORY_LIMIT || process.env.DUCKDB_MEMORY_LIMIT || '').trim();
   if (memoryLimit) await connection.run(`PRAGMA memory_limit=${quotedString(memoryLimit)}`);
+}
+
+async function appendRowsCooperatively(rows, appendRow, shouldCancel) {
+  for (let i = 0; i < rows.length; i += 1) {
+    if (i % APPEND_YIELD_ROWS === 0) {
+      assertNotCancelled(shouldCancel);
+      if (i > 0) await yieldImmediate();
+    }
+    appendRow(rows[i]);
+  }
+  assertNotCancelled(shouldCancel);
+}
+
+function assertNotCancelled(shouldCancel) {
+  if (typeof shouldCancel === 'function' && shouldCancel()) {
+    throw new PrepareJobCancelledError();
+  }
 }
 
 function positiveInt(value) {

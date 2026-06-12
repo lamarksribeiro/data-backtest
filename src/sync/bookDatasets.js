@@ -1,4 +1,4 @@
-import { mkdir, rm } from 'node:fs/promises';
+import { rm } from 'node:fs/promises';
 import path from 'node:path';
 
 import { buildFinalParquetPath, buildTempParquetPath, toPortablePath } from '../lake/paths.js';
@@ -12,12 +12,13 @@ import { listExcludedConditionIdsForDay } from '../state/eventExclusions.js';
 import { applyTickNormalization } from './applyNormalization.js';
 import { classifyExportQuality } from './qualityPolicy.js';
 import { buildPartitionQualityDetails } from './qualityDetails.js';
+import { PrepareJobCancelledError } from '../prepare/errors.js';
 
 export async function listBookPartitions(pool, opts) {
   return listSealedScalarPartitions(pool, opts);
 }
 
-export async function exportBooksPartition({ config, db, pool, partition, dryRun = false, rebuild = false, allowNeedsReview = false, onProgress }) {
+export async function exportBooksPartition({ config, db, pool, partition, dryRun = false, rebuild = false, allowNeedsReview = false, onProgress, shouldCancel }) {
   return exportBookDatasetPartition({
     dataset: 'books',
     config,
@@ -28,9 +29,10 @@ export async function exportBooksPartition({ config, db, pool, partition, dryRun
     rebuild,
     allowNeedsReview,
     onProgress,
+    shouldCancel,
     transformRows: (rows) => rows,
     checksumRows: (rows) => createBooksRowsChecksum(rows),
-    writeParquet: ({ rows, tempPath, finalPath }) => writeBooksParquet({ rows, tempPath, finalPath }),
+    writeParquet: ({ rows, tempPath, finalPath, shouldCancel }) => writeBooksParquet({ rows, tempPath, finalPath, shouldCancel }),
   });
 }
 
@@ -44,6 +46,7 @@ export async function exportBacktestTicksPartition({
   allowNeedsReview = false,
   bookDepth = config.backtestBookDepth,
   onProgress,
+  shouldCancel,
 }) {
   return exportBookDatasetPartition({
     dataset: 'backtest_ticks',
@@ -55,9 +58,10 @@ export async function exportBacktestTicksPartition({
     rebuild,
     allowNeedsReview,
     onProgress,
+    shouldCancel,
     transformRows: null,
     checksumRows: null,
-    writeParquet: ({ rows, tempPath, finalPath }) => writeBacktestTicksParquetFromBookRows({ rows, tempPath, finalPath, bookDepth }),
+    writeParquet: ({ rows, tempPath, finalPath, shouldCancel }) => writeBacktestTicksParquetFromBookRows({ rows, tempPath, finalPath, bookDepth, shouldCancel }),
   });
 }
 
@@ -95,11 +99,13 @@ async function exportBookDatasetPartition({
   checksumRows,
   writeParquet,
   onProgress,
+  shouldCancel,
 }) {
   const report = (phase, extra = {}) => {
     onProgress?.({ current: { dt: partition.dt, phase, ...extra } });
   };
 
+  assertNotCancelled(shouldCancel);
   const decision = shouldProcess(db, dataset, partition, { rebuild, allowNeedsReview });
   if (!decision.process) {
     report('skipped');
@@ -113,6 +119,7 @@ async function exportBookDatasetPartition({
   }
 
   report('listing_events');
+  assertNotCancelled(shouldCancel);
   const events = await getPartitionEvents(pool, partition);
   const conditionIds = events.map((event) => event.conditionId);
   const expectedRows = events.reduce((sum, event) => sum + event.ticksRecorded, 0);
@@ -131,6 +138,7 @@ async function exportBookDatasetPartition({
   }
 
   report('counting_ticks');
+  assertNotCancelled(shouldCancel);
   const counts = await countTicksByEvent(pool, partition, conditionIds);
   const eventsWithCounts = events.map((event) => {
     const actual = counts.get(event.conditionId) || { count: 0, minTs: null, maxTs: null };
@@ -152,7 +160,9 @@ async function exportBookDatasetPartition({
   const finalPath = buildFinalParquetPath(config.lakeRoot, manifestPartition, runId);
 
   report('fetching_rows');
+  assertNotCancelled(shouldCancel);
   const rawRows = await getTicksWithBooksForEvents(pool, partition, conditionIds);
+  assertNotCancelled(shouldCancel);
   const manualExcludedConditionIds = listExcludedConditionIdsForDay(db, {
     dt: partition.dt,
     underlying: partition.underlying,
@@ -198,21 +208,10 @@ async function exportBookDatasetPartition({
     })
     : countOnlyFingerprint;
 
-  upsertManifestPartition(db, {
-    ...manifestPartition,
-    runId,
-    rows: actualRows,
-    eventsCount: events.length,
-    sourceTickCount: actualRows,
-    sourceConditionCount: conditionIds.length,
-    sourceQualityRecordedAtMax: partition.sourceQualityRecordedAtMax,
-    sourceFingerprint,
-    status: 'writing',
-  });
-
   try {
     report('writing_parquet', { rows: actualRows });
-    const writeResult = await writeParquet({ rows, tempPath, finalPath });
+    assertNotCancelled(shouldCancel);
+    const writeResult = await writeParquet({ rows, tempPath, finalPath, shouldCancel });
     if (!valueChecksum && writeResult?.valueChecksum) {
       valueChecksum = writeResult.valueChecksum;
       sourceFingerprint = createSourceFingerprint({
@@ -268,19 +267,13 @@ async function exportBookDatasetPartition({
     }
     return exportResult;
   } catch (err) {
-    await mkdir(path.dirname(tempPath), { recursive: true });
-    upsertManifestPartition(db, {
-      ...manifestPartition,
-      runId,
-      rows: actualRows,
-      eventsCount: events.length,
-      sourceTickCount: actualRows,
-      sourceConditionCount: conditionIds.length,
-      sourceQualityRecordedAtMax: partition.sourceQualityRecordedAtMax,
-      sourceFingerprint,
-      status: 'invalid',
-      error: err.message,
-    });
+    await rm(path.dirname(tempPath), { recursive: true, force: true });
     throw err;
+  }
+}
+
+function assertNotCancelled(shouldCancel) {
+  if (typeof shouldCancel === 'function' && shouldCancel()) {
+    throw new PrepareJobCancelledError();
   }
 }

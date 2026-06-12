@@ -1,4 +1,4 @@
-import { mkdir, rm } from 'node:fs/promises';
+import { rm } from 'node:fs/promises';
 import path from 'node:path';
 
 import { buildFinalParquetPath, buildTempParquetPath, toPortablePath } from '../lake/paths.js';
@@ -12,6 +12,7 @@ import { listExcludedConditionIdsForDay } from '../state/eventExclusions.js';
 import { applyTickNormalization } from './applyNormalization.js';
 import { classifyExportQuality } from './qualityPolicy.js';
 import { buildPartitionQualityDetails } from './qualityDetails.js';
+import { PrepareJobCancelledError } from '../prepare/errors.js';
 
 export async function listScalarPartitions(pool, opts) {
   return listSealedScalarPartitions(pool, opts);
@@ -120,6 +121,7 @@ export async function exportScalarsPartition({
   rebuild = false,
   allowNeedsReview = false,
   onProgress,
+  shouldCancel,
 }) {
   const report = (phase, extra = {}) => {
     onProgress?.({ current: { dt: partition.dt, phase, ...extra } });
@@ -134,6 +136,7 @@ export async function exportScalarsPartition({
     dt: partition.dt,
   };
 
+  assertNotCancelled(shouldCancel);
   const decision = shouldProcessScalarsPartition(db, partition, { rebuild, allowNeedsReview });
   if (!decision.process) {
     report('skipped');
@@ -147,9 +150,11 @@ export async function exportScalarsPartition({
   }
 
   report('listing_events');
+  assertNotCancelled(shouldCancel);
   const events = await getPartitionEvents(pool, partition);
   const conditionIds = events.map((event) => event.conditionId);
   report('counting_ticks');
+  assertNotCancelled(shouldCancel);
   const counts = await countTicksByEvent(pool, partition, conditionIds);
   const eventsWithCounts = events.map((event) => {
     const actual = counts.get(event.conditionId) || { count: 0, minTs: null, maxTs: null };
@@ -182,7 +187,9 @@ export async function exportScalarsPartition({
   const tempPath = buildTempParquetPath(config.lakeRoot, dataset, runId);
   const finalPath = buildFinalParquetPath(config.lakeRoot, manifestPartition, runId);
   report('fetching_rows');
+  assertNotCancelled(shouldCancel);
   const rawTicks = await getScalarTicksForEvents(pool, partition, conditionIds);
+  assertNotCancelled(shouldCancel);
   const manualExcludedConditionIds = listExcludedConditionIdsForDay(db, {
     dt: partition.dt,
     underlying: partition.underlying,
@@ -220,21 +227,10 @@ export async function exportScalarsPartition({
     events: eventsWithCounts,
   });
 
-  upsertManifestPartition(db, {
-    ...manifestPartition,
-    runId,
-    rows: actualRows,
-    eventsCount: events.length,
-    sourceTickCount: actualRows,
-    sourceConditionCount: conditionIds.length,
-    sourceQualityRecordedAtMax: partition.sourceQualityRecordedAtMax,
-    sourceFingerprint,
-    status: 'writing',
-  });
-
   try {
     report('writing_parquet', { rows: actualRows });
-    await writeScalarsParquet({ rows: ticks, tempPath, finalPath });
+    assertNotCancelled(shouldCancel);
+    await writeScalarsParquet({ rows: ticks, tempPath, finalPath, shouldCancel });
 
     const minTs = eventsWithCounts.map((event) => event.minTs).filter(Boolean).sort()[0] ?? null;
     const maxTs = eventsWithCounts.map((event) => event.maxTs).filter(Boolean).sort().at(-1) ?? null;
@@ -274,19 +270,13 @@ export async function exportScalarsPartition({
       qualityClassifyMs: normalized.qualityClassifyMs,
     };
   } catch (err) {
-    await mkdir(path.dirname(tempPath), { recursive: true });
-    upsertManifestPartition(db, {
-      ...manifestPartition,
-      runId,
-      rows: actualRows,
-      eventsCount: events.length,
-      sourceTickCount: actualRows,
-      sourceConditionCount: conditionIds.length,
-      sourceQualityRecordedAtMax: partition.sourceQualityRecordedAtMax,
-      sourceFingerprint,
-      status: 'invalid',
-      error: err.message,
-    });
+    await rm(path.dirname(tempPath), { recursive: true, force: true });
     throw err;
+  }
+}
+
+function assertNotCancelled(shouldCancel) {
+  if (typeof shouldCancel === 'function' && shouldCancel()) {
+    throw new PrepareJobCancelledError();
   }
 }

@@ -58,6 +58,7 @@ async function executePreparationAction({
     return withSourcePool(config, async (pool) => {
       const partitions = await listScalarPartitions(pool, range);
       onProgress?.({ partitions_total: partitions.length, partitions_done: 0 });
+      let partitionsDone = 0;
       const partitionsResult = await mapPool(partitions, config.prepareMaxConcurrent || 2, async (partition, partitionIndex) => {
         assertNotCancelled(shouldCancel);
         onProgress?.({
@@ -65,10 +66,10 @@ async function executePreparationAction({
           actions_total: actionsTotal,
           action_command: action.command,
           partitions_total: partitions.length,
-          partitions_done: partitionIndex,
+          partitions_done: partitionsDone,
           current: { dt: partition.dt, phase: 'starting', partition_index: partitionIndex + 1 },
         });
-        return exportScalarsPartition({
+        const result = await exportScalarsPartition({
           config,
           db,
           pool,
@@ -76,20 +77,21 @@ async function executePreparationAction({
           dryRun,
           rebuild: Boolean(flags.rebuild),
           allowNeedsReview: Boolean(flags['allow-needs-review']),
+          shouldCancel,
           onProgress: (patch) => onProgress?.({
             action_index: actionIndex,
             actions_total: actionsTotal,
             action_command: action.command,
             partitions_total: partitions.length,
-            partitions_done: partitionIndex,
+            partitions_done: partitionsDone,
             current: { dt: partition.dt, partition_index: partitionIndex + 1, ...patch.current },
             ...(patch.files ? { files: patch.files } : {}),
           }),
         });
+        partitionsDone += 1;
+        appendFileProgress(onProgress, result, partitionIndex + 1, partitionsDone, partitions.length, actionIndex, actionsTotal, action.command);
+        return result;
       });
-      for (let i = 0; i < partitionsResult.length; i += 1) {
-        appendFileProgress(onProgress, partitionsResult[i], i + 1, partitions.length, actionIndex, actionsTotal, action.command);
-      }
       onProgress?.({ partitions_done: partitions.length, current: null });
       return { command: action.command, dryRun, partitions: partitionsResult };
     });
@@ -100,6 +102,7 @@ async function executePreparationAction({
       const partitions = await listBookPartitions(pool, range);
       onProgress?.({ partitions_total: partitions.length, partitions_done: 0 });
       const bookDepth = Number(flags['book-depth'] || flags.bookDepth || config.backtestBookDepth);
+      let partitionsDone = 0;
       const partitionsResult = await mapPool(
         partitions,
         action.command === 'sync:backfill-backtest-ticks' ? (config.prepareMaxConcurrent || 2) : 1,
@@ -116,12 +119,13 @@ async function executePreparationAction({
             dryRun,
             rebuild: Boolean(flags.rebuild),
             allowNeedsReview: Boolean(flags['allow-needs-review']),
+            shouldCancel,
             onProgress: (patch) => onProgress?.({
               action_index: actionIndex,
               actions_total: actionsTotal,
               action_command: action.command,
               partitions_total: partitions.length,
-              partitions_done: partitionIndex,
+              partitions_done: partitionsDone,
               current: { dt: partition.dt, partition_index: partitionIndex + 1, ...patch.current },
             }),
           };
@@ -133,11 +137,12 @@ async function executePreparationAction({
             actions_total: actionsTotal,
             action_command: action.command,
             partitions_total: partitions.length,
-            partitions_done: partitionIndex,
+            partitions_done: partitionsDone,
             current: { dt: partition.dt, phase: 'starting', partition_index: partitionIndex + 1 },
           });
           const result = await exportFn(exportArgs);
           if (action.command === 'sync:backfill-backtest-ticks' && !dryRun && !result?.skipped) {
+            assertNotCancelled(shouldCancel);
             await exportBacktestTicksLitePartition({
               config,
               db,
@@ -146,7 +151,8 @@ async function executePreparationAction({
               rebuild: Boolean(flags.rebuild),
             });
           }
-          appendFileProgress(onProgress, result, partitionIndex + 1, partitions.length, actionIndex, actionsTotal, action.command);
+          partitionsDone += 1;
+          appendFileProgress(onProgress, result, partitionIndex + 1, partitionsDone, partitions.length, actionIndex, actionsTotal, action.command);
           return result;
         },
       );
@@ -190,7 +196,7 @@ async function executePreparationAction({
         rebuild: Boolean(flags.rebuild),
       });
       partitionsResult.push(result);
-      appendFileProgress(onProgress, result, partitionIndex + 1, manifestPartitions.length, actionIndex, actionsTotal, action.command);
+      appendFileProgress(onProgress, result, partitionIndex + 1, partitionIndex + 1, manifestPartitions.length, actionIndex, actionsTotal, action.command);
     }
     onProgress?.({ partitions_done: manifestPartitions.length, current: null });
     return { command: action.command, dryRun, partitions: partitionsResult };
@@ -220,7 +226,7 @@ async function executePreparationAction({
         rebuild: Boolean(flags.rebuild),
       });
       partitionsResult.push(result);
-      appendFileProgress(onProgress, result, partitionIndex + 1, scalarPartitions.length, actionIndex, actionsTotal, action.command);
+      appendFileProgress(onProgress, result, partitionIndex + 1, partitionIndex + 1, scalarPartitions.length, actionIndex, actionsTotal, action.command);
     }
     onProgress?.({ partitions_done: scalarPartitions.length, current: null });
     return { command: action.command, dryRun, partitions: partitionsResult };
@@ -229,7 +235,7 @@ async function executePreparationAction({
   throw new Error(`Unsupported preparation command: ${action.command}`);
 }
 
-function appendFileProgress(onProgress, result, partitionIndex, partitionsTotal, actionIndex, actionsTotal, actionCommand) {
+function appendFileProgress(onProgress, result, partitionOrdinal, partitionsDone, partitionsTotal, actionIndex, actionsTotal, actionCommand) {
   if (!onProgress || !result) return;
   const fileEntry = {
     dt: result.partition?.dt ?? null,
@@ -244,8 +250,8 @@ function appendFileProgress(onProgress, result, partitionIndex, partitionsTotal,
     actions_total: actionsTotal,
     action_command: actionCommand,
     partitions_total: partitionsTotal,
-    partitions_done: partitionIndex,
-    current: { dt: fileEntry.dt, phase: 'done', partition_index: partitionIndex },
+    partitions_done: partitionsDone,
+    current: { dt: fileEntry.dt, phase: 'done', partition_index: partitionOrdinal },
     files: [fileEntry],
   });
 }

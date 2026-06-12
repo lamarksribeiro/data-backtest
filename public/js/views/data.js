@@ -172,6 +172,109 @@ const dataStyles = `
     color: var(--text-2);
   }
 
+  .data-pending-panel {
+    margin: 16px 0 18px;
+    padding: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius);
+    background: rgba(15, 23, 42, 0.38);
+  }
+
+  .data-pending-panel__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .data-pending-panel__title {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text-0);
+  }
+
+  .data-pending-panel__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+  }
+
+  .data-pending-group {
+    min-width: 0;
+  }
+
+  .data-pending-group__title {
+    margin: 0 0 8px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+
+  .data-pending-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 340px;
+    overflow: auto;
+    padding-right: 4px;
+  }
+
+  .data-pending-item {
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.025);
+  }
+
+  .data-pending-item--processing {
+    border-color: rgba(245, 158, 11, 0.24);
+    background: rgba(245, 158, 11, 0.06);
+  }
+
+  .data-pending-item--attention {
+    border-color: rgba(239, 68, 68, 0.22);
+    background: rgba(239, 68, 68, 0.055);
+  }
+
+  .data-pending-item__top {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .data-pending-item__date {
+    font-family: var(--font-mono, monospace);
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--text-0);
+  }
+
+  .data-pending-item__status {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .data-pending-item__meta {
+    margin: 7px 0 0;
+    font-size: 11.5px;
+    line-height: 1.4;
+    color: var(--text-2);
+  }
+
+  .data-pending-item__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 10px;
+  }
+
   .coverage-years-container {
     display: flex;
     flex-direction: column;
@@ -806,7 +909,7 @@ function applyDayToPrepareForm(day, ctxSaved) {
 }
 
 async function reprocessDay(ctx, day, ctxSaved, { fieldOptions = null } = {}) {
-  if (day.ui_state === 'processing') {
+  if (day.ui_state === 'processing' && (day.active_jobs || []).length > 0) {
     ctx.toast.warn('Este dia já está em processamento — aguarde o job atual.');
     return false;
   }
@@ -942,8 +1045,112 @@ async function refreshCoverage(ctx, formCtx) {
         legendChip('attention', coverage.summary?.attention ?? 0),
       ]),
     ]),
+    renderCoveragePendingPanel(ctx, coverage, formCtx),
     renderMonthlyHeatmap(ctx, coverage)
   ]));
+}
+
+function renderCoveragePendingPanel(ctx, coverage, formCtx) {
+  const days = coverage.days || [];
+  const processing = days.filter((day) => day.ui_state === 'processing');
+  const attention = days.filter((day) => day.ui_state === 'attention');
+  if (!processing.length && !attention.length) return null;
+
+  return el('div', { class: 'data-pending-panel' }, [
+    el('div', { class: 'data-pending-panel__head' }, [
+      el('div', {}, [
+        el('h3', { class: 'data-pending-panel__title' }, 'Pendências da seleção'),
+        el('p', { class: 'muted', style: { margin: '4px 0 0', fontSize: '11.5px' } },
+          `${processing.length} processando · ${attention.length} precisam de atenção`
+        ),
+      ]),
+    ]),
+    el('div', { class: 'data-pending-panel__grid' }, [
+      renderPendingGroup(ctx, 'Processando', processing, 'processing', formCtx),
+      renderPendingGroup(ctx, 'Atenção', attention, 'attention', formCtx),
+    ]),
+  ]);
+}
+
+function renderPendingGroup(ctx, title, days, tone, formCtx) {
+  return el('div', { class: 'data-pending-group' }, [
+    el('p', { class: 'data-pending-group__title' }, `${title} (${days.length})`),
+    days.length
+      ? el('div', { class: 'data-pending-list' }, days.map((day) => renderPendingItem(ctx, day, tone, formCtx)))
+      : el('p', { class: 'muted', style: { fontSize: '11.5px', margin: 0 } }, 'Nenhum item.'),
+  ]);
+}
+
+function renderPendingItem(ctx, day, tone, formCtx) {
+  const activeJobs = day.active_jobs || [];
+  const activeJob = activeJobs[0] || null;
+  const canReprocess = tone === 'attention' || !activeJob;
+  return el('div', { class: `data-pending-item data-pending-item--${tone}` }, [
+    el('div', { class: 'data-pending-item__top' }, [
+      el('span', { class: 'data-pending-item__date' }, day.dt),
+      el('span', { class: 'data-pending-item__status' }, day.raw_status || day.ui_label),
+    ]),
+    el('p', { class: 'data-pending-item__meta' }, pendingDayDescription(day, activeJob)),
+    el('div', { class: 'data-pending-item__actions' }, [
+      el('button', {
+        type: 'button',
+        class: 'btn btn--ghost btn--sm',
+        onclick: () => openPartitionDrawer(ctx, day),
+      }, 'Ver detalhes'),
+      activeJob ? el('button', {
+        type: 'button',
+        class: 'btn btn--ghost btn--sm',
+        onclick: () => cancelPrepareJobFromData(ctx, activeJob.id, formCtx),
+      }, `Cancelar #${activeJob.id}`) : null,
+      canReprocess ? el('button', {
+        type: 'button',
+        class: 'btn btn--primary btn--sm',
+        onclick: async () => {
+          const ok = await reprocessDay(ctx, day, formCtx);
+          if (ok) await refreshCoverage(ctx, loadContext());
+        },
+      }, tone === 'attention' ? 'Reprocessar' : 'Reprocessar órfão') : null,
+    ]),
+  ]);
+}
+
+function pendingDayDescription(day, activeJob) {
+  if (activeJob) {
+    const pct = activeJob.percent == null ? '' : ` · ${Math.round(Number(activeJob.percent))}%`;
+    const current = activeJob.current_dt && activeJob.current_dt !== day.dt ? ` · atual: ${activeJob.current_dt}` : '';
+    const updated = activeJob.updated_at ? ` · atualizado ${formatJobTimestamp(activeJob.updated_at)}` : '';
+    const phase = activeJob.phase ? formatJobPhase({ status: activeJob.status, progress: { current: { phase: activeJob.phase } } }) : 'na fila';
+    return `Job #${activeJob.id} ${activeJob.status}: ${phase}${pct}${current}${updated}`;
+  }
+  if (day.ui_state === 'processing') {
+    return `Sem job ativo associado. Pode ser processamento antigo interrompido ou manifesto preso em ${day.raw_status}.`;
+  }
+  return day.error || day.hint || 'Partição indisponível para uso em backtest strict.';
+}
+
+function formatJobTimestamp(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+async function cancelPrepareJobFromData(ctx, jobId, formCtx) {
+  const ok = await confirmDialog({
+    title: `Cancelar job #${jobId}`,
+    message: 'Interromper o processamento em andamento?',
+    detail: 'O parquet antigo será mantido. Se o novo arquivo ainda estiver temporário, ele será descartado.',
+    confirmLabel: 'Cancelar job',
+    tone: 'danger',
+  });
+  if (!ok) return;
+  const res = await ctx.api.post(`/api/prepare/jobs/${jobId}/cancel`, {});
+  if (!res.ok) {
+    ctx.toast.err(res.error?.message || 'Falha ao cancelar job');
+    return;
+  }
+  ctx.toast.ok(res.data.status === 'cancelled' ? 'Job cancelado' : 'Cancelamento solicitado');
+  await refreshJobs(ctx);
+  await refreshCoverage(ctx, formCtx);
 }
 
 function legendChip(state, count) {
@@ -1411,7 +1618,7 @@ async function refreshJobs(ctx) {
   mount(section, el('div', {}, [
     el('h2', { class: 'card__title' }, 'Jobs ativos'),
     active.length
-      ? el('div', { class: 'data-jobs-inline' }, active.map((job) => jobCard(job)))
+      ? el('div', { class: 'data-jobs-inline' }, active.map((job) => jobCard(ctx, job)))
       : el('p', { class: 'muted' }, 'Nenhum job em execução.'),
   ]));
 
@@ -1484,8 +1691,8 @@ function tickJobsProgress() {
 
     if (targetPct > currentPct) {
       currentPct = Math.min(targetPct, currentPct + 4);
-    } else if (job.status === 'running' && currentPct < 98) {
-      currentPct = Math.min(98, currentPct + 0.25);
+    } else if (targetPct < currentPct) {
+      currentPct = targetPct;
     }
 
     displayedProgress[job.id] = currentPct;
@@ -1508,7 +1715,7 @@ function formatJobPhase(job) {
   return phase || 'aguardando';
 }
 
-function jobCard(job) {
+function jobCard(ctx, job) {
   const pct = displayedProgress[job.id] ?? calculateJobProgress(job);
   const pctLabel = `${Math.round(pct)}%`;
   return el('div', { class: 'data-job-card', id: `data-job-${job.id}` }, [
@@ -1517,7 +1724,23 @@ function jobCard(job) {
         el('span', { class: 'data-job-card__id' }, `Job #${job.id}`),
         el('span', { class: 'data-job-card__badge' }, job.status),
       ]),
-      el('span', { class: 'data-job-card__pct' }, pctLabel),
+      el('div', { class: 'row', style: { gap: '8px', alignItems: 'center' } }, [
+        el('span', { class: 'data-job-card__pct' }, pctLabel),
+        el('button', {
+          type: 'button',
+          class: 'btn btn--ghost btn--sm',
+          title: 'Cancelar job',
+          onclick: async () => {
+            const res = await ctx.api.post(`/api/prepare/jobs/${job.id}/cancel`, {});
+            if (!res.ok) {
+              ctx.toast.err(res.error?.message || 'Falha ao cancelar job');
+              return;
+            }
+            ctx.toast.ok(res.data.status === 'cancelled' ? 'Job cancelado' : 'Cancelamento solicitado');
+            await refreshJobs(ctx);
+          },
+        }, 'Cancelar'),
+      ]),
     ]),
     el('div', { class: 'data-job-progress-track' }, [
       el('div', { class: 'data-job-progress-bar' }, [
@@ -1533,7 +1756,7 @@ function bindJobsSse(ctx) {
   sseHandler = (event) => {
     if (!['job:progress', 'job:completed', 'job:failed'].includes(event.type)) return;
     refreshJobs(ctx);
-    if (event.type === 'job:completed' && event.jobId) {
+    if (event.type === 'job:completed' && event.jobId && event.status !== 'cancelled') {
       displayedProgress[event.jobId] = 100;
       const fillEl = document.querySelector(`#data-job-${event.jobId} .data-job-progress-fill`);
       const pctEl = document.querySelector(`#data-job-${event.jobId} .data-job-card__pct`);
@@ -1542,6 +1765,10 @@ function bindJobsSse(ctx) {
       const formCtx = loadContext();
       refreshCoverage(ctx, formCtx);
       ctx.toast.ok('Job concluído — cobertura atualizada');
+    } else if ((event.status === 'cancelled' || event.type === 'job:failed') && event.jobId) {
+      delete displayedProgress[event.jobId];
+      refreshCoverage(ctx, loadContext());
+      ctx.toast.warn(event.status === 'cancelled' ? 'Job cancelado' : 'Job falhou');
     }
   };
   connectSse(sseHandler);
