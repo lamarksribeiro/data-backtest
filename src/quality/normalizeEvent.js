@@ -1,9 +1,11 @@
-import { findClobStaleTickIndices } from './clobStale.js';
-import { getTickQualityIssues } from './tickUsable.js';
+import {
+  analyzeTrimSegments,
+  collectTrimIssues,
+  findTrimTickIndices,
+} from './clobStale.js';
 
 export function normalizeEventTicks(ticks, opts = {}) {
   const omitEventBadRatio = opts.omitEventBadRatio ?? 0.5;
-  const minPriceToBeat = opts.minPriceToBeat ?? 1000;
   const sorted = [...ticks].sort((left, right) => String(left.ts).localeCompare(String(right.ts)));
 
   if (!sorted.length) {
@@ -20,55 +22,55 @@ export function normalizeEventTicks(ticks, opts = {}) {
     };
   }
 
-  const staleIndices = findClobStaleTickIndices(sorted, opts);
-  const evaluated = sorted.map((tick, index) => {
-    const issues = getTickQualityIssues(tick, { minPriceToBeat });
-    if (staleIndices.has(index)) issues.push('clob_stale');
-    return { tick, bad: issues.length > 0, issues: [...new Set(issues)] };
-  });
+  const segments = analyzeTrimSegments(sorted, opts);
+  const trimIndices = findTrimTickIndices(sorted, opts);
+  const trimCount = trimIndices.size;
+  const trimRatio = trimCount / sorted.length;
+  const trimSegments = segments.filter((segment) => segment.classification === 'clob_stale'
+    || segment.classification === 'underlying_stale');
+  const issues = collectTrimIssues(segments);
 
-  const badCount = evaluated.filter((entry) => entry.bad).length;
-  const badRatio = badCount / sorted.length;
-  const issueSet = new Set(evaluated.flatMap((entry) => entry.issues));
-
-  if (badRatio > omitEventBadRatio) {
+  if (trimRatio > omitEventBadRatio) {
     return {
       action: 'omit',
       exportTicks: [],
-      issues: [...issueSet],
+      issues: issues.length ? issues : ['feed_desync'],
       stats: {
         ticksIn: sorted.length,
         ticksOut: 0,
         ticksRemoved: sorted.length,
-        badRatio,
+        badRatio: trimRatio,
+        trimSegments,
       },
     };
   }
 
-  const exportTicks = evaluated.filter((entry) => !entry.bad).map((entry) => entry.tick);
-  if (!exportTicks.length) {
+  if (trimCount > 0) {
+    const exportTicks = sorted.filter((_, index) => !trimIndices.has(index));
     return {
-      action: 'omit',
-      exportTicks: [],
-      issues: [...issueSet],
+      action: 'trim',
+      exportTicks,
+      issues,
       stats: {
         ticksIn: sorted.length,
-        ticksOut: 0,
-        ticksRemoved: sorted.length,
-        badRatio: 1,
+        ticksOut: exportTicks.length,
+        ticksRemoved: trimCount,
+        badRatio: trimRatio,
+        trimSegments,
       },
     };
   }
 
   return {
-    action: badCount > 0 ? 'trim' : 'keep',
-    exportTicks,
-    issues: badCount > 0 ? [...issueSet] : [],
+    action: 'keep',
+    exportTicks: sorted,
+    issues: [],
     stats: {
       ticksIn: sorted.length,
-      ticksOut: exportTicks.length,
-      ticksRemoved: badCount,
-      badRatio,
+      ticksOut: sorted.length,
+      ticksRemoved: 0,
+      badRatio: 0,
+      trimSegments: [],
     },
   };
 }

@@ -954,14 +954,18 @@ function shortConditionId(value) {
 function hourTone(bucket) {
   if (bucket.manual > 0) return 'manual';
   if (bucket.omitted > 0) return 'omit';
-  if (bucket.trimmed > 0) return 'trim';
   return 'kept';
 }
 
 function eventStatusLabel(event) {
   if (event.manually_excluded) return 'manual';
-  if (event.normalization_action === 'omit') return 'auto omit';
-  if (event.normalization_action === 'trim') return 'auto trim';
+  if (event.normalization_action === 'omit') return 'omitido';
+  return 'ok';
+}
+
+function eventBadgeTone(event) {
+  if (event.manually_excluded) return 'manual';
+  if (event.normalization_action === 'omit') return 'omit';
   return 'ok';
 }
 
@@ -991,11 +995,11 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = n
     const matchesHour = selectedHour == null || event.hour_utc === selectedHour;
     let matchesType = true;
     if (selectedTypeFilter === 'omit') {
-      matchesType = eventStatusLabel(event) === 'auto omit';
+      matchesType = event.normalization_action === 'omit';
     } else if (selectedTypeFilter === 'trim') {
-      matchesType = eventStatusLabel(event) === 'auto trim';
+      matchesType = event.normalization_action === 'trim';
     } else if (selectedTypeFilter === 'manual') {
-      matchesType = eventStatusLabel(event) === 'manual';
+      matchesType = event.manually_excluded;
     }
     return matchesHour && matchesType;
   });
@@ -1010,7 +1014,7 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = n
     return el('button', {
       type: 'button',
       class: `quality-hour-chip${selectedHour === bucket.hour ? ' is-active' : ''}`,
-      title: `${bucket.total} evento(s) · omit: ${bucket.omitted} · trim: ${bucket.trimmed} · manual: ${bucket.manual}`,
+      title: `${bucket.total} evento(s) · omit: ${bucket.omitted} · aparados: ${bucket.trimmed} · manual: ${bucket.manual}`,
       onclick: () => {
         const container = document.getElementById('data-partition-details-container');
         mount(container, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour === bucket.hour ? null : bucket.hour, fieldOptions, selectedTypeFilter));
@@ -1096,13 +1100,13 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = n
         el('h4', { style: { fontSize: '13px', fontWeight: '700', color: 'var(--text-0)', margin: '8px 0 4px' } }, `Eventos (${events.length})`),
         events.length ? el('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } }, events.map((event) => {
           const excluded = event.manually_excluded;
-          const tone = eventStatusLabel(event);
+          const badgeTone = eventBadgeTone(event);
           return el('div', { class: `event-timeline-card${excluded ? ' event-timeline-card--excluded' : ''}` }, [
             el('div', { class: 'event-info-left' }, [
               el('span', { class: 'event-time-badge' }, formatEventTime(event.event_start)),
               el('span', { class: 'event-desc' }, shortConditionId(event.condition_id)),
               el('div', { class: 'event-meta-row' }, [
-                el('span', { class: `event-badge event-badge--${tone}` }, eventStatusLabel(event)),
+                el('span', { class: `event-badge event-badge--${badgeTone}` }, eventStatusLabel(event)),
                 event.coverage != null ? el('span', { class: 'event-coverage-text' }, `Cob: ${Math.round(event.coverage * 100)}%`) : null
               ])
             ]),

@@ -1,55 +1,260 @@
 import { pricesEqual } from './tickUsable.js';
 
-export function findClobStaleTickIndices(ticks, {
-  minStaleSec = 30,
-  underlyingEpsilon = 0.01,
-} = {}) {
-  const stale = new Set();
-  if (ticks.length < 2) return stale;
+function parseTsMs(ts) {
+  const ms = Date.parse(ts);
+  return Number.isFinite(ms) ? ms : null;
+}
 
-  let streakStart = null;
-  let streakUnderlyingMoved = false;
+function quotesMatch(left, right) {
+  return pricesEqual(left.upPrice, right.upPrice)
+    && pricesEqual(left.downPrice, right.downPrice)
+    && left.upPrice != null
+    && left.downPrice != null;
+}
 
-  const closeStreak = (endIndex) => {
-    if (streakStart == null || !streakUnderlyingMoved || endIndex < streakStart) {
-      streakStart = null;
-      streakUnderlyingMoved = false;
-      return;
+function underlyingPricesMatch(left, right, epsilon) {
+  const leftPrice = left.underlyingPrice;
+  const rightPrice = right.underlyingPrice;
+  if (leftPrice == null || rightPrice == null || !Number.isFinite(leftPrice) || !Number.isFinite(rightPrice)) {
+    return false;
+  }
+  return Math.abs(leftPrice - rightPrice) <= epsilon;
+}
+
+function booksMatch(left, right) {
+  return pricesEqual(left.upBestBid, right.upBestBid)
+    && pricesEqual(left.upBestAsk, right.upBestAsk)
+    && pricesEqual(left.downBestBid, right.downBestBid)
+    && pricesEqual(left.downBestAsk, right.downBestAsk);
+}
+
+function segmentHasBookData(ticks, startIndex, endIndex) {
+  for (let index = startIndex; index <= endIndex; index += 1) {
+    const tick = ticks[index];
+    if (tick.upBestBid != null || tick.upBestAsk != null || tick.downBestBid != null || tick.downBestAsk != null) {
+      return true;
     }
-    const startTs = Date.parse(ticks[streakStart].ts);
-    const endTs = Date.parse(ticks[endIndex].ts);
-    if (!Number.isFinite(startTs) || !Number.isFinite(endTs)) {
-      streakStart = null;
-      streakUnderlyingMoved = false;
-      return;
+  }
+  return false;
+}
+
+function booksFlatInSegment(ticks, startIndex, endIndex) {
+  if (!segmentHasBookData(ticks, startIndex, endIndex)) return null;
+  const first = ticks[startIndex];
+  for (let index = startIndex + 1; index <= endIndex; index += 1) {
+    if (!booksMatch(first, ticks[index])) return false;
+  }
+  return true;
+}
+
+function underlyingRangeInSegment(ticks, startIndex, endIndex) {
+  let min = Number.POSITIVE_INFINITY;
+  let max = Number.NEGATIVE_INFINITY;
+  for (let index = startIndex; index <= endIndex; index += 1) {
+    const value = ticks[index].underlyingPrice;
+    if (value == null || !Number.isFinite(value)) continue;
+    min = Math.min(min, value);
+    max = Math.max(max, value);
+  }
+  if (!Number.isFinite(min)) return 0;
+  return max - min;
+}
+
+function quotesRangeInSegment(ticks, startIndex, endIndex) {
+  let upMin = Number.POSITIVE_INFINITY;
+  let upMax = Number.NEGATIVE_INFINITY;
+  let downMin = Number.POSITIVE_INFINITY;
+  let downMax = Number.NEGATIVE_INFINITY;
+  for (let index = startIndex; index <= endIndex; index += 1) {
+    const up = ticks[index].upPrice;
+    const down = ticks[index].downPrice;
+    if (up != null && Number.isFinite(up)) {
+      upMin = Math.min(upMin, up);
+      upMax = Math.max(upMax, up);
     }
-    if ((endTs - startTs) / 1000 >= minStaleSec) {
-      for (let index = streakStart; index <= endIndex; index += 1) stale.add(index);
+    if (down != null && Number.isFinite(down)) {
+      downMin = Math.min(downMin, down);
+      downMax = Math.max(downMax, down);
     }
-    streakStart = null;
-    streakUnderlyingMoved = false;
+  }
+  return {
+    upRange: Number.isFinite(upMin) ? upMax - upMin : 0,
+    downRange: Number.isFinite(downMin) ? downMax - downMin : 0,
+  };
+}
+
+function medianUnderlyingInSegment(ticks, startIndex, endIndex) {
+  const values = [];
+  for (let index = startIndex; index <= endIndex; index += 1) {
+    const value = ticks[index].underlyingPrice;
+    if (value != null && Number.isFinite(value) && value > 0) values.push(value);
+  }
+  if (!values.length) return null;
+  values.sort((left, right) => left - right);
+  return values[Math.floor(values.length / 2)];
+}
+
+export function resolveSegmentMoveThresholds(ticks, startIndex, endIndex, opts = {}) {
+  const ref = medianUnderlyingInSegment(ticks, startIndex, endIndex) ?? 100_000;
+  const minUnderlyingMove = opts.minUnderlyingMove ?? Math.max(20, ref * 0.00025);
+  const quietUnderlyingMax = opts.quietUnderlyingMax ?? Math.max(5, ref * 0.00008);
+  const minQuoteMove = opts.minQuoteMove ?? 0.003;
+  return { minUnderlyingMove, quietUnderlyingMax, minQuoteMove, refUnderlying: ref };
+}
+
+export function classifyFlatQuoteSegment(ticks, startIndex, endIndex, opts = {}) {
+  const startTs = parseTsMs(ticks[startIndex]?.ts);
+  const endTs = parseTsMs(ticks[endIndex]?.ts);
+  const durationSec = startTs != null && endTs != null ? Math.max(0, (endTs - startTs) / 1000) : 0;
+  const minStaleSec = opts.minStaleSec ?? 30;
+  const underlyingRange = underlyingRangeInSegment(ticks, startIndex, endIndex);
+  const { minUnderlyingMove, quietUnderlyingMax } = resolveSegmentMoveThresholds(ticks, startIndex, endIndex, opts);
+  const booksFlat = booksFlatInSegment(ticks, startIndex, endIndex);
+
+  const base = {
+    feed: 'clob',
+    startIndex,
+    endIndex,
+    durationSec,
+    underlyingRange,
+    booksFlat,
+    minUnderlyingMove,
+    quietUnderlyingMax,
   };
 
-  for (let index = 1; index < ticks.length; index += 1) {
-    const prev = ticks[index - 1];
-    const tick = ticks[index];
-    const quotesSame = pricesEqual(prev.upPrice, tick.upPrice)
-      && pricesEqual(prev.downPrice, tick.downPrice)
-      && tick.upPrice != null
-      && tick.downPrice != null;
-    const underlyingMoved = prev.underlyingPrice != null
-      && tick.underlyingPrice != null
-      && Math.abs(tick.underlyingPrice - prev.underlyingPrice) >= underlyingEpsilon;
-
-    if (quotesSame) {
-      if (streakStart == null) streakStart = index - 1;
-      if (underlyingMoved) streakUnderlyingMoved = true;
-      continue;
-    }
-
-    closeStreak(index - 1);
+  if (durationSec < minStaleSec) {
+    return { ...base, classification: 'too_short' };
   }
 
-  closeStreak(ticks.length - 1);
+  if (underlyingRange <= quietUnderlyingMax) {
+    return { ...base, classification: 'confirmed_quiet_market' };
+  }
+
+  if (booksFlat === false) {
+    return { ...base, classification: 'book_active' };
+  }
+
+  if (underlyingRange >= minUnderlyingMove) {
+    return { ...base, classification: 'clob_stale' };
+  }
+
+  return { ...base, classification: 'noise' };
+}
+
+export function classifyFlatUnderlyingSegment(ticks, startIndex, endIndex, opts = {}) {
+  const startTs = parseTsMs(ticks[startIndex]?.ts);
+  const endTs = parseTsMs(ticks[endIndex]?.ts);
+  const durationSec = startTs != null && endTs != null ? Math.max(0, (endTs - startTs) / 1000) : 0;
+  const minStaleSec = opts.minStaleSec ?? 30;
+  const underlyingRange = underlyingRangeInSegment(ticks, startIndex, endIndex);
+  const { quietUnderlyingMax, minQuoteMove } = resolveSegmentMoveThresholds(ticks, startIndex, endIndex, opts);
+  const { upRange, downRange } = quotesRangeInSegment(ticks, startIndex, endIndex);
+  const quoteRange = Math.max(upRange, downRange);
+  const booksFlat = booksFlatInSegment(ticks, startIndex, endIndex);
+
+  const base = {
+    feed: 'underlying',
+    startIndex,
+    endIndex,
+    durationSec,
+    underlyingRange,
+    quoteRange,
+    booksFlat,
+    quietUnderlyingMax,
+    minQuoteMove,
+  };
+
+  if (durationSec < minStaleSec) {
+    return { ...base, classification: 'too_short' };
+  }
+
+  if (underlyingRange > quietUnderlyingMax) {
+    return { ...base, classification: 'underlying_active' };
+  }
+
+  if (quoteRange < minQuoteMove && booksFlat !== false) {
+    return { ...base, classification: 'confirmed_quiet_market' };
+  }
+
+  if (quoteRange >= minQuoteMove || booksFlat === false) {
+    return { ...base, classification: 'underlying_stale' };
+  }
+
+  return { ...base, classification: 'noise' };
+}
+
+export function analyzeFlatQuoteSegments(ticks, opts = {}) {
+  if (ticks.length < 2) return [];
+
+  const segments = [];
+  let streakStart = 0;
+
+  for (let index = 1; index < ticks.length; index += 1) {
+    if (quotesMatch(ticks[index - 1], ticks[index])) continue;
+
+    segments.push(classifyFlatQuoteSegment(ticks, streakStart, index - 1, opts));
+    streakStart = index;
+  }
+
+  segments.push(classifyFlatQuoteSegment(ticks, streakStart, ticks.length - 1, opts));
+  return segments.filter((segment) => segment.classification !== 'too_short');
+}
+
+export function analyzeFlatUnderlyingSegments(ticks, opts = {}) {
+  if (ticks.length < 2) return [];
+
+  const segments = [];
+  let streakStart = 0;
+
+  for (let index = 1; index < ticks.length; index += 1) {
+    const epsilon = resolveSegmentMoveThresholds(ticks, streakStart, index - 1, opts).quietUnderlyingMax;
+    if (underlyingPricesMatch(ticks[index - 1], ticks[index], epsilon)) continue;
+
+    segments.push(classifyFlatUnderlyingSegment(ticks, streakStart, index - 1, opts));
+    streakStart = index;
+  }
+
+  segments.push(classifyFlatUnderlyingSegment(ticks, streakStart, ticks.length - 1, opts));
+  return segments.filter((segment) => segment.classification !== 'too_short'
+    && segment.classification !== 'underlying_active');
+}
+
+export function analyzeTrimSegments(ticks, opts = {}) {
+  return [
+    ...analyzeFlatQuoteSegments(ticks, opts),
+    ...analyzeFlatUnderlyingSegments(ticks, opts),
+  ];
+}
+
+export function collectTrimIssues(segments) {
+  const issues = [];
+  if (segments.some((segment) => segment.classification === 'clob_stale')) issues.push('clob_stale');
+  if (segments.some((segment) => segment.classification === 'underlying_stale')) issues.push('underlying_stale');
+  return issues;
+}
+
+function addSegmentIndices(target, ticks, segments, classification) {
+  for (const segment of segments) {
+    if (segment.classification !== classification) continue;
+    for (let index = segment.startIndex; index <= segment.endIndex; index += 1) target.add(index);
+  }
+}
+
+export function findClobStaleTickIndices(ticks, opts = {}) {
+  const stale = new Set();
+  addSegmentIndices(stale, ticks, analyzeFlatQuoteSegments(ticks, opts), 'clob_stale');
   return stale;
+}
+
+export function findUnderlyingStaleTickIndices(ticks, opts = {}) {
+  const stale = new Set();
+  addSegmentIndices(stale, ticks, analyzeFlatUnderlyingSegments(ticks, opts), 'underlying_stale');
+  return stale;
+}
+
+export function findTrimTickIndices(ticks, opts = {}) {
+  const trim = new Set();
+  for (const index of findClobStaleTickIndices(ticks, opts)) trim.add(index);
+  for (const index of findUnderlyingStaleTickIndices(ticks, opts)) trim.add(index);
+  return trim;
 }

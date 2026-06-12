@@ -28,38 +28,11 @@ function tick(index, {
   };
 }
 
-test('normalizeEvent keeps clean events untouched', () => {
-  const ticks = Array.from({ length: 20 }, (_, index) => tick(index));
-  const result = normalizeEventTicks(ticks, { omitEventBadRatio: 0.5, minStaleSec: 30 });
-  assert.equal(result.action, 'keep');
-  assert.equal(result.exportTicks.length, 20);
-});
-
-test('normalizeEvent trims when minority of ticks are incomplete', () => {
-  const ticks = Array.from({ length: 20 }, (_, index) => tick(index));
-  ticks[5] = { ...ticks[5], underlyingPrice: null };
-  ticks[6] = { ...ticks[6], underlyingPrice: null };
-  const result = normalizeEventTicks(ticks, { omitEventBadRatio: 0.5, minStaleSec: 30 });
-  assert.equal(result.action, 'trim');
-  assert.equal(result.exportTicks.length, 18);
-  assert.ok(result.issues.includes('null_underlying'));
-});
-
-test('normalizeEvent omits when majority of ticks are incomplete', () => {
-  const ticks = Array.from({ length: 10 }, (_, index) => tick(index));
-  for (let index = 0; index < 6; index += 1) {
-    ticks[index] = { ...ticks[index], underlyingPrice: null };
-  }
-  const result = normalizeEventTicks(ticks, { omitEventBadRatio: 0.5, minStaleSec: 30 });
-  assert.equal(result.action, 'omit');
-  assert.equal(result.exportTicks.length, 0);
-});
-
-test('normalizeEvent trims clob_stale streaks below omit threshold', () => {
+function withClobStaleStreak(length, { staleFrom, staleTo, minStaleSec = 20 }) {
   const ticks = [];
   const baseMs = Date.parse('2026-06-01T14:00:00.000Z');
-  for (let index = 0; index < 80; index += 1) {
-    const stale = index >= 20 && index < 45;
+  for (let index = 0; index < length; index += 1) {
+    const stale = index >= staleFrom && index < staleTo;
     ticks.push({
       ...tick(index),
       ts: new Date(baseMs + index * 1000).toISOString(),
@@ -72,22 +45,99 @@ test('normalizeEvent trims clob_stale streaks below omit threshold', () => {
       downBestAsk: stale ? 0.49 : 0.49 - (index % 4) * 0.001,
     });
   }
-  const result = normalizeEventTicks(ticks, { omitEventBadRatio: 0.5, minStaleSec: 20 });
+  return { ticks, minStaleSec };
+}
+
+test('normalizeEvent keeps clean events untouched', () => {
+  const ticks = Array.from({ length: 20 }, (_, index) => tick(index));
+  const result = normalizeEventTicks(ticks, { omitEventBadRatio: 0.5, minStaleSec: 30 });
+  assert.equal(result.action, 'keep');
+  assert.equal(result.exportTicks.length, 20);
+});
+
+test('normalizeEvent keeps incomplete feed at boundaries without trimming', () => {
+  const ticks = Array.from({ length: 20 }, (_, index) => tick(index));
+  ticks[0] = { ...ticks[0], priceToBeat: null };
+  ticks[1] = { ...ticks[1], underlyingPrice: null };
+  ticks[19] = { ...ticks[19], upPrice: null, downPrice: null };
+  const result = normalizeEventTicks(ticks, { omitEventBadRatio: 0.5, minStaleSec: 30 });
+  assert.equal(result.action, 'keep');
+  assert.equal(result.exportTicks.length, 20);
+});
+
+test('normalizeEvent keeps event when majority of ticks have incomplete feed but no clob_stale', () => {
+  const ticks = Array.from({ length: 10 }, (_, index) => tick(index));
+  for (let index = 0; index < 6; index += 1) {
+    ticks[index] = { ...ticks[index], underlyingPrice: null };
+  }
+  const result = normalizeEventTicks(ticks, { omitEventBadRatio: 0.5, minStaleSec: 30 });
+  assert.equal(result.action, 'keep');
+  assert.equal(result.exportTicks.length, 10);
+});
+
+test('normalizeEvent trims only clob_stale streaks below omit threshold', () => {
+  const { ticks, minStaleSec } = withClobStaleStreak(80, { staleFrom: 20, staleTo: 45 });
+  const result = normalizeEventTicks(ticks, { omitEventBadRatio: 0.5, minStaleSec });
   assert.equal(result.action, 'trim');
   assert.ok(result.exportTicks.length < ticks.length);
   assert.ok(result.issues.includes('clob_stale'));
 });
 
+test('normalizeEvent trims when underlying is frozen but clob keeps updating', () => {
+  const baseMs = Date.parse('2026-06-01T14:00:00.000Z');
+  const ticks = Array.from({ length: 80 }, (_, index) => {
+    const desynced = index >= 20 && index < 55;
+    return {
+      ...tick(index),
+      ts: new Date(baseMs + index * 1000).toISOString(),
+      underlyingPrice: desynced ? 100_000 : 100_000 + index,
+      upPrice: desynced ? 0.50 + (index % 10) * 0.004 : 0.52 + (index % 4) * 0.001,
+      downPrice: desynced ? 0.50 - (index % 10) * 0.004 : 0.48 - (index % 4) * 0.001,
+      upBestBid: desynced ? 0.49 + (index % 10) * 0.004 : 0.51 + (index % 4) * 0.001,
+      upBestAsk: desynced ? 0.51 + (index % 10) * 0.004 : 0.53 + (index % 4) * 0.001,
+      downBestBid: desynced ? 0.47 - (index % 10) * 0.004 : 0.47 - (index % 4) * 0.001,
+      downBestAsk: desynced ? 0.49 - (index % 10) * 0.004 : 0.49 - (index % 4) * 0.001,
+    };
+  });
+  const result = normalizeEventTicks(ticks, { omitEventBadRatio: 0.5, minStaleSec: 30, minQuoteMove: 0.003 });
+  assert.equal(result.action, 'trim');
+  assert.ok(result.exportTicks.length < ticks.length);
+  assert.ok(result.issues.includes('underlying_stale'));
+});
+
+test('normalizeEvent keeps quiet market with flat quotes and flat underlying', () => {
+  const ticks = Array.from({ length: 40 }, (_, index) => ({
+    ...tick(index),
+    ts: new Date(Date.parse('2026-06-01T14:00:00.000Z') + index * 1000).toISOString(),
+    underlyingPrice: 100_000,
+    upPrice: 0.52,
+    downPrice: 0.48,
+    upBestBid: 0.51,
+    upBestAsk: 0.53,
+    downBestBid: 0.47,
+    downBestAsk: 0.49,
+  }));
+  const result = normalizeEventTicks(ticks, { omitEventBadRatio: 0.5, minStaleSec: 30 });
+  assert.equal(result.action, 'keep');
+  assert.equal(result.exportTicks.length, 40);
+});
+
+test('normalizeEvent omits when majority of ticks are clob_stale', () => {
+  const { ticks, minStaleSec } = withClobStaleStreak(40, { staleFrom: 0, staleTo: 30 });
+  const result = normalizeEventTicks(ticks, { omitEventBadRatio: 0.5, minStaleSec });
+  assert.equal(result.action, 'omit');
+  assert.equal(result.exportTicks.length, 0);
+});
+
 test('normalizePartition aggregates hours affected and export quality stays valid', () => {
   const good = Array.from({ length: 20 }, (_, index) => tick(index, { up: 0.51, down: 0.49 }));
-  const badEvent = Array.from({ length: 10 }, (_, index) => tick(index, { up: 0.51, down: 0.49 }));
-  for (let index = 0; index < 6; index += 1) badEvent[index] = { ...badEvent[index], underlyingPrice: null };
+  const { ticks: badEvent, minStaleSec } = withClobStaleStreak(40, { staleFrom: 0, staleTo: 30 });
   badEvent.forEach((row) => {
     row.conditionId = '0xbad';
     row.eventStart = '2026-06-01T15:00:00.000Z';
   });
 
-  const result = normalizePartitionTicks([...good, ...badEvent], { omitEventBadRatio: 0.5, minStaleSec: 30 });
+  const result = normalizePartitionTicks([...good, ...badEvent], { omitEventBadRatio: 0.5, minStaleSec });
   assert.equal(result.report.events_total, 2);
   assert.equal(result.report.events_omitted, 1);
   assert.equal(result.report.events_kept, 1);
@@ -95,7 +145,7 @@ test('normalizePartition aggregates hours affected and export quality stays vali
 
   const quality = classifyExportQuality({
     actualRows: result.exportTicks.length,
-    expectedRows: 30,
+    expectedRows: 60,
     normalization: result.report,
     maxDayOmitRatio: 0.5,
   });

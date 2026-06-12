@@ -125,6 +125,16 @@ export function classifyColumnName(name) {
   return 'numeric';
 }
 
+function firstValidPriceToBeat(priceToBeat, startRow, endRow, minPriceToBeat = 1000) {
+  if (!priceToBeat) return Number.NaN;
+  for (let row = startRow; row < endRow; row += 1) {
+    const value = priceToBeat[row];
+    if (value != null && Number.isFinite(value) && value > minPriceToBeat) return value;
+  }
+  const fallback = priceToBeat[startRow];
+  return fallback != null && Number.isFinite(fallback) ? fallback : Number.NaN;
+}
+
 export function buildEventIndex({ length, codes, columns }) {
   const conditionCodes = codes.get('condition_id');
   const eventStartMs = columns.get('_event_start_ms') ?? columns.get('event_start');
@@ -145,7 +155,7 @@ export function buildEventIndex({ length, codes, columns }) {
         endRow: i,
         eventStart: eventStartMs[startRow],
         eventEnd: eventEndMs?.[startRow] ?? Number.NaN,
-        priceToBeat: priceToBeat?.[startRow] ?? Number.NaN,
+        priceToBeat: firstValidPriceToBeat(priceToBeat, startRow, i),
       });
       startRow = i;
     }
@@ -159,7 +169,7 @@ export function buildEventIndex({ length, codes, columns }) {
       endRow: length,
       eventStart: eventStartMs[startRow],
       eventEnd: eventEndMs?.[startRow] ?? Number.NaN,
-      priceToBeat: priceToBeat?.[startRow] ?? Number.NaN,
+      priceToBeat: firstValidPriceToBeat(priceToBeat, startRow, length),
     });
   }
 

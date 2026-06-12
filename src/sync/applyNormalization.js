@@ -5,7 +5,9 @@ export function buildNormalizationOptions(config = {}) {
     omitEventBadRatio: config.syncNormalizeOmitEventRatio ?? 0.5,
     minStaleSec: config.syncNormalizeMinStaleSec ?? 30,
     minPriceToBeat: config.syncNormalizeMinPtb ?? 1000,
-    underlyingEpsilon: config.syncNormalizeUnderlyingEpsilon ?? 0.01,
+    minUnderlyingMove: config.syncNormalizeMinUnderlyingMove ?? null,
+    quietUnderlyingMax: config.syncNormalizeQuietUnderlyingMax ?? null,
+    minQuoteMove: config.syncNormalizeMinQuoteMove ?? null,
   };
 }
 

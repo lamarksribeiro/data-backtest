@@ -34,7 +34,9 @@ export function loadConfig(env = process.env) {
     syncNormalizeDayOmitRatio: clampRatio(env.SYNC_NORMALIZE_DAY_OMIT_RATIO, 0.5),
     syncNormalizeMinStaleSec: Math.max(Number.parseInt(String(env.SYNC_NORMALIZE_MIN_STALE_SEC || '30'), 10) || 30, 1),
     syncNormalizeMinPtb: Math.max(Number.parseFloat(String(env.SYNC_NORMALIZE_MIN_PTB || '1000')) || 1000, 1),
-    syncNormalizeUnderlyingEpsilon: Math.max(Number.parseFloat(String(env.SYNC_NORMALIZE_UNDERLYING_EPSILON || '0.01')) || 0.01, 0),
+    syncNormalizeMinUnderlyingMove: parseOptionalPositiveFloat(env.SYNC_NORMALIZE_MIN_UNDERLYING_MOVE),
+    syncNormalizeQuietUnderlyingMax: parseOptionalPositiveFloat(env.SYNC_NORMALIZE_QUIET_UNDERLYING_MAX),
+    syncNormalizeMinQuoteMove: parseOptionalPositiveFloat(env.SYNC_NORMALIZE_MIN_QUOTE_MOVE),
     backtestBookDepth: Math.max(Number.parseInt(String(env.BACKTEST_BOOK_DEPTH || '25'), 10) || 25, 1),
     apiPort: Math.max(Number.parseInt(String(env.DATA_BACKTEST_PORT || env.PORT || '3100'), 10) || 3100, 1),
     NODE_ENV: env.NODE_ENV || 'development',
@@ -51,6 +53,12 @@ export function loadConfig(env = process.env) {
     datasetCacheMaxMb: resolveDatasetCacheMaxMb(env),
     prepareMaxConcurrent: Math.max(Number.parseInt(String(env.PREPARE_MAX_CONCURRENT || '2'), 10) || 2, 1),
   };
+}
+
+function parseOptionalPositiveFloat(value) {
+  if (value == null || String(value).trim() === '') return null;
+  const parsed = Number.parseFloat(String(value));
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 
 function clampRatio(value, fallback = 0.5) {
