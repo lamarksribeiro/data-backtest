@@ -75,7 +75,8 @@ test('describeFixActions reads dates from preparation args', () => {
   }]);
   assert.equal(lines.length, 1);
   assert.match(lines[0], /2026-05-01/);
-  assert.match(lines[0], /2026-05-08/);
+  assert.match(lines[0], /2026-05-07/);
+  assert.doesNotMatch(lines[0], /2026-05-08/);
   assert.doesNotMatch(lines[0], /undefined/);
 });
 

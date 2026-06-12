@@ -325,14 +325,20 @@ function renderActions(ctx, formCtx, fieldOptions) {
     el('h2', { class: 'card__title' }, 'Reprocessar período'),
     el('form', { id: 'data-prepare-form', class: 'studio-form' }, [
       el('label', { class: 'field' }, ['De ', el('input', { type: 'date', name: 'from', value: formCtx.from, class: 'field__input' })]),
-      el('label', { class: 'field' }, ['Até ', el('input', { type: 'date', name: 'to', value: formCtx.to, class: 'field__input' })]),
+      el('label', { class: 'field' }, ['Até (incluso) ', el('input', { type: 'date', name: 'to', value: formCtx.to, class: 'field__input' })]),
       el('label', { class: 'field' }, ['Ativo ', selectField('underlying', fieldOptions.underlyings || [formCtx.underlying], formCtx.underlying)]),
       el('label', { class: 'field' }, ['Intervalo ', selectField('interval', fieldOptions.intervals || [formCtx.interval], formCtx.interval)]),
       el('label', { class: 'field' }, ['Book ', selectField('book_depth', fieldOptions.book_depths || [formCtx.book_depth], formCtx.book_depth)]),
-      el('p', { class: 'muted', style: { fontSize: '12px', margin: '0 0 12px' } },
-        'Reprocessa o período selecionado, dia a dia.'
-      ),
-      el('button', { class: 'btn btn--primary', type: 'submit' }, 'Reprocessar período'),
+      el('div', { class: 'data-prepare-footer' }, [
+        el('p', { class: 'muted', style: { fontSize: '12px', margin: '0 0 8px' } },
+          'Prepara o período selecionado, dia a dia.'
+        ),
+        el('label', { class: 'field field--checkbox' }, [
+          el('input', { type: 'checkbox', name: 'rebuild', value: '1' }),
+          ' Incluir dias já prontos',
+        ]),
+        el('button', { class: 'btn btn--primary', type: 'submit' }, 'Executar'),
+      ]),
     ]),
   ]));
 
@@ -356,7 +362,7 @@ function renderActions(ctx, formCtx, fieldOptions) {
       book_depth: fd.get('book_depth'),
     };
     await submitDataFix(ctx, request, {
-      rebuild: true,
+      rebuild: fd.get('rebuild') === '1',
       fieldOptions,
     });
   });
@@ -435,8 +441,8 @@ function renderMonthlyHeatmap(ctx, coverage) {
     return emptyState('Nenhuma partição no intervalo.');
   }
 
-  const selectedFrom = new Date(coverage.from);
-  const selectedTo = new Date(coverage.to);
+  const selectedFrom = coverage.from_date || String(coverage.from || '').slice(0, 10);
+  const selectedTo = coverage.to_date || String(coverage.from || '').slice(0, 10);
 
   const monthsRange = getMonthsRange(days);
   
@@ -486,7 +492,7 @@ function renderMonthlyHeatmap(ctx, coverage) {
         const dayData = days.find(x => x.dt === dateKey);
         if (dayData) {
           const dtDate = new Date(`${dateKey}T00:00:00.000Z`);
-          const isSelected = dtDate >= selectedFrom && dtDate < selectedTo;
+          const isSelected = dateKey >= selectedFrom && dateKey <= selectedTo;
           const rangeClass = isSelected ? 'is-selected' : 'is-out-of-range';
           const titleSuffix = isSelected ? '' : ' (Fora do período selecionado)';
 

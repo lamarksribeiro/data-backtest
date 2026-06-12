@@ -1,5 +1,5 @@
 import { checkDatasetAvailability, partitionDatesForRange } from './availability.js';
-import { datasetRequestFromParams } from './request.js';
+import { datasetRequestFromParams, inclusiveDateRangeFromRequest } from './request.js';
 
 /** Mapeamento 9 estados do manifest → 3 estados na UI (função pura). */
 
@@ -54,11 +54,10 @@ export function getDataCoverage(db, params, config) {
   const bounds = db.prepare(boundsSql).get(...dbParams);
 
   const reqFromDt = request.from.slice(0, 10);
-  const reqToInclusiveDate = new Date(new Date(request.to).getTime() - 1);
-  const reqToDt = reqToInclusiveDate.toISOString().slice(0, 10);
+  const { from_date, to_date } = inclusiveDateRangeFromRequest(request);
 
   let startDt = reqFromDt;
-  let endDt = reqToDt;
+  let endDt = to_date;
 
   if (bounds && bounds.min_dt && bounds.max_dt) {
     if (bounds.min_dt < startDt) startDt = bounds.min_dt;
@@ -90,6 +89,8 @@ export function getDataCoverage(db, params, config) {
     book_depth: request.bookDepth ?? null,
     from: request.from,
     to: request.to,
+    from_date,
+    to_date,
     days,
     summary,
     ok: requestedOk,

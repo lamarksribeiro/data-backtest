@@ -9,7 +9,7 @@ import { upsertManifestPartition } from '../src/state/manifest.js';
 import { toPortablePath } from '../src/lake/paths.js';
 import { writeOhlcParquetFromScalars, writeScalarsParquet } from '../src/sync/duckdbParquet.js';
 import { checkDatasetAvailability, partitionDatesForRange } from '../src/query/availability.js';
-import { rangeFromParams } from '../src/query/request.js';
+import { rangeFromParams, inclusiveEndDateFromExclusive, inclusiveDateRangeFromRequest } from '../src/query/request.js';
 import { queryCandles, queryTicks } from '../src/query/duckdbQuery.js';
 
 test('availability resolves valid active_path and reports missing partitions', async () => {
@@ -38,6 +38,11 @@ test('availability resolves valid active_path and reports missing partitions', a
         from: '2026-05-31T00:00:00.000Z',
         to: '2026-06-08T00:00:00.000Z',
       });
+      assert.equal(inclusiveEndDateFromExclusive('2026-06-08T00:00:00.000Z'), '2026-06-07');
+      assert.deepEqual(inclusiveDateRangeFromRequest({
+        from: '2026-05-31T00:00:00.000Z',
+        to: '2026-06-08T00:00:00.000Z',
+      }), { from_date: '2026-05-31', to_date: '2026-06-07' });
 
       const availability = checkDatasetAvailability(db, {
         dataset: 'scalars',

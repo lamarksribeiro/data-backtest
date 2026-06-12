@@ -127,7 +127,11 @@ function parseDateStart(value) {
 }
 
 function parseDateEnd(value) {
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return new Date(`${value}T00:00:00.000Z`);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const date = new Date(`${value}T00:00:00.000Z`);
+    date.setUTCDate(date.getUTCDate() + 1);
+    return date;
+  }
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) throw new Error(`Invalid date: ${value}`);
   return date;

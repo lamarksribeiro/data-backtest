@@ -16,6 +16,25 @@ export function parseDateEnd(value) {
   return date;
 }
 
+/** Converte fim exclusivo (ISO) para a data inclusiva exibida na UI (YYYY-MM-DD). */
+export function inclusiveEndDateFromExclusive(value) {
+  const text = String(value || '');
+  const dateOnly = text.slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) return dateOnly || '?';
+  if (text.length <= 10) return dateOnly;
+  const exclusive = new Date(text.includes('T') ? text : `${text}T00:00:00.000Z`);
+  if (Number.isNaN(exclusive.getTime())) return dateOnly;
+  const inclusive = new Date(exclusive.getTime() - 86400000);
+  return inclusive.toISOString().slice(0, 10);
+}
+
+export function inclusiveDateRangeFromRequest(request) {
+  return {
+    from_date: String(request.from).slice(0, 10),
+    to_date: inclusiveEndDateFromExclusive(request.to),
+  };
+}
+
 export function rangeFromParams(params) {
   const fromRaw = requiredParam(params, 'from');
   const toRaw = requiredParam(params, 'to');

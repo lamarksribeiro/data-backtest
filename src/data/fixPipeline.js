@@ -1,7 +1,7 @@
 import { acceptEligibleReviewPartitions } from '../state/manifest.js';
 import { checkDatasetAvailability, partitionDatesForRange } from '../query/availability.js';
 import { resolveDataRequest } from '../query/dataMode.js';
-import { datasetRequestFromObject } from '../query/request.js';
+import { datasetRequestFromObject, inclusiveEndDateFromExclusive } from '../query/request.js';
 
 export function buildDataFixPlan(db, request, config) {
   const normalized = datasetRequestFromObject(request, config);
@@ -63,11 +63,18 @@ export function buildDataFixPlan(db, request, config) {
 
 function actionDateLabel(action, field) {
   const direct = action?.[field];
-  if (direct) return String(direct).slice(0, 10);
+  if (direct) {
+    return field === 'to'
+      ? inclusiveEndDateFromExclusive(direct)
+      : String(direct).slice(0, 10);
+  }
   const args = action?.args || [];
   const flag = field === 'from' ? '--from' : '--to';
   const idx = args.indexOf(flag);
-  if (idx >= 0 && args[idx + 1]) return String(args[idx + 1]).slice(0, 10);
+  if (idx >= 0 && args[idx + 1]) {
+    const value = args[idx + 1];
+    return field === 'to' ? inclusiveEndDateFromExclusive(value) : String(value).slice(0, 10);
+  }
   return '?';
 }
 

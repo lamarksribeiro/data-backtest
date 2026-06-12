@@ -52,7 +52,7 @@ export function renderContextBar(ctx, onChange, options = {}) {
   bar.className = 'context-bar';
   bar.innerHTML = `
     <label class="context-bar__field">De <input type="date" name="from" value="${current.from || ''}"></label>
-    <label class="context-bar__field">Até <input type="date" name="to" value="${current.to || ''}"></label>
+    <label class="context-bar__field">Até (incluso) <input type="date" name="to" value="${current.to || ''}"></label>
     <label class="context-bar__field">Ativo ${selectHtml('underlying', underlyings, current.underlying, formatRaw)}</label>
     <label class="context-bar__field">Intervalo ${selectHtml('interval', intervals, current.interval, formatInterval)}</label>
     <label class="context-bar__field">Book ${selectHtml('book_depth', bookDepths, current.book_depth, (value) => `top ${value}`)}</label>
