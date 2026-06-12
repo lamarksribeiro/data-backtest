@@ -1237,7 +1237,7 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, drawerUiState = 
         el('em', {}, 'clob_stale'),
         ', ',
         el('em', {}, 'underlying_stale'),
-        ' ou spot flat prolongado → evento inteiro fora do Parquet.',
+        ' ou spot no mesmo valor por ≥30s → evento inteiro fora do Parquet.',
       ]),
 
       // Cards de resumo de normalização

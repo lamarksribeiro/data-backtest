@@ -182,7 +182,7 @@ test('normalizeEvent keeps event when spot swings materially despite underlying_
   assert.deepEqual(result.issues, []);
 });
 
-test('normalizeEvent omits when spot drifts slowly but odds keep moving', () => {
+test('normalizeEvent omits when spot is frozen exactly but odds keep moving', () => {
   const ptb = 62_515.58;
   const baseMs = Date.parse('2026-06-11T14:00:00.000Z');
   const ticks = Array.from({ length: 600 }, (_, index) => {
@@ -193,7 +193,7 @@ test('normalizeEvent omits when spot drifts slowly but odds keep moving', () => 
       eventStart: '2026-06-11T14:00:00.000Z',
       eventEnd: '2026-06-11T14:05:00.000Z',
       ts: new Date(baseMs + index * 500).toISOString(),
-      underlyingPrice: index < 30 ? ptb - 20 + index * 0.3 : 62_487.69 + (index - 30) * 0.02,
+      underlyingPrice: 62_487.69,
       priceToBeat: ptb,
       upPrice: up,
       downPrice: 1 - up,
@@ -207,6 +207,36 @@ test('normalizeEvent omits when spot drifts slowly but odds keep moving', () => 
   assert.equal(result.action, 'omit');
   assert.equal(result.exportTicks.length, 0);
   assert.ok(result.issues.includes('underlying_stale'));
+});
+
+test('normalizeEvent keeps event when spot only has micromovements inside quiet band', () => {
+  const baseMs = Date.parse('2026-06-12T21:30:00.000Z');
+  const ptb = 63_435.5;
+  const ticks = Array.from({ length: 600 }, (_, index) => {
+    const phase = index / 599;
+    const jitter = (index % 7) * 0.01 + Math.sin(index / 5) * 0.02;
+    const underlying = 63_435.5 + jitter;
+    const up = 0.45 + 0.4 * Math.min(1, Math.max(0, (phase - 0.4) / 0.6));
+    const down = 1 - up;
+    return {
+      conditionId: '0x781404',
+      eventStart: '2026-06-12T21:30:00.000Z',
+      eventEnd: '2026-06-12T21:35:00.000Z',
+      ts: new Date(baseMs + index * 500).toISOString(),
+      underlyingPrice: underlying,
+      priceToBeat: ptb,
+      upPrice: up,
+      downPrice: down,
+      upBestBid: up - 0.01,
+      upBestAsk: up + 0.01,
+      downBestBid: down - 0.01,
+      downBestAsk: down + 0.01,
+    };
+  });
+  const result = normalizeEventTicks(ticks, { omitEventBadRatio: 0.5, minStaleSec: 30, minQuoteMove: 0.003 });
+  assert.equal(result.action, 'keep');
+  assert.equal(result.exportTicks.length, 600);
+  assert.deepEqual(result.issues, []);
 });
 
 test('normalizeEvent omits when majority of ticks are clob_stale', () => {

@@ -21,6 +21,24 @@ function underlyingPricesMatch(left, right, epsilon) {
   return Math.abs(leftPrice - rightPrice) <= epsilon;
 }
 
+function underlyingSpotExactlyEqual(leftTick, rightTick) {
+  const leftPrice = leftTick?.underlyingPrice;
+  const rightPrice = rightTick?.underlyingPrice;
+  if (leftPrice == null || rightPrice == null || !Number.isFinite(leftPrice) || !Number.isFinite(rightPrice)) {
+    return false;
+  }
+  return leftPrice === rightPrice;
+}
+
+export function underlyingSegmentExactlyFlat(ticks, startIndex, endIndex) {
+  const first = ticks[startIndex]?.underlyingPrice;
+  if (first == null || !Number.isFinite(first)) return false;
+  for (let index = startIndex + 1; index <= endIndex; index += 1) {
+    if (ticks[index]?.underlyingPrice !== first) return false;
+  }
+  return true;
+}
+
 function booksMatch(left, right) {
   return pricesEqual(left.upBestBid, right.upBestBid)
     && pricesEqual(left.upBestAsk, right.upBestAsk)
@@ -263,7 +281,7 @@ export function classifyFlatUnderlyingSegment(ticks, startIndex, endIndex, opts 
   }
 
   if (quoteRange >= minQuoteMove || booksFlat === false) {
-    if (underlyingFeedLooksStuck(ticks, startIndex, endIndex, opts)) {
+    if (underlyingSegmentExactlyFlat(ticks, startIndex, endIndex)) {
       return { ...base, classification: 'underlying_stale' };
     }
     return { ...base, classification: 'underlying_quiet' };
@@ -362,11 +380,50 @@ export function eventSpotMovedMaterially(ticks, opts = {}) {
   return eventUnderlyingRange(ticks) >= minUnderlyingMove;
 }
 
+export function analyzeExactFlatUnderlyingSegments(ticks, opts = {}) {
+  if (ticks.length < 2) return [];
+
+  const segments = [];
+  let streakStart = 0;
+  const minStaleSec = opts.minStaleSec ?? 30;
+
+  for (let index = 1; index < ticks.length; index += 1) {
+    if (underlyingSpotExactlyEqual(ticks[index - 1], ticks[index])) continue;
+
+    const endIndex = index - 1;
+    const startTs = parseTsMs(ticks[streakStart]?.ts);
+    const endTs = parseTsMs(ticks[endIndex]?.ts);
+    const durationSec = startTs != null && endTs != null ? Math.max(0, (endTs - startTs) / 1000) : 0;
+    const exactlyFlat = underlyingSegmentExactlyFlat(ticks, streakStart, endIndex);
+    segments.push({
+      feed: 'underlying',
+      startIndex: streakStart,
+      endIndex,
+      durationSec,
+      classification: exactlyFlat && durationSec >= minStaleSec ? 'underlying_flat' : 'too_short',
+    });
+    streakStart = index;
+  }
+
+  const endIndex = ticks.length - 1;
+  const startTs = parseTsMs(ticks[streakStart]?.ts);
+  const endTs = parseTsMs(ticks[endIndex]?.ts);
+  const durationSec = startTs != null && endTs != null ? Math.max(0, (endTs - startTs) / 1000) : 0;
+  const exactlyFlat = underlyingSegmentExactlyFlat(ticks, streakStart, endIndex);
+  segments.push({
+    feed: 'underlying',
+    startIndex: streakStart,
+    endIndex,
+    durationSec,
+    classification: exactlyFlat && durationSec >= minStaleSec ? 'underlying_flat' : 'too_short',
+  });
+
+  return segments.filter((segment) => segment.classification !== 'too_short');
+}
+
 export function findUnderlyingFlatTickIndices(ticks, opts = {}) {
   const flat = new Set();
-  const minStaleSec = opts.minStaleSec ?? 30;
-  for (const segment of analyzeFlatUnderlyingSegments(ticks, opts)) {
-    if (segment.durationSec < minStaleSec) continue;
+  for (const segment of analyzeExactFlatUnderlyingSegments(ticks, opts)) {
     for (let index = segment.startIndex; index <= segment.endIndex; index += 1) flat.add(index);
   }
   return flat;

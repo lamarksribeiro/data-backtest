@@ -1,4 +1,4 @@
-import { analyzeTrimSegments, findUnderlyingFlatTickIndices } from './clobStale.js';
+import { analyzeExactFlatUnderlyingSegments, analyzeTrimSegments } from './clobStale.js';
 import { buildChartTicksFromScalars, summarizeChartTicks } from './chartTicks.js';
 import { normalizeEventTicks } from './normalizeEvent.js';
 import { buildNormalizationOptions } from '../sync/applyNormalization.js';
@@ -26,29 +26,27 @@ export function buildSourceEventPreview(ticks, config = {}) {
   const result = normalizeEventTicks(sorted, opts);
   const segments = analyzeTrimSegments(sorted, opts);
 
-  const flatIndices = findUnderlyingFlatTickIndices(sorted, opts);
-  const minStaleSec = opts.minStaleSec ?? 30;
   const trimRegions = result.action === 'omit'
-    ? segments
-      .filter((segment) => {
-        if (result.issues.includes(segment.classification)) return true;
-        if (!result.issues.includes('underlying_flat')) return false;
-        if (segment.feed !== 'underlying' || segment.durationSec < minStaleSec) return false;
-        for (let index = segment.startIndex; index <= segment.endIndex; index += 1) {
-          if (flatIndices.has(index)) return true;
-        }
-        return false;
-      })
-      .map((segment) => ({
-        kind: result.issues.includes(segment.classification)
-          ? segment.classification
-          : 'underlying_flat',
-        feed: segment.feed,
-        from: sorted[segment.startIndex]?.ts ?? null,
-        to: sorted[segment.endIndex]?.ts ?? null,
-        duration_sec: segment.durationSec,
-      }))
-      .filter((region) => region.from && region.to)
+    ? [
+      ...segments
+        .filter((segment) => result.issues.includes(segment.classification))
+        .map((segment) => ({
+          kind: segment.classification,
+          feed: segment.feed,
+          from: sorted[segment.startIndex]?.ts ?? null,
+          to: sorted[segment.endIndex]?.ts ?? null,
+          duration_sec: segment.durationSec,
+        })),
+      ...(result.issues.includes('underlying_flat')
+        ? analyzeExactFlatUnderlyingSegments(sorted, opts).map((segment) => ({
+          kind: 'underlying_flat',
+          feed: segment.feed,
+          from: sorted[segment.startIndex]?.ts ?? null,
+          to: sorted[segment.endIndex]?.ts ?? null,
+          duration_sec: segment.durationSec,
+        }))
+        : []),
+    ].filter((region) => region.from && region.to)
     : [];
 
   const chart_ticks = buildChartTicksFromScalars(sorted, config);

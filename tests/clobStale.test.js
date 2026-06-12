@@ -164,10 +164,25 @@ test('underlyingFeedLooksStuck distinguishes frozen feed from small oscillation'
   assert.equal(underlyingFeedLooksStuck(oscillating, 0, oscillating.length - 1, { minStaleSec: 30 }), false);
 });
 
-test('underlying stale catches slow spot drift with active odds', () => {
+test('underlying stale requires exact frozen spot even when odds keep moving', () => {
   const ptb = 62_515.58;
   const baseMs = Date.parse('2026-06-11T14:00:00.000Z');
-  const ticks = Array.from({ length: 600 }, (_, index) => {
+  const frozen = Array.from({ length: 600 }, (_, index) => {
+    const phase = index / 600;
+    const up = 0.5 + 0.48 * Math.min(1, Math.max(0, (phase - 0.75) / 0.25));
+    return {
+      ts: new Date(baseMs + index * 500).toISOString(),
+      underlyingPrice: 62_487.69,
+      priceToBeat: ptb,
+      upPrice: up,
+      downPrice: 1 - up,
+      upBestBid: up - 0.01,
+      upBestAsk: up + 0.01,
+      downBestBid: (1 - up) - 0.01,
+      downBestAsk: (1 - up) + 0.01,
+    };
+  });
+  const drifting = Array.from({ length: 600 }, (_, index) => {
     const phase = index / 600;
     const up = 0.5 + 0.48 * Math.min(1, Math.max(0, (phase - 0.75) / 0.25));
     return {
@@ -183,9 +198,11 @@ test('underlying stale catches slow spot drift with active odds', () => {
     };
   });
 
-  const segments = analyzeFlatUnderlyingSegments(ticks, { minStaleSec: 30 });
-  assert.ok(segments.some((segment) => segment.classification === 'underlying_stale'));
-  assert.ok(findUnderlyingStaleTickIndices(ticks, { minStaleSec: 30 }).size >= 300);
+  const frozenSegments = analyzeFlatUnderlyingSegments(frozen, { minStaleSec: 30 });
+  const driftingSegments = analyzeFlatUnderlyingSegments(drifting, { minStaleSec: 30 });
+  assert.ok(frozenSegments.some((segment) => segment.classification === 'underlying_stale'));
+  assert.ok(findUnderlyingStaleTickIndices(frozen, { minStaleSec: 30 }).size >= 300);
+  assert.equal(driftingSegments.some((segment) => segment.classification === 'underlying_stale'), false);
 });
 
 test('resolved market keeps flat quotes near 1/0 when underlying moved away from PTB', () => {
