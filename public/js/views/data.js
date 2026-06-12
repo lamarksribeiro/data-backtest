@@ -717,63 +717,38 @@ const dataStyles = `
   .quality-event-chart__swatch--clob { background: rgba(239, 68, 68, 0.15); color: #fca5a5; }
   .quality-event-chart__swatch--underlying { background: rgba(245, 158, 11, 0.15); color: #fcd34d; }
   .quality-event-chart__swatch--omit { background: rgba(239, 68, 68, 0.22); color: #fecaca; }
-  .quality-event-chart__compare {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+  .quality-event-chart__meta {
+    font-size: 10px;
+    margin-left: auto;
   }
-  .quality-event-chart__panel {
-    background: rgba(0, 0, 0, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 10px;
-    padding: 10px;
+  .quality-event-chart__charts {
     min-width: 0;
   }
-  .quality-event-chart__panel--empty {
-    display: flex;
-    align-items: center;
-    min-height: 180px;
-  }
-  .quality-event-chart__panel-head {
-    margin-bottom: 8px;
-  }
-  .quality-event-chart__panel-title {
-    margin: 0 0 4px;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text-1);
-  }
-  .quality-event-chart__panel-hint,
-  .quality-event-chart__panel-meta {
-    margin: 0;
-    font-size: 10px;
-    line-height: 1.35;
-  }
-  .quality-event-chart__panel-empty {
+  .quality-event-chart__empty {
     padding: 12px 0;
     font-size: 11px;
   }
   .quality-event-chart .explorer-charts {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    gap: 12px;
   }
   .quality-event-chart .explorer-charts__section {
-    margin: 0;
-    padding: 0;
-    border: none;
-    background: transparent;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.12);
+    border-color: rgba(255, 255, 255, 0.06);
+    box-shadow: none;
+  }
+  .quality-event-chart .explorer-charts__section:hover {
+    box-shadow: none;
+    transform: none;
   }
   .quality-event-chart .explorer-charts__title {
-    font-size: 11px;
+    font-size: 12px;
+  }
+  .quality-event-chart .explorer-charts__hint {
+    font-size: 10px;
   }
   .quality-event-chart .chart--compact .chart__viewport {
-    min-height: 120px;
-  }
-  @media (max-width: 960px) {
-    .quality-event-chart__compare {
-      grid-template-columns: 1fr;
-    }
+    min-height: 140px;
   }
   .quality-omit-rules {
     font-size: 12px;

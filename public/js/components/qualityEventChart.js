@@ -59,34 +59,7 @@ function tickCountLabel(preview, sampled) {
   if (sampled) {
     return `${preview.chart_ticks.length} pontos amostrados de ${preview.ticks_in ?? preview.chart_ticks.length}`;
   }
-  if (preview.data_role === 'parquet') {
-    return `${preview.ticks_out ?? 0} ticks no Parquet`;
-  }
   return `${preview.ticks_in ?? 0} ticks brutos`;
-}
-
-function renderChartPanel(title, hint, preview, asset, { overlayBands = null } = {}) {
-  const ticks = previewToTicks(preview);
-  const spotPoints = preview.chart_meta?.spot_points
-    ?? ticks.filter((row) => row.underlying_price != null).length;
-  const sampled = preview.chart_ticks?.length > 0
-    && preview.chart_ticks.length < (preview.ticks_in ?? preview.chart_ticks.length);
-
-  return el('div', { class: 'quality-event-chart__panel' }, [
-    el('div', { class: 'quality-event-chart__panel-head' }, [
-      el('h4', { class: 'quality-event-chart__panel-title' }, title),
-      el('p', { class: 'quality-event-chart__panel-hint muted' }, hint),
-      el('span', { class: 'quality-event-chart__panel-meta muted' }, tickCountLabel(preview, sampled)),
-    ]),
-    spotPoints < 2
-      ? el('p', { class: 'muted quality-event-chart__panel-empty' }, 'Sem preço spot válido para gráfico.')
-      : explorerTickCharts(ticks, {
-        assetSymbol: asset,
-        yAxisDecimals: underlyingDecimals(asset),
-        overlayBands: overlayBands || [],
-        compact: true,
-      }),
-  ]);
 }
 
 export function renderQualityEventChart(container, payload, opts = {}) {
@@ -94,12 +67,14 @@ export function renderQualityEventChart(container, payload, opts = {}) {
 
   const asset = opts.assetSymbol || payload.underlying || 'BTC';
   const original = payload.original ?? payload.preview ?? payload;
-  const parquet = payload.parquet ?? null;
-  const parquetAvailable = Boolean(payload.parquet_available);
 
   const trimRegions = original?.trim_regions || [];
   const originalTicks = previewToTicks(original);
   const overlayBands = overlayBandsFromPreview(originalTicks, original);
+  const spotPoints = original.chart_meta?.spot_points
+    ?? originalTicks.filter((row) => row.underlying_price != null).length;
+  const sampled = original.chart_ticks?.length > 0
+    && original.chart_ticks.length < (original.ticks_in ?? original.chart_ticks.length);
 
   const legendSwatches = [
     trimRegions.some((region) => region.kind === 'clob_stale')
@@ -116,15 +91,6 @@ export function renderQualityEventChart(container, payload, opts = {}) {
       : null,
   ].filter(Boolean);
 
-  const partitionStatus = payload.partition_status || 'missing';
-  const parquetHint = !parquetAvailable
-    ? `Partição ${partitionStatus} — sync ainda não exportou este dia.`
-    : partitionStatus === 'needs_review'
-      ? 'Parquet gerado (needs_review) — dados exportados aguardando revisão de contagem.'
-      : parquet?.ticks_out
-        ? 'Dados exportados no lakehouse.'
-        : 'Evento omitido do export — nenhum tick no Parquet.';
-
   mount(container, el('div', { class: 'quality-event-chart' }, [
     el('div', { class: 'quality-event-chart__summary' }, [
       el('span', { class: `event-badge event-badge--${original.action === 'omit' ? 'omit' : 'ok'}` },
@@ -134,29 +100,23 @@ export function renderQualityEventChart(container, payload, opts = {}) {
         : null,
       el('span', { class: 'muted' },
         `export: ${original.ticks_out ?? 0}/${original.ticks_in ?? 0} ticks`),
+      el('span', { class: 'muted quality-event-chart__meta' }, tickCountLabel(original, sampled)),
     ]),
     legendSwatches.length
       ? el('div', { class: 'quality-event-chart__legend' }, [
-        el('span', {}, 'Faixas (coletor): '),
+        el('span', {}, 'Faixas: '),
         ...legendSwatches,
       ])
       : null,
-    el('div', { class: 'quality-event-chart__compare' }, [
-      renderChartPanel(
-        'Coletor (bruto)',
-        'Postgres do data-colector · faixas vermelhas = motivo da omissão automática.',
-        original,
-        asset,
-        { overlayBands },
-      ),
-      parquetAvailable && parquet
-        ? renderChartPanel('Parquet exportado', parquetHint, parquet, asset)
-        : el('div', { class: 'quality-event-chart__panel quality-event-chart__panel--empty' }, [
-          el('div', { class: 'quality-event-chart__panel-head' }, [
-            el('h4', { class: 'quality-event-chart__panel-title' }, 'Parquet exportado'),
-            el('p', { class: 'quality-event-chart__panel-hint muted' }, parquetHint),
-          ]),
-        ]),
+    el('div', { class: 'quality-event-chart__charts' }, [
+      spotPoints < 2
+        ? el('p', { class: 'muted quality-event-chart__empty' }, 'Sem preço spot válido para gráfico.')
+        : explorerTickCharts(originalTicks, {
+          assetSymbol: asset,
+          yAxisDecimals: underlyingDecimals(asset),
+          overlayBands,
+          compact: true,
+        }),
     ]),
   ]));
 
