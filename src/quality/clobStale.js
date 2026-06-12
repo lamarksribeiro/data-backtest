@@ -153,8 +153,9 @@ export function resolveSegmentMoveThresholds(ticks, startIndex, endIndex, opts =
   const ref = medianUnderlyingInSegment(ticks, startIndex, endIndex) ?? 100_000;
   const minUnderlyingMove = opts.minUnderlyingMove ?? Math.max(20, ref * 0.00025);
   const quietUnderlyingMax = opts.quietUnderlyingMax ?? Math.max(5, ref * 0.00008);
+  const frozenUnderlyingMax = opts.frozenUnderlyingMax ?? quietUnderlyingMax * 2;
   const minQuoteMove = opts.minQuoteMove ?? 0.003;
-  return { minUnderlyingMove, quietUnderlyingMax, minQuoteMove, refUnderlying: ref };
+  return { minUnderlyingMove, quietUnderlyingMax, frozenUnderlyingMax, minQuoteMove, refUnderlying: ref };
 }
 
 export function classifyFlatQuoteSegment(ticks, startIndex, endIndex, opts = {}) {
@@ -227,14 +228,6 @@ export function classifyFlatUnderlyingSegment(ticks, startIndex, endIndex, opts 
     return { ...base, classification: 'too_short' };
   }
 
-  if (underlyingRange > quietUnderlyingMax) {
-    return { ...base, classification: 'underlying_active' };
-  }
-
-  if (isResolvedMarketSegment(ticks, startIndex, endIndex, opts)) {
-    return { ...base, classification: 'resolved_market' };
-  }
-
   if (quoteRange < minQuoteMove && booksFlat !== false) {
     return { ...base, classification: 'confirmed_quiet_market' };
   }
@@ -267,19 +260,24 @@ export function analyzeFlatUnderlyingSegments(ticks, opts = {}) {
   if (ticks.length < 2) return [];
 
   const segments = [];
-  let streakStart = 0;
+  let start = 0;
 
-  for (let index = 1; index < ticks.length; index += 1) {
-    const epsilon = resolveSegmentMoveThresholds(ticks, streakStart, index - 1, opts).quietUnderlyingMax;
-    if (underlyingPricesMatch(ticks[index - 1], ticks[index], epsilon)) continue;
+  while (start < ticks.length) {
+    let end = start;
+    const frozenMax = resolveSegmentMoveThresholds(ticks, start, start, opts).frozenUnderlyingMax;
 
-    segments.push(classifyFlatUnderlyingSegment(ticks, streakStart, index - 1, opts));
-    streakStart = index;
+    while (end + 1 < ticks.length) {
+      const nextEnd = end + 1;
+      const nextRange = underlyingRangeInSegment(ticks, start, nextEnd);
+      if (nextRange > frozenMax) break;
+      end = nextEnd;
+    }
+
+    segments.push(classifyFlatUnderlyingSegment(ticks, start, end, opts));
+    start = end + 1;
   }
 
-  segments.push(classifyFlatUnderlyingSegment(ticks, streakStart, ticks.length - 1, opts));
-  return segments.filter((segment) => segment.classification !== 'too_short'
-    && segment.classification !== 'underlying_active');
+  return segments.filter((segment) => segment.classification !== 'too_short');
 }
 
 export function analyzeTrimSegments(ticks, opts = {}) {

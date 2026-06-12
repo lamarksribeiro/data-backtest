@@ -102,6 +102,30 @@ test('underlying stale segment trims when spot freezes but up down keep moving',
   assert.equal(findClobStaleTickIndices(ticks, { minStaleSec: 30 }).size, 0);
 });
 
+test('underlying stale catches slow spot drift with active odds', () => {
+  const ptb = 62_515.58;
+  const baseMs = Date.parse('2026-06-11T14:00:00.000Z');
+  const ticks = Array.from({ length: 600 }, (_, index) => {
+    const phase = index / 600;
+    const up = 0.5 + 0.48 * Math.min(1, Math.max(0, (phase - 0.75) / 0.25));
+    return {
+      ts: new Date(baseMs + index * 500).toISOString(),
+      underlyingPrice: index < 30 ? ptb - 20 + index * 0.3 : 62_487.69 + (index - 30) * 0.02,
+      priceToBeat: ptb,
+      upPrice: up,
+      downPrice: 1 - up,
+      upBestBid: up - 0.01,
+      upBestAsk: up + 0.01,
+      downBestBid: (1 - up) - 0.01,
+      downBestAsk: (1 - up) + 0.01,
+    };
+  });
+
+  const segments = analyzeFlatUnderlyingSegments(ticks, { minStaleSec: 30 });
+  assert.ok(segments.some((segment) => segment.classification === 'underlying_stale'));
+  assert.ok(findUnderlyingStaleTickIndices(ticks, { minStaleSec: 30 }).size >= 300);
+});
+
 test('resolved market keeps flat quotes near 1/0 when underlying moved away from PTB', () => {
   const ptb = 63_517.89;
   const ticks = buildTicks({
