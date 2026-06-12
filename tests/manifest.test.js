@@ -137,18 +137,27 @@ test('manifest bulk accepts eligible stale event_quality mismatches', async () =
         status: 'needs_review',
         error: 'actual tick count 100 differs from event_quality 1000',
       });
+      upsertManifestPartition(db, {
+        ...base,
+        dt: '2026-06-04',
+        activePath: '/lake/backtest_ticks/review-normalized.parquet',
+        rows: 500,
+        status: 'needs_review',
+        error: 'Normalization omitted 55.6% of events (> 50%)',
+      });
 
       const result = acceptEligibleReviewPartitions(db, {
         ...base,
         fromDt: '2026-06-02',
-        toDt: '2026-06-03',
+        toDt: '2026-06-04',
       }, 0.02);
 
-      assert.equal(result.accepted.length, 1);
+      assert.equal(result.accepted.length, 2);
       assert.equal(result.skipped.length, 1);
       const rows = listManifest(db, { limit: 10 }).sort((left, right) => left.dt.localeCompare(right.dt));
       assert.equal(rows[0].status, 'accepted');
       assert.equal(rows[1].status, 'needs_review');
+      assert.equal(rows[2].status, 'accepted');
     } finally {
       closeStateDatabase(db);
     }

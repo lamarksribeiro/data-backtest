@@ -294,7 +294,7 @@ test('normalizePartition aggregates hours affected and export quality stays vali
   assert.equal(quality.normalizationApplied, true);
 });
 
-test('classifyExportQuality needs review when entire day is omitted', () => {
+test('classifyExportQuality approves normalized export even when entire day is omitted', () => {
   const quality = classifyExportQuality({
     actualRows: 0,
     expectedRows: 1000,
@@ -308,5 +308,6 @@ test('classifyExportQuality needs review when entire day is omitted', () => {
     },
     maxDayOmitRatio: 0.5,
   });
-  assert.equal(quality.status, 'needs_review');
+  assert.equal(quality.status, 'valid');
+  assert.match(quality.error, /Normalized export approved/);
 });

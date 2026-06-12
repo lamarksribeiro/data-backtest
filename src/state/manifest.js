@@ -118,7 +118,11 @@ export function acceptEligibleReviewPartitions(db, opts, acceptMismatchRatio) {
       AND dt <= ?
       AND status = 'needs_review'
       AND active_path IS NOT NULL
-      AND error LIKE '%differs from event_quality%'`;
+      AND (
+        error LIKE '%differs from event_quality%'
+        OR error LIKE 'Normalization%'
+        OR error LIKE 'Normalized export%'
+      )`;
 
   if (opts.resolution) {
     params.push(opts.resolution);
@@ -140,6 +144,16 @@ export function acceptEligibleReviewPartitions(db, opts, acceptMismatchRatio) {
   const now = new Date().toISOString();
 
   for (const row of rows) {
+    if (String(row.error || '').startsWith('Normaliz')) {
+      db.prepare(`
+        UPDATE lake_manifest
+        SET status = 'accepted', verified_at = ?, error = ?
+        WHERE id = ?
+      `).run(now, `Accepted automatically during manifest recheck: normalized export already filters bad events. Original: ${row.error}`, row.id);
+      accepted.push({ id: row.id, dt: row.dt, rows: Number(row.rows ?? row.source_tick_count ?? 0), reason: 'normalization_auto_approved' });
+      continue;
+    }
+
     const expectedRows = expectedRowsFromError(row.error);
     const actualRows = Number(row.rows ?? row.source_tick_count ?? 0);
     if (expectedRows == null) {

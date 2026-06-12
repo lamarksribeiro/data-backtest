@@ -1173,6 +1173,7 @@ async function acceptReviewPartition(ctx, day, formCtx) {
   if (!ok) return;
   const res = await ctx.api.post('/api/manifest/accept', {
     dataset: 'backtest_ticks',
+    market_id: day.partitions?.[0]?.market_id ?? null,
     underlying: formCtx.underlying,
     interval: formCtx.interval,
     book_depth: Number(formCtx.book_depth),

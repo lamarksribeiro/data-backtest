@@ -74,6 +74,7 @@ export function checkDatasetAvailability(db, request) {
     const usable = ['valid', 'accepted'].includes(row.status) && Boolean(row.active_path);
     const partition = {
       dt,
+      market_id: row.market_id ?? null,
       status: row.status,
       usable,
       rows: row.rows ?? null,
@@ -93,6 +94,7 @@ export function checkDatasetAvailability(db, request) {
     }
     unavailable.push({
       dt,
+      market_id: row.market_id ?? null,
       status: row.status,
       active_path: row.active_path,
       rows: row.rows ?? null,

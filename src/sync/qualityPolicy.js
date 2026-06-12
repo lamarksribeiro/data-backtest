@@ -17,45 +17,36 @@ export function classifyExportQuality({
   const expected = Math.max(Number(expectedRows || 0), 0);
 
   if (normalization?.applied) {
-    if (normalization.events_exported === 0 && normalization.events_total > 0) {
-      return {
-        status: 'needs_review',
-        diverged: true,
-        error: 'Normalization omitted every event in the partition',
-        mismatchRatio: 1,
-        normalizationApplied: true,
-      };
-    }
-    if ((normalization.skip_ratio ?? 0) > maxDayOmitRatio) {
-      return {
-        status: 'needs_review',
-        diverged: true,
-        error: `Normalization omitted ${(normalization.skip_ratio * 100).toFixed(1)}% of events (> ${(maxDayOmitRatio * 100).toFixed(0)}%)`,
-        mismatchRatio: normalization.skip_ratio,
-        normalizationApplied: true,
-      };
-    }
-    if (exportedRows === 0) {
-      return {
-        status: 'needs_review',
-        diverged: true,
-        error: 'Normalization produced no exportable ticks',
-        mismatchRatio: expected > 0 ? 1 : 0,
-        normalizationApplied: true,
-      };
-    }
+    const skipRatio = normalization.skip_ratio ?? 0;
+    const qualityNote = buildNormalizationQualityNote({ exportedRows, expected, normalization, skipRatio, maxDayOmitRatio });
     return {
       status: 'valid',
       diverged: exportedRows !== expected,
-      error: exportedRows !== expected
-        ? `Normalized export: ${exportedRows} rows (${normalization.ticks_removed} ticks removed, ${normalization.events_omitted} events omitted)`
-        : null,
-      mismatchRatio: expected > 0 ? Math.abs(exportedRows - expected) / expected : 0,
+      error: qualityNote,
+      mismatchRatio: expected > 0 ? Math.abs(exportedRows - expected) / expected : skipRatio,
       normalizationApplied: true,
     };
   }
 
   return classifyTickCountQuality({ actualRows, expectedRows, acceptMismatchRatio });
+}
+
+function buildNormalizationQualityNote({ exportedRows, expected, normalization, skipRatio, maxDayOmitRatio }) {
+  const removed = normalization.ticks_removed ?? 0;
+  const omitted = normalization.events_omitted ?? 0;
+  if (normalization.events_exported === 0 && normalization.events_total > 0) {
+    return `Normalized export approved: all ${normalization.events_total} events were omitted by quality filters (${removed} ticks removed)`;
+  }
+  if (exportedRows === 0 && expected > 0) {
+    return `Normalized export approved: no exportable ticks after quality filters (${removed} ticks removed, ${omitted} events omitted)`;
+  }
+  if (skipRatio > maxDayOmitRatio) {
+    return `Normalized export approved: ${(skipRatio * 100).toFixed(1)}% of events omitted by quality filters (> ${(maxDayOmitRatio * 100).toFixed(0)}%)`;
+  }
+  if (exportedRows !== expected || removed > 0 || omitted > 0) {
+    return `Normalized export approved: ${exportedRows} rows (${removed} ticks removed, ${omitted} events omitted)`;
+  }
+  return null;
 }
 
 export function classifyTickCountQuality({ actualRows, expectedRows, acceptMismatchRatio = DEFAULT_ACCEPT_MISMATCH_RATIO }) {
