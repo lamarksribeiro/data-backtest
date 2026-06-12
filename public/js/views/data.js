@@ -322,21 +322,17 @@ function renderActions(ctx, formCtx, fieldOptions) {
   const section = document.getElementById('data-actions-section');
   if (!section) return;
   mount(section, el('div', {}, [
-    el('h2', { class: 'card__title' }, 'Preparar período'),
+    el('h2', { class: 'card__title' }, 'Reprocessar período'),
     el('form', { id: 'data-prepare-form', class: 'studio-form' }, [
       el('label', { class: 'field' }, ['De ', el('input', { type: 'date', name: 'from', value: formCtx.from, class: 'field__input' })]),
       el('label', { class: 'field' }, ['Até ', el('input', { type: 'date', name: 'to', value: formCtx.to, class: 'field__input' })]),
       el('label', { class: 'field' }, ['Ativo ', selectField('underlying', fieldOptions.underlyings || [formCtx.underlying], formCtx.underlying)]),
       el('label', { class: 'field' }, ['Intervalo ', selectField('interval', fieldOptions.intervals || [formCtx.interval], formCtx.interval)]),
       el('label', { class: 'field' }, ['Book ', selectField('book_depth', fieldOptions.book_depths || [formCtx.book_depth], formCtx.book_depth)]),
-      el('label', { class: 'field field--checkbox' }, [
-        el('input', { type: 'checkbox', name: 'rebuild', value: '1' }),
-        ' Incluir dias já prontos (reprocessar inteiro)',
-      ]),
-      el('p', { class: 'muted', style: { fontSize: '12px', margin: '0 0 8px' } },
-        'Sempre reprocessa dias inteiros. Para um evento específico, use Excluir/Restaurar no calendário.'
+      el('p', { class: 'muted', style: { fontSize: '12px', margin: '0 0 12px' } },
+        'Reprocessa o período selecionado, dia a dia.'
       ),
-      el('button', { class: 'btn btn--primary', type: 'submit' }, 'Preparar período'),
+      el('button', { class: 'btn btn--primary', type: 'submit' }, 'Reprocessar período'),
     ]),
   ]));
 
@@ -360,7 +356,7 @@ function renderActions(ctx, formCtx, fieldOptions) {
       book_depth: fd.get('book_depth'),
     };
     await submitDataFix(ctx, request, {
-      rebuild: fd.get('rebuild') === '1',
+      rebuild: true,
       fieldOptions,
     });
   });
