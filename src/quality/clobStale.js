@@ -296,8 +296,12 @@ export function analyzeFlatUnderlyingSegments(ticks, opts = {}) {
   let streakStart = 0;
 
   for (let index = 1; index < ticks.length; index += 1) {
-    const epsilon = resolveSegmentMoveThresholds(ticks, streakStart, index - 1, opts).quietUnderlyingMax;
-    if (underlyingPricesMatch(ticks[index - 1], ticks[index], epsilon)) continue;
+    const { quietUnderlyingMax } = resolveSegmentMoveThresholds(ticks, streakStart, index - 1, opts);
+    const pairwiseFlat = underlyingPricesMatch(ticks[index - 1], ticks[index], quietUnderlyingMax);
+    const segmentRange = underlyingRangeInSegment(ticks, streakStart, index);
+    const segmentStillQuiet = segmentRange <= quietUnderlyingMax;
+
+    if (pairwiseFlat && segmentStillQuiet) continue;
 
     segments.push(classifyFlatUnderlyingSegment(ticks, streakStart, index - 1, opts));
     streakStart = index;
@@ -345,4 +349,42 @@ export function findTrimTickIndices(ticks, opts = {}) {
   for (const index of findClobStaleTickIndices(ticks, opts)) trim.add(index);
   for (const index of findUnderlyingStaleTickIndices(ticks, opts)) trim.add(index);
   return trim;
+}
+
+export function eventUnderlyingRange(ticks) {
+  if (!ticks.length) return 0;
+  return underlyingRangeInSegment(ticks, 0, ticks.length - 1);
+}
+
+export function eventSpotMovedMaterially(ticks, opts = {}) {
+  if (ticks.length < 2) return false;
+  const { minUnderlyingMove } = resolveSegmentMoveThresholds(ticks, 0, ticks.length - 1, opts);
+  return eventUnderlyingRange(ticks) >= minUnderlyingMove;
+}
+
+export function collectOmitIssues(ticks, omitIndices, opts = {}) {
+  const issues = [];
+  const clobStale = findClobStaleTickIndices(ticks, opts);
+  const underlyingStale = findUnderlyingStaleTickIndices(ticks, opts);
+  for (const index of omitIndices) {
+    if (clobStale.has(index)) {
+      issues.push('clob_stale');
+      break;
+    }
+  }
+  for (const index of omitIndices) {
+    if (underlyingStale.has(index)) {
+      issues.push('underlying_stale');
+      break;
+    }
+  }
+  return issues;
+}
+
+export function findOmitTickIndices(ticks, opts = {}) {
+  const omit = findTrimTickIndices(ticks, opts);
+  if (!omit.size || !eventSpotMovedMaterially(ticks, opts)) return omit;
+
+  for (const index of findUnderlyingStaleTickIndices(ticks, opts)) omit.delete(index);
+  return omit;
 }

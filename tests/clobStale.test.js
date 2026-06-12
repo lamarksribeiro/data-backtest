@@ -127,6 +127,22 @@ test('underlying quiet market with small spot movement is not trimmed', () => {
   assert.equal(result.exportTicks.length, 600);
 });
 
+test('flat underlying streak breaks when cumulative range exceeds quiet band', () => {
+  const ticks = buildTicks({
+    length: 200,
+    secondStep: 0.5,
+    underlyingForIndex: (index) => 62_000 + index * 0.08,
+    quoteForIndex: (index) => ({
+      up: 0.50 + (index % 10) * 0.004,
+      down: 0.50 - (index % 10) * 0.004,
+    }),
+  });
+  const segments = analyzeFlatUnderlyingSegments(ticks, { minStaleSec: 30, minQuoteMove: 0.003 });
+  assert.ok(segments.length >= 2);
+  assert.ok(segments.every((segment) => segment.underlyingRange <= 6));
+  assert.ok(segments.every((segment) => segment.endIndex - segment.startIndex < 80));
+});
+
 test('underlyingFeedLooksStuck distinguishes frozen feed from small oscillation', () => {
   const frozen = buildTicks({
     length: 80,

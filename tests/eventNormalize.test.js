@@ -122,6 +122,37 @@ test('normalizeEvent keeps quiet market with flat quotes and flat underlying', (
   assert.equal(result.exportTicks.length, 40);
 });
 
+test('normalizeEvent keeps event when spot swings materially despite underlying_stale windows', () => {
+  const baseMs = Date.parse('2026-06-12T03:15:00.000Z');
+  const ptb = 62_600;
+  const ticks = Array.from({ length: 600 }, (_, index) => {
+    const phase = index / 599;
+    const swing = Math.sin(phase * Math.PI) * 380;
+    const underlying = 62_200 + swing + index * 0.02;
+    const up = 0.42 + 0.38 * (0.5 + 0.5 * Math.sin(phase * Math.PI * 3));
+    const down = 1 - up;
+    return {
+      conditionId: '0x9054',
+      eventStart: '2026-06-12T03:15:00.000Z',
+      eventEnd: '2026-06-12T03:20:00.000Z',
+      ts: new Date(baseMs + index * 500).toISOString(),
+      underlyingPrice: underlying,
+      priceToBeat: ptb,
+      upPrice: up,
+      downPrice: down,
+      upBestBid: up - 0.01,
+      upBestAsk: up + 0.01,
+      downBestBid: down - 0.01,
+      downBestAsk: down + 0.01,
+    };
+  });
+
+  const result = normalizeEventTicks(ticks, { omitEventBadRatio: 0.5, minStaleSec: 30, minQuoteMove: 0.003 });
+  assert.equal(result.action, 'keep');
+  assert.equal(result.exportTicks.length, 600);
+  assert.deepEqual(result.issues, []);
+});
+
 test('normalizeEvent omits when spot drifts slowly but odds keep moving', () => {
   const ptb = 62_515.58;
   const baseMs = Date.parse('2026-06-11T14:00:00.000Z');

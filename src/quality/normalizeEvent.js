@@ -1,7 +1,7 @@
 import {
   analyzeTrimSegments,
-  collectTrimIssues,
-  findTrimTickIndices,
+  collectOmitIssues,
+  findOmitTickIndices,
 } from './clobStale.js';
 
 export function normalizeEventTicks(ticks, opts = {}) {
@@ -23,12 +23,12 @@ export function normalizeEventTicks(ticks, opts = {}) {
   }
 
   const segments = analyzeTrimSegments(sorted, opts);
-  const trimIndices = findTrimTickIndices(sorted, opts);
-  const trimCount = trimIndices.size;
+  const omitIndices = findOmitTickIndices(sorted, opts);
+  const trimCount = omitIndices.size;
   const trimRatio = trimCount / sorted.length;
   const trimSegments = segments.filter((segment) => segment.classification === 'clob_stale'
     || segment.classification === 'underlying_stale');
-  const issues = collectTrimIssues(segments);
+  const issues = collectOmitIssues(sorted, omitIndices, opts);
 
   if (trimRatio > omitEventBadRatio) {
     return {

@@ -28,7 +28,7 @@ export function buildSourceEventPreview(ticks, config = {}) {
 
   const trimRegions = result.action === 'omit'
     ? segments
-      .filter((segment) => segment.classification === 'clob_stale' || segment.classification === 'underlying_stale')
+      .filter((segment) => result.issues.includes(segment.classification))
       .map((segment) => ({
         kind: segment.classification,
         feed: segment.feed,
