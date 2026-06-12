@@ -259,6 +259,65 @@ function dataFormFromDom() {
   };
 }
 
+function applyDayToPrepareForm(day, ctxSaved) {
+  const form = document.getElementById('data-prepare-form');
+  if (!form) return;
+  form.querySelector('[name="from"]').value = day.dt;
+  form.querySelector('[name="to"]').value = day.dt;
+  saveContext({ ...ctxSaved, from: day.dt, to: day.dt });
+}
+
+async function reprocessDay(ctx, day, ctxSaved, { fieldOptions = null } = {}) {
+  if (day.ui_state === 'processing') {
+    ctx.toast.warn('Este dia já está em processamento — aguarde o job atual.');
+    return false;
+  }
+  const request = {
+    from: day.dt,
+    to: day.dt,
+    underlying: ctxSaved.underlying,
+    interval: ctxSaved.interval,
+    book_depth: ctxSaved.book_depth,
+  };
+  const rebuild = day.ui_state === 'ready';
+  return submitDataFix(ctx, request, { rebuild, fieldOptions });
+}
+
+async function submitDataFix(ctx, request, { rebuild = false, fieldOptions = null } = {}) {
+  const payload = {
+    ...request,
+    dataset: 'backtest_ticks',
+    book_depth: Number(request.book_depth),
+    ...(rebuild ? { rebuild: true } : {}),
+  };
+  saveContext(payload);
+  const preview = await ctx.api.post('/api/data/fix', { request: payload, dry_run: true });
+  if (!preview.ok) {
+    ctx.toast.err(preview.error?.message || 'Falha no plano');
+    return false;
+  }
+  const lines = preview.data.summary_lines || [];
+  const intro = rebuild
+    ? 'Reprocessar dia(s) inteiro(s), incluindo partições já prontas.'
+    : 'Preparar / corrigir dia(s) com dados faltando ou inválidos.';
+  const msg = lines.length ? lines.join('\n') : (preview.data.summary || intro);
+  const confirmMsg = `${intro}\n\n${msg}\n\nConfirmar?`;
+  if (!confirm(confirmMsg)) return false;
+  const fix = await ctx.api.post('/api/data/fix', {
+    request: payload,
+    confirm_rebuild: preview.data.needs_rebuild_confirm || rebuild ? true : undefined,
+  });
+  if (!fix.ok) {
+    ctx.toast.err(fix.error?.message || 'Falha');
+    return false;
+  }
+  ctx.toast.ok(fix.data.ready ? 'Dados prontos' : `Job #${fix.data.job?.id} criado`);
+  const options = fieldOptions || contextBarOptions(await fetchContextOptionsCached(ctx.api));
+  await refreshCoverage(ctx, applyContextOptions(loadContext(), options));
+  await refreshJobs(ctx);
+  return true;
+}
+
 function renderActions(ctx, formCtx, fieldOptions) {
   const section = document.getElementById('data-actions-section');
   if (!section) return;
@@ -270,7 +329,14 @@ function renderActions(ctx, formCtx, fieldOptions) {
       el('label', { class: 'field' }, ['Ativo ', selectField('underlying', fieldOptions.underlyings || [formCtx.underlying], formCtx.underlying)]),
       el('label', { class: 'field' }, ['Intervalo ', selectField('interval', fieldOptions.intervals || [formCtx.interval], formCtx.interval)]),
       el('label', { class: 'field' }, ['Book ', selectField('book_depth', fieldOptions.book_depths || [formCtx.book_depth], formCtx.book_depth)]),
-      el('button', { class: 'btn btn--primary', type: 'submit' }, 'Corrigir / Preparar'),
+      el('label', { class: 'field field--checkbox' }, [
+        el('input', { type: 'checkbox', name: 'rebuild', value: '1' }),
+        ' Incluir dias já prontos (reprocessar inteiro)',
+      ]),
+      el('p', { class: 'muted', style: { fontSize: '12px', margin: '0 0 8px' } },
+        'Sempre reprocessa dias inteiros. Para um evento específico, use Excluir/Restaurar no calendário.'
+      ),
+      el('button', { class: 'btn btn--primary', type: 'submit' }, 'Preparar período'),
     ]),
   ]));
 
@@ -287,27 +353,16 @@ function renderActions(ctx, formCtx, fieldOptions) {
     ev.preventDefault();
     const fd = new FormData(ev.target);
     const request = {
-      dataset: 'backtest_ticks',
       from: fd.get('from'),
       to: fd.get('to'),
       underlying: fd.get('underlying'),
       interval: fd.get('interval'),
-      book_depth: Number(fd.get('book_depth')),
+      book_depth: fd.get('book_depth'),
     };
-    saveContext(request);
-    const preview = await ctx.api.post('/api/data/fix', { request, dry_run: true });
-    if (!preview.ok) return ctx.toast.err(preview.error?.message || 'Falha no plano');
-    const lines = preview.data.summary_lines || [];
-    const msg = lines.join('\n') || 'Executar correção?';
-    if (!confirm(`${msg}\n\nConfirmar?`)) return;
-    const fix = await ctx.api.post('/api/data/fix', {
-      request,
-      confirm_rebuild: preview.data.needs_rebuild_confirm ? true : undefined,
+    await submitDataFix(ctx, request, {
+      rebuild: fd.get('rebuild') === '1',
+      fieldOptions,
     });
-    if (!fix.ok) return ctx.toast.err(fix.error?.message || 'Falha');
-    ctx.toast.ok(fix.data.ready ? 'Dados prontos' : `Job #${fix.data.job?.id} criado`);
-    await refreshCoverage(ctx, applyContextOptions(loadContext(), fieldOptions));
-    await refreshJobs(ctx);
   });
 }
 
@@ -527,7 +582,7 @@ async function setEventExclusion(ctx, day, eventData, marketId, excluded) {
   return true;
 }
 
-function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = null) {
+function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = null, fieldOptions = null) {
   const events = (eventPayload.events || []).filter((event) => selectedHour == null || event.hour_utc === selectedHour);
   const hourButtons = (eventPayload.hours || []).map((bucket) => el('button', {
     type: 'button',
@@ -535,7 +590,7 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = n
     title: `${bucket.total} evento(s) · omit: ${bucket.omitted} · trim: ${bucket.trimmed} · manual: ${bucket.manual}`,
     onclick: () => {
       const drawer = document.getElementById('data-partition-drawer');
-      mount(drawer, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour === bucket.hour ? null : bucket.hour));
+      mount(drawer, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour === bucket.hour ? null : bucket.hour, fieldOptions));
     },
   }, `${bucket.hour}h`));
 
@@ -545,6 +600,9 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = n
       el('button', { type: 'button', class: 'btn btn--ghost', onclick: () => { document.getElementById('data-partition-drawer').hidden = true; } }, 'Fechar'),
     ]),
     el('p', {}, `Estado UI: ${UI_LABELS[day.ui_state]} · status bruto: ${day.raw_status}`),
+    el('p', { class: 'muted', style: { fontSize: '12px' } },
+      `Configuração: ${ctxSaved.underlying} · ${ctxSaved.interval} · book ${ctxSaved.book_depth} · reprocessamento sempre do dia inteiro`
+    ),
     ...(day.partitions || []).flatMap((p) => {
       const norm = p.quality_details?.normalization;
       if (!norm?.applied && !(eventPayload.exclusions || []).length) return [];
@@ -553,12 +611,13 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = n
         `Normalização: ${norm?.events_omitted ?? 0} omitido(s), ${norm?.events_trimmed ?? 0} aparado(s), ${norm?.events_manual_omitted ?? 0} manual(is)${hours ? ` · horas: ${hours}` : ''}`)];
     }),
     hourButtons.length ? el('div', { class: 'quality-hours' }, [
+      el('span', { class: 'muted', style: { fontSize: '11px', alignSelf: 'center', marginRight: '4px' } }, 'Filtrar hora:'),
       el('button', {
         type: 'button',
         class: `quality-hour${selectedHour == null ? ' is-active' : ''}`,
         onclick: () => {
           const drawer = document.getElementById('data-partition-drawer');
-          mount(drawer, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, null));
+          mount(drawer, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, null, fieldOptions));
         },
       }, 'Todas'),
       ...hourButtons,
@@ -593,31 +652,26 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = n
         })),
       ]),
     ]),
-    day.ui_state === 'attention' ? el('button', {
-      type: 'button',
-      class: 'btn btn--primary btn--sm',
-      onclick: async () => {
-        const fix = await ctx.api.post('/api/data/fix', {
-          request: {
-            dataset: 'backtest_ticks',
-            from: day.dt,
-            to: day.dt,
-            underlying: ctxSaved.underlying,
-            interval: ctxSaved.interval,
-            book_depth: Number(ctxSaved.book_depth),
-          },
-        });
-        ctx.toast.ok(fix.ok ? 'Correção enfileirada' : (fix.error?.message || 'Falha'));
-      },
-    }, 'Corrigir este dia') : null,
+    el('div', { class: 'row row--wrap', style: { gap: '8px', marginTop: '12px' } }, [
+      el('button', {
+        type: 'button',
+        class: 'btn btn--primary btn--sm',
+        disabled: day.ui_state === 'processing',
+        onclick: async () => {
+          const ok = await reprocessDay(ctx, day, ctxSaved, { fieldOptions });
+          if (ok) await openPartitionDrawer(ctx, day, fieldOptions);
+        },
+      }, day.ui_state === 'processing' ? 'Processando…' : 'Reprocessar dia'),
+    ]),
   ]);
 }
 
-async function openPartitionDrawer(ctx, day) {
+async function openPartitionDrawer(ctx, day, fieldOptions = null) {
   const drawer = document.getElementById('data-partition-drawer');
   if (!drawer) return;
   drawer.hidden = false;
   const ctxSaved = loadContext();
+  applyDayToPrepareForm(day, ctxSaved);
   mount(drawer, el('div', { class: 'card' }, [el('p', { class: 'muted' }, 'Carregando eventos do dia…')]));
 
   const query = new URLSearchParams({
@@ -632,7 +686,7 @@ async function openPartitionDrawer(ctx, day) {
     ]));
     return;
   }
-  mount(drawer, buildPartitionDrawer(ctx, day, res.data, ctxSaved, null));
+  mount(drawer, buildPartitionDrawer(ctx, day, res.data, ctxSaved, null, fieldOptions));
 }
 
 async function refreshJobs(ctx) {

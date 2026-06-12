@@ -17,7 +17,7 @@ export function buildDataFixPlan(db, request, config) {
   }, config.syncAcceptCountMismatchRatio ?? 0.02);
 
   const strict = resolveDataRequest(db, normalized, 'strict');
-  if (strict.ready) {
+  if (strict.ready && !normalized.rebuild) {
     return {
       ready: true,
       summary: 'Período já está pronto para backtest.',
@@ -30,15 +30,22 @@ export function buildDataFixPlan(db, request, config) {
 
   const prepare = resolveDataRequest(db, normalized, 'prepare');
   const unavailable = prepare.availability.unavailable || [];
-  const rebuildRequired = unavailable.some((p) => p.status === 'valid');
+  const usablePartitions = (prepare.availability.partitions || []).filter((p) => p.usable);
+  const rebuildRequired = normalized.rebuild
+    ? usablePartitions.length > 0
+    : unavailable.some((p) => p.status === 'valid');
   const missing = prepare.availability.missing?.length ?? 0;
   const syncDays = new Set([
     ...(prepare.availability.missing || []),
     ...unavailable.map((p) => p.dt),
+    ...(normalized.rebuild ? usablePartitions.map((p) => p.dt) : []),
   ]);
 
   const lines = [];
   if (accepted.length) lines.push(`${accepted.length} partição(ões) aceita(s) automaticamente.`);
+  if (normalized.rebuild && usablePartitions.length) {
+    lines.push(`${usablePartitions.length} dia(s) prontos serão reprocessados (--rebuild).`);
+  }
   if (syncDays.size) lines.push(`${syncDays.size} dia(s) serão re-sincronizados.`);
   if (missing && !syncDays.size) lines.push(`${missing} dia(s) sem dados na origem.`);
   if (!lines.length) lines.push('Nenhuma ação necessária após auto-aceite.');

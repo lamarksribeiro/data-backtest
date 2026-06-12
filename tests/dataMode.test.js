@@ -100,7 +100,7 @@ test('prepare mode with rebuild plans already valid degraded partitions', async 
   }
 });
 
-test('prepare mode with rebuild stays ready when no partition is degraded', async () => {
+test('prepare mode with rebuild plans reprocess for valid partitions', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-mode-rebuild-clean-'));
   try {
     const db = openStateDatabase(path.join(dir, 'state.db'));
@@ -122,9 +122,10 @@ test('prepare mode with rebuild stays ready when no partition is degraded', asyn
       };
       const result = resolveDataRequest(db, request, 'prepare');
 
-      assert.equal(result.ready, true);
-      assert.equal(result.status, 'ready');
-      assert.equal(result.preparation.length, 0);
+      assert.equal(result.ready, false);
+      assert.equal(result.status, 'prepare_required');
+      assert.ok(result.preparation.length > 0);
+      assert.ok(result.preparation[0].args.includes('--rebuild'));
     } finally {
       closeStateDatabase(db);
     }

@@ -101,3 +101,37 @@ test('buildDataFixPlan returns summary for unavailable window', async () => {
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+test('buildDataFixPlan schedules rebuild for ready partitions when rebuild=true', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'fix-plan-rebuild-'));
+  const config = testServerConfig({ stateDbPath: path.join(dir, 'state.db') });
+  const db = openStateDatabase(config.stateDbPath);
+  try {
+    upsertManifestPartition(db, {
+      dataset: 'backtest_ticks',
+      underlying: 'BTC',
+      interval: '5m',
+      bookDepth: 25,
+      dt: '2026-06-01',
+      activePath: '/lake/a.parquet',
+      status: 'valid',
+    });
+    const built = buildDataFixPlan(db, {
+      dataset: 'backtest_ticks',
+      from: '2026-06-01',
+      to: '2026-06-01',
+      underlying: 'BTC',
+      interval: '5m',
+      book_depth: 25,
+      rebuild: true,
+    }, config);
+    assert.equal(built.ready, false);
+    assert.equal(built.rebuild_required, true);
+    assert.ok(built.preparation.length > 0);
+    assert.ok(built.preparation[0].args.includes('--rebuild'));
+    assert.match(built.summary, /reprocessados/);
+  } finally {
+    closeStateDatabase(db);
+    await rm(dir, { recursive: true, force: true });
+  }
+});
