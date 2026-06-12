@@ -4,21 +4,140 @@ import { fetchContextOptionsCached } from '../utils/contextOptionsCache.js';
 import { connectSse, disconnectSse } from '../utils/sse.js';
 
 const UI_LABELS = { ready: 'Pronto', processing: 'Processando', attention: 'Atenção' };
-const UI_CLASS = { ready: 'ok', processing: 'warn', attention: 'warn' };
+const UI_CLASS = { ready: 'ok', processing: 'warn', attention: 'err' };
 
 const dataStyles = `
+  .data-dashboard-grid {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 24px;
+    align-items: start;
+    margin-top: 16px;
+  }
+  @media (max-width: 1100px) {
+    .data-dashboard-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .data-sidebar-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: sticky;
+    top: 80px;
+  }
+
+  .studio-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .studio-form label.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-weight: 500;
+    font-size: 12.5px;
+    color: var(--text-2);
+  }
+
+  .data-prepare-footer {
+    margin-top: 10px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  .data-jobs-inline {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .data-job-card {
+    background: rgba(30, 41, 59, 0.45);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.25s ease;
+  }
+
+  .data-job-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--warn);
+  }
+
+  .data-job-card:hover {
+    border-color: rgba(245, 158, 11, 0.4);
+    background: rgba(30, 41, 59, 0.6);
+  }
+
+  .studio-progress-bar {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 99px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .studio-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--warn), #fbbf24);
+    border-radius: 99px;
+    display: block;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    box-shadow: 0 0 8px var(--warn-glow);
+  }
+
+  .studio-progress-fill::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.25),
+      transparent
+    );
+    animation: progress-shine 1.5s infinite linear;
+  }
+
+  @keyframes progress-shine {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
   .coverage-years-container {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    margin-top: 16px;
+    gap: 20px;
+    margin-top: 12px;
   }
 
   .coverage-year-group {
     border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: rgba(22, 28, 45, 0.15);
+    border-radius: var(--radius);
+    background: rgba(13, 19, 32, 0.35);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.02);
     overflow: hidden;
+    transition: border-color 0.2s ease;
+  }
+
+  .coverage-year-group:hover {
+    border-color: rgba(249, 115, 22, 0.2);
   }
 
   .coverage-year-header {
@@ -26,72 +145,86 @@ const dataStyles = `
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(255, 255, 255, 0.015);
     border: none;
     border-bottom: 1px solid var(--border);
-    padding: 12px 18px;
+    padding: 14px 20px;
     color: var(--text-0);
     font-weight: 700;
-    font-size: 13.5px;
+    font-size: 14px;
     cursor: pointer;
     transition: background-color 0.2s ease;
     outline: none;
     text-align: left;
   }
+
   .coverage-year-header:hover {
-    background: var(--bg-hover);
+    background: rgba(255, 255, 255, 0.04);
   }
-  
+
   .coverage-year-header.is-collapsed {
     border-bottom: none;
   }
 
   .coverage-year-header__chevron {
     font-size: 11px;
-    transition: transform 0.2s ease;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     color: var(--text-3);
   }
-  
+
   .coverage-year-header.is-collapsed .coverage-year-header__chevron {
     transform: rotate(-90deg);
   }
 
   .coverage-year-content {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    padding: 16px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 20px;
+    padding: 20px;
+    background: rgba(7, 10, 16, 0.2);
   }
 
   .coverage-month {
-    background: rgba(22, 28, 45, 0.4);
-    border: 1px solid var(--border);
+    background: rgba(17, 24, 39, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.03);
     border-radius: var(--radius-sm);
-    padding: 12px 16px;
-    min-width: 196px;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow: var(--shadow-1);
+    padding: 14px 16px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(4px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+  }
+
+  .coverage-month:hover {
+    border-color: rgba(255, 255, 255, 0.08);
+    transform: translateY(-1px);
   }
 
   .coverage-month__header {
-    font-size: 13px;
+    font-size: 13.5px;
     font-weight: 700;
     color: var(--text-0);
-    margin-bottom: 8px;
+    margin-bottom: 12px;
     text-align: center;
     text-transform: capitalize;
+    letter-spacing: 0.02em;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    width: 100%;
+    padding-bottom: 6px;
   }
 
   .coverage-month__weekdays {
     display: grid;
     grid-template-columns: repeat(7, 22px);
-    gap: 4px;
-    margin-bottom: 6px;
+    gap: 6px;
+    margin-bottom: 8px;
     text-align: center;
-    font-size: 9px;
-    font-weight: 700;
+    font-size: 9.5px;
+    font-weight: 800;
     color: var(--text-3);
+    opacity: 0.6;
     text-transform: uppercase;
   }
 
@@ -99,7 +232,7 @@ const dataStyles = `
     display: grid;
     grid-template-columns: repeat(7, 22px);
     grid-auto-rows: 22px;
-    gap: 4px;
+    gap: 6px;
   }
 
   .coverage-day {
@@ -108,85 +241,74 @@ const dataStyles = `
     justify-content: center;
     width: 22px;
     height: 22px;
-    border-radius: 4px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
     font-size: 10px;
     font-weight: 600;
     font-family: var(--font-mono, monospace);
     cursor: pointer;
-    transition: transform 0.1s ease, border-color 0.1s ease, background-color 0.1s ease;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     user-select: none;
     padding: 0;
   }
 
   .coverage-day--empty {
-    background: rgba(255, 255, 255, 0.015);
-    border-color: rgba(255, 255, 255, 0.03);
-    color: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.01);
+    border-color: rgba(255, 255, 255, 0.02);
+    color: rgba(255, 255, 255, 0.12);
     cursor: default;
   }
+
   .coverage-day--empty:hover {
     transform: none;
-    border-color: rgba(255, 255, 255, 0.03);
   }
-
-  .quality-hours {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin: 12px 0;
-  }
-
-  .quality-hour {
-    min-width: 42px;
-    padding: 4px 6px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    background: rgba(255, 255, 255, 0.03);
-    font-size: 11px;
-    cursor: pointer;
-    text-align: center;
-  }
-
-  .quality-hour--kept { border-color: rgba(80, 200, 120, 0.35); }
-  .quality-hour--trim { border-color: rgba(240, 180, 60, 0.45); }
-  .quality-hour--omit { border-color: rgba(240, 90, 90, 0.5); }
-  .quality-hour--manual { border-color: rgba(140, 160, 255, 0.55); }
-  .quality-hour.is-active { outline: 2px solid var(--accent); }
-
-  .data-event-row--excluded { opacity: 0.72; }
 
   .coverage-day--ready {
-    background: rgba(16, 185, 129, 0.2);
+    background: rgba(16, 185, 129, 0.12);
     border-color: rgba(16, 185, 129, 0.35);
-    color: var(--ok);
+    color: #34d399;
   }
+
   .coverage-day--ready:hover {
-    background: rgba(16, 185, 129, 0.3);
-    border-color: var(--ok);
-    transform: translateY(-1px);
+    background: rgba(16, 185, 129, 0.25);
+    border-color: #10b981;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
+    transform: scale(1.15) translateY(-1px);
+    z-index: 2;
   }
 
   .coverage-day--processing {
-    background: rgba(245, 158, 11, 0.15);
-    border-color: rgba(245, 158, 11, 0.3);
-    color: var(--warn);
+    background: rgba(245, 158, 11, 0.12);
+    border-color: rgba(245, 158, 11, 0.35);
+    color: #fbbf24;
+    animation: day-pulse 2s infinite ease-in-out;
   }
+
   .coverage-day--processing:hover {
     background: rgba(245, 158, 11, 0.25);
-    border-color: var(--warn);
-    transform: translateY(-1px);
+    border-color: #f59e0b;
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.35);
+    transform: scale(1.15) translateY(-1px);
+    z-index: 2;
   }
 
   .coverage-day--attention {
-    background: rgba(239, 68, 68, 0.15);
-    border-color: rgba(239, 68, 68, 0.3);
-    color: var(--err);
+    background: rgba(239, 68, 68, 0.12);
+    border-color: rgba(239, 68, 68, 0.35);
+    color: #f87171;
   }
+
   .coverage-day--attention:hover {
     background: rgba(239, 68, 68, 0.25);
-    border-color: var(--err);
-    transform: translateY(-1px);
+    border-color: #ef4444;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.35);
+    transform: scale(1.15) translateY(-1px);
+    z-index: 2;
+  }
+
+  @keyframes day-pulse {
+    0%, 100% { opacity: 0.85; }
+    50% { opacity: 0.5; }
   }
 
   .coverage-day__pad {
@@ -195,21 +317,288 @@ const dataStyles = `
   }
 
   .coverage-day.is-out-of-range {
-    opacity: 0.35;
+    opacity: 0.25;
     border-style: dotted;
-    filter: saturate(0.6);
+    filter: saturate(0.4);
   }
+
   .coverage-day.is-out-of-range:hover {
-    opacity: 0.75;
+    opacity: 0.65;
     filter: none;
   }
+
   .coverage-day.is-selected {
-    box-shadow: 0 0 0 1px var(--accent);
+    box-shadow: 0 0 0 2px var(--accent);
+    border-color: var(--accent) !important;
+    transform: scale(1.1) translateY(-1px);
+    z-index: 2;
+  }
+
+  /* Overlay de fundo */
+  .drawer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(7, 10, 16, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  .drawer-overlay.is-active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Drawer Lateral Deslizante */
+  .data-partition-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 480px;
+    max-width: 90vw;
+    background: rgba(15, 23, 42, 0.82);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: -10px 0 40px rgba(0, 0, 0, 0.6);
+    z-index: 1001;
+    display: flex !important;
+    flex-direction: column;
+    transform: translateX(100%);
+    visibility: hidden;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s;
+    padding: 0;
+    overflow: hidden;
+  }
+  .data-partition-drawer.is-open {
+    transform: translateX(0);
+    visibility: visible;
+  }
+  .data-partition-drawer__panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+  }
+  .data-partition-drawer__header {
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.01);
+  }
+  .data-partition-drawer__title {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text-0);
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .data-partition-drawer__body {
+    padding: 24px;
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .data-partition-drawer__footer {
+    padding: 20px 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(7, 10, 16, 0.3);
+    display: flex;
+    gap: 12px;
+  }
+
+  /* Normalização em Grid de mini cards */
+  .normalization-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .normalization-item {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-sm);
+    padding: 10px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .normalization-item__value {
+    font-size: 16px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+  }
+  .normalization-item__value--omit { color: var(--err); }
+  .normalization-item__value--trim { color: var(--warn); }
+  .normalization-item__value--manual { color: #818cf8; }
+  .normalization-item__label {
+    font-size: 10px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  /* Timeline Horizontal para horas */
+  .quality-hours-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+  }
+  .quality-hours-timeline__title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .quality-hours-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .quality-hour-chip {
+    padding: 5px 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    font-size: 11px;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--text-2);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    border-style: solid;
+  }
+  .quality-hour-chip:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+  .quality-hour-chip.is-active {
+    background: rgba(249, 115, 22, 0.15);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .quality-hour-indicator {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+  .quality-hour-indicator--kept { background: var(--ok); }
+  .quality-hour-indicator--trim { background: var(--warn); }
+  .quality-hour-indicator--omit { background: var(--err); }
+  .quality-hour-indicator--manual { background: #818cf8; }
+
+  /* Detalhes de Eventos com Visual Glassmorphic */
+  .events-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .event-timeline-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    transition: all 0.2s ease;
+  }
+  .event-timeline-card:hover {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+  }
+  .event-timeline-card--excluded {
+    opacity: 0.45;
+    border-style: dashed;
+    background: rgba(0, 0, 0, 0.1);
+  }
+  .event-info-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+  .event-time-badge {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    font-family: var(--font-mono);
+  }
+  .event-desc {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text-1);
+    word-break: break-all;
+  }
+  .event-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 2px;
+  }
+  .event-badge {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 9.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+  .event-badge--ok { background: rgba(16, 185, 129, 0.1); color: var(--ok); }
+  .event-badge--omit { background: rgba(239, 68, 68, 0.1); color: var(--err); }
+  .event-badge--trim { background: rgba(245, 158, 11, 0.1); color: var(--warn); }
+  .event-badge--manual { background: rgba(129, 140, 248, 0.1); color: #818cf8; }
+  .event-coverage-text {
+    font-size: 11px;
+    color: var(--text-3);
+    font-family: var(--font-mono);
   }
 `;
 
 let sseHandler = null;
 let latestJobs = [];
+
+export function closeDrawer() {
+  const drawer = document.getElementById('data-partition-drawer');
+  const overlay = document.getElementById('data-drawer-overlay');
+  if (drawer) drawer.classList.remove('is-open');
+  if (overlay) overlay.classList.remove('is-active');
+  document.querySelectorAll('.coverage-day.is-selected').forEach(el => el.classList.remove('is-selected'));
+}
+
+export function buildPartitionDrawerLoading(day) {
+  return el('div', { class: 'data-partition-drawer__panel' }, [
+    el('header', { class: 'data-partition-drawer__header' }, [
+      el('div', {}, [
+        el('h3', { class: 'data-partition-drawer__title' }, day.dt),
+        el('p', { class: 'muted', style: { fontSize: '11px', margin: '4px 0 0' } }, 'Carregando…')
+      ]),
+      el('button', { type: 'button', class: 'btn btn--ghost btn--sm btn--icon', onclick: closeDrawer }, [
+        el('i', { class: 'fa-solid fa-xmark' })
+      ]),
+    ]),
+    el('div', { class: 'data-partition-drawer__body', style: { display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '200px' } }, [
+      el('span', { class: 'muted' }, 'Carregando eventos do dia…')
+    ])
+  ]);
+}
 
 export async function renderData(ctx) {
   ctx.setBreadcrumb('data', 'Dados');
@@ -221,6 +610,13 @@ export async function renderData(ctx) {
     document.head.appendChild(styleEl);
   }
 
+  // Criar overlay do drawer se não existir no body
+  let overlay = document.getElementById('data-drawer-overlay');
+  if (!overlay) {
+    overlay = el('div', { id: 'data-drawer-overlay', class: 'drawer-overlay', onclick: closeDrawer });
+    document.body.appendChild(overlay);
+  }
+
   const fallbackCtx = loadContext();
   mount(ctx.contentEl, [
     el('div', { class: 'page-header' }, [
@@ -229,10 +625,22 @@ export async function renderData(ctx) {
         el('p', { class: 'page-header__sub' }, 'Cobertura do lakehouse, preparação e jobs em um só lugar.'),
       ]),
     ]),
-    el('section', { class: 'card', id: 'data-coverage-section' }, el('p', { class: 'muted' }, 'Carregando cobertura…')),
-    el('section', { class: 'card', id: 'data-actions-section' }),
-    el('section', { class: 'card', id: 'data-jobs-section' }, el('p', { class: 'muted' }, 'Carregando jobs…')),
-    el('div', { class: 'data-partition-drawer', id: 'data-partition-drawer', hidden: true }),
+    
+    // Grid de duas colunas
+    el('div', { class: 'data-dashboard-grid' }, [
+      // Coluna lateral esquerda (Ações e Jobs)
+      el('div', { class: 'data-sidebar-panel' }, [
+        el('section', { class: 'card', id: 'data-actions-section' }),
+        el('section', { class: 'card', id: 'data-jobs-section' }, el('p', { class: 'muted' }, 'Carregando jobs…')),
+      ]),
+      // Coluna principal direita (Heatmap / Cobertura)
+      el('div', { class: 'data-main-panel' }, [
+        el('section', { class: 'card', id: 'data-coverage-section', style: { margin: '0' } }, el('p', { class: 'muted' }, 'Carregando cobertura…')),
+      ])
+    ]),
+    
+    // Drawer deslizante lateral
+    el('div', { class: 'data-partition-drawer', id: 'data-partition-drawer' }),
   ]);
 
   renderActions(ctx, fallbackCtx, contextBarOptions({}));
@@ -389,10 +797,10 @@ async function refreshCoverage(ctx, formCtx) {
       el('div', {}, [
         el('h2', { class: 'card__title' }, `Cobertura · ${coverage.underlying} ${coverage.interval}`),
         el('p', { style: { fontSize: '11.5px', color: 'var(--text-3)', marginTop: '4px', maxWidth: '600px', lineHeight: '1.4' } },
-          'Exibindo todas as partições do banco de dados para a configuração selecionada. Os dias fora do período ativo do formulário abaixo aparecem esmaecidos.'
+          'Exibindo todas as partições do banco de dados para a configuração selecionada. Os dias fora do período ativo do formulário lateral aparecem esmaecidos.'
         ),
       ]),
-      el('div', { class: 'row row--wrap' }, [
+      el('div', { class: 'row row--wrap', style: { gap: '8px' } }, [
         legendChip('ready', coverage.summary?.ready ?? 0),
         legendChip('processing', coverage.summary?.processing ?? 0),
         legendChip('attention', coverage.summary?.attention ?? 0),
@@ -403,7 +811,16 @@ async function refreshCoverage(ctx, formCtx) {
 }
 
 function legendChip(state, count) {
-  return el('span', { class: `badge badge--${UI_CLASS[state]}` }, `${UI_LABELS[state]}: ${count}`);
+  const iconClass = state === 'ready' 
+    ? 'fa-solid fa-circle-check' 
+    : state === 'processing' 
+      ? 'fa-solid fa-spinner fa-spin' 
+      : 'fa-solid fa-circle-exclamation';
+  return el('span', { class: `badge badge--${UI_CLASS[state]}`, style: { display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 14px', borderRadius: '30px' } }, [
+    el('i', { class: iconClass }),
+    `${UI_LABELS[state]}: `,
+    el('strong', { style: { marginLeft: '2px', fontFamily: 'var(--font-mono)' } }, String(count))
+  ]);
 }
 
 // Determina o intervalo de meses que aparecem nas partições de cobertura de dados
@@ -586,95 +1003,143 @@ async function setEventExclusion(ctx, day, eventData, marketId, excluded) {
 
 function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour = null, fieldOptions = null) {
   const events = (eventPayload.events || []).filter((event) => selectedHour == null || event.hour_utc === selectedHour);
-  const hourButtons = (eventPayload.hours || []).map((bucket) => el('button', {
-    type: 'button',
-    class: `quality-hour quality-hour--${hourTone(bucket)}${selectedHour === bucket.hour ? ' is-active' : ''}`,
-    title: `${bucket.total} evento(s) · omit: ${bucket.omitted} · trim: ${bucket.trimmed} · manual: ${bucket.manual}`,
-    onclick: () => {
-      const drawer = document.getElementById('data-partition-drawer');
-      mount(drawer, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour === bucket.hour ? null : bucket.hour, fieldOptions));
-    },
-  }, `${bucket.hour}h`));
+  
+  // Calcular totais de normalização para os mini cards
+  const norm = day.partitions?.[0]?.quality_details?.normalization;
+  const countOmitted = norm?.events_omitted ?? 0;
+  const countTrimmed = norm?.events_trimmed ?? 0;
+  const countManual = norm?.events_manual_omitted ?? (eventPayload.exclusions || []).length;
 
-  return el('div', { class: 'card' }, [
-    el('header', { class: 'card__header' }, [
-      el('h3', {}, day.dt),
-      el('button', { type: 'button', class: 'btn btn--ghost', onclick: () => { document.getElementById('data-partition-drawer').hidden = true; } }, 'Fechar'),
+  const hourButtons = (eventPayload.hours || []).map((bucket) => {
+    return el('button', {
+      type: 'button',
+      class: `quality-hour-chip${selectedHour === bucket.hour ? ' is-active' : ''}`,
+      title: `${bucket.total} evento(s) · omit: ${bucket.omitted} · trim: ${bucket.trimmed} · manual: ${bucket.manual}`,
+      onclick: () => {
+        const drawer = document.getElementById('data-partition-drawer');
+        mount(drawer, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, selectedHour === bucket.hour ? null : bucket.hour, fieldOptions));
+      },
+    }, [
+      el('span', { class: `quality-hour-indicator quality-hour-indicator--${hourTone(bucket)}` }),
+      `${bucket.hour}h`
+    ]);
+  });
+
+  return el('div', { class: 'data-partition-drawer__panel' }, [
+    // Header
+    el('header', { class: 'data-partition-drawer__header' }, [
+      el('div', {}, [
+        el('h3', { class: 'data-partition-drawer__title' }, day.dt),
+        el('p', { class: 'muted', style: { fontSize: '11px', margin: '4px 0 0' } }, `Status: ${day.raw_status}`)
+      ]),
+      el('button', { type: 'button', class: 'btn btn--ghost btn--sm btn--icon', onclick: closeDrawer }, [
+        el('i', { class: 'fa-solid fa-xmark' })
+      ]),
     ]),
-    el('p', {}, `Estado UI: ${UI_LABELS[day.ui_state]} · status bruto: ${day.raw_status}`),
-    el('p', { class: 'muted', style: { fontSize: '12px' } },
-      `Configuração: ${ctxSaved.underlying} · ${ctxSaved.interval} · book ${ctxSaved.book_depth} · reprocessamento sempre do dia inteiro`
-    ),
-    ...(day.partitions || []).flatMap((p) => {
-      const norm = p.quality_details?.normalization;
-      if (!norm?.applied && !(eventPayload.exclusions || []).length) return [];
-      const hours = (norm?.hours_affected || []).map((entry) => `${entry.hour}h (${entry.events})`).join(', ');
-      return [el('p', { class: 'data-normalization-summary' },
-        `Normalização: ${norm?.events_omitted ?? 0} omitido(s), ${norm?.events_trimmed ?? 0} aparado(s), ${norm?.events_manual_omitted ?? 0} manual(is)${hours ? ` · horas: ${hours}` : ''}`)];
-    }),
-    hourButtons.length ? el('div', { class: 'quality-hours' }, [
-      el('span', { class: 'muted', style: { fontSize: '11px', alignSelf: 'center', marginRight: '4px' } }, 'Filtrar hora:'),
-      el('button', {
-        type: 'button',
-        class: `quality-hour${selectedHour == null ? ' is-active' : ''}`,
-        onclick: () => {
-          const drawer = document.getElementById('data-partition-drawer');
-          mount(drawer, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, null, fieldOptions));
-        },
-      }, 'Todas'),
-      ...hourButtons,
-    ]) : null,
-    el('div', { class: 'table-wrap' }, [
-      el('table', { class: 'table table--compact' }, [
-        el('thead', {}, el('tr', {}, [
-          el('th', {}, 'Hora'),
-          el('th', {}, 'Status'),
-          el('th', {}, 'Cobertura'),
-          el('th', {}, 'Evento'),
-          el('th', {}, ''),
-        ])),
-        el('tbody', {}, events.map((event) => {
+    
+    // Body
+    el('div', { class: 'data-partition-drawer__body' }, [
+      // Configuração rápida
+      el('div', { style: { background: 'rgba(255,255,255,0.02)', padding: '10px 14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.04)', fontSize: '12.5px' } }, [
+        el('strong', { style: { color: 'var(--text-0)' } }, 'Configuração ativa: '),
+        el('span', { class: 'muted' }, `${ctxSaved.underlying} · ${ctxSaved.interval} · book depth ${ctxSaved.book_depth}`)
+      ]),
+
+      // Cards de resumo de normalização
+      el('div', { class: 'normalization-grid' }, [
+        el('div', { class: 'normalization-item' }, [
+          el('span', { class: 'normalization-item__value normalization-item__value--omit' }, String(countOmitted)),
+          el('span', { class: 'normalization-item__label' }, 'Omitidos')
+        ]),
+        el('div', { class: 'normalization-item' }, [
+          el('span', { class: 'normalization-item__value normalization-item__value--trim' }, String(countTrimmed)),
+          el('span', { class: 'normalization-item__label' }, 'Aparados')
+        ]),
+        el('div', { class: 'normalization-item' }, [
+          el('span', { class: 'normalization-item__value normalization-item__value--manual' }, String(countManual)),
+          el('span', { class: 'normalization-item__label' }, 'Manuais')
+        ]),
+      ]),
+
+      // Timeline de Horas
+      hourButtons.length ? el('div', { class: 'quality-hours-timeline' }, [
+        el('div', { class: 'quality-hours-timeline__title' }, 'Filtrar por Hora'),
+        el('div', { class: 'quality-hours-grid' }, [
+          el('button', {
+            type: 'button',
+            class: `quality-hour-chip${selectedHour == null ? ' is-active' : ''}`,
+            onclick: () => {
+              const drawer = document.getElementById('data-partition-drawer');
+              mount(drawer, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, null, fieldOptions));
+            },
+          }, 'Todas'),
+          ...hourButtons,
+        ])
+      ]) : null,
+
+      // Lista de eventos
+      el('div', { class: 'events-timeline' }, [
+        el('h4', { style: { fontSize: '13px', fontWeight: '700', color: 'var(--text-0)', margin: '8px 0 4px' } }, `Eventos (${events.length})`),
+        events.length ? el('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } }, events.map((event) => {
           const excluded = event.manually_excluded;
-          return el('tr', { class: excluded ? 'data-event-row--excluded' : '' }, [
-            el('td', {}, formatEventTime(event.event_start)),
-            el('td', {}, eventStatusLabel(event)),
-            el('td', {}, event.coverage != null ? `${Math.round(event.coverage * 100)}%` : '—'),
-            el('td', { title: event.condition_id }, shortConditionId(event.condition_id)),
-            el('td', {}, el('button', {
+          const tone = eventStatusLabel(event);
+          return el('div', { class: `event-timeline-card${excluded ? ' event-timeline-card--excluded' : ''}` }, [
+            el('div', { class: 'event-info-left' }, [
+              el('span', { class: 'event-time-badge' }, formatEventTime(event.event_start)),
+              el('span', { class: 'event-desc' }, shortConditionId(event.condition_id)),
+              el('div', { class: 'event-meta-row' }, [
+                el('span', { class: `event-badge event-badge--${tone}` }, eventStatusLabel(event)),
+                event.coverage != null ? el('span', { class: 'event-coverage-text' }, `Cob: ${Math.round(event.coverage * 100)}%`) : null
+              ])
+            ]),
+            el('button', {
               type: 'button',
               class: `btn btn--ghost btn--sm${excluded ? '' : ' btn--danger'}`,
+              style: { padding: '6px 10px', fontSize: '11px' },
               onclick: async () => {
                 const ok = await setEventExclusion(ctx, day, event, eventPayload.market_id, excluded);
                 if (!ok) return;
                 await openPartitionDrawer(ctx, day);
                 refreshJobs(ctx);
               },
-            }, excluded ? 'Restaurar' : 'Excluir')),
+            }, excluded ? 'Restaurar' : 'Excluir')
           ]);
-        })),
-      ]),
+        })) : el('p', { class: 'muted', style: { textAlign: 'center', padding: '20px 0' } }, 'Nenhum evento registrado nesta hora.')
+      ])
     ]),
-    el('div', { class: 'row row--wrap', style: { gap: '8px', marginTop: '12px' } }, [
+    
+    // Footer
+    el('footer', { class: 'data-partition-drawer__footer' }, [
       el('button', {
         type: 'button',
-        class: 'btn btn--primary btn--sm',
+        class: 'btn btn--primary',
+        style: { flex: '1' },
         disabled: day.ui_state === 'processing',
         onclick: async () => {
           const ok = await reprocessDay(ctx, day, ctxSaved, { fieldOptions });
           if (ok) await openPartitionDrawer(ctx, day, fieldOptions);
         },
-      }, day.ui_state === 'processing' ? 'Processando…' : 'Reprocessar dia'),
+      }, day.ui_state === 'processing' ? 'Processando…' : 'Reprocessar Dia'),
     ]),
   ]);
 }
 
 async function openPartitionDrawer(ctx, day, fieldOptions = null) {
   const drawer = document.getElementById('data-partition-drawer');
+  const overlay = document.getElementById('data-drawer-overlay');
   if (!drawer) return;
-  drawer.hidden = false;
+  
+  // Destacar o dia selecionado no calendário
+  document.querySelectorAll('.coverage-day.is-selected').forEach(el => el.classList.remove('is-selected'));
+  const targetDayEl = document.querySelector(`.coverage-day[title*="${day.dt}:"]`);
+  if (targetDayEl) targetDayEl.classList.add('is-selected');
+
+  drawer.classList.add('is-open');
+  if (overlay) overlay.classList.add('is-active');
+  
   const ctxSaved = loadContext();
   applyDayToPrepareForm(day, ctxSaved);
-  mount(drawer, el('div', { class: 'card' }, [el('p', { class: 'muted' }, 'Carregando eventos do dia…')]));
+  mount(drawer, buildPartitionDrawerLoading(day));
 
   const query = new URLSearchParams({
     dt: day.dt,
@@ -683,8 +1148,16 @@ async function openPartitionDrawer(ctx, day, fieldOptions = null) {
   });
   const res = await ctx.api.get(`/api/quality/day-events?${query.toString()}`);
   if (!res.ok) {
-    mount(drawer, el('div', { class: 'card' }, [
-      el('p', {}, `Falha ao carregar eventos: ${res.error?.message || 'erro desconhecido'}`),
+    mount(drawer, el('div', { class: 'data-partition-drawer__panel' }, [
+      el('header', { class: 'data-partition-drawer__header' }, [
+        el('h3', { class: 'data-partition-drawer__title' }, day.dt),
+        el('button', { type: 'button', class: 'btn btn--ghost btn--sm btn--icon', onclick: closeDrawer }, [
+          el('i', { class: 'fa-solid fa-xmark' })
+        ]),
+      ]),
+      el('div', { class: 'data-partition-drawer__body' }, [
+        el('p', { class: 'bad' }, `Falha ao carregar eventos: ${res.error?.message || 'erro desconhecido'}`)
+      ])
     ]));
     return;
   }
