@@ -1,17 +1,8 @@
 // Line charts (SVG) — mesmo padrão visual do data-colector.
 import { el } from './dom.js';
+import { minSpotUsd, underlyingDecimals } from '../../shared/underlyingAssets.js';
 
-const UNDERLYING_DECIMALS = { BTC: 2, ETH: 2, SOL: 2, XRP: 4, DOGE: 6, HYPE: 2, BNB: 2 };
-const MIN_SPOT_USD = { BTC: 1000, ETH: 100, SOL: 10, XRP: 0.1, DOGE: 0.001, HYPE: 1, BNB: 10 };
-const DEFAULT_MIN_PTB = 1000;
-
-export function underlyingDecimals(symbol) {
-  return UNDERLYING_DECIMALS[String(symbol || '').toUpperCase()] ?? 2;
-}
-
-function minSpotUsd(symbol) {
-  return MIN_SPOT_USD[String(symbol || '').toUpperCase()] ?? DEFAULT_MIN_PTB;
-}
+export { underlyingDecimals } from '../../shared/underlyingAssets.js';
 
 function svgEl(tag, attrs = {}, children = []) {
   const node = document.createElementNS('http://www.w3.org/2000/svg', tag);
@@ -62,13 +53,16 @@ function finiteYs(points, kind = 'any', asset = 'BTC') {
     });
 }
 
-function yScaleFromUsdValues(values) {
+function yScaleFromUsdValues(values, asset = 'BTC') {
   const ys = values.filter((value) => Number.isFinite(value));
   if (!ys.length) return { y0: 0, y1: 1 };
   const minY = Math.min(...ys);
   const maxY = Math.max(...ys);
-  const span = Math.max(maxY - minY, Math.abs(maxY) * 0.00005, 1);
-  const padY = Math.max(span * 0.08, 1);
+  const span = maxY - minY;
+  const ref = Math.max(Math.abs(maxY), Math.abs(minY), minSpotUsd(asset));
+  const padY = span > 0
+    ? Math.max(span * 0.08, ref * 0.00015)
+    : Math.max(ref * 0.0015, ref * 0.00015);
   return { y0: minY - padY, y1: maxY + padY };
 }
 
@@ -124,9 +118,12 @@ export function lineChartPanel(series, opts = {}) {
 
   const valueKind = scaleMode === 'usd' ? 'spot' : scaleMode === 'odds' ? 'odds' : 'any';
   const active = series.filter((item) => finiteYs(item.points, valueKind, assetSymbol).length >= 2);
-  const spotSeries = active.find((item) => !item.dash) || active[0];
   const scaleValues = scaleMode === 'usd'
-    ? finiteYs(spotSeries?.points || [], 'spot', assetSymbol)
+    ? active.flatMap((item) => finiteYs(
+      item.points,
+      item.dash ? 'ptb' : 'spot',
+      assetSymbol,
+    ))
     : active.flatMap((item) => finiteYs(item.points, valueKind, assetSymbol));
 
   if (!scaleValues.length) {
@@ -137,8 +134,8 @@ export function lineChartPanel(series, opts = {}) {
   }
 
   const scale = fixedScale || (scaleMode === 'usd'
-    ? yScaleFromUsdValues(scaleValues)
-    : yScaleFromUsdValues(scaleValues));
+    ? yScaleFromUsdValues(scaleValues, assetSymbol)
+    : yScaleFromUsdValues(scaleValues, assetSymbol));
   const plotW = 1000;
   const plotH = compact ? 120 : 280;
   const maxX = Math.max(...active.flatMap((item) => item.points.map((point) => point.x)), 1);
@@ -359,13 +356,6 @@ function trimLeadingInvalidTicks(ticks, asset) {
   return ticks.slice(firstValidIdx);
 }
 
-function resolveEventPtb(ticks, asset = 'BTC') {
-  for (const tick of ticks) {
-    if (isValidPtbPrice(tick.price_to_beat, asset)) return Number(tick.price_to_beat);
-  }
-  return null;
-}
-
 /**
  * @param {object[]} ticks
  * @param {{ assetSymbol?: string, yAxisDecimals?: number, compact?: boolean, overlayBands?: { x0: number, x1: number, color?: string }[] }} [opts]
@@ -381,7 +371,6 @@ export function explorerTickCharts(ticks, opts = {}) {
     ]);
   }
 
-  const eventPtb = resolveEventPtb(validTicks, asset);
   const firstTs = validTicks[0]?.ts;
   const lastTs = validTicks[validTicks.length - 1]?.ts;
   const isSameDay = firstTs && lastTs
@@ -410,7 +399,7 @@ export function explorerTickCharts(ticks, opts = {}) {
       color: '#eab308',
       key: 'price_to_beat',
       dash: true,
-      points: validTicks.map((_, index) => ({ x: index, y: eventPtb })),
+      points: tickSeries(validTicks, 'price_to_beat', 'ptb', asset),
     },
   ];
 
