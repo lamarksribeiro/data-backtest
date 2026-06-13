@@ -40,9 +40,9 @@ function isValidSpotPrice(value, asset) {
   return Number.isFinite(parsed) && parsed >= minSpotUsd(asset);
 }
 
-function isValidPtbPrice(value) {
+function isValidPtbPrice(value, asset = 'BTC') {
   const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed >= DEFAULT_MIN_PTB;
+  return Number.isFinite(parsed) && parsed >= minSpotUsd(asset);
 }
 
 function isValidOddsPrice(value) {
@@ -56,7 +56,7 @@ function finiteYs(points, kind = 'any', asset = 'BTC') {
     .filter((value) => {
       if (value == null || !Number.isFinite(value)) return false;
       if (kind === 'spot') return isValidSpotPrice(value, asset);
-      if (kind === 'ptb') return isValidPtbPrice(value);
+      if (kind === 'ptb') return isValidPtbPrice(value, asset);
       if (kind === 'odds') return isValidOddsPrice(value);
       return true;
     });
@@ -331,7 +331,7 @@ function tickSeries(ticks, key, kind, asset) {
     const parsed = raw != null ? Number(raw) : null;
     let y = null;
     if (kind === 'spot') y = isValidSpotPrice(parsed, asset) ? parsed : null;
-    else if (kind === 'ptb') y = isValidPtbPrice(parsed) ? parsed : null;
+    else if (kind === 'ptb') y = isValidPtbPrice(parsed, asset) ? parsed : null;
     else if (kind === 'odds') y = isValidOddsPrice(parsed) ? parsed : null;
     else y = Number.isFinite(parsed) ? parsed : null;
     return { x: index, y };
@@ -352,16 +352,16 @@ function trimLeadingInvalidTicks(ticks, asset) {
   while (firstValidIdx < ticks.length) {
     const row = ticks[firstValidIdx];
     const hasSpot = isValidSpotPrice(row.underlying_price, asset);
-    const hasPtb = isValidPtbPrice(row.price_to_beat);
+    const hasPtb = isValidPtbPrice(row.price_to_beat, asset);
     if (hasSpot && hasPtb) break;
     firstValidIdx += 1;
   }
   return ticks.slice(firstValidIdx);
 }
 
-function resolveEventPtb(ticks) {
+function resolveEventPtb(ticks, asset = 'BTC') {
   for (const tick of ticks) {
-    if (isValidPtbPrice(tick.price_to_beat)) return Number(tick.price_to_beat);
+    if (isValidPtbPrice(tick.price_to_beat, asset)) return Number(tick.price_to_beat);
   }
   return null;
 }
@@ -381,7 +381,7 @@ export function explorerTickCharts(ticks, opts = {}) {
     ]);
   }
 
-  const eventPtb = resolveEventPtb(validTicks);
+  const eventPtb = resolveEventPtb(validTicks, asset);
   const firstTs = validTicks[0]?.ts;
   const lastTs = validTicks[validTicks.length - 1]?.ts;
   const isSameDay = firstTs && lastTs
