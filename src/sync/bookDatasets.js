@@ -4,12 +4,12 @@ import path from 'node:path';
 import { buildFinalParquetPath, buildTempParquetPath, toPortablePath } from '../lake/paths.js';
 import { cleanupPartitionParquetFiles } from '../lake/cleanup.js';
 import { upsertManifestPartition } from '../state/manifest.js';
-import { countTicksByEvent, getPartitionEvents, getTicksWithBooksForEvent, listSealedScalarPartitions } from '../source/postgres.js';
+import { countTicksByEvent, getPartitionEvents, getTicksWithBooksForEvents, listSealedScalarPartitions } from '../source/postgres.js';
 import { writeBacktestTicksParquetFromBookRows, writeBooksParquet } from './duckdbParquet.js';
 import { createBooksRowsChecksum, createRunId, createSourceFingerprint } from './fingerprint.js';
 import { publishPartitionArchiveStatus } from '../source/archiveApi.js';
 import { listExcludedConditionIdsForDay } from '../state/eventExclusions.js';
-import { applyTickNormalization, mergeNormalizationReports } from './applyNormalization.js';
+import { applyTickNormalization } from './applyNormalization.js';
 import { classifyExportQuality } from './qualityPolicy.js';
 import { buildPartitionQualityDetails } from './qualityDetails.js';
 import { PrepareJobCancelledError } from '../prepare/errors.js';
@@ -161,19 +161,17 @@ async function exportBookDatasetPartition({
 
   report('fetching_rows');
   assertNotCancelled(shouldCancel);
+  const rawRows = await getTicksWithBooksForEvents(pool, partition, conditionIds);
+  assertNotCancelled(shouldCancel);
   const manualExcludedConditionIds = listExcludedConditionIdsForDay(db, {
     dt: partition.dt,
     underlying: partition.underlying,
     interval: partition.interval,
     marketId: partition.marketId,
   });
-  const normalized = await fetchAndNormalizeBookTicksByEvent({
-    pool,
-    partition,
-    eventsWithCounts,
-    config,
+  const normalized = applyTickNormalization(rawRows, config, {
     manualExcludedConditionIds,
-    shouldCancel,
+    partitionEvents: eventsWithCounts,
   });
   const rows = transformRows ? transformRows(normalized.ticks) : normalized.ticks;
   const normalization = normalized.normalization;
@@ -278,33 +276,4 @@ function assertNotCancelled(shouldCancel) {
   if (typeof shouldCancel === 'function' && shouldCancel()) {
     throw new PrepareJobCancelledError();
   }
-}
-
-async function fetchAndNormalizeBookTicksByEvent({
-  pool,
-  partition,
-  eventsWithCounts,
-  config,
-  manualExcludedConditionIds,
-  shouldCancel,
-}) {
-  const exportTicks = [];
-  const reports = [];
-
-  for (const event of eventsWithCounts) {
-    assertNotCancelled(shouldCancel);
-    const rawRows = await getTicksWithBooksForEvent(pool, partition, event.conditionId);
-    const normalized = applyTickNormalization(rawRows, config, {
-      manualExcludedConditionIds,
-      partitionEvents: [event],
-    });
-    exportTicks.push(...normalized.ticks);
-    reports.push(normalized.normalization);
-  }
-
-  exportTicks.sort((left, right) => String(left.ts).localeCompare(String(right.ts)));
-  return {
-    ticks: exportTicks,
-    normalization: mergeNormalizationReports(reports),
-  };
 }

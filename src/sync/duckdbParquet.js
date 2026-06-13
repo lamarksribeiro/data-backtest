@@ -232,7 +232,7 @@ async function writeWithDuckDb({ rows, tempPath, finalPath, tableName, createTab
 }
 
 async function configureDuckDb(connection) {
-  const threads = positiveInt(process.env.SYNC_DUCKDB_THREADS || process.env.DUCKDB_THREADS) ?? 2;
+  const threads = positiveInt(process.env.SYNC_DUCKDB_THREADS || process.env.DUCKDB_THREADS) ?? 4;
   await connection.run(`PRAGMA threads=${threads}`);
 
   const memoryLimit = String(process.env.SYNC_DUCKDB_MEMORY_LIMIT || process.env.DUCKDB_MEMORY_LIMIT || '').trim();

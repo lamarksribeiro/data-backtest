@@ -4,12 +4,12 @@ import path from 'node:path';
 import { buildFinalParquetPath, buildTempParquetPath, toPortablePath } from '../lake/paths.js';
 import { cleanupPartitionParquetFiles } from '../lake/cleanup.js';
 import { markDerivedStaleForScalars, markManifestPartitionStale, upsertManifestPartition } from '../state/manifest.js';
-import { countTicksByEvent, getPartitionEvents, getScalarTicksForEvent, getScalarTicksForEvents, listSealedScalarPartitions } from '../source/postgres.js';
+import { countTicksByEvent, getPartitionEvents, getScalarTicksForEvents, listSealedScalarPartitions } from '../source/postgres.js';
 import { markPartitionArchiveStatusStale } from '../source/archiveApi.js';
 import { createRunId, createScalarRowsChecksum, createSourceFingerprint } from './fingerprint.js';
 import { writeScalarsParquet } from './duckdbParquet.js';
 import { listExcludedConditionIdsForDay } from '../state/eventExclusions.js';
-import { applyTickNormalization, mergeNormalizationReports } from './applyNormalization.js';
+import { applyTickNormalization } from './applyNormalization.js';
 import { classifyExportQuality } from './qualityPolicy.js';
 import { buildPartitionQualityDetails } from './qualityDetails.js';
 import { PrepareJobCancelledError } from '../prepare/errors.js';
@@ -188,19 +188,17 @@ export async function exportScalarsPartition({
   const finalPath = buildFinalParquetPath(config.lakeRoot, manifestPartition, runId);
   report('fetching_rows');
   assertNotCancelled(shouldCancel);
+  const rawTicks = await getScalarTicksForEvents(pool, partition, conditionIds);
+  assertNotCancelled(shouldCancel);
   const manualExcludedConditionIds = listExcludedConditionIdsForDay(db, {
     dt: partition.dt,
     underlying: partition.underlying,
     interval: partition.interval,
     marketId: partition.marketId,
   });
-  const normalized = await fetchAndNormalizeScalarTicksByEvent({
-    pool,
-    eventsWithCounts,
-    config,
-    partition,
+  const normalized = applyTickNormalization(rawTicks, config, {
     manualExcludedConditionIds,
-    shouldCancel,
+    partitionEvents: eventsWithCounts,
   });
   const ticks = normalized.ticks;
   const normalization = normalized.normalization;
@@ -281,36 +279,4 @@ function assertNotCancelled(shouldCancel) {
   if (typeof shouldCancel === 'function' && shouldCancel()) {
     throw new PrepareJobCancelledError();
   }
-}
-
-async function fetchAndNormalizeScalarTicksByEvent({
-  pool,
-  partition,
-  eventsWithCounts,
-  config,
-  manualExcludedConditionIds,
-  shouldCancel,
-}) {
-  const exportTicks = [];
-  const reports = [];
-  let qualityClassifyMs = 0;
-
-  for (const event of eventsWithCounts) {
-    assertNotCancelled(shouldCancel);
-    const rawTicks = await getScalarTicksForEvent(pool, partition, event.conditionId);
-    const normalized = applyTickNormalization(rawTicks, config, {
-      manualExcludedConditionIds,
-      partitionEvents: [event],
-    });
-    exportTicks.push(...normalized.ticks);
-    reports.push(normalized.normalization);
-    qualityClassifyMs += normalized.qualityClassifyMs || 0;
-  }
-
-  exportTicks.sort((left, right) => String(left.ts).localeCompare(String(right.ts)));
-  return {
-    ticks: exportTicks,
-    normalization: mergeNormalizationReports(reports),
-    qualityClassifyMs,
-  };
 }

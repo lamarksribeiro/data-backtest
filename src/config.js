@@ -51,7 +51,7 @@ export function loadConfig(env = process.env) {
     sweepMaxVariants: Math.max(Number.parseInt(String(env.SWEEP_MAX_VARIANTS || '500'), 10) || 500, 1),
     maxConcurrentBacktests: Math.max(Number.parseInt(String(env.MAX_CONCURRENT_BACKTESTS || '1'), 10) || 1, 1),
     datasetCacheMaxMb: resolveDatasetCacheMaxMb(env),
-    prepareMaxConcurrent: Math.max(Number.parseInt(String(env.PREPARE_MAX_CONCURRENT || '1'), 10) || 1, 1),
+    prepareMaxConcurrent: Math.max(Number.parseInt(String(env.PREPARE_MAX_CONCURRENT || '2'), 10) || 2, 1),
     prepareRunner: normalizePrepareRunner(env.PREPARE_RUNNER),
   };
 }
