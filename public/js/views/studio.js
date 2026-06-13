@@ -55,20 +55,34 @@ function formatTimeRemaining(value) {
 
 function chartSeriesIsUsable(series) {
   const base = series?.underlying || [];
-  const valid = base.filter((point) => point?.value != null && Number.isFinite(Number(point.value)));
+  const valid = base.filter((point) => pointFiniteValue(point) != null);
   if (valid.length < 2) return false;
-  const uniqueTs = new Set(valid.map((point) => String(point.ts)));
+  const uniqueTs = new Set(valid.map((point) => String(pointTs(point))));
   return uniqueTs.size >= 2;
+}
+
+function pointTs(point) {
+  if (Array.isArray(point)) return point[0];
+  return point?.ts ?? point?.time ?? point?.t ?? point?.x;
+}
+
+function pointFiniteValue(point) {
+  const value = Array.isArray(point)
+    ? point[1]
+    : point?.value ?? point?.y ?? point?.underlying_price ?? point?.underlyingPrice ?? point?.price_to_beat ?? point?.priceToBeat ?? point?.ptb ?? point?.price;
+  const num = Number(value);
+  return Number.isFinite(num) ? num : null;
 }
 
 function enrichEventSummaryFromChart(event, chartPayload) {
   if (!event || !chartPayload) return;
   const summary = event.summary || (event.summary = {});
   const series = chartPayload.series || {};
-  const ptbPoint = (series.priceToBeat || []).find((p) => p?.value != null && Number.isFinite(Number(p.value)));
-  const spotPoints = (series.underlying || []).filter((p) => p?.value != null && Number.isFinite(Number(p.value)));
+  const ptbSeries = series.priceToBeat || series.price_to_beat || series.ptb || [];
+  const ptbPoint = ptbSeries.find((p) => pointFiniteValue(p) != null);
+  const spotPoints = (series.underlying || []).filter((p) => pointFiniteValue(p) != null);
 
-  if (summary.priceToBeat == null && ptbPoint) summary.priceToBeat = Number(ptbPoint.value);
+  if (summary.priceToBeat == null && ptbPoint) summary.priceToBeat = pointFiniteValue(ptbPoint);
 
   const entryOrder = (event.orders || []).find((o) => !o?.type || o.type === 'entry');
   const entryTs = summary.entryTime || entryOrder?.ts || entryOrder?.createdAt;
@@ -86,14 +100,15 @@ function enrichEventSummaryFromChart(event, chartPayload) {
       let bestDiff = Number.POSITIVE_INFINITY;
       for (let i = 0; i < spotPoints.length; i += 1) {
         const spot = spotPoints[i];
-        const tsMs = new Date(spot.ts).getTime();
+        const tsMs = new Date(pointTs(spot)).getTime();
         if (!Number.isFinite(tsMs)) continue;
         const diff = Math.abs(tsMs - entryMs);
         if (diff < bestDiff) {
           bestDiff = diff;
-          bestSpot = Number(spot.value);
-          const ptb = series.priceToBeat?.[i];
-          if (ptb?.value != null) bestPtb = Number(ptb.value);
+          bestSpot = pointFiniteValue(spot);
+          const ptb = ptbSeries[i];
+          const ptbValue = pointFiniteValue(ptb);
+          if (ptbValue != null) bestPtb = ptbValue;
         }
       }
       if (Number.isFinite(bestSpot) && Number.isFinite(bestPtb)) {
@@ -1090,9 +1105,22 @@ async function selectEventAndRenderInline(ctx, runId, eventId, index = 0, { sync
   if (!res.ok) return mount(container, el('p', {}, 'Evento não encontrado'));
   const event = res.data.event;
 
-  let chartData = null;
-  let chartLoading = Boolean(event.condition_id);
+  let chartData = event.series && chartSeriesIsUsable(event.series)
+    ? {
+      event,
+      series: event.series,
+      series_meta: event.series_meta,
+      summary: event.summary,
+      exits: event.summary?.exits ?? [],
+      orders: event.orders,
+      marks: event.marks,
+      logs: event.logs,
+      metrics: event.metrics,
+    }
+    : null;
+  let chartLoading = Boolean((event.condition_id || event.id) && !chartData);
   const assetSymbol = studioState.selectedRunMeta?.underlying || 'BTC';
+  if (chartData) enrichEventSummaryFromChart(event, chartData);
 
   const tabs = [
     { id: 'chart', label: 'Gráfico' },
@@ -1178,8 +1206,11 @@ async function selectEventAndRenderInline(ctx, runId, eventId, index = 0, { sync
 
   renderEventDetailContent();
 
-  if (chartLoading && event.condition_id) {
-    void ctx.api.get(`/api/backtest/runs/${runId}/chart-data?condition_id=${encodeURIComponent(event.condition_id)}`)
+  if (chartLoading && (event.condition_id || event.id)) {
+    const chartParams = new URLSearchParams();
+    if (event.condition_id) chartParams.set('condition_id', event.condition_id);
+    if (event.id) chartParams.set('event_id', String(event.id));
+    void ctx.api.get(`/api/backtest/runs/${runId}/chart-data?${chartParams.toString()}`)
       .then((chartRes) => {
         if (token !== openEventToken) return;
         chartLoading = false;

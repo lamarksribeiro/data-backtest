@@ -432,10 +432,11 @@ export function createApiHandler(deps) {
         }
         if (req.method === 'GET' && backtestRunRoute.kind === 'chart-data') {
           const conditionId = url.searchParams.get('condition_id');
-          if (!conditionId) {
-            return sendJson(res, 400, { error: { code: 'REQUEST_FAILED', message: 'condition_id is required' } });
+          const eventTraceId = positiveOptionalInt(url.searchParams.get('event_id'));
+          if (!conditionId && !eventTraceId) {
+            return sendJson(res, 400, { error: { code: 'REQUEST_FAILED', message: 'condition_id or event_id is required' } });
           }
-          const chartData = await getChartData(db, config, run, conditionId);
+          const chartData = await getChartData(db, config, run, conditionId, { eventTraceId });
           return chartData
             ? sendJson(res, 200, chartData)
             : sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Event trace not found for condition_id' } });

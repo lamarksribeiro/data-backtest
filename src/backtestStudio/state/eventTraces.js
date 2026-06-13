@@ -269,12 +269,16 @@ export function getEventTraceByConditionId(db, runId, conditionId) {
   return row ? toApiEventDetail(row) : null;
 }
 
-export async function getChartData(db, config, run, conditionId) {
-  const event = getEventTraceByConditionId(db, run.id, conditionId);
+export async function getChartData(db, config, run, conditionId, { eventTraceId = null } = {}) {
+  const event = eventTraceId
+    ? getEventTrace(db, run.id, eventTraceId)
+    : getEventTraceByConditionId(db, run.id, conditionId);
   if (!event) return null;
+  if (conditionId && String(event.condition_id) !== String(conditionId)) return null;
+  const effectiveConditionId = conditionId ?? event.condition_id;
 
   if (config?.stateDbPath && event.chart_series_path) {
-    const sidecar = readChartSidecarForEvent(event.chart_series_path, conditionId);
+    const sidecar = readChartSidecarForEvent(event.chart_series_path, effectiveConditionId);
     if (sidecar?.series && chartSeriesIsUsable(sidecar.series)) {
       return {
         event: toApiEventSummaryFromDetail(event),
@@ -296,7 +300,7 @@ export async function getChartData(db, config, run, conditionId) {
     interval: run.interval,
     bookDepth: run.bookDepth,
     chartSide: side,
-    conditionId,
+    conditionId: effectiveConditionId,
     from: event.event_start,
     to: event.event_end,
     limit: 20000,

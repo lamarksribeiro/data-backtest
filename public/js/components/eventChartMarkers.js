@@ -15,37 +15,70 @@ function finite(value) {
 }
 
 function spotAtTime(series, ts) {
-  const underlying = series?.underlying || [];
+  const underlying = seriesArray(series, 'underlying');
   const target = new Date(ts).getTime();
   if (!Number.isFinite(target) || !underlying.length) return null;
   let best = null;
   let bestDiff = Number.POSITIVE_INFINITY;
   for (const point of underlying) {
-    const pointMs = new Date(point.ts).getTime();
+    const pointMs = new Date(pointTs(point)).getTime();
     if (!Number.isFinite(pointMs)) continue;
     const diff = Math.abs(pointMs - target);
     if (diff < bestDiff) {
       bestDiff = diff;
-      best = finite(point.value);
+      best = pointValue(point, 'underlying');
     }
   }
   return best;
 }
 
 function buildChartPoints(series) {
-  const underlying = series?.underlying || [];
+  const underlying = seriesArray(series, 'underlying');
+  const priceToBeat = seriesArray(series, 'priceToBeat');
   const pts = [];
   const ptb = [];
   for (let i = 0; i < underlying.length; i += 1) {
     const row = underlying[i];
-    const tsMs = new Date(row.ts).getTime();
+    const ts = pointTs(row);
+    const tsMs = new Date(ts).getTime();
     if (!Number.isFinite(tsMs)) continue;
-    const spot = finite(row.value);
-    const beat = finite(series.priceToBeat?.[i]?.value);
+    const spot = pointValue(row, 'underlying');
+    const beat = pointValue(priceToBeat[i], 'priceToBeat');
     if (spot != null) pts.push([tsMs, spot]);
     if (beat != null) ptb.push([tsMs, beat]);
   }
   return { pts, ptb };
+}
+
+function buildConstantLine(points, value) {
+  const num = finite(value);
+  if (num == null || points.length < 2) return [];
+  return points.map(([ts]) => [ts, num]);
+}
+
+function seriesArray(series, key) {
+  if (!series) return [];
+  if (Array.isArray(series[key])) return series[key];
+  if (key === 'priceToBeat') {
+    if (Array.isArray(series.price_to_beat)) return series.price_to_beat;
+    if (Array.isArray(series.ptb)) return series.ptb;
+  }
+  return [];
+}
+
+function pointTs(point) {
+  if (Array.isArray(point)) return point[0];
+  return point?.ts ?? point?.time ?? point?.t ?? point?.x;
+}
+
+function pointValue(point, key) {
+  if (Array.isArray(point)) return finite(point[1]);
+  if (!point) return null;
+  if (point.value != null) return finite(point.value);
+  if (point.y != null) return finite(point.y);
+  if (key === 'underlying') return finite(point.underlying_price ?? point.underlyingPrice ?? point.price);
+  if (key === 'priceToBeat') return finite(point.price_to_beat ?? point.priceToBeat ?? point.ptb);
+  return null;
 }
 
 function buildMarkers(event, series) {
@@ -73,10 +106,13 @@ export async function renderEventChartWithMarkers(container, event, chartData, o
   if (pts.length < 2) return null;
 
   const asset = opts.assetSymbol || 'BTC';
+  const ptbLine = ptb.length >= 2
+    ? ptb
+    : buildConstantLine(pts, event?.summary?.priceToBeat ?? event?.price_to_beat ?? chartData?.summary?.priceToBeat);
   const markers = buildMarkers(event, series);
 
   return renderUplotLine(container, pts, [
-    { label: 'PTB', data: ptb },
+    { label: 'PTB', data: ptbLine },
   ], {
     markers,
     primaryLabel: asset,
