@@ -12,7 +12,6 @@
   "glsExecution": "compiled-soa",
   "fastRun": true,
   "variantWorkers": 4,
-  "chunkDays": 1,
   "defaults": "../defaults.json",
   "searchSpace": "../search-spaces/top-candidates-depth25.json",
   "metrics": [

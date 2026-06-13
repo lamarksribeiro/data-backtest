@@ -81,9 +81,10 @@ export async function runLabExperiment(experimentPath, options = {}) {
     }
 
     const variantWorkers = Math.max(Number(options.variantWorkers || experiment.variantWorkers || 1) || 1, 1);
-    const sweep = Number(experiment.chunkDays || options.chunkDays || 0) > 0
+    const chunkDays = resolveChunkDays(experiment, options);
+    const sweep = chunkDays > 0
       ? await runChunkedSweep(db, request, variants, {
-        chunkDays: Number(experiment.chunkDays || options.chunkDays),
+        chunkDays,
         variantWorkers,
         maxVariants,
         onProgress: options.onProgress,
@@ -339,8 +340,16 @@ function buildBacktestRequest({ experiment, strategy, defaults, glsAst, columnAn
   };
 }
 
+export function resolveChunkDays(experiment, options = {}) {
+  const explicit = Number(experiment.chunkDays ?? options.chunkDays ?? 0);
+  if (Number.isFinite(explicit) && explicit > 0) return explicit;
+  if (experiment.dailyMetrics === true) return 1;
+  return 0;
+}
+
 function buildMetadata({ experiment, strategy, sourcePath, variants, totalVariantCount, availability, startedAt, options }) {
   const usablePartitions = availability.partitions?.filter((partition) => partition.usable) || [];
+  const chunkDays = resolveChunkDays(experiment, options);
   return {
     generatedAt: new Date().toISOString(),
     experimentName: experiment.name,
@@ -352,6 +361,9 @@ function buildMetadata({ experiment, strategy, sourcePath, variants, totalVarian
       from: parseDateStart(experiment.from).toISOString(),
       to: parseDateEnd(experiment.to).toISOString(),
     },
+    sweepMode: chunkDays > 0 ? `chunked-${chunkDays}d` : 'single-pass',
+    chunkDays: chunkDays > 0 ? chunkDays : null,
+    dailyMetrics: chunkDays > 0,
     engine: experiment.engine || 'soa',
     glsExecution: experiment.glsExecution || 'compiled-soa',
     fastRun: experiment.fastRun !== false,

@@ -12,7 +12,6 @@
   "glsExecution": "compiled-soa",
   "fastRun": true,
   "variantWorkers": 12,
-  "chunkDays": 1,
   "defaults": "../defaults.json",
   "searchSpace": "../search-spaces/midpoint-sampled-depth25.json",
   "metrics": [

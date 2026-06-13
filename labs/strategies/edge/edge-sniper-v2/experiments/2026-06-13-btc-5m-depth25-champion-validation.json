@@ -12,7 +12,7 @@
   "glsExecution": "compiled-soa",
   "fastRun": true,
   "variantWorkers": 5,
-  "chunkDays": 1,
+  "dailyMetrics": true,
   "defaults": "../defaults.json",
   "searchSpace": "../search-spaces/champion-validation-depth25.json",
   "metrics": [
