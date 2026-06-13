@@ -390,6 +390,10 @@ class Parser {
   }
 
   parseLiteral() {
+    if (this.matchOp('-')) {
+      const token = this.expectType('number');
+      return -token.value;
+    }
     const node = this.parsePrimary();
     if (node.type !== 'Literal') {
       throw syntaxError('Expected literal value', node.loc?.line ?? this.current.line, node.loc?.column ?? this.current.column);

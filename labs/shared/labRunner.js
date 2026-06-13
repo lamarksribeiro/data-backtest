@@ -171,8 +171,9 @@ async function runChunkedSweep(db, request, variants, { chunkDays, variantWorker
         summary: emptyAggregateSummary(),
         ticks: 0,
         variantMs: 0,
+        daily: [],
       };
-      mergeVariantSummary(current, variant);
+      mergeVariantSummary(current, variant, chunk);
       aggregate.set(variant.id, current);
     }
   }
@@ -236,7 +237,7 @@ function emptyAggregateSummary() {
   };
 }
 
-function mergeVariantSummary(target, variant) {
+function mergeVariantSummary(target, variant, chunk = null) {
   const summary = variant.summary || {};
   target.ticks += Number(variant.ticks || 0);
   target.variantMs += Number(variant.variantMs || 0);
@@ -257,6 +258,24 @@ function mergeVariantSummary(target, variant) {
   target.summary.ticksProcessed += Number(summary.ticksProcessed || 0);
   target.summary.totalFees += Number(summary.totalFees || summary.feesPaid || 0);
   target.summary.feesPaid = target.summary.totalFees;
+  if (chunk) {
+    target.daily.push({
+      dt: chunk.from.slice(0, 10),
+      from: chunk.from,
+      to: chunk.to,
+      ticks: Number(variant.ticks || 0),
+      variantMs: Number(variant.variantMs || 0),
+      totalEvents: Number(summary.totalEvents || 0),
+      entries: Number(summary.entries ?? summary.totalEntries ?? 0),
+      wins: Number(summary.wins ?? summary.totalWins ?? 0),
+      losses: Number(summary.losses ?? summary.totalLosses ?? 0),
+      winRate: Number(summary.winRate || 0),
+      totalPnl: Number(summary.totalPnl || 0),
+      profitFactor: Number(summary.profitFactor || 0),
+      maxDrawdown: Number(summary.maxDrawdown || 0),
+      feesPaid: Number(summary.totalFees || summary.feesPaid || 0),
+    });
+  }
 }
 
 function finalizeAggregateVariant(variant) {
@@ -268,7 +287,29 @@ function finalizeAggregateVariant(variant) {
   summary.feeDrag = summary.totalPnl + summary.totalFees !== 0
     ? summary.totalFees / Math.abs(summary.totalPnl + summary.totalFees)
     : 0;
+  summary.daily = summarizeDaily(variant.daily || []);
   return variant;
+}
+
+function summarizeDaily(days) {
+  const pnls = days.map((day) => Number(day.totalPnl || 0));
+  const profitableDays = pnls.filter((pnl) => pnl > 0).length;
+  const losingDays = pnls.filter((pnl) => pnl < 0).length;
+  const flatDays = pnls.length - profitableDays - losingDays;
+  const sorted = [...pnls].sort((a, b) => a - b);
+  const median = sorted.length ? sorted[Math.floor(sorted.length / 2)] : 0;
+  return {
+    days: days.length,
+    profitableDays,
+    losingDays,
+    flatDays,
+    positiveDayRate: days.length ? (profitableDays / days.length) * 100 : 0,
+    worstDayPnl: sorted.length ? sorted[0] : 0,
+    bestDayPnl: sorted.length ? sorted[sorted.length - 1] : 0,
+    avgDailyPnl: days.length ? pnls.reduce((sum, pnl) => sum + pnl, 0) / days.length : 0,
+    medianDailyPnl: median,
+    maxDailyDrawdown: days.reduce((max, day) => Math.max(max, Number(day.maxDrawdown || 0)), 0),
+  };
 }
 
 function buildBacktestRequest({ experiment, strategy, defaults, glsAst, columnAnalysis, bookDepth, options }) {

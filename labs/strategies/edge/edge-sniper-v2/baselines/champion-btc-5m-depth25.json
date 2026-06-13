@@ -1,0 +1,42 @@
+{
+  "name": "champion-btc-5m-depth25",
+  "strategyId": "edge-sniper-v2",
+  "sourceExperiment": "reports/labs/edge-sniper-v2/2026-06-13T19-05-20-175Z-btc-5m-depth25-champion-validation",
+  "selectedVariant": "s240-d25-loose",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "window": {
+    "from": "2026-04-23T00:00:00.000Z",
+    "to": "2026-05-31T00:00:00.000Z"
+  },
+  "params": {
+    "entryWindowStart": 240,
+    "entryWindowEnd": 0,
+    "momentumSec": 1,
+    "slowMomentumSec": 4,
+    "minAsk": 0.001,
+    "maxAsk": 0.75,
+    "minDistanceAbs": 25,
+    "minDistanceNearExpiry": 0,
+    "minDirectionalProb": 0.01,
+    "minEdge": -0.5,
+    "maxSpread": 0.15,
+    "minLiquidityRatio": 0.1
+  },
+  "summary": {
+    "totalPnl": 17871.14449,
+    "entries": 6158,
+    "winRate": 59.09386164339071,
+    "profitFactor": 4.509636274496558,
+    "maxDrawdown": 67.66338999999999,
+    "positiveDays": 34,
+    "totalDays": 38,
+    "worstDayPnl": 0
+  },
+  "challengers": {
+    "aggressive": "s240-d10-loose",
+    "conservative": "s180-d25-loose"
+  }
+}

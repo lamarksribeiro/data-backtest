@@ -65,8 +65,8 @@ function renderSummaryMarkdown(report) {
     '',
     '## Top Results',
     '',
-    '| Rank | Variant | PnL | Entries | Win % | Profit Factor | Max DD | Variant ms |',
-    '|---:|---|---:|---:|---:|---:|---:|---:|',
+    '| Rank | Variant | PnL | Entries | Win % | PF | Max DD | Pos Days | Worst Day | Variant ms |',
+    '|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|',
   ];
 
   for (const item of topResults.slice(0, 20)) {
@@ -78,6 +78,8 @@ function renderSummaryMarkdown(report) {
       formatNumber(item.summary.winRate),
       formatNumber(item.summary.profitFactor),
       formatNumber(item.summary.maxDrawdown),
+      item.summary.daily ? `${item.summary.daily.profitableDays}/${item.summary.daily.days}` : 'n/a',
+      item.summary.daily ? formatNumber(item.summary.daily.worstDayPnl) : 'n/a',
       item.variantMs ?? 'n/a',
       '|',
     ].join(' | '));

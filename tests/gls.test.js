@@ -47,6 +47,17 @@ test('GLS parser parses strategy params and hooks', () => {
   assert.ok(ast.hooks.onEventEnd);
 });
 
+test('GLS parser accepts negative numeric param defaults', () => {
+  const ast = parse(`
+    strategy "Negative Params" {
+      param minEdge = -0.5
+    }
+  `);
+
+  assert.equal(ast.params[0].name, 'minEdge');
+  assert.equal(ast.params[0].default, -0.5);
+});
+
 test('GLS validator accepts valid strategy and rejects unknown functions', () => {
   const ok = validate(SIMPLE_STRATEGY);
   assert.equal(ok.ok, true);
