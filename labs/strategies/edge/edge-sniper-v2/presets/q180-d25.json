@@ -1,0 +1,32 @@
+{
+  "id": "q180-d25",
+  "name": "Q180 D25",
+  "studioSlug": "esv2-q180-d25",
+  "studioName": "Edge Sniper V2 · Q180 D25",
+  "role": "challenger",
+  "description": "Equilíbrio qualidade/PnL do sampled-sweep: 21/38 dias positivos.",
+  "tags": ["stability", "depth25"],
+  "labVariantId": "q180-d25",
+  "labSummary": {
+    "totalPnl": 4184.06,
+    "profitFactor": 1.94,
+    "positiveDays": 21,
+    "totalDays": 38,
+    "entries": 2483,
+    "source": "midpoint-sampled-sweep Brutus 2026-06-13"
+  },
+  "params": {
+    "entryWindowStart": 180,
+    "entryWindowEnd": 2,
+    "momentumSec": 4,
+    "slowMomentumSec": 8,
+    "minAsk": 0.02,
+    "maxAsk": 0.65,
+    "minDistanceAbs": 25,
+    "minDistanceNearExpiry": 25,
+    "minDirectionalProb": 0.5,
+    "minEdge": -0.2,
+    "maxSpread": 0.15,
+    "minLiquidityRatio": 0.5
+  }
+}

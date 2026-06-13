@@ -1,0 +1,32 @@
+{
+  "id": "near-default-loose",
+  "name": "Near Default Loose",
+  "studioSlug": "esv2-near-default-loose",
+  "studioName": "Edge Sniper V2 · Near Default Loose",
+  "role": "champion",
+  "description": "Campeã pós-fix do simulador: melhor equilíbrio PnL × estabilidade diária.",
+  "tags": ["champion", "depth25"],
+  "labVariantId": "near-default-loose",
+  "labSummary": {
+    "totalPnl": 3170.2,
+    "profitFactor": 3.77,
+    "positiveDays": 27,
+    "totalDays": 38,
+    "entries": 866,
+    "source": "champion-validation 2026-06-13"
+  },
+  "params": {
+    "entryWindowStart": 180,
+    "entryWindowEnd": 4,
+    "momentumSec": 4,
+    "slowMomentumSec": 8,
+    "minAsk": 0.05,
+    "maxAsk": 0.65,
+    "minDistanceAbs": 40,
+    "minDistanceNearExpiry": 40,
+    "minDirectionalProb": 0.5,
+    "minEdge": 0,
+    "maxSpread": 0.15,
+    "minLiquidityRatio": 0.5
+  }
+}

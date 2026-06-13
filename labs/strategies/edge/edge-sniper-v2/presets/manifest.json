@@ -1,0 +1,11 @@
+{
+  "strategyId": "edge-sniper-v2",
+  "updatedAt": "2026-06-13",
+  "presets": [
+  { "id": "near-default-loose", "role": "champion", "studioSlug": "esv2-near-default-loose" },
+  { "id": "quality-v0017", "role": "candidate", "studioSlug": "esv2-quality-v0017" },
+  { "id": "s180-d25-medium", "role": "candidate", "studioSlug": "esv2-s180-d25-medium" },
+  { "id": "q180-d40", "role": "challenger", "studioSlug": "esv2-q180-d40" },
+  { "id": "q180-d25", "role": "challenger", "studioSlug": "esv2-q180-d25" }
+  ]
+}

@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { performance } from 'node:perf_hooks';
 
@@ -11,6 +12,48 @@ import { runBacktestSweep } from '../../src/backtest/sweep.js';
 import { expandParamGrid, countParamGridVariants } from './paramGrid.js';
 import { runParallelVariantSweep } from './parallelVariantSweep.js';
 import { createLabReportDir, gitMetadata, writeLabReport } from './reportWriter.js';
+import { loadPreset } from './presets.js';
+
+export async function runLabPreset(presetId, options = {}) {
+  const { preset, strategyRoot, params } = loadPreset(presetId, {
+    strategyFamily: options.strategyFamily || 'edge',
+    strategyId: options.strategyId || 'edge-sniper-v2',
+  });
+  const tempDir = mkdtempSync(path.join(os.tmpdir(), 'lab-preset-'));
+  const experimentFile = path.join(tempDir, 'experiment.json');
+  const searchSpaceFile = path.join(tempDir, 'search-space.json');
+  writeFileSync(searchSpaceFile, `${JSON.stringify({
+    variants: [{ id: preset.id, params }],
+  }, null, 2)}\n`, 'utf8');
+  const experiment = {
+    name: `preset-${preset.id}`,
+    strategyId: options.strategyId || 'edge-sniper-v2',
+    strategyFamily: options.strategyFamily || 'edge',
+    dataset: options.dataset || 'backtest_ticks',
+    underlying: options.underlying || 'BTC',
+    interval: options.interval || '5m',
+    bookDepth: Number(options.bookDepth || preset.bookDepth || 25),
+    from: options.from || preset.window?.from || '2026-04-23',
+    to: options.to || preset.window?.to || '2026-05-30',
+    engine: options.engine || 'soa',
+    glsExecution: options.glsExecution || 'compiled-soa',
+    fastRun: options.fastRun !== false,
+    variantWorkers: 1,
+    dailyMetrics: options.dailyMetrics === true,
+    defaults: path.join(strategyRoot, 'defaults.json'),
+    searchSpace: searchSpaceFile,
+  };
+  writeFileSync(experimentFile, `${JSON.stringify(experiment, null, 2)}\n`, 'utf8');
+  try {
+    return await runLabExperiment(experimentFile, {
+      ...options,
+      maxVariants: 1,
+      variantWorkers: Number(options.variantWorkers || 1),
+    });
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true });
+  }
+}
 
 export async function runLabExperiment(experimentPath, options = {}) {
   const absoluteExperimentPath = path.resolve(experimentPath);

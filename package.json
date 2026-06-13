@@ -37,6 +37,8 @@
     "bench:backtest": "node scripts/bench-backtest.js",
     "bench:v4": "node scripts/bench-v4-suite.js",
     "lab:run": "node labs/cli/run.js",
+    "lab:run-preset": "node labs/cli/run-preset.js",
+    "lab:seed-presets": "node labs/cli/seed-presets.js",
     "lab:consolidate": "node labs/cli/consolidate.js",
     "lab:bench-sweep": "node labs/cli/bench-sweep-mode.js"
   },

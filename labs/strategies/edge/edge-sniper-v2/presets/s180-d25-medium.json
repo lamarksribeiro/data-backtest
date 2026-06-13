@@ -1,0 +1,32 @@
+{
+  "id": "s180-d25-medium",
+  "name": "S180 D25 Medium",
+  "studioSlug": "esv2-s180-d25-medium",
+  "studioName": "Edge Sniper V2 · S180 D25 Medium",
+  "role": "candidate",
+  "description": "Melhor variante nomeada do sampled-sweep Brutus (38d).",
+  "tags": ["discovery", "depth25"],
+  "labVariantId": "s180-d25-medium",
+  "labSummary": {
+    "totalPnl": 6650.05,
+    "profitFactor": 2.12,
+    "positiveDays": 18,
+    "totalDays": 38,
+    "entries": 4543,
+    "source": "midpoint-sampled-sweep Brutus 2026-06-13"
+  },
+  "params": {
+    "entryWindowStart": 180,
+    "entryWindowEnd": 0,
+    "momentumSec": 2,
+    "slowMomentumSec": 4,
+    "minAsk": 0.001,
+    "maxAsk": 0.75,
+    "minDistanceAbs": 25,
+    "minDistanceNearExpiry": 25,
+    "minDirectionalProb": 0.2,
+    "minEdge": -0.2,
+    "maxSpread": 0.15,
+    "minLiquidityRatio": 0.1
+  }
+}

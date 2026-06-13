@@ -1,0 +1,32 @@
+{
+  "id": "quality-v0017",
+  "name": "Quality V0017",
+  "studioSlug": "esv2-quality-v0017",
+  "studioName": "Edge Sniper V2 · Quality V0017",
+  "role": "candidate",
+  "description": "Líder PnL do quality-sweep Brutus (38d). Alta atividade; validar estabilidade diária.",
+  "tags": ["discovery", "depth25", "high-pnl"],
+  "labVariantId": "v0017",
+  "labSummary": {
+    "totalPnl": 6678.84,
+    "profitFactor": 2.19,
+    "positiveDays": 18,
+    "totalDays": 38,
+    "entries": 4497,
+    "source": "midpoint-quality-sweep Brutus 2026-06-13"
+  },
+  "params": {
+    "entryWindowStart": 180,
+    "entryWindowEnd": 0,
+    "momentumSec": 1,
+    "slowMomentumSec": 4,
+    "minAsk": 0.001,
+    "maxAsk": 0.75,
+    "minEdge": -0.5,
+    "minDirectionalProb": 0.5,
+    "minDistanceAbs": 25,
+    "minDistanceNearExpiry": 0,
+    "maxSpread": 0.15,
+    "minLiquidityRatio": 0.1
+  }
+}

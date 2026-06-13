@@ -25,6 +25,7 @@ labs/
       experiments/   JSON config-driven
       search-spaces/
       baselines/
+      presets/         Variantes vencedoras (Studio: esv2-*)
       queues/        Filas opcionais para ops remotas
   legacy/            Pontes temporarias com polymarket-test
 ```
@@ -40,6 +41,8 @@ reports/labs/<strategy-id>/<timestamp>-<experiment-name>/
 | npm | Descricao |
 |---|---|
 | `lab:run` | Executa um experimento (`--experiment labs/strategies/...`) |
+| `lab:run-preset` | Backtest de preset nomeado (`--preset near-default-loose`) |
+| `lab:seed-presets` | Cria estrategias `esv2-*` no Backtest Studio |
 | `lab:consolidate` | Mescla `top-results.json` de varios relatorios |
 | `lab:bench-sweep` | Benchmark chunked vs single-pass (local) |
 
