@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * Compara wall time e leitura DuckDB entre sweep chunked (legado) e single-pass.
+ * Compara sweep chunked (legado) vs single-pass em unidades de trabalho e tempo.
  *
  * Uso:
- *   npm run bench:lab-sweep
- *   npm run bench:lab-sweep -- --days 7 --variants 8 --variant-workers 8
+ *   npm run lab:bench-sweep
+ *   npm run lab:bench-sweep -- --days 7 --variants 8 --variant-workers 8
  */
 import 'dotenv/config';
 
@@ -13,8 +13,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { performance } from 'node:perf_hooks';
 
-import { clearAllDatasetCaches } from '../src/backtest/datasetCache.js';
-import { runLabExperiment } from '../labs/shared/labRunner.js';
+import { clearAllDatasetCaches } from '../../src/backtest/datasetCache.js';
+import { runLabExperiment } from '../shared/labRunner.js';
 
 const DEFAULT_EXPERIMENT = 'labs/strategies/edge/edge-sniper-v2/experiments/2026-06-13-btc-5m-depth25-midpoint-sampled-sweep.json';
 

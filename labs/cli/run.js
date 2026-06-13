@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import 'dotenv/config';
 
-import { runLabExperiment } from '../labs/shared/labRunner.js';
+import { runLabExperiment } from '../shared/labRunner.js';
 
 function parseArgs(argv) {
   const flags = {};

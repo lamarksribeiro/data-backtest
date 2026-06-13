@@ -16,24 +16,42 @@ O objetivo dos labs e criar estrategias novas, otimizar estrategias antigas e va
 
 ```text
 labs/
+  cli/               Entrypoints npm (lab:run, lab:consolidate, lab:bench-sweep)
+  ops/               Scripts de operacao remota (Brutus, docker)
+    brutus/
+  shared/            Biblioteca comum (labRunner, paramGrid, reportWriter, ...)
   strategies/        Catalogo de estrategias de pesquisa
-  shared/            Infraestrutura comum dos labs
+    <family>/<id>/
+      experiments/   JSON config-driven
+      search-spaces/
+      baselines/
+      queues/        Filas opcionais para ops remotas
   legacy/            Pontes temporarias com polymarket-test
 ```
 
-Resultados de execucao devem ser gravados em:
+Resultados de execucao:
 
 ```text
 reports/labs/<strategy-id>/<timestamp>-<experiment-name>/
 ```
+
+## Comandos
+
+| npm | Descricao |
+|---|---|
+| `lab:run` | Executa um experimento (`--experiment labs/strategies/...`) |
+| `lab:consolidate` | Mescla `top-results.json` de varios relatorios |
+| `lab:bench-sweep` | Benchmark chunked vs single-pass (local) |
+
+Operacao no Brutus: ver `labs/ops/brutus/README.md`.
 
 ## Fluxo
 
 1. Criar ou escolher uma estrategia em `labs/strategies/<family>/<strategy-id>/`.
 2. Definir `defaults.json`, `params.schema.json` e um search space.
 3. Criar um experimento em `experiments/`.
-4. Rodar sweep rapido em modo colunar.
-5. Validar os melhores candidatos em run completo.
+4. Rodar sweep rapido em modo colunar (`npm run lab:run`).
+5. Validar os melhores candidatos (ex.: `dailyMetrics: true` no JSON).
 6. Promover para Backtest Studio quando a estrategia estiver madura.
 
 ## Status De Estrategia

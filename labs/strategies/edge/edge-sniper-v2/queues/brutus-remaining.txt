@@ -1,0 +1,3 @@
+# Retomada após sampled (quality + relaxed)
+labs/strategies/edge/edge-sniper-v2/experiments/2026-06-13-btc-5m-depth25-midpoint-quality-sweep.json
+labs/strategies/edge/edge-sniper-v2/experiments/2026-06-13-btc-5m-relaxed-entry-finder.json

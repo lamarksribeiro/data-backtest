@@ -7,7 +7,7 @@ import {
   consolidateLabReports,
   findLabReportDirs,
   writeConsolidatedReport,
-} from '../labs/shared/labConsolidate.js';
+} from '../shared/labConsolidate.js';
 
 function parseArgs(argv) {
   const flags = {};

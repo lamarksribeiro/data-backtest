@@ -1,0 +1,4 @@
+# Fila completa Edge Sniper V2 no Brutus (single-pass)
+labs/strategies/edge/edge-sniper-v2/experiments/2026-06-13-btc-5m-depth25-midpoint-sampled-sweep.json
+labs/strategies/edge/edge-sniper-v2/experiments/2026-06-13-btc-5m-depth25-midpoint-quality-sweep.json
+labs/strategies/edge/edge-sniper-v2/experiments/2026-06-13-btc-5m-relaxed-entry-finder.json

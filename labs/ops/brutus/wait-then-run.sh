@@ -3,7 +3,7 @@ set -eu
 
 LOG="${LAB_LOG:-/tmp/lab-edge-sniper-brutus.log}"
 MARKER="${LAB_WAIT_MARKER:-DONE labs/strategies/edge/edge-sniper-v2/experiments/2026-06-13-btc-5m-depth25-midpoint-quality-sweep.json}"
-NEXT_SCRIPT="${LAB_NEXT_SCRIPT:-/tmp/run-lab-brutus-relaxed-only.sh}"
+NEXT_SCRIPT="${LAB_NEXT_SCRIPT:-/tmp/labs-brutus-run-relaxed-only.sh}"
 
 echo "waiting for marker in $LOG:"
 echo "  $MARKER"
