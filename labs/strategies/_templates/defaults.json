@@ -1,0 +1,5 @@
+{
+  "walletSize": 100,
+  "maxOrderValue": 15,
+  "minShares": 5
+}

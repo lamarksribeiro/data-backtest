@@ -1,0 +1,8 @@
+{
+  "name": "broad",
+  "description": "Initial broad search space. Keep this intentionally small until baseline speed is known.",
+  "grid": {
+    "maxOrderValue": [5, 10, 15],
+    "minShares": [3, 5, 10]
+  }
+}

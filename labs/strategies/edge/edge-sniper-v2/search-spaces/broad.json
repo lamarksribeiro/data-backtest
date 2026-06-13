@@ -1,0 +1,15 @@
+{
+  "name": "broad",
+  "description": "Busca ampla para descobrir regioes promissoras. Use depois do smoke inicial.",
+  "grid": {
+    "minDistanceAbs": [0, 20, 40, 60, 80],
+    "minDistanceNearExpiry": [0, 25, 50, 75],
+    "minEdge": [-0.05, 0, 0.05, 0.1],
+    "minDirectionalProb": [0.5, 0.54, 0.58, 0.62],
+    "maxAsk": [0.45, 0.58, 0.7],
+    "maxSpread": [0.06, 0.1, 0.2],
+    "takeProfitBid": [0.82, 0.9, 0.96],
+    "trailAfterBid": [0.7, 0.78, 0.86],
+    "trailDrop": [0.06, 0.1, 0.16]
+  }
+}

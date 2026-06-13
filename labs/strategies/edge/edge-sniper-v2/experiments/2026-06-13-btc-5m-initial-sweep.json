@@ -1,0 +1,31 @@
+{
+  "name": "btc-5m-initial-sweep",
+  "strategyId": "edge-sniper-v2",
+  "strategyFamily": "edge",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 10,
+  "from": "2026-05-29",
+  "to": "2026-05-30",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "defaults": "../defaults.json",
+  "searchSpace": "../search-spaces/conservative.json",
+  "baseline": "../baselines/baseline-btc-5m-2026-05-29.json",
+  "metrics": [
+    "totalPnl",
+    "entries",
+    "winRate",
+    "avgPnlPerEvent",
+    "profitFactor",
+    "maxDrawdown",
+    "ticksPerSec"
+  ],
+  "promotionCriteria": {
+    "minEntries": 3,
+    "mustBeatBaselinePnl": true,
+    "requiresOutOfSample": true
+  }
+}

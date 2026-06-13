@@ -1,0 +1,23 @@
+{
+  "name": "initial-smoke",
+  "strategyId": "my-strategy-v1",
+  "strategyFamily": "edge",
+  "dataset": "backtest_ticks_lite",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": null,
+  "from": "2026-05-29",
+  "to": "2026-05-30",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "searchSpace": "search-spaces/broad.json",
+  "metrics": [
+    "totalPnl",
+    "entries",
+    "winRate",
+    "avgPnlPerEvent",
+    "maxDrawdown",
+    "ticksPerSec"
+  ]
+}

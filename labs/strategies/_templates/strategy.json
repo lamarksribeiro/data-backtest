@@ -1,0 +1,17 @@
+{
+  "id": "my-strategy-v1",
+  "name": "My Strategy V1",
+  "family": "edge",
+  "status": "draft",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": false,
+  "defaultBookDepth": null,
+  "source": {
+    "type": "file",
+    "path": "labs/strategies/<family>/<strategy-id>/strategy.gls"
+  },
+  "promotedToStudio": false,
+  "notes": "Describe the hypothesis and current maturity."
+}
