@@ -137,13 +137,16 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
     else if (pnl < 0 && hadEntry) losses += 1;
 
     const closedAt = closedAtForEvent(snap, lastTick, currentEvent);
-    const entryOrder = snap.orders.find((o) => o.type === 'entry');
-    const entryMetrics = computeEntryMetrics(entryOrder, currentEvent, samples);
+    const entryOrder = snap.orders
+      .filter((o) => !o?.type || o.type === 'entry')
+      .sort((a, b) => new Date(a.ts || a.createdAt || 0) - new Date(b.ts || b.createdAt || 0))[0];
+    const priceToBeat = resolvePriceToBeat(currentEvent, lastTick, samples);
+    const entryMetrics = computeEntryMetrics(entryOrder, { ...currentEvent, priceToBeat }, samples);
     const eventRecord = {
       eventId: currentEvent.eventId,
       eventStart: currentEvent.eventStart,
       eventEnd: currentEvent.eventEnd,
-      priceToBeat: currentEvent.priceToBeat ?? lastTick?.price_to_beat ?? null,
+      priceToBeat,
       positionType: snap.position?.side ?? entryOrder?.side ?? null,
       entryTime: entryOrder?.ts ?? null,
       entryDistanceToPtb: entryMetrics.entryDistanceToPtb,
@@ -360,8 +363,9 @@ function closedAtForEvent(snapshot, lastTick, currentEvent) {
 }
 
 function computeEntryMetrics(entryOrder, currentEvent, samples = []) {
-  if (!entryOrder?.ts) return { entryDistanceToPtb: null, entryTimeRemaining: null };
-  const entryMs = new Date(entryOrder.ts).getTime();
+  if (!entryOrder?.ts && !entryOrder?.createdAt) return { entryDistanceToPtb: null, entryTimeRemaining: null };
+  const entryTs = entryOrder.ts || entryOrder.createdAt;
+  const entryMs = new Date(entryTs).getTime();
   const eventEndMs = new Date(currentEvent?.eventEnd).getTime();
   const entryTimeRemaining = Number.isFinite(entryMs) && Number.isFinite(eventEndMs)
     ? Math.max(0, Math.round((eventEndMs - entryMs) / 1000))
@@ -386,6 +390,18 @@ function computeEntryMetrics(entryOrder, currentEvent, samples = []) {
     ? Math.abs(spot - ptb)
     : null;
   return { entryDistanceToPtb, entryTimeRemaining };
+}
+
+function resolvePriceToBeat(currentEvent, lastTick, samples = []) {
+  const fromEvent = Number(currentEvent?.priceToBeat);
+  if (Number.isFinite(fromEvent) && fromEvent > 0) return fromEvent;
+  const fromTick = Number(lastTick?.price_to_beat ?? lastTick?.priceToBeat);
+  if (Number.isFinite(fromTick) && fromTick > 0) return fromTick;
+  for (const sample of samples) {
+    const value = Number(sample.price_to_beat ?? sample.priceToBeat);
+    if (Number.isFinite(value) && value > 0) return value;
+  }
+  return null;
 }
 
 function buildDiagnosticsFromState(sourceState) {

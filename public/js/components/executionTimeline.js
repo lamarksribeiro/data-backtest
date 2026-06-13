@@ -95,11 +95,11 @@ export function renderEventFeeSummary(event) {
   return el('div', { class: 'event-detail-grid' }, [
     detailMetric('PnL líquido', formatPnl(event.final_pnl), Number(event.final_pnl) >= 0 ? 'good' : 'bad'),
     detailMetric('PnL bruto', summary.finalPnlBeforeFees == null ? '—' : formatPnl(summary.finalPnlBeforeFees)),
-    detailMetric('Preço entrada', formatPrice(summary.avgEntryPrice)),
+    detailMetric('Preço entrada', formatContractPrice(summary.avgEntryPrice)),
     detailMetric('Contratos', summary.quantity == null ? '—' : String(summary.quantity)),
     detailMetric('Custo', summary.cost == null ? '—' : formatPnl(summary.cost)),
-    detailMetric('PTB inicial', formatPrice(summary.priceToBeat)),
-    detailMetric('Dist. PTB entrada', summary.entryDistanceToPtb == null ? '—' : `$${Number(summary.entryDistanceToPtb).toFixed(0)}`),
+    detailMetric('PTB inicial', formatUsd(summary.priceToBeat)),
+    detailMetric('Dist. PTB entrada', summary.entryDistanceToPtb == null ? '—' : formatUsd(summary.entryDistanceToPtb)),
     detailMetric('Tempo restante', summary.entryTimeRemaining == null ? '—' : `${Math.round(summary.entryTimeRemaining)}s`),
     detailMetric('Taxas', formatPnl(fees.totalFee ?? 0), fees.totalFee > 0 ? 'warn' : ''),
     detailMetric('Taxa entrada', formatPnl(fees.entryFee ?? 0)),
@@ -138,7 +138,7 @@ export function generateNarratedLogs(event) {
     logs.push({
       ts: event.event_start,
       type: 'info',
-      msg: `Início do Evento detectado. PTB (Preço Limite) inicial: ${formatPrice(event.summary?.avgEntryPrice ?? event.summary?.priceToBeat ?? '-')}`,
+      msg: `Início do Evento detectado. PTB (Preço Limite) inicial: ${formatUsd(event.summary?.priceToBeat) !== '—' ? formatUsd(event.summary?.priceToBeat) : formatContractPrice(event.summary?.avgEntryPrice)}`,
     });
   }
 
@@ -267,9 +267,20 @@ function formatLogTs(ts) {
   return new Date(ts).toISOString().slice(11, 19);
 }
 
-function formatPrice(value) {
+function formatUsd(value) {
   const num = Number(value);
-  return Number.isFinite(num) ? num.toFixed(3) : '-';
+  if (!Number.isFinite(num)) return '—';
+  if (Math.abs(num) >= 1000) return `$${num.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+  return `$${num.toFixed(2)}`;
+}
+
+function formatContractPrice(value) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num.toFixed(3) : '—';
+}
+
+function formatPrice(value) {
+  return formatContractPrice(value);
 }
 
 function formatQty(value) {

@@ -1,4 +1,4 @@
-import { persistEventTraces } from '../backtestStudio/state/eventTraces.js';
+import { persistEventTraces, mergeResultIntoEventTraces } from '../backtestStudio/state/eventTraces.js';
 import { downsamplePoints } from '../utils/downsample.js';
 
 export function createBacktestRun(db, { request, result, strategyMeta = null, status = 'completed', error = null, durationMs = null, startedAt = null }) {
@@ -248,6 +248,8 @@ function finishExistingBacktestRun(db, id, { request, result, strategyMeta = nul
     const existingTraces = db.prepare('SELECT COUNT(*) AS c FROM backtest_event_traces WHERE run_id = ?').get(id);
     if (!existingTraces?.c) {
       persistEventTraces(db, id, result, { transaction: false });
+    } else {
+      mergeResultIntoEventTraces(db, id, result, { transaction: false });
     }
     result.summary.timings.sqliteWriteMs = Date.now() - storageStartedAt;
     const durationMs = startedAt ? Date.now() - startedAt : null;

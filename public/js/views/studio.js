@@ -53,9 +53,68 @@ function formatTimeRemaining(value) {
   return Number.isFinite(num) ? `${Math.round(num)}s` : '—';
 }
 
-function chartSeriesHasChartablePoints(series) {
+function chartSeriesIsUsable(series) {
   const base = series?.underlying || [];
-  return base.some((point) => point?.value != null && Number.isFinite(Number(point.value)));
+  const valid = base.filter((point) => point?.value != null && Number.isFinite(Number(point.value)));
+  if (valid.length < 2) return false;
+  const uniqueTs = new Set(valid.map((point) => String(point.ts)));
+  return uniqueTs.size >= 2;
+}
+
+function enrichEventSummaryFromChart(event, chartPayload) {
+  if (!event || !chartPayload) return;
+  const summary = event.summary || (event.summary = {});
+  const series = chartPayload.series || {};
+  const ptbPoint = (series.priceToBeat || []).find((p) => p?.value != null && Number.isFinite(Number(p.value)));
+  const spotPoints = (series.underlying || []).filter((p) => p?.value != null && Number.isFinite(Number(p.value)));
+
+  if (summary.priceToBeat == null && ptbPoint) summary.priceToBeat = Number(ptbPoint.value);
+
+  const entryOrder = (event.orders || []).find((o) => !o?.type || o.type === 'entry');
+  const entryTs = summary.entryTime || entryOrder?.ts || entryOrder?.createdAt;
+  if (entryTs && spotPoints.length) {
+    const entryMs = new Date(entryTs).getTime();
+    if (summary.entryTimeRemaining == null && event.event_end) {
+      const endMs = new Date(event.event_end).getTime();
+      if (Number.isFinite(entryMs) && Number.isFinite(endMs)) {
+        summary.entryTimeRemaining = Math.max(0, Math.round((endMs - entryMs) / 1000));
+      }
+    }
+    if (summary.entryDistanceToPtb == null) {
+      let bestSpot = null;
+      let bestPtb = summary.priceToBeat;
+      let bestDiff = Number.POSITIVE_INFINITY;
+      for (let i = 0; i < spotPoints.length; i += 1) {
+        const spot = spotPoints[i];
+        const tsMs = new Date(spot.ts).getTime();
+        if (!Number.isFinite(tsMs)) continue;
+        const diff = Math.abs(tsMs - entryMs);
+        if (diff < bestDiff) {
+          bestDiff = diff;
+          bestSpot = Number(spot.value);
+          const ptb = series.priceToBeat?.[i];
+          if (ptb?.value != null) bestPtb = Number(ptb.value);
+        }
+      }
+      if (Number.isFinite(bestSpot) && Number.isFinite(bestPtb)) {
+        summary.entryDistanceToPtb = Math.abs(bestSpot - bestPtb);
+      }
+    }
+  }
+
+  if (chartPayload.summary) {
+    Object.assign(summary, {
+      priceToBeat: summary.priceToBeat ?? chartPayload.summary.priceToBeat,
+      entryDistanceToPtb: summary.entryDistanceToPtb ?? chartPayload.summary.entryDistanceToPtb,
+      entryTimeRemaining: summary.entryTimeRemaining ?? chartPayload.summary.entryTimeRemaining,
+      finalPnlBeforeFees: summary.finalPnlBeforeFees ?? chartPayload.summary.finalPnlBeforeFees,
+    });
+  }
+
+  if (summary.finalPnlBeforeFees == null && event.final_pnl != null) {
+    const fee = Number(summary.fees?.totalFee || 0);
+    summary.finalPnlBeforeFees = fee > 0 ? Number(event.final_pnl) + fee : Number(event.final_pnl);
+  }
 }
 
 function renderSelectedEventContainerPlaceholder() {
@@ -1031,9 +1090,8 @@ async function selectEventAndRenderInline(ctx, runId, eventId, index = 0, { sync
   if (!res.ok) return mount(container, el('p', {}, 'Evento não encontrado'));
   const event = res.data.event;
 
-  const hasSidecarSeries = chartSeriesHasChartablePoints(event.series);
-  let chartData = hasSidecarSeries ? { series: event.series, series_meta: event.series_meta } : null;
-  let chartLoading = Boolean(event.condition_id && !hasSidecarSeries);
+  let chartData = null;
+  let chartLoading = Boolean(event.condition_id);
   const assetSymbol = studioState.selectedRunMeta?.underlying || 'BTC';
 
   const tabs = [
@@ -1107,12 +1165,10 @@ async function selectEventAndRenderInline(ctx, runId, eventId, index = 0, { sync
 
     if (activeTab === 'chart') {
       const containerChart = document.getElementById('studio-event-chart');
-      const payload = chartData?.series
-        ? chartData
-        : (chartSeriesHasChartablePoints(event.series) ? { series: event.series, series_meta: event.series_meta } : null);
+      const payload = chartData?.series ? chartData : null;
       if (chartLoading && containerChart) {
         mount(containerChart, Skeleton({ lines: 3 }));
-      } else if (payload?.series) {
+      } else if (payload?.series && chartSeriesIsUsable(payload.series)) {
         void renderEventChartWithMarkers(containerChart, event, payload, { assetSymbol });
       } else if (containerChart) {
         mount(containerChart, el('p', { class: 'muted text-center', style: { padding: '24px 0' } }, 'Série de preços indisponível para este evento.'));
@@ -1128,7 +1184,8 @@ async function selectEventAndRenderInline(ctx, runId, eventId, index = 0, { sync
         if (token !== openEventToken) return;
         chartLoading = false;
         chartData = chartRes.ok ? chartRes.data : null;
-        if (studioState.activeEventTab === 'chart') renderEventDetailContent();
+        if (chartData) enrichEventSummaryFromChart(event, chartData);
+        renderEventDetailContent();
       });
   }
 

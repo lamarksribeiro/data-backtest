@@ -11,6 +11,104 @@ export function chartSeriesHasChartablePoints(series) {
   return base.some((point) => point?.value != null && Number.isFinite(Number(point.value)));
 }
 
+/** Sidecar corrompido (ex.: referência ao cursor) costuma ter 1 timestamp repetido — força fallback DuckDB. */
+export function chartSeriesIsUsable(series) {
+  const base = series?.underlying || [];
+  const valid = base.filter((point) => point?.value != null && Number.isFinite(Number(point.value)));
+  if (valid.length < 2) return false;
+  const uniqueTs = new Set(valid.map((point) => String(point.ts)));
+  return uniqueTs.size >= 2;
+}
+
+export function enrichSummaryFromChartSeries(summary = {}, series = {}, event = {}) {
+  const next = { ...summary };
+  const ptbPoint = (series.priceToBeat || []).find((p) => p?.value != null && Number.isFinite(Number(p.value)));
+  const spotPoints = (series.underlying || []).filter((p) => p?.value != null && Number.isFinite(Number(p.value)));
+
+  if (next.priceToBeat == null && ptbPoint) next.priceToBeat = Number(ptbPoint.value);
+
+  const entryTs = next.entryTime || event.entryTime
+    || (event.orders || []).find((o) => !o?.type || o.type === 'entry')?.ts
+    || (event.orders || []).find((o) => !o?.type || o.type === 'entry')?.createdAt;
+  if (entryTs && spotPoints.length) {
+    const entryMs = new Date(entryTs).getTime();
+    let bestSpot = null;
+    let bestPtb = null;
+    let bestDiff = Number.POSITIVE_INFINITY;
+    for (let i = 0; i < spotPoints.length; i += 1) {
+      const spot = spotPoints[i];
+      const tsMs = new Date(spot.ts).getTime();
+      if (!Number.isFinite(tsMs)) continue;
+      const diff = Math.abs(tsMs - entryMs);
+      if (diff < bestDiff) {
+        bestDiff = diff;
+        bestSpot = Number(spot.value);
+        const ptb = series.priceToBeat?.[i];
+        bestPtb = ptb?.value != null ? Number(ptb.value) : next.priceToBeat;
+      }
+    }
+    if (next.entryDistanceToPtb == null && Number.isFinite(bestSpot) && Number.isFinite(bestPtb)) {
+      next.entryDistanceToPtb = Math.abs(bestSpot - bestPtb);
+    }
+    if (next.entryTimeRemaining == null && event.event_end) {
+      const endMs = new Date(event.event_end).getTime();
+      if (Number.isFinite(entryMs) && Number.isFinite(endMs)) {
+        next.entryTimeRemaining = Math.max(0, Math.round((endMs - entryMs) / 1000));
+      }
+    }
+  }
+
+  if (next.finalPnlBeforeFees == null && event.final_pnl != null) {
+    const fee = Number(next.fees?.totalFee || 0);
+    next.finalPnlBeforeFees = fee > 0 ? Number(event.final_pnl) + fee : Number(event.final_pnl);
+  }
+
+  return next;
+}
+
+export function mergeResultIntoEventTraces(db, runId, result, { transaction = true } = {}) {
+  const rows = normalizeEventsFromResult(runId, result);
+  if (!rows.length) return 0;
+  const update = db.prepare(`
+    UPDATE backtest_event_traces SET
+      side = ?, entries_count = ?, exits_count = ?, final_pnl = ?, result = ?, reason = ?,
+      summary_json = ?, orders_json = ?, marks_json = ?, logs_json = ?, metrics_json = ?
+    WHERE run_id = ? AND condition_id = ?
+  `);
+  const apply = () => {
+    let updated = 0;
+    for (const row of rows) {
+      const info = update.run(
+        row.side,
+        row.entries_count,
+        row.exits_count,
+        row.final_pnl,
+        row.result,
+        row.reason,
+        JSON.stringify(row.summary),
+        JSON.stringify(row.orders),
+        JSON.stringify(row.marks),
+        JSON.stringify(row.logs),
+        JSON.stringify(row.metrics),
+        runId,
+        row.condition_id,
+      );
+      updated += info.changes;
+    }
+    return updated;
+  };
+  if (!transaction) return apply();
+  db.exec('BEGIN IMMEDIATE');
+  try {
+    const updated = apply();
+    db.exec('COMMIT');
+    return updated;
+  } catch (err) {
+    db.exec('ROLLBACK');
+    throw err;
+  }
+}
+
 export function persistEventTraces(db, runId, result, { transaction = true } = {}) {
   if (transaction) {
     db.exec('BEGIN IMMEDIATE');
@@ -153,7 +251,7 @@ export function getEventTrace(db, runId, eventTraceId, { stateDbPath = null } = 
   const detail = toApiEventDetail(row);
   if (stateDbPath && row.chart_series_path) {
     const sidecar = readChartSidecarForEvent(row.chart_series_path, row.condition_id);
-    if (sidecar?.series && chartSeriesHasChartablePoints(sidecar.series)) {
+    if (sidecar?.series && chartSeriesIsUsable(sidecar.series)) {
       detail.series = sidecar.series;
       detail.series_meta = sidecar.meta;
     }
@@ -177,12 +275,12 @@ export async function getChartData(db, config, run, conditionId) {
 
   if (config?.stateDbPath && event.chart_series_path) {
     const sidecar = readChartSidecarForEvent(event.chart_series_path, conditionId);
-    if (sidecar?.series && chartSeriesHasChartablePoints(sidecar.series)) {
+    if (sidecar?.series && chartSeriesIsUsable(sidecar.series)) {
       return {
         event: toApiEventSummaryFromDetail(event),
         series: sidecar.series,
         series_meta: sidecar.meta ?? { source: 'sidecar' },
-        summary: event.summary,
+        summary: enrichSummaryFromChartSeries(event.summary, sidecar.series, event),
         exits: event.summary?.exits ?? [],
         orders: event.orders,
         marks: event.marks,
@@ -208,12 +306,13 @@ export async function getChartData(db, config, run, conditionId) {
   const fullSeries = buildChartSeries(rows, side);
   const keepTs = collectMarkerTimestamps(event);
   const { series, meta } = downsampleChartSeries(fullSeries, keepTs);
+  const enrichedSummary = enrichSummaryFromChartSeries(event.summary, series, event);
 
   return {
     event: toApiEventSummaryFromDetail(event),
     series,
     series_meta: meta,
-    summary: event.summary,
+    summary: enrichedSummary,
     exits: event.summary?.exits ?? [],
     orders: event.orders,
     marks: event.marks,
@@ -375,14 +474,21 @@ function toApiEventSummary(row) {
     quantity: summary.quantity ?? null,
     cost: summary.cost ?? null,
     price_to_beat: summary.priceToBeat ?? null,
-    entry_distance_ptb: summary.entryDistanceToPtb ?? null,
-    entry_time_remaining: summary.entryTimeRemaining ?? null,
+    entry_distance_ptb: summary.entryDistanceToPtb ?? summary.diagnostics?.distanceToPtb ?? null,
+    entry_time_remaining: summary.entryTimeRemaining ?? summary.diagnostics?.lastSecsLeft ?? null,
     expiration_result: summary.expirationResult ?? null,
     fees_total: fees.totalFee ?? 0,
   };
 }
 
 function toApiEventDetail(row) {
+  const summary = JSON.parse(row.summary_json || '{}');
+  const fees = summary?.fees || {};
+  const finalPnl = Number(row.final_pnl);
+  if (summary.finalPnlBeforeFees == null && Number.isFinite(finalPnl)) {
+    const fee = Number(fees.totalFee || 0);
+    summary.finalPnlBeforeFees = fee > 0 ? finalPnl + fee : finalPnl;
+  }
   return {
     id: Number(row.id),
     run_id: Number(row.run_id),
@@ -397,7 +503,7 @@ function toApiEventDetail(row) {
     result: row.result,
     reason: row.reason,
     ticks_count: row.ticks_count,
-    summary: JSON.parse(row.summary_json),
+    summary,
     orders: JSON.parse(row.orders_json),
     marks: JSON.parse(row.marks_json),
     logs: JSON.parse(row.logs_json),

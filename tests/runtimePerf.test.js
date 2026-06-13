@@ -7,7 +7,7 @@ import os from 'node:os';
 import { extractEquityFromResultJson } from '../src/state/backtestRuns.js';
 import { readChartSidecarForEvent, appendChartSidecarLine, buildEventChartSeries } from '../src/backtest/chartSidecar.js';
 import { createColumnSetBuilder, createTickCursorView, snapshotTickCursorView } from '../src/backtest/columnStore.js';
-import { chartSeriesHasChartablePoints } from '../src/backtestStudio/state/eventTraces.js';
+import { chartSeriesHasChartablePoints, chartSeriesIsUsable } from '../src/backtestStudio/state/eventTraces.js';
 import { loadConfig } from '../src/config.js';
 
 test('extractEquityFromResultJson reads equity without full parse', () => {
@@ -62,6 +62,7 @@ test('snapshotTickCursorView freezes per-index tick values', () => {
 
   const { series } = buildEventChartSeries([first, second], 'UP');
   assert.ok(chartSeriesHasChartablePoints(series));
+  assert.ok(chartSeriesIsUsable(series));
   assert.equal(series.underlying.length, 2);
   assert.equal(series.underlying[0].value, 100);
   assert.equal(series.underlying[1].value, 101);
