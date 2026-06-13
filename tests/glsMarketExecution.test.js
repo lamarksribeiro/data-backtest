@@ -108,6 +108,48 @@ test('GLS order simulator does not fabricate bid liquidity when no bid level cro
   assert.equal(snapshot.realizedPnl, 0);
 });
 
+test('GLS order simulator does not reuse cached book levels from mutable tick cursors', () => {
+  const simulator = createOrderSimulator();
+  let index = 0;
+  const cursor = {
+    setIndex(nextIndex) {
+      index = nextIndex;
+    },
+    get book_depth() {
+      return 1;
+    },
+    get up_ask_px_1() {
+      return index === 0 ? 0.1 : 0.2;
+    },
+    get up_ask_sz_1() {
+      return 10;
+    },
+  };
+
+  const first = simulator.enter('UP', {
+    ts: '2026-05-31T00:00:01.000Z',
+    price: 0.1,
+    maxPrice: 0.2,
+    budget: 2,
+    minShares: 1,
+    tick: cursor,
+  });
+  assert.deepEqual(first.fills, [{ price: 0.1, qty: 10 }]);
+
+  simulator.reset();
+  cursor.setIndex(1);
+  const second = simulator.enter('UP', {
+    ts: '2026-05-31T00:00:02.000Z',
+    price: 0.2,
+    maxPrice: 0.2,
+    budget: 2,
+    minShares: 1,
+    tick: cursor,
+  });
+
+  assert.deepEqual(second.fills, [{ price: 0.2, qty: 10 }]);
+});
+
 test('GLS runtime passes tick book depth into strategy exits', () => {
   const runner = createGlsRunnerFromSource(`
     strategy "Market Real Exit" {

@@ -244,14 +244,15 @@ function fillAsks(side, tick, maxPrice, requestedQty, consumedByPrice, fallbackB
 function askLevels(side, tick, fallbackBestAsk) {
   const prefix = side === 'DOWN' ? 'down_ask' : 'up_ask';
   const cacheKey = `_parsed_${prefix}`;
-  if (tick && tick[cacheKey]) return tick[cacheKey];
+  const canCache = canCacheBookLevels(tick);
+  if (canCache && tick[cacheKey]) return tick[cacheKey];
 
   const rawLevels = side === 'DOWN'
     ? (tick?._parsed_down_book_asks || tick?.down_book_asks)
     : (tick?._parsed_up_book_asks || tick?.up_book_asks);
   const parsed = parseBookLevels(rawLevels);
   if (parsed.length) {
-    if (tick) tick[cacheKey] = parsed;
+    if (canCache) tick[cacheKey] = parsed;
     return parsed;
   }
 
@@ -265,7 +266,7 @@ function askLevels(side, tick, fallbackBestAsk) {
   const result = flattened.length ? flattened.sort((left, right) => left.price - right.price) : [];
   if (result.length > 0) {
     Object.defineProperty(result, '_isParsed', { value: true, enumerable: false });
-    if (tick) tick[cacheKey] = result;
+    if (canCache) tick[cacheKey] = result;
     return result;
   }
 
@@ -299,14 +300,15 @@ function fillBids(side, tick, minPrice, requestedQty, consumedByPrice) {
 function bidLevels(side, tick, fallbackBestBid) {
   const prefix = side === 'DOWN' ? 'down_bid' : 'up_bid';
   const cacheKey = `_parsed_${prefix}`;
-  if (tick && tick[cacheKey]) return tick[cacheKey];
+  const canCache = canCacheBookLevels(tick);
+  if (canCache && tick[cacheKey]) return tick[cacheKey];
 
   const rawLevels = side === 'DOWN'
     ? (tick?._parsed_down_book_bids || tick?.down_book_bids)
     : (tick?._parsed_up_book_bids || tick?.up_book_bids);
   const parsed = parseBookLevels(rawLevels, 'bid');
   if (parsed.length) {
-    if (tick) tick[cacheKey] = parsed;
+    if (canCache) tick[cacheKey] = parsed;
     return parsed;
   }
 
@@ -320,7 +322,7 @@ function bidLevels(side, tick, fallbackBestBid) {
   const result = flattened.length ? flattened.sort((left, right) => right.price - left.price) : [];
   if (result.length > 0) {
     Object.defineProperty(result, '_isParsed', { value: true, enumerable: false });
-    if (tick) tick[cacheKey] = result;
+    if (canCache) tick[cacheKey] = result;
     return result;
   }
 
@@ -352,6 +354,10 @@ function parseBookLevels(rawLevels, side = 'ask') {
 
   Object.defineProperty(result, '_isParsed', { value: true, enumerable: false });
   return result;
+}
+
+function canCacheBookLevels(tick) {
+  return Boolean(tick) && typeof tick.setIndex !== 'function';
 }
 
 function trimFills(fills, targetShares) {
