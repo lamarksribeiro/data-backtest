@@ -1179,10 +1179,10 @@ async function selectEventAndRenderInline(ctx, runId, eventId, index = 0, { sync
   if (chartData) enrichEventSummaryFromChart(event, chartData);
 
   const tabs = [
-    { id: 'chart', label: 'Gráfico' },
-    { id: 'timeline', label: 'Linha do Tempo' },
-    { id: 'diagnostics', label: 'Diagnóstico' },
-    { id: 'logs', label: 'Tradução do Gráfico (Logs)' },
+    { id: 'chart', label: 'Gráfico', icon: 'fa-chart-line' },
+    { id: 'timeline', label: 'Linha do Tempo', icon: 'fa-clock-rotate-left' },
+    { id: 'diagnostics', label: 'Diagnóstico', icon: 'fa-circle-nodes' },
+    { id: 'logs', label: 'Tradução do Gráfico (Logs)', icon: 'fa-terminal' },
   ];
 
   function renderEventDetailContent() {
@@ -1224,7 +1224,7 @@ async function selectEventAndRenderInline(ctx, runId, eventId, index = 0, { sync
               renderSelectedEventContainerPlaceholder();
               document.querySelectorAll('.studio-event-row').forEach(r => r.classList.remove('is-selected'));
             }
-          }, 'Limpar'),
+          }, [el('i', { class: 'fa-solid fa-xmark', style: { marginRight: '4px' } }), 'Limpar']),
         ])
       ]),
       renderEventOverview(event),
@@ -1232,7 +1232,10 @@ async function selectEventAndRenderInline(ctx, runId, eventId, index = 0, { sync
         type: 'button',
         class: `drawer-tab-link${activeTab === t.id ? ' is-active' : ''}`,
         onclick: () => { studioState.activeEventTab = t.id; renderEventDetailContent(); },
-      }, t.label))),
+      }, [
+        el('i', { class: `fa-solid ${t.icon}`, style: { marginRight: '6px' } }),
+        t.label
+      ]))),
       el('div', { class: `drawer-tab-panel${activeTab === 'chart' ? ' is-active' : ''}` }, [
         el('div', { id: 'studio-event-chart', class: 'studio-event-chart' }),
       ]),

@@ -38,8 +38,8 @@ export function renderGroupedMetrics(summary, { onToggle, cardId = 'run-metrics-
     },
   }, viewMode === 'panel' ? 'Ver JSON' : 'Ver painel');
 
-  const header = el('div', { class: 'card__header' }, [
-    el('h2', { class: 'card__title' }, 'Métricas completas'),
+  const header = el('div', { class: 'card__header', style: { marginBottom: '16px' } }, [
+    el('h2', { class: 'card__title' }, 'Métricas da Execução'),
     toggleBtn,
   ]);
 
@@ -55,24 +55,68 @@ export function renderGroupedMetrics(summary, { onToggle, cardId = 'run-metrics-
   const losses = summary.totalLosses ?? summary.losses ?? 0;
   const winRate = summary.winRate ?? (totalEntries > 0 ? (wins / totalEntries) * 100 : 0);
 
+  // KPIs de Alto Impacto (Hero Cards)
+  const heroGrid = el('div', { class: 'metrics-hero-grid' }, [
+    // 1. PnL Líquido
+    el('div', { class: `metrics-hero-card metrics-hero-card--pnl-${tonePnl(summary.totalPnl)}` }, [
+      el('span', { class: 'metrics-hero-card__label' }, 'PnL Líquido'),
+      el('span', { class: `metrics-hero-card__value metric-item__value--${tonePnl(summary.totalPnl)}` }, formatPnl(summary.totalPnl ?? 0)),
+      el('span', { class: 'metrics-hero-card__sub' }, [
+        'Retorno Médio: ',
+        el('strong', { class: `pnl-${tonePnl(summary.avgPnl)}` }, formatPnl(summary.avgPnl ?? 0))
+      ])
+    ]),
+    // 2. Taxa de Acerto (Win Rate)
+    el('div', { class: 'metrics-hero-card metrics-hero-card--winrate' }, [
+      el('span', { class: 'metrics-hero-card__label' }, 'Taxa de Acerto'),
+      el('span', { class: 'metrics-hero-card__value' }, `${formatRate(winRate)}%`),
+      el('div', { class: 'win-rate-progress-wrap' }, [
+        el('div', { class: 'win-rate-progress-bar', style: { width: `${Math.min(100, Math.max(0, winRate))}%` } })
+      ]),
+      el('span', { class: 'metrics-hero-card__sub' }, [
+        el('strong', {}, String(wins)), ' vitórias / ',
+        el('strong', {}, String(losses)), ' derrotas'
+      ])
+    ]),
+    // 3. Drawdown Máximo
+    el('div', { class: 'metrics-hero-card metrics-hero-card--drawdown' }, [
+      el('span', { class: 'metrics-hero-card__label' }, 'Drawdown Máximo'),
+      el('span', { class: 'metrics-hero-card__value metric-item__value--bad' }, formatPnl(summary.maxDrawdown ?? 0)),
+      el('span', { class: 'metrics-hero-card__sub' }, [
+        'Fator Recuperação: ',
+        el('strong', {}, formatRateValue(summary.recoveryFactor))
+      ])
+    ]),
+    // 4. Fator de Lucro (Profit Factor)
+    el('div', { class: 'metrics-hero-card metrics-hero-card--factor' }, [
+      el('span', { class: 'metrics-hero-card__label' }, 'Fator de Lucro'),
+      el('span', { class: `metrics-hero-card__value metric-item__value--${(summary.profitFactor ?? 0) >= 1 ? 'good' : 'bad'}` }, formatRateValue(summary.profitFactor)),
+      el('span', { class: 'metrics-hero-card__sub' }, [
+        'Sharpe: ',
+        el('strong', {}, formatRateValue(summary.sharpeRatio ?? summary.sharpe)),
+        ' | Sortino: ',
+        el('strong', {}, formatRateValue(summary.sortinoRatio ?? summary.sortino))
+      ])
+    ])
+  ]);
+
   return el('section', { class: 'card', id: cardId }, [
     header,
+    heroGrid,
     el('div', { class: 'metrics-dashboard-grid' }, [
-      metricsGroup('Visão Geral', [
-        metricItem('PnL Líquido', formatPnl(summary.totalPnl ?? 0), tonePnl(summary.totalPnl)),
-        metricItem('Drawdown Máximo', formatPnl(summary.maxDrawdown ?? 0), 'bad'),
+      metricsGroup('Geral & Risco', [
         metricItem('Volume Operado', formatVolume(summary.volume ?? summary.fees?.volume ?? 0)),
         metricItem('Taxas Pagas', formatPnl(summary.feesPaid ?? summary.totalFees ?? summary.fees?.totalFee ?? 0)),
         metricItem('Sharpe Ratio', formatRateValue(summary.sharpeRatio ?? summary.sharpe)),
         metricItem('Sortino Ratio', formatRateValue(summary.sortinoRatio ?? summary.sortino)),
+        metricItem('Fator Recuperação', formatRateValue(summary.recoveryFactor)),
+        metricItem('Fator de Lucro', formatRateValue(summary.profitFactor), (summary.profitFactor ?? 0) >= 1 ? 'good' : 'bad'),
       ]),
       metricsGroup('Assertividade', [
         metricItem('Total Operações', totalEntries),
-        metricItem('Vitórias', wins, 'good'),
-        metricItem('Derrotas', losses, 'bad'),
+        metricItem('Vitórias (Win)', wins, 'good'),
+        metricItem('Derrotas (Loss)', losses, 'bad'),
         metricItem('Taxa de Acerto', `${formatRate(winRate)}%`, winRate >= 50 ? 'good' : 'bad'),
-        metricItem('Fator de Lucro', formatRateValue(summary.profitFactor), (summary.profitFactor ?? 0) >= 1 ? 'good' : 'bad'),
-        metricItem('Fator Recuperação', formatRateValue(summary.recoveryFactor)),
       ], winRate),
       metricsGroup('Médias e Limites', [
         metricItem('Retorno Médio', formatPnl(summary.avgPnl ?? 0), tonePnl(summary.avgPnl)),

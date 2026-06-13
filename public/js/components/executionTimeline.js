@@ -251,17 +251,18 @@ export function renderLogList(logs, event = null) {
 
 function timelineItem(item) {
   const icon = {
-    entry: '▲',
-    exit: '▼',
-    stop: '✖',
-    trail_stop: '✖',
-    take_profit: '✔',
-    partial: '◆',
-    reverse: '↻',
-    mark: 'ℹ'
-  }[item.kind] || '●';
+    entry: el('i', { class: 'fa-solid fa-arrow-up-long', 'aria-hidden': 'true' }),
+    exit: el('i', { class: 'fa-solid fa-arrow-down-long', 'aria-hidden': 'true' }),
+    stop: el('i', { class: 'fa-solid fa-hand', 'aria-hidden': 'true' }),
+    trail_stop: el('i', { class: 'fa-solid fa-hand-holding-dollar', 'aria-hidden': 'true' }),
+    take_profit: el('i', { class: 'fa-solid fa-check', 'aria-hidden': 'true' }),
+    partial: el('i', { class: 'fa-solid fa-circle-nodes', 'aria-hidden': 'true' }),
+    reverse: el('i', { class: 'fa-solid fa-arrows-spin', 'aria-hidden': 'true' }),
+    mark: el('i', { class: 'fa-solid fa-circle-info', 'aria-hidden': 'true' })
+  }[item.kind] || el('i', { class: 'fa-solid fa-circle', 'aria-hidden': 'true' });
+
   return el('article', { class: `execution-timeline__item execution-timeline__item--${item.kind}` }, [
-    el('div', { class: 'execution-timeline__dot' }, icon),
+    el('div', { class: 'execution-timeline__dot' }, [icon]),
     el('div', { class: 'execution-timeline__body' }, [
       el('div', { class: 'execution-timeline__head' }, [
         el('strong', {}, item.title),
