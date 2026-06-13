@@ -21,6 +21,7 @@ export function testServerConfig(overrides = {}) {
     stateDbPath: overrides.stateDbPath,
     backtestDataMode: 'strict',
     backtestBookDepth: overrides.backtestBookDepth ?? 25,
+    prepareRunner: 'inline',
     SESSION_SECRET: 'test-session-secret',
     SESSION_MAX_AGE_SEC: 3600,
     NODE_ENV: 'test',

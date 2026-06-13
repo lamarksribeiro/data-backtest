@@ -764,6 +764,7 @@ const dataStyles = `
 let sseHandler = null;
 let latestJobs = [];
 let jobsTimer = null;
+let jobsRefreshDebounce = null;
 let displayedProgress = {};
 
 export function buildDetailsEmptyState() {
@@ -990,7 +991,7 @@ function renderActions(ctx, formCtx, fieldOptions) {
   });
 }
 
-async function refreshCoverage(ctx, formCtx) {
+async function refreshCoverage(ctx, formCtx, { full = true } = {}) {
   const q = new URLSearchParams({
     underlying: formCtx.underlying,
     interval: formCtx.interval,
@@ -998,6 +999,7 @@ async function refreshCoverage(ctx, formCtx) {
     from: formCtx.from,
     to: formCtx.to,
   });
+  if (full) q.set('full', '1');
   const res = await ctx.api.get(`/api/data/coverage?${q}`);
   const section = document.getElementById('data-coverage-section');
   if (!section) return;
@@ -1761,22 +1763,61 @@ function jobCard(ctx, job) {
   ]);
 }
 
+function updateJobCardFromProgress(jobId, progress, status = 'running') {
+  const existing = latestJobs.find((job) => job.id === jobId);
+  const job = existing
+    ? { ...existing, progress, status }
+    : { id: jobId, status, progress, dry_run: false, mode: 'prepare' };
+  if (existing) {
+    Object.assign(existing, job);
+  } else {
+    latestJobs.unshift(job);
+  }
+
+  const targetPct = calculateJobProgress(job);
+  displayedProgress[jobId] = targetPct;
+  const cardEl = document.getElementById(`data-job-${jobId}`);
+  if (!cardEl) return false;
+
+  const fillEl = cardEl.querySelector('.data-job-progress-fill');
+  const pctEl = cardEl.querySelector('.data-job-card__pct');
+  const phaseEl = cardEl.querySelector('.data-job-card__phase');
+  const pctLabel = `${Math.round(targetPct)}%`;
+  if (fillEl) fillEl.style.width = `${targetPct}%`;
+  if (pctEl) pctEl.textContent = pctLabel;
+  if (phaseEl) phaseEl.textContent = formatJobPhase(job);
+  return true;
+}
+
+function scheduleRefreshJobs(ctx) {
+  if (jobsRefreshDebounce) clearTimeout(jobsRefreshDebounce);
+  jobsRefreshDebounce = setTimeout(() => {
+    jobsRefreshDebounce = null;
+    void refreshJobs(ctx);
+  }, 2000);
+}
+
 function bindJobsSse(ctx) {
   if (sseHandler) disconnectSse(sseHandler);
   sseHandler = (event) => {
     if (!['job:progress', 'job:completed', 'job:failed'].includes(event.type)) return;
-    refreshJobs(ctx);
+
+    if (event.type === 'job:progress' && event.jobId && event.progress) {
+      const updated = updateJobCardFromProgress(event.jobId, event.progress, 'running');
+      if (!updated) scheduleRefreshJobs(ctx);
+      return;
+    }
+
     if (event.type === 'job:completed' && event.jobId && event.status !== 'cancelled') {
       displayedProgress[event.jobId] = 100;
-      const fillEl = document.querySelector(`#data-job-${event.jobId} .data-job-progress-fill`);
-      const pctEl = document.querySelector(`#data-job-${event.jobId} .data-job-card__pct`);
-      if (fillEl) fillEl.style.width = '100%';
-      if (pctEl) pctEl.textContent = '100%';
-      const formCtx = loadContext();
-      refreshCoverage(ctx, formCtx);
+      void refreshJobs(ctx).then(() => refreshCoverage(ctx, loadContext()));
       ctx.toast.ok('Job concluído — cobertura atualizada');
-    } else if ((event.status === 'cancelled' || event.type === 'job:failed') && event.jobId) {
+      return;
+    }
+
+    if ((event.status === 'cancelled' || event.type === 'job:failed') && event.jobId) {
       delete displayedProgress[event.jobId];
+      scheduleRefreshJobs(ctx);
       refreshCoverage(ctx, loadContext());
       ctx.toast.warn(event.status === 'cancelled' ? 'Job cancelado' : 'Job falhou');
     }

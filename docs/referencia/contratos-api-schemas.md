@@ -381,16 +381,31 @@ Response:
 Query params:
 
 ```text
-limit optional
+limit optional (default 20, max 100)
+slim optional — default true; use slim=0 para incluir request/plan/result completos
 ```
 
-Response:
+Response (slim, default):
 
 ```json
 {
-  "jobs": []
+  "jobs": [
+    {
+      "id": 1,
+      "status": "running",
+      "mode": "prepare",
+      "dry_run": false,
+      "progress": { "percent": 42, "files_count": 3, "bytes_total": 1200000 },
+      "error": null,
+      "created_at": "...",
+      "started_at": "...",
+      "completed_at": null
+    }
+  ]
 }
 ```
+
+`progress.files` mantem no maximo os 5 arquivos mais recentes; contadores `files_count` e `bytes_total` acumulam o job inteiro.
 
 ### `GET /api/prepare/jobs/:id`
 
@@ -429,12 +444,12 @@ Request:
 Campos opcionais V2:
 
 ```text
-async          — enfileira run (202) em vez de executar inline
+async          — omitido ou true: enfileira (202); false: enfileira e aguarda resultado (200) sem bloquear o event loop
 fast_run       — reduz traces/logs no worker
 gls_execution  — compiled | interpreter (default: env GLS_EXECUTION)
 ```
 
-Response async (`202`):
+Response async (`202`, default quando `async` omitido ou `true`):
 
 ```json
 {
@@ -927,7 +942,9 @@ created_at
 
 ### `GET /api/data/coverage`
 
-Query: `underlying`, `interval`, `dataset` (default `backtest_ticks`), `book_depth`, `from`, `to`.
+Query: `underlying`, `interval`, `dataset` (default `backtest_ticks`), `book_depth`, `from`, `to`, `full` (opcional: `1` expande ao historico completo do manifest para heatmap).
+
+Sem `full=1`, responde apenas o intervalo pedido (mais rapido). A UI do heatmap usa `full=1`. Cache TTL 30s no servidor.
 
 Response:
 

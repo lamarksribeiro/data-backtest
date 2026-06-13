@@ -350,6 +350,7 @@ test('GLS strategy runs on lakehouse via strategy_id/version', async () => {
         interval: '5m',
         book_depth: 2,
         batch_size: 5,
+        async: false,
       });
       assert.ok(runRes.run.id);
       assert.equal(runRes.run.strategy_id, strategy.id);

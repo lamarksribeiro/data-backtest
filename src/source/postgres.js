@@ -161,6 +161,16 @@ export async function getScalarTicksForEvents(pool, partition, conditionIds) {
   return rows.map(rowToScalarTick);
 }
 
+export async function getScalarTicksForEvent(pool, partition, conditionId) {
+  if (!conditionId) return [];
+  return getScalarTicksForEvents(pool, partition, [conditionId]);
+}
+
+export async function getTicksWithBooksForEvent(pool, partition, conditionId) {
+  if (!conditionId) return [];
+  return getTicksWithBooksForEvents(pool, partition, [conditionId]);
+}
+
 export async function getTicksWithBooksForEvents(pool, partition, conditionIds) {
   if (!conditionIds.length) return [];
   const { rows } = await pool.query(`

@@ -37,7 +37,7 @@ export function partitionStatusHint(status) {
   return STATUS_HINTS[status] || `Status "${status}" não pode ser usado em modo strict.`;
 }
 
-export function checkDatasetAvailability(db, request) {
+export function checkDatasetAvailability(db, request, { includeQualityDetails = true } = {}) {
   const dates = partitionDatesForRange(request.from, request.to);
   acceptEligibleReviewPartitions(db, {
     dataset: request.dataset,
@@ -81,7 +81,7 @@ export function checkDatasetAvailability(db, request) {
       events_count: row.events_count ?? null,
       coverage_min: row.coverage_min ?? null,
       has_degraded: Boolean(row.has_degraded),
-      quality_details: parseQualityDetails(row.quality_details_json),
+      quality_details: includeQualityDetails ? parseQualityDetails(row.quality_details_json) : null,
       active_path: row.active_path ?? null,
       error: row.error ?? null,
       hint: partitionStatusHint(row.status),

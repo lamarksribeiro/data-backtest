@@ -13,6 +13,13 @@ export const UI_STATE_LABELS = {
   attention: 'Atenção',
 };
 
+const COVERAGE_CACHE_TTL_MS = 30_000;
+const coverageCache = new Map();
+
+export function invalidateCoverageCache() {
+  coverageCache.clear();
+}
+
 export function mapStatusToUiState(status, { activeJob = false } = {}) {
   if (activeJob || UI_PROCESSING.has(status)) return 'processing';
   if (UI_READY.has(status)) return 'ready';
@@ -27,62 +34,68 @@ export function uiStateTone(state) {
 
 export function getDataCoverage(db, params, config) {
   const request = datasetRequestFromParams(params, config);
+  const fullHistory = params.get('full') === '1';
+  const cacheKey = fullHistory
+    ? `full:${request.dataset}:${request.underlying}:${request.interval}:${request.bookDepth}:${request.resolution || ''}`
+    : `narrow:${request.dataset}:${request.underlying}:${request.interval}:${request.bookDepth}:${request.resolution || ''}:${request.from}:${request.to}`;
 
-  // Find min and max dt in lake_manifest for this specific config
-  const dbParams = [request.dataset, request.underlying, request.interval];
-  let boundsSql = `
-    SELECT MIN(dt) AS min_dt, MAX(dt) AS max_dt 
-    FROM lake_manifest
-    WHERE dataset = ? 
-      AND underlying = ? 
-      AND interval = ?`;
-
-  if (request.resolution) {
-    dbParams.push(request.resolution);
-    boundsSql += ` AND resolution = ?`;
-  } else {
-    boundsSql += ` AND resolution IS NULL`;
+  const now = Date.now();
+  const cached = coverageCache.get(cacheKey);
+  if (cached && now - cached.at < COVERAGE_CACHE_TTL_MS) {
+    return cached.value;
   }
 
-  if (request.bookDepth != null) {
-    dbParams.push(request.bookDepth);
-    boundsSql += ` AND book_depth = ?`;
-  } else {
-    boundsSql += ` AND book_depth IS NULL`;
-  }
-
-  const bounds = db.prepare(boundsSql).get(...dbParams);
-
-  const reqFromDt = request.from.slice(0, 10);
   const { from_date, to_date } = inclusiveDateRangeFromRequest(request);
-
-  let startDt = reqFromDt;
+  let startDt = request.from.slice(0, 10);
   let endDt = to_date;
 
-  if (bounds && bounds.min_dt && bounds.max_dt) {
-    if (bounds.min_dt < startDt) startDt = bounds.min_dt;
-    if (bounds.max_dt > endDt) endDt = bounds.max_dt;
+  if (fullHistory) {
+    const dbParams = [request.dataset, request.underlying, request.interval];
+    let boundsSql = `
+      SELECT MIN(dt) AS min_dt, MAX(dt) AS max_dt
+      FROM lake_manifest
+      WHERE dataset = ?
+        AND underlying = ?
+        AND interval = ?`;
+
+    if (request.resolution) {
+      dbParams.push(request.resolution);
+      boundsSql += ' AND resolution = ?';
+    } else {
+      boundsSql += ' AND resolution IS NULL';
+    }
+
+    if (request.bookDepth != null) {
+      dbParams.push(request.bookDepth);
+      boundsSql += ' AND book_depth = ?';
+    } else {
+      boundsSql += ' AND book_depth IS NULL';
+    }
+
+    const bounds = db.prepare(boundsSql).get(...dbParams);
+    if (bounds?.min_dt && bounds.min_dt < startDt) startDt = bounds.min_dt;
+    if (bounds?.max_dt && bounds.max_dt > endDt) endDt = bounds.max_dt;
   }
 
   const endPlusOne = new Date(`${endDt}T00:00:00.000Z`);
   endPlusOne.setUTCDate(endPlusOne.getUTCDate() + 1);
 
-  const wideRequest = {
+  const rangeRequest = {
     ...request,
     from: `${startDt}T00:00:00.000Z`,
     to: endPlusOne.toISOString(),
   };
 
-  const availability = checkDatasetAvailability(db, wideRequest);
-  const activeJobsByDate = findActiveJobsByDate(db, wideRequest);
+  const availability = checkDatasetAvailability(db, rangeRequest, { includeQualityDetails: fullHistory });
+  const activeJobsByDate = findActiveJobsByDate(db, rangeRequest);
   const { days, summary } = aggregateCoverageDays(availability.partitions, { activeJobsByDate });
 
-  // Calculate ok status specifically for the requested (narrow) range
   const requestedDates = new Set(partitionDatesForRange(request.from, request.to));
   const requestedPartitions = availability.partitions.filter((p) => requestedDates.has(p.dt));
-  const requestedOk = requestedPartitions.length === requestedDates.size && requestedPartitions.every((p) => p.usable);
+  const requestedOk = requestedPartitions.length === requestedDates.size
+    && requestedPartitions.every((p) => p.usable);
 
-  return {
+  const value = {
     dataset: request.dataset,
     underlying: request.underlying,
     interval: request.interval,
@@ -91,10 +104,14 @@ export function getDataCoverage(db, params, config) {
     to: request.to,
     from_date,
     to_date,
+    scope: fullHistory ? 'full' : 'requested',
     days,
     summary,
     ok: requestedOk,
   };
+
+  coverageCache.set(cacheKey, { at: now, value });
+  return value;
 }
 
 function findActiveJobsByDate(db, request) {

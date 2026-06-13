@@ -34,6 +34,23 @@ export function createBacktestQueue({ config, db, onEvent }) {
     return { ...latest, queuePosition: position };
   }
 
+  const waiters = new Map();
+
+  function enqueueAndWait(params) {
+    const run = enqueue(params);
+    return new Promise((resolve, reject) => {
+      waiters.set(run.id, { resolve, reject });
+    });
+  }
+
+  function settleWaiter(runId, outcome) {
+    const waiter = waiters.get(runId);
+    if (!waiter) return;
+    waiters.delete(runId);
+    if (outcome.error) waiter.reject(outcome.error);
+    else waiter.resolve(outcome.run);
+  }
+
   function drain() {
     if (draining) return;
     draining = true;
@@ -106,6 +123,14 @@ export function createBacktestQueue({ config, db, onEvent }) {
     worker.on('exit', (code) => {
       activeWorkers.delete(run.id);
       const current = safeGetBacktestRun(db, run.id);
+      const waiter = waiters.get(run.id);
+      if (waiter) {
+        if (current && !['running', 'queued'].includes(current.status)) {
+          settleWaiter(run.id, { run: current });
+        } else if (code !== 0) {
+          settleWaiter(run.id, { error: new Error(`Worker exited with code ${code}`), run: current });
+        }
+      }
       if (code !== 0 && current?.status === 'running') {
         handleFailure(run.id, request, startedAt, `Worker exited with code ${code}`);
       }
@@ -146,6 +171,8 @@ export function createBacktestQueue({ config, db, onEvent }) {
     }
     terminalRuns.add(runId);
     if (run) emit('run:failed', { runId, run, error });
+    const waiter = waiters.get(runId);
+    if (waiter) settleWaiter(runId, { error: new Error(error), run });
   }
 
   function onWorkerComplete(runId, request, startedAt) {
@@ -175,7 +202,7 @@ export function createBacktestQueue({ config, db, onEvent }) {
     return waiting.length;
   }
 
-  return { enqueue, drain, cancel, activeCount, onWorkerComplete, releaseWaitingRuns };
+  return { enqueue, enqueueAndWait, drain, cancel, activeCount, onWorkerComplete, releaseWaitingRuns };
 }
 
 function safeGetBacktestRun(db, runId) {

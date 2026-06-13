@@ -388,6 +388,7 @@ test('data-backtest API runs versioned strategy only when data is ready', async 
         interval: '5m',
         book_depth: 2,
         batch_size: 5,
+        async: false,
       });
       assert.equal(completed.result.strategy, 'API GLS');
       assert.equal(completed.result.ticks, 12);
@@ -407,7 +408,7 @@ test('data-backtest API runs versioned strategy only when data is ready', async 
         batch_size: 5,
         async: true,
       }, 202);
-      assert.equal(asyncRun.run.status, 'running');
+      assert.ok(['queued', 'running'].includes(asyncRun.run.status));
       assert.equal(asyncRun.run.progress.total_ticks, 12);
 
       let asyncDetail = null;

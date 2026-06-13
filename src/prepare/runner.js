@@ -1,3 +1,5 @@
+import { Worker } from 'node:worker_threads';
+
 import { resolveDataRequest } from '../query/dataMode.js';
 import {
   createPrepareJob,
@@ -7,17 +9,19 @@ import {
   markPrepareJobCompleted,
   markPrepareJobFailed,
   markPrepareJobRunning,
-  updatePrepareJobProgress,
 } from '../state/prepareJobs.js';
 import { executePreparationActions } from './executor.js';
 import { PrepareJobCancelledError } from './errors.js';
-import { computePrepareJobPercent } from './progress.js';
+import { createProgressReporter } from './progressReporter.js';
+import { serializeWorkerConfig } from '../config.js';
 
 export function createPrepareJobRunner({ config, db, executeActions = executePreparationActions, onEvent }) {
+  const useWorker = config.prepareRunner !== 'inline';
   let running = false;
   let idleResolvers = [];
   let currentJobId = null;
   let cancelRequested = false;
+  let activeWorker = null;
 
   function enqueue({ request, mode = 'prepare', dryRun = true }) {
     const plan = resolveDataRequest(db, request, mode);
@@ -35,45 +39,79 @@ export function createPrepareJobRunner({ config, db, executeActions = executePre
     }
     if (job.status === 'running' && currentJobId === jobId) {
       cancelRequested = true;
+      activeWorker?.postMessage?.({ type: 'cancel' });
       return { ok: true, status: 'cancelling' };
     }
     return { ok: false, reason: 'not_cancellable', status: job.status };
   }
 
-  function createProgressReporter(job, emitEvent) {
-    const startedAt = job.started_at || new Date().toISOString();
-    let progress = {
-      started_at: startedAt,
-      updated_at: startedAt,
-      actions_total: job.plan?.preparation?.length || 0,
-      action_index: 0,
-      partitions_total: 0,
-      partitions_done: 0,
-      files: [],
-      current: null,
-    };
+  async function runInline(job) {
+    const reportProgress = createProgressReporter(db, job, onEvent);
+    if (cancelRequested) throw new PrepareJobCancelledError();
 
-    let lastPersistMs = 0;
-    return (patch) => {
-      const nextFiles = patch.files ? [...progress.files, ...patch.files] : progress.files;
-      progress = {
-        ...progress,
-        ...patch,
-        files: nextFiles,
-        current: patch.current === undefined ? progress.current : patch.current,
-        updated_at: new Date().toISOString(),
-      };
-      progress.percent = computePrepareJobPercent(progress);
-      const now = Date.now();
-      const force = Boolean(patch.files?.length)
-        || patch.current?.phase === 'done'
-        || patch.current === null
-        || patch.partitions_done != null && patch.current == null;
-      if (!force && now - lastPersistMs < 1000) return;
-      lastPersistMs = now;
-      updatePrepareJobProgress(db, job.id, progress);
-      emitEvent?.({ type: 'job:progress', jobId: job.id, status: 'running', progress });
+    if (job.plan.ready || !job.plan.preparation.length) {
+      return { ready: job.plan.ready, actions: [] };
+    }
+
+    return {
+      ready: false,
+      actions: await executeActions({
+        config,
+        db,
+        actions: job.plan.preparation,
+        dryRun: job.dry_run,
+        onProgress: reportProgress,
+        shouldCancel: () => cancelRequested,
+      }),
     };
+  }
+
+  function runInWorker(job) {
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const finish = (fn) => {
+        if (settled) return;
+        settled = true;
+        fn();
+      };
+
+      const worker = new Worker(new URL('./worker.js', import.meta.url), {
+        workerData: {
+          stateDbPath: config.stateDbPath,
+          jobId: job.id,
+          config: serializeWorkerConfig(config),
+        },
+      });
+      activeWorker = worker;
+
+      worker.on('message', (msg) => {
+        if (msg?.type === 'progress') {
+          onEvent?.({ type: 'job:progress', jobId: job.id, status: 'running', progress: msg.progress });
+          return;
+        }
+        if (msg?.type === 'completed') {
+          finish(() => resolve({ status: 'completed' }));
+          return;
+        }
+        if (msg?.type === 'cancelled') {
+          finish(() => resolve({ status: 'cancelled' }));
+          return;
+        }
+        if (msg?.type === 'failed') {
+          finish(() => reject(new Error(msg.error || 'prepare job failed')));
+        }
+      });
+
+      worker.on('error', (err) => finish(() => reject(err)));
+      worker.on('exit', (code) => {
+        activeWorker = null;
+        if (!settled && code !== 0) {
+          finish(() => reject(new Error(`Prepare worker exited with code ${code}`)));
+        }
+      });
+
+      worker.unref();
+    });
   }
 
   async function runNext() {
@@ -85,38 +123,37 @@ export function createPrepareJobRunner({ config, db, executeActions = executePre
     currentJobId = job.id;
     cancelRequested = false;
     markPrepareJobRunning(db, job.id);
-    const reportProgress = createProgressReporter(job, onEvent);
 
     try {
-      if (cancelRequested) throw new PrepareJobCancelledError();
-
-      const result = job.plan.ready || !job.plan.preparation.length
-        ? { ready: job.plan.ready, actions: [] }
-        : {
-          ready: false,
-          actions: await executeActions({
-            config,
-            db,
-            actions: job.plan.preparation,
-            dryRun: job.dry_run,
-            onProgress: reportProgress,
-            shouldCancel: () => cancelRequested,
-          }),
-        };
-      markPrepareJobCompleted(db, job.id, result);
-      onEvent?.({ type: 'job:completed', jobId: job.id, status: 'completed' });
+      if (useWorker) {
+        const outcome = await runInWorker(job);
+        if (outcome.status === 'completed') {
+          onEvent?.({ type: 'job:completed', jobId: job.id, status: 'completed' });
+        } else {
+          onEvent?.({ type: 'job:completed', jobId: job.id, status: 'cancelled' });
+        }
+      } else {
+        const result = await runInline(job);
+        markPrepareJobCompleted(db, job.id, result);
+        onEvent?.({ type: 'job:completed', jobId: job.id, status: 'completed' });
+      }
     } catch (err) {
       if (err instanceof PrepareJobCancelledError || cancelRequested) {
-        markPrepareJobCancelled(db, job.id, err.message || 'cancelado pelo operador');
+        if (!useWorker) {
+          markPrepareJobCancelled(db, job.id, err.message || 'cancelado pelo operador');
+        }
         onEvent?.({ type: 'job:completed', jobId: job.id, status: 'cancelled' });
-      } else {
+      } else if (!useWorker) {
         markPrepareJobFailed(db, job.id, err);
+        onEvent?.({ type: 'job:failed', jobId: job.id, status: 'failed', error: err.message });
+      } else {
         onEvent?.({ type: 'job:failed', jobId: job.id, status: 'failed', error: err.message });
       }
     } finally {
       running = false;
       currentJobId = null;
       cancelRequested = false;
+      activeWorker = null;
       queueMicrotask(() => runNext());
       resolveIdle();
     }

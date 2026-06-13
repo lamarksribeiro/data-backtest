@@ -1,7 +1,6 @@
 import { mkdir, rename, rm } from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { availableParallelism } from 'node:os';
 import { setImmediate as yieldImmediate } from 'node:timers/promises';
 import { DuckDBInstance, quotedString } from '@duckdb/node-api';
 
@@ -233,8 +232,7 @@ async function writeWithDuckDb({ rows, tempPath, finalPath, tableName, createTab
 }
 
 async function configureDuckDb(connection) {
-  const threads = positiveInt(process.env.SYNC_DUCKDB_THREADS || process.env.DUCKDB_THREADS)
-    ?? Math.max(1, Math.min(availableParallelism(), 16));
+  const threads = positiveInt(process.env.SYNC_DUCKDB_THREADS || process.env.DUCKDB_THREADS) ?? 2;
   await connection.run(`PRAGMA threads=${threads}`);
 
   const memoryLimit = String(process.env.SYNC_DUCKDB_MEMORY_LIMIT || process.env.DUCKDB_MEMORY_LIMIT || '').trim();

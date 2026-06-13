@@ -20,18 +20,14 @@ import { createPrepareJobRunner } from '../prepare/runner.js';
 import { compareBacktestRuns, getRunAnalysis } from '../backtest/analysis.js';
 import { createBacktestQueue } from '../backtest/queue.js';
 import { analyzeStrategyColumns } from '../backtestStudio/gls/compiler.js';
-import { availabilityRequestForBacktest, runBacktest } from '../backtest/engine.js';
-import { parseSweepVariants, runBacktestSweep } from '../backtest/sweep.js';
+import { availabilityRequestForBacktest } from '../backtest/engine.js';
+import { parseSweepVariants } from '../backtest/sweep.js';
 import { addSseClient, broadcastSse } from './sseHub.js';
 import {
   cancelBacktestRun,
-  completeBacktestRun,
-  createBacktestRun,
-  createRunningBacktestRun,
   failBacktestRun,
   getBacktestRun,
   listBacktestRuns,
-  updateBacktestRunProgress,
 } from '../state/backtestRuns.js';
 import { getChartData, getEventTrace, listEventTraces } from '../backtestStudio/state/eventTraces.js';
 import {
@@ -52,7 +48,7 @@ import {
   validateStrategySource,
 } from '../backtestStudio/state/strategies.js';
 import { getStrategyStats, listStrategiesWithStats, listTrashedStrategiesWithStats } from '../backtestStudio/state/strategyStats.js';
-import { getDataCoverage } from '../query/coverageUi.js';
+import { getDataCoverage, invalidateCoverageCache } from '../query/coverageUi.js';
 import { runDataFix } from '../data/fixPipeline.js';
 import {
   handleQualityDayEvents,
@@ -89,8 +85,11 @@ export function createApiHandler(deps) {
   let backtestQueue;
   const onSseEvent = (event) => {
     broadcastSse(event);
-    if (event.type === 'job:completed' && event.status === 'completed') {
-      backtestQueue?.releaseWaitingRuns?.(event.jobId);
+    if (event.type === 'job:completed') {
+      invalidateCoverageCache();
+      if (event.status === 'completed') {
+        backtestQueue?.releaseWaitingRuns?.(event.jobId);
+      }
     }
     if (event.type === 'data:stale') {
       broadcastSse(event);
@@ -341,7 +340,10 @@ export function createApiHandler(deps) {
         }
       }
       if (req.method === 'GET' && url.pathname === '/api/prepare/jobs') {
-        return sendJson(res, 200, { jobs: listPrepareJobs(db, { limit: url.searchParams.get('limit') }) });
+        const slim = url.searchParams.get('slim') !== '0';
+        return sendJson(res, 200, {
+          jobs: listPrepareJobs(db, { limit: url.searchParams.get('limit'), slim }),
+        });
       }
       if (req.method === 'GET' && url.pathname === '/api/backtest/compare') {
         const ids = String(url.searchParams.get('ids') || '')
@@ -580,59 +582,41 @@ export function createApiHandler(deps) {
         }
         const estimatedTicks = estimateTicks(strict.availability);
         request.estimatedTicks = estimatedTicks;
-        if (body.async === true) {
-          const run = backtestQueue.enqueue({
-            request,
-            strategyMeta: request.strategyMeta ?? null,
-            totalTicks: estimatedTicks,
-            startedAt,
-            dependsOnJob: body.depends_on_job ?? body.wait_for_job ?? null,
-          });
-          return sendJson(res, 202, { run, queuePosition: run.queuePosition ?? null });
+        const enqueueParams = {
+          request,
+          strategyMeta: request.strategyMeta ?? null,
+          totalTicks: estimatedTicks,
+          startedAt,
+          dependsOnJob: body.depends_on_job ?? body.wait_for_job ?? null,
+        };
+
+        if (body.async === false) {
+          try {
+            const run = await backtestQueue.enqueueAndWait(enqueueParams);
+            const fullRun = getBacktestRun(db, run.id, { includeResult: true, includeEquity: false });
+            const result = fullRun?.result;
+            if (['failed', 'failed_runtime', 'partial'].includes(fullRun?.status)) {
+              return sendJson(res, 500, {
+                error: { code: 'REQUEST_FAILED', message: fullRun?.error || 'backtest failed' },
+                run: fullRun,
+              });
+            }
+            return sendJson(res, 200, {
+              run: fullRun,
+              result: result ? {
+                strategy: result.strategy,
+                ticks: result.ticks,
+                batches: result.batches,
+                summary: result.summary,
+              } : null,
+            });
+          } catch (err) {
+            return sendJson(res, 500, { error: { code: 'REQUEST_FAILED', message: err.message } });
+          }
         }
-        try {
-          const result = await runBacktest(db, request);
-          const run = createBacktestRun(db, {
-            request,
-            result,
-            strategyMeta: request.strategyMeta ?? null,
-            startedAt,
-          });
-          return sendJson(res, 200, {
-            run,
-            result: {
-              strategy: result.strategy,
-              ticks: result.ticks,
-              batches: result.batches,
-              summary: result.summary,
-            },
-          });
-        } catch (err) {
-          const failedResult = err.partialResult || {
-            strategy: request.strategyLabel || request.strategy,
-            source: 'lakehouse',
-            underlying: request.underlying,
-            interval: request.interval,
-            bookDepth: request.bookDepth,
-            from: new Date(request.from).toISOString(),
-            to: new Date(request.to).toISOString(),
-            ticks: 0,
-            batches: 0,
-            summary: { failed: true, error: err.message },
-            events: [],
-            equity: [],
-            log: [],
-          };
-          const run = createBacktestRun(db, {
-            request,
-            result: failedResult,
-            strategyMeta: request.strategyMeta ?? null,
-            status: failedResult.ticks > 0 ? 'partial' : 'failed_runtime',
-            error: err.message,
-            startedAt,
-          });
-          return sendJson(res, 500, { error: { code: 'REQUEST_FAILED', message: err.message }, run });
-        }
+
+        const run = backtestQueue.enqueue(enqueueParams);
+        return sendJson(res, 202, { run, queuePosition: run.queuePosition ?? null });
       }
       if (req.method === 'POST' && url.pathname === '/api/backtest/sweep') {
         const body = await readJson(req);
@@ -661,7 +645,7 @@ export function createApiHandler(deps) {
           });
         }
         try {
-          const sweep = await runBacktestSweep(db, request, variants);
+          const sweep = await runSweepInWorker(config, request, variants);
           return sendJson(res, 200, { sweep });
         } catch (err) {
           return sendJson(res, 500, { error: { code: 'SWEEP_FAILED', message: err.message } });
@@ -999,42 +983,22 @@ function normalizeOptionalGlsExecution(value) {
   throw new Error('gls_execution must be compiled, compiled-soa, or interpreter');
 }
 
-async function runBacktestInBackground({ db, runId, request, startedAt }) {
-  try {
-    const result = await runBacktest(db, request, {
-      progressStartedAt: startedAt,
-      onProgress: (progress) => updateBacktestRunProgress(db, runId, progress),
+function runSweepInWorker(config, request, variants) {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(new URL('../backtest/sweepWorker.js', import.meta.url), {
+      workerData: {
+        stateDbPath: config.stateDbPath,
+        request,
+        variants,
+      },
     });
-    completeBacktestRun(db, runId, {
-      request,
-      result,
-      strategyMeta: request.strategyMeta ?? null,
-      startedAt,
+    worker.on('message', (msg) => {
+      if (msg?.ok) resolve(msg.sweep);
+      else reject(new Error(msg?.error || 'sweep failed'));
     });
-  } catch (err) {
-    const failedResult = err.partialResult || {
-      strategy: request.strategyLabel || request.strategy,
-      source: 'lakehouse',
-      underlying: request.underlying,
-      interval: request.interval,
-      bookDepth: request.bookDepth,
-      from: new Date(request.from).toISOString(),
-      to: new Date(request.to).toISOString(),
-      ticks: 0,
-      batches: 0,
-      summary: { failed: true, error: err.message },
-      events: [],
-      equity: [],
-      log: [],
-    };
-    failBacktestRun(db, runId, {
-      request,
-      result: failedResult,
-      strategyMeta: request.strategyMeta ?? null,
-      error: err.message,
-      startedAt,
-    });
-  }
+    worker.on('error', reject);
+    worker.unref();
+  });
 }
 
 function startBacktestWorker({ config, db, runId, request, startedAt, activeBacktestWorkers }) {

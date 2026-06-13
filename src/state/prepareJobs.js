@@ -11,8 +11,16 @@ export function getPrepareJob(db, id) {
   return row ? toApiJob(row) : null;
 }
 
-export function listPrepareJobs(db, { limit = 20 } = {}) {
+export function listPrepareJobs(db, { limit = 20, slim = true } = {}) {
   const safeLimit = Math.min(Math.max(Number.parseInt(String(limit), 10) || 20, 1), 100);
+  if (slim) {
+    return db.prepare(`
+      SELECT id, status, mode, dry_run, error, created_at, started_at, completed_at, progress_json
+      FROM prepare_jobs
+      ORDER BY id DESC
+      LIMIT ?
+    `).all(safeLimit).map(toSlimApiJob);
+  }
   return db.prepare('SELECT * FROM prepare_jobs ORDER BY id DESC LIMIT ?').all(safeLimit).map(toApiJob);
 }
 
@@ -75,6 +83,21 @@ export function recoverStalePrepareJobs(db) {
     WHERE status IN ('queued', 'running')
   `).run();
   return result.changes;
+}
+
+function toSlimApiJob(row) {
+  const progress = row.progress_json ? JSON.parse(row.progress_json) : null;
+  return {
+    id: Number(row.id),
+    status: row.status,
+    mode: row.mode,
+    dry_run: Boolean(row.dry_run),
+    progress,
+    error: row.error,
+    created_at: row.created_at,
+    started_at: row.started_at,
+    completed_at: row.completed_at,
+  };
 }
 
 function toApiJob(row) {

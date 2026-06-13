@@ -51,7 +51,43 @@ export function loadConfig(env = process.env) {
     sweepMaxVariants: Math.max(Number.parseInt(String(env.SWEEP_MAX_VARIANTS || '500'), 10) || 500, 1),
     maxConcurrentBacktests: Math.max(Number.parseInt(String(env.MAX_CONCURRENT_BACKTESTS || '1'), 10) || 1, 1),
     datasetCacheMaxMb: resolveDatasetCacheMaxMb(env),
-    prepareMaxConcurrent: Math.max(Number.parseInt(String(env.PREPARE_MAX_CONCURRENT || '2'), 10) || 2, 1),
+    prepareMaxConcurrent: Math.max(Number.parseInt(String(env.PREPARE_MAX_CONCURRENT || '1'), 10) || 1, 1),
+    prepareRunner: normalizePrepareRunner(env.PREPARE_RUNNER),
+  };
+}
+
+function normalizePrepareRunner(value) {
+  const mode = String(value || 'worker').trim().toLowerCase();
+  return mode === 'inline' ? 'inline' : 'worker';
+}
+
+/** Snapshot serializável para worker_threads (prepare + backtest). */
+export function serializeWorkerConfig(config) {
+  return {
+    lakeRoot: config.lakeRoot,
+    stateDbPath: config.stateDbPath,
+    dataCollectorDatabaseUrl: config.dataCollectorDatabaseUrl,
+    dataCollectorApiUrl: config.dataCollectorApiUrl,
+    dataCollectorArchiveApiKey: config.dataCollectorArchiveApiKey,
+    syncBatchSize: config.syncBatchSize,
+    syncMaxPool: config.syncMaxPool,
+    syncStatementTimeoutMs: config.syncStatementTimeoutMs,
+    syncMarginMinutes: config.syncMarginMinutes,
+    syncAcceptCountMismatchRatio: config.syncAcceptCountMismatchRatio,
+    syncNormalizeOmitEventRatio: config.syncNormalizeOmitEventRatio,
+    syncNormalizeDayOmitRatio: config.syncNormalizeDayOmitRatio,
+    syncNormalizeMinStaleSec: config.syncNormalizeMinStaleSec,
+    syncNormalizeMinPtb: config.syncNormalizeMinPtb,
+    syncNormalizeMinUnderlyingMove: config.syncNormalizeMinUnderlyingMove,
+    syncNormalizeQuietUnderlyingMax: config.syncNormalizeQuietUnderlyingMax,
+    syncNormalizeMinQuoteMove: config.syncNormalizeMinQuoteMove,
+    backtestBookDepth: config.backtestBookDepth,
+    prepareMaxConcurrent: config.prepareMaxConcurrent,
+    glsExecution: config.glsExecution,
+    backtestEngine: config.backtestEngine,
+    backtestWorkers: config.backtestWorkers,
+    sweepMaxVariants: config.sweepMaxVariants,
+    datasetCacheMaxMb: config.datasetCacheMaxMb,
   };
 }
 

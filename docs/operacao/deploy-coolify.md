@@ -68,7 +68,12 @@ NODE_OPTIONS=--max-old-space-size=7168
 SYNC_BATCH_SIZE=50000
 SYNC_MAX_POOL=2
 SYNC_STATEMENT_TIMEOUT_MS=600000
+PREPARE_MAX_CONCURRENT=1
+SYNC_DUCKDB_THREADS=2
+DUCKDB_THREADS=2
 ```
+
+**Orçamento de CPU (V5):** `SYNC_DUCKDB_THREADS × PREPARE_MAX_CONCURRENT + DUCKDB_THREADS + BACKTEST_WORKERS × MAX_CONCURRENT_BACKTESTS ≤ vCPUs` do container.
 
 **Desempenho do sync**
 
@@ -77,7 +82,11 @@ SYNC_STATEMENT_TIMEOUT_MS=600000
 | `NODE_OPTIONS` | `--max-old-space-size=7168` | heap Node para Parquet/DuckDB (ajuste ~70% da RAM do container) |
 | `SYNC_STATEMENT_TIMEOUT_MS` | `600000` (10 min) | timeout das queries no Postgres fonte; sync real conta ticks |
 | `SYNC_MAX_POOL` | `2` | conexoes RO ao colector; nao subir muito |
-| `SYNC_BATCH_SIZE` | `50000` | reservado para batching futuro no export |
+| `SYNC_BATCH_SIZE` | `50000` | tamanho do batch no export evento-a-evento |
+| `PREPARE_MAX_CONCURRENT` | `1` | uma particao por vez no job de preparacao |
+| `SYNC_DUCKDB_THREADS` | `2` (container) / `4` (dedicado) | threads DuckDB na escrita Parquet |
+| `DUCKDB_THREADS` | `2`–`4` | pool de leitura (coverage, backtest) |
+| `PREPARE_RUNNER` | `worker` (default) | `inline` apenas para rollback/debug |
 
 **Dry-run** usa apenas `event_quality` (rapido). **Sync real** valida contando ticks — 1 dia BTC 15m leva ~1–3 min; ranges grandes rodam **1 particao/dia** em sequencia (nao precisa baixar dia a dia na UI, mas jobs muito longos podem ser melhor fatiados por semana).
 
