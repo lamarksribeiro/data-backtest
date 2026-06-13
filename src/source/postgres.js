@@ -15,9 +15,24 @@ export function createSourcePool(config) {
     application_name: 'data-backtest-sync',
   });
 
-  pool.on('connect', (client) => {
-    client.query('SET default_transaction_read_only = on').catch(() => {});
-  });
+  const baseConnect = pool.connect.bind(pool);
+  pool.connect = async (callback) => {
+    if (typeof callback === 'function') {
+      return baseConnect(async (err, client, release) => {
+        if (err) return callback(err);
+        try {
+          await client.query('SET default_transaction_read_only = on');
+          callback(null, client, release);
+        } catch (setErr) {
+          release(setErr);
+          callback(setErr);
+        }
+      });
+    }
+    const client = await baseConnect();
+    await client.query('SET default_transaction_read_only = on');
+    return client;
+  };
 
   return pool;
 }
