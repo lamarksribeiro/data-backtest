@@ -1,5 +1,7 @@
 import { quotedString } from '@duckdb/node-api';
 
+import { loadConfig } from '../config.js';
+import { resolveLakeActivePath } from '../lake/paths.js';
 import { requireDatasetAvailability } from './availability.js';
 import { openSharedConnection } from './duckdbPool.js';
 
@@ -46,8 +48,10 @@ const PREVIEW_SCALAR_COLUMNS = [
 ].join(', ');
 
 export async function queryTicksFromPartitionPath(request) {
-  const activePath = request.activePath ?? request.active_path;
-  if (!activePath) return [];
+  const rawPath = request.activePath ?? request.active_path;
+  if (!rawPath) return [];
+  const lakeRoot = request.lakeRoot ?? loadConfig().lakeRoot;
+  const activePath = resolveLakeActivePath(lakeRoot, rawPath);
   const dataset = request.dataset || 'scalars';
   const select = request.select
     ?? (dataset === 'backtest_ticks'

@@ -1,7 +1,7 @@
 import { readdir, rm, stat } from 'node:fs/promises';
 import path from 'node:path';
 
-import { buildPartitionDirectory } from './paths.js';
+import { buildPartitionDirectory, resolveLakeActivePath } from './paths.js';
 
 export function listActiveParquetRelativePaths(db, lakeRoot) {
   const rows = db.prepare(`
@@ -81,11 +81,9 @@ async function listParquetFiles(root, scope) {
 
 function activePathToRelative(activePath, lakeRoot) {
   const root = path.resolve(lakeRoot);
-  const raw = String(activePath || '').replace(/\\/g, '/');
-  if (!raw) return null;
-
-  const absolute = path.isAbsolute(raw) ? path.resolve(raw) : path.resolve(root, raw);
-  const relative = path.relative(root, absolute).replace(/\\/g, '/');
-  if (!relative || relative.startsWith('../') || path.isAbsolute(relative)) return null;
+  const resolved = resolveLakeActivePath(root, activePath);
+  if (!resolved) return null;
+  const relative = path.relative(root, resolved).replace(/\\/g, '/');
+  if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) return null;
   return relative;
 }

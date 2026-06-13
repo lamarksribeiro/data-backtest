@@ -1,4 +1,6 @@
 import { acceptEligibleReviewPartitions } from '../state/manifest.js';
+import { loadConfig } from '../config.js';
+import { resolveLakeActivePath } from '../lake/paths.js';
 
 export function partitionDatesForRange(from, to) {
   const fromDate = new Date(from);
@@ -54,6 +56,7 @@ export function checkDatasetAvailability(db, request, { includeQualityDetails = 
   const unavailable = [];
   const files = [];
   const partitions = [];
+  const lakeRoot = request.lakeRoot ?? loadConfig().lakeRoot;
 
   for (const dt of dates) {
     const row = byDate.get(dt);
@@ -89,7 +92,7 @@ export function checkDatasetAvailability(db, request, { includeQualityDetails = 
     partitions.push(partition);
 
     if (usable) {
-      files.push(row.active_path);
+      files.push(resolveLakeActivePath(lakeRoot, row.active_path));
       continue;
     }
     unavailable.push({

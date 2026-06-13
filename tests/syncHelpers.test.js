@@ -5,7 +5,7 @@ import os from 'node:os';
 import { mkdtemp, rm, stat } from 'node:fs/promises';
 
 import { loadConfig } from '../src/config.js';
-import { buildFinalParquetPath, buildTempParquetPath, toPortablePath } from '../src/lake/paths.js';
+import { buildFinalParquetPath, buildTempParquetPath, resolveLakeActivePath, toPortablePath } from '../src/lake/paths.js';
 import { openStateDatabase, closeStateDatabase } from '../src/state/sqlite.js';
 import { upsertManifestPartition } from '../src/state/manifest.js';
 import { resolutionToIntervalSql, writeBacktestTicksParquet, writeBooksParquet, writeOhlcParquetFromScalars, writeScalarsParquet } from '../src/sync/duckdbParquet.js';
@@ -169,6 +169,18 @@ test('lake paths use versioned parquet filenames', () => {
 
   assert.match(toPortablePath(finalPath), /backtest_ticks\/underlying=BTC\/interval=5m\/book_depth=10\/dt=2026-05-31\/part-run-1\.parquet$/);
   assert.match(toPortablePath(tempPath), /\.tmp\/backtest_ticks\/run-1\/part-run-1\.parquet$/);
+});
+
+test('resolveLakeActivePath maps production /lake prefix to local lake root', () => {
+  const lakeRoot = path.resolve('D:/projeto/data-backtest/lake');
+  const resolved = resolveLakeActivePath(
+    lakeRoot,
+    '/lake/backtest_ticks/underlying=BTC/interval=5m/book_depth=25/dt=2026-06-01/part-x.parquet',
+  );
+  assert.equal(
+    resolved,
+    path.join(lakeRoot, 'backtest_ticks/underlying=BTC/interval=5m/book_depth=25/dt=2026-06-01/part-x.parquet'),
+  );
 });
 
 test('source fingerprint is deterministic independent of event order', () => {

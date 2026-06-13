@@ -1,7 +1,7 @@
 import { accessSync, constants } from 'node:fs';
-import path from 'node:path';
 
 import { getHealth } from '../health.js';
+import { resolveLakeActivePath } from '../lake/paths.js';
 import { listManifest } from '../state/manifest.js';
 
 export async function runBackupCheck(config, db) {
@@ -12,7 +12,7 @@ export async function runBackupCheck(config, db) {
 
   for (const partition of partitions) {
     if (!partition.active_path || partition.status !== 'valid') continue;
-    const resolved = resolveActivePath(config.lakeRoot, partition.active_path);
+    const resolved = resolveLakeActivePath(config.lakeRoot, partition.active_path);
     if (checkedPaths.has(resolved)) continue;
     checkedPaths.add(resolved);
     try {
@@ -33,15 +33,4 @@ export async function runBackupCheck(config, db) {
       'Este check valida health, storage e existencia dos active_path validos.',
     ],
   };
-}
-
-function resolveActivePath(lakeRoot, activePath) {
-  const normalized = String(activePath).replace(/\\/g, '/');
-  if (normalized.startsWith('/lake/')) {
-    return path.join(lakeRoot, normalized.slice('/lake/'.length));
-  }
-  if (path.isAbsolute(normalized) || /^[a-zA-Z]:\//.test(normalized)) {
-    return path.resolve(normalized);
-  }
-  return path.resolve(lakeRoot, normalized);
 }

@@ -32,3 +32,18 @@ export function buildTempParquetPath(lakeRoot, dataset, runId) {
 export function toPortablePath(filePath) {
   return filePath.split(path.sep).join('/');
 }
+
+/** Resolve manifest active_path (incl. prefixo /lake/ de producao) para path absoluto local. */
+export function resolveLakeActivePath(lakeRoot, activePath) {
+  const normalized = String(activePath || '').replace(/\\/g, '/');
+  if (!normalized) return null;
+
+  const root = path.resolve(lakeRoot);
+  if (normalized.startsWith('/lake/')) {
+    return path.join(root, normalized.slice('/lake/'.length));
+  }
+  if (path.isAbsolute(normalized) || /^[a-zA-Z]:\//.test(normalized)) {
+    return path.resolve(normalized);
+  }
+  return path.resolve(root, normalized);
+}
