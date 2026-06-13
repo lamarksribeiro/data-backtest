@@ -3,6 +3,8 @@ let uplotReady = null;
 /** @type {WeakMap<HTMLElement, import('uplot').default[]>} */
 const containerCharts = new WeakMap();
 
+const DEFAULT_COLORS = ['#f97316', '#38bdf8', '#a78bfa', '#34d399', '#f472b6'];
+
 export function destroyChartsIn(container) {
   if (!container) return;
   const charts = containerCharts.get(container);
@@ -71,6 +73,23 @@ function tightYRange(_u, min, max) {
   return [min - pad, max + pad];
 }
 
+function resolveColors(opts) {
+  if (Array.isArray(opts.colors) && opts.colors.length) return opts.colors;
+  if (opts.primaryColor) return [opts.primaryColor, ...DEFAULT_COLORS.slice(1)];
+  return DEFAULT_COLORS;
+}
+
+function seriesConfig(seriesItem, index, colors) {
+  return {
+    label: seriesItem.label || `s${index}`,
+    stroke: seriesItem.stroke || colors[index % colors.length],
+    width: seriesItem.width ?? 2,
+    dash: seriesItem.dash,
+    spanGaps: false,
+    points: { show: false },
+  };
+}
+
 export async function renderUplotLine(container, primarySeries, extraSeries = [], opts = {}) {
   if (!container) return null;
   const uPlot = await loadUplot();
@@ -89,7 +108,7 @@ export async function renderUplotLine(container, primarySeries, extraSeries = []
     ...labeled.slice(1).map((s) => alignSeriesToX(normalizeSeriesPoints(s.data), primaryPoints)),
   ];
   if (!primaryPoints.some((p) => p[1] != null)) return null;
-  const colors = ['#f97316', '#38bdf8', '#a78bfa', '#34d399', '#f472b6'];
+  const colors = resolveColors(opts);
   const markers = Array.isArray(opts.markers) ? opts.markers : [];
   const chartHeight = Number(opts.height) > 0 ? Number(opts.height) : 220;
   const useTightY = opts.yRange === 'tight';
@@ -99,18 +118,13 @@ export async function renderUplotLine(container, primarySeries, extraSeries = []
     scales: {
       x: { time: true },
       y: {
-        auto: !useTightY,
+        auto: true,
         range: useTightY
           ? (_u, min, max) => tightYRange(_u, min, max)
           : undefined,
       },
     },
-    series: [{}, ...labeled.map((s, i) => ({
-      label: s.label || `s${i}`,
-      stroke: colors[i % colors.length],
-      width: 2,
-      spanGaps: false,
-    }))],
+    series: [{}, ...labeled.map((s, i) => seriesConfig(s, i, colors))],
     axes: [
       { stroke: '#64748b', grid: { stroke: 'rgba(255,255,255,0.06)' } },
       { stroke: '#64748b', grid: { stroke: 'rgba(255,255,255,0.06)' }, size: 72 },
@@ -119,7 +133,7 @@ export async function renderUplotLine(container, primarySeries, extraSeries = []
     hooks: {
       draw: [
         ...(Array.isArray(opts.regions) && opts.regions.length ? [(u) => drawRegions(u, opts.regions)] : []),
-        ...(markers.length ? [(u) => drawMarkers(u, markers, colors[0])] : []),
+        ...(markers.length ? [(u) => drawMarkers(u, markers)] : []),
       ],
       setSelect: [(u) => {
         if (u.select.width <= 0) return;
@@ -177,54 +191,103 @@ function drawRegions(u, regions = []) {
   }
 }
 
-function drawMarkers(u, markers, defaultColor) {
+function hexAlpha(hex, alpha) {
+  const clean = String(hex || '#94a3b8').replace('#', '');
+  const full = clean.length === 3
+    ? clean.split('').map((c) => c + c).join('')
+    : clean.slice(0, 6);
+  const r = parseInt(full.slice(0, 2), 16);
+  const g = parseInt(full.slice(2, 4), 16);
+  const b = parseInt(full.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function drawShape(ctx, kind, x, y, size, color) {
+  ctx.beginPath();
+  switch (kind) {
+    case 'entry':
+      ctx.moveTo(x, y - size);
+      ctx.lineTo(x + size, y + size * 0.65);
+      ctx.lineTo(x - size, y + size * 0.65);
+      ctx.closePath();
+      break;
+    case 'exit':
+      ctx.moveTo(x, y + size);
+      ctx.lineTo(x + size, y - size * 0.65);
+      ctx.lineTo(x - size, y - size * 0.65);
+      ctx.closePath();
+      break;
+    case 'stop':
+    case 'trail_stop':
+      ctx.moveTo(x, y - size);
+      ctx.lineTo(x + size, y);
+      ctx.lineTo(x, y + size);
+      ctx.lineTo(x - size, y);
+      ctx.closePath();
+      break;
+    case 'take_profit':
+    case 'mark':
+      ctx.arc(x, y, size * 0.72, 0, Math.PI * 2);
+      break;
+    case 'partial':
+      ctx.rect(x - size * 0.72, y - size * 0.72, size * 1.44, size * 1.44);
+      break;
+    case 'reverse':
+      ctx.moveTo(x, y - size);
+      ctx.lineTo(x + size * 0.86, y - size * 0.25);
+      ctx.lineTo(x + size * 0.55, y + size);
+      ctx.lineTo(x - size * 0.55, y + size);
+      ctx.lineTo(x - size * 0.86, y - size * 0.25);
+      ctx.closePath();
+      break;
+    default:
+      ctx.arc(x, y, size * 0.65, 0, Math.PI * 2);
+      break;
+  }
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.strokeStyle = '#0b1120';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+
+function drawMarkers(u, markers) {
   const ctx = u.ctx;
   const { left, top, width, height } = u.bbox;
+  const scaleKey = u.scales.y ? 'y' : 'y0';
+  const guideX = new Set();
+
   for (const marker of markers) {
     const x = u.valToPos(marker.ts / 1000, 'x', true);
-    if (x < left || x > left + width) continue;
-    const yVal = marker.price != null ? Number(String(marker.price).replace(/[^0-9.-]/g, '')) : null;
-    
-    // Tenta usar a escala 'y' ou 'y0' dependendo do que estiver definido no uPlot
-    const scaleKey = u.scales.y ? 'y' : 'y0';
-    const y = yVal != null && Number.isFinite(yVal)
+    if (x < left - 4 || x > left + width + 4) continue;
+
+    const yVal = marker.price != null ? Number(marker.price) : null;
+    const onSeries = yVal != null && Number.isFinite(yVal);
+    const y = onSeries
       ? u.valToPos(yVal, scaleKey, true)
-      : top + height * 0.15;
+      : top + height * 0.12;
 
-    const color = marker.color || defaultColor;
+    const color = marker.color || '#94a3b8';
+    const kind = marker.kind || 'mark';
+    const guideKey = Math.round(x);
 
-    // 1. Desenhar linha vertical pontilhada bem sutil no ponto temporal
-    ctx.strokeStyle = color + '44'; // Opacidade ~25%
-    ctx.lineWidth = 1;
-    ctx.setLineDash([3, 3]);
-    ctx.beginPath();
-    ctx.moveTo(x, top);
-    ctx.lineTo(x, top + height);
-    ctx.stroke();
-    ctx.setLineDash([]); // limpa tracejado
-
-    // 2. Se temos a coordenada Y exata do preço, desenhar uma pequena marca/círculo no ponto exato
-    if (yVal != null && Number.isFinite(yVal) && y >= top && y <= top + height) {
-      ctx.fillStyle = color;
+    if (!guideX.has(guideKey)) {
+      guideX.add(guideKey);
+      ctx.save();
+      ctx.strokeStyle = hexAlpha(color, 0.18);
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 5]);
       ctx.beginPath();
-      ctx.arc(x, y, 4, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.strokeStyle = '#090d16'; // Borda escura para dar contraste
-      ctx.lineWidth = 1.5;
+      ctx.moveTo(x, top);
+      ctx.lineTo(x, top + height);
       ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
     }
 
-    // 3. Desenhar o símbolo e rótulo do marcador
-    ctx.fillStyle = color;
-    ctx.font = 'bold 12px JetBrains Mono, monospace';
-    ctx.textAlign = 'center';
-    
-    // Deslocar o símbolo verticalmente para não sobrepor o círculo
-    const offset = marker.label === '▲' ? 14 : -8; // Entrada abaixo, saída/outros acima
-    const textY = yVal != null && Number.isFinite(yVal) ? y + offset : top + 15;
-    
-    // Garante que o texto fique dentro dos limites do gráfico
-    const safeY = Math.min(top + height - 4, Math.max(top + 12, textY));
-    ctx.fillText((marker.label || '●').slice(0, 2), x, safeY);
+    if (onSeries && y >= top - 8 && y <= top + height + 8) {
+      drawShape(ctx, kind, x, y, 6.5, color);
+    }
   }
 }

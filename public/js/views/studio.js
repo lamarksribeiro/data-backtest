@@ -35,12 +35,62 @@ function formatEventTime(iso) {
   });
 }
 
-function formatEventResultLabel(ev) {
-  if (ev.expiration_result === 'WIN' || ev.result === 'win') return '✅ Acertou';
-  if (ev.expiration_result === 'LOSS' || ev.result === 'loss') return '❌ Errou';
-  if (ev.reason === 'expiry_win') return '✅ Acertou';
-  if (ev.reason === 'expiry_loss') return '❌ Errou';
-  return ev.reason || ev.result || '—';
+function humanizeReason(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '—';
+  const labels = {
+    expiry_win: 'Acertou',
+    expiry_loss: 'Errou',
+    no_entry: 'Sem entrada',
+    breakeven: 'Empate',
+    closed: 'Fechado',
+    stop_loss: 'Stop loss',
+    take_profit: 'Take profit',
+    reverse: 'Reversão',
+  };
+  if (labels[raw]) return labels[raw];
+  return raw.replace(/_/g, ' ');
+}
+
+function resolveEventResult(ev) {
+  if (ev.expiration_result === 'WIN' || ev.result === 'win' || ev.reason === 'expiry_win') {
+    return { tone: 'ok', label: 'Acertou', icon: 'fa-check' };
+  }
+  if (ev.expiration_result === 'LOSS' || ev.result === 'loss' || ev.reason === 'expiry_loss') {
+    return { tone: 'err', label: 'Errou', icon: 'fa-xmark' };
+  }
+  if (ev.result === 'breakeven' || ev.reason === 'breakeven') {
+    return { tone: 'idle', label: 'Empate', icon: 'fa-minus' };
+  }
+  if (ev.result === 'no_entry' || ev.reason === 'no_entry') {
+    return { tone: 'idle', label: 'Sem entrada', icon: 'fa-ban' };
+  }
+  const raw = ev.reason || ev.result || '';
+  const label = humanizeReason(raw);
+  const lower = raw.toLowerCase();
+  let tone = 'idle';
+  if (lower.includes('stop') || lower.includes('loss') || lower.includes('err')) tone = 'err';
+  else if (lower.includes('win') || lower.includes('profit')) tone = 'ok';
+  else if (lower.includes('warn')) tone = 'warn';
+  return { tone, label, icon: 'fa-circle-dot' };
+}
+
+function renderEventResultBadge(ev) {
+  const { tone, label, icon } = resolveEventResult(ev);
+  return el('span', { class: 'col-result' }, [
+    el('span', { class: `event-result-badge badge badge--compact badge--${tone}` }, [
+      el('i', { class: `fa-solid ${icon}`, 'aria-hidden': 'true' }),
+      label,
+    ]),
+  ]);
+}
+
+function renderSideCell(side) {
+  if (!side) return el('span', { class: 'col-side muted' }, '—');
+  const tone = side === 'UP' ? 'up' : side === 'DOWN' ? 'down' : 'idle';
+  return el('span', { class: 'col-side' }, [
+    el('span', { class: `event-side-pill event-side-pill--${tone}` }, side),
+  ]);
 }
 
 function formatDistPtb(value) {
@@ -849,7 +899,12 @@ async function loadRunDetail(ctx, runId) {
   ]));
 
   if (run.equity?.length) {
-    renderUplotLine(document.getElementById('studio-equity-chart'), run.equity.map((p) => [new Date(p.ts).getTime(), p.pnl]));
+    renderUplotLine(
+      document.getElementById('studio-equity-chart'),
+      run.equity.map((p) => [new Date(p.ts).getTime(), p.pnl]),
+      [],
+      { primaryLabel: 'PnL', primaryColor: '#34d399', height: 220 },
+    );
   }
   
   renderSelectedEventContainerPlaceholder();
@@ -904,7 +959,7 @@ function buildEventFilters(ctx, runId) {
         const params = new URLSearchParams({ format: 'csv', limit: '5000', q: studioState.filterQ, result: studioState.filterResult, sort: studioState.filterSort });
         window.open(`/api/backtest/runs/${runId}/events?${params}`, '_blank');
       },
-    }, 'CSV'),
+    }, [el('i', { class: 'fa-solid fa-file-arrow-down', 'aria-hidden': 'true' }), 'CSV']),
   ];
 }
 
@@ -1027,7 +1082,7 @@ function renderCancelledPanel(container, run, ctx) {
 }
 
 function renderVirtualEventTable(events, ctx, runId) {
-  const rowH = 36;
+  const rowH = 40;
   const wrap = el('div', { class: 'studio-events-wrap' }, [
     el('div', { class: 'studio-table-header-row' }, [
       el('span', { class: 'col-index' }, '#'),
@@ -1038,7 +1093,7 @@ function renderVirtualEventTable(events, ctx, runId) {
       el('span', { class: 'col-pnl' }, 'P&L (Líquido)'),
       el('span', { class: 'col-dist' }, 'Dist PTB'),
       el('span', { class: 'col-trest' }, 'T.Rest'),
-      el('span', { class: 'col-reason' }, 'Resultado'),
+      el('span', { class: 'col-result' }, 'Resultado'),
     ])
   ]);
   const viewport = el('div', { class: 'studio-events-viewport', style: { maxHeight: '360px', overflow: 'auto' } });
@@ -1066,26 +1121,27 @@ function eventRow(ev, ctx, runId, index) {
   const isSelected = studioState.selectedEventId === ev.id;
   const pnlVal = Number(ev.final_pnl || 0);
   const pnlTone = pnlVal > 0 ? 'good' : pnlVal < 0 ? 'bad' : 'idle';
-  const sideTone = ev.side === 'UP' ? 'up' : ev.side === 'DOWN' ? 'down' : 'idle';
+  const result = resolveEventResult(ev);
+  const rowTone = result.tone === 'ok' ? 'win' : result.tone === 'err' ? 'loss' : '';
   const quantity = ev.quantity;
   const cost = ev.cost;
 
   return el('button', {
     type: 'button',
-    class: `studio-event-row${isSelected ? ' is-selected' : ''}`,
+    class: `studio-event-row${isSelected ? ' is-selected' : ''}${rowTone ? ` studio-event-row--${rowTone}` : ''}`,
     'data-event-id': String(ev.id),
     title: `${formatEventTime(ev.event_start)} · ${ev.condition_id || ''}`,
     onclick: () => selectEventAndRenderInline(ctx, runId, ev.id, index),
   }, [
     el('span', { class: 'col-index muted' }, String(index + 1)),
     el('span', { class: 'col-time' }, formatEventTime(ev.event_start)),
-    el('span', { class: `col-side side-${sideTone}` }, ev.side || '—'),
+    renderSideCell(ev.side),
     el('span', { class: 'col-qty' }, quantity != null ? String(quantity) : '—'),
     el('span', { class: 'col-cost' }, cost != null ? formatPnl(cost) : '—'),
     el('span', { class: `col-pnl pnl-${pnlTone}` }, formatPnl(pnlVal)),
     el('span', { class: 'col-dist muted' }, formatDistPtb(ev.entry_distance_ptb)),
     el('span', { class: 'col-trest muted' }, formatTimeRemaining(ev.entry_time_remaining)),
-    el('span', { class: 'col-reason' }, formatEventResultLabel(ev)),
+    renderEventResultBadge(ev),
   ]);
 }
 

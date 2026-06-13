@@ -7,7 +7,17 @@ export function buildExecutionItems(event) {
   const orders = event.orders || [];
   const hasExitOrders = orders.some((order) => order?.type === 'exit');
   for (const order of orders) {
-    const kind = order.type === 'exit' ? 'exit' : 'entry';
+    let kind = order.type === 'exit' ? 'exit' : 'entry';
+    const reasonText = (order.reason || order.source || '').toLowerCase();
+    if (kind === 'exit') {
+      if (reasonText.includes('stop loss') || reasonText.includes('stop_loss')) {
+        kind = 'stop';
+      } else if (reasonText.includes('trail') || reasonText.includes('trailing')) {
+        kind = 'trail_stop';
+      } else if (reasonText.includes('take profit') || reasonText.includes('take_profit') || reasonText.includes('profit') || reasonText.includes('limit')) {
+        kind = 'take_profit';
+      }
+    }
     items.push({
       kind,
       ts: order.createdAt || order.ts || order.time,
@@ -22,8 +32,17 @@ export function buildExecutionItems(event) {
     });
   }
   for (const exit of hasExitOrders ? [] : (summary.exits || [])) {
+    let kind = 'exit';
+    const reasonText = (exit.reason || '').toLowerCase();
+    if (reasonText.includes('stop loss') || reasonText.includes('stop_loss') || reasonText.includes('stop')) {
+      kind = 'stop';
+    } else if (reasonText.includes('trail') || reasonText.includes('trailing')) {
+      kind = 'trail_stop';
+    } else if (reasonText.includes('take profit') || reasonText.includes('take_profit') || reasonText.includes('profit') || reasonText.includes('limit')) {
+      kind = 'take_profit';
+    }
     items.push({
-      kind: 'exit',
+      kind,
       ts: exit.ts || exit.time,
       title: `Saída ${exit.reason || ''}`,
       meta: [
@@ -37,9 +56,9 @@ export function buildExecutionItems(event) {
   }
   for (const order of summary.profitOrders || []) {
     items.push({
-      kind: 'partial',
+      kind: 'take_profit',
       ts: order.fillTime || order.time,
-      title: 'Parcial / take profit',
+      title: 'Parcial / Take Profit',
       meta: [['Preço', formatPrice(order.price)], ['Qtd', formatQty(order.qty ?? order.filledQty)], ['Status', order.filled ? 'filled' : '-']],
     });
   }
@@ -55,7 +74,7 @@ export function buildExecutionItems(event) {
     items.push({
       kind: 'mark',
       ts: mark.ts,
-      title: mark.name || 'Mark',
+      title: mark.name ? `Marca · ${mark.name}` : 'Marca da estratégia',
       meta: Object.entries(mark.data || {}).slice(0, 4).map(([key, value]) => [labelize(key), String(value)]),
     });
   }
@@ -231,7 +250,16 @@ export function renderLogList(logs, event = null) {
 }
 
 function timelineItem(item) {
-  const icon = { entry: '▲', exit: '▼', partial: '◆', reverse: '↻', mark: '●' }[item.kind] || '●';
+  const icon = {
+    entry: '▲',
+    exit: '▼',
+    stop: '✖',
+    trail_stop: '✖',
+    take_profit: '✔',
+    partial: '◆',
+    reverse: '↻',
+    mark: 'ℹ'
+  }[item.kind] || '●';
   return el('article', { class: `execution-timeline__item execution-timeline__item--${item.kind}` }, [
     el('div', { class: 'execution-timeline__dot' }, icon),
     el('div', { class: 'execution-timeline__body' }, [

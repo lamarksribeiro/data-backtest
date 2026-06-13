@@ -1,13 +1,21 @@
+
 import { renderUplotLine } from '../utils/uplotChart.js';
 import { buildExecutionItems } from './executionTimeline.js';
 
 const MARKER_STYLES = {
-  entry: { color: '#22c55e', symbol: '▲', label: 'Entrada' },
-  exit: { color: '#fb7185', symbol: '▼', label: 'Saída' },
-  partial: { color: '#fbbf24', symbol: '◆', label: 'Parcial' },
-  reverse: { color: '#a78bfa', symbol: '↻', label: 'Reversão' },
-  mark: { color: '#94a3b8', symbol: '●', label: 'Mark' },
+  entry: { color: '#4ade80', label: 'Entrada' },
+  exit: { color: '#fb7185', label: 'Saída' },
+  stop: { color: '#f87171', label: 'Stop Loss' },
+  trail_stop: { color: '#ef4444', label: 'Trailing Stop' },
+  take_profit: { color: '#2dd4bf', label: 'Take Profit' },
+  partial: { color: '#fbbf24', label: 'Parcial' },
+  reverse: { color: '#c4b5fd', label: 'Reversão' },
 };
+
+/** Só execução de trade no gráfico — marks GLS ficam na Linha do Tempo / Logs. */
+const CHART_MARKER_KINDS = new Set([
+  'entry', 'exit', 'stop', 'trail_stop', 'take_profit', 'partial', 'reverse',
+]);
 
 function finite(value) {
   const num = Number(value);
@@ -84,19 +92,38 @@ function pointValue(point, key) {
 function buildMarkers(event, series) {
   const items = buildExecutionItems(event);
   return items
-    .filter((item) => item.ts)
+    .filter((item) => item.ts && CHART_MARKER_KINDS.has(item.kind))
     .map((item) => {
-      const style = MARKER_STYLES[item.kind] || MARKER_STYLES.mark;
+      const style = MARKER_STYLES[item.kind];
       const ts = new Date(item.ts).getTime();
       const spot = spotAtTime(series, item.ts);
       return {
+        kind: item.kind,
         ts,
         price: spot,
-        label: style.symbol,
         color: style.color,
         title: item.title || style.label,
       };
     });
+}
+
+function markerLegendEl(markers) {
+  if (!markers.length) return null;
+  const seen = new Set();
+  const legend = document.createElement('div');
+  legend.className = 'studio-event-chart__markers';
+  for (const marker of markers) {
+    const style = MARKER_STYLES[marker.kind];
+    if (!style) continue;
+    const key = marker.kind || 'mark';
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const item = document.createElement('span');
+    item.className = `studio-event-chart__marker studio-event-chart__marker--${key}`;
+    item.innerHTML = `<span class="studio-event-chart__marker-swatch" style="--marker-color:${style.color}"></span><strong>${style.label}</strong>`;
+    legend.appendChild(item);
+  }
+  return legend;
 }
 
 export async function renderEventChartWithMarkers(container, event, chartData, opts = {}) {
@@ -111,11 +138,28 @@ export async function renderEventChartWithMarkers(container, event, chartData, o
     : buildConstantLine(pts, event?.summary?.priceToBeat ?? event?.price_to_beat ?? chartData?.summary?.priceToBeat);
   const markers = buildMarkers(event, series);
 
-  return renderUplotLine(container, pts, [
-    { label: 'PTB', data: ptbLine },
+  container.innerHTML = '';
+  const stack = document.createElement('div');
+  stack.className = 'studio-event-chart__stack';
+
+  const header = document.createElement('div');
+  header.className = 'studio-event-chart__head';
+  header.innerHTML = `<span class="studio-event-chart__title">${asset} × PTB</span>`;
+  const legend = markerLegendEl(markers);
+  if (legend) header.appendChild(legend);
+  stack.appendChild(header);
+
+  const plot = document.createElement('div');
+  plot.className = 'studio-event-chart__plot';
+  stack.appendChild(plot);
+  container.appendChild(stack);
+
+  return renderUplotLine(plot, pts, [
+    { label: 'PTB', data: ptbLine, dash: [7, 5], width: 1.75, stroke: '#38bdf8' },
   ], {
     markers,
     primaryLabel: asset,
+    colors: ['#f97316', '#38bdf8'],
     yRange: 'tight',
     height: 280,
   });
