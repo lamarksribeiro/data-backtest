@@ -155,6 +155,10 @@ test('backtest studio API exposes run detail, events and chart-data', async () =
       assert.ok(Array.isArray(chart.marks));
       assert.ok(Array.isArray(chart.logs));
 
+      const chartByEvent = await getJson(`${baseUrl}/api/backtest/runs/${run.id}/chart-data?event_id=${events.events[0].id}`);
+      assert.equal(chartByEvent.event.id, events.events[0].id);
+      assert.equal(chartByEvent.series.underlying.length, 12);
+
       const missing = await fetch(`${baseUrl}/api/backtest/runs/${run.id}/chart-data`);
       assert.equal(missing.status, 400);
 

@@ -1009,6 +1009,7 @@ function startBacktestWorker({ config, db, runId, request, startedAt, activeBack
       runId,
       request,
       startedAt,
+      fastRun: Boolean(request.fastRun),
     },
   });
   activeBacktestWorkers?.set(runId, worker);

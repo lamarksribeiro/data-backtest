@@ -82,13 +82,13 @@ export function createStandardLibrary() {
     },
     signals: {
       momentum(samples, seconds) {
-        return sampleDelta(samples, seconds, (row) => Number(row?.underlyingPrice ?? row?.btc_price));
+        return sampleDelta(samples, seconds, sampleUnderlyingValue);
       },
       slowMomentum(samples, seconds) {
-        return sampleDelta(samples, seconds, (row) => Number(row?.underlyingPrice ?? row?.btc_price));
+        return sampleDelta(samples, seconds, sampleUnderlyingValue);
       },
       volatility(samples, seconds) {
-        const values = recentValues(samples, seconds, (row) => Number(row?.underlyingPrice ?? row?.btc_price));
+        const values = recentValues(samples, seconds, sampleUnderlyingValue);
         if (values.length < 2) return stdDev(values);
         return stdDev(values);
       },
@@ -252,8 +252,12 @@ function sampleAgo(samples, seconds) {
 }
 
 function sampleUnderlying(sample, fallback) {
-  const value = Number(sample?.underlyingPrice ?? sample?.btc_price ?? sample?.underlying_price);
+  const value = sampleUnderlyingValue(sample);
   return Number.isFinite(value) ? value : fallback;
+}
+
+function sampleUnderlyingValue(sample) {
+  return Number(sample?.underlyingPrice ?? sample?.btc_price ?? sample?.underlying_price);
 }
 
 function recentVolatility(samples, lookbackSec) {

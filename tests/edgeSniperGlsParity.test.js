@@ -9,8 +9,10 @@ import { upsertManifestPartition } from '../src/state/manifest.js';
 import { toPortablePath } from '../src/lake/paths.js';
 import { writeBacktestTicksParquet } from '../src/sync/duckdbParquet.js';
 import { runBacktest } from '../src/backtest/engine.js';
+import { createColumnSetBuilder } from '../src/backtest/columnStore.js';
 import { parse } from '../src/backtestStudio/gls/parser.js';
 import { validate } from '../src/backtestStudio/gls/validator.js';
+import { createGlsRunnerFromSource } from '../src/backtestStudio/gls/runtime.js';
 import { compareEdgeSniperParity, compareGlsExecutionParity } from '../src/backtestStudio/gls/parity.js';
 import { getEdgeSniperV2GlsSource } from '../src/backtestStudio/gls/loadStrategySource.js';
 import { seedEdgeSniperV2Strategy } from '../src/backtestStudio/gls/seedStrategies.js';
@@ -273,6 +275,17 @@ test('edge-sniper GLS interpreter and compiled execution match on key scenarios'
   }
 });
 
+test('edge-sniper GLS fast-run matches full-run on key scenarios', () => {
+  const source = getEdgeSniperV2GlsSource();
+  for (const scenario of GLS_EXECUTION_SCENARIOS) {
+    const ticks = typeof scenario.ticks === 'function' ? scenario.ticks() : scenario.ticks;
+    const full = runGlsScenario(source, ticks, scenario.params, { fastRun: false });
+    const fast = runGlsScenario(source, ticks, scenario.params, { fastRun: true });
+    assert.deepEqual(fast.summary, full.summary, scenario.name);
+    assert.equal(fast.events.length, full.events.length, scenario.name);
+  }
+});
+
 test('seed edge-sniper-v2-gls strategy and run via lakehouse engine', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-gls-seed-'));
   try {
@@ -367,6 +380,95 @@ test('seed edge-sniper-v2-gls strategy and run via lakehouse engine', async () =
   }
 });
 
+test('edge-sniper-v2-gls lakehouse fast-run matches full-run', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-gls-fast-parity-'));
+  try {
+    const db = openStateDatabase(path.join(dir, 'state.db'));
+    try {
+      const parquetPath = path.join(dir, 'lake', 'backtest_ticks', 'part-test.parquet');
+      await writeBacktestTicksParquet({
+        tempPath: path.join(dir, 'lake', '.tmp', 'backtest_ticks.parquet'),
+        finalPath: parquetPath,
+        bookDepth: 2,
+        rows: buildModelSensitiveTicks().map((tick) => ({
+          marketId: 'market-1',
+          underlying: 'BTC',
+          interval: '5m',
+          conditionId: tick.condition_id,
+          eventStart: tick.event_start,
+          eventEnd: tick.event_end,
+          ts: tick.ts,
+          underlyingPrice: tick.btc_price,
+          priceToBeat: tick.price_to_beat,
+          upPrice: tick.up_price,
+          downPrice: tick.down_price,
+          upBestBid: tick.up_best_bid,
+          upBestAsk: tick.up_best_ask,
+          downBestBid: tick.down_best_bid,
+          downBestAsk: tick.down_best_ask,
+          coverage: 1,
+          degraded: false,
+          up_ask_px_1: tick.up_ask_px_1,
+          up_ask_sz_1: tick.up_ask_sz_1,
+          down_ask_px_1: tick.down_ask_px_1,
+          down_ask_sz_1: tick.down_ask_sz_1,
+        })),
+      });
+      upsertManifestPartition(db, {
+        dataset: 'backtest_ticks',
+        underlying: 'BTC',
+        interval: '5m',
+        bookDepth: 2,
+        dt: '2026-05-31',
+        activePath: toPortablePath(parquetPath),
+        rows: 20,
+        status: 'valid',
+      });
+
+      const glsAst = parse(getEdgeSniperV2GlsSource());
+      const request = {
+        glsAst,
+        glsExecution: 'compiled-soa',
+        underlying: 'BTC',
+        interval: '5m',
+        bookDepth: 2,
+        from: '2026-05-31T00:00:00.000Z',
+        to: '2026-05-31T00:00:20.000Z',
+        params: {
+          minDistanceAbs: 0,
+          minDistanceNearExpiry: 0,
+          minDirectionalProb: 0.55,
+          minEdge: 0.02,
+          maxSpread: 0.99,
+          minLiquidityRatio: 0.01,
+          minAsk: 0.001,
+          maxAsk: 0.99,
+          entryWindowStart: 300,
+          entryWindowEnd: 0,
+          momentumSec: 4,
+          slowMomentumSec: 8,
+          stopReverseEnabled: false,
+          takeProfitBid: 0.99,
+          trailAfterBid: 0.99,
+          lateExitSec: 0,
+          lateExitMinBid: 0.99,
+        },
+      };
+      const full = await runBacktest(db, { ...request, fastRun: false });
+      const fast = await runBacktest(db, { ...request, fastRun: true });
+
+      assert.equal(fast.summary.totalEntries, full.summary.totalEntries);
+      assert.equal(fast.summary.totalPnl, full.summary.totalPnl);
+      assert.equal(fast.summary.totalWins, full.summary.totalWins);
+      assert.equal(fast.summary.totalLosses, full.summary.totalLosses);
+    } finally {
+      closeStateDatabase(db);
+    }
+  } finally {
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
+  }
+});
+
 test('seed edge-sniper-v2-gls creates a new version when embedded source changes', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-gls-seed-update-'));
   try {
@@ -409,6 +511,71 @@ function buildSyntheticEventTicks({ distance = 0, ask = 0.52, bid = 0.5, ptb = 7
     down_ask_px_1: 0.5,
     down_ask_sz_1: 100,
   }));
+}
+
+function runGlsScenario(source, ticks, params, options) {
+  const runner = createGlsRunnerFromSource(source, params, { executionMode: 'compiled-soa', bookDepth: 25, ...options });
+  const columnSet = buildColumnSetFromTicks(ticks);
+  runner.bindColumnSet(columnSet);
+  for (const event of columnSet.events) {
+    runner.beginEvent(event);
+    for (let i = event.startRow; i < event.endRow; i += 1) runner.processIndex(i);
+    runner.endEvent(event);
+  }
+  const result = runner.finish();
+  return {
+    summary: {
+      totalEvents: result.summary.totalEvents,
+      totalEntries: result.summary.totalEntries,
+      totalPnl: Number(result.summary.totalPnl.toFixed(4)),
+      totalWins: result.summary.totalWins,
+      totalLosses: result.summary.totalLosses,
+    },
+    events: result.events,
+  };
+}
+
+function buildColumnSetFromTicks(ticks) {
+  const builder = createColumnSetBuilder({ initialCapacity: Math.max(ticks.length, 16) });
+  for (const column of ['condition_id', 'market_id', 'underlying', 'interval']) builder.registerColumn(column, 'code');
+  for (const column of [
+    '_ts_ms', '_event_start_ms', '_event_end_ms', 'underlying_price', 'price_to_beat', 'up_price', 'down_price',
+    'up_best_ask', 'up_best_bid', 'down_best_ask', 'down_best_bid', 'book_depth',
+    'up_ask_px_1', 'up_ask_sz_1', 'up_bid_px_1', 'up_bid_sz_1',
+    'down_ask_px_1', 'down_ask_sz_1', 'down_bid_px_1', 'down_bid_sz_1',
+  ]) builder.registerColumn(column, 'numeric');
+
+  for (const tick of ticks) {
+    builder.ensureCapacity(1);
+    const i = builder.length;
+    builder.codes.get('condition_id')[i] = builder.internCode('condition_id', tick.condition_id);
+    builder.codes.get('market_id')[i] = builder.internCode('market_id', tick.market_id ?? 'market-test');
+    builder.codes.get('underlying')[i] = builder.internCode('underlying', tick.underlying ?? 'BTC');
+    builder.codes.get('interval')[i] = builder.internCode('interval', tick.interval ?? '5m');
+    builder.columns.get('_ts_ms')[i] = new Date(tick.ts).getTime();
+    builder.columns.get('_event_start_ms')[i] = new Date(tick.event_start).getTime();
+    builder.columns.get('_event_end_ms')[i] = new Date(tick.event_end).getTime();
+    builder.columns.get('underlying_price')[i] = Number(tick.btc_price ?? tick.underlying_price);
+    builder.columns.get('price_to_beat')[i] = Number(tick.price_to_beat);
+    builder.columns.get('up_price')[i] = Number(tick.up_price);
+    builder.columns.get('down_price')[i] = Number(tick.down_price);
+    builder.columns.get('up_best_ask')[i] = Number(tick.up_best_ask);
+    builder.columns.get('up_best_bid')[i] = Number(tick.up_best_bid);
+    builder.columns.get('down_best_ask')[i] = Number(tick.down_best_ask);
+    builder.columns.get('down_best_bid')[i] = Number(tick.down_best_bid);
+    builder.columns.get('book_depth')[i] = 1;
+    builder.columns.get('up_ask_px_1')[i] = Number(tick.up_ask_px_1 ?? tick.up_best_ask);
+    builder.columns.get('up_ask_sz_1')[i] = Number(tick.up_ask_sz_1 ?? 100);
+    builder.columns.get('up_bid_px_1')[i] = Number(tick.up_bid_px_1 ?? tick.up_best_bid);
+    builder.columns.get('up_bid_sz_1')[i] = Number(tick.up_bid_sz_1 ?? 100);
+    builder.columns.get('down_ask_px_1')[i] = Number(tick.down_ask_px_1 ?? tick.down_best_ask);
+    builder.columns.get('down_ask_sz_1')[i] = Number(tick.down_ask_sz_1 ?? 100);
+    builder.columns.get('down_bid_px_1')[i] = Number(tick.down_bid_px_1 ?? tick.down_best_bid);
+    builder.columns.get('down_bid_sz_1')[i] = Number(tick.down_bid_sz_1 ?? 100);
+    builder.length += 1;
+  }
+
+  return builder.finalize();
 }
 
 function buildPartialTakeProfitTicks() {

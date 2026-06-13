@@ -81,8 +81,14 @@ export async function renderUplotLine(container, primarySeries, extraSeries = []
     ...extraSeries,
   ].filter((s) => s?.data?.length);
   if (!labeled.length) return null;
-  const xs = labeled[0].data.map((p) => p[0] / 1000);
-  const data = [xs, ...labeled.map((s) => s.data.map((p) => (p[1] != null && Number.isFinite(p[1]) ? p[1] : null)))];
+  const primaryPoints = normalizeSeriesPoints(labeled[0].data);
+  const xs = primaryPoints.map((p) => p[0] / 1000);
+  const data = [
+    xs,
+    primaryPoints.map((p) => p[1]),
+    ...labeled.slice(1).map((s) => alignSeriesToX(normalizeSeriesPoints(s.data), primaryPoints)),
+  ];
+  if (!primaryPoints.some((p) => p[1] != null)) return null;
   const colors = ['#f97316', '#38bdf8', '#a78bfa', '#34d399', '#f472b6'];
   const markers = Array.isArray(opts.markers) ? opts.markers : [];
   const chartHeight = Number(opts.height) > 0 ? Number(opts.height) : 220;
@@ -136,6 +142,25 @@ export async function renderUplotLine(container, primarySeries, extraSeries = []
   trackChart(container, chart);
 
   return chart;
+}
+
+function normalizeSeriesPoints(points = []) {
+  return (points || [])
+    .map((point) => {
+      const rawTs = Array.isArray(point) ? point[0] : point?.ts ?? point?.x ?? point?.time;
+      const rawValue = Array.isArray(point) ? point[1] : point?.value ?? point?.y;
+      const ts = typeof rawTs === 'number' ? rawTs : new Date(rawTs).getTime();
+      const value = rawValue == null || rawValue === '' ? null : Number(rawValue);
+      if (!Number.isFinite(ts)) return null;
+      return [ts, Number.isFinite(value) ? value : null];
+    })
+    .filter(Boolean)
+    .sort((left, right) => left[0] - right[0]);
+}
+
+function alignSeriesToX(points, primaryPoints) {
+  const byTs = new Map(points.map(([ts, value]) => [ts, value]));
+  return primaryPoints.map(([ts]) => byTs.get(ts) ?? null);
 }
 
 function drawRegions(u, regions = []) {

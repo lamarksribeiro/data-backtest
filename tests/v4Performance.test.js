@@ -70,6 +70,44 @@ test('fast-run matches full summary on simple strategy', () => {
   assert.equal(fast.events.length, full.events.length);
 });
 
+test('fast-run preserves samples for sample-dependent strategies', () => {
+  const ast = parse(`
+strategy "Sample Dependent" {
+  param budget = 10
+
+  onEventStart(event) { state.entered = false }
+
+  onTick(tick, event) {
+    let momentum = signals.momentum(samples, 2)
+    if (!state.entered && momentum > 20) {
+      enter("UP", { price: book.ask("UP", tick), budget: params.budget, reason: "momentum" })
+      state.entered = true
+    }
+  }
+
+  onEventEnd(event) { closeOpenPosition({ reason: "event_end" }) }
+}
+`);
+  const columnSet = buildMultiEventColumnSet();
+
+  const run = (fastRun) => {
+    const runner = createGlsBacktestRunner(ast, {}, { executionMode: 'compiled-soa', bookDepth: 25, fastRun });
+    runner.bindColumnSet(columnSet);
+    for (const ev of columnSet.events) {
+      runner.beginEvent(ev);
+      for (let i = ev.startRow; i < ev.endRow; i += 1) runner.processIndex(i);
+      runner.endEvent(ev);
+    }
+    return runner.finish();
+  };
+
+  const full = run(false);
+  const fast = run(true);
+  assert.equal(full.summary.totalEntries, 1);
+  assert.equal(fast.summary.totalEntries, full.summary.totalEntries);
+  assert.equal(fast.summary.totalPnl, full.summary.totalPnl);
+});
+
 test('fast-run keeps order data for polymarket fees', () => {
   const ast = parse(SIMPLE);
   const columnSet = buildMultiEventColumnSet();

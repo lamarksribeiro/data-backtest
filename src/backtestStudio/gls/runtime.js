@@ -241,10 +241,8 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
     }
 
     tickCursor.setIndex(rowIndex);
-    if (!fastRun) {
-      samples.push(snapshotTickCursorView(tickCursor));
-      if (samples.length > 500) samples.shift();
-    }
+    samples.push(snapshotTickCursorView(tickCursor));
+    if (samples.length > 500) samples.shift();
 
     const ctx = buildRuntimeContext(tickCursor, currentEvent);
     ctx.__i = rowIndex;
@@ -286,10 +284,8 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
       return;
     }
 
-    if (!fastRun) {
-      samples.push(tick);
-      if (samples.length > 500) samples.shift();
-    }
+    samples.push(tick);
+    if (samples.length > 500) samples.shift();
 
     const ctx = buildRuntimeContext(tick, currentEvent);
     runHook('onTick', ctx);

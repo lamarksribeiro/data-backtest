@@ -17,6 +17,7 @@ import { appendEventTraceBatch } from '../backtestStudio/state/eventTraces.js';
 const FLUSH_BATCH_EVENTS = 200;
 const db = openStateDatabase(workerData.stateDbPath);
 const runId = workerData.runId;
+const fastRun = Boolean(workerData.fastRun ?? workerData.request?.fastRun);
 const sidecarFile = chartSidecarPath(workerData.stateDbPath, runId);
 ensureChartSidecarDir(workerData.stateDbPath);
 
@@ -33,8 +34,8 @@ function flushTraces() {
 try {
   const request = {
     ...workerData.request,
-    fastRun: Boolean(workerData.fastRun),
-    onEventFinalized: workerData.fastRun
+    fastRun,
+    onEventFinalized: fastRun
       ? null
       : (eventRecord, samples) => {
         const side = eventRecord.positionType || 'UP';
