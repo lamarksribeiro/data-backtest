@@ -41,7 +41,8 @@ export async function resolveDualEventPreview({
     return { ok: false, status: 404, code: 'NOT_FOUND', message: 'No ticks found for event' };
   }
 
-  const original = buildSourceEventPreview(sourceTicks, config);
+  const previewConfig = { ...config, underlying };
+  const original = buildSourceEventPreview(sourceTicks, previewConfig);
   const { partition, dataset: lakeDataset } = findLakePartitionForPreview(db, {
     dt,
     underlying,
@@ -74,7 +75,7 @@ export async function resolveDualEventPreview({
       dataset: lakeDataset ?? 'scalars',
       bookDepth: config.backtestBookDepth,
     });
-    parquet = buildParquetEventPreview(parquetTicks, normMeta, config);
+    parquet = buildParquetEventPreview(parquetTicks, normMeta, previewConfig);
     parquet.partition_status = partition.status;
   }
 

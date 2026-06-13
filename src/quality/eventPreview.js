@@ -2,6 +2,7 @@ import { analyzeExactFlatUnderlyingSegments, analyzeTrimSegments } from './clobS
 import { buildChartTicksFromScalars, summarizeChartTicks } from './chartTicks.js';
 import { normalizeEventTicks } from './normalizeEvent.js';
 import { buildNormalizationOptions } from '../sync/applyNormalization.js';
+import { minSpotUsd } from './underlyingThresholds.js';
 
 function num(value) {
   const parsed = Number(value);
@@ -12,6 +13,11 @@ function scalarPrice(value, min = 1000) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed < min) return null;
   return parsed;
+}
+
+function previewMinSpot(config = {}, ticks = []) {
+  const underlying = config.underlying || ticks[0]?.underlying;
+  return Number(config.minSpotPrice) > 0 ? Number(config.minSpotPrice) : minSpotUsd(underlying);
 }
 
 function oddsPrice(value) {
@@ -50,6 +56,7 @@ export function buildSourceEventPreview(ticks, config = {}) {
     : [];
 
   const chart_ticks = buildChartTicksFromScalars(sorted, config);
+  const minSpot = previewMinSpot(config, sorted);
 
   return {
     action: result.action,
@@ -61,8 +68,8 @@ export function buildSourceEventPreview(ticks, config = {}) {
     trim_regions: trimRegions,
     removed_ticks: [],
     series: {
-      underlying: sorted.map((tick) => ({ ts: tick.ts, value: scalarPrice(tick.underlyingPrice) })),
-      price_to_beat: sorted.map((tick) => ({ ts: tick.ts, value: scalarPrice(tick.priceToBeat) })),
+      underlying: sorted.map((tick) => ({ ts: tick.ts, value: scalarPrice(tick.underlyingPrice, minSpot) })),
+      price_to_beat: sorted.map((tick) => ({ ts: tick.ts, value: scalarPrice(tick.priceToBeat, minSpot) })),
       up: sorted.map((tick) => ({ ts: tick.ts, value: oddsPrice(tick.upPrice) })),
       down: sorted.map((tick) => ({ ts: tick.ts, value: oddsPrice(tick.downPrice) })),
     },

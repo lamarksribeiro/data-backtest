@@ -1,13 +1,14 @@
-const DEFAULT_MIN_PTB = 1000;
+import { resolveChartThresholds } from './underlyingThresholds.js';
+
 const DEFAULT_CHART_SAMPLE_SIZE = 400;
 
-export function spotPriceForChart(value, minSpot = DEFAULT_MIN_PTB) {
+export function spotPriceForChart(value, minSpot = 1000) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed < minSpot) return null;
   return parsed;
 }
 
-export function ptbForChart(value, minPtb = DEFAULT_MIN_PTB) {
+export function ptbForChart(value, minPtb = 1000) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed < minPtb) return null;
   return parsed;
@@ -55,8 +56,7 @@ function mapTickToChartRow(tick, minSpot, minPtb) {
  * Eventos OK usam exatamente os ticks que entram no Parquet.
  */
 export function buildChartTicksFromScalars(ticks, config = {}) {
-  const minPtb = Number(config.minPriceToBeat) > 0 ? Number(config.minPriceToBeat) : DEFAULT_MIN_PTB;
-  const minSpot = Number(config.minSpotPrice) > 0 ? Number(config.minSpotPrice) : minPtb;
+  const { minSpot, minPtb } = resolveChartThresholds(config, ticks);
   const sampleSize = Number(config.chartSampleSize) > 0 ? Number(config.chartSampleSize) : DEFAULT_CHART_SAMPLE_SIZE;
   const sorted = [...ticks].sort((left, right) => String(left.ts).localeCompare(String(right.ts)));
   const mapped = sorted.map((tick) => mapTickToChartRow(tick, minSpot, minPtb));
