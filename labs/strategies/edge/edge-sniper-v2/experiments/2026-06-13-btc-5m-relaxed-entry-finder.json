@@ -1,5 +1,5 @@
 {
-  "name": "btc-5m-initial-sweep",
+  "name": "btc-5m-relaxed-entry-finder",
   "strategyId": "edge-sniper-v2",
   "strategyFamily": "edge",
   "dataset": "backtest_ticks",
@@ -11,9 +11,9 @@
   "engine": "soa",
   "glsExecution": "compiled-soa",
   "fastRun": true,
-  "variantWorkers": 8,
+  "variantWorkers": 12,
   "defaults": "../defaults.json",
-  "searchSpace": "../search-spaces/conservative.json",
+  "searchSpace": "../search-spaces/relaxed-entry-finder.json",
   "baseline": "../baselines/baseline-btc-5m-2026-05-29.json",
   "metrics": [
     "totalPnl",

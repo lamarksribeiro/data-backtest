@@ -1,20 +1,20 @@
 {
-  "name": "btc-5m-initial-sweep",
+  "name": "btc-5m-depth25-midpoint-sampled-sweep",
   "strategyId": "edge-sniper-v2",
   "strategyFamily": "edge",
   "dataset": "backtest_ticks",
   "underlying": "BTC",
   "interval": "5m",
   "bookDepth": 25,
-  "from": "2026-05-29",
-  "to": "2026-05-29",
+  "from": "2026-04-23",
+  "to": "2026-05-30",
   "engine": "soa",
   "glsExecution": "compiled-soa",
   "fastRun": true,
-  "variantWorkers": 8,
+  "variantWorkers": 12,
+  "chunkDays": 1,
   "defaults": "../defaults.json",
-  "searchSpace": "../search-spaces/conservative.json",
-  "baseline": "../baselines/baseline-btc-5m-2026-05-29.json",
+  "searchSpace": "../search-spaces/midpoint-sampled-depth25.json",
   "metrics": [
     "totalPnl",
     "entries",
@@ -23,10 +23,5 @@
     "profitFactor",
     "maxDrawdown",
     "ticksPerSec"
-  ],
-  "promotionCriteria": {
-    "minEntries": 3,
-    "mustBeatBaselinePnl": true,
-    "requiresOutOfSample": true
-  }
+  ]
 }

@@ -1,0 +1,74 @@
+{
+  "name": "top-candidates-depth25",
+  "description": "Candidatos derivados do relaxed-entry-finder para validar no historico book_depth=25.",
+  "variants": [
+    {
+      "id": "relaxed-v0163",
+      "params": {
+        "entryWindowStart": 300,
+        "entryWindowEnd": 0,
+        "momentumSec": 1,
+        "slowMomentumSec": 1,
+        "minAsk": 0.001,
+        "maxAsk": 0.75,
+        "minDistanceAbs": 10,
+        "minDistanceNearExpiry": 0,
+        "minDirectionalProb": 0.01,
+        "minEdge": -0.5,
+        "maxSpread": 0.3,
+        "minLiquidityRatio": 0.01
+      }
+    },
+    {
+      "id": "relaxed-v0172",
+      "params": {
+        "entryWindowStart": 300,
+        "entryWindowEnd": 0,
+        "momentumSec": 1,
+        "slowMomentumSec": 1,
+        "minAsk": 0.001,
+        "maxAsk": 0.75,
+        "minDistanceAbs": 10,
+        "minDistanceNearExpiry": 0,
+        "minDirectionalProb": 0.01,
+        "minEdge": -0.5,
+        "maxSpread": 0.99,
+        "minLiquidityRatio": 0.01
+      }
+    },
+    {
+      "id": "less-relaxed-edge",
+      "params": {
+        "entryWindowStart": 240,
+        "entryWindowEnd": 2,
+        "momentumSec": 2,
+        "slowMomentumSec": 4,
+        "minAsk": 0.02,
+        "maxAsk": 0.75,
+        "minDistanceAbs": 25,
+        "minDistanceNearExpiry": 25,
+        "minDirectionalProb": 0.2,
+        "minEdge": -0.2,
+        "maxSpread": 0.3,
+        "minLiquidityRatio": 0.1
+      }
+    },
+    {
+      "id": "near-default-loose",
+      "params": {
+        "entryWindowStart": 180,
+        "entryWindowEnd": 4,
+        "momentumSec": 4,
+        "slowMomentumSec": 8,
+        "minAsk": 0.05,
+        "maxAsk": 0.65,
+        "minDistanceAbs": 40,
+        "minDistanceNearExpiry": 40,
+        "minDirectionalProb": 0.5,
+        "minEdge": 0,
+        "maxSpread": 0.15,
+        "minLiquidityRatio": 0.5
+      }
+    }
+  ]
+}
