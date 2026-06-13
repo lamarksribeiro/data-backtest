@@ -1,0 +1,18 @@
+{
+  "name": "midpoint-focused-depth25",
+  "description": "Grid focado nas 12 variantes candidatas mais promissoras pós-maio de 2026 para otimizar distância e probabilidade direcional.",
+  "grid": {
+    "entryWindowStart": [180],
+    "entryWindowEnd": [4],
+    "momentumSec": [4],
+    "slowMomentumSec": [8],
+    "minAsk": [0.05],
+    "maxAsk": [0.65],
+    "minDistanceAbs": [25, 40, 50],
+    "minDistanceNearExpiry": [25, 40],
+    "minDirectionalProb": [0.50, 0.55],
+    "minEdge": [0],
+    "maxSpread": [0.15],
+    "minLiquidityRatio": [0.5]
+  }
+}

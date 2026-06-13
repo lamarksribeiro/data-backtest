@@ -44,16 +44,21 @@ test('availability resolves valid active_path and reports missing partitions', a
         to: '2026-06-08T00:00:00.000Z',
       }), { from_date: '2026-05-31', to_date: '2026-06-07' });
 
+      const lakeRoot = '/lake';
       const availability = checkDatasetAvailability(db, {
         dataset: 'scalars',
         underlying: 'BTC',
         interval: '5m',
         from: '2026-05-31T00:00:00.000Z',
         to: '2026-06-02T00:00:00.000Z',
+        lakeRoot,
       });
 
       assert.equal(availability.ok, false);
-      assert.deepEqual(availability.files, ['/lake/scalars/part.parquet']);
+      assert.deepEqual(
+        availability.files.map((f) => toPortablePath(path.relative(path.resolve(lakeRoot), f))),
+        ['scalars/part.parquet']
+      );
       assert.deepEqual(availability.missing, ['2026-06-01']);
       assert.equal(availability.summary.valid, 1);
       assert.equal(availability.summary.missing, 1);

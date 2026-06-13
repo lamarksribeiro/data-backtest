@@ -1,11 +1,11 @@
 {
-  "id": "q180-d40",
-  "name": "Q180 D40",
-  "studioSlug": "esv2-q180-d40",
-  "studioName": "Edge Sniper V2 · Q180 D40",
+  "id": "v4",
+  "name": "v4 (Challenger)",
+  "studioSlug": "esv2-v4",
+  "studioName": "Edge Sniper V2 · v4",
   "role": "challenger",
-  "description": "Challenger de estabilidade: 28/38 dias positivos com PF alto.",
-  "tags": ["stability", "depth25"],
+  "description": "Desafiante Brutus. Altíssimo Profit Factor (4.12) com excelente consistência diária (28/38 dias+).",
+  "tags": ["stability", "depth25", "high-pf"],
   "labVariantId": "q180-d40",
   "labSummary": {
     "totalPnl": 3609.83,
