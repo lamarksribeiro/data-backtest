@@ -1116,16 +1116,19 @@ function matchBacktestRunRoute(pathname) {
 }
 
 function eventsToCsv(events) {
-  const header = 'id,condition_id,event_start,side,final_pnl,result,reason,ticks_count';
+  const header = 'id,event_start,side,quantity,cost,final_pnl,entry_distance_ptb,entry_time_remaining,result,reason,condition_id';
   const rows = (events || []).map((e) => [
     e.id,
-    e.condition_id,
     e.event_start,
     e.side ?? '',
+    e.quantity ?? '',
+    e.cost ?? '',
     e.final_pnl,
+    e.entry_distance_ptb ?? '',
+    e.entry_time_remaining ?? '',
     e.result ?? '',
     e.reason ?? '',
-    e.ticks_count ?? 0,
+    e.condition_id,
   ].map(csvEscape).join(','));
   return `${header}\n${rows.join('\n')}\n`;
 }

@@ -24,9 +24,38 @@ function formatPrice(value) {
   return Number.isFinite(num) ? num.toFixed(3) : '-';
 }
 
-function formatQty(value) {
+function formatEventTime(iso) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function formatEventResultLabel(ev) {
+  if (ev.expiration_result === 'WIN' || ev.result === 'win') return '✅ Acertou';
+  if (ev.expiration_result === 'LOSS' || ev.result === 'loss') return '❌ Errou';
+  if (ev.reason === 'expiry_win') return '✅ Acertou';
+  if (ev.reason === 'expiry_loss') return '❌ Errou';
+  return ev.reason || ev.result || '—';
+}
+
+function formatDistPtb(value) {
   const num = Number(value);
-  return Number.isFinite(num) ? num.toFixed(num >= 100 ? 0 : 2) : String(value ?? '-');
+  return Number.isFinite(num) ? `$${num.toFixed(0)}` : '—';
+}
+
+function formatTimeRemaining(value) {
+  const num = Number(value);
+  return Number.isFinite(num) ? `${Math.round(num)}s` : '—';
+}
+
+function chartSeriesHasChartablePoints(series) {
+  const base = series?.underlying || [];
+  return base.some((point) => point?.value != null && Number.isFinite(Number(point.value)));
 }
 
 function renderSelectedEventContainerPlaceholder() {
@@ -46,6 +75,7 @@ const MAX_STUDIO_EVENTS = 500;
 const studioState = {
   runs: [],
   selectedRunId: null,
+  selectedRunMeta: null,
   selectedEventId: null,
   compareIds: [],
   events: [],
@@ -716,6 +746,10 @@ async function loadRunDetail(ctx, runId) {
   const runRes = await ctx.api.get(`/api/backtest/runs/${runId}?slim=1&equity=1`);
   if (!runRes.ok) return mount(main, el('p', { class: 'muted' }, 'Run não encontrado'));
   const run = runRes.data.run;
+  studioState.selectedRunMeta = {
+    underlying: run.underlying,
+    interval: run.interval,
+  };
 
   if (run.status === 'queued' || run.status === 'running') {
     renderProgressPanel(main, run, ctx);
@@ -774,7 +808,8 @@ function buildEventFilters(ctx, runId) {
         class: 'field__input',
         onchange: (ev) => { studioState.filterResult = ev.target.value; studioState.eventsOffset = 0; loadEvents(ctx, runId); },
       }, [
-        { value: 'all', label: 'Todos com Entrada' },
+        { value: 'all_with_entries', label: 'Todos com Entrada' },
+        { value: 'all', label: 'Todos os Eventos' },
         { value: 'win', label: 'Ganho' },
         { value: 'loss', label: 'Perda' },
         { value: 'breakeven', label: 'Empate' },
@@ -921,13 +956,15 @@ function renderVirtualEventTable(events, ctx, runId) {
   const rowH = 36;
   const wrap = el('div', { class: 'studio-events-wrap' }, [
     el('div', { class: 'studio-table-header-row' }, [
-      el('span', { class: 'col-condition' }, 'Evento / Condição'),
-      el('span', { class: 'col-side' }, 'Lado'),
-      el('span', { class: 'col-price' }, 'Preço Entrada'),
-      el('span', { class: 'col-ptb' }, 'PTB Inicial'),
-      el('span', { class: 'col-fees' }, 'Taxa Paga'),
-      el('span', { class: 'col-pnl' }, 'PnL Líquido'),
-      el('span', { class: 'col-reason' }, 'Resultado')
+      el('span', { class: 'col-index' }, '#'),
+      el('span', { class: 'col-time' }, 'Hora Evento'),
+      el('span', { class: 'col-side' }, 'Posição'),
+      el('span', { class: 'col-qty' }, 'Contratos'),
+      el('span', { class: 'col-cost' }, 'Custo'),
+      el('span', { class: 'col-pnl' }, 'P&L (Líquido)'),
+      el('span', { class: 'col-dist' }, 'Dist PTB'),
+      el('span', { class: 'col-trest' }, 'T.Rest'),
+      el('span', { class: 'col-reason' }, 'Resultado'),
     ])
   ]);
   const viewport = el('div', { class: 'studio-events-viewport', style: { maxHeight: '360px', overflow: 'auto' } });
@@ -955,25 +992,26 @@ function eventRow(ev, ctx, runId, index) {
   const isSelected = studioState.selectedEventId === ev.id;
   const pnlVal = Number(ev.final_pnl || 0);
   const pnlTone = pnlVal > 0 ? 'good' : pnlVal < 0 ? 'bad' : 'idle';
-  const sideTone = ev.side === 'UP' ? 'up' : 'down';
-  
-  const entryPrice = ev.summary?.avgEntryPrice ?? ev.summary?.cost ?? null;
-  const ptbVal = ev.summary?.priceToBeat ?? null;
-  const totalFee = ev.summary?.fees?.totalFee ?? 0;
+  const sideTone = ev.side === 'UP' ? 'up' : ev.side === 'DOWN' ? 'down' : 'idle';
+  const quantity = ev.quantity;
+  const cost = ev.cost;
 
   return el('button', {
     type: 'button',
     class: `studio-event-row${isSelected ? ' is-selected' : ''}`,
     'data-event-id': String(ev.id),
+    title: `${formatEventTime(ev.event_start)} · ${ev.condition_id || ''}`,
     onclick: () => selectEventAndRenderInline(ctx, runId, ev.id, index),
   }, [
-    el('span', { class: 'col-condition mono' }, ev.condition_id || '—'),
+    el('span', { class: 'col-index muted' }, String(index + 1)),
+    el('span', { class: 'col-time' }, formatEventTime(ev.event_start)),
     el('span', { class: `col-side side-${sideTone}` }, ev.side || '—'),
-    el('span', { class: 'col-price' }, entryPrice != null ? formatPrice(entryPrice) : '—'),
-    el('span', { class: 'col-ptb' }, ptbVal != null ? formatPrice(ptbVal) : '—'),
-    el('span', { class: `col-fees ${totalFee > 0 ? 'text-warn' : 'muted'}` }, formatPnl(totalFee)),
+    el('span', { class: 'col-qty' }, quantity != null ? String(quantity) : '—'),
+    el('span', { class: 'col-cost' }, cost != null ? formatPnl(cost) : '—'),
     el('span', { class: `col-pnl pnl-${pnlTone}` }, formatPnl(pnlVal)),
-    el('span', { class: 'col-reason' }, ev.reason || '—')
+    el('span', { class: 'col-dist muted' }, formatDistPtb(ev.entry_distance_ptb)),
+    el('span', { class: 'col-trest muted' }, formatTimeRemaining(ev.entry_time_remaining)),
+    el('span', { class: 'col-reason' }, formatEventResultLabel(ev)),
   ]);
 }
 
@@ -993,9 +1031,10 @@ async function selectEventAndRenderInline(ctx, runId, eventId, index = 0, { sync
   if (!res.ok) return mount(container, el('p', {}, 'Evento não encontrado'));
   const event = res.data.event;
 
-  const hasSidecarSeries = Boolean(event.series?.underlying?.length);
+  const hasSidecarSeries = chartSeriesHasChartablePoints(event.series);
   let chartData = hasSidecarSeries ? { series: event.series, series_meta: event.series_meta } : null;
   let chartLoading = Boolean(event.condition_id && !hasSidecarSeries);
+  const assetSymbol = studioState.selectedRunMeta?.underlying || 'BTC';
 
   const tabs = [
     { id: 'chart', label: 'Gráfico' },
@@ -1009,7 +1048,8 @@ async function selectEventAndRenderInline(ctx, runId, eventId, index = 0, { sync
     mount(container, el('div', { class: 'card card--compact studio-selected-event-card' }, [
       el('header', { class: 'studio-selected-event__head row row--between' }, [
         el('div', { class: 'row' }, [
-          el('strong', { class: 'studio-selected-event__title' }, `Evento: ${event.condition_id} (${event.side || 'N/A'})`),
+          el('strong', { class: 'studio-selected-event__title' }, `Evento ${formatEventTime(event.event_start)} · ${event.side || 'N/A'}`),
+          el('span', { class: 'muted mono', style: { fontSize: '12px', marginLeft: '8px' } }, event.condition_id || ''),
           el('span', { class: `badge badge--${event.result === 'win' ? 'ok' : event.result === 'loss' ? 'err' : 'idle'}` }, event.result || ''),
         ]),
         el('div', { class: 'btn-group' }, [
@@ -1069,11 +1109,11 @@ async function selectEventAndRenderInline(ctx, runId, eventId, index = 0, { sync
       const containerChart = document.getElementById('studio-event-chart');
       const payload = chartData?.series
         ? chartData
-        : (event.series?.underlying?.length ? { series: event.series, series_meta: event.series_meta } : null);
+        : (chartSeriesHasChartablePoints(event.series) ? { series: event.series, series_meta: event.series_meta } : null);
       if (chartLoading && containerChart) {
         mount(containerChart, Skeleton({ lines: 3 }));
-      } else if (payload?.series?.underlying?.length) {
-        void renderEventChartWithMarkers(containerChart, event, payload);
+      } else if (payload?.series) {
+        void renderEventChartWithMarkers(containerChart, event, payload, { assetSymbol });
       } else if (containerChart) {
         mount(containerChart, el('p', { class: 'muted text-center', style: { padding: '24px 0' } }, 'Série de preços indisponível para este evento.'));
       }

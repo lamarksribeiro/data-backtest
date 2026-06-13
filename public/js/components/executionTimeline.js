@@ -94,13 +94,19 @@ export function renderEventFeeSummary(event) {
   const fees = summary.fees || {};
   return el('div', { class: 'event-detail-grid' }, [
     detailMetric('PnL líquido', formatPnl(event.final_pnl), Number(event.final_pnl) >= 0 ? 'good' : 'bad'),
-    detailMetric('PnL bruto', summary.finalPnlBeforeFees == null ? '-' : formatPnl(summary.finalPnlBeforeFees)),
+    detailMetric('PnL bruto', summary.finalPnlBeforeFees == null ? '—' : formatPnl(summary.finalPnlBeforeFees)),
+    detailMetric('Preço entrada', formatPrice(summary.avgEntryPrice)),
+    detailMetric('Contratos', summary.quantity == null ? '—' : String(summary.quantity)),
+    detailMetric('Custo', summary.cost == null ? '—' : formatPnl(summary.cost)),
+    detailMetric('PTB inicial', formatPrice(summary.priceToBeat)),
+    detailMetric('Dist. PTB entrada', summary.entryDistanceToPtb == null ? '—' : `$${Number(summary.entryDistanceToPtb).toFixed(0)}`),
+    detailMetric('Tempo restante', summary.entryTimeRemaining == null ? '—' : `${Math.round(summary.entryTimeRemaining)}s`),
     detailMetric('Taxas', formatPnl(fees.totalFee ?? 0), fees.totalFee > 0 ? 'warn' : ''),
     detailMetric('Taxa entrada', formatPnl(fees.entryFee ?? 0)),
     detailMetric('Taxa saída', formatPnl(fees.exitFee ?? 0)),
     detailMetric('Trades taxados', String(fees.tradesCharged ?? 0)),
-    detailMetric('Lado', event.side || summary.positionType || '-'),
-    detailMetric('Motivo final', event.reason || '-'),
+    detailMetric('Lado', event.side || summary.positionType || '—'),
+    detailMetric('Motivo final', event.reason || '—'),
   ]);
 }
 

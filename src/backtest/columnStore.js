@@ -273,6 +273,27 @@ export function createTickCursorView(columnSet) {
   return view;
 }
 
+/** Captura valores do cursor mutável para sidecar/gráfico (evita referência compartilhada). */
+export function snapshotTickCursorView(view) {
+  if (!view) return null;
+  return {
+    ts: view.ts,
+    underlying_price: finiteOrNull(view.underlying_price),
+    price_to_beat: finiteOrNull(view.price_to_beat),
+    up_price: finiteOrNull(view.up_price),
+    down_price: finiteOrNull(view.down_price),
+    up_best_bid: finiteOrNull(view.up_best_bid),
+    up_best_ask: finiteOrNull(view.up_best_ask),
+    down_best_bid: finiteOrNull(view.down_best_bid),
+    down_best_ask: finiteOrNull(view.down_best_ask),
+  };
+}
+
+function finiteOrNull(value) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : null;
+}
+
 export function eventRecordFromColumnSet(columnSet, eventMeta) {
   const dict = columnSet.dictionaries.get('condition_id');
   const conditionId = dict?.[eventMeta.conditionCode] ?? '';

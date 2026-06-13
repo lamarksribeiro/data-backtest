@@ -6,6 +6,11 @@ import { downsamplePoints } from '../../utils/downsample.js';
 
 const CHART_MAX_POINTS = 400;
 
+export function chartSeriesHasChartablePoints(series) {
+  const base = series?.underlying || [];
+  return base.some((point) => point?.value != null && Number.isFinite(Number(point.value)));
+}
+
 export function persistEventTraces(db, runId, result, { transaction = true } = {}) {
   if (transaction) {
     db.exec('BEGIN IMMEDIATE');
@@ -148,7 +153,7 @@ export function getEventTrace(db, runId, eventTraceId, { stateDbPath = null } = 
   const detail = toApiEventDetail(row);
   if (stateDbPath && row.chart_series_path) {
     const sidecar = readChartSidecarForEvent(row.chart_series_path, row.condition_id);
-    if (sidecar?.series) {
+    if (sidecar?.series && chartSeriesHasChartablePoints(sidecar.series)) {
       detail.series = sidecar.series;
       detail.series_meta = sidecar.meta;
     }
@@ -172,7 +177,7 @@ export async function getChartData(db, config, run, conditionId) {
 
   if (config?.stateDbPath && event.chart_series_path) {
     const sidecar = readChartSidecarForEvent(event.chart_series_path, conditionId);
-    if (sidecar?.series) {
+    if (sidecar?.series && chartSeriesHasChartablePoints(sidecar.series)) {
       return {
         event: toApiEventSummaryFromDetail(event),
         series: sidecar.series,
@@ -240,6 +245,7 @@ function normalizeEventsFromResult(runId, result) {
       quantity: event.quantity ?? 0,
       cost: event.cost ?? 0,
       avgEntryPrice: event.avgEntryPrice ?? null,
+      priceToBeat: event.priceToBeat ?? event.price_to_beat ?? null,
       expirationResult: event.expirationResult ?? null,
       winnerSide: event.winnerSide ?? null,
       expiryPnl: event.expiryPnl ?? 0,
@@ -348,6 +354,7 @@ function point(ts, value) {
 
 function toApiEventSummary(row) {
   const summary = JSON.parse(row.summary_json || '{}');
+  const fees = summary?.fees || {};
   return {
     id: Number(row.id),
     run_id: Number(row.run_id),
@@ -364,6 +371,14 @@ function toApiEventSummary(row) {
     reason_detail: summary?.diagnostics?.lastNoEntryReason ?? null,
     ticks_count: row.ticks_count,
     created_at: row.created_at,
+    avg_entry_price: summary.avgEntryPrice ?? null,
+    quantity: summary.quantity ?? null,
+    cost: summary.cost ?? null,
+    price_to_beat: summary.priceToBeat ?? null,
+    entry_distance_ptb: summary.entryDistanceToPtb ?? null,
+    entry_time_remaining: summary.entryTimeRemaining ?? null,
+    expiration_result: summary.expirationResult ?? null,
+    fees_total: fees.totalFee ?? 0,
   };
 }
 

@@ -8,6 +8,7 @@ import {
   createTickCursorView,
   eventRecordFromColumnSet,
   msToIso,
+  snapshotTickCursorView,
 } from '../../backtest/columnStore.js';
 import { parse } from './parser.js';
 import { loadConfig } from '../../config.js';
@@ -137,15 +138,19 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
 
     const closedAt = closedAtForEvent(snap, lastTick, currentEvent);
     const entryOrder = snap.orders.find((o) => o.type === 'entry');
+    const entryMetrics = computeEntryMetrics(entryOrder, currentEvent, samples);
     const eventRecord = {
       eventId: currentEvent.eventId,
       eventStart: currentEvent.eventStart,
       eventEnd: currentEvent.eventEnd,
+      priceToBeat: currentEvent.priceToBeat ?? lastTick?.price_to_beat ?? null,
       positionType: snap.position?.side ?? entryOrder?.side ?? null,
       entryTime: entryOrder?.ts ?? null,
-      quantity: entryOrder?.shares ?? 0,
-      cost: entryOrder?.notional ?? 0,
-      avgEntryPrice: entryOrder?.price ?? null,
+      entryDistanceToPtb: entryMetrics.entryDistanceToPtb,
+      entryTimeRemaining: entryMetrics.entryTimeRemaining,
+      quantity: entryOrder?.shares ?? snap.position?.shares ?? 0,
+      cost: entryOrder?.notional ?? snap.position?.cost ?? 0,
+      avgEntryPrice: entryOrder?.price ?? snap.position?.avgPrice ?? null,
       orders: snap.orders,
       exits: snap.exits,
       expirationResult: settlement.expirationResult,
@@ -234,7 +239,7 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
 
     tickCursor.setIndex(rowIndex);
     if (!fastRun) {
-      samples.push(tickCursor);
+      samples.push(snapshotTickCursorView(tickCursor));
       if (samples.length > 500) samples.shift();
     }
 
@@ -352,6 +357,35 @@ function closedAtForEvent(snapshot, lastTick, currentEvent) {
     return snapshot.exits[snapshot.exits.length - 1].ts ?? lastTick?.ts ?? currentEvent.eventEnd;
   }
   return lastTick?.ts ?? currentEvent.eventEnd;
+}
+
+function computeEntryMetrics(entryOrder, currentEvent, samples = []) {
+  if (!entryOrder?.ts) return { entryDistanceToPtb: null, entryTimeRemaining: null };
+  const entryMs = new Date(entryOrder.ts).getTime();
+  const eventEndMs = new Date(currentEvent?.eventEnd).getTime();
+  const entryTimeRemaining = Number.isFinite(entryMs) && Number.isFinite(eventEndMs)
+    ? Math.max(0, Math.round((eventEndMs - entryMs) / 1000))
+    : null;
+
+  const ptb = Number(currentEvent?.priceToBeat);
+  let entryTick = null;
+  if (Number.isFinite(entryMs) && samples.length) {
+    let bestDiff = Number.POSITIVE_INFINITY;
+    for (const sample of samples) {
+      const sampleMs = new Date(sample.ts).getTime();
+      if (!Number.isFinite(sampleMs)) continue;
+      const diff = Math.abs(sampleMs - entryMs);
+      if (diff < bestDiff) {
+        bestDiff = diff;
+        entryTick = sample;
+      }
+    }
+  }
+  const spot = Number(entryTick?.underlying_price ?? entryTick?.underlyingPrice);
+  const entryDistanceToPtb = Number.isFinite(ptb) && Number.isFinite(spot)
+    ? Math.abs(spot - ptb)
+    : null;
+  return { entryDistanceToPtb, entryTimeRemaining };
 }
 
 function buildDiagnosticsFromState(sourceState) {

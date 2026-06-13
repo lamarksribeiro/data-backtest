@@ -5592,13 +5592,34 @@ i.fa-solid, i.fa-regular, i.fa-brands {
 }
 
 /* Colunas Alinhadas da Tabela */
-.col-condition { flex: 1.5; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.col-side      { flex: 0.8; }
-.col-price     { flex: 1.2; text-align: right; font-variant-numeric: tabular-nums; }
-.col-ptb       { flex: 1.2; text-align: right; font-variant-numeric: tabular-nums; }
-.col-fees      { flex: 1.0; text-align: right; font-variant-numeric: tabular-nums; }
-.col-pnl       { flex: 1.3; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
-.col-reason    { flex: 1.2; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 8px; }
+.col-index   { flex: 0.4; text-align: right; font-variant-numeric: tabular-nums; }
+.col-time     { flex: 1.1; white-space: nowrap; }
+.col-side     { flex: 0.7; font-weight: 600; }
+.col-qty      { flex: 0.7; text-align: right; font-variant-numeric: tabular-nums; }
+.col-cost     { flex: 0.8; text-align: right; font-variant-numeric: tabular-nums; }
+.col-pnl      { flex: 0.9; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.col-dist     { flex: 0.8; text-align: right; font-variant-numeric: tabular-nums; font-size: 12px; }
+.col-trest    { flex: 0.7; text-align: right; font-variant-numeric: tabular-nums; font-size: 12px; }
+.col-reason   { flex: 1.0; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 8px; }
+
+.studio-event-chart__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.studio-event-chart__markers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  font-size: 12px;
+  color: var(--text-2);
+  padding: 4px 2px 0;
+}
+
+.studio-event-chart__marker strong {
+  font-weight: 600;
+}
 
 /* Cores de Destaque */
 .pnl-good { color: var(--ok) !important; }

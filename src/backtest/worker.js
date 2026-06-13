@@ -94,33 +94,11 @@ try {
 }
 
 function normalizeEventForTrace(runId, event, chartPath) {
-  const eventStart = new Date(event.eventStart).toISOString();
-  const eventEnd = new Date(event.eventEnd).toISOString();
-  const orders = Array.isArray(event.orders) ? event.orders : [];
-  const pnl = Number(event.finalPnl || 0);
   return {
-    eventId: event.eventId,
-    eventStart,
-    eventEnd,
-    marketId: event.marketId,
-    positionType: event.positionType,
-    orders,
-    exits: event.exits || [],
-    marks: event.marks || [],
-    logs: event.logs || [],
-    metrics: event.metrics || {},
-    finalPnl: pnl,
-    reason: event.reason,
-    ticksProcessed: event.ticksProcessed,
-    diagnostics: event.diagnostics,
+    ...event,
+    eventStart: new Date(event.eventStart).toISOString(),
+    eventEnd: new Date(event.eventEnd).toISOString(),
+    closedAt: event.closedAt ? new Date(event.closedAt).toISOString() : new Date(event.eventEnd).toISOString(),
     chart_series_path: chartPath,
-    closedAt: event.closedAt,
-    expirationResult: event.expirationResult,
-    winnerSide: event.winnerSide,
-    expiryPnl: event.expiryPnl,
-    entryTime: event.entryTime,
-    quantity: event.quantity,
-    cost: event.cost,
-    avgEntryPrice: event.avgEntryPrice,
   };
 }

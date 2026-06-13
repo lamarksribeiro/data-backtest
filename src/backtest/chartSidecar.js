@@ -104,5 +104,7 @@ export function clearChartSidecarCache() {
 }
 
 function num(value) {
-  return value == null ? null : Number(value);
+  if (value == null) return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
 }
