@@ -135,6 +135,10 @@ export function createStandardLibrary() {
         const bucket = normalized.find((item) => Number(secondsLeft) >= Math.min(300, Math.max(0, item.minSecondsRemaining)));
         return bucket ? Math.max(0, bucket.minDistanceAbs) : fallback;
       },
+      underlyingAgo(samples, seconds) {
+        const sample = sampleAgo(samples, seconds);
+        return sample ? sampleUnderlyingValue(sample) : null;
+      },
     },
     math: {
       abs: Math.abs,
@@ -147,6 +151,22 @@ export function createStandardLibrary() {
       logistic(value) {
         const v = Math.min(18, Math.max(-18, Number(value)));
         return 1 / (1 + Math.exp(-v));
+      },
+      erf(value) {
+        const sign = value < 0 ? -1 : 1;
+        const absValue = Math.abs(value);
+        const a1 = 0.254829592;
+        const a2 = -0.284496736;
+        const a3 = 1.421413741;
+        const a4 = -1.453152027;
+        const a5 = 1.061405429;
+        const p = 0.3275911;
+        const factor = 1 / (1 + (p * absValue));
+        const result = 1 - (((((a5 * factor + a4) * factor) + a3) * factor + a2) * factor + a1) * factor * Math.exp(-absValue * absValue);
+        return sign * result;
+      },
+      normalCdf(value) {
+        return 0.5 * (1 + lib.math.erf(value / Math.SQRT2));
       },
     },
     model: {
@@ -193,6 +213,163 @@ export function createStandardLibrary() {
           return true;
         }).sort((left, right) => right.edge - left.edge);
         return { best: candidates[0] ?? null, probUp };
+      },
+      scoreImpulseElasticitySides(samples, tick, event, params = {}) {
+        if (!samples || !samples.length) return { best: null, probUp: 0.5 };
+        const latest = samples[samples.length - 1];
+        const latestTs = latest._tsMs ?? timestampMs(latest.ts);
+        const impulseSec = Number(params.impulseSec ?? 5);
+        const targetMs = latestTs - (impulseSec * 1000);
+        let impulseSample = samples[0];
+        for (let index = samples.length - 1; index >= 0; index -= 1) {
+          const sampleTs = samples[index]._tsMs ?? timestampMs(samples[index].ts);
+          if (sampleTs <= targetMs) {
+            impulseSample = samples[index];
+            break;
+          }
+        }
+        
+        if (!latest || !impulseSample || latest === impulseSample) return { best: null, probUp: 0.5 };
+        
+        const btcPrice = Number(tick.underlyingPrice);
+        const priceToBeat = Number(event.priceToBeat ?? tick.priceToBeat);
+        if (!Number.isFinite(btcPrice) || !Number.isFinite(priceToBeat)) return { best: null, probUp: 0.5 };
+        
+        const shock = btcPrice - sampleUnderlying(impulseSample, btcPrice);
+        const shockAbs = Math.abs(shock);
+        const shockSide = shock >= 0 ? 'UP' : 'DOWN';
+        const shockSign = shock >= 0 ? 1 : -1;
+        
+        const pUp = marketProbUpFromBook(tick);
+        const pUpChange = pUp - marketProbUpFromBook(impulseSample);
+        const shockResponse = shockSign * pUpChange;
+        
+        const lookbackSec = Number(params.volLookbackSec ?? 45);
+        const cutoff = latestTs - (lookbackSec * 1000);
+        const recent = samples.filter((sample) => (sample._tsMs ?? timestampMs(sample.ts)) >= cutoff && Number.isFinite(sampleUnderlying(sample, Number.NaN)));
+        
+        const normalizedChanges = [];
+        for (let index = 1; index < recent.length; index += 1) {
+          const t1 = recent[index]._tsMs ?? timestampMs(recent[index].ts);
+          const t0 = recent[index - 1]._tsMs ?? timestampMs(recent[index - 1].ts);
+          const dtSec = Math.max(0.25, (t1 - t0) / 1000);
+          normalizedChanges.push((sampleUnderlying(recent[index], 0) - sampleUnderlying(recent[index - 1], 0)) / Math.sqrt(dtSec));
+        }
+        
+        const vol = Math.max(0.000001, stdDev(normalizedChanges));
+        const shockZ = shockAbs / Math.max(0.000001, vol * Math.sqrt(Math.max(1, impulseSec)));
+        
+        const thesis = String(params.thesis || 'inertia').toLowerCase();
+        
+        if (shockAbs < Number(params.minShockAbs ?? 18) || shockZ < Number(params.minShockZ ?? 1.05)) return { best: null, probUp: pUp };
+        
+        let side = shockSide;
+        let sideShock = shockAbs;
+        let sideResponse = shockResponse;
+        
+        if (thesis === 'fade') {
+          if (shockResponse < Number(params.minOverResponse ?? 0.12)) return { best: null, probUp: pUp };
+          side = shockSide === 'UP' ? 'DOWN' : 'UP';
+          sideShock = shockAbs;
+          sideResponse = -shockResponse;
+        } else if (thesis === 'compression') {
+          if (Math.abs(btcPrice - priceToBeat) > Number(params.maxCompressionDist ?? 12)) return { best: null, probUp: pUp };
+          if (vol < Number(params.minCompressionVol ?? 3.5)) return { best: null, probUp: pUp };
+          if (shockResponse > Number(params.maxResponse ?? 0.065)) return { best: null, probUp: pUp };
+        } else if (thesis === 'random') {
+          if (shockResponse < Number(params.minResponse ?? -0.04) || shockResponse > Number(params.maxResponse ?? 0.065)) return { best: null, probUp: pUp };
+          side = seededSide(`${event.start || event.eventStart}:${tick.ts}:impulse-elasticity`);
+          const sideSign = side === 'UP' ? 1 : -1;
+          sideShock = sideSign * shock;
+          sideResponse = sideSign * pUpChange;
+        } else if (shockResponse < Number(params.minResponse ?? -0.04) || shockResponse > Number(params.maxResponse ?? 0.065)) {
+          return { best: null, probUp: pUp };
+        }
+        
+        if (params.allowedPositionSide && params.allowedPositionSide !== 'BOTH' && params.allowedPositionSide !== side) return { best: null, probUp: pUp };
+        
+        const fields = {
+          ask: lib.book.ask(side, tick),
+          bid: lib.book.bid(side, tick),
+          rawAsks: side === 'DOWN' ? tick.down_book_asks : tick.up_book_asks,
+          rawBids: side === 'DOWN' ? tick.down_book_bids : tick.up_book_bids,
+        };
+        const oppositeSide = side === 'UP' ? 'DOWN' : 'UP';
+        const oppositeAsk = lib.book.ask(oppositeSide, tick);
+        
+        const ask = fields.ask;
+        const bid = fields.bid;
+        if (ask == null || bid == null) return { best: null, probUp: pUp };
+        
+        const spread = Math.max(0, ask - bid);
+        const askSum = ask + (oppositeAsk ?? 0.5);
+        
+        const sideSign = side === 'UP' ? 1 : -1;
+        const signedDistance = sideSign * (btcPrice - priceToBeat);
+        
+        const secsLeft = Math.max(0, (new Date(event.end || tick.event_end).getTime() - new Date(tick.ts).getTime()) / 1000);
+        
+        const sigmaTau = Math.max(Number(params.minSigma ?? 8), vol * Math.sqrt(Math.max(1, secsLeft)) * Number(params.sigmaMultiplier ?? 1.10));
+        
+        const carryVelocity = sideShock / Math.max(1, impulseSec);
+        const carryWeight = thesis === 'fade' ? Number(params.fadeCarryWeight ?? 0.42) : Number(params.impulseCarryWeight ?? 0.32);
+        
+        const carry = lib.math.clamp(
+          carryVelocity * Math.min(secsLeft, Number(params.carryHorizonSec ?? 16)) * carryWeight,
+          -sigmaTau * Number(params.carryClampSigma ?? 0.80),
+          sigmaTau * Number(params.carryClampSigma ?? 0.80)
+        );
+        
+        const terminalProbability = lib.math.clamp(lib.math.normalCdf((signedDistance + carry) / Math.max(0.000001, sigmaTau)), 0.001, 0.999);
+        const responsePenalty = Math.max(0, sideResponse) / Math.max(0.001, Number(params.responseScale ?? 0.08));
+        
+        const inertia = lib.math.clamp(shockZ - responsePenalty, 0, 4);
+        const overreaction = lib.math.clamp(responsePenalty - (shockZ * 0.55), 0, 4);
+        const compressionBoost = thesis === 'compression'
+          ? lib.math.clamp((Number(params.maxCompressionDist ?? 12) - Math.abs(btcPrice - priceToBeat)) / Math.max(1, Number(params.maxCompressionDist ?? 12)), 0, 1)
+          : 0;
+          
+        const anomalyBoost = thesis === 'fade' ? overreaction : Math.max(inertia, compressionBoost * shockZ);
+        
+        const modelProbability = lib.math.clamp(
+          terminalProbability + (Number(params.inertiaProbabilityWeight ?? 0.10) * Math.min(1, anomalyBoost / 4) * (1 - terminalProbability)),
+          0.001,
+          0.999
+        );
+        
+        const modelEdge = modelProbability - ask;
+        const maxFillPrice = Math.min(Number(params.maxAsk ?? 0.72), ask + Number(params.entrySlippageMax ?? 0.02));
+        
+        const liquidityQty = lib.book.availableQty(side, maxFillPrice, tick);
+        const targetQty = Math.floor(Math.min(Number(params.maxOrderValue ?? 15), Number(params.walletSize ?? 100)) / Math.max(maxFillPrice, 0.001));
+        const liquidityRatio = targetQty > 0 ? Math.min(1, liquidityQty / targetQty) : 0;
+        const decisionMetric = Math.max(0, modelEdge) * Math.max(0.001, anomalyBoost) * Math.max(0.2, liquidityRatio) / Math.max(0.01, spread);
+        
+        const marketProbability = side === 'UP' ? pUp : 1 - pUp;
+        
+        const candidate = {
+          side,
+          ask,
+          bid,
+          spread,
+          askSum,
+          signedDistance,
+          modelProbability,
+          modelEdge,
+          liquidityRatio,
+          decisionMetric,
+          marketProbability
+        };
+        
+        if (candidate.ask < Number(params.minAsk ?? 0.06) || candidate.ask > Number(params.maxAsk ?? 0.72)) return { best: null, probUp: pUp };
+        if (candidate.spread > Number(params.maxSpread ?? 0.10)) return { best: null, probUp: pUp };
+        if (candidate.askSum < Number(params.minOddsSum ?? 0.98) || candidate.askSum > Number(params.maxOddsSum ?? 1.07)) return { best: null, probUp: pUp };
+        if (candidate.signedDistance < Number(params.minSignedDistance ?? 4) || candidate.signedDistance > Number(params.maxSignedDistance ?? 120)) return { best: null, probUp: pUp };
+        if (candidate.modelProbability < Number(params.minModelProb ?? 0.42)) return { best: null, probUp: pUp };
+        if (candidate.modelEdge < Number(params.minModelEdge ?? 0.025)) return { best: null, probUp: pUp };
+        if (candidate.decisionMetric < Number(params.minDecisionMetric ?? 0.025)) return { best: null, probUp: pUp };
+        
+        return { best: candidate, probUp: pUp };
       },
     },
     risk: {
@@ -330,6 +507,15 @@ function stdDev(values) {
 
 function clamp01(value) {
   return Math.min(1, Math.max(0, Number(value)));
+}
+
+function seededSide(key) {
+  let hash = 2166136261;
+  for (let index = 0; index < key.length; index++) {
+    hash ^= key.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0) % 2 === 0 ? 'UP' : 'DOWN';
 }
 
 export function normalizeTick(tick) {

@@ -1,0 +1,17 @@
+{
+  "id": "impulse-elasticity",
+  "name": "Impulse Elasticity",
+  "family": "impulse",
+  "status": "candidate",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "src/backtestStudio/gls/strategies/impulseElasticity.gls"
+  },
+  "promotedToStudio": false,
+  "notes": "Estratégia baseada em divergência e elasticidade instantânea do consenso do book pós choques de BTC."
+}

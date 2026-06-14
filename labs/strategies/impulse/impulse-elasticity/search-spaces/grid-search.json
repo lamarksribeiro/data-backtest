@@ -1,0 +1,13 @@
+{
+  "name": "grid-search",
+  "description": "Grid focado em otimizar Impulse Elasticity com suporte a distância pós-maio.",
+  "grid": {
+    "thesis": ["inertia"],
+    "entryWindowStart": [95],
+    "entryWindowEnd": [24],
+    "minShockAbs": [18, 24, 30],
+    "maxResponse": [0.05, 0.065, 0.08],
+    "minSignedDistance": [4, 8],
+    "minModelEdge": [0.025, 0.035]
+  }
+}

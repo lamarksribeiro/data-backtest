@@ -1,0 +1,143 @@
+strategy "Impulse Elasticity GLS" {
+  param walletSize = 100
+  param maxOrderValue = 15
+  param minShares = 5
+  param thesis = "inertia"
+  param entryWindowStart = 95
+  param entryWindowEnd = 24
+  param impulseSec = 5
+  param volLookbackSec = 45
+  param minShockAbs = 18
+  param minShockZ = 1.05
+  param minResponse = -0.04
+  param maxResponse = 0.065
+  param minOverResponse = 0.12
+  param maxCompressionDist = 12
+  param minCompressionVol = 3.5
+  param minSignedDistance = 4
+  param maxSignedDistance = 120
+  param allowedPositionSide = "BOTH"
+  param minAsk = 0.06
+  param maxAsk = 0.72
+  param maxSpread = 0.10
+  param minOddsSum = 0.98
+  param maxOddsSum = 1.07
+  param minModelProb = 0.42
+  param minModelEdge = 0.025
+  param minDecisionMetric = 0.025
+  param minSigma = 8
+  param sigmaMultiplier = 1.10
+  param impulseCarryWeight = 0.32
+  param fadeCarryWeight = 0.42
+  param carryHorizonSec = 16
+  param carryClampSigma = 0.80
+  param responseScale = 0.08
+  param inertiaProbabilityWeight = 0.10
+  param entrySlippageMax = 0.02
+  param exitSlippageMax = 0.02
+  param minLiquidityRatio = 0.65
+  param exitLiquidityRatio = 0.40
+  param fallbackBookSize = 0
+  param takeProfitBid = 0.88
+  param catchUpMinBid = 0.62
+  param exitCatchUpProb = 0.13
+  param stopBid = 0.16
+  param stopMinBid = 0.05
+  param reversalSec = 4
+  param reversalShockAbs = 16
+  param lateExitSec = 12
+  param lateExitMinBid = 0.72
+
+  onEventStart(event) {
+    state.entered = false
+    state.closed = false
+    state.entrySideProb = 0.0
+  }
+
+  onTick(tick, event) {
+    let secsLeft = time.secondsUntil(event.end, tick.ts)
+
+    if (position.open) {
+      let side = position.side
+      let bid = book.bid(side, tick)
+
+      if (bid >= params.takeProfitBid) {
+        let sold = exit({ price: bid, reason: "take_profit" })
+        if (sold) {
+          state.closed = sold.closed
+          mark("exit", { reason: "take_profit", price: bid })
+        }
+      } else {
+        let rawProb = prices.marketProbUp(tick)
+        let sideProb = (side == "UP") * rawProb + (side == "DOWN") * (1.0 - rawProb)
+        let catchUpEdge = sideProb - state.entrySideProb
+        if (bid >= params.catchUpMinBid && catchUpEdge >= params.exitCatchUpProb) {
+          let sold = exit({ price: bid, reason: "elasticity_catchup" })
+          if (sold) {
+            state.closed = sold.closed
+            mark("exit", { reason: "elasticity_catchup", price: bid })
+          }
+        } else {
+          if (secsLeft <= params.lateExitSec && bid >= params.lateExitMinBid) {
+            let sold = exit({ price: bid, reason: "late_bid_exit" })
+            if (sold) {
+              state.closed = sold.closed
+              mark("exit", { reason: "late_bid_exit", price: bid })
+            }
+          } else {
+            let latestBtc = tick.underlyingPrice
+            let revBtc = signals.underlyingAgo(samples, params.reversalSec)
+            if (revBtc) {
+              let sideSign = (side == "UP") * 2.0 - 1.0
+              let reversalMove = sideSign * (latestBtc - revBtc)
+              if (reversalMove <= 0 - params.reversalShockAbs && bid >= params.stopMinBid) {
+                let sold = exit({ price: bid, reason: "impulse_reversal_stop" })
+                if (sold) {
+                  state.closed = sold.closed
+                  mark("exit", { reason: "impulse_reversal_stop", price: bid })
+                }
+              } else {
+                if (bid <= params.stopBid && bid >= params.stopMinBid) {
+                  let sold = exit({ price: bid, reason: "bid_stop" })
+                  if (sold) {
+                    state.closed = sold.closed
+                    mark("exit", { reason: "bid_stop", price: bid })
+                  }
+                }
+              }
+            } else {
+              if (bid <= params.stopBid && bid >= params.stopMinBid) {
+                let sold = exit({ price: bid, reason: "bid_stop" })
+                if (sold) {
+                  state.closed = sold.closed
+                  mark("exit", { reason: "bid_stop", price: bid })
+                }
+              }
+            }
+          }
+        }
+      }
+    } else {
+      if (!state.closed && time.inWindow(secsLeft, params.entryWindowStart, params.entryWindowEnd)) {
+        let scored = model.scoreImpulseElasticitySides(samples, tick, event, params)
+        let best = scored.best
+        if (best) {
+          let maxFillPrice = math.min(params.maxAsk, best.ask + params.entrySlippageMax)
+          let liq = book.liquidityRatio(best.side, tick, params.maxOrderValue, maxFillPrice)
+          if (liq >= params.minLiquidityRatio) {
+            let budget = math.min(params.maxOrderValue, params.walletSize + runState.totalPnl)
+            let bought = enter(best.side, { price: best.ask, maxPrice: maxFillPrice, budget: budget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "entry" })
+            if (bought) {
+              state.entered = true
+              state.entrySideProb = best.marketProbability
+              mark("entry", { side: best.side, ask: best.ask, edge: best.edge })
+            }
+          }
+        }
+      }
+    }
+  }
+
+  onEventEnd(event) {
+  }
+}

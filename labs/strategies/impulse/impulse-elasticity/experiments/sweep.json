@@ -1,0 +1,25 @@
+{
+  "name": "btc-5m-depth25-impulse-sweep",
+  "strategyId": "impulse-elasticity",
+  "strategyFamily": "impulse",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-05-16",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "variantWorkers": 4,
+  "dailyMetrics": true,
+  "defaults": "../defaults.json",
+  "searchSpace": "../search-spaces/grid-search.json",
+  "metrics": [
+    "totalPnl",
+    "entries",
+    "winRate",
+    "profitFactor",
+    "maxDrawdown"
+  ]
+}
