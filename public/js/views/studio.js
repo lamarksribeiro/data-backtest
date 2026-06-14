@@ -1,7 +1,7 @@
 import { el, mount } from '../utils/dom.js';
 import { applyContextOptions, contextBarOptions, loadContext, saveContext, selectField } from '../utils/context.js';
 import { fetchContextOptionsCached } from '../utils/contextOptionsCache.js';
-import { formatPnl } from '../utils/format.js';
+import { formatPnl, shortId } from '../utils/format.js';
 import { loadStrategyOptions, renderStrategyPicker, backtestPayloadFromPick, resolveInitialStrategyPick, saveLastStrategyPick, getStrategyGroupFromPick, invalidateStrategyPickerCache } from '../utils/strategyPicker.js';
 import { MetricCard, Skeleton, StatusBadge } from '../components/Skeleton.js';
 import { renderRunMetricsPanel, renderTimingSection, resetMetricsViewMode } from '../components/runMetrics.js';
@@ -1269,7 +1269,12 @@ async function selectEventAndRenderInline(ctx, runId, eventId, index = 0, { sync
       el('header', { class: 'studio-selected-event__head row row--between' }, [
         el('div', { class: 'row' }, [
           el('strong', { class: 'studio-selected-event__title' }, `Evento ${formatEventTime(event.event_start)} · ${event.side || 'N/A'}`),
-          el('span', { class: 'muted mono', style: { fontSize: '12px', marginLeft: '8px' } }, event.condition_id || ''),
+          event.condition_id
+            ? el('span', {
+              class: 'muted mono studio-selected-event__condition-id',
+              title: event.condition_id,
+            }, shortId(event.condition_id))
+            : null,
           el('span', { class: `badge badge--${event.result === 'win' ? 'ok' : event.result === 'loss' ? 'err' : 'idle'}` }, event.result || ''),
         ]),
         el('div', { class: 'btn-group' }, [

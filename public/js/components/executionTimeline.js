@@ -145,9 +145,9 @@ export function renderDiagnosticsPanel(event) {
   ];
   for (const [key, value] of Object.entries(diagnostics || {})) {
     if (value == null || typeof value === 'object') continue;
-    items.push([labelize(key), String(value)]);
+    items.push([diagnosticLabel(key), formatDiagnosticValue(key, value)]);
   }
-  return el('div', { class: 'event-detail-grid' }, items.map(([label, value]) => detailMetric(label, value)));
+  return el('div', { class: 'event-detail-grid event-detail-grid--diagnostics' }, items.map(([label, value]) => detailMetric(label, value)));
 }
 
 export function generateNarratedLogs(event) {
@@ -322,6 +322,41 @@ function formatMetric(value) {
   return Number.isFinite(num) ? num.toFixed(Math.abs(num) >= 100 ? 1 : 2) : '-';
 }
 
+const DIAGNOSTIC_LABELS = {
+  lastNoEntryReason: 'Motivo sem entrada',
+  lastNoEntryDetail: 'Detalhe sem entrada',
+  lastCandidateSide: 'Lado candidato',
+  lastCandidateAsk: 'Ask candidato',
+  lastCandidateEdge: 'Edge candidato',
+  lastCandidateProbability: 'Prob. candidato',
+  lastLiquidityRatio: 'Razão liquidez',
+  lastDistance: 'Distância',
+  lastMinDistance: 'Dist. mínima',
+  lastSecsLeft: 'Segs restantes',
+  lastElapsed: 'Tempo decorrido',
+};
+
+function diagnosticLabel(key) {
+  return DIAGNOSTIC_LABELS[key] || labelize(key);
+}
+
+function formatDiagnosticValue(key, value) {
+  if (value == null) return '-';
+  if (typeof value === 'string') return value;
+  const num = Number(value);
+  if (!Number.isFinite(num)) return String(value);
+  const k = String(key).toLowerCase();
+  if (k.includes('probability') || k.includes('edge')) return num.toFixed(3);
+  if (k.includes('ask') || k.includes('price')) return num.toFixed(3);
+  if (k.includes('distance')) return num.toFixed(2);
+  if (k.includes('ratio')) return num.toFixed(2);
+  if (k.includes('secs') || k.includes('elapsed') || k.includes('remaining')) return `${num.toFixed(1)}s`;
+  return formatMetric(num);
+}
+
 function labelize(value) {
-  return String(value || '').replaceAll('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  return String(value || '')
+    .replaceAll('_', ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 }

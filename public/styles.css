@@ -3606,6 +3606,31 @@ details.advanced[open] { padding-bottom: 16px; }
   gap: 12px 16px;
   margin-top: 12px;
 }
+.event-detail-grid--diagnostics {
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+}
+.event-detail-grid .metric-item {
+  min-width: 0;
+}
+.event-detail-grid .metric-item__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.event-detail-grid .metric-item__value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+}
+.studio-selected-event__condition-id {
+  font-size: 12px;
+  margin-left: 8px;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .execution-timeline {
   display: flex;
   flex-direction: column;
