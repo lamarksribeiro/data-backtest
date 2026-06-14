@@ -17,11 +17,11 @@ export const BLOCK_CATALOG = {
   ],
   prices: ['mid', 'marketProbUp', 'priceForSide', 'oppositeSide'],
   book: ['ask', 'bid', 'spread', 'availableQty', 'liquidityRatio'],
-  signals: ['momentum', 'slowMomentum', 'volatility', 'directionalEdge', 'zScore', 'effectiveMinDistance', 'stopReverseMinDistance'],
+  signals: ['momentum', 'slowMomentum', 'volatility', 'directionalEdge', 'zScore', 'effectiveMinDistance', 'stopReverseMinDistance', 'underlyingAgo'],
   risk: ['sizeByBudget', 'capOrderValue', 'stopBid', 'takeProfit', 'trailingStop'],
   time: ['secondsUntil', 'secondsSince', 'inWindow', 'isNearExpiry'],
-  math: ['abs', 'min', 'max', 'clamp', 'sqrt', 'logistic'],
-  model: ['directionProbability', 'scoreSides'],
+  math: ['abs', 'min', 'max', 'clamp', 'sqrt', 'logistic', 'erf', 'normalCdf'],
+  model: ['directionProbability', 'scoreSides', 'scoreImpulseElasticitySides'],
   debug: ['log', 'mark', 'metric'],
 };
 
