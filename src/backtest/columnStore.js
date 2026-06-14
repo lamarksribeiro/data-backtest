@@ -278,6 +278,9 @@ export function snapshotTickCursorView(view) {
   if (!view) return null;
   return {
     ts: view.ts,
+    _tsMs: view._tsMs,
+    _eventStartMs: view._eventStartMs,
+    _eventEndMs: view._eventEndMs,
     underlying_price: finiteOrNull(view.underlying_price),
     price_to_beat: finiteOrNull(view.price_to_beat),
     up_price: finiteOrNull(view.up_price),

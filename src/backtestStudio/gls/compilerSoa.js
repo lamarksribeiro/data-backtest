@@ -37,7 +37,6 @@ function compileSoaHook(hook, bindings) {
   const src = `
 'use strict';
 ${bindings}
-${lets}
 function __truthy(v) { return Boolean(v); }
 function __setPath(obj, path, value) {
   if (!path.length) return;
@@ -49,10 +48,22 @@ function __setPath(obj, path, value) {
   cur[path[path.length - 1]] = value;
 }
 function __objectArg(v) { return v && typeof v === 'object' ? v : {}; }
+return function __compiledSoaHook(ctx, lib, orders, debug) {
+${lets}
 ${body}
+};
 `;
   // eslint-disable-next-line no-new-func
-  return new Function('ctx', 'cols', 'lib', 'orders', 'debug', src);
+  const factory = new Function('cols', src);
+  const boundByColumns = new WeakMap();
+  return function runCompiledSoaHook(ctx, cols, lib, orders, debug) {
+    let bound = boundByColumns.get(cols);
+    if (!bound) {
+      bound = factory(cols);
+      boundByColumns.set(cols, bound);
+    }
+    return bound(ctx, lib, orders, debug);
+  };
 }
 
 function collectLetNames(body, names = new Set()) {
