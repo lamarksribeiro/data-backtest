@@ -14,6 +14,8 @@ documentação por finalidade: **arquitetura** (decisões e planos), **implement
 | Entender o plano de evolução atual (Estúdio único, Dados simples, biblioteca de estratégias) | [arquitetura/arquitetura-v3-consolidacao-ux.md](arquitetura/arquitetura-v3-consolidacao-ux.md) |
 | Ver o que a V2 entregou (motor rápido, SSE, Estúdio) | [arquitetura/arquitetura-v2-performance-ux.md](arquitetura/arquitetura-v2-performance-ux.md) |
 | Usar o Backtest Studio (escrever estratégias GLS, rodar backtests) | [referencia/manual-backtest-studio.md](referencia/manual-backtest-studio.md) |
+| Criar e testar novos laboratórios de estratégias | [referencia/guia-criacao-e-teste-de-laboratorios.md](referencia/guia-criacao-e-teste-de-laboratorios.md) |
+| Seguir boas práticas de performance no laboratório (sweeps) | [referencia/guia-performance-laboratorio.md](referencia/guia-performance-laboratorio.md) |
 | Operar o lakehouse (sync, validação, rebuild, backup) | [operacao/operacao-lakehouse.md](operacao/operacao-lakehouse.md) |
 | Consultar endpoints e schemas | [referencia/contratos-api-schemas.md](referencia/contratos-api-schemas.md) |
 
@@ -49,6 +51,8 @@ documentação por finalidade: **arquitetura** (decisões e planos), **implement
 | Documento | Conteúdo |
 |-----------|----------|
 | [manual-backtest-studio.md](referencia/manual-backtest-studio.md) | Manual do usuário: UI, fluxo de backtest, sintaxe GLS, exemplos |
+| [guia-criacao-e-teste-de-laboratorios.md](referencia/guia-criacao-e-teste-de-laboratorios.md) | Guia prático de criação, otimização (sweeps) e testes de laboratórios |
+| [guia-performance-laboratorio.md](referencia/guia-performance-laboratorio.md) | Recomendações e boas práticas de performance de processamento no lab |
 | [contratos-api-schemas.md](referencia/contratos-api-schemas.md) | Contratos HTTP (request/response) e schemas SQLite |
 | [contrato-archive-retencao.md](referencia/contrato-archive-retencao.md) | Contrato de archive com o `data-colector` e retenção opcional |
 | [paridade-edge-sniper-v2.md](referencia/paridade-edge-sniper-v2.md) | Evidência do golden test de paridade da estratégia seed Edge Sniper V2 |
