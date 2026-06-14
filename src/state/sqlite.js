@@ -158,6 +158,44 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT NOT NULL,
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
+
+CREATE TABLE IF NOT EXISTS asset_update_schedules (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  enabled INTEGER NOT NULL DEFAULT 1,
+  underlying TEXT NOT NULL,
+  interval TEXT NOT NULL,
+  book_depth INTEGER NOT NULL,
+  start_date TEXT NOT NULL,
+  frequency TEXT NOT NULL DEFAULT 'daily' CHECK (frequency IN ('daily', 'every_hours')),
+  time_utc TEXT NOT NULL DEFAULT '03:00',
+  every_hours INTEGER NOT NULL DEFAULT 24,
+  next_run_at TEXT,
+  last_run_at TEXT,
+  last_success_at TEXT,
+  last_error TEXT,
+  last_job_id INTEGER,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+
+CREATE INDEX IF NOT EXISTS asset_update_schedules_due_idx ON asset_update_schedules(enabled, next_run_at);
+
+CREATE TABLE IF NOT EXISTS asset_update_schedule_runs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  schedule_id INTEGER NOT NULL REFERENCES asset_update_schedules(id) ON DELETE CASCADE,
+  prepare_job_id INTEGER,
+  status TEXT NOT NULL DEFAULT 'queued' CHECK (status IN ('queued', 'running', 'completed', 'failed', 'cancelled', 'skipped')),
+  from_date TEXT NOT NULL,
+  to_date TEXT NOT NULL,
+  message TEXT,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  started_at TEXT,
+  completed_at TEXT
+);
+
+CREATE INDEX IF NOT EXISTS asset_update_schedule_runs_schedule_idx ON asset_update_schedule_runs(schedule_id, created_at);
+CREATE INDEX IF NOT EXISTS asset_update_schedule_runs_job_idx ON asset_update_schedule_runs(prepare_job_id);
 `;
 
 const BACKTEST_RUNS_MIGRATIONS = [

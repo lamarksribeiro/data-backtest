@@ -13,10 +13,19 @@ import { acceptManifestPartition, listBacktestContextOptions, listManifest, mani
 import { emptyContextOptions, mergeContextOptions } from '../state/contextOptions.js';
 import { createSourcePool, listSourceContextOptions } from '../source/postgres.js';
 import { getPrepareJob, listPrepareJobs } from '../state/prepareJobs.js';
+import {
+  createAssetUpdateSchedule,
+  deleteAssetUpdateSchedule,
+  finishAssetUpdateRunByJobId,
+  getAssetUpdateSchedule,
+  listAssetUpdateSchedules,
+  updateAssetUpdateSchedule,
+} from '../state/assetUpdateSchedules.js';
 import { checkDatasetAvailability } from '../query/availability.js';
 import { resolveDataRequest } from '../query/dataMode.js';
 import { datasetRequestFromObject, datasetRequestFromParams } from '../query/request.js';
 import { createPrepareJobRunner } from '../prepare/runner.js';
+import { createAssetUpdateScheduler, lastClosedUtcDate } from '../scheduler/assetUpdates.js';
 import { compareBacktestRuns, getRunAnalysis } from '../backtest/analysis.js';
 import { createBacktestQueue } from '../backtest/queue.js';
 import { analyzeStrategyColumns } from '../backtestStudio/gls/compiler.js';
@@ -86,16 +95,26 @@ export function createApiHandler(deps) {
   const onSseEvent = (event) => {
     broadcastSse(event);
     if (event.type === 'job:completed') {
+      finishAssetUpdateRunByJobId(db, event.jobId, event.status, event.status === 'cancelled' ? 'job cancelled' : null);
       invalidateCoverageCache();
       if (event.status === 'completed') {
         backtestQueue?.releaseWaitingRuns?.(event.jobId);
       }
+    }
+    if (event.type === 'job:failed') {
+      finishAssetUpdateRunByJobId(db, event.jobId, 'failed', event.error || 'job failed');
     }
     if (event.type === 'data:stale') {
       broadcastSse(event);
     }
   };
   const resolvedPrepareRunner = prepareRunner ?? createPrepareJobRunner({ config, db, onEvent: onSseEvent });
+  const assetUpdateScheduler = createAssetUpdateScheduler({
+    config,
+    db,
+    prepareRunner: resolvedPrepareRunner,
+    autoStart: deps.startScheduler === true,
+  });
   backtestQueue = createBacktestQueue({
     config,
     db,
@@ -210,6 +229,44 @@ export function createApiHandler(deps) {
       }
       if (req.method === 'GET' && url.pathname === '/api/context-options') {
         return sendJson(res, 200, { options: await getContextOptions() });
+      }
+      if (req.method === 'GET' && url.pathname === '/api/settings/asset-update-schedules') {
+        return sendJson(res, 200, {
+          schedules: listAssetUpdateSchedules(db),
+          target_to_date: lastClosedUtcDate(),
+        });
+      }
+      if (req.method === 'POST' && url.pathname === '/api/settings/asset-update-schedules') {
+        const body = await readJson(req);
+        const schedule = createAssetUpdateSchedule(db, body, { config });
+        return sendJson(res, 201, { schedule, target_to_date: lastClosedUtcDate() });
+      }
+      const assetScheduleRoute = matchAssetUpdateScheduleRoute(url.pathname);
+      if (assetScheduleRoute) {
+        const schedule = getAssetUpdateSchedule(db, assetScheduleRoute.scheduleId);
+        if (!schedule) {
+          return sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Schedule not found' } });
+        }
+        if (req.method === 'GET' && assetScheduleRoute.kind === 'detail') {
+          return sendJson(res, 200, { schedule, target_to_date: lastClosedUtcDate() });
+        }
+        if (req.method === 'PATCH' && assetScheduleRoute.kind === 'detail') {
+          const body = await readJson(req);
+          const updated = updateAssetUpdateSchedule(db, assetScheduleRoute.scheduleId, body, { config });
+          return sendJson(res, 200, { schedule: updated, target_to_date: lastClosedUtcDate() });
+        }
+        if (req.method === 'DELETE' && assetScheduleRoute.kind === 'detail') {
+          deleteAssetUpdateSchedule(db, assetScheduleRoute.scheduleId);
+          return sendJson(res, 200, { ok: true });
+        }
+        if (req.method === 'POST' && assetScheduleRoute.kind === 'run') {
+          const result = await assetUpdateScheduler.runNow(assetScheduleRoute.scheduleId);
+          if (!result.ok) {
+            const status = result.code === 'ALREADY_RUNNING' ? 409 : 400;
+            return sendJson(res, status, { error: { code: result.code || 'RUN_FAILED', message: result.message }, ...result });
+          }
+          return sendJson(res, result.job ? 202 : 200, result);
+        }
       }
       if (req.method === 'GET' && url.pathname === '/api/availability') {
         const request = datasetRequestFromParams(url.searchParams, config);
@@ -671,6 +728,9 @@ export function createApiHandler(deps) {
               },
             });
           }
+          if (result.status === 'cancelled') {
+            finishAssetUpdateRunByJobId(db, prepareJobRoute.jobId, 'cancelled', 'job cancelled');
+          }
           const updated = getPrepareJob(db, prepareJobRoute.jobId);
           return sendJson(res, 200, { ok: true, status: result.status, job: updated });
         }
@@ -1098,6 +1158,16 @@ function matchPrepareJobRoute(pathname) {
   if (!Number.isFinite(jobId)) return null;
   if (parts.length === 4) return { kind: 'detail', jobId };
   if (parts.length === 5 && parts[4] === 'cancel') return { kind: 'cancel', jobId };
+  return null;
+}
+
+function matchAssetUpdateScheduleRoute(pathname) {
+  const parts = pathname.split('/').filter(Boolean);
+  if (parts.length < 4 || parts[0] !== 'api' || parts[1] !== 'settings' || parts[2] !== 'asset-update-schedules') return null;
+  const scheduleId = Number.parseInt(parts[3], 10);
+  if (!Number.isFinite(scheduleId)) return null;
+  if (parts.length === 4) return { kind: 'detail', scheduleId };
+  if (parts.length === 5 && parts[4] === 'run') return { kind: 'run', scheduleId };
   return null;
 }
 

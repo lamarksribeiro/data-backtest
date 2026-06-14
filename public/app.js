@@ -8,6 +8,7 @@ import { renderOverview } from './js/views/overview.js';
 import { renderData } from './js/views/data.js';
 import { renderStudio, leaveStudio, redirectLegacyBacktestRoute } from './js/views/studio.js';
 import { renderStrategies } from './js/views/strategies.js';
+import { renderSettings } from './js/views/settings.js';
 
 const contentEl = document.getElementById('content');
 const backButton = document.getElementById('nav-back');
@@ -21,6 +22,7 @@ const SECTIONS = {
   studio: 'Estúdio',
   strategies: 'Estratégias',
   data: 'Dados',
+  settings: 'Configurações',
 };
 
 const SECTION_ROUTES = {
@@ -28,6 +30,7 @@ const SECTION_ROUTES = {
   studio: 'studio',
   strategies: 'strategies',
   data: 'data',
+  settings: 'settings',
 };
 
 let currentRoute = '';
@@ -136,6 +139,7 @@ async function bootstrap() {
       'strategies/:id': (params) => renderStrategies(ctx, params),
       'strategies/:id/:versionId': (params) => renderStrategies(ctx, params),
       data: () => renderData(ctx),
+      settings: () => renderSettings(ctx),
       jobs: () => { navigate('data'); },
       backtests: () => navigate('studio'),
       'backtests/:id': (params) => redirectLegacyBacktestRoute({ id: params.id }),

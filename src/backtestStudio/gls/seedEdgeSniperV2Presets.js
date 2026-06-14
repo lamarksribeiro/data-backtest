@@ -22,7 +22,7 @@ export function seedEdgeSniperV2Presets(db, {
   strategyId = 'edge-sniper-v2',
 } = {}) {
   const baseSource = getEdgeSniperV2GlsSource();
-  const presets = listPresets({ strategyFamily, strategyId });
+  const presets = listPresets({ strategyFamily, strategyId, includeAliases: false });
   const strategyRoot = resolveStrategyRoot(strategyFamily, strategyId);
   const seeded = [];
 

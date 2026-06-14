@@ -29,9 +29,10 @@ export function resolvePresetParams(preset, strategyRoot) {
   return { ...defaults, ...(preset.params || {}) };
 }
 
-export function listPresets({ strategyFamily = 'edge', strategyId = 'edge-sniper-v2' } = {}) {
+export function listPresets({ strategyFamily = 'edge', strategyId = 'edge-sniper-v2', includeAliases = true } = {}) {
   const strategyRoot = resolveStrategyRoot(strategyFamily, strategyId);
-  return listPresetFiles(strategyRoot).map((file) => loadPresetFile(file));
+  const presets = listPresetFiles(strategyRoot).map((file) => loadPresetFile(file));
+  return includeAliases ? withLabVariantAliases(presets) : presets;
 }
 
 export function loadPreset(presetId, { strategyFamily = 'edge', strategyId = 'edge-sniper-v2' } = {}) {
@@ -43,4 +44,38 @@ export function loadPreset(presetId, { strategyFamily = 'edge', strategyId = 'ed
     strategyRoot,
     params: resolvePresetParams(preset, strategyRoot),
   };
+}
+
+function withLabVariantAliases(presets) {
+  const result = [...presets];
+  const ids = new Set(result.map((preset) => preset.id));
+  for (const preset of presets) {
+    const aliasId = preset.labVariantId;
+    if (!aliasId || aliasId === preset.id || ids.has(aliasId)) continue;
+    result.push(toLabVariantAlias(preset, aliasId));
+    ids.add(aliasId);
+  }
+  return result.sort((a, b) => String(a.id).localeCompare(String(b.id)));
+}
+
+function toLabVariantAlias(preset, aliasId) {
+  return {
+    ...preset,
+    id: aliasId,
+    sourcePresetId: preset.id,
+    studioSlug: aliasSlug(preset, aliasId),
+    studioName: aliasName(preset, aliasId),
+  };
+}
+
+function aliasSlug(preset, aliasId) {
+  const slug = String(preset.studioSlug || '');
+  if (slug.endsWith(`-${preset.id}`)) return `${slug.slice(0, -String(preset.id).length)}${aliasId}`;
+  return `esv2-${aliasId}`;
+}
+
+function aliasName(preset, aliasId) {
+  const name = String(preset.studioName || preset.name || '');
+  if (!name) return aliasId;
+  return name.replace(String(preset.id), aliasId);
 }
