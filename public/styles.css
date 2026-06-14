@@ -6453,6 +6453,51 @@ html, body {
     transform: translateY(-50%) !important;
     z-index: 10 !important;
   }
+
+  .field__input[type="date"],
+  .field__input[type="time"],
+  .field__input[type="datetime-local"],
+  .context-bar__field input[type="date"],
+  .context-bar__field input[type="time"],
+  .context-bar__field input[type="datetime-local"] {
+    -webkit-appearance: none;
+    appearance: none;
+    display: block;
+    width: 100% !important;
+    width: -webkit-fill-available !important;
+    inline-size: 100% !important;
+    inline-size: -webkit-fill-available !important;
+    max-width: 100% !important;
+    max-inline-size: 100% !important;
+    min-width: 0 !important;
+    min-inline-size: 0 !important;
+    box-sizing: border-box;
+    overflow: hidden;
+    text-align: left;
+  }
+
+  .studio-form .field,
+  .settings-form .field,
+  #data-actions-section .field {
+    overflow: hidden;
+  }
+
+  .field__input[type="date"]::-webkit-date-and-time-value,
+  .field__input[type="time"]::-webkit-date-and-time-value,
+  .field__input[type="datetime-local"]::-webkit-date-and-time-value,
+  .context-bar__field input[type="date"]::-webkit-date-and-time-value,
+  .context-bar__field input[type="time"]::-webkit-date-and-time-value,
+  .context-bar__field input[type="datetime-local"]::-webkit-date-and-time-value {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 /* Forçar layout do Estúdio em coluna única e habilitar sistema de abas no mobile */
@@ -6592,5 +6637,3 @@ html, body {
     grid-template-columns: minmax(0, 1fr);
   }
 }
-
-
