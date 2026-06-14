@@ -88,13 +88,19 @@ const overviewStyles = `
   .stat-premium--system.stat--err::before { background: var(--err); }
 
   .portfolio-insights {
-    margin-top: 24px;
+    grid-column: span 2;
+    margin-top: 16px;
     padding: 16px 20px;
     background: linear-gradient(90deg, rgba(249, 115, 22, 0.05), rgba(59, 130, 246, 0.02));
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     box-shadow: var(--shadow-1);
     position: relative;
+  }
+  @media (max-width: 640px) {
+    .portfolio-insights {
+      grid-column: span 1;
+    }
   }
   .portfolio-insights::after {
     content: '';
@@ -289,7 +295,7 @@ export async function renderOverview(ctx) {
         ]),
 
         // Insights Globais
-        el('div', { class: 'portfolio-insights', style: { gridColumn: 'span 2', marginTop: '16px' } }, [
+        el('div', { class: 'portfolio-insights' }, [
           el('h4', { class: 'portfolio-insights__title' }, [
             el('i', { class: 'fa-solid fa-circle-info', style: { color: 'var(--accent)' } }),
             insightTitle

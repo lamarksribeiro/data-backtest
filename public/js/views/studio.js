@@ -498,6 +498,16 @@ export function leaveStudio() {
   }
 }
 
+function switchMobileTab(tab) {
+  const layout = document.getElementById('studio-layout-el');
+  if (!layout) return;
+  layout.className = `studio-layout show-${tab}`;
+  
+  document.querySelectorAll('.studio-mobile-tab-btn').forEach(btn => {
+    btn.classList.toggle('is-active', btn.id === `tab-btn-${tab}`);
+  });
+}
+
 export async function renderStudio(ctx) {
   studioCtx = ctx;
   clearProgressPoll();
@@ -509,11 +519,30 @@ export async function renderStudio(ctx) {
   studioState.selectedEventId = query.event;
   studioState.compareIds = query.compare;
 
-  mount(ctx.contentEl, el('div', { class: 'studio-layout' }, [
-    el('section', { class: 'studio-config', id: 'studio-config' }, Skeleton({ lines: 6 })),
-    el('section', { class: 'studio-main', id: 'studio-main' }, Skeleton({ lines: 8 })),
-    el('aside', { class: 'studio-runs', id: 'studio-runs' }, Skeleton({ lines: 5 })),
-    el('div', { class: 'studio-drawer', id: 'studio-drawer', hidden: true }),
+  mount(ctx.contentEl, el('div', { class: 'studio-container' }, [
+    el('div', { class: 'studio-mobile-tabs' }, [
+      el('button', {
+        class: 'studio-mobile-tab-btn',
+        id: 'tab-btn-config',
+        onclick: () => switchMobileTab('config')
+      }, 'Parâmetros'),
+      el('button', {
+        class: 'studio-mobile-tab-btn is-active',
+        id: 'tab-btn-main',
+        onclick: () => switchMobileTab('main')
+      }, 'Resultados'),
+      el('button', {
+        class: 'studio-mobile-tab-btn',
+        id: 'tab-btn-runs',
+        onclick: () => switchMobileTab('runs')
+      }, 'Histórico')
+    ]),
+    el('div', { class: 'studio-layout show-main', id: 'studio-layout-el' }, [
+      el('section', { class: 'studio-config', id: 'studio-config' }, Skeleton({ lines: 6 })),
+      el('section', { class: 'studio-main', id: 'studio-main' }, Skeleton({ lines: 8 })),
+      el('aside', { class: 'studio-runs', id: 'studio-runs' }, Skeleton({ lines: 5 })),
+      el('div', { class: 'studio-drawer', id: 'studio-drawer', hidden: true }),
+    ])
   ]));
 
   try {
@@ -790,6 +819,7 @@ async function runBacktest(ctx, form) {
             pushStudioQuery({ run: studioState.selectedRunId, event: null });
             await refreshRuns(ctx);
             await loadRunDetail(ctx, studioState.selectedRunId);
+            switchMobileTab('main');
             return ctx.toast.ok('Backtest aguardando dados');
           }
         }
@@ -802,6 +832,7 @@ async function runBacktest(ctx, form) {
   pushStudioQuery({ run: studioState.selectedRunId, event: null });
   await refreshRuns(ctx);
   await loadRunDetail(ctx, studioState.selectedRunId);
+  switchMobileTab('main');
   ctx.toast.ok('Backtest enfileirado');
 }
 
@@ -932,6 +963,7 @@ async function selectRun(ctx, id) {
   studioState.eventsOffset = 0;
   pushStudioQuery({ run: id, event: null });
   await Promise.all([refreshRuns(ctx), loadRunDetail(ctx, id)]);
+  switchMobileTab('main');
 }
 
 async function loadRunDetail(ctx, runId) {
