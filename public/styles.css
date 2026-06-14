@@ -784,6 +784,7 @@ input, select, textarea, button { font: inherit; color: inherit; }
   width: 100%;
   max-width: 100%;
   min-width: 0;
+  min-inline-size: 0;
   box-sizing: border-box;
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
@@ -796,6 +797,9 @@ input[type="datetime-local"] {
   width: 100%;
   max-width: 100%;
   min-width: 0;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  box-sizing: border-box;
   -webkit-min-logical-width: 0;
 }
 .field__input:focus,
@@ -6551,7 +6555,42 @@ html, body {
     width: 100% !important;
     max-width: 100% !important;
   }
+
+  .context-bar {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    max-width: 100%;
+    align-items: stretch;
+  }
+
+  .context-bar__field {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .context-bar__field-label {
+    white-space: normal;
+  }
+
+  .context-bar__field input,
+  .context-bar__field select,
+  .context-bar__select {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
 }
 
+@media (max-width: 380px) {
+  .context-bar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 
 
