@@ -245,18 +245,10 @@ function orderClauseForSort(sort) {
   }
 }
 
-export function getEventTrace(db, runId, eventTraceId, { stateDbPath = null } = {}) {
+export function getEventTrace(db, runId, eventTraceId) {
   const row = db.prepare('SELECT * FROM backtest_event_traces WHERE run_id = ? AND id = ?').get(runId, eventTraceId);
   if (!row) return null;
-  const detail = toApiEventDetail(row);
-  if (stateDbPath && row.chart_series_path) {
-    const sidecar = readChartSidecarForEvent(row.chart_series_path, row.condition_id);
-    if (sidecar?.series && chartSeriesIsUsable(sidecar.series)) {
-      detail.series = sidecar.series;
-      detail.series_meta = sidecar.meta;
-    }
-  }
-  return detail;
+  return toApiEventDetail(row);
 }
 
 export function getEventTraceByConditionId(db, runId, conditionId) {
@@ -278,7 +270,7 @@ export async function getChartData(db, config, run, conditionId, { eventTraceId 
   const effectiveConditionId = conditionId ?? event.condition_id;
 
   if (config?.stateDbPath && event.chart_series_path) {
-    const sidecar = readChartSidecarForEvent(event.chart_series_path, effectiveConditionId);
+    const sidecar = await readChartSidecarForEvent(event.chart_series_path, effectiveConditionId);
     if (sidecar?.series && chartSeriesIsUsable(sidecar.series)) {
       return {
         event: toApiEventSummaryFromDetail(event),

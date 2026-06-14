@@ -480,9 +480,7 @@ export function createApiHandler(deps) {
           return sendJson(res, 200, { events });
         }
         if (req.method === 'GET' && backtestRunRoute.kind === 'event-detail') {
-          const event = getEventTrace(db, backtestRunRoute.runId, backtestRunRoute.eventTraceId, {
-            stateDbPath: config.stateDbPath,
-          });
+          const event = getEventTrace(db, backtestRunRoute.runId, backtestRunRoute.eventTraceId);
           return event
             ? sendJson(res, 200, { event: toEventDetailResponse(event) })
             : sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Event trace not found' } });

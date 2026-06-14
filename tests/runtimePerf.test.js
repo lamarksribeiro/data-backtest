@@ -1,11 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 
 import { extractEquityFromResultJson } from '../src/state/backtestRuns.js';
-import { readChartSidecarForEvent, appendChartSidecarLine, buildEventChartSeries } from '../src/backtest/chartSidecar.js';
+import { readChartSidecarForEvent, appendChartSidecarLine, buildEventChartSeries, chartSidecarIndexPath } from '../src/backtest/chartSidecar.js';
 import { createColumnSetBuilder, createTickCursorView, snapshotTickCursorView } from '../src/backtest/columnStore.js';
 import { chartSeriesHasChartablePoints, chartSeriesIsUsable } from '../src/backtestStudio/state/eventTraces.js';
 import { loadConfig } from '../src/config.js';
@@ -69,14 +70,67 @@ test('snapshotTickCursorView freezes per-index tick values', () => {
   assert.equal(series.underlying[1].value, 101);
 });
 
-test('chart sidecar cache serves repeated event reads', async () => {
+test('chart sidecar append writes byte-offset index', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'sidecar-idx-'));
+  const file = path.join(dir, 'run-1.jsonl');
+  try {
+    appendChartSidecarLine(file, 'cond-a', { series: { underlying: [{ ts: 't', value: 1 }] }, meta: {} });
+    appendChartSidecarLine(file, 'cond-b', { series: { underlying: [{ ts: 't', value: 2 }] }, meta: {} });
+    assert.ok(existsSync(chartSidecarIndexPath(file)));
+    const b = await readChartSidecarForEvent(file, 'cond-b');
+    assert.equal(b.series.underlying[0].value, 2);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('chart sidecar builds index lazily for legacy jsonl without idx', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'sidecar-legacy-'));
+  const file = path.join(dir, 'run-legacy.jsonl');
+  try {
+    const lines = [
+      JSON.stringify({ condition_id: 'cond-a', series: { underlying: [{ ts: 't', value: 1 }] }, meta: {} }),
+      JSON.stringify({ condition_id: 'cond-b', series: { underlying: [{ ts: 't', value: 99 }] }, meta: {} }),
+    ];
+    await writeFile(file, `${lines.join('\n')}\n`, 'utf8');
+    assert.equal(existsSync(chartSidecarIndexPath(file)), false);
+    const row = await readChartSidecarForEvent(file, 'cond-b');
+    assert.equal(row.series.underlying[0].value, 99);
+    assert.ok(existsSync(chartSidecarIndexPath(file)));
+    const again = await readChartSidecarForEvent(file, 'cond-a');
+    assert.equal(again.series.underlying[0].value, 1);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('chart sidecar streams large jsonl without loading entire file', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'sidecar-stream-'));
+  const file = path.join(dir, 'run-large.jsonl');
+  try {
+    for (let i = 0; i < 5000; i += 1) {
+      appendChartSidecarLine(file, `cond-${i}`, {
+        series: { underlying: [{ ts: 't', value: i }] },
+        meta: {},
+      });
+    }
+    const first = await readChartSidecarForEvent(file, 'cond-0');
+    const last = await readChartSidecarForEvent(file, 'cond-4999');
+    assert.equal(first.series.underlying[0].value, 0);
+    assert.equal(last.series.underlying[0].value, 4999);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('chart sidecar serves repeated event reads', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'sidecar-cache-'));
   const file = path.join(dir, 'run-1.jsonl');
   try {
     appendChartSidecarLine(file, 'cond-a', { series: { underlying: [{ ts: 't', value: 1 }] }, meta: {} });
     appendChartSidecarLine(file, 'cond-b', { series: { underlying: [{ ts: 't', value: 2 }] }, meta: {} });
-    const a = readChartSidecarForEvent(file, 'cond-a');
-    const b = readChartSidecarForEvent(file, 'cond-b');
+    const a = await readChartSidecarForEvent(file, 'cond-a');
+    const b = await readChartSidecarForEvent(file, 'cond-b');
     assert.equal(a.series.underlying[0].value, 1);
     assert.equal(b.series.underlying[0].value, 2);
   } finally {

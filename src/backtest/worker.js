@@ -6,6 +6,7 @@ import {
   buildEventChartSeries,
   chartSidecarPath,
   ensureChartSidecarDir,
+  resetChartSidecarRun,
 } from './chartSidecar.js';
 import { openStateDatabase, closeStateDatabase } from '../state/sqlite.js';
 import {
@@ -20,6 +21,7 @@ const runId = workerData.runId;
 const fastRun = Boolean(workerData.fastRun ?? workerData.request?.fastRun);
 const sidecarFile = chartSidecarPath(workerData.stateDbPath, runId);
 ensureChartSidecarDir(workerData.stateDbPath);
+if (!fastRun) resetChartSidecarRun(sidecarFile);
 
 let pendingEvents = [];
 let pendingResult = null;
