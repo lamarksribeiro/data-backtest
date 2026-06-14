@@ -568,16 +568,7 @@ function renderConfigPanel(ctx, { formCtx, fieldOptions }) {
     el('form', { id: 'studio-form', class: 'studio-form' }, [
       el('label', { class: 'field' }, [
         el('span', { class: 'field__label' }, 'Estratégia'),
-        el('div', { class: 'strategy-picker-row' }, [
-          el('div', { id: 'studio-strategy-pick' }),
-          el('button', {
-            type: 'button',
-            class: 'btn btn--ghost btn--sm strategy-picker-pin',
-            id: 'studio-strategy-pin',
-            title: 'Fixar a versão selecionada como padrão desta estratégia',
-          }, '★ Fixar versão'),
-        ]),
-        el('p', { class: 'muted strategy-picker-hint', id: 'studio-strategy-hint' }),
+        el('div', { id: 'studio-strategy-pick' }),
       ]),
       el('div', { class: 'row row--wrap', id: 'studio-coverage-indicator' }),
       el('label', { class: 'field' }, ['De ', el('input', { type: 'date', name: 'from', value: formCtx.from, class: 'field__input', onchange: () => refreshCoverageIndicator(ctx, formFromDom()) })]),
@@ -601,22 +592,7 @@ function renderConfigPanel(ctx, { formCtx, fieldOptions }) {
     ]),
   ]));
 
-  const strategyPickWrap = document.getElementById('studio-strategy-pick');
-  if (strategyPickWrap) {
-    strategyPickWrap.innerHTML = '';
-    strategyPickWrap.appendChild(renderStrategyPicker(studioState.strategyOptions, studioState.selectedStrategyPick, (value) => {
-      studioState.selectedStrategyPick = value;
-      saveLastStrategyPick(value);
-      const [, sid, vid] = String(value).split(':');
-      pushStudioQuery({ strategy: Number(sid) || null, version: Number(vid) || null });
-      updateStudioStrategyHint(ctx);
-      refreshRuns(ctx);
-    }));
-  }
-
-  const pinBtn = document.getElementById('studio-strategy-pin');
-  pinBtn?.addEventListener('click', () => pinStudioStrategyVersion(ctx));
-  updateStudioStrategyHint(ctx);
+  mountStudioStrategyPicker(ctx);
 
   document.getElementById('studio-form')?.addEventListener('submit', (ev) => {
     ev.preventDefault();
@@ -625,10 +601,39 @@ function renderConfigPanel(ctx, { formCtx, fieldOptions }) {
   document.getElementById('studio-fix-btn')?.addEventListener('click', () => fixDataFromStudio(ctx));
 }
 
-function updateStudioStrategyHint(ctx) {
-  const hint = document.getElementById('studio-strategy-hint');
+function mountStudioStrategyPicker(ctx) {
+  const strategyPickWrap = document.getElementById('studio-strategy-pick');
+  if (!strategyPickWrap) return;
+
+  const pinBtn = el('button', {
+    type: 'button',
+    class: 'btn btn--ghost btn--icon studio-strategy-pin',
+    id: 'studio-strategy-pin',
+    title: 'Fixar versão padrão',
+    'aria-label': 'Fixar versão padrão',
+    onclick: () => pinStudioStrategyVersion(ctx),
+  }, el('i', { class: 'fa-solid fa-star', 'aria-hidden': 'true' }));
+
+  strategyPickWrap.replaceChildren(renderStrategyPicker(
+    studioState.strategyOptions,
+    studioState.selectedStrategyPick,
+    (value) => {
+      studioState.selectedStrategyPick = value;
+      saveLastStrategyPick(value);
+      const [, sid, vid] = String(value).split(':');
+      pushStudioQuery({ strategy: Number(sid) || null, version: Number(vid) || null });
+      updateStudioPinState();
+      refreshRuns(ctx);
+    },
+    pinBtn,
+  ));
+
+  updateStudioPinState();
+}
+
+function updateStudioPinState() {
   const pinBtn = document.getElementById('studio-strategy-pin');
-  if (!hint) return;
+  if (!pinBtn) return;
 
   const pick = studioState.selectedStrategyPick
     || document.querySelector('#studio-form [name="strategy_pick"]')?.value;
@@ -637,20 +642,17 @@ function updateStudioStrategyHint(ctx) {
   const version = group?.versions.find((v) => String(v.versionId) === String(vid));
 
   if (!group || !version) {
-    hint.textContent = '';
-    if (pinBtn) pinBtn.disabled = true;
+    pinBtn.disabled = true;
+    pinBtn.classList.remove('is-active');
+    pinBtn.setAttribute('aria-pressed', 'false');
     return;
   }
 
   const isDefault = String(group.defaultVersionId) === String(version.versionId);
-  hint.textContent = isDefault
-    ? `Versão padrão fixada: v${version.versionNum}${version.notes ? ` (${version.notes})` : ''}.`
-    : `Selecionada: v${version.versionNum}${version.notes ? ` (${version.notes})` : ''}. Use ★ Fixar versão para sempre carregar esta versão.`;
-  if (pinBtn) {
-    pinBtn.disabled = false;
-    pinBtn.classList.toggle('is-active', isDefault);
-    pinBtn.textContent = isDefault ? '★ Versão padrão' : '★ Fixar versão';
-  }
+  pinBtn.disabled = false;
+  pinBtn.classList.toggle('is-active', isDefault);
+  pinBtn.setAttribute('aria-pressed', isDefault ? 'true' : 'false');
+  pinBtn.title = isDefault ? 'Versão padrão fixada' : 'Fixar esta versão como padrão';
 }
 
 async function pinStudioStrategyVersion(ctx) {
@@ -670,25 +672,7 @@ async function pinStudioStrategyVersion(ctx) {
   studioState.strategyOptions = await loadStrategyOptions(ctx.api, { force: true });
   studioState.selectedStrategyPick = `gls:${strategyId}:${versionId}`;
   saveLastStrategyPick(studioState.selectedStrategyPick);
-
-  const strategyPickWrap = document.getElementById('studio-strategy-pick');
-  if (strategyPickWrap) {
-    strategyPickWrap.innerHTML = '';
-    strategyPickWrap.appendChild(renderStrategyPicker(
-      studioState.strategyOptions,
-      studioState.selectedStrategyPick,
-      (value) => {
-        studioState.selectedStrategyPick = value;
-        saveLastStrategyPick(value);
-        const [, nextSid, nextVid] = String(value).split(':');
-        pushStudioQuery({ strategy: Number(nextSid) || null, version: Number(nextVid) || null });
-        updateStudioStrategyHint(ctx);
-        refreshRuns(ctx);
-      },
-    ));
-  }
-
-  updateStudioStrategyHint(ctx);
+  mountStudioStrategyPicker(ctx);
   ctx.toast.ok('Versão fixada como padrão');
 }
 

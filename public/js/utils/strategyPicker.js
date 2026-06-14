@@ -97,8 +97,11 @@ export function resolveInitialStrategyPick(options, { strategyId = null, version
 function formatVersionLabel(version, strat) {
   const isDefault = String(version.versionId) === String(strat?.defaultVersionId);
   const prefix = isDefault ? '★ ' : '';
-  const notes = version.notes ? ` — ${version.notes}` : '';
-  return `${prefix}v${version.versionNum}${notes}`;
+  if (version.notes) {
+    const shortNotes = String(version.notes).replace(/^Preset\s+v\d+:\s*/i, '');
+    return `${prefix}v${version.versionNum} · ${shortNotes}`;
+  }
+  return `${prefix}v${version.versionNum}`;
 }
 
 function mapPickerRows(rows, { includeArchived = false } = {}) {
@@ -214,16 +217,19 @@ export function renderStrategySelect(options, selectedValue = '') {
   return `<select name="strategy_pick" class="field__input" ${options.length ? '' : 'disabled'}>${html || '<option value="">Nenhuma estratégia</option>'}</select>`;
 }
 
-export function renderStrategyPicker(options, selectedValue = '', onChange = null) {
-  const wrap = el('div', { class: 'strategy-picker' });
+export function renderStrategyPicker(options, selectedValue = '', onChange = null, pinButton = null) {
+  const wrap = el('div', { class: 'studio-strategy-picker' });
   const strategies = groupOptionsByStrategy(options);
   const [, selSid, selVid] = String(selectedValue || '').split(':');
 
-  const strategySelect = el('select', { name: 'strategy_id_pick', class: 'field__input' },
-    strategies.map((s) => el('option', {
-      value: String(s.strategyId),
-      selected: String(s.strategyId) === String(selSid),
-    }, s.label)));
+  const strategySelect = el('select', {
+    name: 'strategy_id_pick',
+    class: 'field__input studio-strategy-picker__strategy',
+    'aria-label': 'Estratégia',
+  }, strategies.map((s) => el('option', {
+    value: String(s.strategyId),
+    selected: String(s.strategyId) === String(selSid),
+  }, s.label)));
 
   const current = strategies.find((s) => String(s.strategyId) === String(selSid)) || strategies[0];
   const initialVid = (selSid && selVid && current?.versions.some((v) => String(v.versionId) === String(selVid)))
@@ -235,7 +241,12 @@ export function renderStrategyPicker(options, selectedValue = '', onChange = nul
     value: current ? `gls:${current.strategyId}:${initialVid}` : (selectedValue || options[0]?.value || ''),
   });
 
-  const versionSelect = el('select', { name: 'strategy_version_pick', class: 'field__input' });
+  const versionSelect = el('select', {
+    name: 'strategy_version_pick',
+    class: 'field__input studio-strategy-picker__version',
+    'aria-label': 'Versão',
+  });
+  const versionRow = el('div', { class: 'studio-strategy-picker__version-row' });
 
   function syncValue({ strategyChanged = false } = {}) {
     const sid = strategySelect.value;
@@ -265,7 +276,9 @@ export function renderStrategyPicker(options, selectedValue = '', onChange = nul
   syncValue();
   strategySelect.addEventListener('change', () => syncValue({ strategyChanged: true }));
   versionSelect.addEventListener('change', () => syncValue({ strategyChanged: false }));
-  wrap.append(strategySelect, versionSelect, hidden);
+  versionRow.append(versionSelect);
+  if (pinButton) versionRow.append(pinButton);
+  wrap.append(strategySelect, versionRow, hidden);
   return wrap;
 }
 
