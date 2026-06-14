@@ -600,11 +600,26 @@ function renderConfigPanel(ctx, { formCtx, fieldOptions }) {
         el('div', { id: 'studio-strategy-pick' }),
       ]),
       el('div', { class: 'row row--wrap', id: 'studio-coverage-indicator' }),
-      el('label', { class: 'field' }, ['De ', el('input', { type: 'date', name: 'from', value: formCtx.from, class: 'field__input', onchange: () => refreshCoverageIndicator(ctx, formFromDom()) })]),
-      el('label', { class: 'field' }, ['Até (incluso) ', el('input', { type: 'date', name: 'to', value: formCtx.to, class: 'field__input', onchange: () => refreshCoverageIndicator(ctx, formFromDom()) })]),
-      el('label', { class: 'field' }, ['Ativo ', selectField('underlying', fieldOptions.underlyings || [formCtx.underlying], formCtx.underlying)]),
-      el('label', { class: 'field' }, ['Intervalo ', selectField('interval', fieldOptions.intervals || [formCtx.interval], formCtx.interval)]),
-      el('label', { class: 'field' }, ['Book ', selectField('book_depth', fieldOptions.book_depths || [formCtx.book_depth], formCtx.book_depth)]),
+      el('label', { class: 'field' }, [
+        el('span', { class: 'field__label' }, 'De'),
+        el('input', { type: 'date', name: 'from', value: formCtx.from, class: 'field__input', onchange: () => refreshCoverageIndicator(ctx, formFromDom()) }),
+      ]),
+      el('label', { class: 'field' }, [
+        el('span', { class: 'field__label' }, 'Até (incluso)'),
+        el('input', { type: 'date', name: 'to', value: formCtx.to, class: 'field__input', onchange: () => refreshCoverageIndicator(ctx, formFromDom()) }),
+      ]),
+      el('label', { class: 'field' }, [
+        el('span', { class: 'field__label' }, 'Ativo'),
+        selectField('underlying', fieldOptions.underlyings || [formCtx.underlying], formCtx.underlying),
+      ]),
+      el('label', { class: 'field' }, [
+        el('span', { class: 'field__label' }, 'Intervalo'),
+        selectField('interval', fieldOptions.intervals || [formCtx.interval], formCtx.interval),
+      ]),
+      el('label', { class: 'field' }, [
+        el('span', { class: 'field__label' }, 'Book'),
+        selectField('book_depth', fieldOptions.book_depths || [formCtx.book_depth], formCtx.book_depth),
+      ]),
       el('label', { class: 'field field--checkbox' }, [
         el('input', { type: 'checkbox', name: 'fast_run', value: '1' }),
         ' Modo rápido',

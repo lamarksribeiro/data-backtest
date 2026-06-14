@@ -1090,11 +1090,26 @@ function renderActions(ctx, formCtx, fieldOptions) {
   mount(section, el('div', {}, [
     el('h2', { class: 'card__title' }, 'Reprocessar período'),
     el('form', { id: 'data-prepare-form', class: 'studio-form' }, [
-      el('label', { class: 'field' }, ['De ', el('input', { type: 'date', name: 'from', value: formCtx.from, class: 'field__input' })]),
-      el('label', { class: 'field' }, ['Até (incluso) ', el('input', { type: 'date', name: 'to', value: formCtx.to, class: 'field__input' })]),
-      el('label', { class: 'field' }, ['Ativo ', selectField('underlying', fieldOptions.underlyings || [formCtx.underlying], formCtx.underlying)]),
-      el('label', { class: 'field' }, ['Intervalo ', selectField('interval', fieldOptions.intervals || [formCtx.interval], formCtx.interval)]),
-      el('label', { class: 'field' }, ['Book ', selectField('book_depth', fieldOptions.book_depths || [formCtx.book_depth], formCtx.book_depth)]),
+      el('label', { class: 'field' }, [
+        el('span', { class: 'field__label' }, 'De'),
+        el('input', { type: 'date', name: 'from', value: formCtx.from, class: 'field__input' }),
+      ]),
+      el('label', { class: 'field' }, [
+        el('span', { class: 'field__label' }, 'Até (incluso)'),
+        el('input', { type: 'date', name: 'to', value: formCtx.to, class: 'field__input' }),
+      ]),
+      el('label', { class: 'field' }, [
+        el('span', { class: 'field__label' }, 'Ativo'),
+        selectField('underlying', fieldOptions.underlyings || [formCtx.underlying], formCtx.underlying),
+      ]),
+      el('label', { class: 'field' }, [
+        el('span', { class: 'field__label' }, 'Intervalo'),
+        selectField('interval', fieldOptions.intervals || [formCtx.interval], formCtx.interval),
+      ]),
+      el('label', { class: 'field' }, [
+        el('span', { class: 'field__label' }, 'Book'),
+        selectField('book_depth', fieldOptions.book_depths || [formCtx.book_depth], formCtx.book_depth),
+      ]),
       el('div', { class: 'data-prepare-footer' }, [
         el('p', { class: 'muted', style: { fontSize: '12px', margin: '0 0 8px' } },
           'Prepara o período selecionado, dia a dia.'

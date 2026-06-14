@@ -51,11 +51,11 @@ export function renderContextBar(ctx, onChange, options = {}) {
   const bar = document.createElement('div');
   bar.className = 'context-bar';
   bar.innerHTML = `
-    <label class="context-bar__field">De <input type="date" name="from" value="${current.from || ''}"></label>
-    <label class="context-bar__field">Até (incluso) <input type="date" name="to" value="${current.to || ''}"></label>
-    <label class="context-bar__field">Ativo ${selectHtml('underlying', underlyings, current.underlying, formatRaw)}</label>
-    <label class="context-bar__field">Intervalo ${selectHtml('interval', intervals, current.interval, formatInterval)}</label>
-    <label class="context-bar__field">Book ${selectHtml('book_depth', bookDepths, current.book_depth, (value) => `top ${value}`)}</label>
+    <label class="context-bar__field"><span class="context-bar__field-label">De</span><input type="date" name="from" value="${current.from || ''}"></label>
+    <label class="context-bar__field"><span class="context-bar__field-label">Até (incluso)</span><input type="date" name="to" value="${current.to || ''}"></label>
+    <label class="context-bar__field"><span class="context-bar__field-label">Ativo</span>${selectHtml('underlying', underlyings, current.underlying, formatRaw)}</label>
+    <label class="context-bar__field"><span class="context-bar__field-label">Intervalo</span>${selectHtml('interval', intervals, current.interval, formatInterval)}</label>
+    <label class="context-bar__field"><span class="context-bar__field-label">Book</span>${selectHtml('book_depth', bookDepths, current.book_depth, (value) => `top ${value}`)}</label>
   `;
   bar.querySelectorAll('input, select').forEach((input) => {
     input.addEventListener('change', () => {

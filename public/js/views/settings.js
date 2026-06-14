@@ -33,11 +33,11 @@ const settingsStyles = `
 
   .settings-form__row {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
     gap: 12px;
   }
 
-  @media (max-width: 640px) {
+  @media (max-width: 768px) {
     .settings-form__row { grid-template-columns: 1fr; }
   }
 
@@ -214,12 +214,24 @@ function renderScheduleForm(ctx, fieldOptions, formCtx) {
       el('label', { class: 'field' }, ['Intervalo ', selectField('interval', fieldOptions.intervals || [formCtx.interval], formCtx.interval)]),
     ]),
     el('div', { class: 'settings-form__row' }, [
-      el('label', { class: 'field' }, ['Book ', selectField('book_depth', fieldOptions.book_depths || [formCtx.book_depth], formCtx.book_depth)]),
-      el('label', { class: 'field' }, ['Cobrir desde ', el('input', { class: 'field__input', type: 'date', name: 'start_date', value: formCtx.from })]),
+      el('label', { class: 'field' }, [
+        el('span', { class: 'field__label' }, 'Book'),
+        selectField('book_depth', fieldOptions.book_depths || [formCtx.book_depth], formCtx.book_depth),
+      ]),
+      el('label', { class: 'field' }, [
+        el('span', { class: 'field__label' }, 'Cobrir desde'),
+        el('input', { class: 'field__input', type: 'date', name: 'start_date', value: formCtx.from }),
+      ]),
     ]),
     el('div', { class: 'settings-form__row' }, [
-      el('label', { class: 'field' }, ['Frequência ', frequencySelect]),
-      el('label', { class: 'field' }, ['Horário UTC ', el('input', { class: 'field__input', type: 'time', name: 'time_utc', value: '03:00' })]),
+      el('label', { class: 'field' }, [
+        el('span', { class: 'field__label' }, 'Frequência'),
+        frequencySelect,
+      ]),
+      el('label', { class: 'field' }, [
+        el('span', { class: 'field__label' }, 'Horário UTC'),
+        el('input', { class: 'field__input', type: 'time', name: 'time_utc', value: '03:00' }),
+      ]),
     ]),
     el('label', { class: 'field' }, ['Intervalo em horas ', el('input', { class: 'field__input', type: 'number', min: '1', max: '168', name: 'every_hours', value: '24' })]),
     el('label', { class: 'field field--checkbox' }, [
