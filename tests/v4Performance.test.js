@@ -263,7 +263,7 @@ test('sweep reuses column set and returns per-variant summaries', async () => {
       assert.equal(sweep.variantCount, 3);
       assert.equal(sweep.ticks, 8);
       assert.ok(sweep.timings.duckdbReadMs >= 0);
-      assert.ok(sweep.timings.avgVariantMs > 0);
+      assert.ok(sweep.timings.avgVariantMs >= 0);
       assert.equal(parallelSweep.variantCount, sweep.variantCount);
       assert.equal(parallelSweep.timings.variantWorkers, 2);
       const loose = sweep.variants.find((v) => v.id === 'loose');

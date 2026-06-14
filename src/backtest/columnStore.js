@@ -28,7 +28,7 @@ export function createColumnSetBuilder({ initialCapacity = 65536 } = {}) {
 
 class ColumnSetBuilder {
   constructor(initialCapacity) {
-    this.capacity = Math.max(initialCapacity, 1024);
+    this.capacity = Math.max(Number.isFinite(Number(initialCapacity)) ? Number(initialCapacity) : 65536, 1024);
     this.length = 0;
     this.columns = new Map();
     this.codes = new Map();
@@ -144,11 +144,13 @@ export function buildEventIndex({ length, codes, columns }) {
 
   const events = [];
   let startRow = 0;
-  let prevKey = null;
+  let prevCondition = conditionCodes[0];
+  let prevStart = eventStartMs[0];
 
-  for (let i = 0; i < length; i += 1) {
-    const key = `${conditionCodes[i]}|${eventStartMs[i]}`;
-    if (prevKey !== null && key !== prevKey) {
+  for (let i = 1; i < length; i += 1) {
+    const condition = conditionCodes[i];
+    const start = eventStartMs[i];
+    if (condition !== prevCondition || !sameNumericKey(start, prevStart)) {
       events.push({
         conditionCode: conditionCodes[startRow],
         startRow,
@@ -158,8 +160,9 @@ export function buildEventIndex({ length, codes, columns }) {
         priceToBeat: firstValidPriceToBeat(priceToBeat, startRow, i),
       });
       startRow = i;
+      prevCondition = condition;
+      prevStart = start;
     }
-    prevKey = key;
   }
 
   if (length > 0) {
@@ -174,6 +177,10 @@ export function buildEventIndex({ length, codes, columns }) {
   }
 
   return events;
+}
+
+function sameNumericKey(left, right) {
+  return left === right || (Number.isNaN(left) && Number.isNaN(right));
 }
 
 export function estimateColumnSetSize(columnSet) {

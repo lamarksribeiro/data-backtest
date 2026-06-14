@@ -1,5 +1,5 @@
 import { openSharedConnection } from './duckdbPool.js';
-import { buildTicksSql, backtestTickSelectColumns } from './duckdbQuery.js';
+import { buildTicksSql, backtestColumnSetSelectColumns } from './duckdbQuery.js';
 import { requireDatasetAvailability } from './availability.js';
 import {
   classifyColumnName,
@@ -48,7 +48,7 @@ export async function loadBacktestColumnSet(db, request, { onProgress } = {}) {
   const availability = requireDatasetAvailability(db, { ...request, dataset });
   const bookDepth = request.bookDepth ?? 25;
   const selectCols = request.select
-    ?? backtestTickSelectColumns(bookDepth, {
+    ?? backtestColumnSetSelectColumns(bookDepth, {
       scalarColumns: request.selectColumns,
       includeBook: request.includeBook !== false,
     });
@@ -60,7 +60,7 @@ export async function loadBacktestColumnSet(db, request, { onProgress } = {}) {
     result = await connection.stream(sourceSql);
     const columnNames = result.columnNames();
     const columnTypes = result.columnTypes();
-    const builder = createColumnSetBuilder();
+    const builder = createColumnSetBuilder({ initialCapacity: estimateInitialCapacity(availability) });
     for (const name of columnNames) {
       builder.registerColumn(resolveStorageColumn(name), classifyColumnName(name));
     }
@@ -85,6 +85,13 @@ export async function loadBacktestColumnSet(db, request, { onProgress } = {}) {
   } finally {
     connection.closeSync();
   }
+}
+
+function estimateInitialCapacity(availability) {
+  const estimated = availability.partitions
+    ?.filter((partition) => partition.usable)
+    .reduce((sum, partition) => sum + (Number(partition.rows) || 0), 0) ?? 0;
+  return estimated > 0 ? estimated : undefined;
 }
 
 function resolveStorageColumn(name) {
@@ -160,6 +167,17 @@ function appendNumericFromGeneric(vector, target, offset, rowCount) {
 function appendTimestampMs(vector, target, offset, rowCount, typeId) {
   if (vector.items instanceof BigInt64Array && vector.validity) {
     const divisor = timestampDivisor(typeId);
+    if (divisor !== 1_000_000_000n) {
+      const numericDivisor = Number(divisor);
+      for (let i = 0; i < rowCount; i += 1) {
+        if (!vector.validity.itemValid(i)) {
+          target[offset + i] = Number.NaN;
+          continue;
+        }
+        target[offset + i] = Number(vector.items[i]) / numericDivisor;
+      }
+      return;
+    }
     for (let i = 0; i < rowCount; i += 1) {
       if (!vector.validity.itemValid(i)) {
         target[offset + i] = Number.NaN;

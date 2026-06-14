@@ -28,6 +28,15 @@ export function backtestTickSelectColumns(bookDepth = 25, { scalarColumns, inclu
   return [...new Set(cols)].join(', ');
 }
 
+export function backtestColumnSetSelectColumns(bookDepth = 25, options = {}) {
+  return backtestTickSelectColumns(bookDepth, options)
+    .split(', ')
+    .map((col) => (col === 'ts' || col === 'event_start' || col === 'event_end'
+      ? `TRY_CAST(${col} AS TIMESTAMP) AS ${col}`
+      : col))
+    .join(', ');
+}
+
 /** Colunas mínimas para gráficos de evento (sem book depth). */
 export function chartTickSelectColumns(side = 'UP') {
   const prefix = side === 'DOWN' ? 'down' : 'up';
@@ -196,12 +205,12 @@ export function buildTicksSql(availability, request, { select = '*', order = tru
   const limitClause = request.limit != null
     ? `LIMIT ${safeLimit(request.limit)} OFFSET ${safeOffset(request.offset)}`
     : '';
-  const orderClause = order ? `ORDER BY CAST(${tsColumn} AS TIMESTAMP) ASC, condition_id ASC` : '';
+  const orderClause = order ? `ORDER BY ${tsColumn} ASC, condition_id ASC` : '';
   return `
     SELECT ${select}
     FROM read_parquet(${parquetList(availability.files)})
-    WHERE CAST(${tsColumn} AS TIMESTAMP) >= CAST(${quotedString(new Date(request.from).toISOString())} AS TIMESTAMP)
-      AND CAST(${tsColumn} AS TIMESTAMP) < CAST(${quotedString(new Date(request.to).toISOString())} AS TIMESTAMP)
+    WHERE ${tsColumn} >= ${quotedString(new Date(request.from).toISOString())}
+      AND ${tsColumn} < ${quotedString(new Date(request.to).toISOString())}
       ${conditionClause}
       ${qualityClause}
     ${orderClause}
