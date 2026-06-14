@@ -8,4 +8,5 @@ Thumbs.db
 dist/
 /lake/
 /state/
+/.tmp/
 /reports/labs/

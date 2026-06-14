@@ -1,0 +1,17 @@
+{
+  "name": "stop-bid-counterfactual",
+  "strategyId": "edge-sniper-v3",
+  "strategyFamily": "edge",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-06-01",
+  "to": "2026-06-12",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "searchSpace": "../search-spaces/stop-bid-counterfactual.json"
+}

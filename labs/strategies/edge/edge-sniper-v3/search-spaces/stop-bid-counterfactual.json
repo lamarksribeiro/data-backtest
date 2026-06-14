@@ -1,0 +1,15 @@
+{
+  "variants": [
+    { "id": "baseline", "params": {} },
+    { "id": "dynamicStop", "params": { "dynamicStopEnabled": true } },
+    { "id": "stopBid_0.10", "params": { "stopBid": 0.10 } },
+    {
+      "id": "stop_entry_relative",
+      "params": {
+        "dynamicStopEnabled": true,
+        "dynamicStopFactor": 0.85,
+        "dynamicStopMinBid": 0.05
+      }
+    }
+  ]
+}
