@@ -9,6 +9,7 @@ import { createApiServer } from './api/server.js';
 import { createAuthService } from './auth/authService.js';
 import { seedEdgeSniperV2Strategy } from './backtestStudio/gls/seedStrategies.js';
 import { seedEdgeSniperV2Presets } from './backtestStudio/gls/seedEdgeSniperV2Presets.js';
+import { seedEdgeSniperV3Presets } from './backtestStudio/gls/seedEdgeSniperV3Presets.js';
 
 const config = loadConfig();
 if (!config.TEST_MODE && !config.SESSION_SECRET) {
@@ -26,6 +27,7 @@ if (recoveredAssetUpdateRuns > 0) {
 }
 seedEdgeSniperV2Strategy(db);
 seedEdgeSniperV2Presets(db);
+seedEdgeSniperV3Presets(db);
 const authService = createAuthService({ db, config });
 if (!config.TEST_MODE) {
   const bootstrapped = await authService.bootstrapAdmin();

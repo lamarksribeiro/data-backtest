@@ -12,6 +12,8 @@ import { loadBacktestColumnSet } from '../query/columnChunkReader.js';
 const STRATEGIES = {
   'edge-sniper-v2': createEdgeSniperBacktestRunner,
   edgeSniperV2: createEdgeSniperBacktestRunner,
+  'edge-sniper-v3': createEdgeSniperBacktestRunner,
+  edgeSniperV3: createEdgeSniperBacktestRunner,
 };
 
 export function resolveBacktestDataset(request, columnAnalysis) {

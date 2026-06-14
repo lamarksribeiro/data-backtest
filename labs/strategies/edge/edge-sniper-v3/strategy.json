@@ -1,0 +1,18 @@
+{
+  "id": "edge-sniper-v3",
+  "name": "Edge Sniper V3",
+  "family": "edge",
+  "status": "candidate",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "src/backtestStudio/gls/strategies/edgeSniperV3_v2.gls"
+  },
+  "promotedToStudio": true,
+  "studioSlug": "edge-sniper-v3-gls",
+  "notes": "Estratégia Edge Sniper V3: V1 clássico (antigo V2 v7) e V2 OBI (antigo V2 v10)."
+}

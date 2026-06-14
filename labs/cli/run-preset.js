@@ -25,8 +25,10 @@ async function main() {
   const flags = parseArgs(process.argv.slice(2));
   const preset = flags.preset || flags.p;
 
+  const strategyId = flags.strategy || flags['strategy-id'] || 'edge-sniper-v2';
+
   if (flags.list) {
-    const presets = listPresets();
+    const presets = listPresets({ strategyId });
     console.log(JSON.stringify(presets.map((item) => ({
       id: item.id,
       name: item.name,
@@ -38,10 +40,11 @@ async function main() {
   }
 
   if (!preset) {
-    throw new Error('Usage: npm run lab:run-preset -- --preset <id> [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--daily-metrics] [--dry-run] [--list]');
+    throw new Error('Usage: npm run lab:run-preset -- --preset <id> [--strategy <id>] [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--daily-metrics] [--dry-run] [--list]');
   }
 
   const result = await runLabPreset(preset, {
+    strategyId,
     dryRun: Boolean(flags['dry-run'] || flags.dryRun),
     from: flags.from,
     to: flags.to,

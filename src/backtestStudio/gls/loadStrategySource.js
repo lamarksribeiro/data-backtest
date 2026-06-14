@@ -12,3 +12,12 @@ export function loadGlsStrategySource(name) {
 export function getEdgeSniperV2GlsSource() {
   return loadGlsStrategySource('edgeSniperV2');
 }
+
+export function getEdgeSniperV3V1GlsSource() {
+  return loadGlsStrategySource('edgeSniperV3_v1');
+}
+
+export function getEdgeSniperV3V2GlsSource() {
+  return loadGlsStrategySource('edgeSniperV3_v2');
+}
+
