@@ -40,6 +40,13 @@ const DEFAULT_PARAMS = {
   lateExitMinBid: 0.64,
   finalExitSec: 0,
   finalExitMinBid: 0.05,
+  useBlackScholesProb: false,
+  useObiDrift: false,
+  obiLevels: 5,
+  obiDriftFactor: 0.5,
+  driftHorizonSec: 20,
+  useObiInScore: false,
+  obiScoreWeight: 0.25,
 };
 
 function toFiniteNumber(value) {
@@ -74,6 +81,24 @@ function std(values) {
   if (values.length < 2) return 0;
   const avg = mean(values);
   return Math.sqrt(mean(values.map((value) => (value - avg) ** 2)));
+}
+
+function erf(value) {
+  const sign = value < 0 ? -1 : 1;
+  const absValue = Math.abs(value);
+  const a1 = 0.254829592;
+  const a2 = -0.284496736;
+  const a3 = 1.421413741;
+  const a4 = -1.453152027;
+  const a5 = 1.061405429;
+  const p = 0.3275911;
+  const factor = 1 / (1 + (p * absValue));
+  const result = 1 - (((((a5 * factor + a4) * factor) + a3) * factor + a2) * factor + a1) * factor * Math.exp(-absValue * absValue);
+  return sign * result;
+}
+
+function normalCdf(value) {
+  return 0.5 * (1 + erf(value / Math.SQRT2));
 }
 
 function normalizePrice(value, fallback) {
@@ -138,6 +163,27 @@ export function mergeEdgeSniperParams(raw = {}) {
   params.lateExitMinBid = normalizePrice(params.lateExitMinBid, DEFAULT_PARAMS.lateExitMinBid);
   params.finalExitSec = clamp(params.finalExitSec, 0, params.lateExitSec);
   params.finalExitMinBid = normalizePrice(params.finalExitMinBid, DEFAULT_PARAMS.finalExitMinBid);
+
+  params.useBlackScholesProb = toBool(raw.useBlackScholesProb, DEFAULT_PARAMS.useBlackScholesProb);
+  params.useObiDrift = toBool(raw.useObiDrift, DEFAULT_PARAMS.useObiDrift);
+  if (raw.obiLevels != null) {
+    const val = toFiniteNumber(raw.obiLevels);
+    if (val != null) params.obiLevels = clamp(val, 1, 10);
+  }
+  if (raw.obiDriftFactor != null) {
+    const val = toFiniteNumber(raw.obiDriftFactor);
+    if (val != null) params.obiDriftFactor = clamp(val, -10, 10);
+  }
+  if (raw.driftHorizonSec != null) {
+    const val = toFiniteNumber(raw.driftHorizonSec);
+    if (val != null) params.driftHorizonSec = clamp(val, 1, 300);
+  }
+  params.useObiInScore = toBool(raw.useObiInScore, DEFAULT_PARAMS.useObiInScore);
+  if (raw.obiScoreWeight != null) {
+    const val = toFiniteNumber(raw.obiScoreWeight);
+    if (val != null) params.obiScoreWeight = clamp(val, -10, 10);
+  }
+
   applyStopReverseParams(params, raw, {
     stopReverseEnabled: true,
     stopReverseMinDistanceAbs: 10,
@@ -306,6 +352,20 @@ function addSample(state, tick) {
   while (state.samples.length > 1 && tickTime - state.samples[0].timeMs > 120000) state.samples.shift();
 }
 
+function orderBookImbalance(side, tick, levels = 5) {
+  const prefix = side === 'DOWN' ? 'down' : 'up';
+  let bidQtySum = 0;
+  let askQtySum = 0;
+  for (let i = 1; i <= levels; i += 1) {
+    const askSz = toFiniteNumber(tick[`${prefix}_ask_sz_${i}`]);
+    const bidSz = toFiniteNumber(tick[`${prefix}_bid_sz_${i}`]);
+    if (askSz != null) askQtySum += askSz;
+    if (bidSz != null) bidQtySum += bidSz;
+  }
+  const sum = bidQtySum + askQtySum;
+  return sum > 0 ? (bidQtySum - askQtySum) / sum : 0;
+}
+
 function computeModel(state, tick, params) {
   const samples = state.samples;
   const latest = samples[samples.length - 1];
@@ -319,13 +379,53 @@ function computeModel(state, tick, params) {
   const fastMove = btcPrice - (fastSample?.btc ?? btcPrice);
   const slowMove = btcPrice - (slowSample?.btc ?? btcPrice);
   const recentVolPerSec = recentVol(samples, params.volLookbackSec);
+
+  const useBs = params.useBlackScholesProb === true || params.useBlackScholesProb === 'true' || params.useBlackScholesProb === 1 || params.useBlackScholesProb === '1';
+
+  let probability = 0.5;
   const sigma = Math.max(params.minSigma, recentVolPerSec * Math.sqrt(Math.max(1, timeRemainingSec)) * params.sigmaMultiplier);
   const distanceZ = distance / sigma;
   const momentumZ = (fastMove + (params.slowMomentumWeight * slowMove)) / sigma;
-  const marketProbability = marketProbUp(tick);
-  const marketLag = clamp((distance > 0 ? 1 - marketProbability : marketProbability) - 0.5, -0.5, 0.5);
-  const probability = clamp(logistic((params.distanceWeight * distanceZ) + (params.momentumWeight * momentumZ) + (params.lagWeight * marketLag)), 0.001, 0.999);
-  return { probability, sigma, distance, distanceZ, momentumZ, marketLag, recentVolPerSec, timeRemainingSec };
+
+  const obiLevels = Number(params.obiLevels ?? 5);
+  const obiUp = orderBookImbalance('UP', tick, obiLevels);
+  const obiDown = orderBookImbalance('DOWN', tick, obiLevels);
+  const obiNet = obiUp - obiDown;
+
+  if (useBs) {
+    // 1. Estimar drift por segundo
+    const dtFast = Math.max(1, Number(params.momentumSec ?? 6));
+    const dtSlow = Math.max(1, Number(params.slowMomentumSec ?? 18));
+    const speedFast = fastMove / dtFast;
+    const speedSlow = slowMove / dtSlow;
+    const driftSec = (speedFast * (1 - params.slowMomentumWeight)) + (speedSlow * params.slowMomentumWeight);
+
+    // Limita o horizonte de projeção do drift para evitar saturação
+    const driftHorizon = Math.min(timeRemainingSec, Number(params.driftHorizonSec ?? 20));
+    let btcExpected = btcPrice + (driftSec * driftHorizon);
+
+    const useObiDrift = params.useObiDrift === true || params.useObiDrift === 'true' || params.useObiDrift === 1 || params.useObiDrift === '1';
+    if (useObiDrift) {
+      btcExpected += obiNet * Number(params.obiDriftFactor ?? 0.5) * Math.min(timeRemainingSec, 10);
+    }
+
+    const terminalZ = (btcExpected - priceToBeat) / sigma;
+    probability = clamp(normalCdf(terminalZ), 0.001, 0.999);
+  } else {
+    const marketProbability = marketProbUp(tick);
+    const marketLag = clamp((distance > 0 ? 1 - marketProbability : marketProbability) - 0.5, -0.5, 0.5);
+    
+    let score = (params.distanceWeight * distanceZ) + (params.momentumWeight * momentumZ) + (params.lagWeight * marketLag);
+
+    const useObiInScore = params.useObiInScore === true || params.useObiInScore === 'true' || params.useObiInScore === 1 || params.useObiInScore === '1';
+    if (useObiInScore) {
+      score += obiNet * Number(params.obiScoreWeight ?? 0.25);
+    }
+
+    probability = clamp(logistic(score), 0.001, 0.999);
+  }
+
+  return { probability, sigma, distance, distanceZ, momentumZ, marketLag: useBs ? 0 : (distance > 0 ? 1 - marketProbUp(tick) : marketProbUp(tick)) - 0.5, recentVolPerSec, timeRemainingSec };
 }
 
 function effectiveMinDistance(params, timeRemainingSec) {

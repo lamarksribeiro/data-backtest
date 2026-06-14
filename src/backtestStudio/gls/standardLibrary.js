@@ -170,6 +170,19 @@ export function createStandardLibrary() {
       },
     },
     model: {
+      orderBookImbalance(side, tick, levels = 5) {
+        const prefix = side === 'DOWN' ? 'down' : 'up';
+        let bidQtySum = 0;
+        let askQtySum = 0;
+        for (let i = 1; i <= levels; i += 1) {
+          const askSz = Number(tick?.[`${prefix}_ask_sz_${i}`]);
+          const bidSz = Number(tick?.[`${prefix}_bid_sz_${i}`]);
+          if (Number.isFinite(askSz)) askQtySum += askSz;
+          if (Number.isFinite(bidSz)) bidQtySum += bidSz;
+        }
+        const sum = bidQtySum + askQtySum;
+        return sum > 0 ? (bidQtySum - askQtySum) / sum : 0;
+      },
       directionProbability(samples, tick, event, params = {}) {
         const btc = Number(tick?.underlyingPrice ?? tick?.btc_price);
         const ptb = Number(event?.priceToBeat ?? tick?.priceToBeat ?? tick?.price_to_beat);
@@ -183,6 +196,41 @@ export function createStandardLibrary() {
         const recentVol = recentVolatility(samples, params.volLookbackSec ?? 45);
         const minSigma = Number(params.minSigma ?? 10);
         const sigmaMultiplier = Number(params.sigmaMultiplier ?? 1);
+
+        const obiLevels = Number(params.obiLevels ?? 5);
+        const obiUp = lib.model.orderBookImbalance('UP', tick, obiLevels);
+        const obiDown = lib.model.orderBookImbalance('DOWN', tick, obiLevels);
+        const obiNet = obiUp - obiDown;
+
+        const useBs = params.useBlackScholesProb === true || params.useBlackScholesProb === 'true' || params.useBlackScholesProb === 1 || params.useBlackScholesProb === '1';
+
+        if (useBs) {
+          // 1. Estimar o drift por segundo
+          const dtFast = Math.max(1, Number(params.momentumSec ?? 6));
+          const dtSlow = Math.max(1, Number(params.slowMomentumSec ?? 18));
+          const speedFast = fastMove / dtFast;
+          const speedSlow = slowMove / dtSlow;
+          const slowWeight = Number(params.slowMomentumWeight ?? 0.35);
+          const driftSec = (speedFast * (1 - slowWeight)) + (speedSlow * slowWeight);
+
+          // Limita o horizonte de projeção do drift para evitar saturação espúria de volatilidade
+          const driftHorizon = Math.min(secsLeft, Number(params.driftHorizonSec ?? 20));
+          let btcExpected = btc + (driftSec * driftHorizon);
+
+          const useObiDrift = params.useObiDrift === true || params.useObiDrift === 'true' || params.useObiDrift === 1 || params.useObiDrift === '1';
+          if (useObiDrift) {
+            btcExpected += obiNet * Number(params.obiDriftFactor ?? 0.5) * Math.min(secsLeft, 10);
+          }
+
+          // Preço esperado no terminal (vencimento)
+          const sigmaTotal = Math.max(minSigma, recentVol * Math.sqrt(secsLeft) * sigmaMultiplier);
+
+          // 4. Probabilidade Terminal UP usando normalCdf
+          const terminalZ = (btcExpected - ptb) / sigmaTotal;
+          return Math.min(0.999, Math.max(0.001, lib.math.normalCdf(terminalZ)));
+        }
+
+        // Modelo Logístico Tradicional
         const sigma = Math.max(minSigma, recentVol * Math.sqrt(Math.max(1, secsLeft)) * sigmaMultiplier);
         const distanceZ = distance / sigma;
         const momentumZ = (fastMove + (Number(params.slowMomentumWeight ?? 0.35) * slowMove)) / sigma;
@@ -191,7 +239,15 @@ export function createStandardLibrary() {
         const distanceWeight = Number(params.distanceWeight ?? 2);
         const momentumWeight = Number(params.momentumWeight ?? 0.65);
         const lagWeight = Number(params.lagWeight ?? 0.45);
-        const score = (distanceWeight * distanceZ) + (momentumWeight * momentumZ) + (lagWeight * marketLag);
+        
+        let score = (distanceWeight * distanceZ) + (momentumWeight * momentumZ) + (lagWeight * marketLag);
+
+        // Correção de microestrutura OBI opcional no score logístico
+        const useObiInScore = params.useObiInScore === true || params.useObiInScore === 'true' || params.useObiInScore === 1 || params.useObiInScore === '1';
+        if (useObiInScore) {
+          score += obiNet * Number(params.obiScoreWeight ?? 0.25);
+        }
+
         return Math.min(0.999, Math.max(0.001, lib.math.logistic(score)));
       },
       scoreSides(samples, tick, event, params = {}) {

@@ -52,6 +52,13 @@
       "type": "string",
       "enum": ["same-cost", "open-cost", "sale-proceeds", "max-order"]
     },
-    "stopReverseBudgetFactor": { "type": "number", "minimum": 0 }
+    "stopReverseBudgetFactor": { "type": "number", "minimum": 0 },
+    "useBlackScholesProb": { "type": "boolean" },
+    "useObiDrift": { "type": "boolean" },
+    "obiLevels": { "type": "number", "minimum": 1, "maximum": 10 },
+    "obiDriftFactor": { "type": "number" },
+    "driftHorizonSec": { "type": "number", "minimum": 1 },
+    "useObiInScore": { "type": "boolean" },
+    "obiScoreWeight": { "type": "number" }
   }
 }

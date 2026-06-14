@@ -1,9 +1,10 @@
 {
   "strategyId": "edge-sniper-v2",
-  "updatedAt": "2026-06-13",
+  "updatedAt": "2026-06-14",
   "presets": [
     { "id": "v2", "role": "champion" },
     { "id": "v3", "role": "champion" },
-    { "id": "v4", "role": "challenger" }
+    { "id": "v4", "role": "challenger" },
+    { "id": "v5", "role": "champion" }
   ]
 }

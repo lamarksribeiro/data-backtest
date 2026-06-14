@@ -1,0 +1,37 @@
+{
+  "id": "v5",
+  "name": "v5 (OBI Champion)",
+  "studioSlug": "esv2-v5",
+  "studioName": "Edge Sniper V2 · v5",
+  "role": "champion",
+  "description": "Variante campea absoluta com microestrutura de livro (OBI) ativada. Altissimo Profit Factor (2.24), drawdown reduzido pela metade (50.25) e win rate superior (66.4%) sob o periodo de maio a junho de 2026.",
+  "tags": ["champion", "depth25", "obi-optimized", "low-drawdown"],
+  "labVariantId": "log-obi-d50-strict-weight035",
+  "labSummary": {
+    "totalPnl": 606.79,
+    "profitFactor": 2.24,
+    "positiveDays": 29,
+    "totalDays": 40,
+    "entries": 250,
+    "source": "optimal-sweep local 2026-06-14"
+  },
+  "params": {
+    "useBlackScholesProb": false,
+    "useObiDrift": false,
+    "useObiInScore": true,
+    "obiLevels": 5,
+    "obiScoreWeight": 0.35,
+    "entryWindowStart": 180,
+    "entryWindowEnd": 4,
+    "momentumSec": 6,
+    "slowMomentumSec": 12,
+    "minAsk": 0.08,
+    "maxAsk": 0.58,
+    "minDistanceAbs": 50,
+    "minDistanceNearExpiry": 50,
+    "minDirectionalProb": 0.56,
+    "minEdge": 0.02,
+    "maxSpread": 0.08,
+    "minLiquidityRatio": 0.75
+  }
+}

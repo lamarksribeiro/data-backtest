@@ -46,6 +46,13 @@ strategy "Edge Sniper V2 GLS" {
   param stopReverseMinLiquidityRatio = 0.75
   param stopReverseBudgetMode = "same-cost"
   param stopReverseBudgetFactor = 1.25
+  param useBlackScholesProb = false
+  param useObiDrift = false
+  param obiLevels = 5
+  param obiDriftFactor = 0.5
+  param driftHorizonSec = 20
+  param useObiInScore = false
+  param obiScoreWeight = 0.25
 
   onEventStart(event) {
     state.entered = false
