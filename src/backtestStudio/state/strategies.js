@@ -50,13 +50,37 @@ export function updateStrategy(db, id, patch = {}) {
     status: patch.status != null ? normalizeStatus(patch.status) : current.status,
     tags: patch.tags != null ? normalizeTags(patch.tags) : current.tags,
     pinned: patch.pinned != null ? (patch.pinned ? 1 : 0) : (current.pinned ? 1 : 0),
+    default_version_id: current.default_version_id ?? null,
   };
+
+  if (patch.default_version_id !== undefined) {
+    if (patch.default_version_id == null || patch.default_version_id === '') {
+      next.default_version_id = null;
+    } else {
+      const versionId = Number(patch.default_version_id);
+      if (!Number.isFinite(versionId) || versionId <= 0) {
+        throw new Error('default_version_id must be a positive integer or null');
+      }
+      const version = getStrategyVersion(db, id, versionId);
+      if (!version) throw new Error('default_version_id not found for strategy');
+      next.default_version_id = versionId;
+    }
+  }
 
   db.prepare(`
     UPDATE strategy_definitions
-    SET name = ?, description = ?, status = ?, tags_json = ?, pinned = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+    SET name = ?, description = ?, status = ?, tags_json = ?, pinned = ?, default_version_id = ?,
+        updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
     WHERE id = ?
-  `).run(next.name, next.description, next.status, JSON.stringify(next.tags), next.pinned, id);
+  `).run(
+    next.name,
+    next.description,
+    next.status,
+    JSON.stringify(next.tags),
+    next.pinned,
+    next.default_version_id,
+    id,
+  );
 
   invalidateStrategyStatsCache();
   return getStrategy(db, id);
@@ -137,6 +161,7 @@ export function listStrategiesForPicker(db) {
       sd.name,
       sd.status,
       sd.pinned,
+      sd.default_version_id,
       sv.id AS version_id,
       sv.version,
       sv.notes
@@ -154,6 +179,7 @@ export function listStrategiesForPicker(db) {
     name: row.name,
     status: row.status,
     pinned: Boolean(row.pinned),
+    default_version_id: row.default_version_id != null ? Number(row.default_version_id) : null,
     notes: row.notes || null,
   }));
 }
@@ -290,6 +316,7 @@ function toApiStrategy(db, row) {
     status: row.status,
     tags: JSON.parse(row.tags_json),
     pinned: Boolean(row.pinned),
+    default_version_id: row.default_version_id != null ? Number(row.default_version_id) : null,
     deleted_at: row.deleted_at ?? null,
     latest_version: latest?.version != null ? Number(latest.version) : null,
     latest_version_id: latest?.id != null ? Number(latest.id) : null,

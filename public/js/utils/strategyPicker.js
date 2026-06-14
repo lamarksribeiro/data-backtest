@@ -2,10 +2,104 @@ import { el } from './dom.js';
 import { escapeHtml } from './format.js';
 
 const PICKER_CACHE_TTL_MS = 30_000;
+const STRATEGY_PICK_STORAGE_KEY = 'data-backtest-strategy-pick';
+
 /** @type {{ options: object[], at: number } | null} */
 let pickerCache = null;
 /** @type {Promise<object[]> | null} */
 let pickerInflight = null;
+
+function sortVersions(versions) {
+  return [...versions].sort((a, b) => {
+    if ((b.versionNum ?? 0) !== (a.versionNum ?? 0)) return (b.versionNum ?? 0) - (a.versionNum ?? 0);
+    return (b.versionId ?? 0) - (a.versionId ?? 0);
+  });
+}
+
+function groupOptionsByStrategy(options) {
+  const byStrategy = new Map();
+  for (const opt of options) {
+    const key = opt.strategyId;
+    if (!byStrategy.has(key)) {
+      byStrategy.set(key, {
+        strategyId: key,
+        label: opt.label.split(' · ')[0],
+        versions: [],
+        defaultVersionId: opt.defaultVersionId ?? null,
+        pinned: Boolean(opt.pinned),
+      });
+    }
+    byStrategy.get(key).versions.push(opt);
+  }
+  for (const strat of byStrategy.values()) {
+    strat.versions = sortVersions(strat.versions);
+  }
+  return [...byStrategy.values()].sort((a, b) => {
+    if (a.pinned !== b.pinned) return b.pinned ? 1 : -1;
+    return (b.strategyId ?? 0) - (a.strategyId ?? 0);
+  });
+}
+
+export function loadLastStrategyPick() {
+  try {
+    const raw = localStorage.getItem(STRATEGY_PICK_STORAGE_KEY);
+    return raw && String(raw).startsWith('gls:') ? String(raw) : '';
+  } catch {
+    return '';
+  }
+}
+
+export function saveLastStrategyPick(pick) {
+  if (!pick || !String(pick).startsWith('gls:')) return;
+  try {
+    localStorage.setItem(STRATEGY_PICK_STORAGE_KEY, String(pick));
+  } catch {
+    // ignore quota / private mode
+  }
+}
+
+export function resolveVersionIdForStrategy(strat, versions = strat?.versions) {
+  const list = sortVersions(versions || []);
+  if (!list.length) return null;
+
+  const savedPick = loadLastStrategyPick();
+  const [, savedSid, savedVid] = String(savedPick || '').split(':');
+  if (String(savedSid) === String(strat.strategyId) && list.some((v) => String(v.versionId) === String(savedVid))) {
+    return Number(savedVid);
+  }
+
+  if (strat.defaultVersionId && list.some((v) => String(v.versionId) === String(strat.defaultVersionId))) {
+    return Number(strat.defaultVersionId);
+  }
+
+  return list[list.length - 1]?.versionId ?? list[0]?.versionId ?? null;
+}
+
+export function resolveInitialStrategyPick(options, { strategyId = null, versionId = null } = {}) {
+  if (!options.length) return '';
+
+  if (strategyId && versionId) {
+    const exact = options.find((o) => o.strategyId === strategyId && o.versionId === versionId);
+    if (exact) return exact.value;
+  }
+
+  const saved = loadLastStrategyPick();
+  if (saved && options.some((o) => o.value === saved)) return saved;
+
+  const strategies = groupOptionsByStrategy(options);
+  const first = strategies[0];
+  if (!first) return options[0].value;
+
+  const vid = resolveVersionIdForStrategy(first, first.versions);
+  return `gls:${first.strategyId}:${vid}`;
+}
+
+function formatVersionLabel(version, strat) {
+  const isDefault = String(version.versionId) === String(strat?.defaultVersionId);
+  const prefix = isDefault ? '★ ' : '';
+  const notes = version.notes ? ` — ${version.notes}` : '';
+  return `${prefix}v${version.versionNum}${notes}`;
+}
 
 function mapPickerRows(rows, { includeArchived = false } = {}) {
   const options = [];
@@ -21,13 +115,10 @@ function mapPickerRows(rows, { includeArchived = false } = {}) {
       slug: row.slug,
       status: row.status,
       pinned: row.pinned,
+      defaultVersionId: row.default_version_id ?? null,
       notes: row.notes,
     });
   }
-  options.sort((a, b) => {
-    if (a.pinned !== b.pinned) return b.pinned ? 1 : -1;
-    return (b.versionNum ?? 0) - (a.versionNum ?? 0);
-  });
   return options;
 }
 
@@ -84,14 +175,11 @@ export async function loadStrategyOptions(api, { includeArchived = false, stats 
           slug: strategy.slug,
           status: strategy.status,
           pinned: strategy.pinned,
+          defaultVersionId: strategy.default_version_id ?? null,
           notes: version.notes,
         });
       }
     }
-    options.sort((a, b) => {
-      if (a.pinned !== b.pinned) return b.pinned ? 1 : -1;
-      return (b.versionNum ?? 0) - (a.versionNum ?? 0);
-    });
     if (!stats) pickerCache = { options, at: Date.now() };
     return options;
   })();
@@ -114,6 +202,11 @@ export function invalidateStrategyPickerCache() {
   pickerCache = null;
 }
 
+export function getStrategyGroupFromPick(options, pick) {
+  const [, sid] = String(pick || '').split(':');
+  return groupOptionsByStrategy(options).find((s) => String(s.strategyId) === String(sid)) || null;
+}
+
 export function renderStrategySelect(options, selectedValue = '') {
   const html = options.map((opt) => `
     <option value="${escapeHtml(opt.value)}" ${opt.value === selectedValue ? 'selected' : ''}>${escapeHtml(opt.label)}</option>
@@ -123,38 +216,55 @@ export function renderStrategySelect(options, selectedValue = '') {
 
 export function renderStrategyPicker(options, selectedValue = '', onChange = null) {
   const wrap = el('div', { class: 'strategy-picker' });
-  const byStrategy = new Map();
-  for (const opt of options) {
-    const key = opt.strategyId;
-    if (!byStrategy.has(key)) byStrategy.set(key, { strategyId: key, label: opt.label.split(' · ')[0], versions: [] });
-    byStrategy.get(key).versions.push(opt);
-  }
-
-  const strategies = [...byStrategy.values()];
+  const strategies = groupOptionsByStrategy(options);
   const [, selSid, selVid] = String(selectedValue || '').split(':');
+
   const strategySelect = el('select', { name: 'strategy_id_pick', class: 'field__input' },
-    strategies.map((s) => el('option', { value: String(s.strategyId), selected: String(s.strategyId) === String(selSid) }, s.label)));
+    strategies.map((s) => el('option', {
+      value: String(s.strategyId),
+      selected: String(s.strategyId) === String(selSid),
+    }, s.label)));
 
   const current = strategies.find((s) => String(s.strategyId) === String(selSid)) || strategies[0];
-  const versionSelect = el('select', { name: 'strategy_version_pick', class: 'field__input' },
-    (current?.versions || options).map((v) => el('option', {
-      value: String(v.versionId),
-      selected: String(v.versionId) === String(selVid) || v.value === selectedValue,
-    }, `v${v.versionNum}${v.notes ? ` — ${v.notes}` : ''}`)));
+  const initialVid = (selSid && selVid && current?.versions.some((v) => String(v.versionId) === String(selVid)))
+    ? selVid
+    : resolveVersionIdForStrategy(current, current?.versions);
+  const hidden = el('input', {
+    type: 'hidden',
+    name: 'strategy_pick',
+    value: current ? `gls:${current.strategyId}:${initialVid}` : (selectedValue || options[0]?.value || ''),
+  });
 
-  const hidden = el('input', { type: 'hidden', name: 'strategy_pick', value: selectedValue || options[0]?.value || '' });
+  const versionSelect = el('select', { name: 'strategy_version_pick', class: 'field__input' });
 
-  function syncValue() {
+  function syncValue({ strategyChanged = false } = {}) {
     const sid = strategySelect.value;
-    const strat = strategies.find((s) => String(s.strategyId) === sid);
-    versionSelect.replaceChildren(...(strat?.versions || []).map((v) => el('option', { value: String(v.versionId) }, `v${v.versionNum}${v.notes ? ` — ${v.notes}` : ''}`)));
-    const vid = versionSelect.value || strat?.versions[0]?.versionId;
-    hidden.value = `gls:${sid}:${vid}`;
+    const strat = strategies.find((s) => String(s.strategyId) === sid) || strategies[0];
+    if (!strat) return;
+
+    const sortedVersions = sortVersions(strat.versions);
+    let vid;
+    if (strategyChanged) {
+      vid = resolveVersionIdForStrategy(strat, sortedVersions);
+    } else {
+      const currentVid = versionSelect.value;
+      vid = sortedVersions.some((v) => String(v.versionId) === String(currentVid))
+        ? currentVid
+        : resolveVersionIdForStrategy(strat, sortedVersions);
+    }
+
+    versionSelect.replaceChildren(...sortedVersions.map((v) => el('option', {
+      value: String(v.versionId),
+      selected: String(v.versionId) === String(vid),
+    }, formatVersionLabel(v, strat))));
+
+    hidden.value = `gls:${strat.strategyId}:${vid}`;
     onChange?.(hidden.value);
   }
 
-  strategySelect.addEventListener('change', syncValue);
-  versionSelect.addEventListener('change', syncValue);
+  syncValue();
+  strategySelect.addEventListener('change', () => syncValue({ strategyChanged: true }));
+  versionSelect.addEventListener('change', () => syncValue({ strategyChanged: false }));
   wrap.append(strategySelect, versionSelect, hidden);
   return wrap;
 }

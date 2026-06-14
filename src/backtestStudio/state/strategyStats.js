@@ -88,7 +88,7 @@ export function listStrategiesWithStats(db, { trashed = false } = {}) {
 
   const clause = trashed ? 'deleted_at IS NOT NULL' : 'deleted_at IS NULL';
   const strategies = db.prepare(`
-    SELECT id, slug, name, status, pinned, updated_at, deleted_at
+    SELECT id, slug, name, status, pinned, default_version_id, updated_at, deleted_at
     FROM strategy_definitions
     WHERE ${clause}
     ORDER BY pinned DESC, updated_at DESC, id DESC
@@ -109,6 +109,7 @@ export function listStrategiesWithStats(db, { trashed = false } = {}) {
       name: row.name,
       status: row.status,
       pinned: Boolean(row.pinned),
+      default_version_id: row.default_version_id != null ? Number(row.default_version_id) : null,
       deleted_at: row.deleted_at ?? null,
       latest_version: latest?.version != null ? Number(latest.version) : null,
       latest_version_id: latest?.id != null ? Number(latest.id) : null,

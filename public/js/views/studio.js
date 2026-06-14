@@ -2,7 +2,7 @@ import { el, mount } from '../utils/dom.js';
 import { applyContextOptions, contextBarOptions, loadContext, saveContext, selectField } from '../utils/context.js';
 import { fetchContextOptionsCached } from '../utils/contextOptionsCache.js';
 import { formatPnl } from '../utils/format.js';
-import { loadStrategyOptions, renderStrategyPicker, backtestPayloadFromPick } from '../utils/strategyPicker.js';
+import { loadStrategyOptions, renderStrategyPicker, backtestPayloadFromPick, resolveInitialStrategyPick, saveLastStrategyPick, getStrategyGroupFromPick, invalidateStrategyPickerCache } from '../utils/strategyPicker.js';
 import { MetricCard, Skeleton, StatusBadge } from '../components/Skeleton.js';
 import { renderRunMetricsPanel, renderTimingSection, resetMetricsViewMode } from '../components/runMetrics.js';
 import { renderNoEntryDiagnostic, partitionNoEntryEvents } from '../components/noEntryDiagnostic.js';
@@ -526,8 +526,14 @@ export async function renderStudio(ctx) {
     studioState.strategyOptions = strategyOptions;
     if (query.strategy && query.version) {
       studioState.selectedStrategyPick = `gls:${query.strategy}:${query.version}`;
-    } else if (!studioState.selectedStrategyPick && studioState.strategyOptions[0]) {
-      studioState.selectedStrategyPick = studioState.strategyOptions[0].value;
+    } else {
+      studioState.selectedStrategyPick = resolveInitialStrategyPick(strategyOptions, {
+        strategyId: query.strategy,
+        versionId: query.version,
+      });
+    }
+    if (studioState.selectedStrategyPick) {
+      saveLastStrategyPick(studioState.selectedStrategyPick);
     }
 
     renderConfigPanel(ctx, { formCtx, fieldOptions });
@@ -562,7 +568,16 @@ function renderConfigPanel(ctx, { formCtx, fieldOptions }) {
     el('form', { id: 'studio-form', class: 'studio-form' }, [
       el('label', { class: 'field' }, [
         el('span', { class: 'field__label' }, 'Estratégia'),
-        el('div', { id: 'studio-strategy-pick' }),
+        el('div', { class: 'strategy-picker-row' }, [
+          el('div', { id: 'studio-strategy-pick' }),
+          el('button', {
+            type: 'button',
+            class: 'btn btn--ghost btn--sm strategy-picker-pin',
+            id: 'studio-strategy-pin',
+            title: 'Fixar a versão selecionada como padrão desta estratégia',
+          }, '★ Fixar versão'),
+        ]),
+        el('p', { class: 'muted strategy-picker-hint', id: 'studio-strategy-hint' }),
       ]),
       el('div', { class: 'row row--wrap', id: 'studio-coverage-indicator' }),
       el('label', { class: 'field' }, ['De ', el('input', { type: 'date', name: 'from', value: formCtx.from, class: 'field__input', onchange: () => refreshCoverageIndicator(ctx, formFromDom()) })]),
@@ -591,17 +606,90 @@ function renderConfigPanel(ctx, { formCtx, fieldOptions }) {
     strategyPickWrap.innerHTML = '';
     strategyPickWrap.appendChild(renderStrategyPicker(studioState.strategyOptions, studioState.selectedStrategyPick, (value) => {
       studioState.selectedStrategyPick = value;
+      saveLastStrategyPick(value);
       const [, sid, vid] = String(value).split(':');
       pushStudioQuery({ strategy: Number(sid) || null, version: Number(vid) || null });
+      updateStudioStrategyHint(ctx);
       refreshRuns(ctx);
     }));
   }
+
+  const pinBtn = document.getElementById('studio-strategy-pin');
+  pinBtn?.addEventListener('click', () => pinStudioStrategyVersion(ctx));
+  updateStudioStrategyHint(ctx);
 
   document.getElementById('studio-form')?.addEventListener('submit', (ev) => {
     ev.preventDefault();
     runBacktest(ctx, ev.target);
   });
   document.getElementById('studio-fix-btn')?.addEventListener('click', () => fixDataFromStudio(ctx));
+}
+
+function updateStudioStrategyHint(ctx) {
+  const hint = document.getElementById('studio-strategy-hint');
+  const pinBtn = document.getElementById('studio-strategy-pin');
+  if (!hint) return;
+
+  const pick = studioState.selectedStrategyPick
+    || document.querySelector('#studio-form [name="strategy_pick"]')?.value;
+  const group = getStrategyGroupFromPick(studioState.strategyOptions, pick);
+  const [, , vid] = String(pick || '').split(':');
+  const version = group?.versions.find((v) => String(v.versionId) === String(vid));
+
+  if (!group || !version) {
+    hint.textContent = '';
+    if (pinBtn) pinBtn.disabled = true;
+    return;
+  }
+
+  const isDefault = String(group.defaultVersionId) === String(version.versionId);
+  hint.textContent = isDefault
+    ? `Versão padrão fixada: v${version.versionNum}${version.notes ? ` (${version.notes})` : ''}.`
+    : `Selecionada: v${version.versionNum}${version.notes ? ` (${version.notes})` : ''}. Use ★ Fixar versão para sempre carregar esta versão.`;
+  if (pinBtn) {
+    pinBtn.disabled = false;
+    pinBtn.classList.toggle('is-active', isDefault);
+    pinBtn.textContent = isDefault ? '★ Versão padrão' : '★ Fixar versão';
+  }
+}
+
+async function pinStudioStrategyVersion(ctx) {
+  const pick = studioState.selectedStrategyPick
+    || document.querySelector('#studio-form [name="strategy_pick"]')?.value;
+  const [, sid, vid] = String(pick || '').split(':');
+  const strategyId = Number(sid);
+  const versionId = Number(vid);
+  if (!Number.isFinite(strategyId) || !Number.isFinite(versionId)) {
+    return ctx.toast.warn('Selecione uma estratégia e versão');
+  }
+
+  const res = await ctx.api.patch(`/api/strategies/${strategyId}`, { default_version_id: versionId });
+  if (!res.ok) return ctx.toast.err(res.error?.message || 'Falha ao fixar versão');
+
+  invalidateStrategyPickerCache();
+  studioState.strategyOptions = await loadStrategyOptions(ctx.api, { force: true });
+  studioState.selectedStrategyPick = `gls:${strategyId}:${versionId}`;
+  saveLastStrategyPick(studioState.selectedStrategyPick);
+
+  const strategyPickWrap = document.getElementById('studio-strategy-pick');
+  if (strategyPickWrap) {
+    strategyPickWrap.innerHTML = '';
+    strategyPickWrap.appendChild(renderStrategyPicker(
+      studioState.strategyOptions,
+      studioState.selectedStrategyPick,
+      (value) => {
+        studioState.selectedStrategyPick = value;
+        saveLastStrategyPick(value);
+        const [, nextSid, nextVid] = String(value).split(':');
+        pushStudioQuery({ strategy: Number(nextSid) || null, version: Number(nextVid) || null });
+        updateStudioStrategyHint(ctx);
+        refreshRuns(ctx);
+      },
+    ));
+  }
+
+  updateStudioStrategyHint(ctx);
+  ctx.toast.ok('Versão fixada como padrão');
 }
 
 function formFromDom() {
@@ -678,6 +766,11 @@ async function fixDataFromStudio(ctx) {
 
 async function runBacktest(ctx, form) {
   const fd = new FormData(form);
+  const pick = studioState.selectedStrategyPick
+    || fd.get('strategy_pick')
+    || form.querySelector('[name="strategy_pick"]')?.value;
+  if (!pick) return ctx.toast.warn('Selecione uma estratégia');
+
   const ctxSaved = saveContext({
     from: fd.get('from'),
     to: fd.get('to'),
@@ -686,12 +779,13 @@ async function runBacktest(ctx, form) {
     book_depth: fd.get('book_depth'),
     batch_size: fd.get('batch_size'),
   });
-  const pick = studioState.selectedStrategyPick || form.querySelector('[name="strategy_pick"]')?.value;
   const payload = backtestPayloadFromPick(pick, ctxSaved, {
     fast_run: fd.get('fast_run') === '1',
     async: true,
   });
-  if (!payload) return ctx.toast.warn('Selecione uma estratégia');
+  if (!payload?.strategy_id || !payload?.strategy_version_id) {
+    return ctx.toast.warn('Selecione uma estratégia e versão válidas');
+  }
   const res = await ctx.api.post('/api/backtest/run', payload);
   if (!res.ok) {
     if (res.data?.availability) {

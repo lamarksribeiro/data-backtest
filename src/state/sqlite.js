@@ -179,6 +179,7 @@ const STRATEGY_V3_MIGRATIONS = [
   'ALTER TABLE strategy_definitions ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0',
   'ALTER TABLE strategy_versions ADD COLUMN notes TEXT NULL',
   'ALTER TABLE strategy_definitions ADD COLUMN deleted_at TEXT NULL',
+  'ALTER TABLE strategy_definitions ADD COLUMN default_version_id INTEGER NULL',
 ];
 
 const BACKTEST_RUNS_V3_INDEXES = [

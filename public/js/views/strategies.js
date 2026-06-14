@@ -287,7 +287,7 @@ function strategyCard(ctx, strategy) {
       el('button', {
         type: 'button',
         class: 'btn btn--primary btn--sm',
-        onclick: () => ctx.navigate(`studio?strategy=${strategy.id}&version=${strategy.latest_version_id || ''}`),
+        onclick: () => ctx.navigate(`studio?strategy=${strategy.id}&version=${strategy.default_version_id || strategy.latest_version_id || ''}`),
       }, '▶ Rodar'),
       el('button', {
         type: 'button',
@@ -494,8 +494,22 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
               await openStrategyEditor(ctx, strategyId, nextVersionId);
             },
           }, versions.length
-            ? versions.map((item) => el('option', { value: item.id, selected: item.id === version?.id }, `v${item.version}${item.notes ? ` — ${item.notes}` : ''} · ${item.created_at ? item.created_at.slice(0, 10) : '—'}`))
+            ? versions.map((item) => el('option', { value: item.id, selected: item.id === version?.id }, `${strategy.default_version_id === item.id ? '★ ' : ''}v${item.version}${item.notes ? ` — ${item.notes}` : ''} · ${item.created_at ? item.created_at.slice(0, 10) : '—'}`))
             : [el('option', { value: '' }, 'Sem versões')]),
+          el('button', {
+            class: `btn btn--ghost btn--sm${strategy.default_version_id === version?.id ? ' is-active' : ''}`,
+            type: 'button',
+            title: 'Fixar esta versão como padrão no Estúdio',
+            onclick: async () => {
+              const res = await ctx.api.patch(`/api/strategies/${strategy.id}`, { default_version_id: version.id });
+              if (!res.ok) return ctx.toast.err(res.error?.message || 'Falha ao fixar versão');
+              strategy.default_version_id = version.id;
+              state.currentStrategy = { ...strategy, default_version_id: version.id };
+              invalidateStrategyPickerCache();
+              ctx.toast.ok('Versão fixada como padrão');
+              await openStrategyEditor(ctx, strategyId, version.id);
+            },
+          }, strategy.default_version_id === version?.id ? '★ Padrão' : '★ Fixar padrão'),
           ...(versions.length > 1
             ? [el('button', {
               class: 'btn btn--ghost btn--sm btn--icon strategy-version-control__delete',

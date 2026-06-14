@@ -4860,6 +4860,11 @@ i.fa-solid, i.fa-regular, i.fa-brands {
   align-items: start;
 }
 .studio-config .studio-form { display: grid; gap: 10px; }
+.strategy-picker { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.strategy-picker-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: start; }
+.strategy-picker-row > .strategy-picker { flex: 1 1 220px; }
+.strategy-picker-pin.is-active { color: #fbbf24; border-color: rgba(251, 191, 36, .35); }
+.strategy-picker-hint { margin: 4px 0 0; font-size: 11px; line-height: 1.4; }
 .studio-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
 .metric-card { background: var(--ds-surface, #111827); border: 1px solid rgba(255,255,255,.06); border-radius: var(--ds-radius, 10px); padding: 10px 12px; }
 .metric-card__label { font-size: 11px; color: var(--ds-muted, #9ca3af); }

@@ -133,5 +133,22 @@ export function seedEdgeSniperV2Presets(db, {
     WHERE id = ?
   `).run(strategy.id);
 
+  const currentDefault = db.prepare('SELECT default_version_id FROM strategy_definitions WHERE id = ?').get(strategy.id);
+  if (currentDefault?.default_version_id == null) {
+    const champion = db.prepare(`
+      SELECT id FROM strategy_versions
+      WHERE strategy_id = ? AND version = 3
+      ORDER BY id DESC
+      LIMIT 1
+    `).get(strategy.id);
+    if (champion) {
+      db.prepare(`
+        UPDATE strategy_definitions
+        SET default_version_id = ?
+        WHERE id = ?
+      `).run(champion.id, strategy.id);
+    }
+  }
+
   return seeded;
 }

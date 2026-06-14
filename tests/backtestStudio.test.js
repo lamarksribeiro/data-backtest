@@ -208,6 +208,13 @@ test('strategy CRUD API creates definitions and versions', async () => {
       assert.equal(updated.status, 'validated');
       assert.equal(listStrategies(db).length, 1);
 
+      const defaultVersion = updateStrategy(db, strategy.id, { default_version_id: version.id });
+      assert.equal(defaultVersion.default_version_id, version.id);
+      assert.throws(
+        () => updateStrategy(db, strategy.id, { default_version_id: 99999 }),
+        /not found/,
+      );
+
       const tempStrategy = createStrategy(db, { slug: 'delete-me', name: 'Delete Me' });
       createStrategyVersion(db, tempStrategy.id, { source_code: 'strategy "Delete Me" {}' });
       assert.equal(deleteStrategy(db, tempStrategy.id).slug, 'delete-me');
