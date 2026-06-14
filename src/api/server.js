@@ -935,6 +935,7 @@ function backtestRequestFromBody(body, config, db) {
     batchSize: positiveIntValue(body.batch_size ?? body.batchSize, 10_000),
     params: parseParams(body.params),
     fastRun: body.fast_run === true || body.fastRun === true,
+    variantWorkers: positiveOptionalInt(body.variant_workers ?? body.variantWorkers),
   };
 
   const strategyId = positiveOptionalInt(body.strategy_id);

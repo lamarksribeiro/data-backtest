@@ -1,10 +1,12 @@
 import { applyPolymarketFeesToBacktestResult } from './fees.js';
+import { Worker } from 'node:worker_threads';
 import { loadConfig } from '../config.js';
 import { analyzeStrategyColumns, analyzeStrategyParallelism } from '../backtestStudio/gls/compiler.js';
 import { createGlsBacktestRunner } from '../backtestStudio/gls/runtime.js';
 import { datasetCacheKey, getDatasetCache } from './datasetCache.js';
 import { loadBacktestColumnSet } from '../query/columnChunkReader.js';
 import { runParallelEventSlices } from './eventPool.js';
+import { columnSetToShared, wrapSharedColumnSet } from './columnStore.js';
 import {
   availabilityRequestForBacktest,
   resolveBacktestDataset,
@@ -41,13 +43,29 @@ export async function runBacktestSweep(db, baseRequest, variants, { onProgress, 
     : baseRequest.bookDepth;
 
   const timings = { startedAt: Date.now(), duckdbReadMs: 0, processMs: 0, completedAt: null };
-  const columnSet = await loadOrGetColumnSet(db, baseRequest, {
+  const loaded = await loadOrGetColumnSet(db, baseRequest, {
     dataset,
     columnAnalysis,
     effectiveBookDepth,
     config,
     timings,
   });
+  let columnSet = loaded.columnSet;
+
+  const variantWorkerCount = Math.max(Number(baseRequest.variantWorkers ?? config.sweepVariantWorkers ?? 1) || 1, 1);
+  if (variantWorkerCount > 1 && normalized.length > 1) {
+    return runParallelVariantSweep({
+      baseRequest,
+      variants: normalized,
+      columnSet,
+      cache: loaded.cache,
+      cacheKey: loaded.cacheKey,
+      effectiveBookDepth,
+      timings,
+      workerCount: variantWorkerCount,
+      onProgress,
+    });
+  }
 
   const parallelism = analyzeStrategyParallelism(baseRequest.glsAst);
   const workerCount = Number(baseRequest.backtestWorkers ?? config.backtestWorkers ?? 1);
@@ -55,7 +73,7 @@ export async function runBacktestSweep(db, baseRequest, variants, { onProgress, 
     && workerCount > 1
     && columnSet.events.length > 1;
 
-  const executionMode = baseRequest.glsExecution ?? 'compiled-soa';
+  const executionMode = 'compiled-soa';
   const variantResults = [];
   const processStartedAt = Date.now();
 
@@ -143,7 +161,7 @@ async function loadOrGetColumnSet(db, request, ctx) {
     ctx.columnAnalysis?.scalarColumns?.join(','),
   );
   const cached = cache.get(cacheKey);
-  if (cached) return cached;
+  if (cached) return { columnSet: cached, cache, cacheKey };
 
   const readStartedAt = Date.now();
   const columnSet = await loadBacktestColumnSet(db, {
@@ -158,7 +176,123 @@ async function loadOrGetColumnSet(db, request, ctx) {
   });
   ctx.timings.duckdbReadMs += Date.now() - readStartedAt;
   cache.set(cacheKey, columnSet);
-  return columnSet;
+  return { columnSet, cache, cacheKey };
+}
+
+async function runParallelVariantSweep({
+  baseRequest,
+  variants,
+  columnSet,
+  cache,
+  cacheKey,
+  effectiveBookDepth,
+  timings,
+  workerCount,
+  onProgress,
+}) {
+  const shareStartedAt = Date.now();
+  const sharedColumnSet = columnSetToShared(columnSet);
+  columnSet = wrapSharedColumnSet(sharedColumnSet);
+  cache?.set?.(cacheKey, columnSet);
+  const shareMs = Date.now() - shareStartedAt;
+
+  const workers = Math.max(1, Math.min(Number(workerCount) || 1, variants.length));
+  const chunks = splitVariants(variants, workers);
+  const progressState = new Map();
+  const processStartedAt = Date.now();
+
+  const chunkResults = await Promise.all(chunks.map((chunk, workerIndex) => runVariantWorker({
+    workerIndex,
+    request: {
+      ...baseRequest,
+      effectiveBookDepth,
+      glsExecution: 'compiled-soa',
+    },
+    sharedColumnSet,
+    variants: chunk,
+    onProgress: (msg) => {
+      progressState.set(workerIndex, msg.completed || 0);
+      const completed = [...progressState.values()].reduce((sum, count) => sum + count, 0);
+      onProgress?.({
+        phase: 'sweep',
+        variantIndex: Math.max(0, completed - 1),
+        variantCount: variants.length,
+        variantId: msg.variantId,
+        workerIndex,
+      });
+    },
+  })));
+
+  const processMs = Date.now() - processStartedAt;
+  timings.processMs = processMs;
+  timings.completedAt = Date.now();
+
+  const variantResults = chunkResults
+    .flat()
+    .sort((left, right) => left.order - right.order)
+    .map(({ order, ...result }) => result);
+
+  return {
+    strategy: variantResults[0] ? baseRequest.strategyLabel || baseRequest.strategy : null,
+    source: 'lakehouse',
+    underlying: baseRequest.underlying,
+    interval: baseRequest.interval,
+    bookDepth: baseRequest.bookDepth,
+    from: new Date(baseRequest.from).toISOString(),
+    to: new Date(baseRequest.to).toISOString(),
+    ticks: columnSet.length,
+    variantCount: variantResults.length,
+    variants: variantResults,
+    timings: {
+      duckdbReadMs: timings.duckdbReadMs,
+      shareMs,
+      sweepProcessMs: processMs,
+      avgVariantMs: variantResults.length ? Math.round(processMs / variantResults.length) : null,
+      totalMs: timings.completedAt - timings.startedAt,
+      variantWorkers: workers,
+    },
+    strategyMeta: baseRequest.strategyMeta ?? null,
+  };
+}
+
+function splitVariants(variants, workerCount) {
+  const chunks = Array.from({ length: workerCount }, () => []);
+  for (let index = 0; index < variants.length; index += 1) {
+    chunks[index % workerCount].push({ ...variants[index], order: index });
+  }
+  return chunks.filter((chunk) => chunk.length > 0);
+}
+
+function runVariantWorker({ workerIndex, request, sharedColumnSet, variants, onProgress }) {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const worker = new Worker(new URL('./variantSweepWorker.js', import.meta.url), {
+      workerData: { workerIndex, request, sharedColumnSet, variants },
+    });
+    worker.on('message', (msg) => {
+      if (msg?.type === 'progress') {
+        onProgress?.(msg);
+        return;
+      }
+      if (msg?.type === 'done') {
+        settled = true;
+        resolve(msg.results || []);
+        worker.terminate().catch(() => {});
+        return;
+      }
+      if (msg?.type === 'error') {
+        settled = true;
+        reject(new Error(msg.error || 'variant worker failed'));
+        worker.terminate().catch(() => {});
+      }
+    });
+    worker.on('error', (err) => {
+      if (!settled) reject(err);
+    });
+    worker.on('exit', (code) => {
+      if (!settled && code !== 0) reject(new Error(`variant worker exited with code ${code}`));
+    });
+  });
 }
 
 export function parseSweepVariants(body, maxVariants = 500) {

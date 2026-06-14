@@ -112,7 +112,8 @@ Copie `.env.example` para `.env` quando precisar customizar caminhos:
 LAKE_ROOT=./lake
 STATE_DB_PATH=./state/data-backtest.db
 BACKTEST_DATA_MODE=strict
-BACKTEST_BOOK_DEPTH=10
+BACKTEST_BOOK_DEPTH=25
+SWEEP_VARIANT_WORKERS=1
 DATA_BACKTEST_PORT=3100
 SESSION_SECRET=change-me-to-a-long-random-string
 SESSION_MAX_AGE_SEC=86400
@@ -141,7 +142,8 @@ No Coolify, os valores esperados são:
 LAKE_ROOT=/lake
 STATE_DB_PATH=/state/data-backtest.db
 BACKTEST_DATA_MODE=strict
-BACKTEST_BOOK_DEPTH=10
+BACKTEST_BOOK_DEPTH=25
+SWEEP_VARIANT_WORKERS=1
 ```
 
 Volumes recomendados:
@@ -165,14 +167,14 @@ npm run sync:backfill -- --from 2026-05-01 --to 2026-05-02 --underlying BTC --in
 npm run sync:incremental -- --lookback-days 2 --underlying BTC --interval 5m --dry-run
 npm run sync:reconcile-scalars -- --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --dry-run
 npm run sync:backfill-books -- --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --dry-run
-npm run sync:backfill-backtest-ticks -- --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --dry-run
+npm run sync:backfill-backtest-ticks -- --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 25 --dry-run
 npm run sync:backfill-ohlc -- --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --resolution 1m --dry-run
-npm run query:availability -- --dataset backtest_ticks --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10
-npm run query:resolve -- --mode prepare --dataset backtest_ticks --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10
-npm run query:ticks -- --dataset backtest_ticks --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --limit 10
+npm run query:availability -- --dataset backtest_ticks --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 25
+npm run query:resolve -- --mode prepare --dataset backtest_ticks --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 25
+npm run query:ticks -- --dataset backtest_ticks --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 25 --limit 10
 npm run query:candles -- --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --resolution 1m --limit 10
-npm run legacy:smoke -- --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --limit 10
-npm run backtest:run -- --strategy-id 1 --strategy-version-id 1 --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --batch-size 5000
+npm run legacy:smoke -- --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 25 --limit 10
+npm run backtest:run -- --strategy-id 1 --strategy-version-id 1 --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 25 --batch-size 5000
 npm run manifest:mark-stale -- --underlying BTC --interval 5m --dt 2026-05-31 --reason "repair-gap"
 npm test
 ```
@@ -216,7 +218,7 @@ Para reprocessar partições `stale`, `invalid` ou `needs_review`, marque `Repro
 Parâmetros da estratégia podem ser passados como JSON:
 
 ```bash
-npm run backtest:run -- --strategy-id 1 --strategy-version-id 1 --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 10 --params '{"minDistanceAbs":40,"maxOrderValue":10}'
+npm run backtest:run -- --strategy-id 1 --strategy-version-id 1 --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 25 --params '{"minDistanceAbs":40,"maxOrderValue":10}'
 ```
 
 ## Research Labs e adapter legado
@@ -228,7 +230,7 @@ Para adaptar códigos legados do `polymarket-test`, crie o adapter com o state D
 ```js
 import { createPolymarketTestAdapter } from './src/legacy/polymarketTestAdapter.js';
 
-const adapter = createPolymarketTestAdapter(db, { underlying: 'BTC', interval: '5m', bookDepth: 10 });
+const adapter = createPolymarketTestAdapter(db, { underlying: 'BTC', interval: '5m', bookDepth: 25 });
 const rows = await adapter.getTicksForBacktest(from, to, { limit: 100000 });
 
 for await (const batch of adapter.getTicksForBacktestBatches(from, to, 1000)) {
@@ -240,7 +242,7 @@ Primeiro alvo legado com source opt-in: `polymarket-test/scripts/tune-bs-lead.js
 
 ```bash
 cd ../polymarket-test
-npm run tune:bs-lead:lakehouse -- --from 2026-05-01 --to 2026-05-02 --book-depth 10
+npm run tune:bs-lead:lakehouse -- --from 2026-05-01 --to 2026-05-02 --book-depth 25
 ```
 
 Sem `--data-source lakehouse`, o script continua usando Postgres.

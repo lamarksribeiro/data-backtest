@@ -49,6 +49,7 @@ export function loadConfig(env = process.env) {
     backtestEngine: normalizeBacktestEngine(env.BACKTEST_ENGINE),
     backtestWorkers: Math.max(Number.parseInt(String(env.BACKTEST_WORKERS || '1'), 10) || 1, 1),
     sweepMaxVariants: Math.max(Number.parseInt(String(env.SWEEP_MAX_VARIANTS || '500'), 10) || 500, 1),
+    sweepVariantWorkers: Math.max(Number.parseInt(String(env.SWEEP_VARIANT_WORKERS || '1'), 10) || 1, 1),
     maxConcurrentBacktests: Math.max(Number.parseInt(String(env.MAX_CONCURRENT_BACKTESTS || '1'), 10) || 1, 1),
     datasetCacheMaxMb: resolveDatasetCacheMaxMb(env),
     prepareMaxConcurrent: Math.max(Number.parseInt(String(env.PREPARE_MAX_CONCURRENT || '2'), 10) || 2, 1),
@@ -87,6 +88,7 @@ export function serializeWorkerConfig(config) {
     backtestEngine: config.backtestEngine,
     backtestWorkers: config.backtestWorkers,
     sweepMaxVariants: config.sweepMaxVariants,
+    sweepVariantWorkers: config.sweepVariantWorkers,
     datasetCacheMaxMb: config.datasetCacheMaxMb,
   };
 }

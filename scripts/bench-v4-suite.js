@@ -171,10 +171,12 @@ async function runSweepScenario(db, baseRequest, variantCount, label) {
     ticks: sweep.ticks,
     timings: {
       duckdbReadMs: sweep.timings.duckdbReadMs,
+      shareMs: sweep.timings.shareMs,
       sweepProcessMs: sweep.timings.sweepProcessMs,
       avgVariantMs: sweep.timings.avgVariantMs,
       totalMs: sweep.timings.totalMs,
       wallMs: Math.round(wallMs),
+      variantWorkers: sweep.timings.variantWorkers,
       ticksPerSec: ticksPerSec(sweep.ticks * variantCount, sweep.timings.sweepProcessMs),
       variantsPerSec: sweep.timings.sweepProcessMs
         ? Math.round((variantCount / sweep.timings.sweepProcessMs) * 1000 * 100) / 100

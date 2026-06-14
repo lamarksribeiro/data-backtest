@@ -18,8 +18,9 @@ test('extractEquityFromResultJson reads equity without full parse', () => {
 });
 
 test('resolveDatasetCacheMaxMb scales with NODE_OPTIONS heap', () => {
-  const cfg = loadConfig({ ...process.env, DATASET_CACHE_MAX_MB: '', NODE_OPTIONS: '--max-old-space-size=7168' });
+  const cfg = loadConfig({ ...process.env, DATASET_CACHE_MAX_MB: '', NODE_OPTIONS: '--max-old-space-size=7168', SWEEP_VARIANT_WORKERS: '3' });
   assert.equal(cfg.datasetCacheMaxMb, 1433);
+  assert.equal(cfg.sweepVariantWorkers, 3);
   const explicit = loadConfig({ ...process.env, DATASET_CACHE_MAX_MB: '1024' });
   assert.equal(explicit.datasetCacheMaxMb, 1024);
 });

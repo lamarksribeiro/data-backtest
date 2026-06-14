@@ -251,19 +251,26 @@ test('sweep reuses column set and returns per-variant summaries', async () => {
         params: {},
       };
 
-      const sweep = await runBacktestSweep(db, baseRequest, [
+      const variants = [
         { id: 'loose', params: { minDistanceAbs: 0, maxAsk: 0.99 } },
         { id: 'tight', params: { minDistanceAbs: 500, maxAsk: 0.99 } },
         { id: 'mid', params: { minDistanceAbs: 10, maxAsk: 0.99 } },
-      ]);
+      ];
+
+      const sweep = await runBacktestSweep(db, baseRequest, variants);
+      const parallelSweep = await runBacktestSweep(db, { ...baseRequest, variantWorkers: 2 }, variants);
 
       assert.equal(sweep.variantCount, 3);
       assert.equal(sweep.ticks, 8);
       assert.ok(sweep.timings.duckdbReadMs >= 0);
       assert.ok(sweep.timings.avgVariantMs > 0);
+      assert.equal(parallelSweep.variantCount, sweep.variantCount);
+      assert.equal(parallelSweep.timings.variantWorkers, 2);
       const loose = sweep.variants.find((v) => v.id === 'loose');
       const tight = sweep.variants.find((v) => v.id === 'tight');
+      const parallelLoose = parallelSweep.variants.find((v) => v.id === 'loose');
       assert.ok(loose.summary.totalEntries >= tight.summary.totalEntries);
+      assert.equal(parallelLoose.summary.totalPnl, loose.summary.totalPnl);
     } finally {
       closeStateDatabase(db);
     }
