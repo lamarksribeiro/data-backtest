@@ -5010,12 +5010,13 @@ i.fa-solid, i.fa-regular, i.fa-brands {
 .studio-config .studio-form .field {
   min-width: 0;
 }
-.studio-strategy-picker { display: grid; gap: 8px; }
+.studio-strategy-picker { display: grid; gap: 8px; width: 100%; }
 .studio-strategy-picker__strategy { width: 100%; }
 .studio-strategy-picker__version-row {
   display: flex;
   gap: 8px;
   align-items: stretch;
+  width: 100%;
 }
 .studio-strategy-picker__version {
   flex: 1;
@@ -5025,9 +5026,15 @@ i.fa-solid, i.fa-regular, i.fa-brands {
 .studio-strategy-pin {
   flex: 0 0 36px;
   width: 36px;
-  height: 36px;
   padding: 0;
   align-self: stretch;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+.studio-strategy-pin:hover {
+  transform: scale(1.05);
 }
 .studio-strategy-pin.is-active {
   color: #fbbf24;

@@ -1208,10 +1208,10 @@ function confirmDeleteRunsDialog(strategyName) {
       resolve(false);
       return;
     }
-    const checkbox = el('input', { type: 'checkbox', id: 'trash-delete-runs' });
+    const checkbox = el('input', { type: 'checkbox', id: 'trash-delete-runs', class: 'switch-field__input' });
     const overlay = el('div', {
-      class: 'modal-overlay',
       onclick: (e) => { if (e.target === overlay) { overlay.remove(); resolve(null); } },
+      class: 'modal-overlay',
     }, [
       el('div', { class: 'modal modal--danger', role: 'dialog', onclick: (e) => e.stopPropagation() }, [
         el('div', { class: 'modal__header' }, [
@@ -1222,6 +1222,7 @@ function confirmDeleteRunsDialog(strategyName) {
           el('p', { class: 'modal__message' }, `Confirme o que fazer com os backtests de "${strategyName}".`),
           el('label', { class: 'switch-field', style: { marginTop: '12px' } }, [
             checkbox,
+            el('span', { class: 'switch-field__slider' }),
             ' Apagar também todos os backtests desta estratégia',
           ]),
           el('p', { class: 'modal__detail' }, 'Desmarcado: runs permanecem no banco, mas sem vínculo com a estratégia.'),

@@ -620,8 +620,9 @@ function renderConfigPanel(ctx, { formCtx, fieldOptions }) {
         el('span', { class: 'field__label' }, 'Book'),
         selectField('book_depth', fieldOptions.book_depths || [formCtx.book_depth], formCtx.book_depth),
       ]),
-      el('label', { class: 'field field--checkbox' }, [
-        el('input', { type: 'checkbox', name: 'fast_run', value: '1' }),
+      el('label', { class: 'switch-field' }, [
+        el('input', { type: 'checkbox', name: 'fast_run', value: '1', class: 'switch-field__input' }),
+        el('span', { class: 'switch-field__slider' }),
         ' Modo rápido',
       ]),
       el('details', { class: 'advanced-settings-details' }, [
@@ -917,8 +918,10 @@ async function refreshRuns(ctx) {
         el('input', {
           type: 'checkbox',
           checked: studioState.runFilters.strategyOnly,
+          class: 'switch-field__input',
           onchange: (e) => { studioState.runFilters.strategyOnly = e.target.checked; refreshRuns(ctx); },
         }),
+        el('span', { class: 'switch-field__slider' }),
         ' Só esta estratégia',
       ]),
     ]),
