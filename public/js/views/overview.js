@@ -1,23 +1,9 @@
 import { el, mount } from '../utils/dom.js';
 import { fetchHealthzCached } from '../utils/healthzCache.js';
-import { renderUplotSparkline } from '../utils/uplotChart.js';
 import { formatPnl } from '../utils/format.js';
 
 // Injeção de estilo CSS premium para o Overview
 const overviewStyles = `
-  .overview-grid-layout {
-    display: grid;
-    grid-template-columns: 7fr 3fr;
-    gap: 20px;
-    margin-top: 16px;
-    align-items: stretch;
-  }
-  @media (max-width: 980px) {
-    .overview-grid-layout {
-      grid-template-columns: 1fr;
-    }
-  }
-
   .portfolio-analysis-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -163,15 +149,12 @@ export async function renderOverview(ctx) {
     el('div', { class: 'grid grid--4', id: 'overview-stats' }, [
       el('div', { class: 'stat stat--idle stat-premium' }, [el('span', { class: 'stat__label' }, 'Carregando'), el('span', { class: 'stat__value' }, '…')]),
     ]),
-    el('div', { class: 'overview-grid-layout' }, [
-      el('section', { class: 'card', id: 'overview-portfolio-card' }, [
-        el('h2', { class: 'card__title' }, 'Distribuição do Portfólio de Estratégias'),
-        el('p', { class: 'muted', style: { marginBottom: '16px' } }, 'Análise visual do pipeline de desenvolvimento e do perfil de lucratividade de suas estratégias.'),
-        el('div', { class: 'portfolio-analysis-container', id: 'portfolio-analysis-root' }, [
-          el('div', { style: { padding: '40px 0', textAlign: 'center', gridColumn: 'span 2' } }, el('p', { class: 'muted' }, 'Carregando análise do portfólio...')),
-        ]),
+    el('section', { class: 'card', id: 'overview-portfolio-card', style: { marginTop: '16px' } }, [
+      el('h2', { class: 'card__title' }, 'Distribuição do Portfólio de Estratégias'),
+      el('p', { class: 'muted', style: { marginBottom: '16px' } }, 'Análise visual do pipeline de desenvolvimento e do perfil de lucratividade de suas estratégias.'),
+      el('div', { class: 'portfolio-analysis-container', id: 'portfolio-analysis-root' }, [
+        el('div', { style: { padding: '40px 0', textAlign: 'center', gridColumn: 'span 2' } }, el('p', { class: 'muted' }, 'Carregando análise do portfólio...')),
       ]),
-      el('section', { class: 'card', id: 'overview-actions-card', style: { display: 'flex', flexDirection: 'column', gap: '12px' } }),
     ]),
     el('div', { class: 'grid grid--2 gap-md', style: { marginTop: '16px' } }, [
       el('section', { class: 'card', id: 'overview-health-detail' }),
@@ -179,20 +162,15 @@ export async function renderOverview(ctx) {
     ]),
   ]);
 
-  // Renderiza ações rápidas
-  renderQuickActions(ctx);
-
   try {
     // 2. Chamadas de APIs paralelas
-    const [healthRes, strategiesRes, runsRes] = await Promise.all([
+    const [healthRes, strategiesRes] = await Promise.all([
       fetchHealthzCached({ force: true }),
       ctx.api.get('/api/strategies?stats=1'),
-      ctx.api.get('/api/backtest/runs?limit=100'),
     ]);
 
     const health = healthRes.body || {};
     const strategies = strategiesRes.ok ? strategiesRes.data.strategies || [] : [];
-    const runs = runsRes.ok ? runsRes.data.runs || [] : [];
 
     // Calcular estatísticas das estratégias
     const totalStrategies = strategies.length;
@@ -210,8 +188,6 @@ export async function renderOverview(ctx) {
     const profitablePct = testedStrategies.length
       ? Math.round((profitableStrategies.length / testedStrategies.length) * 100)
       : 0;
-
-    const activeRunsCount = runs.filter((r) => r.status === 'running' || r.status === 'queued').length;
 
     // Atualizar os cards de estatísticas rápidas
     mount(document.getElementById('overview-stats'), [
@@ -476,35 +452,6 @@ function createStackedBar(segments) {
       marginBottom: '12px',
     }
   }, flexItems);
-}
-
-function renderQuickActions(ctx) {
-  const container = document.getElementById('overview-actions-card');
-  if (!container) return;
-  mount(container, [
-    el('h2', { class: 'card__title' }, 'Ações Rápidas'),
-    el('div', { class: 'quick-action-card', onclick: () => ctx.navigate('studio') }, [
-      el('div', { class: 'quick-action-card__icon' }, el('i', { class: 'fa-solid fa-wand-magic-sparkles' })),
-      el('div', { class: 'quick-action-card__content' }, [
-        el('strong', {}, 'Executar Novo Backtest'),
-        el('span', { class: 'muted' }, 'Configure parâmetros e simule estratégias GLS sobre o Lakehouse.'),
-      ]),
-    ]),
-    el('div', { class: 'quick-action-card', onclick: () => ctx.navigate('strategies') }, [
-      el('div', { class: 'quick-action-card__icon' }, el('i', { class: 'fa-solid fa-chess-knight' })),
-      el('div', { class: 'quick-action-card__content' }, [
-        el('strong', {}, 'Gerenciar Estratégias'),
-        el('span', { class: 'muted' }, 'Edite código GLS, valide a sintaxe e publique novas versões de algoritmos.'),
-      ]),
-    ]),
-    el('div', { class: 'quick-action-card', onclick: () => ctx.navigate('data') }, [
-      el('div', { class: 'quick-action-card__icon' }, el('i', { class: 'fa-solid fa-database' })),
-      el('div', { class: 'quick-action-card__content' }, [
-        el('strong', {}, 'Sincronizar Parquets'),
-        el('span', { class: 'muted' }, 'Monitore a cobertura de ticks do Lakehouse e execute correções de dados.'),
-      ]),
-    ]),
-  ]);
 }
 
 function statCard(label, value, tone, hint, extraClass = '') {
