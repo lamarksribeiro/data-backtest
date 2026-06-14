@@ -1,6 +1,7 @@
 import { el, mount } from '../utils/dom.js';
 import { fetchHealthzCached } from '../utils/healthzCache.js';
 import { formatPnl } from '../utils/format.js';
+import { renderUplotSparkline } from '../utils/uplotChart.js';
 
 // Injeção de estilo CSS premium para o Overview
 const overviewStyles = `
@@ -130,6 +131,31 @@ const overviewStyles = `
 
   .table-premium td {
     vertical-align: middle;
+  }
+
+  @media (max-width: 768px) {
+    .portfolio-chart-section {
+      justify-content: center;
+    }
+
+    .portfolio-legend {
+      width: 100%;
+    }
+
+    .portfolio-chart-section > svg {
+      margin: 0 auto;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .portfolio-insights {
+      padding: 14px 16px;
+    }
+
+    .stat-premium .stat__hint {
+      font-size: 11px;
+      line-height: 1.4;
+    }
   }
 `;
 

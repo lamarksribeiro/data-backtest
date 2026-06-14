@@ -119,6 +119,17 @@ const settingsStyles = `
     gap: 8px;
   }
 
+  @media (max-width: 480px) {
+    .schedule-card__head {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .schedule-card__grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
   .schedule-run-list {
     display: flex;
     flex-direction: column;

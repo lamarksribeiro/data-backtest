@@ -159,10 +159,22 @@ function initMobileNav() {
   const closeBtn = mobileNav.querySelector('.mobile-nav__close');
 
   function setOpen(open) {
+    if (!open && mobileNav.contains(document.activeElement)) {
+      menuBtn.focus({ preventScroll: true });
+    }
+
     mobileNav.classList.toggle('is-open', open);
     menuBtn.classList.toggle('is-open', open);
     menuBtn.setAttribute('aria-expanded', String(open));
-    mobileNav.setAttribute('aria-hidden', String(!open));
+
+    if (open) {
+      mobileNav.removeAttribute('inert');
+      mobileNav.setAttribute('aria-hidden', 'false');
+    } else {
+      mobileNav.setAttribute('aria-hidden', 'true');
+      mobileNav.setAttribute('inert', '');
+    }
+
     document.body.classList.toggle('nav-open', open);
   }
 

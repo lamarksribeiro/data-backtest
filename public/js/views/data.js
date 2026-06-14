@@ -333,10 +333,42 @@ const dataStyles = `
 
   .coverage-year-content {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr));
     gap: 20px;
     padding: 20px;
     background: rgba(7, 10, 16, 0.2);
+  }
+
+  .coverage-year-content.is-collapsed {
+    display: none;
+  }
+
+  .coverage-year-header__title {
+    min-width: 0;
+    word-break: break-word;
+    padding-right: 8px;
+  }
+
+  .data-coverage-desc {
+    max-width: 100%;
+    word-break: break-word;
+  }
+
+  .data-coverage-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .data-dashboard-grid,
+  .data-main-panel,
+  #data-coverage-section,
+  .coverage-years-container,
+  .coverage-year-group {
+    min-width: 0;
+    max-width: 100%;
   }
 
   .coverage-month {
@@ -759,6 +791,117 @@ const dataStyles = `
     padding: 10px 12px;
     line-height: 1.45;
   }
+
+  @media (max-width: 768px) {
+    .data-sidebar-panel {
+      position: static;
+      top: auto;
+    }
+
+    .data-main-panel {
+      order: -1;
+    }
+
+    .data-dashboard-grid {
+      gap: 16px;
+    }
+
+    .data-partition-inline-panel {
+      padding: 14px 12px;
+    }
+
+    .coverage-year-header {
+      padding: 12px 14px;
+      font-size: 13px;
+    }
+
+    .coverage-year-content {
+      padding: 14px;
+      gap: 14px;
+      grid-template-columns: 1fr;
+    }
+
+    .data-coverage-legend .badge {
+      flex: 1 1 calc(50% - 4px);
+      justify-content: center;
+      min-width: 0;
+    }
+
+    .data-coverage-legend .badge:last-child:nth-child(odd) {
+      flex-basis: 100%;
+    }
+
+    .data-pending-panel {
+      padding: 12px;
+    }
+
+    .data-pending-panel__head {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    #data-coverage-section .card__header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .normalization-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .event-timeline-card {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .event-timeline-card > .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .coverage-month {
+      width: 100%;
+      padding: 10px 8px;
+    }
+
+    .coverage-month__weekdays,
+    .coverage-month__days {
+      width: min(100%, 240px);
+      margin: 0 auto;
+      gap: 4px;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+
+    .coverage-day,
+    .coverage-day__pad {
+      width: 100%;
+      max-width: 30px;
+      height: auto;
+      aspect-ratio: 1;
+      justify-self: center;
+    }
+
+    .data-coverage-legend .badge {
+      flex: 1 1 100%;
+      white-space: normal;
+      text-align: center;
+    }
+  }
+
+  @media (hover: none) and (pointer: coarse) {
+    .coverage-day--ready:hover,
+    .coverage-day--processing:hover,
+    .coverage-day--attention:hover,
+    .coverage-day.is-selected {
+      transform: none;
+    }
+
+    .coverage-month:hover {
+      transform: none;
+    }
+  }
 `;
 
 let sseHandler = null;
@@ -768,11 +911,11 @@ let jobsRefreshDebounce = null;
 let displayedProgress = {};
 
 export function buildDetailsEmptyState() {
-  return el('div', { class: 'card', style: { borderStyle: 'dashed', background: 'rgba(255,255,255,0.01)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', textAlign: 'center' } }, [
+  return el('div', { class: 'card data-details-empty', style: { borderStyle: 'dashed', background: 'rgba(255,255,255,0.01)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 16px', textAlign: 'center' } }, [
     el('div', { style: { fontSize: '24px', color: 'var(--text-3)', marginBottom: '12px' } }, [
       el('i', { class: 'fa-solid fa-calendar-day' })
     ]),
-    el('p', { class: 'muted', style: { margin: 0, fontSize: '13.5px' } }, 'Selecione um dia ativo no calendário para ver os detalhes da partição e eventos.')
+    el('p', { class: 'muted', style: { margin: 0, fontSize: '13.5px', maxWidth: '100%', wordBreak: 'break-word' } }, 'Selecione um dia ativo no calendário para ver os detalhes da partição e eventos.')
   ]);
 }
 
@@ -1012,11 +1155,11 @@ async function refreshCoverage(ctx, formCtx, { full = true } = {}) {
     el('div', { class: 'card__header' }, [
       el('div', {}, [
         el('h2', { class: 'card__title' }, `Cobertura · ${coverage.underlying} ${coverage.interval}`),
-        el('p', { style: { fontSize: '11.5px', color: 'var(--text-3)', marginTop: '4px', maxWidth: '600px', lineHeight: '1.4' } },
+        el('p', { class: 'data-coverage-desc muted', style: { fontSize: '11.5px', marginTop: '4px', lineHeight: '1.4' } },
           'Exibindo todas as partições do banco de dados para a configuração selecionada. Os dias fora do período ativo do formulário lateral aparecem esmaecidos.'
         ),
       ]),
-      el('div', { class: 'row row--wrap', style: { gap: '8px' } }, [
+      el('div', { class: 'data-coverage-legend' }, [
         legendChip('ready', coverage.summary?.ready ?? 0),
         legendChip('processing', coverage.summary?.processing ?? 0),
         legendChip('attention', coverage.summary?.attention ?? 0),
@@ -1240,9 +1383,8 @@ function renderMonthlyHeatmap(ctx, coverage) {
     const isOpen = yearIndex === 0;
 
     const headerChevron = el('span', { class: 'coverage-year-header__chevron' }, '▼');
-    const contentEl = el('div', { 
-      class: 'coverage-year-content', 
-      style: { display: isOpen ? 'flex' : 'none' } 
+    const contentEl = el('div', {
+      class: `coverage-year-content${isOpen ? '' : ' is-collapsed'}`,
     }, months.map((month) => {
       // 0 = Domingo, 1 = Segunda, etc.
       const firstDayOfWeek = new Date(year, month - 1, 1).getDay();
@@ -1294,8 +1436,10 @@ function renderMonthlyHeatmap(ctx, coverage) {
       class: `coverage-year-header${isOpen ? '' : ' is-collapsed'}`,
       onclick: (e) => {
         const btn = e.currentTarget;
+        const group = btn.closest('.coverage-year-group');
+        const content = group?.querySelector('.coverage-year-content');
         const collapsed = btn.classList.toggle('is-collapsed');
-        contentEl.style.display = collapsed ? 'none' : 'flex';
+        content?.classList.toggle('is-collapsed', collapsed);
       }
     }, [
       el('span', { class: 'coverage-year-header__title' }, `Ano de ${year} (${months.length} ${months.length === 1 ? 'mês' : 'meses'} com cobertura)`),
