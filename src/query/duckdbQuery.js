@@ -2,6 +2,7 @@ import { quotedString } from '@duckdb/node-api';
 
 import { loadConfig } from '../config.js';
 import { resolveLakeActivePath } from '../lake/paths.js';
+import { minSpotUsd } from '../quality/underlyingThresholds.js';
 import { requireDatasetAvailability } from './availability.js';
 import { openSharedConnection } from './duckdbPool.js';
 
@@ -195,10 +196,11 @@ export async function queryCandles(db, request) {
 
 export function buildTicksSql(availability, request, { select = '*', order = true } = {}) {
   const tsColumn = 'ts';
+  const minPtb = minSpotUsd(request.underlying);
   const qualityClause = request.validBacktestRows ? `
       AND underlying_price IS NOT NULL
       AND price_to_beat IS NOT NULL
-      AND price_to_beat > 1000` : '';
+      AND price_to_beat > ${minPtb}` : '';
   const conditionClause = request.conditionId
     ? ` AND condition_id = ${quotedString(String(request.conditionId))}`
     : '';

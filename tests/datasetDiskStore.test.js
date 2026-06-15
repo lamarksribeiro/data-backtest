@@ -7,6 +7,7 @@ import os from 'node:os';
 import {
 	clearDatasetDiskCache,
 	isPartitionCacheValid,
+	readValidPartitionMeta,
 	scanDatasetDiskCache,
 } from '../src/backtest/datasetDiskStore.js';
 import {
@@ -20,6 +21,30 @@ test('isPartitionCacheValid rejects stale fingerprint', () => {
 	const meta = { source_fingerprint: 'a', active_path: 'p1' };
 	const row = { status: 'valid', source_fingerprint: 'b', active_path: 'p1' };
 	assert.equal(isPartitionCacheValid(meta, row, '/tmp/x.bin'), false);
+});
+
+test('readValidPartitionMeta rejects empty cache when manifest has rows', async () => {
+	const root = await mkdtemp(path.join(os.tmpdir(), 'disk-store-empty-'));
+	const dir = path.join(root, 'backtest_ticks', 'underlying=SOL', 'interval=5m', 'book_depth=25', 'cols=abc');
+	const columnSet = {
+		length: 0,
+		columns: new Map([['_ts_ms', new Float64Array(0)], ['_event_start_ms', new Float64Array(0)], ['_event_end_ms', new Float64Array(0)]]),
+		codes: new Map([['condition_id', new Int32Array(0)]]),
+		flags: new Map(),
+		dictionaries: new Map([['condition_id', []]]),
+		events: [],
+	};
+	const binPath = partitionBinPath(dir, '2026-06-01');
+	const metaPath = partitionMetaPath(dir, '2026-06-01');
+	writeColumnSetPartition({
+		binPath,
+		metaPath,
+		columnSet,
+		meta: { dt: '2026-06-01', source_fingerprint: 'fp', active_path: 'lake/a.parquet' },
+	});
+	const manifestRow = { status: 'valid', source_fingerprint: 'fp', active_path: 'lake/a.parquet', rows: 5000 };
+	assert.equal(readValidPartitionMeta(binPath, metaPath, manifestRow), null);
+	await rm(root, { recursive: true, force: true });
 });
 
 test('scan and clear dataset disk cache', async () => {

@@ -52,6 +52,7 @@ export function readValidPartitionMeta(binPath, metaPath, manifestRow) {
 	if (!existsSync(binPath) || !existsSync(metaPath)) return null;
 	const meta = readPartitionMeta(metaPath);
 	if (!meta || !isPartitionCacheValid(meta, manifestRow, binPath)) return null;
+	if (meta.rows === 0 && (manifestRow?.rows ?? 0) > 0) return null;
 	return meta;
 }
 

@@ -1,4 +1,9 @@
-const DEFAULT_MIN_PTB = 1000;
+import { minSpotUsd } from './underlyingThresholds.js';
+
+function resolveMinPriceToBeat(tick, opts = {}) {
+  if (opts.minPriceToBeat != null) return opts.minPriceToBeat;
+  return minSpotUsd(tick?.underlying);
+}
 
 function isPriceInRange(value) {
   return value != null && Number.isFinite(value) && value >= 0 && value <= 1;
@@ -18,8 +23,9 @@ function quotesValid(tick) {
   return true;
 }
 
-export function getTickQualityIssues(tick, { minPriceToBeat = DEFAULT_MIN_PTB } = {}) {
+export function getTickQualityIssues(tick, opts = {}) {
   const issues = [];
+  const minPriceToBeat = resolveMinPriceToBeat(tick, opts);
   const hasUnderlying = tick.underlyingPrice != null && tick.underlyingPrice > 0;
   const hasUp = isPriceInRange(tick.upPrice);
   const hasDown = isPriceInRange(tick.downPrice);

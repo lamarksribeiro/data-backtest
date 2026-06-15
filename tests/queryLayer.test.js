@@ -10,7 +10,8 @@ import { toPortablePath } from '../src/lake/paths.js';
 import { writeOhlcParquetFromScalars, writeScalarsParquet } from '../src/sync/duckdbParquet.js';
 import { checkDatasetAvailability, partitionDatesForRange } from '../src/query/availability.js';
 import { rangeFromParams, inclusiveEndDateFromExclusive, inclusiveDateRangeFromRequest } from '../src/query/request.js';
-import { queryCandles, queryTicks } from '../src/query/duckdbQuery.js';
+import { queryCandles, queryTicks, buildTicksSql } from '../src/query/duckdbQuery.js';
+import { MIN_SPOT_USD, listedUnderlyings } from '../public/shared/underlyingAssets.js';
 
 test('availability resolves valid active_path and reports missing partitions', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-query-'));
@@ -254,3 +255,17 @@ function makeScalarRow(ts, underlyingPrice) {
     degraded: false,
   };
 }
+
+test('buildTicksSql uses per-asset min price_to_beat for validBacktestRows', () => {
+  const availability = { files: ['/lake/part.parquet'] };
+  const base = {
+    from: '2026-06-01T00:00:00.000Z',
+    to: '2026-06-02T00:00:00.000Z',
+    validBacktestRows: true,
+  };
+  for (const underlying of listedUnderlyings()) {
+    const sql = buildTicksSql(availability, { ...base, underlying });
+    const minPtb = MIN_SPOT_USD[underlying];
+    assert.match(sql, new RegExp(`price_to_beat > ${String(minPtb).replace('.', '\\.')}`));
+  }
+});

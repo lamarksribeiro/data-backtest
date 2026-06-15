@@ -3,6 +3,8 @@
  * Dados permanecem em TypedArrays da fronteira DuckDB até a estratégia.
  */
 
+import { minSpotUsd } from '../quality/underlyingThresholds.js';
+
 const MS_COLUMNS = new Set(['ts', 'event_start', 'event_end']);
 const CODE_COLUMNS = new Set(['market_id', 'underlying', 'interval', 'condition_id']);
 const FLAG_COLUMNS = new Set(['degraded']);
@@ -106,13 +108,15 @@ class ColumnSetBuilder {
     const flags = new Map();
     for (const [name, arr] of this.flags) flags.set(name, trimFlag(arr));
 
+    const dictionaries = new Map(this.dictionaries);
+
     const columnSet = {
       length,
       columns,
       codes,
-      dictionaries: new Map(this.dictionaries),
+      dictionaries,
       flags,
-      events: buildEventIndex({ length, codes, columns }),
+      events: buildEventIndex({ length, codes, columns, dictionaries }),
     };
     return columnSet;
   }
@@ -125,7 +129,21 @@ export function classifyColumnName(name) {
   return 'numeric';
 }
 
-function firstValidPriceToBeat(priceToBeat, startRow, endRow, minPriceToBeat = 1000) {
+function inferUnderlying(codes, dictionaries) {
+  const underlyingCodes = codes?.get('underlying');
+  const dict = dictionaries?.get('underlying');
+  if (!underlyingCodes?.length || !dict?.length) return null;
+  const code = underlyingCodes[0];
+  if (!Number.isInteger(code) || code < 0 || code >= dict.length) return null;
+  return dict[code];
+}
+
+function resolveMinPriceToBeat({ underlying, dictionaries, codes, minPriceToBeat } = {}) {
+  if (minPriceToBeat != null && Number.isFinite(minPriceToBeat)) return minPriceToBeat;
+  return minSpotUsd(underlying ?? inferUnderlying(codes, dictionaries));
+}
+
+function firstValidPriceToBeat(priceToBeat, startRow, endRow, minPriceToBeat) {
   if (!priceToBeat) return Number.NaN;
   for (let row = startRow; row < endRow; row += 1) {
     const value = priceToBeat[row];
@@ -135,7 +153,8 @@ function firstValidPriceToBeat(priceToBeat, startRow, endRow, minPriceToBeat = 1
   return fallback != null && Number.isFinite(fallback) ? fallback : Number.NaN;
 }
 
-export function buildEventIndex({ length, codes, columns }) {
+export function buildEventIndex({ length, codes, columns, dictionaries, underlying, minPriceToBeat } = {}) {
+  const minPtb = resolveMinPriceToBeat({ underlying, dictionaries, codes, minPriceToBeat });
   const conditionCodes = codes.get('condition_id');
   const eventStartMs = columns.get('_event_start_ms') ?? columns.get('event_start');
   const eventEndMs = columns.get('_event_end_ms') ?? columns.get('event_end');
@@ -157,7 +176,7 @@ export function buildEventIndex({ length, codes, columns }) {
         endRow: i,
         eventStart: eventStartMs[startRow],
         eventEnd: eventEndMs?.[startRow] ?? Number.NaN,
-        priceToBeat: firstValidPriceToBeat(priceToBeat, startRow, i),
+        priceToBeat: firstValidPriceToBeat(priceToBeat, startRow, i, minPtb),
       });
       startRow = i;
       prevCondition = condition;
@@ -172,7 +191,7 @@ export function buildEventIndex({ length, codes, columns }) {
       endRow: length,
       eventStart: eventStartMs[startRow],
       eventEnd: eventEndMs?.[startRow] ?? Number.NaN,
-      priceToBeat: firstValidPriceToBeat(priceToBeat, startRow, length),
+      priceToBeat: firstValidPriceToBeat(priceToBeat, startRow, length, minPtb),
     });
   }
 

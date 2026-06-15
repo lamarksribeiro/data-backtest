@@ -190,7 +190,7 @@ export function deserializeColumnSet(buffer) {
 		codes,
 		flags,
 		dictionaries,
-		events: buildEventIndex({ length: rowCount, codes, columns }),
+		events: buildEventIndex({ length: rowCount, codes, columns, dictionaries }),
 	};
 	return columnSet;
 }

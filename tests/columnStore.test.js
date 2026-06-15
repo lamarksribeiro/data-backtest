@@ -54,3 +54,29 @@ test('column set builder builds event index', () => {
 test('buildEventIndex handles empty column set', () => {
   assert.deepEqual(buildEventIndex({ length: 0, codes: new Map(), columns: new Map() }), []);
 });
+
+test('buildEventIndex uses per-asset min price_to_beat from underlying dictionary', () => {
+  const builder = createColumnSetBuilder({ initialCapacity: 4 });
+  builder.registerColumn('underlying', 'code');
+  builder.registerColumn('condition_id', 'code');
+  builder.registerColumn('_event_start_ms', 'ms');
+  builder.registerColumn('_event_end_ms', 'ms');
+  builder.registerColumn('price_to_beat', 'numeric');
+
+  builder.ensureCapacity(2);
+  builder.codes.get('underlying')[0] = builder.internCode('underlying', 'DOGE');
+  builder.codes.get('condition_id')[0] = builder.internCode('condition_id', 'c1');
+  builder.columns.get('_event_start_ms')[0] = 1000;
+  builder.columns.get('_event_end_ms')[0] = 2000;
+  builder.columns.get('price_to_beat')[0] = 0.2;
+  builder.codes.get('underlying')[1] = builder.codes.get('underlying')[0];
+  builder.codes.get('condition_id')[1] = builder.codes.get('condition_id')[0];
+  builder.columns.get('_event_start_ms')[1] = 1000;
+  builder.columns.get('_event_end_ms')[1] = 2000;
+  builder.columns.get('price_to_beat')[1] = 0.21;
+  builder.length = 2;
+
+  const columnSet = builder.finalize();
+  assert.equal(columnSet.events.length, 1);
+  assert.equal(columnSet.events[0].priceToBeat, 0.2);
+});

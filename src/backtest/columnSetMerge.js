@@ -82,7 +82,7 @@ export function concatColumnSets(parts) {
 		codes,
 		flags,
 		dictionaries,
-		events: buildEventIndex({ length: totalLength, codes, columns }),
+		events: buildEventIndex({ length: totalLength, codes, columns, dictionaries }),
 	};
 }
 
@@ -115,7 +115,7 @@ export function sliceColumnSet(columnSet, fromMs, toMs) {
 		codes,
 		flags,
 		dictionaries: columnSet.dictionaries,
-		events: buildEventIndex({ length, codes, columns }),
+		events: buildEventIndex({ length, codes, columns, dictionaries: columnSet.dictionaries }),
 	};
 }
 
