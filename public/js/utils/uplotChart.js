@@ -37,6 +37,8 @@ function loadUplot() {
   return uplotReady;
 }
 
+const SPARKLINE_HEIGHT = 56;
+
 /** Mini sparkline: valores numéricos no eixo X (sem converter para data). */
 export async function renderUplotSparkline(container, values) {
   if (!container || !values?.length) return null;
@@ -46,14 +48,20 @@ export async function renderUplotSparkline(container, values) {
   const ys = values.map((v) => Number(v) || 0);
   const chart = new uPlot({
     width: container.clientWidth || 200,
-    height: 52,
+    height: SPARKLINE_HEIGHT,
+    scales: {
+      y: {
+        auto: true,
+        range: (u, min, max) => tightYRange(u, min, max),
+      },
+    },
     series: [{}, { stroke: '#f97316', width: 1.5, points: { show: false } }],
     axes: [{ show: false }, { show: false }],
     cursor: { show: false },
     legend: { show: false },
-    padding: [4, 4, 0, 0],
+    padding: [6, 4, 6, 4],
   }, [xs, ys], container);
-  const onResize = () => chart.setSize({ width: container.clientWidth || 200, height: 52 });
+  const onResize = () => chart.setSize({ width: container.clientWidth || 200, height: SPARKLINE_HEIGHT });
   window.addEventListener('resize', onResize);
   chart.destroy = ((orig) => () => {
     window.removeEventListener('resize', onResize);
