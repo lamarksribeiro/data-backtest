@@ -83,6 +83,7 @@ const state = {
     runOutcome: 'all',
   },
   historyPanelApi: null,
+  historyFocusedVersionId: null,
 };
 
 const DEFAULT_HISTORY_FILTERS = {
@@ -97,6 +98,7 @@ function resetHistoryFilters(strategyId) {
   if (state.historyStrategyId !== strategyId) {
     state.historyStrategyId = strategyId;
     state.historyFilters = { ...DEFAULT_HISTORY_FILTERS };
+    state.historyFocusedVersionId = null;
   }
 }
 
@@ -148,19 +150,19 @@ function filterRuns(runs, versions) {
   });
 }
 
-function renderVersionTableRow(ctx, strategy, version, versionStat, switchTab) {
+function renderVersionTableRow(ctx, strategy, version, versionStat, onVersionFocus) {
   const isDefault = strategy.default_version_id === version.id;
+  const isFocused = state.historyFocusedVersionId === version.id;
   const vRuns = versionStat.runs ?? 0;
   const vWinRate = versionStat.win_rate ?? 0;
   const vAvgPnl = versionStat.avg_pnl ?? 0;
 
   return el('tr', {
-    class: `strategy-history-row${isDefault ? ' is-default' : ''}${state.selectedVersionId === version.id ? ' is-selected' : ''}`,
-    title: 'Clique para abrir no editor GLS',
-    onclick: async (e) => {
+    class: `strategy-history-row${isDefault ? ' is-default' : ''}${isFocused ? ' is-selected' : ''}`,
+    title: 'Clique para ver simulações desta versão',
+    onclick: (e) => {
       if (e.target.closest('button')) return;
-      await openStrategyEditor(ctx, strategy.id, version.id);
-      switchTab('code');
+      onVersionFocus(version.id, { scroll: true });
     },
   }, [
     el('td', { class: 'mono strategy-history-col--version' }, [
@@ -207,14 +209,7 @@ function renderVersionTableRow(ctx, strategy, version, versionStat, switchTab) {
         title: 'Filtrar simulações desta versão',
         onclick: (e) => {
           e.stopPropagation();
-          state.historyFilters.runVersionId = String(version.id);
-          const sel = document.getElementById('strategy-run-version-filter');
-          if (sel) {
-            sel.value = state.historyFilters.runVersionId;
-            sel.dispatchEvent(new Event('change', { bubbles: true }));
-          }
-          document.querySelector('#tab-content-stats .strategy-history-section:last-child')
-            ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          onVersionFocus(version.id, { scroll: true });
         },
       }, el('i', { class: 'fa-solid fa-filter' })),
       el('button', {
@@ -287,6 +282,18 @@ function renderStrategyHistoryTab(ctx, { strategy, strategyId, versions: initial
   const versionsCountEl = el('span', { class: 'strategy-history-count muted' });
   const runsCountEl = el('span', { class: 'strategy-history-count muted' });
 
+  function focusVersionInHistory(versionId, { scroll = false } = {}) {
+    state.historyFilters.runVersionId = String(versionId);
+    state.historyFocusedVersionId = versionId;
+    runVersionSelect.value = state.historyFilters.runVersionId;
+    refreshVersionsTable();
+    refreshRunsTable();
+    if (scroll) {
+      document.querySelector('#tab-content-stats .strategy-history-section:last-child')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
   function refreshVersionsTable() {
     const filtered = filterVersions(versions, stats, strategyRef);
     mount(versionsCountEl, [renderHistoryFilterCount(filtered.length, versions.length)]);
@@ -299,7 +306,7 @@ function renderStrategyHistoryTab(ctx, { strategy, strategyId, versions: initial
     }
     mount(versionsTbody, filtered.map((v) => {
       const vStat = stats.by_version?.find((bv) => bv.version_id === v.id) || {};
-      return renderVersionTableRow(ctx, strategyRef, v, vStat, switchTab);
+      return renderVersionTableRow(ctx, strategyRef, v, vStat, focusVersionInHistory);
     }));
   }
 
@@ -346,6 +353,7 @@ function renderStrategyHistoryTab(ctx, { strategy, strategyId, versions: initial
     }
     if (state.historyFilters.runVersionId && !versions.some((v) => String(v.id) === state.historyFilters.runVersionId)) {
       state.historyFilters.runVersionId = '';
+      state.historyFocusedVersionId = null;
     }
     rebuildRunVersionSelect();
     mount(summaryEl, renderStrategyPerformanceSummary(strategyStats));
@@ -376,6 +384,7 @@ function renderStrategyHistoryTab(ctx, { strategy, strategyId, versions: initial
     value: state.historyFilters.runVersionId,
     onchange: (e) => {
       state.historyFilters.runVersionId = e.target.value;
+      state.historyFocusedVersionId = e.target.value ? Number(e.target.value) : null;
       onFilterChange();
     },
   }, [
