@@ -43,7 +43,12 @@ const TIMESTAMP_TYPE_IDS = new Set([
 /**
  * Carrega ticks do Parquet via DuckDB em ColumnSet (sem objetos-linha JS).
  */
-export async function loadBacktestColumnSet(db, request, { onProgress } = {}) {
+export async function loadBacktestColumnSet(db, request, options = {}) {
+	const { loadBacktestColumnSetWithDiskCache } = await import('../backtest/datasetDiskLoader.js');
+	return loadBacktestColumnSetWithDiskCache(db, request, options);
+}
+
+export async function loadBacktestColumnSetFromDuckdb(db, request, { onProgress } = {}) {
   const dataset = request.dataset || 'backtest_ticks';
   const availability = requireDatasetAvailability(db, { ...request, dataset });
   const bookDepth = request.bookDepth ?? 25;

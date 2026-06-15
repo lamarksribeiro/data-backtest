@@ -123,6 +123,19 @@ DATA_COLLECTOR_API_URL=http://localhost:3000
 DATA_COLLECTOR_ARCHIVE_API_KEY=
 ```
 
+### Cache de dataset (disco)
+
+O backtest materializa **ColumnSets por dia UTC** em `{STATE_DB_PATH dir}/dataset-cache/` (ou `DATASET_DISK_CACHE_DIR`). Na primeira leitura de uma janela, cada dia ausente é lido do Parquet via DuckDB e gravado em disco; execuções seguintes (mesmas colunas/book depth) leem só os arquivos necessários e aplicam subset por timestamp.
+
+| Variável | Default | Função |
+|----------|---------|--------|
+| `DATASET_DISK_CACHE` | `1` | Liga/desliga cache em disco |
+| `DATASET_DISK_CACHE_DIR` | ao lado do SQLite | Raiz do cache |
+| `DATASET_DISK_CACHE_MAX_GB` | `0` (ilimitado) | Eviction LRU por tamanho |
+| `DATASET_CACHE_MAX_MB` | ~512 ou 20% heap | LRU em RAM; **use `0` em produção** com disco |
+
+CLI: `npm run cache:dataset -- --underlying BTC --interval 5m --from 2026-05-04 --to 2026-06-13 --book-depth 25`. Gestão na UI em **Configurações → Cache de backtest**.
+
 ### Login da UI
 
 A interface web exige autenticação (mesmo padrão do `data-colector`: cookie HMAC + bcrypt).

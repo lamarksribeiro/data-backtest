@@ -52,6 +52,9 @@ export function loadConfig(env = process.env) {
     sweepVariantWorkers: Math.max(Number.parseInt(String(env.SWEEP_VARIANT_WORKERS || '1'), 10) || 1, 1),
     maxConcurrentBacktests: Math.max(Number.parseInt(String(env.MAX_CONCURRENT_BACKTESTS || '1'), 10) || 1, 1),
     datasetCacheMaxMb: resolveDatasetCacheMaxMb(env),
+    datasetDiskCacheEnabled: resolveDatasetDiskCacheEnabled(env),
+    datasetDiskCacheDir: resolveDatasetDiskCacheDir(env),
+    datasetDiskCacheMaxGb: resolveDatasetDiskCacheMaxGb(env),
     prepareMaxConcurrent: Math.max(Number.parseInt(String(env.PREPARE_MAX_CONCURRENT || '2'), 10) || 2, 1),
     prepareRunner: normalizePrepareRunner(env.PREPARE_RUNNER),
   };
@@ -90,6 +93,9 @@ export function serializeWorkerConfig(config) {
     sweepMaxVariants: config.sweepMaxVariants,
     sweepVariantWorkers: config.sweepVariantWorkers,
     datasetCacheMaxMb: config.datasetCacheMaxMb,
+    datasetDiskCacheEnabled: config.datasetDiskCacheEnabled,
+    datasetDiskCacheDir: config.datasetDiskCacheDir,
+    datasetDiskCacheMaxGb: config.datasetDiskCacheMaxGb,
   };
 }
 
@@ -134,6 +140,28 @@ function resolveDatasetCacheMaxMb(env) {
     }
   }
   return 512;
+}
+
+function resolveDatasetDiskCacheEnabled(env) {
+  const raw = env.DATASET_DISK_CACHE;
+  if (raw == null || String(raw).trim() === '') return true;
+  const v = String(raw).trim().toLowerCase();
+  return !['0', 'false', 'no', 'off'].includes(v);
+}
+
+function resolveDatasetDiskCacheDir(env) {
+  const raw = env.DATASET_DISK_CACHE_DIR;
+  if (raw != null && String(raw).trim() !== '') {
+    return resolvePath(raw, './state/dataset-cache');
+  }
+  const stateDb = resolvePath(env.STATE_DB_PATH, './state/data-backtest.db');
+  return path.join(path.dirname(stateDb), 'dataset-cache');
+}
+
+function resolveDatasetDiskCacheMaxGb(env) {
+  const raw = env.DATASET_DISK_CACHE_MAX_GB;
+  if (raw == null || String(raw).trim() === '') return 0;
+  return Math.max(Number.parseFloat(String(raw)) || 0, 0);
 }
 
 export function requireSourceDatabaseUrl(config) {

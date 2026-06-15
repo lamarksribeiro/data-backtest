@@ -38,6 +38,21 @@ test('buildProgress advances loading percent from loaded rows', () => {
   assert.ok(doneLoad.percent >= 12);
 });
 
+test('buildProgress shows merge step near end of loading phase', () => {
+  const startedAt = Date.now() - 5000;
+  const merge = buildProgress({
+    phase: 'loading',
+    ticks: 0,
+    loadedTicks: 1_000_000,
+    batches: 0,
+    totalTicks: 1_000_000,
+    loadingStep: 'merge',
+    startedAt,
+  });
+  assert.ok(merge.percent >= 11);
+  assert.equal(merge.loading_step, 'merge');
+});
+
 test('buildProgress maps processing ticks into weighted percent', () => {
   const startedAt = Date.now() - 10_000;
   const half = buildProgress({

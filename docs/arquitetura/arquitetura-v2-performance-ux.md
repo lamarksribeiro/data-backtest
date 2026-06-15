@@ -208,18 +208,22 @@ Trocar o flush único (`persistEventTraces`, hoje chamado 1× no fim) por flush
 ### 4.6 E6 — Cache de dataset entre runs (re-run instantâneo)
 
 O caso de uso dominante é *rodar a mesma janela de dados várias vezes mudando
-parâmetros*. Proposta:
+parâmetros*. Implementação atual (Fase 3):
 
-- `src/backtest/datasetCache.js`: após a primeira leitura, os batches
-  convertidos ficam em **colunas tipadas** (`Float64Array`/`Int32Array` por
-  coluna — layout colunar, compatível com transferable/SharedArrayBuffer entre
-  workers), chaveados por `(underlying, interval, bookDepth, from, to, colunas)`.
-- Política LRU por bytes (`DATASET_CACHE_MAX_MB`, default ~512 MB; 0 desliga).
-- Re-run com mesmos dados: `duckdbReadMs ≈ 0` e sem custo de conversão — o tempo
-  do backtest vira praticamente só o `processMs` compilado.
-- Pré-requisito direto para o **otimizador de parâmetros** (grid/random search)
-  do pós-MVP: N variações de params sobre o mesmo dataset cacheado, distribuídas
-  pelo pool de workers.
+- **Cache em disco** (`src/backtest/datasetDiskLoader.js`, `columnSetDisk.js`,
+  `datasetDiskStore.js`): materialização **por partição diária UTC** em
+  `{state}/dataset-cache/`. Auto-gravação em miss; subset automático por
+  `_ts_ms` após concatenação (`columnSetMerge.js`).
+- Invalidação lazy via `source_fingerprint` + `active_path` do `lake_manifest`.
+- `DATASET_DISK_CACHE=1` (default), `DATASET_DISK_CACHE_MAX_GB` para eviction LRU.
+- Cache **RAM** (`src/backtest/datasetCache.js`, `DATASET_CACHE_MAX_MB`): útil só
+  dentro do mesmo processo; workers efêmeros do Estúdio não reaproveitam — em
+  produção, preferir `DATASET_CACHE_MAX_MB=0` e disco.
+- Re-run com mesmos dados/colunas: `duckdbReadMs ≈ 0` após materialização.
+- Gestão: `GET/DELETE /api/settings/dataset-cache`, warmup via POST; CLI
+  `npm run cache:dataset`; aba **Cache de backtest** em Configurações da UI.
+- Pré-requisito para **otimizador de parâmetros** (grid/random search): N
+  variações sobre o mesmo dataset cacheado em disco.
 
 ### 4.7 E7 — Chart de evento pré-computado
 

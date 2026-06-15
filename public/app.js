@@ -9,6 +9,7 @@ import { renderData } from './js/views/data.js';
 import { renderStudio, leaveStudio, redirectLegacyBacktestRoute } from './js/views/studio.js';
 import { renderStrategies } from './js/views/strategies.js';
 import { renderSettings } from './js/views/settings.js';
+import { renderDatasetCacheSettings } from './js/views/datasetCacheSettings.js';
 
 const contentEl = document.getElementById('content');
 const backButton = document.getElementById('nav-back');
@@ -45,6 +46,7 @@ function topLevelRoute(route) {
 function parentRouteFor(route) {
   const path = String(route || '').split('?')[0];
   if (path.startsWith('strategies/')) return 'strategies';
+  if (path.startsWith('settings/')) return 'settings';
   if (path.startsWith('backtests')) return 'studio';
   return SECTION_ROUTES[currentSection] || 'overview';
 }
@@ -140,6 +142,7 @@ async function bootstrap() {
       'strategies/:id/:versionId': (params) => renderStrategies(ctx, params),
       data: () => renderData(ctx),
       settings: () => renderSettings(ctx),
+      'settings/cache': () => renderDatasetCacheSettings(ctx),
       jobs: () => { navigate('data'); },
       backtests: () => navigate('studio'),
       'backtests/:id': (params) => redirectLegacyBacktestRoute({ id: params.id }),

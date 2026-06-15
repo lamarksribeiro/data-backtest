@@ -2,6 +2,7 @@ import { el, mount, emptyState } from '../utils/dom.js';
 import { confirmDialog } from '../utils/confirm.js';
 import { applyContextOptions, contextBarOptions, loadContext, selectField } from '../utils/context.js';
 import { fetchContextOptionsCached } from '../utils/contextOptionsCache.js';
+import { renderSettingsTabs } from './settingsTabs.js';
 
 const settingsStyles = `
   .settings-grid {
@@ -150,7 +151,7 @@ const settingsStyles = `
 `;
 
 export async function renderSettings(ctx) {
-  ctx.setBreadcrumb('settings', 'Configurações');
+  ctx.setBreadcrumb('settings', 'Sincronização Parquet');
   ctx.renderContextBar?.();
 
   if (!document.getElementById('settings-custom-styles')) {
@@ -165,12 +166,18 @@ export async function renderSettings(ctx) {
 }
 
 async function refreshSettings(ctx, fieldOptions, formCtx = loadContext()) {
-  const res = await ctx.api.get('/api/settings/asset-update-schedules');
-  if (!res.ok) {
-    mount(ctx.contentEl, el('p', { class: 'bad' }, res.error?.message || 'Falha ao carregar configurações'));
+  const schedulesRes = await ctx.api.get('/api/settings/asset-update-schedules');
+  if (!schedulesRes.ok) {
+    mount(ctx.contentEl, el('p', { class: 'bad' }, schedulesRes.error?.message || 'Falha ao carregar configurações'));
     return;
   }
-  renderSettingsPage(ctx, fieldOptions, formCtx, res.data.schedules || [], res.data.target_to_date);
+  renderSettingsPage(
+    ctx,
+    fieldOptions,
+    formCtx,
+    schedulesRes.data.schedules || [],
+    schedulesRes.data.target_to_date,
+  );
 }
 
 function renderSettingsPage(ctx, fieldOptions, formCtx, schedules, targetToDate) {
@@ -178,9 +185,10 @@ function renderSettingsPage(ctx, fieldOptions, formCtx, schedules, targetToDate)
     el('div', { class: 'page-header' }, [
       el('div', {}, [
         el('h1', {}, 'Configurações'),
-        el('p', { class: 'page-header__sub' }, 'Automatize a preparação dos ativos antes dos backtests.'),
+        el('p', { class: 'page-header__sub' }, 'Agendamentos automáticos para preparar Parquet no lakehouse — jobs de sync e rebuild.'),
       ]),
     ]),
+    renderSettingsTabs('sync'),
     el('div', { class: 'settings-grid' }, [
       el('section', { class: 'card' }, [
         el('h2', { class: 'card__title' }, 'Novo agendamento'),

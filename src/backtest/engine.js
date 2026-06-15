@@ -109,7 +109,9 @@ export async function runBacktest(db, request, { onProgress, progressStartedAt: 
 }
 
 async function runSoAEngine(db, request, ctx) {
-  const cache = getDatasetCache(ctx.config.datasetCacheMaxMb);
+  const cache = ctx.config.datasetDiskCacheEnabled
+    ? { get: () => null, set: () => {} }
+    : getDatasetCache(ctx.config.datasetCacheMaxMb);
   const cacheKey = datasetCacheKey({ ...request, dataset: ctx.dataset }, ctx.columnAnalysis?.scalarColumns?.join(','));
   let columnSet = cache.get(cacheKey);
   const useCompiledSoa = ctx.runner.executionMode === 'compiled-soa' && typeof ctx.runner.bindColumnSet === 'function';
@@ -148,14 +150,15 @@ async function runSoAEngine(db, request, ctx) {
         dataset: ctx.dataset,
         validBacktestRows: true,
       }, {
-        onProgress: ({ loadedRows: nextLoaded }) => {
+        onProgress: ({ loadedRows: nextLoaded, loadingStep }) => {
           loadedRows = nextLoaded;
           ctx.emitProgress({
             phase: 'loading',
             ticks: 0,
             loadedTicks: loadedRows,
             batches: 0,
-            totalTicks: estimatedLoad || null,
+            totalTicks: estimatedLoad || loadedRows || null,
+            loadingStep,
           });
         },
       });
@@ -205,33 +208,52 @@ async function runSoAEngine(db, request, ctx) {
     && columnSet.events.length > 1
     && typeof ctx.runner.importParallelSlices === 'function';
 
-  if (canParallelize) {
-    ctx.emitProgress({ phase: 'processing', ticks: 0, batches: 1, totalTicks: ticks, force: true });
-    const slices = await runParallelEventSlices({
-      ast: request.glsAst,
-      params: request.params ?? {},
-      columnSet,
-      workerCount,
-      fastRun: Boolean(request.fastRun),
-      bookDepth: ctx.effectiveBookDepth,
+  let processingTicks = 0;
+  const processingHeartbeat = setInterval(() => {
+    ctx.emitProgress({
+      phase: 'processing',
+      ticks: processingTicks,
+      batches: 1,
+      totalTicks: ticks,
+      force: true,
     });
-    if (slices?.length) {
-      ctx.runner.importParallelSlices(slices);
-      ctx.emitProgress({ phase: 'processing', ticks: ticks, batches: 1, totalTicks: ticks, force: true });
+  }, 1000);
+
+  try {
+    if (canParallelize) {
+      ctx.emitProgress({ phase: 'processing', ticks: 0, batches: 1, totalTicks: ticks, force: true });
+      const slices = await runParallelEventSlices({
+        ast: request.glsAst,
+        params: request.params ?? {},
+        columnSet,
+        workerCount,
+        fastRun: Boolean(request.fastRun),
+        bookDepth: ctx.effectiveBookDepth,
+      });
+      if (slices?.length) {
+        ctx.runner.importParallelSlices(slices);
+        processingTicks = ticks;
+        ctx.emitProgress({ phase: 'processing', ticks: ticks, batches: 1, totalTicks: ticks, force: true });
+      } else {
+        await runSequentialSoA(ctx.runner, columnSet, useCompiledSoa, (processed) => {
+          processingTicks = processed;
+          ctx.emitProgress({ phase: 'processing', ticks: processed, batches: 1, totalTicks: ticks });
+        });
+      }
+    } else if (useCompiledSoa) {
+      ctx.runner.bindColumnSet(columnSet);
+      await runSequentialSoA(ctx.runner, columnSet, true, (processed) => {
+        processingTicks = processed;
+        ctx.emitProgress({ phase: 'processing', ticks: processed, batches: 1, totalTicks: ticks });
+      });
     } else {
-      runSequentialSoA(ctx.runner, columnSet, useCompiledSoa, (processed, total) => {
-        ctx.emitProgress({ phase: 'processing', ticks: processed, batches: 1, totalTicks: total });
+      await runSequentialSoA(ctx.runner, columnSet, false, (processed) => {
+        processingTicks = processed;
+        ctx.emitProgress({ phase: 'processing', ticks: processed, batches: 1, totalTicks: ticks });
       });
     }
-  } else if (useCompiledSoa) {
-    ctx.runner.bindColumnSet(columnSet);
-    runSequentialSoA(ctx.runner, columnSet, true, (processed, total) => {
-      ctx.emitProgress({ phase: 'processing', ticks: processed, batches: 1, totalTicks: total });
-    });
-  } else {
-    runSequentialSoA(ctx.runner, columnSet, false, (processed, total) => {
-      ctx.emitProgress({ phase: 'processing', ticks: processed, batches: 1, totalTicks: total });
-    });
+  } finally {
+    clearInterval(processingHeartbeat);
   }
   ctx.timings.processMs += Date.now() - processStartedAt;
   ctx.emitProgress({ phase: 'processing', ticks, batches, totalTicks: ticks, force: true });
@@ -239,7 +261,9 @@ async function runSoAEngine(db, request, ctx) {
   return { ticks, batches };
 }
 
-export function runSequentialSoA(runner, columnSet, compiledSoa, onProgress = null) {
+const PROCESS_YIELD_EVERY = 512;
+
+export async function runSequentialSoA(runner, columnSet, compiledSoa, onProgress = null) {
   const total = columnSet.length;
   let lastEmitAt = 0;
 
@@ -248,7 +272,13 @@ export function runSequentialSoA(runner, columnSet, compiledSoa, onProgress = nu
     const now = Date.now();
     if (processed < total && now - lastEmitAt < 350) return;
     lastEmitAt = now;
-    onProgress(processed, total);
+    onProgress(processed);
+  };
+
+  const yieldIfNeeded = async (index) => {
+    if (index > 0 && index % PROCESS_YIELD_EVERY === 0) {
+      await new Promise((resolve) => setImmediate(resolve));
+    }
   };
 
   if (compiledSoa) {
@@ -257,6 +287,7 @@ export function runSequentialSoA(runner, columnSet, compiledSoa, onProgress = nu
       for (let i = ev.startRow; i < ev.endRow; i += 1) {
         runner.processIndex(i);
         emitProgress(i + 1);
+        await yieldIfNeeded(i - ev.startRow);
       }
       runner.endEvent(ev);
     }
@@ -268,6 +299,7 @@ export function runSequentialSoA(runner, columnSet, compiledSoa, onProgress = nu
     cursor.setIndex(i);
     runner.processTick(cursor);
     emitProgress(i + 1);
+    await yieldIfNeeded(i);
   }
 }
 
@@ -318,13 +350,15 @@ function createProgressEmitter(onProgress, startedAt) {
   let lastEmitAt = 0;
   let processingStartedAt = null;
   let lastPercent = 0;
-  return ({ phase, ticks, loadedTicks, batches, totalTicks, force = false }) => {
+  return ({ phase, ticks, loadedTicks, batches, totalTicks, loadingStep, force = false }) => {
     if (!onProgress) return;
     const now = Date.now();
     if (!force && now - lastEmitAt < PROGRESS_MIN_MS) return;
     lastEmitAt = now;
     if (phase === 'processing' && processingStartedAt == null) processingStartedAt = now;
-    const progress = buildProgress({ phase, ticks, loadedTicks, batches, totalTicks, startedAt, processingStartedAt });
+    const progress = buildProgress({
+      phase, ticks, loadedTicks, batches, totalTicks, loadingStep, startedAt, processingStartedAt,
+    });
     if (progress.percent != null) {
       progress.percent = Math.max(lastPercent, progress.percent);
       lastPercent = progress.percent;
@@ -333,7 +367,9 @@ function createProgressEmitter(onProgress, startedAt) {
   };
 }
 
-export function buildProgress({ phase, ticks, loadedTicks = null, batches, totalTicks, startedAt, processingStartedAt = null }) {
+export function buildProgress({
+  phase, ticks, loadedTicks = null, batches, totalTicks, loadingStep = null, startedAt, processingStartedAt = null,
+}) {
   const elapsedMs = Math.max(Date.now() - startedAt, 1);
   const safeTotal = totalTicks > 0 ? totalTicks : null;
   const safeTicks = Math.max(Number(ticks) || 0, 0);
@@ -345,7 +381,9 @@ export function buildProgress({ phase, ticks, loadedTicks = null, batches, total
       LOADING_PHASE_WEIGHT * 100 * 0.2,
       (elapsedMs / 120_000) * LOADING_PHASE_WEIGHT * 100,
     );
-    if (safeTotal && safeLoadedTicks > 0) {
+    if (loadingStep === 'merge') {
+      percent = LOADING_PHASE_WEIGHT * 100 * 0.95;
+    } else if (safeTotal && safeLoadedTicks > 0) {
       const loadRatio = Math.min(1, safeLoadedTicks / safeTotal);
       percent = Math.max(loadRatio * LOADING_PHASE_WEIGHT * 100, loadingIdlePercent);
     } else if (safeTotal) {
@@ -380,6 +418,7 @@ export function buildProgress({ phase, ticks, loadedTicks = null, batches, total
     phase,
     ticks: safeTicks,
     loaded_ticks: safeLoadedTicks || null,
+    loading_step: loadingStep || null,
     batches,
     total_ticks: safeTotal,
     percent: percent != null ? Math.min(99, Math.max(0, percent)) : null,

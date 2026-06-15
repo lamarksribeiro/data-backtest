@@ -25,6 +25,8 @@ import { runBacktest } from './backtest/engine.js';
 import { runBackupCheck } from './ops/backupCheck.js';
 import { getStrategy, getStrategyVersion } from './backtestStudio/state/strategies.js';
 import { parse } from './backtestStudio/gls/parser.js';
+import { warmupDatasetDiskCache } from './backtest/datasetDiskLoader.js';
+import { clearDatasetDiskCache, scanDatasetDiskCache } from './backtest/datasetDiskStore.js';
 
 function parseArgs(argv) {
   const [command = 'help', ...rest] = argv;
@@ -78,6 +80,9 @@ Commands:
   sync:backfill-ohlc Exports OHLC candles from valid scalars Parquet
   sync:incremental Exports recent sealed scalars partitions using SYNC_MARGIN_MINUTES
   sync:reconcile-scalars Recomputes source fingerprints and marks changed scalars stale
+  cache:dataset     Materializes daily ColumnSet cache on disk for a date window
+  cache:dataset:stats Shows disk cache usage summary
+  cache:dataset:clear Clears disk cache (optional filters)
 
 Sync examples:
   node src/cli.js sync:partitions --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m
@@ -480,6 +485,36 @@ async function main() {
       } finally {
         await closeSourcePool(pool);
       }
+      return;
+    }
+
+    if (command === 'cache:dataset') {
+      const range = toRange(flags);
+      const warmed = await warmupDatasetDiskCache(db, {
+        dataset: flags.dataset ? String(flags.dataset) : 'backtest_ticks',
+        underlying: requiredFlag(flags, 'underlying').toUpperCase(),
+        interval: requiredFlag(flags, 'interval'),
+        bookDepth: optionalIntFlag(flags, 'book-depth') ?? config.backtestBookDepth,
+        from: range.from,
+        to: range.to,
+      }, { config });
+      printJson(warmed);
+      return;
+    }
+
+    if (command === 'cache:dataset:stats') {
+      printJson(scanDatasetDiskCache(config));
+      return;
+    }
+
+    if (command === 'cache:dataset:clear') {
+      const result = clearDatasetDiskCache(config, {
+        underlying: flags.underlying ? String(flags.underlying).toUpperCase() : undefined,
+        interval: flags.interval ? String(flags.interval) : undefined,
+        dataset: flags.dataset ? String(flags.dataset) : undefined,
+        bookDepth: flags['book-depth'] != null ? optionalIntFlag(flags, 'book-depth') : undefined,
+      });
+      printJson({ ok: true, ...result });
       return;
     }
 

@@ -54,19 +54,37 @@ function partitionEventIndices(eventCount, workers, chunkSize) {
 }
 
 function runChunk(workerData) {
+  const timeoutMs = Math.max(Number(workerData.timeoutMs) || 0, 0) || 30 * 60 * 1000;
   return new Promise((resolve, reject) => {
+    let settled = false;
+    const finish = (fn, value) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      fn(value);
+    };
+
     const worker = new Worker(new URL('./eventWorker.js', import.meta.url), { workerData });
+    const timer = setTimeout(() => {
+      worker.terminate().catch(() => {});
+      finish(reject, new Error('event worker timed out'));
+    }, timeoutMs);
+
     worker.once('message', (msg) => {
       worker.terminate().catch(() => {});
       if (!msg?.ok) {
-        reject(new Error(msg?.error || 'event worker failed'));
+        finish(reject, new Error(msg?.error || 'event worker failed'));
         return;
       }
-      resolve(msg);
+      finish(resolve, msg);
     });
-    worker.once('error', reject);
+    worker.once('error', (err) => {
+      worker.terminate().catch(() => {});
+      finish(reject, err);
+    });
     worker.once('exit', (code) => {
-      if (code !== 0) reject(new Error(`event worker exited with code ${code}`));
+      if (settled) return;
+      if (code !== 0) finish(reject, new Error(`event worker exited with code ${code}`));
     });
   });
 }

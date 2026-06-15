@@ -28,6 +28,8 @@ import { createPrepareJobRunner } from '../prepare/runner.js';
 import { createAssetUpdateScheduler, lastClosedUtcDate } from '../scheduler/assetUpdates.js';
 import { compareBacktestRuns, getRunAnalysis } from '../backtest/analysis.js';
 import { createBacktestQueue } from '../backtest/queue.js';
+import { clearDatasetDiskCache, scanDatasetDiskCache } from '../backtest/datasetDiskStore.js';
+import { warmupDatasetDiskCache } from '../backtest/datasetDiskLoader.js';
 import { analyzeStrategyColumns } from '../backtestStudio/gls/compiler.js';
 import { availabilityRequestForBacktest } from '../backtest/engine.js';
 import { parseSweepVariants } from '../backtest/sweep.js';
@@ -240,6 +242,39 @@ export function createApiHandler(deps) {
         const body = await readJson(req);
         const schedule = createAssetUpdateSchedule(db, body, { config });
         return sendJson(res, 201, { schedule, target_to_date: lastClosedUtcDate() });
+      }
+      if (req.method === 'GET' && url.pathname === '/api/settings/dataset-cache') {
+        const stats = scanDatasetDiskCache(config);
+        return sendJson(res, 200, {
+          enabled: config.datasetDiskCacheEnabled,
+          cache_dir: config.datasetDiskCacheDir,
+          max_gb: config.datasetDiskCacheMaxGb,
+          ...stats,
+        });
+      }
+      if (req.method === 'DELETE' && url.pathname === '/api/settings/dataset-cache') {
+        const filters = {
+          underlying: url.searchParams.get('underlying') || undefined,
+          interval: url.searchParams.get('interval') || undefined,
+          dataset: url.searchParams.get('dataset') || undefined,
+        };
+        const bookDepthRaw = url.searchParams.get('book_depth');
+        if (bookDepthRaw != null && bookDepthRaw !== '') {
+          filters.bookDepth = bookDepthRaw === 'none' ? null : Number.parseInt(bookDepthRaw, 10);
+        }
+        const result = clearDatasetDiskCache(config, filters);
+        return sendJson(res, 200, { ok: true, ...result });
+      }
+      if (req.method === 'POST' && url.pathname === '/api/settings/dataset-cache/warmup') {
+        const body = await readJson(req);
+        const dataRequest = datasetRequestFromObject({ dataset: 'backtest_ticks', ...body }, config);
+        const warmupRequest = {
+          ...dataRequest,
+          bookDepth: positiveOptionalInt(body.book_depth ?? body.bookDepth) ?? config.backtestBookDepth,
+          selectColumns: body.select_columns ?? body.selectColumns,
+        };
+        const warmed = await warmupDatasetDiskCache(db, warmupRequest, { config });
+        return sendJson(res, 200, warmed);
       }
       const assetScheduleRoute = matchAssetUpdateScheduleRoute(url.pathname);
       if (assetScheduleRoute) {

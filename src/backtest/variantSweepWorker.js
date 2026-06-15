@@ -5,6 +5,7 @@ import { applyPolymarketFeesToBacktestResult } from './fees.js';
 import { wrapSharedColumnSet } from './columnStore.js';
 import { createGlsBacktestRunner } from '../backtestStudio/gls/runtime.js';
 
+(async () => {
 try {
   const columnSet = wrapSharedColumnSet(workerData.sharedColumnSet);
   const request = workerData.request;
@@ -22,7 +23,7 @@ try {
     });
 
     runner.bindColumnSet(columnSet);
-    runSequentialSoA(runner, columnSet, true);
+    await runSequentialSoA(runner, columnSet, true);
 
     const result = runner.finish();
     applyPolymarketFeesToBacktestResult(result, request.feeOptions);
@@ -49,3 +50,4 @@ try {
 } catch (err) {
   parentPort?.postMessage({ type: 'error', error: err.message, stack: err.stack });
 }
+})();

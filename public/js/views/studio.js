@@ -243,10 +243,15 @@ function clearProgressPoll() {
   lastProgressSnapshot = null;
 }
 
-function formatProgressPhase(phase) {
+function formatProgressPhase(phase, progress = null) {
+  const step = progress?.loading_step ?? progress?.loadingStep;
   switch (String(phase || '').toLowerCase()) {
-    case 'loading': return 'Carregando dados';
-    case 'processing': return 'Processando';
+    case 'loading':
+      if (step === 'merge') return 'Montando janela';
+      return 'Carregando dados';
+    case 'processing':
+      if (!progress?.ticks && (progress?.processing_elapsed_ms ?? 0) > 4000) return 'Iniciando motor';
+      return 'Processando';
     case 'finalizing': return 'Finalizando';
     case 'queued': return 'Na fila';
     default: return phase || 'Aguardando';
@@ -284,7 +289,15 @@ function formatProgressRemaining(progress) {
   const ms = progress?.eta_ms ?? (progress?.eta != null ? Number(progress.eta) * 1000 : null);
   if (ms != null && Number.isFinite(ms) && ms > 0) return `~${formatDurationMs(ms)}`;
   if (progress?.phase === 'queued') return 'Aguardando';
-  if (progress?.phase === 'loading') return 'Após carregar';
+  if (progress?.phase === 'loading') {
+    if (progress?.loading_step === 'merge' || progress?.loadingStep === 'merge') return 'Unindo dias';
+    return 'Após carregar';
+  }
+  if (progress?.phase === 'processing' && !progress?.ticks) {
+    const elapsed = progress?.processing_elapsed_ms ?? progress?.elapsed_ms ?? 0;
+    if (elapsed > 4000) return 'Primeiro evento…';
+    return 'Calculando...';
+  }
   return 'Calculando...';
 }
 
@@ -318,7 +331,7 @@ function applyProgressUi(progress, { skipSnapshot = false } = {}) {
   const pct = document.getElementById('studio-progress-pct');
   if (pct) pct.textContent = `${displayPercent.toFixed(0)}%`;
   const phase = document.getElementById('studio-progress-phase');
-  if (phase) phase.textContent = formatProgressPhase(progress.phase);
+  if (phase) phase.textContent = formatProgressPhase(progress.phase, progress);
   const ticks = document.getElementById('studio-progress-ticks');
   if (ticks) {
     ticks.textContent = `${progress.ticks || 0}${progress.total_ticks ? ` / ${progress.total_ticks}` : ''}`;
@@ -1162,7 +1175,7 @@ function renderProgressPanel(container, run, ctx) {
         ]),
         el('div', { class: 'studio-progress-metric' }, [
           el('span', { class: 'studio-progress-metric__label' }, 'Fase'),
-          el('div', { class: 'studio-progress-metric__value', id: 'studio-progress-phase' }, formatProgressPhase(progress.phase)),
+          el('div', { class: 'studio-progress-metric__value', id: 'studio-progress-phase' }, formatProgressPhase(progress.phase, progress)),
         ]),
         el('div', { class: 'studio-progress-metric' }, [
           el('span', { class: 'studio-progress-metric__label' }, 'Ticks Processados'),

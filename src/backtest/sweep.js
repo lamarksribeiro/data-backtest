@@ -100,11 +100,11 @@ export async function runBacktestSweep(db, baseRequest, variants, { onProgress, 
         runner.importParallelSlices(slices);
       } else {
         runner.bindColumnSet(columnSet);
-        runSequentialSoA(runner, columnSet, true);
+        await runSequentialSoA(runner, columnSet, true);
       }
     } else {
       runner.bindColumnSet(columnSet);
-      runSequentialSoA(runner, columnSet, true);
+      await runSequentialSoA(runner, columnSet, true);
     }
 
     const result = runner.finish();
