@@ -155,7 +155,9 @@ export async function runBacktestSweep(db, baseRequest, variants, { onProgress, 
 }
 
 async function loadOrGetColumnSet(db, request, ctx) {
-  const cache = getDatasetCache(ctx.config.datasetCacheMaxMb);
+  const cache = ctx.config.datasetDiskCacheEnabled
+    ? { get: () => null, set: () => {} }
+    : getDatasetCache(ctx.config.datasetCacheMaxMb);
   const cacheKey = datasetCacheKey(
     { ...request, dataset: ctx.dataset },
     ctx.columnAnalysis?.scalarColumns?.join(','),

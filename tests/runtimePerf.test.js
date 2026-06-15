@@ -18,12 +18,17 @@ test('extractEquityFromResultJson reads equity without full parse', () => {
   assert.deepEqual(out, equity);
 });
 
-test('resolveDatasetCacheMaxMb scales with NODE_OPTIONS heap', () => {
-  const cfg = loadConfig({ ...process.env, DATASET_CACHE_MAX_MB: '', NODE_OPTIONS: '--max-old-space-size=7168', SWEEP_VARIANT_WORKERS: '3' });
-  assert.equal(cfg.datasetCacheMaxMb, 1433);
+test('resolveDatasetCacheMaxMb defaults to 0 with disk cache enabled', () => {
+  const cfg = loadConfig({ ...process.env, DATASET_CACHE_MAX_MB: '', DATASET_DISK_CACHE: '1', SWEEP_VARIANT_WORKERS: '3' });
+  assert.equal(cfg.datasetCacheMaxMb, 0);
   assert.equal(cfg.sweepVariantWorkers, 3);
   const explicit = loadConfig({ ...process.env, DATASET_CACHE_MAX_MB: '1024' });
   assert.equal(explicit.datasetCacheMaxMb, 1024);
+});
+
+test('resolveDatasetCacheMaxMb scales with NODE_OPTIONS when disk cache is off', () => {
+  const cfg = loadConfig({ ...process.env, DATASET_CACHE_MAX_MB: '', DATASET_DISK_CACHE: '0', NODE_OPTIONS: '--max-old-space-size=7168' });
+  assert.equal(cfg.datasetCacheMaxMb, 1433);
 });
 
 test('snapshotTickCursorView freezes per-index tick values', () => {

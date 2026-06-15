@@ -1,8 +1,9 @@
 import { Worker } from 'node:worker_threads';
 
+import { spawnIsolatedBacktest } from './backtestProcessRunner.js';
+
 import {
   clearRunJobDependency,
-  completeBacktestRun,
   createQueuedBacktestRun,
   failBacktestRun,
   getBacktestRun,
@@ -74,47 +75,58 @@ export function createBacktestQueue({ config, db, onEvent }) {
 
     emit('run:progress', { runId: run.id, progress: running.progress });
 
-    const worker = new Worker(new URL('./worker.js', import.meta.url), {
-      workerData: {
-        stateDbPath: config.stateDbPath,
-        runId: run.id,
-        request: {
-          ...request,
-          strategyMeta: run.strategy_snapshot_json ? JSON.parse(run.strategy_snapshot_json) : null,
-        },
-        startedAt,
-        fastRun: Boolean(request.fastRun),
+    const workerPayload = {
+      stateDbPath: config.stateDbPath,
+      runId: run.id,
+      request: {
+        ...request,
+        strategyMeta: run.strategy_snapshot_json ? JSON.parse(run.strategy_snapshot_json) : null,
       },
+      startedAt,
+      fastRun: Boolean(request.fastRun),
+    };
+
+    if (config.backtestIsolateProcess !== false) {
+      startIsolatedProcess(run, workerPayload);
+      return;
+    }
+
+    const worker = new Worker(new URL('./worker.js', import.meta.url), {
+      workerData: workerPayload,
     });
 
     activeWorkers.set(run.id, worker);
+    bindWorkerHandlers(run, request, startedAt, worker);
+    worker.unref();
+  }
 
-    worker.on('message', (msg) => {
-      if (msg?.type === 'progress') {
-        if (terminalRuns.has(run.id)) return;
+  function startIsolatedProcess(run, workerPayload) {
+    const child = spawnIsolatedBacktest(workerPayload, {
+      onMessage: (msg) => handleWorkerMessage(run, msg),
+      onError: (err) => handleFailure(run.id, workerPayload.request, workerPayload.startedAt, err.message),
+      onExit: (code) => {
+        activeWorkers.delete(run.id);
         const current = safeGetBacktestRun(db, run.id);
-        if (!current || current.status !== 'running') {
-          if (current && !['running', 'queued'].includes(current.status)) terminalRuns.add(run.id);
-          return;
+        const waiter = waiters.get(run.id);
+        if (waiter) {
+          if (current && !['running', 'queued'].includes(current.status)) {
+            settleWaiter(run.id, { run: current });
+          } else if (code !== 0) {
+            settleWaiter(run.id, { error: new Error(`Backtest process exited with code ${code}`), run: current });
+          }
         }
-        if (!safeUpdateBacktestRunProgress(db, run.id, msg.progress)) return;
-        emit('run:progress', { runId: run.id, progress: msg.progress });
-        return;
-      }
-      if (msg?.ok === true) {
-        terminalRuns.add(run.id);
-        const completed = safeGetBacktestRun(db, run.id);
-        if (!completed) return;
-        emit('run:completed', { runId: run.id, run: completed });
-        return;
-      }
-      if (msg?.ok === false) {
-        terminalRuns.add(run.id);
-        const failed = safeGetBacktestRun(db, run.id);
-        if (!failed) return;
-        emit('run:failed', { runId: run.id, run: failed, error: msg.error });
-      }
+        if (code !== 0 && current?.status === 'running') {
+          handleFailure(run.id, workerPayload.request, workerPayload.startedAt, `Backtest process exited with code ${code}`);
+        }
+        if (current && !['running', 'queued'].includes(current.status)) terminalRuns.add(run.id);
+        queueMicrotask(() => drain());
+      },
     });
+    activeWorkers.set(run.id, child);
+  }
+
+  function bindWorkerHandlers(run, request, startedAt, worker) {
+    worker.on('message', (msg) => handleWorkerMessage(run, msg));
 
     worker.on('error', (err) => {
       handleFailure(run.id, request, startedAt, err.message);
@@ -137,8 +149,33 @@ export function createBacktestQueue({ config, db, onEvent }) {
       if (current && !['running', 'queued'].includes(current.status)) terminalRuns.add(run.id);
       queueMicrotask(() => drain());
     });
+  }
 
-    worker.unref();
+  function handleWorkerMessage(run, msg) {
+    if (msg?.type === 'progress') {
+      if (terminalRuns.has(run.id)) return;
+      const current = safeGetBacktestRun(db, run.id);
+      if (!current || current.status !== 'running') {
+        if (current && !['running', 'queued'].includes(current.status)) terminalRuns.add(run.id);
+        return;
+      }
+      if (!safeUpdateBacktestRunProgress(db, run.id, msg.progress)) return;
+      emit('run:progress', { runId: run.id, progress: msg.progress });
+      return;
+    }
+    if (msg?.ok === true) {
+      terminalRuns.add(run.id);
+      const completed = safeGetBacktestRun(db, run.id);
+      if (!completed) return;
+      emit('run:completed', { runId: run.id, run: completed });
+      return;
+    }
+    if (msg?.ok === false) {
+      terminalRuns.add(run.id);
+      const failed = safeGetBacktestRun(db, run.id);
+      if (!failed) return;
+      emit('run:failed', { runId: run.id, run: failed, error: msg.error });
+    }
   }
 
   function handleFailure(runId, request, startedAt, error) {
@@ -184,7 +221,8 @@ export function createBacktestQueue({ config, db, onEvent }) {
     terminalRuns.add(runId);
     const worker = activeWorkers.get(runId);
     if (worker) {
-      worker.terminate();
+      if (typeof worker.kill === 'function') worker.kill('SIGTERM');
+      else worker.terminate();
       activeWorkers.delete(runId);
     }
   }

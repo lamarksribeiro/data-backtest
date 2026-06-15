@@ -337,10 +337,16 @@ export function eventRecordFromColumnSet(columnSet, eventMeta) {
   };
 }
 
+export function isSharedColumnSet(columnSet) {
+  const sample = columnSet?.columns?.get('_ts_ms');
+  return sample?.buffer instanceof SharedArrayBuffer;
+}
+
 /**
  * Converte ColumnSet para buffers compartilhados (zero-copy entre worker_threads).
  */
 export function columnSetToShared(columnSet) {
+  if (isSharedColumnSet(columnSet)) return columnSet;
   const columns = new Map();
   for (const [name, arr] of columnSet.columns) {
     if (arr.buffer instanceof SharedArrayBuffer) {

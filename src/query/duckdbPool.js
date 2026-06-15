@@ -35,6 +35,17 @@ export async function openSharedConnection() {
   return connection;
 }
 
+export async function closeSharedDuckInstance() {
+  if (!sharedInstancePromise) return;
+  try {
+    const instance = await sharedInstancePromise;
+    instance.closeSync?.();
+  } catch {
+    /* ignore close errors during teardown */
+  }
+  sharedInstancePromise = null;
+}
+
 export function resetSharedDuckInstanceForTests() {
   sharedInstancePromise = null;
 }

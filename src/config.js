@@ -52,6 +52,7 @@ export function loadConfig(env = process.env) {
     sweepMaxVariants: Math.max(Number.parseInt(String(env.SWEEP_MAX_VARIANTS || '500'), 10) || 500, 1),
     sweepVariantWorkers: Math.max(Number.parseInt(String(env.SWEEP_VARIANT_WORKERS || '1'), 10) || 1, 1),
     maxConcurrentBacktests: Math.max(Number.parseInt(String(env.MAX_CONCURRENT_BACKTESTS || '1'), 10) || 1, 1),
+    backtestIsolateProcess: resolveBacktestIsolateProcess(env),
     datasetCacheMaxMb: resolveDatasetCacheMaxMb(env),
     datasetDiskCacheEnabled: resolveDatasetDiskCacheEnabled(env),
     datasetDiskCacheDir: resolveDatasetDiskCacheDir(env),
@@ -103,6 +104,7 @@ export function serializeWorkerConfig(config) {
     backtestWorkers: config.backtestWorkers,
     sweepMaxVariants: config.sweepMaxVariants,
     sweepVariantWorkers: config.sweepVariantWorkers,
+    backtestIsolateProcess: config.backtestIsolateProcess,
     datasetCacheMaxMb: config.datasetCacheMaxMb,
     datasetDiskCacheEnabled: config.datasetDiskCacheEnabled,
     datasetDiskCacheDir: config.datasetDiskCacheDir,
@@ -134,15 +136,23 @@ function normalizeBacktestEngine(value) {
   return mode === 'rows' ? 'rows' : 'soa';
 }
 
+function resolveBacktestIsolateProcess(env) {
+  const raw = env.BACKTEST_ISOLATE_PROCESS;
+  if (raw == null || String(raw).trim() === '') return true;
+  const v = String(raw).trim().toLowerCase();
+  return !['0', 'false', 'no', 'off'].includes(v);
+}
+
 /**
- * Cache LRU de ColumnSet: usa DATASET_CACHE_MAX_MB se definido; senão ~20% do heap Node
- * (NODE_OPTIONS --max-old-space-size), entre 512 MB e 2048 MB.
+ * Cache LRU de ColumnSet: usa DATASET_CACHE_MAX_MB se definido; com disco ativo default 0;
+ * senão ~20% do heap Node (NODE_OPTIONS --max-old-space-size), entre 512 MB e 2048 MB.
  */
 function resolveDatasetCacheMaxMb(env) {
   const raw = env.DATASET_CACHE_MAX_MB;
   if (raw != null && String(raw).trim() !== '') {
     return Math.max(Number.parseInt(String(raw), 10) || 0, 0);
   }
+  if (resolveDatasetDiskCacheEnabled(env)) return 0;
   const match = String(env.NODE_OPTIONS || '').match(/--max-old-space-size=(\d+)/);
   if (match) {
     const heapMb = Number.parseInt(match[1], 10);

@@ -39,7 +39,7 @@ export async function loadBacktestColumnSetWithDiskCache(db, request, { onProgre
 	const fromMs = new Date(request.from).getTime();
 	const toMs = new Date(request.to).getTime();
 	const dates = partitionDatesForRange(request.from, request.to);
-	const daySets = [];
+	let merged = null;
 	let loadedRows = 0;
 
 	const reportProgress = (extra = {}) => {
@@ -101,8 +101,9 @@ export async function loadBacktestColumnSetWithDiskCache(db, request, { onProgre
 		const sliceTo = Math.min(toMs, dayEndMs);
 		if (sliceFrom < sliceTo) {
 			const sliced = sliceColumnSet(columnSet, sliceFrom, sliceTo);
+			columnSet = null;
 			if (sliced.length > 0) {
-				daySets.push(sliced);
+				merged = merged ? concatColumnSets([merged, sliced]) : sliced;
 				loadedRows += sliced.length;
 			}
 		}
@@ -110,16 +111,13 @@ export async function loadBacktestColumnSetWithDiskCache(db, request, { onProgre
 		await new Promise((resolve) => setImmediate(resolve));
 	}
 
-	if (!daySets.length) {
+	if (!merged) {
 		return sliceColumnSet(concatColumnSets([]), fromMs, toMs);
 	}
 
 	reportProgress({ loadingStep: 'merge' });
 	await new Promise((resolve) => setImmediate(resolve));
-	if (daySets.length === 1) {
-		return daySets[0];
-	}
-	return concatColumnSets(daySets);
+	return merged;
 }
 
 export async function warmupDatasetDiskCache(db, request, { onProgress, config = loadConfig() } = {}) {

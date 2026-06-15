@@ -1,6 +1,6 @@
 import { Worker } from 'node:worker_threads';
 
-import { columnSetToShared } from './columnStore.js';
+import { columnSetToShared, wrapSharedColumnSet } from './columnStore.js';
 
 const EVENTS_PER_CHUNK = 50;
 
@@ -20,13 +20,16 @@ export async function runParallelEventSlices({
   if (workers <= 1) return null;
 
   const sharedColumnSet = columnSetToShared(columnSet);
+  if (sharedColumnSet !== columnSet) {
+    columnSet = wrapSharedColumnSet(sharedColumnSet);
+  }
   const chunks = partitionEventIndices(columnSet.events.length, workers, EVENTS_PER_CHUNK);
   if (chunks.length <= 1) return null;
 
   const results = await Promise.all(chunks.map((eventIndices, chunkIndex) => runChunk({
     ast,
     params,
-    sharedColumnSet,
+    sharedColumnSet: columnSet,
     eventIndices,
     eventIndexOffset: eventIndices[0] ?? 0,
     fastRun,

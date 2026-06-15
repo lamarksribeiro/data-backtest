@@ -116,6 +116,10 @@ async function runSoAEngine(db, request, ctx) {
   let columnSet = cache.get(cacheKey);
   const useCompiledSoa = ctx.runner.executionMode === 'compiled-soa' && typeof ctx.runner.bindColumnSet === 'function';
 
+  const releaseColumnSet = () => {
+    columnSet = null;
+  };
+
   ctx.emitProgress({
     phase: 'loading',
     ticks: 0,
@@ -254,6 +258,7 @@ async function runSoAEngine(db, request, ctx) {
     }
   } finally {
     clearInterval(processingHeartbeat);
+    releaseColumnSet();
   }
   ctx.timings.processMs += Date.now() - processStartedAt;
   ctx.emitProgress({ phase: 'processing', ticks, batches, totalTicks: ticks, force: true });
