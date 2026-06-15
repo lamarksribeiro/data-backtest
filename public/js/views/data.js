@@ -912,7 +912,9 @@ let displayedProgress = {};
 let dayDrawerLoadToken = 0;
 let dayDrawerAbort = null;
 let eventPreviewAbort = null;
+let dayDrawerPayload = null;
 
+const DEFAULT_DAY_HOUR = 0;
 const EVENTS_PAGE_SIZE = 48;
 const DAY_EVENTS_TIMEOUT_MS = 60_000;
 const EVENT_PREVIEW_TIMEOUT_MS = 45_000;
@@ -932,6 +934,7 @@ export function closeDrawer() {
   dayDrawerAbort = null;
   eventPreviewAbort?.abort();
   eventPreviewAbort = null;
+  dayDrawerPayload = null;
   document.querySelectorAll('.coverage-day.is-selected').forEach(el => el.classList.remove('is-selected'));
   const container = document.getElementById('data-partition-details-container');
   if (container) {
@@ -1571,31 +1574,141 @@ async function setEventExclusion(ctx, day, eventData, marketId, excluded) {
   return true;
 }
 
-function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, drawerUiState = {}, fieldOptions = null) {
-  const selectedHour = drawerUiState.selectedHour ?? null;
-  const selectedTypeFilter = drawerUiState.selectedTypeFilter ?? null;
+function dayEventsQuery(ctxSaved, day, hourUtc) {
+  const query = new URLSearchParams({
+    dt: day.dt,
+    underlying: ctxSaved.underlying,
+    interval: ctxSaved.interval,
+    book_depth: ctxSaved.book_depth,
+    hour: hourUtc == null ? 'all' : String(hourUtc),
+  });
+  return query;
+}
+
+async function fetchDayEvents(ctx, day, ctxSaved, hourUtc, signal) {
+  const query = dayEventsQuery(ctxSaved, day, hourUtc);
+  return ctx.api.get(`/api/quality/day-events?${query.toString()}`, {
+    timeoutMs: DAY_EVENTS_TIMEOUT_MS,
+    signal,
+  });
+}
+
+function renderEventsList(ctx, day, ctxSaved, eventPayload, drawerUiState, fieldOptions, events, loadToken) {
   const selectedEventId = drawerUiState.selectedEventId ?? null;
   const visibleCount = drawerUiState.visibleCount ?? EVENTS_PAGE_SIZE;
-  const loadToken = drawerUiState.loadToken ?? dayDrawerLoadToken;
-
   const remountDrawer = (patch = {}) => {
     Object.assign(drawerUiState, patch);
     const container = document.getElementById('data-partition-details-container');
-    mount(container, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, drawerUiState, fieldOptions));
+    mount(container, buildPartitionDrawer(ctx, day, ctxSaved, drawerUiState, fieldOptions));
     if (drawerUiState.selectedEventId) {
       const selectedEvent = events.find((event) => event.condition_id === drawerUiState.selectedEventId);
       void loadEventPreview(ctx, day, ctxSaved, drawerUiState.selectedEventId, selectedEvent, loadToken);
     }
   };
-  const events = (eventPayload.events || []).filter((event) => {
-    const matchesHour = selectedHour == null || event.hour_utc === selectedHour;
-    let matchesType = true;
-    if (selectedTypeFilter === 'omit') {
-      matchesType = event.normalization_action === 'omit';
-    } else if (selectedTypeFilter === 'manual') {
-      matchesType = event.manually_excluded;
+
+  return el('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } }, [
+    ...events.slice(0, visibleCount).map((event) => {
+      const excluded = event.manually_excluded;
+      const badgeTone = eventBadgeTone(event);
+      const isSelected = selectedEventId === event.condition_id;
+      return el('div', { class: `event-timeline-card${excluded ? ' event-timeline-card--excluded' : ''}${isSelected ? ' is-selected' : ''}` }, [
+        el('div', {
+          class: 'event-info-left',
+          style: { cursor: 'pointer', flex: '1' },
+          onclick: () => {
+            drawerUiState.selectedEventId = isSelected ? null : event.condition_id;
+            remountDrawer();
+          },
+        }, [
+          el('span', { class: 'event-time-badge' }, formatEventTime(event.event_start)),
+          el('span', { class: 'event-desc' }, shortConditionId(event.condition_id)),
+          el('div', { class: 'event-meta-row' }, [
+            el('span', { class: `event-badge event-badge--${badgeTone}` }, eventStatusLabel(event)),
+            event.normalization_issues?.length
+              ? el('span', { class: 'event-timeline-card__issues' }, formatIssues(event.normalization_issues))
+              : null,
+            event.normalization_bad_ratio != null
+              ? el('span', { class: 'event-coverage-text' }, `Ruim: ${Math.round(event.normalization_bad_ratio * 100)}%`)
+              : null,
+            event.coverage != null ? el('span', { class: 'event-coverage-text' }, `Cob: ${Math.round(event.coverage * 100)}%`) : null,
+          ]),
+          isSelected ? el('div', { id: `quality-preview-${event.condition_id}` }) : null,
+        ]),
+        el('button', {
+          type: 'button',
+          class: `btn btn--ghost btn--sm${excluded ? '' : ' btn--danger'}`,
+          style: { padding: '6px 10px', fontSize: '11px' },
+          onclick: async (ev) => {
+            ev.stopPropagation();
+            const ok = await setEventExclusion(ctx, day, event, eventPayload.market_id, excluded);
+            if (!ok) return;
+            await openPartitionDrawer(ctx, day, fieldOptions);
+            refreshJobs(ctx);
+          },
+        }, excluded ? 'Restaurar' : 'Excluir'),
+      ]);
+    }),
+    visibleCount < events.length ? el('button', {
+      type: 'button',
+      class: 'btn btn--ghost btn--sm',
+      style: { alignSelf: 'center', marginTop: '4px' },
+      onclick: () => remountDrawer({ visibleCount: visibleCount + EVENTS_PAGE_SIZE }),
+    }, `Mostrar mais (${events.length - visibleCount} restantes)`) : null,
+  ]);
+}
+
+async function loadDayHour(ctx, day, ctxSaved, hourUtc, drawerUiState, fieldOptions, loadToken) {
+  if (dayDrawerPayload?.hour_loaded === hourUtc && !drawerUiState.hourLoading) return;
+  drawerUiState.hourLoading = true;
+  drawerUiState.selectedEventId = null;
+  drawerUiState.selectedTypeFilter = null;
+  drawerUiState.visibleCount = EVENTS_PAGE_SIZE;
+  const container = document.getElementById('data-partition-details-container');
+  if (container) {
+    mount(container, buildPartitionDrawer(ctx, day, ctxSaved, drawerUiState, fieldOptions));
+  }
+
+  const res = await fetchDayEvents(ctx, day, ctxSaved, hourUtc, dayDrawerAbort?.signal);
+  if (loadToken !== dayDrawerLoadToken) return;
+  if (!res.ok) {
+    drawerUiState.hourLoading = false;
+    if (res.error?.code === 'ABORTED') return;
+    ctx.toast?.err?.(res.error?.message || 'Falha ao carregar hora');
+    if (container) mount(container, buildPartitionDrawer(ctx, day, ctxSaved, drawerUiState, fieldOptions));
+    return;
+  }
+
+  dayDrawerPayload = { ...dayDrawerPayload, ...res.data };
+  drawerUiState.hourLoading = false;
+  if (container) mount(container, buildPartitionDrawer(ctx, day, ctxSaved, drawerUiState, fieldOptions));
+}
+
+function buildPartitionDrawer(ctx, day, ctxSaved, drawerUiState = {}, fieldOptions = null) {
+  const eventPayload = dayDrawerPayload;
+  if (!eventPayload) {
+    return buildPartitionDrawerLoading(day);
+  }
+
+  const loadedHour = eventPayload.hour_loaded ?? DEFAULT_DAY_HOUR;
+  const selectedTypeFilter = drawerUiState.selectedTypeFilter ?? null;
+  const hourLoading = Boolean(drawerUiState.hourLoading);
+  const loadToken = drawerUiState.loadToken ?? dayDrawerLoadToken;
+
+  const remountDrawer = (patch = {}) => {
+    Object.assign(drawerUiState, patch);
+    const container = document.getElementById('data-partition-details-container');
+    mount(container, buildPartitionDrawer(ctx, day, ctxSaved, drawerUiState, fieldOptions));
+    if (drawerUiState.selectedEventId) {
+      const events = (dayDrawerPayload?.events || []);
+      const selectedEvent = events.find((event) => event.condition_id === drawerUiState.selectedEventId);
+      void loadEventPreview(ctx, day, ctxSaved, drawerUiState.selectedEventId, selectedEvent, loadToken);
     }
-    return matchesHour && matchesType;
+  };
+
+  const events = (eventPayload.events || []).filter((event) => {
+    if (selectedTypeFilter === 'omit') return event.normalization_action === 'omit';
+    if (selectedTypeFilter === 'manual') return event.manually_excluded;
+    return true;
   });
   
   // Calcular totais de normalização para os mini cards
@@ -1606,12 +1719,12 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, drawerUiState = 
   const hourButtons = (eventPayload.hours || []).map((bucket) => {
     return el('button', {
       type: 'button',
-      class: `quality-hour-chip${selectedHour === bucket.hour ? ' is-active' : ''}`,
+      class: `quality-hour-chip${loadedHour === bucket.hour ? ' is-active' : ''}`,
       title: `${bucket.total} evento(s) · omit: ${bucket.omitted} · manual: ${bucket.manual}`,
+      disabled: hourLoading,
       onclick: () => {
-        drawerUiState.selectedHour = selectedHour === bucket.hour ? null : bucket.hour;
-        drawerUiState.visibleCount = EVENTS_PAGE_SIZE;
-        remountDrawer();
+        if (loadedHour === bucket.hour) return;
+        void loadDayHour(ctx, day, ctxSaved, bucket.hour, drawerUiState, fieldOptions, loadToken);
       },
     }, [
       el('span', { class: `quality-hour-indicator quality-hour-indicator--${hourTone(bucket)}` }),
@@ -1678,73 +1791,21 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, drawerUiState = 
 
       // Timeline de Horas
       hourButtons.length ? el('div', { class: 'quality-hours-timeline' }, [
-        el('div', { class: 'quality-hours-timeline__title' }, 'Filtrar por Hora'),
-        el('div', { class: 'quality-hours-grid' }, [
-          el('button', {
-            type: 'button',
-            class: `quality-hour-chip${selectedHour == null ? ' is-active' : ''}`,
-            onclick: () => {
-              drawerUiState.selectedHour = null;
-              drawerUiState.visibleCount = EVENTS_PAGE_SIZE;
-              remountDrawer();
-            },
-          }, 'Todas'),
-          ...hourButtons,
-        ])
+        el('div', { class: 'quality-hours-timeline__title' }, 'Hora (UTC) — clique para carregar'),
+        el('div', { class: 'quality-hours-grid' }, hourButtons),
       ]) : null,
 
       // Lista de eventos
       el('div', { class: 'events-timeline' }, [
-        el('h4', { style: { fontSize: '13px', fontWeight: '700', color: 'var(--text-0)', margin: '8px 0 4px' } }, `Eventos (${events.length})`),
-        events.length ? el('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } }, [
-          ...events.slice(0, visibleCount).map((event) => {
-          const excluded = event.manually_excluded;
-          const badgeTone = eventBadgeTone(event);
-          const isSelected = selectedEventId === event.condition_id;
-          return el('div', { class: `event-timeline-card${excluded ? ' event-timeline-card--excluded' : ''}${isSelected ? ' is-selected' : ''}` }, [
-            el('div', {
-              class: 'event-info-left',
-              style: { cursor: 'pointer', flex: '1' },
-              onclick: () => {
-                drawerUiState.selectedEventId = isSelected ? null : event.condition_id;
-                remountDrawer();
-              },
-            }, [
-              el('span', { class: 'event-time-badge' }, formatEventTime(event.event_start)),
-              el('span', { class: 'event-desc' }, shortConditionId(event.condition_id)),
-              el('div', { class: 'event-meta-row' }, [
-                el('span', { class: `event-badge event-badge--${badgeTone}` }, eventStatusLabel(event)),
-                event.normalization_issues?.length
-                  ? el('span', { class: 'event-timeline-card__issues' }, formatIssues(event.normalization_issues))
-                  : null,
-                event.normalization_bad_ratio != null
-                  ? el('span', { class: 'event-coverage-text' }, `Ruim: ${Math.round(event.normalization_bad_ratio * 100)}%`)
-                  : null,
-                event.coverage != null ? el('span', { class: 'event-coverage-text' }, `Cob: ${Math.round(event.coverage * 100)}%`) : null,
-              ]),
-              isSelected ? el('div', { id: `quality-preview-${event.condition_id}` }) : null,
-            ]),
-            el('button', {
-              type: 'button',
-              class: `btn btn--ghost btn--sm${excluded ? '' : ' btn--danger'}`,
-              style: { padding: '6px 10px', fontSize: '11px' },
-              onclick: async (ev) => {
-                ev.stopPropagation();
-                const ok = await setEventExclusion(ctx, day, event, eventPayload.market_id, excluded);
-                if (!ok) return;
-                await openPartitionDrawer(ctx, day, fieldOptions);
-                refreshJobs(ctx);
-              },
-            }, excluded ? 'Restaurar' : 'Excluir')
-          ]);
-        }),
-          visibleCount < events.length ? el('button', {
-            type: 'button',
-            class: 'btn btn--ghost btn--sm',
-            style: { alignSelf: 'center', marginTop: '4px' },
-            onclick: () => remountDrawer({ visibleCount: visibleCount + EVENTS_PAGE_SIZE }),
-          }, `Mostrar mais (${events.length - visibleCount} restantes)`) : null,
-        ]) : el('p', { class: 'muted', style: { textAlign: 'center', padding: '20px 0' } }, 'Nenhum evento registrado com este filtro.')
+        el('h4', { style: { fontSize: '13px', fontWeight: '700', color: 'var(--text-0)', margin: '8px 0 4px' } },
+          hourLoading
+            ? `Carregando eventos da ${loadedHour}h UTC…`
+            : `Eventos da ${loadedHour}h UTC (${events.length})`),
+        hourLoading
+          ? el('p', { class: 'muted', style: { textAlign: 'center', padding: '20px 0' } }, 'Buscando eventos desta hora…')
+          : events.length
+            ? renderEventsList(ctx, day, ctxSaved, eventPayload, drawerUiState, fieldOptions, events, loadToken)
+            : el('p', { class: 'muted', style: { textAlign: 'center', padding: '20px 0' } }, 'Nenhum evento nesta hora com o filtro atual.')
       ])
     ]),
     
@@ -1788,12 +1849,7 @@ async function openPartitionDrawer(ctx, day, fieldOptions = null) {
   // Focar suavemente a tela no painel de detalhes integrado
   container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-  const query = new URLSearchParams({
-    dt: day.dt,
-    underlying: ctxSaved.underlying,
-    interval: ctxSaved.interval,
-    book_depth: ctxSaved.book_depth,
-  });
+  const query = dayEventsQuery(ctxSaved, day, DEFAULT_DAY_HOUR);
   const res = await ctx.api.get(`/api/quality/day-events?${query.toString()}`, {
     timeoutMs: DAY_EVENTS_TIMEOUT_MS,
     signal,
@@ -1814,14 +1870,15 @@ async function openPartitionDrawer(ctx, day, fieldOptions = null) {
     ]));
     return;
   }
+  dayDrawerPayload = res.data;
   const drawerUiState = {
-    selectedHour: null,
     selectedTypeFilter: null,
     selectedEventId: null,
     visibleCount: EVENTS_PAGE_SIZE,
+    hourLoading: false,
     loadToken,
   };
-  mount(container, buildPartitionDrawer(ctx, day, res.data, ctxSaved, drawerUiState, fieldOptions));
+  mount(container, buildPartitionDrawer(ctx, day, ctxSaved, drawerUiState, fieldOptions));
 }
 
 async function refreshJobs(ctx) {

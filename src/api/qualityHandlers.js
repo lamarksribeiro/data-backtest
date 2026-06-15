@@ -15,7 +15,7 @@ import {
 	markDayManifestStale,
 	removeEventExclusion,
 } from '../state/eventExclusions.js';
-import { getPartitionEvents, resolveMarketId } from '../source/postgres.js';
+import { getPartitionEvents, getPartitionEventStubs, resolveMarketId } from '../source/postgres.js';
 
 function nextDayIso(dt) {
 	const date = new Date(`${dt}T00:00:00.000Z`);
@@ -57,18 +57,34 @@ function findPartitionForDay(db, config, { dt, underlying, interval, bookDepth }
 	return partition;
 }
 
+function parseHourUtcParam(params) {
+	if (!params.has('hour')) return 0;
+	const raw = String(params.get('hour') ?? '').trim().toLowerCase();
+	if (!raw || raw === 'all') return null;
+	const hour = Number(raw);
+	if (!Number.isInteger(hour) || hour < 0 || hour > 23) {
+		return { error: 'hour must be an integer between 0 and 23, or "all"' };
+	}
+	return hour;
+}
+
 export async function handleQualityDayEvents(pool, db, config, params) {
 	const dt = String(params.get('dt') || '').trim();
 	const underlying = String(params.get('underlying') || '').trim().toUpperCase();
 	const interval = String(params.get('interval') || '').trim();
 	const live = params.get('live') === '1';
+	const hourParsed = parseHourUtcParam(params);
+	if (hourParsed !== null && typeof hourParsed === 'object' && hourParsed.error) {
+		return { ok: false, status: 400, body: { error: { code: 'INVALID_REQUEST', message: hourParsed.error } } };
+	}
+	const hourUtc = hourParsed;
 	if (!dt || !underlying || !interval) {
 		return { ok: false, status: 400, body: { error: { code: 'INVALID_REQUEST', message: 'dt, underlying and interval are required' } } };
 	}
 
 	const bookDepthVal = params.get('book_depth') || params.get('bookDepth');
 	const bookDepth = bookDepthVal ? Number(bookDepthVal) : Number(config.backtestBookDepth);
-	const cacheKey = dayEventsCacheKey({ dt, underlying, interval, bookDepth });
+	const cacheKey = dayEventsCacheKey({ dt, underlying, interval, bookDepth, hourUtc });
 	if (!live) {
 		const cached = getCachedDayEvents(cacheKey);
 		if (cached) return cached;
@@ -79,17 +95,21 @@ export async function handleQualityDayEvents(pool, db, config, params) {
 		return { ok: false, status: 404, body: { error: { code: 'MARKET_NOT_FOUND', message: 'Market not found in source database' } } };
 	}
 
-	const events = await getPartitionEvents(pool, { marketId, dt, underlying, interval });
+	const partitionCtx = { marketId, dt, underlying, interval };
 	const exclusions = listEventExclusionsForDay(db, { dt, underlying, interval, marketId });
 	const partition = findPartitionForDay(db, config, { dt, underlying, interval, bookDepth });
 	const manifestNorm = partition?.quality_details?.normalization ?? null;
 	const { normalizationIndex, normalization_live } = await resolveDayNormalizationIndex(
 		pool,
-		{ marketId, dt, underlying, interval },
+		partitionCtx,
 		manifestNorm,
 		config,
 		{ live },
 	);
+
+	const stubs = await getPartitionEventStubs(pool, partitionCtx);
+	const hours = summarizeHours(mergeDayEvents({ events: stubs, exclusions, normalizationIndex }));
+	const events = await getPartitionEvents(pool, partitionCtx, { hourUtc });
 	const merged = mergeDayEvents({ events, exclusions, normalizationIndex });
 
 	const result = {
@@ -100,8 +120,9 @@ export async function handleQualityDayEvents(pool, db, config, params) {
 			underlying,
 			interval,
 			market_id: marketId,
+			hour_loaded: hourUtc,
 			events: merged,
-			hours: summarizeHours(merged),
+			hours,
 			exclusions,
 			normalization: manifestNorm ?? null,
 			normalization_live,

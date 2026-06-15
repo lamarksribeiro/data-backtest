@@ -1,8 +1,9 @@
 const DAY_EVENTS_CACHE_TTL_MS = 30_000;
 const cache = new Map();
 
-export function dayEventsCacheKey({ dt, underlying, interval, bookDepth }) {
-	return `${dt}|${underlying}|${interval}|${bookDepth ?? ''}`;
+export function dayEventsCacheKey({ dt, underlying, interval, bookDepth, hourUtc = 0 }) {
+	const hourKey = hourUtc == null ? 'all' : String(hourUtc);
+	return `${dt}|${underlying}|${interval}|${bookDepth ?? ''}|${hourKey}`;
 }
 
 export function getCachedDayEvents(key) {

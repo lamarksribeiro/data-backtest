@@ -111,7 +111,35 @@ export async function resolveMarketId(pool, { underlying, interval }) {
   return rows[0]?.id ?? null;
 }
 
-export async function getPartitionEvents(pool, partition) {
+function partitionDayBoundsSql(columnRef) {
+	return `${columnRef} >= ($2::date::timestamp AT TIME ZONE 'UTC')
+      AND ${columnRef} < (($2::date + 1)::timestamp AT TIME ZONE 'UTC')`;
+}
+
+function partitionHourBoundsSql(columnRef) {
+	return `${columnRef} >= ($2::date::timestamp AT TIME ZONE 'UTC') + ($3::int * interval '1 hour')
+      AND ${columnRef} < ($2::date::timestamp AT TIME ZONE 'UTC') + (($3::int + 1) * interval '1 hour')`;
+}
+
+function mapEventQualityRow(row) {
+	return {
+		conditionId: row.condition_id,
+		marketId: row.market_id,
+		eventStart: new Date(row.event_start).toISOString(),
+		eventEnd: new Date(row.event_end).toISOString(),
+		ticksRecorded: Number(row.ticks_recorded || 0),
+		ticksExpected: Number(row.ticks_expected || 0),
+		coverage: row.coverage == null ? null : Number(row.coverage),
+		degraded: Boolean(row.degraded),
+		recordedAt: row.recorded_at ? new Date(row.recorded_at).toISOString() : null,
+	};
+}
+
+export async function getPartitionEvents(pool, partition, { hourUtc = null } = {}) {
+	const params = [partition.marketId, partition.dt];
+	const boundsSql = hourUtc == null
+		? partitionDayBoundsSql('eq.event_start')
+		: (params.push(hourUtc), partitionHourBoundsSql('eq.event_start'));
 	const { rows } = await pool.query(`
     SELECT
       eq.condition_id,
@@ -125,22 +153,32 @@ export async function getPartitionEvents(pool, partition) {
       eq.recorded_at
     FROM event_quality eq
     WHERE eq.market_id = $1
-      AND eq.event_start >= ($2::date::timestamp AT TIME ZONE 'UTC')
-      AND eq.event_start < (($2::date + 1)::timestamp AT TIME ZONE 'UTC')
+      AND ${boundsSql}
     ORDER BY eq.event_start ASC, eq.condition_id ASC
+  `, params);
+
+	return rows.map(mapEventQualityRow);
+}
+
+/** Lightweight rows for hour timeline — no tick scan, full day only. */
+export async function getPartitionEventStubs(pool, partition) {
+	const { rows } = await pool.query(`
+    SELECT
+      eq.condition_id,
+      eq.market_id,
+      eq.event_start,
+      eq.event_end,
+      eq.ticks_recorded,
+      eq.ticks_expected,
+      eq.coverage,
+      eq.degraded
+    FROM event_quality eq
+    WHERE eq.market_id = $1
+      AND ${partitionDayBoundsSql('eq.event_start')}
+    ORDER BY eq.event_start ASC
   `, [partition.marketId, partition.dt]);
 
-  return rows.map((row) => ({
-    conditionId: row.condition_id,
-    marketId: row.market_id,
-    eventStart: new Date(row.event_start).toISOString(),
-    eventEnd: new Date(row.event_end).toISOString(),
-    ticksRecorded: Number(row.ticks_recorded || 0),
-    ticksExpected: Number(row.ticks_expected || 0),
-    coverage: row.coverage == null ? null : Number(row.coverage),
-    degraded: Boolean(row.degraded),
-    recordedAt: row.recorded_at ? new Date(row.recorded_at).toISOString() : null,
-  }));
+	return rows.map(mapEventQualityRow);
 }
 
 export async function getScalarTicksForEvents(pool, partition, conditionIds) {

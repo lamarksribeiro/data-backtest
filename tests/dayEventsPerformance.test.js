@@ -35,12 +35,17 @@ test('isNormalizationIndexIncomplete detects partial omit index', () => {
 });
 
 test('dayEventsCache stores and invalidates by day prefix', () => {
-	const key = dayEventsCacheKey({ dt: '2026-06-01', underlying: 'BTC', interval: '5m', bookDepth: 25 });
-	const result = { ok: true, status: 200, body: { dt: '2026-06-01' } };
+	const key = dayEventsCacheKey({ dt: '2026-06-01', underlying: 'BTC', interval: '5m', bookDepth: 25, hourUtc: 0 });
+	const result = { ok: true, status: 200, body: { dt: '2026-06-01', hour_loaded: 0 } };
 	setCachedDayEvents(key, result);
 	assert.deepEqual(getCachedDayEvents(key)?.body, result.body);
 	invalidateDayEventsCache({ dt: '2026-06-01', underlying: 'BTC', interval: '5m' });
 	assert.equal(getCachedDayEvents(key), null);
+});
+
+test('dayEventsCache keys differ per hour', () => {
+	const base = { dt: '2026-06-01', underlying: 'BTC', interval: '5m', bookDepth: 25 };
+	assert.notEqual(dayEventsCacheKey({ ...base, hourUtc: 0 }), dayEventsCacheKey({ ...base, hourUtc: 1 }));
 });
 
 test('buildPartitionQualityDetails persists events_index even when normalization not applied', () => {
