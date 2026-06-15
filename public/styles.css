@@ -6851,6 +6851,24 @@ html, body {
 .strategy-history-table--runs .strategy-history-col--num { width: 80px; text-align: right; }
 .strategy-history-table--runs .strategy-history-col--date { width: 128px; }
 
+.strategy-version-star {
+  color: var(--text-3);
+  opacity: 0.55;
+}
+.strategy-version-star.is-on,
+.strategy-version-star:disabled {
+  color: #fff;
+  opacity: 1;
+}
+.strategy-version-star:not(:disabled):hover {
+  color: #fff;
+  opacity: 0.9;
+}
+.strategy-editor-version-select {
+  min-width: 180px;
+  max-width: 360px;
+}
+
 .strategy-versions-table-wrap {
   overflow-x: auto;
   border: 1px solid var(--border);

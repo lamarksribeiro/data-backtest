@@ -78,7 +78,6 @@ const state = {
   historyFilters: {
     versionQuery: '',
     versionScope: 'all',
-    runVersionId: '',
     runQuery: '',
     runOutcome: 'all',
   },
@@ -89,10 +88,16 @@ const state = {
 const DEFAULT_HISTORY_FILTERS = {
   versionQuery: '',
   versionScope: 'all',
-  runVersionId: '',
   runQuery: '',
   runOutcome: 'all',
 };
+
+function versionOptionLabel(v, strategy) {
+  const parts = [`v${v.version}`];
+  if (strategy?.default_version_id === v.id) parts.push('padrão');
+  if (v.notes) parts.push(v.notes);
+  return parts.join(' · ');
+}
 
 function resetHistoryFilters(strategyId) {
   if (state.historyStrategyId !== strategyId) {
@@ -135,9 +140,9 @@ function filterVersions(versions, stats, strategy) {
 
 function filterRuns(runs, versions) {
   const q = state.historyFilters.runQuery.toLowerCase().trim();
-  const versionId = state.historyFilters.runVersionId;
+  const versionId = state.historyFocusedVersionId;
   return runs.filter((run) => {
-    if (versionId && String(run.strategy_version_id || '') !== versionId) return false;
+    if (versionId && run.strategy_version_id !== versionId) return false;
     const pnl = run.summary?.totalPnl ?? 0;
     if (state.historyFilters.runOutcome === 'positive' && pnl <= 0) return false;
     if (state.historyFilters.runOutcome === 'negative' && pnl >= 0) return false;
@@ -165,10 +170,7 @@ function renderVersionTableRow(ctx, strategy, version, versionStat, onVersionFoc
       onVersionFocus(version.id, { scroll: true });
     },
   }, [
-    el('td', { class: 'mono strategy-history-col--version' }, [
-      el('strong', {}, `v${version.version}`),
-      isDefault ? el('span', { class: 'badge badge--accent badge--compact', style: { marginLeft: '6px' } }, 'padrão') : null,
-    ]),
+    el('td', { class: 'mono strategy-history-col--version' }, el('strong', {}, `v${version.version}`)),
     el('td', { class: 'strategy-history-col--notes', title: version.notes || '' },
       version.notes || el('span', { class: 'muted' }, '—')),
     el('td', { class: 'mono strategy-history-col--num' }, vRuns > 0 ? String(vRuns) : el('span', { class: 'muted' }, '0')),
@@ -180,7 +182,7 @@ function renderVersionTableRow(ctx, strategy, version, versionStat, onVersionFoc
     }, vRuns > 0 ? formatPnl(vAvgPnl) : el('span', { class: 'muted' }, '—')),
     el('td', { class: 'strategy-history-col--actions' }, el('div', { class: 'btn-group' }, [
       el('button', {
-        class: `btn btn--ghost btn--sm btn--icon${isDefault ? ' is-active' : ''}`,
+        class: `btn btn--ghost btn--sm btn--icon strategy-version-star${isDefault ? ' is-on' : ''}`,
         type: 'button',
         title: isDefault ? 'Versão padrão no Estúdio' : 'Fixar como padrão',
         disabled: isDefault,
@@ -191,7 +193,7 @@ function renderVersionTableRow(ctx, strategy, version, versionStat, onVersionFoc
           strategy.default_version_id = version.id;
           invalidateStrategyPickerCache();
           ctx.toast.ok('Versão fixada como padrão');
-          await openStrategyEditor(ctx, strategy.id, version.id);
+          await state.historyPanelApi?.refresh({ scrollSnap: captureScrollState(ctx) });
         },
       }, '★'),
       el('button', {
@@ -203,15 +205,6 @@ function renderVersionTableRow(ctx, strategy, version, versionStat, onVersionFoc
           ctx.navigate(`studio?strategy=${strategy.id}&version=${version.id}`);
         },
       }, '▶'),
-      el('button', {
-        class: 'btn btn--ghost btn--sm btn--icon',
-        type: 'button',
-        title: 'Filtrar simulações desta versão',
-        onclick: (e) => {
-          e.stopPropagation();
-          onVersionFocus(version.id, { scroll: true });
-        },
-      }, el('i', { class: 'fa-solid fa-filter' })),
       el('button', {
         class: 'btn btn--ghost btn--sm btn--icon btn--danger-hover',
         type: 'button',
@@ -281,11 +274,23 @@ function renderStrategyHistoryTab(ctx, { strategy, strategyId, versions: initial
   const runsTbody = el('tbody', { id: 'strategy-runs-tbody' });
   const versionsCountEl = el('span', { class: 'strategy-history-count muted' });
   const runsCountEl = el('span', { class: 'strategy-history-count muted' });
+  const runsSectionTitleEl = el('h3', { class: 'card__title' }, 'Simulações');
+
+  function updateRunsSectionTitle() {
+    const focused = state.historyFocusedVersionId
+      ? versions.find((v) => v.id === state.historyFocusedVersionId)
+      : null;
+    mount(runsSectionTitleEl, [
+      'Simulações',
+      focused
+        ? el('span', { class: 'muted', style: { fontWeight: 400, fontSize: '13px', marginLeft: '8px' } }, `· v${focused.version}`)
+        : null,
+    ]);
+  }
 
   function focusVersionInHistory(versionId, { scroll = false } = {}) {
-    state.historyFilters.runVersionId = String(versionId);
     state.historyFocusedVersionId = versionId;
-    runVersionSelect.value = state.historyFilters.runVersionId;
+    updateRunsSectionTitle();
     refreshVersionsTable();
     refreshRunsTable();
     if (scroll) {
@@ -328,14 +333,6 @@ function renderStrategyHistoryTab(ctx, { strategy, strategyId, versions: initial
     refreshRunsTable();
   }
 
-  function rebuildRunVersionSelect() {
-    mount(runVersionSelect, [
-      el('option', { value: '' }, 'Todas as versões'),
-      ...versions.map((v) => el('option', { value: String(v.id) }, `v${v.version}`)),
-    ]);
-    runVersionSelect.value = state.historyFilters.runVersionId;
-  }
-
   async function refresh(opts = {}) {
     const scrollSnap = opts.scrollSnap ?? captureScrollState(ctx);
     const [statsRes, runsRes, versionsRes, strategyRes] = await Promise.all([
@@ -351,12 +348,11 @@ function renderStrategyHistoryTab(ctx, { strategy, strategyId, versions: initial
       strategyStats = statsRes.data.stats;
       stats = strategyStats || { totals: {}, by_version: [] };
     }
-    if (state.historyFilters.runVersionId && !versions.some((v) => String(v.id) === state.historyFilters.runVersionId)) {
-      state.historyFilters.runVersionId = '';
+    if (state.historyFocusedVersionId && !versions.some((v) => v.id === state.historyFocusedVersionId)) {
       state.historyFocusedVersionId = null;
     }
-    rebuildRunVersionSelect();
     mount(summaryEl, renderStrategyPerformanceSummary(strategyStats));
+    updateRunsSectionTitle();
     refreshVersionsTable();
     refreshRunsTable();
     restoreScrollState(ctx, scrollSnap);
@@ -378,21 +374,6 @@ function renderStrategyHistoryTab(ctx, { strategy, strategyId, versions: initial
   ]);
   versionScopeSelect.value = state.historyFilters.versionScope;
 
-  const runVersionSelect = el('select', {
-    id: 'strategy-run-version-filter',
-    class: 'field__input field__input--sm',
-    value: state.historyFilters.runVersionId,
-    onchange: (e) => {
-      state.historyFilters.runVersionId = e.target.value;
-      state.historyFocusedVersionId = e.target.value ? Number(e.target.value) : null;
-      onFilterChange();
-    },
-  }, [
-    el('option', { value: '' }, 'Todas as versões'),
-    ...versions.map((v) => el('option', { value: String(v.id) }, `v${v.version}`)),
-  ]);
-  runVersionSelect.value = state.historyFilters.runVersionId;
-
   const runOutcomeSelect = el('select', {
     class: 'field__input field__input--sm',
     onchange: (e) => {
@@ -407,6 +388,7 @@ function renderStrategyHistoryTab(ctx, { strategy, strategyId, versions: initial
   runOutcomeSelect.value = state.historyFilters.runOutcome;
 
   mount(summaryEl, renderStrategyPerformanceSummary(strategyStats));
+  updateRunsSectionTitle();
   refreshVersionsTable();
   refreshRunsTable();
 
@@ -459,7 +441,7 @@ function renderStrategyHistoryTab(ctx, { strategy, strategyId, versions: initial
     ]),
     el('section', { class: 'strategy-history-section' }, [
       el('div', { class: 'strategy-history-section__head' }, [
-        el('h3', { class: 'card__title' }, 'Simulações'),
+        runsSectionTitleEl,
         runsCountEl,
       ]),
       el('div', { class: 'strategy-history-toolbar' }, [
@@ -473,7 +455,6 @@ function renderStrategyHistoryTab(ctx, { strategy, strategyId, versions: initial
             refreshRunsTable();
           },
         }),
-        runVersionSelect,
         runOutcomeSelect,
       ]),
       el('div', { class: 'strategy-history-table-wrap' }, [
@@ -1053,9 +1034,20 @@ async function openStrategyEditor(ctx, strategyId, versionId = null, options = {
       el('div', { class: 'strategy-code-tab-layout strategy-code-tab-layout--single' }, [
         el('div', { class: 'strategy-code-editor-area' }, [
           el('div', { class: 'row row--between', style: { flexWrap: 'wrap', gap: '8px' } }, [
-            el('div', { class: 'row' }, [
+            el('div', { class: 'row', style: { flexWrap: 'wrap', gap: '10px', alignItems: 'center' } }, [
               el('span', { class: 'eyebrow' }, 'Linguagem GLS'),
-              version ? el('span', { class: 'badge badge--idle badge--compact' }, `Versão v${version.version}`) : null,
+              versions.length ? el('select', {
+                id: 'strategy-editor-version-select',
+                class: 'field__input field__input--sm strategy-editor-version-select',
+                onchange: async (e) => {
+                  const vid = Number(e.target.value);
+                  if (!vid || vid === state.selectedVersionId) return;
+                  await openStrategyEditor(ctx, strategy.id, vid, { preserveScroll: true, activeTab: 'code' });
+                },
+              }, versions.map((v) => el('option', {
+                value: v.id,
+                selected: v.id === version?.id,
+              }, versionOptionLabel(v, strategy)))) : el('span', { class: 'muted' }, 'Sem versões'),
             ]),
             el('div', { class: 'row', style: { flexWrap: 'wrap', gap: '8px' } }, [
               el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => toggleGlsDrawer(true) }, [
