@@ -26,6 +26,17 @@ import { resolveDataRequest } from '../query/dataMode.js';
 import { datasetRequestFromObject, datasetRequestFromParams } from '../query/request.js';
 import { createPrepareJobRunner } from '../prepare/runner.js';
 import { createAssetUpdateScheduler, lastClosedUtcDate } from '../scheduler/assetUpdates.js';
+import { createTelegramBackupScheduler, enqueueTelegramBackupAfterAssetSync } from '../scheduler/telegramBackup.js';
+import { enqueueTelegramBackup, getTelegramBackupRunStatus } from '../backup/runner.js';
+import { restoreFromTelegram } from '../backup/restore.js';
+import { testTelegramBackupConnection } from '../backup/upload.js';
+import { listTelegramBackupRuns, getLastCompletedTelegramBackupRun } from '../state/telegramBackup.js';
+import {
+  resolveTelegramBackupConfig,
+  toPublicTelegramBackupSettings,
+  updateTelegramBackupSettings,
+  validateTelegramBackupSettingsInput,
+} from '../state/telegramBackupSettings.js';
 import { compareBacktestRuns, getRunAnalysis } from '../backtest/analysis.js';
 import { createBacktestQueue } from '../backtest/queue.js';
 import { clearDatasetDiskCache, scanDatasetDiskCache } from '../backtest/datasetDiskStore.js';
@@ -97,10 +108,22 @@ export function createApiHandler(deps) {
   const onSseEvent = (event) => {
     broadcastSse(event);
     if (event.type === 'job:completed') {
-      finishAssetUpdateRunByJobId(db, event.jobId, event.status, event.status === 'cancelled' ? 'job cancelled' : null);
+      const assetRun = finishAssetUpdateRunByJobId(db, event.jobId, event.status, event.status === 'cancelled' ? 'job cancelled' : null);
       invalidateCoverageCache();
       if (event.status === 'completed') {
         backtestQueue?.releaseWaitingRuns?.(event.jobId);
+        if (assetRun?.status === 'completed') {
+          const schedule = getAssetUpdateSchedule(db, assetRun.schedule_id);
+          if (schedule) {
+            enqueueTelegramBackupAfterAssetSync({
+              config,
+              db,
+              underlying: schedule.underlying,
+              interval: schedule.interval,
+              bookDepth: schedule.book_depth,
+            });
+          }
+        }
       }
     }
     if (event.type === 'job:failed') {
@@ -115,6 +138,11 @@ export function createApiHandler(deps) {
     config,
     db,
     prepareRunner: resolvedPrepareRunner,
+    autoStart: deps.startScheduler === true,
+  });
+  const telegramBackupScheduler = createTelegramBackupScheduler({
+    config,
+    db,
     autoStart: deps.startScheduler === true,
   });
   backtestQueue = createBacktestQueue({
@@ -275,6 +303,90 @@ export function createApiHandler(deps) {
         };
         const warmed = await warmupDatasetDiskCache(db, warmupRequest, { config });
         return sendJson(res, 200, warmed);
+      }
+      if (req.method === 'GET' && url.pathname === '/api/settings/telegram-backup') {
+        const effective = resolveTelegramBackupConfig(config, db);
+        const lastRun = getLastCompletedTelegramBackupRun(db);
+        return sendJson(res, 200, {
+          settings: toPublicTelegramBackupSettings(effective),
+          last_run: lastRun,
+        });
+      }
+      if (req.method === 'PUT' && url.pathname === '/api/settings/telegram-backup') {
+        const body = await readJson(req);
+        const validated = validateTelegramBackupSettingsInput(body);
+        if (!validated.ok) {
+          return sendJson(res, 400, { error: { code: 'VALIDATION_FAILED', message: validated.message } });
+        }
+        updateTelegramBackupSettings(db, validated.patch, { updatedBy: req.user?.username ?? null });
+        const effective = resolveTelegramBackupConfig(config, db);
+        return sendJson(res, 200, { settings: toPublicTelegramBackupSettings(effective) });
+      }
+      if (req.method === 'POST' && url.pathname === '/api/settings/telegram-backup/test') {
+        const effective = resolveTelegramBackupConfig(config, db);
+        if (!effective.botToken || !effective.chatId) {
+          return sendJson(res, 400, { error: { code: 'NOT_CONFIGURED', message: 'Configure token e chat_id antes de testar.' } });
+        }
+        const result = await testTelegramBackupConnection(effective);
+        return sendJson(res, 200, result);
+      }
+      if (req.method === 'GET' && url.pathname === '/api/backup/telegram/runs') {
+        const limit = positiveOptionalInt(url.searchParams.get('limit')) ?? 20;
+        return sendJson(res, 200, { runs: listTelegramBackupRuns(db, { limit }) });
+      }
+      const telegramBackupRunRoute = matchTelegramBackupRunRoute(url.pathname);
+      if (telegramBackupRunRoute?.kind === 'detail' && req.method === 'GET') {
+        const run = getTelegramBackupRunStatus(db, telegramBackupRunRoute.runId);
+        if (!run) return sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Run not found' } });
+        return sendJson(res, 200, { run });
+      }
+      if (req.method === 'POST' && url.pathname === '/api/backup/telegram/runs') {
+        const body = await readJson(req);
+        const backupConfig = resolveTelegramBackupConfig(config, db);
+        if (!backupConfig.enabled && !body.force) {
+          return sendJson(res, 403, { error: { code: 'DISABLED', message: 'Backup Telegram desabilitado nas configurações.' } });
+        }
+        if (!backupConfig.configured) {
+          return sendJson(res, 400, { error: { code: 'NOT_CONFIGURED', message: 'Token e chat_id são obrigatórios.' } });
+        }
+        const result = enqueueTelegramBackup({
+          config,
+          db,
+          backupConfig,
+          request: {
+            underlying: body.underlying ? String(body.underlying).toUpperCase() : null,
+            interval: body.interval ? String(body.interval) : '5m',
+            bookDepth: positiveOptionalInt(body.book_depth ?? body.bookDepth),
+            allUnderlyings: body.all_underlyings === true,
+            incremental: body.incremental != null ? Boolean(body.incremental) : backupConfig.incrementalDefault,
+            dryRun: body.dry_run === true,
+            force: body.force === true,
+            from: body.from ? String(body.from) : null,
+            to: body.to ? String(body.to) : null,
+            continueOnError: true,
+          },
+        });
+        return sendJson(res, 202, result);
+      }
+      if (req.method === 'POST' && url.pathname === '/api/backup/telegram/restore') {
+        const body = await readJson(req);
+        if (body.confirm !== true) {
+          return sendJson(res, 400, { error: { code: 'CONFIRM_REQUIRED', message: 'Envie confirm: true para restaurar.' } });
+        }
+        const backupConfig = resolveTelegramBackupConfig(config, db);
+        const result = await restoreFromTelegram({
+          config,
+          db,
+          backupConfig,
+          masterFileId: body.master_file_id ? String(body.master_file_id) : null,
+          catalogMessageId: body.catalog_message_id ? Number.parseInt(String(body.catalog_message_id), 10) : null,
+          runId: body.run_id ? String(body.run_id) : null,
+          catalogPath: body.catalog_path ? String(body.catalog_path) : null,
+          underlying: body.underlying ? String(body.underlying).toUpperCase() : null,
+          dryRun: body.dry_run === true,
+        });
+        const status = result.ok ? 200 : 409;
+        return sendJson(res, status, result);
       }
       const assetScheduleRoute = matchAssetUpdateScheduleRoute(url.pathname);
       if (assetScheduleRoute) {
@@ -1201,6 +1313,14 @@ function matchAssetUpdateScheduleRoute(pathname) {
   if (!Number.isFinite(scheduleId)) return null;
   if (parts.length === 4) return { kind: 'detail', scheduleId };
   if (parts.length === 5 && parts[4] === 'run') return { kind: 'run', scheduleId };
+  return null;
+}
+
+function matchTelegramBackupRunRoute(pathname) {
+  const parts = pathname.split('/').filter(Boolean);
+  if (parts.length === 5 && parts[0] === 'api' && parts[1] === 'backup' && parts[2] === 'telegram' && parts[3] === 'runs') {
+    return { kind: 'detail', runId: parts[4] };
+  }
   return null;
 }
 

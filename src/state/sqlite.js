@@ -196,6 +196,63 @@ CREATE TABLE IF NOT EXISTS asset_update_schedule_runs (
 
 CREATE INDEX IF NOT EXISTS asset_update_schedule_runs_schedule_idx ON asset_update_schedule_runs(schedule_id, created_at);
 CREATE INDEX IF NOT EXISTS asset_update_schedule_runs_job_idx ON asset_update_schedule_runs(prepare_job_id);
+
+CREATE TABLE IF NOT EXISTS telegram_backup_settings (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  enabled INTEGER NOT NULL DEFAULT 0,
+  bot_token TEXT,
+  chat_id TEXT,
+  auto_after_asset_sync INTEGER NOT NULL DEFAULT 0,
+  auto_schedule_enabled INTEGER NOT NULL DEFAULT 0,
+  auto_schedule_time_utc TEXT DEFAULT '04:00',
+  pin_master_catalog INTEGER NOT NULL DEFAULT 1,
+  incremental_default INTEGER NOT NULL DEFAULT 1,
+  silent_uploads INTEGER NOT NULL DEFAULT 1,
+  max_chunk_bytes INTEGER NOT NULL DEFAULT 50331648,
+  rate_limit_ms INTEGER NOT NULL DEFAULT 3000,
+  last_schedule_run_date TEXT,
+  updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  updated_by TEXT
+);
+
+CREATE TABLE IF NOT EXISTS telegram_backup_runs (
+  id TEXT PRIMARY KEY,
+  status TEXT NOT NULL CHECK (status IN ('queued', 'running', 'completed', 'failed')),
+  mode TEXT NOT NULL CHECK (mode IN ('full', 'incremental')),
+  underlying TEXT,
+  request_json TEXT,
+  result_json TEXT,
+  progress_json TEXT,
+  error TEXT,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  started_at TEXT,
+  completed_at TEXT
+);
+
+CREATE INDEX IF NOT EXISTS telegram_backup_runs_created_idx ON telegram_backup_runs(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS telegram_backup_artifacts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  run_id TEXT NOT NULL,
+  underlying TEXT NOT NULL,
+  dataset TEXT NOT NULL,
+  interval TEXT NOT NULL,
+  book_depth INTEGER,
+  dt TEXT NOT NULL,
+  sha256 TEXT NOT NULL,
+  bytes INTEGER NOT NULL,
+  chunk_index INTEGER NOT NULL DEFAULT 0,
+  chunk_count INTEGER NOT NULL DEFAULT 1,
+  telegram_message_id INTEGER,
+  telegram_file_id TEXT,
+  catalog_message_id INTEGER,
+  skipped INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS telegram_backup_artifact_uidx ON telegram_backup_artifacts(
+  underlying, dataset, interval, COALESCE(book_depth, -1), dt, chunk_index, sha256
+);
 `;
 
 const BACKTEST_RUNS_MIGRATIONS = [
@@ -247,7 +304,18 @@ export function openStateDatabase(stateDbPath) {
   repairStrategyDefinitionsForeignKeys(db);
   migrateBacktestRunsV3Indexes(db);
   applyColumnMigrations(db, 'backtest_runs', BACKTEST_RUNS_V3_COLUMNS);
+  ensureTelegramBackupSettingsRow(db);
   return db;
+}
+
+function ensureTelegramBackupSettingsRow(db) {
+  const row = db.prepare('SELECT id FROM telegram_backup_settings WHERE id = 1').get();
+  if (!row) {
+    db.prepare(`
+      INSERT INTO telegram_backup_settings (id, updated_at)
+      VALUES (1, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+    `).run();
+  }
 }
 
 function migrateStrategyV3(db) {

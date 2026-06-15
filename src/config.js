@@ -57,6 +57,13 @@ export function loadConfig(env = process.env) {
     datasetDiskCacheMaxGb: resolveDatasetDiskCacheMaxGb(env),
     prepareMaxConcurrent: Math.max(Number.parseInt(String(env.PREPARE_MAX_CONCURRENT || '2'), 10) || 2, 1),
     prepareRunner: normalizePrepareRunner(env.PREPARE_RUNNER),
+    telegramBackupBotToken: String(env.TELEGRAM_BACKUP_BOT_TOKEN || '').trim(),
+    telegramBackupChatId: String(env.TELEGRAM_BACKUP_CHAT_ID || '').trim(),
+    telegramBackupEnabled: String(env.TELEGRAM_BACKUP_ENABLED || 'false').trim(),
+    telegramBackupAutoAfterSync: String(env.TELEGRAM_BACKUP_AUTO_AFTER_SYNC || env.TELEGRAM_BACKUP_AUTO || 'false').trim(),
+    telegramBackupAutoSchedule: String(env.TELEGRAM_BACKUP_AUTO_SCHEDULE || 'false').trim(),
+    telegramBackupMaxChunkBytes: Math.max(Number.parseInt(String(env.TELEGRAM_BACKUP_MAX_CHUNK_BYTES || '50331648'), 10) || 50331648, 1024 * 1024),
+    telegramBackupRateLimitMs: Math.max(Number.parseInt(String(env.TELEGRAM_BACKUP_RATE_LIMIT_MS || '3000'), 10) || 3000, 500),
   };
 }
 

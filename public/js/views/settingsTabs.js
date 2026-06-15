@@ -46,6 +46,7 @@ const TAB_STYLES = `
 const TABS = [
   { id: 'sync', route: 'settings', label: 'Sincronização Parquet', icon: 'fa-clock' },
   { id: 'cache', route: 'settings/cache', label: 'Cache de backtest', icon: 'fa-bolt' },
+  { id: 'backup', route: 'settings/backup', label: 'Backup Telegram', icon: 'fa-paper-plane' },
 ];
 
 export function ensureSettingsTabStyles() {

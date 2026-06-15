@@ -10,6 +10,7 @@ import { renderStudio, leaveStudio, redirectLegacyBacktestRoute } from './js/vie
 import { renderStrategies } from './js/views/strategies.js';
 import { renderSettings } from './js/views/settings.js';
 import { renderDatasetCacheSettings } from './js/views/datasetCacheSettings.js';
+import { renderTelegramBackupSettings } from './js/views/telegramBackupSettings.js';
 
 const contentEl = document.getElementById('content');
 const backButton = document.getElementById('nav-back');
@@ -143,6 +144,7 @@ async function bootstrap() {
       data: () => renderData(ctx),
       settings: () => renderSettings(ctx),
       'settings/cache': () => renderDatasetCacheSettings(ctx),
+      'settings/backup': () => renderTelegramBackupSettings(ctx),
       jobs: () => { navigate('data'); },
       backtests: () => navigate('studio'),
       'backtests/:id': (params) => redirectLegacyBacktestRoute({ id: params.id }),

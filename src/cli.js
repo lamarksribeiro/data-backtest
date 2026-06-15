@@ -27,6 +27,10 @@ import { getStrategy, getStrategyVersion } from './backtestStudio/state/strategi
 import { parse } from './backtestStudio/gls/parser.js';
 import { warmupDatasetDiskCache } from './backtest/datasetDiskLoader.js';
 import { clearDatasetDiskCache, scanDatasetDiskCache } from './backtest/datasetDiskStore.js';
+import { runTelegramBackup } from './backup/upload.js';
+import { restoreFromTelegram } from './backup/restore.js';
+import { verifyTelegramBackup } from './backup/verify.js';
+import { resolveTelegramBackupConfig } from './state/telegramBackupSettings.js';
 
 function parseArgs(argv) {
   const [command = 'help', ...rest] = argv;
@@ -83,6 +87,9 @@ Commands:
   cache:dataset     Materializes daily ColumnSet cache on disk for a date window
   cache:dataset:stats Shows disk cache usage summary
   cache:dataset:clear Clears disk cache (optional filters)
+  backup:telegram       Upload backtest_ticks partitions to Telegram
+  backup:telegram:restore Restore lake + manifest from Telegram catalog
+  backup:telegram:verify  Compare local lake vs remote Telegram catalog
 
 Sync examples:
   node src/cli.js sync:partitions --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m
@@ -515,6 +522,65 @@ async function main() {
         bookDepth: flags['book-depth'] != null ? optionalIntFlag(flags, 'book-depth') : undefined,
       });
       printJson({ ok: true, ...result });
+      return;
+    }
+
+    if (command === 'backup:telegram') {
+      const backupConfig = resolveTelegramBackupConfig(config, db);
+      const result = await runTelegramBackup({
+        config,
+        db,
+        backupConfig,
+        request: {
+          cli: true,
+          force: optionalBoolFlag(flags, 'force'),
+          dryRun: optionalBoolFlag(flags, 'dry-run'),
+          incremental: optionalBoolFlag(flags, 'incremental') || backupConfig.incrementalDefault,
+          allUnderlyings: optionalBoolFlag(flags, 'all-underlyings'),
+          underlying: flags.underlying ? String(flags.underlying).toUpperCase() : null,
+          interval: flags.interval ? String(flags.interval) : '5m',
+          bookDepth: optionalIntFlag(flags, 'book-depth'),
+          from: flags.from ? String(flags.from) : null,
+          to: flags.to ? String(flags.to) : null,
+          skipCheck: optionalBoolFlag(flags, 'skip-check'),
+          continueOnError: optionalBoolFlag(flags, 'continue-on-error') || true,
+        },
+      });
+      printJson(result);
+      if (!result.ok) process.exitCode = 1;
+      return;
+    }
+
+    if (command === 'backup:telegram:restore') {
+      const backupConfig = resolveTelegramBackupConfig(config, db);
+      const result = await restoreFromTelegram({
+        config,
+        db,
+        backupConfig,
+        masterFileId: flags['master-file-id'] ? String(flags['master-file-id']) : null,
+        catalogMessageId: flags['catalog-message'] ? Number.parseInt(String(flags['catalog-message']), 10) : null,
+        runId: flags['run-id'] ? String(flags['run-id']) : null,
+        catalogPath: flags['catalog-path'] ? String(flags['catalog-path']) : null,
+        underlying: flags.underlying ? String(flags.underlying).toUpperCase() : null,
+        dryRun: optionalBoolFlag(flags, 'dry-run'),
+      });
+      printJson(result);
+      if (!result.ok) process.exitCode = 1;
+      return;
+    }
+
+    if (command === 'backup:telegram:verify') {
+      const backupConfig = resolveTelegramBackupConfig(config, db);
+      const result = await verifyTelegramBackup({
+        config,
+        db,
+        backupConfig,
+        runId: flags['run-id'] ? String(flags['run-id']) : null,
+        masterFileId: flags['master-file-id'] ? String(flags['master-file-id']) : null,
+        underlying: flags.underlying ? String(flags.underlying).toUpperCase() : null,
+      });
+      printJson(result);
+      if (!result.ok) process.exitCode = 1;
       return;
     }
 

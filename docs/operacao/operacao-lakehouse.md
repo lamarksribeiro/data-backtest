@@ -534,6 +534,53 @@ DATA_COLLECTOR_ARCHIVE_API_KEY=
 6. restaurar backup ou rebuild por particao
 ```
 
+## Backup Telegram (`backtest_ticks`)
+
+Backup incremental por ativo (`underlying`) enviando Parquet ZSTD para um **canal privado** do Telegram, com catálogo JSON autocontido para restore sem Postgres/Brutus.
+
+### Setup do canal
+
+1. Criar bot dedicado via @BotFather.
+2. Criar canal privado (ex.: `GoldenLens Backtest Backup`).
+3. Adicionar o bot como **administrador** com permissão de postar.
+4. Obter `chat_id` do canal (formato `-100…`).
+5. Configurar em **Configurações → Backup Telegram** ou via env:
+
+```env
+TELEGRAM_BACKUP_BOT_TOKEN=
+TELEGRAM_BACKUP_CHAT_ID=-100xxxxxxxxxx
+TELEGRAM_BACKUP_ENABLED=false
+```
+
+### O que é enviado
+
+- Parquet `backtest_ticks` (partições `valid`/`accepted`)
+- Sidecar JSON por partição (manifest + sha256)
+- `catalog-{UNDERLYING}.json` por ativo
+- `master_catalog.json` (fixado no canal quando habilitado)
+- `event_exclusions` filtradas por ativo
+
+### CLI
+
+```bash
+npm run backup:telegram -- --underlying BTC --interval 5m --book-depth 25 --incremental
+npm run backup:telegram -- --all-underlyings --incremental
+npm run backup:telegram:restore -- --run-id br-... 
+npm run backup:telegram:restore -- --master-file-id <file_id>
+npm run backup:telegram:verify -- --run-id br-...
+```
+
+Antes do primeiro backup: `npm run ops:check`.
+
+### Restore em instalação nova
+
+1. Configurar `LAKE_ROOT`, `STATE_DB_PATH` e credenciais Telegram.
+2. Obter `file_id` do `master_catalog.json` (mensagem de resumo do backup ou run local).
+3. `npm run backup:telegram:restore -- --master-file-id <id>`
+4. `npm run ops:check` + `query:availability` + smoke de backtest.
+
+**Importante:** manter o mesmo bot token usado no upload; `file_id` é válido para o bot que enviou o arquivo.
+
 ## Criterios Para Considerar O Lake Operacional
 
 - Healthcheck OK.
