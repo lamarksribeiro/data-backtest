@@ -32,11 +32,26 @@ export function buildNormalizationIndexFromReport(report) {
 }
 
 export async function buildLiveNormalizationIndex(pool, partition, config = {}) {
-  const events = await getPartitionEvents(pool, partition);
-  const conditionIds = [...new Set(events.map((event) => event.conditionId))];
-  if (!conditionIds.length) return new Map();
+	const events = await getPartitionEvents(pool, partition);
+	const conditionIds = [...new Set(events.map((event) => event.conditionId))];
+	if (!conditionIds.length) return new Map();
 
-  const ticks = await getScalarTicksForEvents(pool, partition, conditionIds);
-  const { report } = normalizePartitionTicks(ticks, buildNormalizationOptions(config), events);
-  return buildNormalizationIndexFromReport(report);
+	const ticks = await getScalarTicksForEvents(pool, partition, conditionIds);
+	const { report } = normalizePartitionTicks(ticks, buildNormalizationOptions(config), events);
+	return buildNormalizationIndexFromReport(report);
+}
+
+/** Live normalization for a single event (preview) — avoids scanning the full day. */
+export async function buildLiveNormalizationIndexForEvent(pool, partition, conditionId, config = {}) {
+	if (!conditionId) return new Map();
+	const ticks = await getScalarTicksForEvents(pool, partition, [conditionId]);
+	if (!ticks.length) return new Map();
+	const events = await getPartitionEvents(pool, partition);
+	const event = events.find((row) => row.conditionId === conditionId) ?? {
+		conditionId,
+		eventStart: ticks[0]?.eventStart ?? null,
+		ticksRecorded: ticks.length,
+	};
+	const { report } = normalizePartitionTicks(ticks, buildNormalizationOptions(config), [event]);
+	return buildNormalizationIndexFromReport(report);
 }

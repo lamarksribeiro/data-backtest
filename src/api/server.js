@@ -73,6 +73,7 @@ import {
 } from '../backtestStudio/state/strategies.js';
 import { getStrategyStats, listStrategiesWithStats, listTrashedStrategiesWithStats } from '../backtestStudio/state/strategyStats.js';
 import { getDataCoverage, invalidateCoverageCache } from '../query/coverageUi.js';
+import { invalidateDayEventsCache } from '../api/qualityHandlers.js';
 import { runDataFix } from '../data/fixPipeline.js';
 import {
   handleQualityDayEvents,
@@ -112,6 +113,7 @@ export function createApiHandler(deps) {
     if (event.type === 'job:completed') {
       const assetRun = finishAssetUpdateRunByJobId(db, event.jobId, event.status, event.status === 'cancelled' ? 'job cancelled' : null);
       invalidateCoverageCache();
+      invalidateDayEventsCache();
       if (event.status === 'completed') {
         backtestQueue?.releaseWaitingRuns?.(event.jobId);
         if (assetRun?.status === 'completed') {

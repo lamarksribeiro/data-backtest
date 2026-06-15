@@ -909,6 +909,13 @@ let latestJobs = [];
 let jobsTimer = null;
 let jobsRefreshDebounce = null;
 let displayedProgress = {};
+let dayDrawerLoadToken = 0;
+let dayDrawerAbort = null;
+let eventPreviewAbort = null;
+
+const EVENTS_PAGE_SIZE = 48;
+const DAY_EVENTS_TIMEOUT_MS = 60_000;
+const EVENT_PREVIEW_TIMEOUT_MS = 45_000;
 
 export function buildDetailsEmptyState() {
   return el('div', { class: 'card data-details-empty', style: { borderStyle: 'dashed', background: 'rgba(255,255,255,0.01)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 16px', textAlign: 'center' } }, [
@@ -920,6 +927,11 @@ export function buildDetailsEmptyState() {
 }
 
 export function closeDrawer() {
+  dayDrawerLoadToken += 1;
+  dayDrawerAbort?.abort();
+  dayDrawerAbort = null;
+  eventPreviewAbort?.abort();
+  eventPreviewAbort = null;
   document.querySelectorAll('.coverage-day.is-selected').forEach(el => el.classList.remove('is-selected'));
   const container = document.getElementById('data-partition-details-container');
   if (container) {
@@ -1508,13 +1520,16 @@ function formatIssues(issues = []) {
   }).join(' · ');
 }
 
-async function loadEventPreview(ctx, day, ctxSaved, conditionId, eventMeta = null) {
+async function loadEventPreview(ctx, day, ctxSaved, conditionId, eventMeta = null, loadToken = dayDrawerLoadToken) {
   const host = document.getElementById(`quality-preview-${conditionId}`);
   if (!host) return;
   if (eventMeta?.ticks_recorded === 0 || eventMeta?.normalization_action === 'omit' && eventMeta?.normalization_issues?.includes('missing_ticks')) {
     mount(host, el('p', { class: 'muted', style: { padding: '8px 0' } }, 'Evento omitido automaticamente — sem ticks no coletor.'));
     return;
   }
+  eventPreviewAbort?.abort();
+  eventPreviewAbort = new AbortController();
+  const signal = eventPreviewAbort.signal;
   mount(host, el('p', { class: 'muted', style: { padding: '8px 0' } }, 'Carregando gráfico…'));
   const query = new URLSearchParams({
     dt: day.dt,
@@ -1522,8 +1537,13 @@ async function loadEventPreview(ctx, day, ctxSaved, conditionId, eventMeta = nul
     interval: ctxSaved.interval,
     condition_id: conditionId,
   });
-  const res = await ctx.api.get(`/api/quality/event-preview?${query.toString()}`);
+  const res = await ctx.api.get(`/api/quality/event-preview?${query.toString()}`, {
+    timeoutMs: EVENT_PREVIEW_TIMEOUT_MS,
+    signal,
+  });
+  if (loadToken !== dayDrawerLoadToken) return;
   if (!res.ok) {
+    if (res.error?.code === 'ABORTED') return;
     mount(host, el('p', { class: 'bad', style: { padding: '8px 0' } }, res.error?.message || 'Falha ao carregar preview'));
     return;
   }
@@ -1555,13 +1575,16 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, drawerUiState = 
   const selectedHour = drawerUiState.selectedHour ?? null;
   const selectedTypeFilter = drawerUiState.selectedTypeFilter ?? null;
   const selectedEventId = drawerUiState.selectedEventId ?? null;
+  const visibleCount = drawerUiState.visibleCount ?? EVENTS_PAGE_SIZE;
+  const loadToken = drawerUiState.loadToken ?? dayDrawerLoadToken;
 
-  const remountDrawer = () => {
+  const remountDrawer = (patch = {}) => {
+    Object.assign(drawerUiState, patch);
     const container = document.getElementById('data-partition-details-container');
     mount(container, buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, drawerUiState, fieldOptions));
     if (drawerUiState.selectedEventId) {
       const selectedEvent = events.find((event) => event.condition_id === drawerUiState.selectedEventId);
-      void loadEventPreview(ctx, day, ctxSaved, drawerUiState.selectedEventId, selectedEvent);
+      void loadEventPreview(ctx, day, ctxSaved, drawerUiState.selectedEventId, selectedEvent, loadToken);
     }
   };
   const events = (eventPayload.events || []).filter((event) => {
@@ -1587,6 +1610,7 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, drawerUiState = 
       title: `${bucket.total} evento(s) · omit: ${bucket.omitted} · manual: ${bucket.manual}`,
       onclick: () => {
         drawerUiState.selectedHour = selectedHour === bucket.hour ? null : bucket.hour;
+        drawerUiState.visibleCount = EVENTS_PAGE_SIZE;
         remountDrawer();
       },
     }, [
@@ -1631,6 +1655,7 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, drawerUiState = 
           onclick: () => {
             drawerUiState.selectedTypeFilter = selectedTypeFilter === 'omit' ? null : 'omit';
             drawerUiState.selectedEventId = null;
+            drawerUiState.visibleCount = EVENTS_PAGE_SIZE;
             remountDrawer();
           }
         }, [
@@ -1642,6 +1667,7 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, drawerUiState = 
           onclick: () => {
             drawerUiState.selectedTypeFilter = selectedTypeFilter === 'manual' ? null : 'manual';
             drawerUiState.selectedEventId = null;
+            drawerUiState.visibleCount = EVENTS_PAGE_SIZE;
             remountDrawer();
           }
         }, [
@@ -1659,6 +1685,7 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, drawerUiState = 
             class: `quality-hour-chip${selectedHour == null ? ' is-active' : ''}`,
             onclick: () => {
               drawerUiState.selectedHour = null;
+              drawerUiState.visibleCount = EVENTS_PAGE_SIZE;
               remountDrawer();
             },
           }, 'Todas'),
@@ -1669,7 +1696,8 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, drawerUiState = 
       // Lista de eventos
       el('div', { class: 'events-timeline' }, [
         el('h4', { style: { fontSize: '13px', fontWeight: '700', color: 'var(--text-0)', margin: '8px 0 4px' } }, `Eventos (${events.length})`),
-        events.length ? el('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } }, events.map((event) => {
+        events.length ? el('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } }, [
+          ...events.slice(0, visibleCount).map((event) => {
           const excluded = event.manually_excluded;
           const badgeTone = eventBadgeTone(event);
           const isSelected = selectedEventId === event.condition_id;
@@ -1709,7 +1737,14 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, drawerUiState = 
               },
             }, excluded ? 'Restaurar' : 'Excluir')
           ]);
-        })) : el('p', { class: 'muted', style: { textAlign: 'center', padding: '20px 0' } }, 'Nenhum evento registrado com este filtro.')
+        }),
+          visibleCount < events.length ? el('button', {
+            type: 'button',
+            class: 'btn btn--ghost btn--sm',
+            style: { alignSelf: 'center', marginTop: '4px' },
+            onclick: () => remountDrawer({ visibleCount: visibleCount + EVENTS_PAGE_SIZE }),
+          }, `Mostrar mais (${events.length - visibleCount} restantes)`) : null,
+        ]) : el('p', { class: 'muted', style: { textAlign: 'center', padding: '20px 0' } }, 'Nenhum evento registrado com este filtro.')
       ])
     ]),
     
@@ -1732,6 +1767,14 @@ function buildPartitionDrawer(ctx, day, eventPayload, ctxSaved, drawerUiState = 
 async function openPartitionDrawer(ctx, day, fieldOptions = null) {
   const container = document.getElementById('data-partition-details-container');
   if (!container) return;
+
+  dayDrawerLoadToken += 1;
+  const loadToken = dayDrawerLoadToken;
+  dayDrawerAbort?.abort();
+  dayDrawerAbort = new AbortController();
+  const signal = dayDrawerAbort.signal;
+  eventPreviewAbort?.abort();
+  eventPreviewAbort = null;
   
   // Destacar o dia selecionado no calendário
   document.querySelectorAll('.coverage-day.is-selected').forEach(el => el.classList.remove('is-selected'));
@@ -1751,8 +1794,13 @@ async function openPartitionDrawer(ctx, day, fieldOptions = null) {
     interval: ctxSaved.interval,
     book_depth: ctxSaved.book_depth,
   });
-  const res = await ctx.api.get(`/api/quality/day-events?${query.toString()}`);
+  const res = await ctx.api.get(`/api/quality/day-events?${query.toString()}`, {
+    timeoutMs: DAY_EVENTS_TIMEOUT_MS,
+    signal,
+  });
+  if (loadToken !== dayDrawerLoadToken) return;
   if (!res.ok) {
+    if (res.error?.code === 'ABORTED') return;
     mount(container, el('div', { class: 'data-partition-inline-panel' }, [
       el('header', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '14px' } }, [
         el('h3', { style: { fontSize: '16px', fontWeight: '800', margin: 0, color: 'var(--text-0)' } }, `Detalhes: ${day.dt}`),
@@ -1766,7 +1814,13 @@ async function openPartitionDrawer(ctx, day, fieldOptions = null) {
     ]));
     return;
   }
-  const drawerUiState = { selectedHour: null, selectedTypeFilter: null, selectedEventId: null };
+  const drawerUiState = {
+    selectedHour: null,
+    selectedTypeFilter: null,
+    selectedEventId: null,
+    visibleCount: EVENTS_PAGE_SIZE,
+    loadToken,
+  };
   mount(container, buildPartitionDrawer(ctx, day, res.data, ctxSaved, drawerUiState, fieldOptions));
 }
 

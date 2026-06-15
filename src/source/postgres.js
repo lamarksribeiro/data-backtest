@@ -112,7 +112,7 @@ export async function resolveMarketId(pool, { underlying, interval }) {
 }
 
 export async function getPartitionEvents(pool, partition) {
-  const { rows } = await pool.query(`
+	const { rows } = await pool.query(`
     SELECT
       eq.condition_id,
       eq.market_id,
@@ -125,7 +125,8 @@ export async function getPartitionEvents(pool, partition) {
       eq.recorded_at
     FROM event_quality eq
     WHERE eq.market_id = $1
-      AND (eq.event_start AT TIME ZONE 'UTC')::date = $2::date
+      AND eq.event_start >= ($2::date::timestamp AT TIME ZONE 'UTC')
+      AND eq.event_start < (($2::date + 1)::timestamp AT TIME ZONE 'UTC')
     ORDER BY eq.event_start ASC, eq.condition_id ASC
   `, [partition.marketId, partition.dt]);
 

@@ -88,12 +88,13 @@ export function buildPartitionQualityDetails({
       missing_ticks: Math.max(Number(event.ticksExpected || 0) - Number(event.ticksRecorded || 0), 0),
     }));
 
-  if (!issues.length && !samples.length && !normalization?.applied) return null;
+  const normalizationReport = normalization?.events_index?.length ? normalization : null;
+  if (!issues.length && !samples.length && !normalizationReport) return null;
 
   return {
-    version: normalization?.applied ? 2 : 1,
+    version: normalizationReport?.applied ? 2 : 1,
     generated_at: new Date().toISOString(),
-    normalization: normalization?.applied ? normalization : null,
+    normalization: normalizationReport,
     degraded_threshold: DEGRADED_COVERAGE_THRESHOLD,
     events_total: eventList.length,
     events_degraded: degradedEvents.length,
