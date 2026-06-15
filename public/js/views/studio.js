@@ -230,6 +230,8 @@ let openEventToken = 0;
 let progressPollTimer = null;
 let progressElapsedTimer = null;
 let lastProgressSnapshot = null;
+let lastProgressRunId = null;
+let lastProgressReceivedAt = 0;
 
 function clearProgressPoll() {
   if (progressPollTimer) {
@@ -241,6 +243,8 @@ function clearProgressPoll() {
     progressElapsedTimer = null;
   }
   lastProgressSnapshot = null;
+  lastProgressRunId = null;
+  lastProgressReceivedAt = 0;
 }
 
 function formatProgressPhase(phase, progress = null) {
@@ -259,19 +263,31 @@ function formatProgressPhase(phase, progress = null) {
 }
 
 function resolveProgressElapsedMs(progress) {
-  const startedAt = progress?.started_at ?? progress?.startedAt;
+  if (!progress) return null;
+  if (progress.phase === 'queued') return null;
+
+  const base = progress.elapsed_ms ?? progress.elapsedMs;
+  const updated = progress.updated_at ?? progress.updatedAt;
+  if (base != null && Number.isFinite(Number(base)) && updated) {
+    const updatedMs = new Date(updated).getTime();
+    if (Number.isFinite(updatedMs)) {
+      const drift = lastProgressReceivedAt > 0 ? Math.max(0, Date.now() - lastProgressReceivedAt) : 0;
+      return Math.max(0, Number(base) + drift);
+    }
+  }
+
+  const startedAt = progress.started_at ?? progress.startedAt;
   if (startedAt) {
     const started = new Date(startedAt).getTime();
-    if (Number.isFinite(started)) return Math.max(Date.now() - started, 0);
+    if (Number.isFinite(started)) return Math.max(0, Date.now() - started);
   }
-  const ms = progress?.elapsed_ms ?? progress?.elapsedMs;
-  return ms != null && Number.isFinite(ms) ? ms : null;
+  return null;
 }
 
 function startProgressElapsedTicker() {
   if (progressElapsedTimer) return;
   progressElapsedTimer = setInterval(() => {
-    if (!lastProgressSnapshot?.started_at) return;
+    if (!lastProgressSnapshot || lastProgressSnapshot.phase === 'queued') return;
     applyProgressUi(lastProgressSnapshot, { skipSnapshot: true });
   }, 500);
 }
@@ -302,26 +318,27 @@ function formatProgressRemaining(progress) {
 }
 
 function formatProgressElapsed(progress) {
+  if (progress?.phase === 'queued') return 'Na fila';
   return formatDurationMs(resolveProgressElapsedMs(progress), '0s');
 }
 
-function applyProgressUi(progress, { skipSnapshot = false } = {}) {
+function applyProgressUi(progress, { skipSnapshot = false, runId = null } = {}) {
   if (!progress) return;
+  if (runId != null && runId !== lastProgressRunId) {
+    lastProgressRunId = runId;
+    lastProgressSnapshot = null;
+    lastProgressReceivedAt = 0;
+  }
   const percent = progress.percent != null ? Number(progress.percent) : 0;
   const previousPercent = lastProgressSnapshot?.percent != null ? Number(lastProgressSnapshot.percent) : 0;
   const displayPercent = Math.max(previousPercent, percent);
   if (!skipSnapshot) {
-    const prevStarted = lastProgressSnapshot?.started_at ?? lastProgressSnapshot?.startedAt;
-    const nextStarted = progress.started_at ?? progress.startedAt;
-    let started_at = nextStarted ?? prevStarted ?? null;
-    if (prevStarted && nextStarted) {
-      const prevMs = new Date(prevStarted).getTime();
-      const nextMs = new Date(nextStarted).getTime();
-      if (Number.isFinite(prevMs) && Number.isFinite(nextMs)) {
-        started_at = prevMs <= nextMs ? prevStarted : nextStarted;
-      }
-    }
-    lastProgressSnapshot = { ...progress, percent: displayPercent, ...(started_at ? { started_at } : {}) };
+    lastProgressReceivedAt = Date.now();
+    lastProgressSnapshot = {
+      ...progress,
+      percent: displayPercent,
+      ...(runId != null ? { runId } : {}),
+    };
     startProgressElapsedTicker();
   }
   const fill = document.getElementById('studio-progress-fill');
@@ -449,7 +466,7 @@ function startProgressPoll(ctx, runId) {
       await loadRunDetail(ctx, runId);
       return;
     }
-    if (run.progress) applyProgressUi(run.progress);
+    if (run.progress) applyProgressUi(run.progress, { runId: run.id });
     updateRunListProgress(runId, run.status, run.progress);
   };
   pollOnce();
@@ -1463,7 +1480,7 @@ function bindSse(ctx) {
   sseHandler = (event) => {
     if (!isStudioRouteActive()) return;
     if (event.type === 'run:progress' && event.runId === studioState.selectedRunId) {
-      applyProgressUi(event.progress);
+      applyProgressUi(event.progress, { runId: event.runId });
       updateRunListProgress(event.runId, 'running', event.progress);
     }
     if (event.type === 'run:cancelled') {

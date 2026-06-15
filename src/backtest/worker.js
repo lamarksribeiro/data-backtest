@@ -50,7 +50,6 @@ try {
   };
 
   const result = await runBacktest(db, request, {
-    progressStartedAt: workerData.startedAt,
     onProgress: (progress) => parentPort?.postMessage({ type: 'progress', progress }),
   });
 
@@ -61,7 +60,7 @@ try {
     request: workerData.request,
     result,
     strategyMeta: workerData.request.strategyMeta ?? null,
-    startedAt: workerData.startedAt,
+    startedAt: result.timings?.runStartedAt ?? workerData.startedAt,
   });
   parentPort?.postMessage({ ok: true, runId: run.id });
 } catch (err) {

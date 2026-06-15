@@ -55,7 +55,7 @@ export async function runBacktest(db, request, { onProgress, progressStartedAt: 
   let ticks = 0;
   let batches = 0;
   const totalTicks = Number(request.estimatedTicks || 0) || null;
-  const progressStartedAt = Number(progressStartedAtInput) > 0 ? Number(progressStartedAtInput) : Date.now();
+  const progressStartedAt = Date.now();
   const emitProgress = createProgressEmitter(onProgress, progressStartedAt);
   emitProgress({ phase: 'loading', ticks, batches, totalTicks, force: true });
 
@@ -377,22 +377,15 @@ export function buildProgress({
   let percent = null;
 
   if (phase === 'loading') {
-    const loadingIdlePercent = Math.min(
-      LOADING_PHASE_WEIGHT * 100 * 0.2,
-      (elapsedMs / 120_000) * LOADING_PHASE_WEIGHT * 100,
-    );
+    const loadingCap = LOADING_PHASE_WEIGHT * 100;
+    const loadingFloor = loadingCap * 0.04;
     if (loadingStep === 'merge') {
-      percent = LOADING_PHASE_WEIGHT * 100 * 0.95;
+      percent = loadingCap * 0.95;
     } else if (safeTotal && safeLoadedTicks > 0) {
       const loadRatio = Math.min(1, safeLoadedTicks / safeTotal);
-      percent = Math.max(loadRatio * LOADING_PHASE_WEIGHT * 100, loadingIdlePercent);
-    } else if (safeTotal) {
-      // DuckDB ainda não devolveu chunks — barra mínima até o primeiro batch.
-      percent = loadingIdlePercent;
-    } else if (safeLoadedTicks > 0) {
-      percent = Math.min(LOADING_PHASE_WEIGHT * 100, 1);
+      percent = Math.max(loadingFloor, loadRatio * loadingCap);
     } else {
-      percent = loadingIdlePercent;
+      percent = loadingFloor;
     }
   } else if (phase === 'processing' && safeTotal) {
     const processRatio = Math.min(1, safeTicks / safeTotal);
@@ -444,6 +437,7 @@ function formatTimings(timings) {
     finishMs,
     overheadMs: Math.max(0, totalMs - duckdbReadMs - processMs - finishMs),
     totalMs,
+    runStartedAt: timings.startedAt,
   };
 }
 

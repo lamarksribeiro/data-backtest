@@ -85,16 +85,22 @@ export function createRunningBacktestRun(db, { request, strategyMeta = null, tot
   });
 }
 
-export function markBacktestRunRunning(db, id) {
+export function markBacktestRunRunning(db, id, { startedAt = Date.now() } = {}) {
   const existing = db.prepare('SELECT progress_json FROM backtest_runs WHERE id = ?').get(id);
   const prev = existing?.progress_json ? JSON.parse(existing.progress_json) : {};
+  const startedIso = new Date(startedAt).toISOString();
   const nowProgress = {
     ...prev,
     phase: 'loading',
     ticks: 0,
     batches: 0,
-    started_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    queued_at: prev.queued_at ?? null,
+    started_at: startedIso,
+    elapsed_ms: 0,
+    processing_elapsed_ms: null,
+    processing_started_at: null,
+    eta_ms: null,
+    updated_at: startedIso,
   };
   const changes = db.prepare(`
     UPDATE backtest_runs
@@ -137,14 +143,16 @@ export function clearRunJobDependency(db, runId) {
 
 function insertBacktestRunRow(db, { request, strategyMeta, totalTicks, status, phase, dependsOnJob = null }) {
   const meta = strategyMeta ?? request.strategyMeta ?? null;
+  const nowIso = new Date().toISOString();
   const nowProgress = {
     phase,
     ticks: 0,
     batches: 0,
     total_ticks: totalTicks,
-    percent: totalTicks ? 0 : null,
-    started_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    percent: phase === 'queued' ? 0 : null,
+    queued_at: status === 'queued' ? nowIso : null,
+    started_at: status === 'running' ? nowIso : null,
+    updated_at: nowIso,
     eta_ms: null,
     ...(dependsOnJob != null ? { depends_on_job: Number(dependsOnJob) } : {}),
   };
@@ -189,7 +197,8 @@ export function updateBacktestRunProgress(db, id, progress) {
   const prevPercent = Number(prev.percent);
   const merged = {
     ...progress,
-    started_at: progress.started_at || prev.started_at || new Date().toISOString(),
+    queued_at: progress.queued_at ?? prev.queued_at ?? null,
+    started_at: progress.started_at ?? prev.started_at ?? null,
     total_ticks: progress.total_ticks ?? prev.total_ticks ?? null,
     percent: progress.percent == null
       ? (prev.percent ?? null)

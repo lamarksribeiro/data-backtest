@@ -69,7 +69,7 @@ export function createBacktestQueue({ config, db, onEvent }) {
     const startedAt = Date.now();
     const request = pendingRequests.get(run.id) || JSON.parse(run.dataset_request_json || '{}');
     pendingRequests.delete(run.id);
-    const running = markBacktestRunRunning(db, run.id);
+    const running = markBacktestRunRunning(db, run.id, { startedAt });
     if (!running) return;
 
     emit('run:progress', { runId: run.id, progress: running.progress });
