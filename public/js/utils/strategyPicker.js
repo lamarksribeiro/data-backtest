@@ -95,13 +95,11 @@ export function resolveInitialStrategyPick(options, { strategyId = null, version
 }
 
 function formatVersionLabel(version, strat) {
-  const isDefault = String(version.versionId) === String(strat?.defaultVersionId);
-  const prefix = isDefault ? '★ ' : '';
   if (version.notes) {
     const shortNotes = String(version.notes).replace(/^Preset\s+v\d+:\s*/i, '');
-    return `${prefix}v${version.versionNum} · ${shortNotes}`;
+    return `v${version.versionNum} · ${shortNotes}`;
   }
-  return `${prefix}v${version.versionNum}`;
+  return `v${version.versionNum}`;
 }
 
 function mapPickerRows(rows, { includeArchived = false } = {}) {
@@ -246,7 +244,6 @@ export function renderStrategyPicker(options, selectedValue = '', onChange = nul
     class: 'field__input studio-strategy-picker__version',
     'aria-label': 'Versão',
   });
-  const versionRow = el('div', { class: 'studio-strategy-picker__version-row' });
 
   function syncValue({ strategyChanged = false } = {}) {
     const sid = strategySelect.value;
@@ -276,9 +273,23 @@ export function renderStrategyPicker(options, selectedValue = '', onChange = nul
   syncValue();
   strategySelect.addEventListener('change', () => syncValue({ strategyChanged: true }));
   versionSelect.addEventListener('change', () => syncValue({ strategyChanged: false }));
-  versionRow.append(versionSelect);
-  if (pinButton) versionRow.append(pinButton);
-  wrap.append(strategySelect, versionRow, hidden);
+
+  const versionWrap = el('div', { class: 'studio-strategy-picker__version-wrap' }, [
+    versionSelect,
+    ...(pinButton ? [pinButton] : []),
+  ]);
+
+  wrap.append(
+    el('div', { class: 'studio-strategy-picker__field' }, [
+      el('span', { class: 'studio-strategy-picker__label' }, 'Estratégia'),
+      strategySelect,
+    ]),
+    el('div', { class: 'studio-strategy-picker__field' }, [
+      el('span', { class: 'studio-strategy-picker__label' }, 'Versão'),
+      versionWrap,
+    ]),
+    hidden,
+  );
   return wrap;
 }
 

@@ -625,8 +625,7 @@ function renderConfigPanel(ctx, { formCtx, fieldOptions }) {
   mount(wrap, el('div', { class: 'card' }, [
     el('h2', { class: 'card__title' }, 'Configurar'),
     el('form', { id: 'studio-form', class: 'studio-form' }, [
-      el('label', { class: 'field' }, [
-        el('span', { class: 'field__label' }, 'Estratégia'),
+      el('div', { class: 'field studio-strategy-field' }, [
         el('div', { id: 'studio-strategy-pick' }),
       ]),
       el('div', { class: 'row row--wrap', id: 'studio-coverage-indicator' }),
@@ -682,12 +681,17 @@ function mountStudioStrategyPicker(ctx) {
 
   const pinBtn = el('button', {
     type: 'button',
-    class: 'btn btn--ghost btn--icon studio-strategy-pin',
+    class: 'studio-strategy-pin',
     id: 'studio-strategy-pin',
     title: 'Fixar versão padrão',
     'aria-label': 'Fixar versão padrão',
-    onclick: () => pinStudioStrategyVersion(ctx),
-  }, el('i', { class: 'fa-solid fa-star', 'aria-hidden': 'true' }));
+    onclick: (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      void pinStudioStrategyVersion(ctx);
+    },
+  }, el('i', { class: 'fa-regular fa-star', 'aria-hidden': 'true' }));
+  pinBtn.addEventListener('mousedown', (event) => event.preventDefault());
 
   strategyPickWrap.replaceChildren(renderStrategyPicker(
     studioState.strategyOptions,
@@ -728,6 +732,8 @@ function updateStudioPinState() {
   pinBtn.classList.toggle('is-active', isDefault);
   pinBtn.setAttribute('aria-pressed', isDefault ? 'true' : 'false');
   pinBtn.title = isDefault ? 'Versão padrão fixada' : 'Fixar esta versão como padrão';
+  const icon = pinBtn.querySelector('i');
+  if (icon) icon.className = isDefault ? 'fa-solid fa-star' : 'fa-regular fa-star';
 }
 
 async function pinStudioStrategyVersion(ctx) {
