@@ -27,13 +27,15 @@ import { datasetRequestFromObject, datasetRequestFromParams } from '../query/req
 import { createPrepareJobRunner } from '../prepare/runner.js';
 import { createAssetUpdateScheduler, lastClosedUtcDate } from '../scheduler/assetUpdates.js';
 import { createTelegramBackupScheduler, enqueueTelegramBackupAfterAssetSync } from '../scheduler/telegramBackup.js';
-import { enqueueTelegramBackup, getTelegramBackupRunStatus } from '../backup/runner.js';
-import { restoreFromTelegram } from '../backup/restore.js';
+import { enqueueTelegramBackup, enqueueTelegramRestore, getTelegramBackupRunStatus, isTelegramBackupRunning } from '../backup/runner.js';
 import { testTelegramBackupConnection } from '../backup/upload.js';
-import { listTelegramBackupRuns, getLastCompletedTelegramBackupRun } from '../state/telegramBackup.js';
+import { discoverTelegramBackupCatalog } from '../backup/discover.js';
+import { listTelegramBackupRuns, getLastCompletedTelegramBackupRun, clearTelegramBackupLocalRecords } from '../state/telegramBackup.js';
 import {
   resolveTelegramBackupConfig,
   toPublicTelegramBackupSettings,
+  getStoredChannelCatalog,
+  saveChannelCatalogDiscovery,
   updateTelegramBackupSettings,
   validateTelegramBackupSettingsInput,
 } from '../state/telegramBackupSettings.js';
@@ -307,9 +309,11 @@ export function createApiHandler(deps) {
       if (req.method === 'GET' && url.pathname === '/api/settings/telegram-backup') {
         const effective = resolveTelegramBackupConfig(config, db);
         const lastRun = getLastCompletedTelegramBackupRun(db);
+        const channelCatalog = getStoredChannelCatalog(db);
         return sendJson(res, 200, {
           settings: toPublicTelegramBackupSettings(effective),
           last_run: lastRun,
+          channel_catalog: channelCatalog,
         });
       }
       if (req.method === 'PUT' && url.pathname === '/api/settings/telegram-backup') {
@@ -327,8 +331,20 @@ export function createApiHandler(deps) {
         if (!effective.botToken || !effective.chatId) {
           return sendJson(res, 400, { error: { code: 'NOT_CONFIGURED', message: 'Configure token e chat_id antes de testar.' } });
         }
-        const result = await testTelegramBackupConnection(effective);
+        const result = await testTelegramBackupConnection(effective, { db });
         return sendJson(res, 200, result);
+      }
+      if (req.method === 'POST' && url.pathname === '/api/backup/telegram/discover') {
+        const backupConfig = resolveTelegramBackupConfig(config, db);
+        if (!backupConfig.configured) {
+          return sendJson(res, 400, { error: { code: 'NOT_CONFIGURED', message: 'Token e chat_id são obrigatórios.' } });
+        }
+        if (isTelegramBackupRunning()) {
+          return sendJson(res, 409, { error: { code: 'BACKUP_BUSY', message: 'Aguarde o backup ou restore em andamento terminar.' } });
+        }
+        const discovery = await discoverTelegramBackupCatalog({ backupConfig });
+        const channelCatalog = saveChannelCatalogDiscovery(db, discovery);
+        return sendJson(res, 200, { ok: discovery.ok, discovery: channelCatalog ?? discovery });
       }
       if (req.method === 'GET' && url.pathname === '/api/backup/telegram/runs') {
         const limit = positiveOptionalInt(url.searchParams.get('limit')) ?? 20;
@@ -374,19 +390,38 @@ export function createApiHandler(deps) {
           return sendJson(res, 400, { error: { code: 'CONFIRM_REQUIRED', message: 'Envie confirm: true para restaurar.' } });
         }
         const backupConfig = resolveTelegramBackupConfig(config, db);
-        const result = await restoreFromTelegram({
+        if (!backupConfig.configured) {
+          return sendJson(res, 400, { error: { code: 'NOT_CONFIGURED', message: 'Token e chat_id são obrigatórios.' } });
+        }
+        const result = enqueueTelegramRestore({
           config,
           db,
           backupConfig,
-          masterFileId: body.master_file_id ? String(body.master_file_id) : null,
-          catalogMessageId: body.catalog_message_id ? Number.parseInt(String(body.catalog_message_id), 10) : null,
-          runId: body.run_id ? String(body.run_id) : null,
-          catalogPath: body.catalog_path ? String(body.catalog_path) : null,
-          underlying: body.underlying ? String(body.underlying).toUpperCase() : null,
-          dryRun: body.dry_run === true,
+          request: {
+            masterFileId: body.master_file_id ? String(body.master_file_id) : null,
+            catalogMessageId: body.catalog_message_id ? Number.parseInt(String(body.catalog_message_id), 10) : null,
+            sourceRunId: body.run_id ? String(body.run_id) : null,
+            catalogPath: body.catalog_path ? String(body.catalog_path) : null,
+            underlying: body.underlying ? String(body.underlying).toUpperCase() : null,
+            dryRun: body.dry_run === true,
+          },
         });
-        const status = result.ok ? 200 : 409;
-        return sendJson(res, status, result);
+        if (!result.ok) {
+          const status = result.code === 'ALREADY_RUNNING' ? 409 : 400;
+          return sendJson(res, status, { error: { code: result.code, message: result.message }, ...result });
+        }
+        return sendJson(res, 202, result);
+      }
+      if (req.method === 'POST' && url.pathname === '/api/backup/telegram/clear-local') {
+        const body = await readJson(req);
+        if (body.confirm !== true) {
+          return sendJson(res, 400, { error: { code: 'CONFIRM_REQUIRED', message: 'Envie confirm: true para limpar o histórico local.' } });
+        }
+        if (isTelegramBackupRunning()) {
+          return sendJson(res, 409, { error: { code: 'BACKUP_BUSY', message: 'Aguarde o backup ou restore em andamento terminar.' } });
+        }
+        const cleared = clearTelegramBackupLocalRecords(db);
+        return sendJson(res, 200, { ok: true, ...cleared });
       }
       const assetScheduleRoute = matchAssetUpdateScheduleRoute(url.pathname);
       if (assetScheduleRoute) {

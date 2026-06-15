@@ -1,5 +1,6 @@
 import path from 'node:path';
 
+import { clampTelegramChunkBytes, TELEGRAM_DEFAULT_CHUNK_BYTES } from './backup/telegramLimits.js';
 import { normalizeAcceptCountMismatchRatio } from './sync/qualityPolicy.js';
 
 const VALID_DATA_MODES = new Set(['strict', 'prepare', 'hybrid']);
@@ -62,7 +63,10 @@ export function loadConfig(env = process.env) {
     telegramBackupEnabled: String(env.TELEGRAM_BACKUP_ENABLED || 'false').trim(),
     telegramBackupAutoAfterSync: String(env.TELEGRAM_BACKUP_AUTO_AFTER_SYNC || env.TELEGRAM_BACKUP_AUTO || 'false').trim(),
     telegramBackupAutoSchedule: String(env.TELEGRAM_BACKUP_AUTO_SCHEDULE || 'false').trim(),
-    telegramBackupMaxChunkBytes: Math.max(Number.parseInt(String(env.TELEGRAM_BACKUP_MAX_CHUNK_BYTES || '50331648'), 10) || 50331648, 1024 * 1024),
+    telegramBackupMaxChunkBytes: clampTelegramChunkBytes(
+      Number.parseInt(String(env.TELEGRAM_BACKUP_MAX_CHUNK_BYTES || String(TELEGRAM_DEFAULT_CHUNK_BYTES)), 10)
+        || TELEGRAM_DEFAULT_CHUNK_BYTES,
+    ),
     telegramBackupRateLimitMs: Math.max(Number.parseInt(String(env.TELEGRAM_BACKUP_RATE_LIMIT_MS || '3000'), 10) || 3000, 500),
   };
 }

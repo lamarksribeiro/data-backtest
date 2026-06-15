@@ -1,5 +1,7 @@
 const BOT_TOKEN_RE = /^\d+:[A-Za-z0-9_-]+$/;
 
+import { clampTelegramChunkBytes, TELEGRAM_DEFAULT_CHUNK_BYTES } from '../backup/telegramLimits.js';
+
 export function getTelegramBackupSettingsRow(db) {
   return db.prepare('SELECT * FROM telegram_backup_settings WHERE id = 1').get();
 }
@@ -21,7 +23,9 @@ export function resolveTelegramBackupConfig(config, db) {
     pinMasterCatalog: row?.pin_master_catalog == null ? true : Boolean(row.pin_master_catalog),
     incrementalDefault: row?.incremental_default == null ? true : Boolean(row.incremental_default),
     silentUploads: row?.silent_uploads == null ? true : Boolean(row.silent_uploads),
-    maxChunkBytes: row?.max_chunk_bytes ?? config.telegramBackupMaxChunkBytes ?? 50331648,
+    maxChunkBytes: clampTelegramChunkBytes(
+      row?.max_chunk_bytes ?? config.telegramBackupMaxChunkBytes ?? TELEGRAM_DEFAULT_CHUNK_BYTES,
+    ),
     rateLimitMs: row?.rate_limit_ms ?? config.telegramBackupRateLimitMs ?? 3000,
     lastScheduleRunDate: row?.last_schedule_run_date ?? null,
     updatedAt: row?.updated_at ?? null,
@@ -95,13 +99,13 @@ export function validateTelegramBackupSettingsInput(input) {
     if (!Number.isFinite(bytes) || bytes < 1024 * 1024) {
       return { ok: false, message: 'max_chunk_bytes deve ser >= 1 MB.' };
     }
-    patch.max_chunk_bytes = bytes;
+    patch.max_chunk_bytes = clampTelegramChunkBytes(bytes);
   } else if (input.max_chunk_mb != null) {
     const mb = Number.parseInt(String(input.max_chunk_mb), 10);
     if (!Number.isFinite(mb) || mb < 1) {
       return { ok: false, message: 'Tamanho do chunk inválido.' };
     }
-    patch.max_chunk_bytes = mb * 1024 * 1024;
+    patch.max_chunk_bytes = clampTelegramChunkBytes(mb * 1024 * 1024);
   }
 
   if (input.rate_limit_ms != null) {
@@ -127,7 +131,7 @@ export function updateTelegramBackupSettings(db, patch, { updatedBy = null } = {
     pin_master_catalog: patch.pin_master_catalog != null ? (patch.pin_master_catalog ? 1 : 0) : (current.pin_master_catalog ?? 1),
     incremental_default: patch.incremental_default != null ? (patch.incremental_default ? 1 : 0) : (current.incremental_default ?? 1),
     silent_uploads: patch.silent_uploads != null ? (patch.silent_uploads ? 1 : 0) : (current.silent_uploads ?? 1),
-    max_chunk_bytes: patch.max_chunk_bytes ?? current.max_chunk_bytes ?? 50331648,
+    max_chunk_bytes: clampTelegramChunkBytes(patch.max_chunk_bytes ?? current.max_chunk_bytes ?? TELEGRAM_DEFAULT_CHUNK_BYTES),
     rate_limit_ms: patch.rate_limit_ms ?? current.rate_limit_ms ?? 3000,
     updated_by: updatedBy,
   };
@@ -176,6 +180,73 @@ export function markTelegramBackupScheduleRan(db, date) {
     SET last_schedule_run_date = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
     WHERE id = 1
   `).run(date);
+}
+
+export function getChannelCatalogFromRow(row) {
+  if (!row?.discovered_master_file_id) return null;
+  let summary = null;
+  if (row.discovered_summary_json) {
+    try {
+      summary = JSON.parse(row.discovered_summary_json);
+    } catch {
+      summary = null;
+    }
+  }
+  return {
+    ok: true,
+    master_file_id: row.discovered_master_file_id,
+    discovered_at: row.discovered_at ?? null,
+    source: row.discovered_source ?? 'cached',
+    ...(summary || {}),
+  };
+}
+
+export function getStoredChannelCatalog(db) {
+  const row = getTelegramBackupSettingsRow(db);
+  return getChannelCatalogFromRow(row);
+}
+
+export function saveChannelCatalogDiscovery(db, discovery) {
+  if (!discovery?.ok || !discovery.master_file_id) {
+    db.prepare(`
+      UPDATE telegram_backup_settings
+      SET discovered_master_file_id = NULL,
+          discovered_at = NULL,
+          discovered_source = NULL,
+          discovered_summary_json = NULL,
+          updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+      WHERE id = 1
+    `).run();
+    return null;
+  }
+
+  const summary = {
+    backup_run_id: discovery.backup_run_id ?? null,
+    created_at: discovery.created_at ?? null,
+    asset_count: discovery.asset_count ?? null,
+    partition_count: discovery.partition_count ?? null,
+    underlyings: discovery.underlyings ?? [],
+    chat_title: discovery.chat_title ?? null,
+    message_id: discovery.message_id ?? null,
+    file_name: discovery.file_name ?? null,
+  };
+
+  db.prepare(`
+    UPDATE telegram_backup_settings
+    SET discovered_master_file_id = ?,
+        discovered_at = ?,
+        discovered_source = ?,
+        discovered_summary_json = ?,
+        updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+    WHERE id = 1
+  `).run(
+    discovery.master_file_id,
+    discovery.discovered_at ?? new Date().toISOString(),
+    discovery.source ?? 'pinned',
+    JSON.stringify(summary),
+  );
+
+  return getStoredChannelCatalog(db);
 }
 
 export function maskBotToken(token) {

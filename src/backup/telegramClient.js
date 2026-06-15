@@ -73,6 +73,10 @@ export function createTelegramClient({ botToken, chatId, rateLimitMs = 3000, fet
       });
     },
 
+    async getChat() {
+      return apiCall('getChat', { chat_id: chatId });
+    },
+
     async getFile(fileId) {
       return apiCall('getFile', { file_id: fileId });
     },

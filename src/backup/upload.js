@@ -10,6 +10,8 @@ import {
   updateTelegramBackupRun,
 } from '../state/telegramBackup.js';
 import { createTelegramClient, telegramRefFromMessage } from './telegramClient.js';
+import { discoverTelegramBackupCatalog, summarizeMasterCatalog } from './discover.js';
+import { saveChannelCatalogDiscovery } from '../state/telegramBackupSettings.js';
 import {
   buildAssetCatalog,
   buildCaption,
@@ -144,6 +146,13 @@ export async function runTelegramBackup({
       });
 
       if (!request.dryRun) {
+        onProgress?.({
+          phase: 'catalog',
+          underlying: group.underlying,
+          processed,
+          total: totalPartitions,
+          stats,
+        });
         const catalogJson = JSON.stringify(catalog, null, 2);
         const catalogBuffer = Buffer.from(catalogJson, 'utf8');
         const catalogMessage = await client.sendDocumentBuffer(catalogBuffer, {
@@ -174,6 +183,7 @@ export async function runTelegramBackup({
 
     let masterRef = null;
     if (!request.dryRun) {
+      onProgress?.({ phase: 'master_catalog', processed, total: totalPartitions, stats });
       const master = buildMasterCatalog({
         backupRunId: runId,
         lakeRootHint: config.lakeRoot,
@@ -189,6 +199,15 @@ export async function runTelegramBackup({
       if (effective.pinMasterCatalog && masterRef.message_id) {
         await client.pinChatMessage(masterRef.message_id);
       }
+      saveChannelCatalogDiscovery(db, {
+        ok: true,
+        master_file_id: masterRef.file_id,
+        message_id: masterRef.message_id,
+        file_name: masterRef.file_name,
+        source: effective.pinMasterCatalog ? 'pinned' : 'backup',
+        discovered_at: new Date().toISOString(),
+        ...summarizeMasterCatalog(master),
+      });
       const summary = [
         `Backup ${runId} concluído`,
         `uploaded=${stats.uploaded} skipped=${stats.skipped} errors=${stats.errors}`,
@@ -439,7 +458,7 @@ function selectGroups(db, request) {
   }];
 }
 
-export async function testTelegramBackupConnection(backupConfig) {
+export async function testTelegramBackupConnection(backupConfig, { db = null } = {}) {
   const client = createTelegramClient({
     botToken: backupConfig.botToken,
     chatId: backupConfig.chatId,
@@ -449,5 +468,9 @@ export async function testTelegramBackupConnection(backupConfig) {
     `GoldenLens backup test OK — ${new Date().toISOString()}`,
     { disableNotification: true },
   );
-  return { ok: true, message_id: message.message_id };
+  const discovery = await discoverTelegramBackupCatalog({ backupConfig });
+  if (db) {
+    saveChannelCatalogDiscovery(db, discovery.ok ? discovery : { ok: false });
+  }
+  return { ok: true, message_id: message.message_id, discovery };
 }

@@ -13,6 +13,14 @@ export function createTelegramBackupRun(db, run) {
   return getTelegramBackupRun(db, run.id);
 }
 
+export function listActiveTelegramBackupRuns(db) {
+  return db.prepare(`
+    SELECT * FROM telegram_backup_runs
+    WHERE status IN ('queued', 'running')
+    ORDER BY created_at DESC
+  `).all().map(toApiRun);
+}
+
 export function getTelegramBackupRun(db, id) {
   const row = db.prepare('SELECT * FROM telegram_backup_runs WHERE id = ?').get(id);
   return row ? toApiRun(row) : null;
@@ -107,6 +115,28 @@ export function getLastCompletedTelegramBackupRun(db) {
     LIMIT 1
   `).get();
   return row ? toApiRun(row) : null;
+}
+
+export function countTelegramBackupLocalRecords(db) {
+  const runs = db.prepare('SELECT COUNT(*) AS c FROM telegram_backup_runs').get().c;
+  const artifacts = db.prepare('SELECT COUNT(*) AS c FROM telegram_backup_artifacts').get().c;
+  return { runs, artifacts };
+}
+
+export function clearTelegramBackupLocalRecords(db) {
+  const before = countTelegramBackupLocalRecords(db);
+  db.exec('DELETE FROM telegram_backup_artifacts');
+  db.exec('DELETE FROM telegram_backup_runs');
+  db.prepare(`
+    UPDATE telegram_backup_settings
+    SET last_schedule_run_date = NULL,
+        updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+    WHERE id = 1
+  `).run();
+  return {
+    runs_removed: before.runs,
+    artifacts_removed: before.artifacts,
+  };
 }
 
 function toApiRun(row) {

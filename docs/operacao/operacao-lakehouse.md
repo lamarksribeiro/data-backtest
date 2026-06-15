@@ -552,7 +552,13 @@ TELEGRAM_BACKUP_CHAT_ID=-100xxxxxxxxxx
 TELEGRAM_BACKUP_ENABLED=false
 ```
 
-### O que é enviado
+### Chunking e limite de download
+
+O Bot API do Telegram **só permite baixar arquivos de até ~20 MB** (`getFile`). O envio aceita até ~50 MB, mas o restore falha com `file is too big` se a partição foi enviada inteira acima de 20 MB.
+
+- Chunk padrão: **18 MB** (`TELEGRAM_BACKUP_MAX_CHUNK_BYTES=18874368`)
+- Partições maiores são divididas automaticamente no upload
+- Backups antigos enviados sem chunk precisam de **novo backup completo** (desmarque “Incremental” na UI ou use `--force` na CLI) antes de restaurar
 
 - Parquet `backtest_ticks` (partições `valid`/`accepted`)
 - Sidecar JSON por partição (manifest + sha256)
@@ -572,12 +578,26 @@ npm run backup:telegram:verify -- --run-id br-...
 
 Antes do primeiro backup: `npm run ops:check`.
 
+### Limpar histórico local
+
+Na UI (**Configurações → Backup Telegram → Limpar histórico local**) ou `POST /api/backup/telegram/clear-local` com `{ "confirm": true }`.
+
+Remove runs, artifacts e o marcador de agendamento diário no SQLite. **Não** apaga mensagens no canal Telegram nem Parquets do lake.
+
 ### Restore em instalação nova
 
-1. Configurar `LAKE_ROOT`, `STATE_DB_PATH` e credenciais Telegram.
-2. Obter `file_id` do `master_catalog.json` (mensagem de resumo do backup ou run local).
-3. `npm run backup:telegram:restore -- --master-file-id <id>`
+1. Configurar `LAKE_ROOT`, `STATE_DB_PATH` e credenciais Telegram (**mesmo bot** que enviou o backup).
+2. Abrir **Configurações → Backup Telegram** — a app detecta automaticamente o `master_catalog.json` **fixado no canal** (ou clique em **Atualizar detecção**).
+3. **Restaurar do Telegram** → opção **Backup detectado no canal**.
 4. `npm run ops:check` + `query:availability` + smoke de backtest.
+
+Se o catálogo não estiver fixado: fixe a mensagem `master_catalog.json` no canal (opção “Fixar catálogo mestre”) ou cole o `file_id` manualmente.
+
+### Restore em instalação nova (CLI)
+
+```bash
+npm run backup:telegram:restore -- --master-file-id <file_id>
+```
 
 **Importante:** manter o mesmo bot token usado no upload; `file_id` é válido para o bot que enviou o arquivo.
 

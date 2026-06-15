@@ -208,7 +208,7 @@ CREATE TABLE IF NOT EXISTS telegram_backup_settings (
   pin_master_catalog INTEGER NOT NULL DEFAULT 1,
   incremental_default INTEGER NOT NULL DEFAULT 1,
   silent_uploads INTEGER NOT NULL DEFAULT 1,
-  max_chunk_bytes INTEGER NOT NULL DEFAULT 50331648,
+  max_chunk_bytes INTEGER NOT NULL DEFAULT 18874368,
   rate_limit_ms INTEGER NOT NULL DEFAULT 3000,
   last_schedule_run_date TEXT,
   updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
@@ -289,6 +289,13 @@ const BACKTEST_RUNS_V3_COLUMNS = [
   'ALTER TABLE backtest_runs ADD COLUMN depends_on_job_id INTEGER NULL',
 ];
 
+const TELEGRAM_BACKUP_SETTINGS_MIGRATIONS = [
+  'ALTER TABLE telegram_backup_settings ADD COLUMN discovered_master_file_id TEXT',
+  'ALTER TABLE telegram_backup_settings ADD COLUMN discovered_at TEXT',
+  'ALTER TABLE telegram_backup_settings ADD COLUMN discovered_source TEXT',
+  'ALTER TABLE telegram_backup_settings ADD COLUMN discovered_summary_json TEXT',
+];
+
 export function openStateDatabase(stateDbPath) {
   mkdirSync(path.dirname(stateDbPath), { recursive: true });
   const db = new DatabaseSync(stateDbPath);
@@ -304,6 +311,7 @@ export function openStateDatabase(stateDbPath) {
   repairStrategyDefinitionsForeignKeys(db);
   migrateBacktestRunsV3Indexes(db);
   applyColumnMigrations(db, 'backtest_runs', BACKTEST_RUNS_V3_COLUMNS);
+  applyColumnMigrations(db, 'telegram_backup_settings', TELEGRAM_BACKUP_SETTINGS_MIGRATIONS);
   ensureTelegramBackupSettingsRow(db);
   return db;
 }

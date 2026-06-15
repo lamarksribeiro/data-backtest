@@ -21,6 +21,7 @@ export async function restoreFromTelegram({
   catalogPath = null,
   underlying = null,
   dryRun = false,
+  onProgress = null,
 }) {
   const effective = backupConfig ?? resolveTelegramBackupConfig(config, db);
   if (!effective.botToken || !effective.chatId) {
@@ -66,8 +67,18 @@ export async function restoreFromTelegram({
     errors: [],
   };
 
+  const workItems = [];
   for (const asset of master.assets || []) {
     if (underlying && asset.underlying !== String(underlying).toUpperCase()) continue;
+    workItems.push(asset);
+  }
+
+  let processed = 0;
+  const totalPartitions = await countPartitions(client, workItems, { underlying, dryRun });
+
+  onProgress?.({ phase: 'restore', processed: 0, total: totalPartitions, kind: 'restore' });
+
+  for (const asset of workItems) {
     if (!asset.catalog?.file_id) {
       restored.errors.push({ underlying: asset.underlying, error: 'missing catalog file_id' });
       continue;
@@ -79,10 +90,27 @@ export async function restoreFromTelegram({
     if (dryRun) {
       restored.partitions += catalog.partitions?.length ?? 0;
       restored.exclusions += catalog.event_exclusions?.length ?? 0;
+      processed += catalog.partitions?.length ?? 0;
+      onProgress?.({
+        phase: 'restore',
+        processed,
+        total: totalPartitions,
+        underlying: asset.underlying,
+        kind: 'restore',
+      });
       continue;
     }
 
     for (const partition of catalog.partitions || []) {
+      processed += 1;
+      onProgress?.({
+        phase: 'restore',
+        processed,
+        total: totalPartitions,
+        underlying: asset.underlying,
+        dt: partition.dt,
+        kind: 'restore',
+      });
       try {
         await restorePartition({ config, db, client, partition });
         restored.partitions += 1;
@@ -204,4 +232,19 @@ function parseMaybeJson(value) {
   } catch {
     return null;
   }
+}
+
+async function countPartitions(client, assets, { dryRun }) {
+  let total = 0;
+  for (const asset of assets) {
+    if (!asset.catalog?.file_id) continue;
+    try {
+      const catalogBuf = await client.downloadFile(asset.catalog.file_id);
+      const catalog = parseCatalogJson(catalogBuf);
+      total += catalog.partitions?.length ?? 0;
+    } catch {
+      // counted during restore
+    }
+  }
+  return total;
 }
