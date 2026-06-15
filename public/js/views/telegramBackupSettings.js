@@ -609,7 +609,10 @@ function renderConnectionCard(formState, settings, ctx) {
 
   return el('section', { class: 'card' }, [
     sectionHead('Conexão Telegram', 'Crie o bot no @BotFather, adicione-o ao canal privado e informe as credenciais.'),
-    el('div', { class: 'backup-form' }, [
+    el('form', {
+      class: 'backup-form',
+      onsubmit: (event) => event.preventDefault(),
+    }, [
       toggleRow('Backup habilitado', 'Interruptor geral do envio automático e manual.', enabledInput),
       el('div', { class: 'backup-form__row' }, [
         field('Token do bot', passwordField(tokenInput), 'Deixe em branco para manter o token salvo.'),
