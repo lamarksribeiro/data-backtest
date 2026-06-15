@@ -1,6 +1,6 @@
 import { Worker } from 'node:worker_threads';
 
-import { spawnIsolatedBacktest } from './backtestProcessRunner.js';
+import { spawnIsolatedBacktest, stopIsolatedBacktest } from './backtestProcessRunner.js';
 
 import {
   clearRunJobDependency,
@@ -100,10 +100,21 @@ export function createBacktestQueue({ config, db, onEvent }) {
     worker.unref();
   }
 
+  function stopActiveRunner(runId) {
+    const runner = activeWorkers.get(runId);
+    if (!runner) return;
+    if (typeof runner.kill === 'function') stopIsolatedBacktest(runner);
+    else if (typeof runner.terminate === 'function') runner.terminate().catch(() => {});
+    activeWorkers.delete(runId);
+  }
+
   function startIsolatedProcess(run, workerPayload) {
     const child = spawnIsolatedBacktest(workerPayload, {
       onMessage: (msg) => handleWorkerMessage(run, msg),
-      onError: (err) => handleFailure(run.id, workerPayload.request, workerPayload.startedAt, err.message),
+      onStderr: (text, runId) => {
+        console.error(`[backtest:${runId}] ${text}`);
+      },
+      onSpawnError: (err) => handleFailure(run.id, workerPayload.request, workerPayload.startedAt, err.message),
       onExit: (code) => {
         activeWorkers.delete(run.id);
         const current = safeGetBacktestRun(db, run.id);
@@ -179,6 +190,7 @@ export function createBacktestQueue({ config, db, onEvent }) {
   }
 
   function handleFailure(runId, request, startedAt, error) {
+    stopActiveRunner(runId);
     const failedResult = {
       strategy: request.strategyLabel || request.strategy,
       source: 'lakehouse',
@@ -219,12 +231,7 @@ export function createBacktestQueue({ config, db, onEvent }) {
 
   function cancel(runId) {
     terminalRuns.add(runId);
-    const worker = activeWorkers.get(runId);
-    if (worker) {
-      if (typeof worker.kill === 'function') worker.kill('SIGTERM');
-      else worker.terminate();
-      activeWorkers.delete(runId);
-    }
+    stopActiveRunner(runId);
   }
 
   function activeCount() {
