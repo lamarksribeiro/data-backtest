@@ -82,6 +82,7 @@ const state = {
     runQuery: '',
     runOutcome: 'all',
   },
+  historyPanelApi: null,
 };
 
 const DEFAULT_HISTORY_FILTERS = {
@@ -97,6 +98,23 @@ function resetHistoryFilters(strategyId) {
     state.historyStrategyId = strategyId;
     state.historyFilters = { ...DEFAULT_HISTORY_FILTERS };
   }
+}
+
+function captureScrollState(ctx) {
+  return {
+    windowY: window.scrollY,
+    contentTop: ctx.contentEl?.scrollTop ?? 0,
+    activeTab: document.querySelector('.premium-tab-content.is-active')?.id?.replace('tab-content-', '') || 'stats',
+  };
+}
+
+function restoreScrollState(ctx, snap) {
+  if (!snap) return;
+  if (snap.activeTab) switchTab(snap.activeTab);
+  requestAnimationFrame(() => {
+    window.scrollTo(0, snap.windowY);
+    if (ctx.contentEl) ctx.contentEl.scrollTop = snap.contentTop;
+  });
 }
 
 function filterVersions(versions, stats, strategy) {
@@ -257,15 +275,20 @@ function renderHistoryFilterCount(shown, total) {
   return el('span', { class: 'strategy-history-count muted' }, `${shown} de ${total}`);
 }
 
-function renderStrategyHistoryTab(ctx, { strategy, strategyId, versions, strategyRuns, strategyStats, switchTab }) {
-  const stats = strategyStats || { totals: {}, by_version: [] };
+function renderStrategyHistoryTab(ctx, { strategy, strategyId, versions: initialVersions, strategyRuns: initialRuns, strategyStats: initialStats, switchTab }) {
+  let strategyRef = strategy;
+  let versions = [...(initialVersions || [])];
+  let strategyRuns = [...(initialRuns || [])];
+  let strategyStats = initialStats;
+  let stats = strategyStats || { totals: {}, by_version: [] };
+  const summaryEl = el('div', { class: 'strategy-summary-host' });
   const versionsTbody = el('tbody', { id: 'strategy-versions-tbody' });
   const runsTbody = el('tbody', { id: 'strategy-runs-tbody' });
   const versionsCountEl = el('span', { class: 'strategy-history-count muted' });
   const runsCountEl = el('span', { class: 'strategy-history-count muted' });
 
   function refreshVersionsTable() {
-    const filtered = filterVersions(versions, stats, strategy);
+    const filtered = filterVersions(versions, stats, strategyRef);
     mount(versionsCountEl, [renderHistoryFilterCount(filtered.length, versions.length)]);
     if (!filtered.length) {
       mount(versionsTbody, el('tr', {}, el('td', {
@@ -276,7 +299,7 @@ function renderStrategyHistoryTab(ctx, { strategy, strategyId, versions, strateg
     }
     mount(versionsTbody, filtered.map((v) => {
       const vStat = stats.by_version?.find((bv) => bv.version_id === v.id) || {};
-      return renderVersionTableRow(ctx, strategy, v, vStat, switchTab);
+      return renderVersionTableRow(ctx, strategyRef, v, vStat, switchTab);
     }));
   }
 
@@ -296,6 +319,40 @@ function renderStrategyHistoryTab(ctx, { strategy, strategyId, versions, strateg
   function onFilterChange() {
     refreshVersionsTable();
     refreshRunsTable();
+  }
+
+  function rebuildRunVersionSelect() {
+    mount(runVersionSelect, [
+      el('option', { value: '' }, 'Todas as versões'),
+      ...versions.map((v) => el('option', { value: String(v.id) }, `v${v.version}`)),
+    ]);
+    runVersionSelect.value = state.historyFilters.runVersionId;
+  }
+
+  async function refresh(opts = {}) {
+    const scrollSnap = opts.scrollSnap ?? captureScrollState(ctx);
+    const [statsRes, runsRes, versionsRes, strategyRes] = await Promise.all([
+      ctx.api.get(`/api/strategies/${strategyId}/stats`),
+      ctx.api.get(`/api/backtest/runs?strategy_id=${strategyId}&limit=50`),
+      ctx.api.get(`/api/strategies/${strategyId}/versions`),
+      ctx.api.get(`/api/strategies/${strategyId}`),
+    ]);
+    if (strategyRes.ok) strategyRef = strategyRes.data.strategy;
+    if (versionsRes.ok) versions = versionsRes.data.versions || [];
+    if (runsRes.ok) strategyRuns = runsRes.data.runs || [];
+    if (statsRes.ok) {
+      strategyStats = statsRes.data.stats;
+      stats = strategyStats || { totals: {}, by_version: [] };
+    }
+    if (state.historyFilters.runVersionId && !versions.some((v) => String(v.id) === state.historyFilters.runVersionId)) {
+      state.historyFilters.runVersionId = '';
+    }
+    rebuildRunVersionSelect();
+    mount(summaryEl, renderStrategyPerformanceSummary(strategyStats));
+    refreshVersionsTable();
+    refreshRunsTable();
+    restoreScrollState(ctx, scrollSnap);
+    return { strategy: strategyRef, versions, strategyRuns, strategyStats };
   }
 
   const versionScopeSelect = el('select', {
@@ -340,11 +397,18 @@ function renderStrategyHistoryTab(ctx, { strategy, strategyId, versions, strateg
   ]);
   runOutcomeSelect.value = state.historyFilters.runOutcome;
 
+  mount(summaryEl, renderStrategyPerformanceSummary(strategyStats));
   refreshVersionsTable();
   refreshRunsTable();
 
+  state.historyPanelApi = {
+    strategyId,
+    refresh,
+    getVersions: () => versions,
+  };
+
   return el('div', { class: 'strategy-history-tab' }, [
-    renderStrategyPerformanceSummary(strategyStats),
+    summaryEl,
     el('section', { class: 'strategy-history-section' }, [
       el('div', { class: 'strategy-history-section__head' }, [
         el('h3', { class: 'card__title' }, 'Versões'),
@@ -831,7 +895,8 @@ function renderStrategyHeaderMeta(strategy) {
   ]);
 }
 
-async function openStrategyEditor(ctx, strategyId, versionId = null) {
+async function openStrategyEditor(ctx, strategyId, versionId = null, options = {}) {
+  const scrollSnap = options.preserveScroll ? captureScrollState(ctx) : null;
   const editorPanel = document.getElementById('strategy-editor');
   if (!editorPanel) return;
 
@@ -843,7 +908,9 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
     state.focusedEditor = null;
   }
 
-  mount(editorPanel, el('p', { class: 'muted' }, 'Carregando detalhes do editor...'));
+  if (!options.preserveScroll) {
+    mount(editorPanel, el('p', { class: 'muted' }, 'Carregando detalhes do editor...'));
+  }
 
   const [strategyRes, versionsRes, blocksRes, statsRes, runsRes] = await Promise.all([
     ctx.api.get(`/api/strategies/${strategyId}`),
@@ -1086,6 +1153,14 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
       state.sourceCode = cm.getValue();
     });
     window.setTimeout(() => editor.refresh(), 50);
+  }
+
+  if (options.preserveScroll) {
+    const snap = scrollSnap || captureScrollState(ctx);
+    if (options.activeTab) snap.activeTab = options.activeTab;
+    restoreScrollState(ctx, snap);
+  } else if (options.activeTab) {
+    switchTab(options.activeTab);
   }
 }
 
@@ -1675,6 +1750,8 @@ function confirmDeleteRunsDialog(strategyName) {
 
 async function deleteVersionFlow(ctx, strategy, version) {
   if (!version) return;
+  const scrollSnap = captureScrollState(ctx);
+  const wasCurrent = state.selectedVersionId === version.id;
   const ok = await confirmDialog({
     title: 'Excluir versão',
     message: `Excluir a versão v${version.version} de "${strategy.name}"?`,
@@ -1709,8 +1786,17 @@ async function deleteVersionFlow(ctx, strategy, version) {
   }
 
   ctx.toast.ok(`Versão v${version.version} excluída`);
-  state.selectedVersionId = null;
-  await renderStrategies(ctx, { id: strategy.id });
+  invalidateStrategyPickerCache();
+  await state.historyPanelApi?.refresh({ scrollSnap });
+
+  if (wasCurrent) {
+    const remaining = state.historyPanelApi?.getVersions() || [];
+    const nextVersionId = remaining[0]?.id ?? null;
+    await openStrategyEditor(ctx, strategy.id, nextVersionId, {
+      preserveScroll: true,
+      activeTab: scrollSnap.activeTab,
+    });
+  }
 }
 
 function toggleGlsDrawer(isOpen) {
@@ -1799,6 +1885,7 @@ function insertBlockIntoEditor(signature) {
 }
 
 async function deleteRunFlow(ctx, strategyId, runId) {
+  const scrollSnap = captureScrollState(ctx);
   const ok = await confirmDialog({
     title: 'Excluir simulação',
     message: `Deseja apagar permanentemente a simulação #${runId}?`,
@@ -1815,5 +1902,5 @@ async function deleteRunFlow(ctx, strategyId, runId) {
   }
   ctx.toast.ok(`Simulação #${runId} excluída`);
   invalidateStrategyPickerCache();
-  await openStrategyEditor(ctx, strategyId, state.selectedVersionId);
+  await state.historyPanelApi?.refresh({ scrollSnap });
 }
