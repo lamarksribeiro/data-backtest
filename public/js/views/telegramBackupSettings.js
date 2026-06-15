@@ -99,6 +99,7 @@ async function refreshTelegramBackupSettings(ctx) {
 
 function renderTelegramBackupPage(ctx, data, runs) {
   const settings = data.settings || {};
+  const timezoneLabel = formatSchedulerTimezoneLabel(data.scheduler_timezone);
   const lastRun = data.last_run;
   const channelCatalog = data.channel_catalog;
   const completedRuns = runs.filter((r) => r.status === 'completed' && r.result?.master_catalog?.file_id);
@@ -161,7 +162,7 @@ function renderTelegramBackupPage(ctx, data, runs) {
           el('button', { type: 'button', class: 'btn btn--primary btn--sm', onclick: () => saveSettings(ctx, formState) }, 'Salvar'),
         ]),
         el('h3', { style: { margin: '8px 0 0', fontSize: '13px' } }, 'Comportamento'),
-        ...behaviorToggles(formState),
+        ...behaviorToggles(formState, timezoneLabel),
         el('details', { class: 'backup-advanced' }, [
           el('summary', {}, 'Avançado'),
           el('div', { class: 'backup-form__row', style: { marginTop: '10px' } }, [
@@ -746,10 +747,10 @@ function optionRow(input, title, hint) {
   ]);
 }
 
-function behaviorToggles(formState) {
+function behaviorToggles(formState, timezoneLabel) {
   const defs = [
     ['auto_after_asset_sync', 'Backup após sync de ativo', 'Dispara backup incremental quando um agendamento de atualização concluir.'],
-    ['auto_schedule_enabled', 'Agendamento diário', 'Backup incremental de todos os ativos no horário UTC.'],
+    ['auto_schedule_enabled', 'Agendamento diário', `Backup incremental de todos os ativos no horário local (${timezoneLabel}).`],
     ['incremental_default', 'Incremental por padrão', 'Runs manuais pulam partições inalteradas (sha256).'],
     ['pin_master_catalog', 'Fixar catálogo mestre', 'Fixa a mensagem master_catalog no canal.'],
     ['silent_uploads', 'Uploads silenciosos', 'Sem notificação push no canal.'],
@@ -761,7 +762,7 @@ function behaviorToggles(formState) {
     return toggleRow(label, hint, input);
   }).concat([
     el('label', { class: 'field' }, [
-      el('span', {}, 'Horário UTC (agendamento)'),
+      el('span', {}, `Horário (${timezoneLabel})`),
       (() => {
         const input = el('input', { type: 'time', class: 'input', value: formState.auto_schedule_time_utc });
         input.oninput = () => { formState.auto_schedule_time_utc = input.value; };
@@ -865,4 +866,8 @@ function formatDateTime(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
+}
+
+function formatSchedulerTimezoneLabel(timeZone) {
+  return String(timeZone || 'America/Sao_Paulo').replace(/_/g, ' ');
 }

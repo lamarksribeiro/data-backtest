@@ -218,10 +218,12 @@ async function refreshSettings(ctx, fieldOptions, formCtx = loadContext()) {
     formCtx,
     schedulesRes.data.schedules || [],
     schedulesRes.data.target_to_date,
+    schedulesRes.data.scheduler_timezone,
   );
 }
 
-function renderSettingsPage(ctx, fieldOptions, formCtx, schedules, targetToDate) {
+function renderSettingsPage(ctx, fieldOptions, formCtx, schedules, targetToDate, schedulerTimezone) {
+  const timezoneLabel = formatSchedulerTimezoneLabel(schedulerTimezone);
   mount(ctx.contentEl, [
     el('div', { class: 'page-header' }, [
       el('div', {}, [
@@ -234,7 +236,7 @@ function renderSettingsPage(ctx, fieldOptions, formCtx, schedules, targetToDate)
       el('section', { class: 'card' }, [
         el('h2', { class: 'card__title' }, 'Novo agendamento'),
         el('p', { class: 'settings-hint' }, `Cada execução atualiza somente até ${targetToDate || 'o último dia fechado'} e reaproveita o mesmo pipeline dos jobs manuais.`),
-        renderScheduleForm(ctx, fieldOptions, formCtx),
+        renderScheduleForm(ctx, fieldOptions, formCtx, timezoneLabel),
       ]),
       el('section', { class: 'card' }, [
         el('div', { class: 'card__header' }, [
@@ -244,13 +246,13 @@ function renderSettingsPage(ctx, fieldOptions, formCtx, schedules, targetToDate)
           ]),
           el('span', { class: 'badge badge--ok' }, `Alvo: ${targetToDate || 'ontem UTC'}`),
         ]),
-        schedules.length ? el('div', { class: 'schedule-list' }, schedules.map((schedule) => renderScheduleCard(ctx, schedule, fieldOptions, formCtx))) : emptyState('Nenhum agendamento criado.'),
+        schedules.length ? el('div', { class: 'schedule-list' }, schedules.map((schedule) => renderScheduleCard(ctx, schedule, fieldOptions, formCtx, timezoneLabel))) : emptyState('Nenhum agendamento criado.'),
       ]),
     ]),
   ]);
 }
 
-function renderScheduleForm(ctx, fieldOptions, formCtx) {
+function renderScheduleForm(ctx, fieldOptions, formCtx, timezoneLabel) {
   const frequencySelect = simpleSelect('frequency', [
     ['daily', 'Diária'],
     ['every_hours', 'A cada N horas'],
@@ -278,7 +280,7 @@ function renderScheduleForm(ctx, fieldOptions, formCtx) {
         frequencySelect,
       ]),
       el('label', { class: 'field' }, [
-        el('span', { class: 'field__label' }, 'Horário UTC'),
+        el('span', { class: 'field__label' }, `Horário (${timezoneLabel})`),
         el('input', { class: 'field__input', type: 'time', name: 'time_utc', value: '03:00' }),
       ]),
     ]),
@@ -318,7 +320,7 @@ function renderScheduleForm(ctx, fieldOptions, formCtx) {
   return form;
 }
 
-function renderScheduleCard(ctx, schedule, fieldOptions, formCtx) {
+function renderScheduleCard(ctx, schedule, fieldOptions, formCtx, timezoneLabel) {
   const activeRun = schedule.active_run;
   return el('article', { class: `schedule-card${schedule.enabled ? '' : ' is-disabled'}` }, [
     el('div', { class: 'schedule-card__head' }, [
@@ -330,7 +332,7 @@ function renderScheduleCard(ctx, schedule, fieldOptions, formCtx) {
     ]),
     el('div', { class: 'schedule-card__grid' }, [
       stat('Cobertura', `${schedule.start_date} → ontem UTC`),
-      stat('Frequência', frequencyLabel(schedule)),
+      stat('Frequência', frequencyLabel(schedule, timezoneLabel)),
       stat('Próxima', formatDateTime(schedule.next_run_at) || 'pausado'),
       stat('Último sucesso', formatDateTime(schedule.last_success_at) || 'nunca'),
     ]),
@@ -417,9 +419,13 @@ function stat(label, value) {
   ]);
 }
 
-function frequencyLabel(schedule) {
+function frequencyLabel(schedule, timezoneLabel) {
   if (schedule.frequency === 'every_hours') return `a cada ${schedule.every_hours}h`;
-  return `diária ${schedule.time_utc} UTC`;
+  return `diária às ${schedule.time_utc} (${timezoneLabel})`;
+}
+
+function formatSchedulerTimezoneLabel(timeZone) {
+  return String(timeZone || 'America/Sao_Paulo').replace(/_/g, ' ');
 }
 
 function formatDateTime(value) {

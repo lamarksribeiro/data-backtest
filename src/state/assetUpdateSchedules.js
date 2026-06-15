@@ -1,4 +1,5 @@
 import { normalizeInterval } from '../source/postgres.js';
+import { nextDailyRunAt, parseScheduleTime, resolveSchedulerTimezone } from '../scheduler/scheduleTime.js';
 
 const VALID_FREQUENCIES = new Set(['daily', 'every_hours']);
 const ACTIVE_RUN_STATUSES = new Set(['queued', 'running']);
@@ -15,7 +16,9 @@ export function getAssetUpdateSchedule(db, id) {
 
 export function createAssetUpdateSchedule(db, input, { config, now = new Date() } = {}) {
   const normalized = normalizeScheduleInput(input, config);
-  const nextRunAt = normalized.enabled ? computeNextRunAt({ ...normalized, created_at: now.toISOString() }, now) : null;
+  const nextRunAt = normalized.enabled
+    ? computeNextRunAt({ ...normalized, created_at: now.toISOString() }, now, { config })
+    : null;
   const result = db.prepare(`
     INSERT INTO asset_update_schedules (
       name, enabled, underlying, interval, book_depth, start_date,
@@ -41,7 +44,7 @@ export function updateAssetUpdateSchedule(db, id, patch, { config, now = new Dat
   if (!current) return null;
   const normalized = normalizeScheduleInput({ ...current, ...patch }, config);
   const nextRunAt = normalized.enabled
-    ? computeNextRunAt({ ...current, ...normalized }, now)
+    ? computeNextRunAt({ ...current, ...normalized }, now, { config })
     : null;
   db.prepare(`
     UPDATE asset_update_schedules
@@ -184,6 +187,21 @@ export function finishAssetUpdateRunByJobId(db, jobId, status, message = null, {
   return getAssetUpdateRun(db, runRow.id);
 }
 
+export function reconcileAssetUpdateSchedules(db, config, now = new Date()) {
+  const rows = db.prepare('SELECT * FROM asset_update_schedules WHERE enabled = 1').all();
+  for (const row of rows) {
+    const schedule = toApiSchedule(row);
+    const nextRunAt = computeNextRunAt(schedule, now, { config });
+    if (nextRunAt !== schedule.next_run_at) {
+      db.prepare(`
+        UPDATE asset_update_schedules
+        SET next_run_at = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+        WHERE id = ?
+      `).run(nextRunAt, schedule.id);
+    }
+  }
+}
+
 export function recoverStaleAssetUpdateRuns(db) {
   const result = db.prepare(`
     UPDATE asset_update_schedule_runs
@@ -195,7 +213,7 @@ export function recoverStaleAssetUpdateRuns(db) {
   return result.changes;
 }
 
-export function computeNextRunAt(schedule, now = new Date()) {
+export function computeNextRunAt(schedule, now = new Date(), { config } = {}) {
   if (schedule.enabled === false || schedule.enabled === 0) return null;
   const current = toDate(now);
   if (schedule.frequency === 'every_hours') {
@@ -206,21 +224,10 @@ export function computeNextRunAt(schedule, now = new Date()) {
     return next.toISOString();
   }
 
-  const [hour, minute] = parseTimeUtc(schedule.time_utc || '03:00');
-  let next = new Date(Date.UTC(
-    current.getUTCFullYear(),
-    current.getUTCMonth(),
-    current.getUTCDate(),
-    hour,
-    minute,
-    0,
-    0,
-  ));
-  const lastRun = validDate(schedule.last_run_at);
-  while (next <= current || (lastRun && next <= lastRun)) {
-    next = new Date(next.getTime() + 24 * 60 * 60 * 1000);
-  }
-  return next.toISOString();
+  const timeZone = resolveSchedulerTimezone(config);
+  return nextDailyRunAt(schedule.time_utc || '03:00', current, timeZone, {
+    after: schedule.last_run_at,
+  });
 }
 
 function enrichSchedule(db, schedule) {
@@ -294,17 +301,8 @@ function normalizeDateOnly(value, field) {
 
 function normalizeTimeUtc(value) {
   const text = String(value || '').trim();
-  parseTimeUtc(text);
+  parseScheduleTime(text);
   return text;
-}
-
-function parseTimeUtc(value) {
-  const match = String(value || '').match(/^(\d{2}):(\d{2})$/);
-  if (!match) throw new Error('time_utc must be HH:MM');
-  const hour = Number.parseInt(match[1], 10);
-  const minute = Number.parseInt(match[2], 10);
-  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) throw new Error('time_utc must be HH:MM');
-  return [hour, minute];
 }
 
 function positiveInt(value, field) {

@@ -21,6 +21,7 @@ test('asset update scheduler prepares only through the last closed UTC day', asy
     const config = testServerConfig({
       lakeRoot: path.join(dir, 'lake'),
       stateDbPath: path.join(dir, 'state.db'),
+      schedulerTimezone: 'UTC',
     });
     const db = openStateDatabase(config.stateDbPath);
     try {
@@ -71,6 +72,36 @@ test('asset update scheduler prepares only through the last closed UTC day', asy
       assert.equal(completed.recent_runs[0].status, 'completed');
       assert.equal(completed.recent_runs[0].to_date, '2026-06-12');
       assert.ok(completed.last_success_at);
+    } finally {
+      closeStateDatabase(db);
+    }
+  } finally {
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
+  }
+});
+
+test('asset update schedule uses configured scheduler timezone', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-schedule-tz-'));
+  try {
+    const config = testServerConfig({
+      lakeRoot: path.join(dir, 'lake'),
+      stateDbPath: path.join(dir, 'state.db'),
+      schedulerTimezone: 'America/Sao_Paulo',
+    });
+    const db = openStateDatabase(config.stateDbPath);
+    try {
+      const createdAt = new Date('2026-06-13T01:00:00.000Z');
+      const schedule = createAssetUpdateSchedule(db, {
+        name: 'BTC nightly BRT',
+        underlying: 'BTC',
+        interval: '5m',
+        book_depth: 25,
+        start_date: '2026-06-10',
+        frequency: 'daily',
+        time_utc: '03:00',
+      }, { config, now: createdAt });
+
+      assert.equal(schedule.next_run_at, '2026-06-13T06:00:00.000Z');
     } finally {
       closeStateDatabase(db);
     }

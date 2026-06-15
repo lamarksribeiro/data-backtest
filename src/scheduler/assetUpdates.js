@@ -6,6 +6,7 @@ import {
   hasActiveAssetUpdateRun,
   listDueAssetUpdateSchedules,
   markAssetUpdateScheduleAttempt,
+  reconcileAssetUpdateSchedules,
 } from '../state/assetUpdateSchedules.js';
 
 const DEFAULT_POLL_MS = 60_000;
@@ -32,6 +33,7 @@ export function createAssetUpdateScheduler({ db, config, prepareRunner, pollMs =
 
   function start() {
     if (timer) return;
+    reconcileAssetUpdateSchedules(db, config, now());
     timer = setInterval(() => void tick(), pollMs);
     timer.unref?.();
     queueMicrotask(() => void tick());
@@ -67,7 +69,7 @@ export async function runAssetUpdateSchedule({ db, config, prepareRunner, schedu
 
   const toDate = lastClosedUtcDate(current);
   const nextRunAt = schedule.enabled
-    ? computeNextRunAt({ ...schedule, last_run_at: nowIso }, current)
+    ? computeNextRunAt({ ...schedule, last_run_at: nowIso }, current, { config })
     : null;
 
   if (toDate < schedule.start_date) {

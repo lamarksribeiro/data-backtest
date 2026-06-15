@@ -1,6 +1,11 @@
 import { listBackupPartitionGroups } from '../backup/export.js';
 import { resolveTelegramBackupConfig, markTelegramBackupScheduleRan } from '../state/telegramBackupSettings.js';
 import { enqueueTelegramBackup, isTelegramBackupRunning } from '../backup/runner.js';
+import {
+  isDailyScheduleDue,
+  localDateKey,
+  resolveSchedulerTimezone,
+} from './scheduleTime.js';
 
 const DEFAULT_POLL_MS = 60_000;
 
@@ -45,20 +50,11 @@ export function createTelegramBackupScheduler({ config, db, pollMs = DEFAULT_POL
 }
 
 async function maybeRunDailySchedule({ config, db, backupConfig, current }) {
-  const today = current.toISOString().slice(0, 10);
+  const timeZone = resolveSchedulerTimezone(config);
+  const today = localDateKey(current, timeZone);
   if (backupConfig.lastScheduleRunDate === today) return;
 
-  const [hour, minute] = String(backupConfig.autoScheduleTimeUtc || '04:00').split(':').map((v) => Number.parseInt(v, 10));
-  const scheduled = new Date(Date.UTC(
-    current.getUTCFullYear(),
-    current.getUTCMonth(),
-    current.getUTCDate(),
-    hour || 0,
-    minute || 0,
-    0,
-    0,
-  ));
-  if (current < scheduled) return;
+  if (!isDailyScheduleDue(backupConfig.autoScheduleTimeUtc || '04:00', current, timeZone)) return;
 
   const groups = listBackupPartitionGroups(db);
   if (!groups.length) return;

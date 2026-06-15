@@ -69,7 +69,19 @@ export function loadConfig(env = process.env) {
         || TELEGRAM_DEFAULT_CHUNK_BYTES,
     ),
     telegramBackupRateLimitMs: Math.max(Number.parseInt(String(env.TELEGRAM_BACKUP_RATE_LIMIT_MS || '3000'), 10) || 3000, 500),
+    schedulerTimezone: normalizeSchedulerTimezone(env.SCHEDULER_TIMEZONE),
   };
+}
+
+function normalizeSchedulerTimezone(value) {
+  const raw = String(value || 'America/Sao_Paulo').trim();
+  if (!raw) return 'America/Sao_Paulo';
+  try {
+    Intl.DateTimeFormat(undefined, { timeZone: raw });
+    return raw;
+  } catch {
+    throw new Error(`Invalid SCHEDULER_TIMEZONE: ${raw}`);
+  }
 }
 
 function normalizePrepareRunner(value) {

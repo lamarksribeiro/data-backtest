@@ -268,12 +268,17 @@ export function createApiHandler(deps) {
         return sendJson(res, 200, {
           schedules: listAssetUpdateSchedules(db),
           target_to_date: lastClosedUtcDate(),
+          scheduler_timezone: config.schedulerTimezone,
         });
       }
       if (req.method === 'POST' && url.pathname === '/api/settings/asset-update-schedules') {
         const body = await readJson(req);
         const schedule = createAssetUpdateSchedule(db, body, { config });
-        return sendJson(res, 201, { schedule, target_to_date: lastClosedUtcDate() });
+        return sendJson(res, 201, {
+          schedule,
+          target_to_date: lastClosedUtcDate(),
+          scheduler_timezone: config.schedulerTimezone,
+        });
       }
       if (req.method === 'GET' && url.pathname === '/api/settings/dataset-cache') {
         const stats = scanDatasetDiskCache(config);
@@ -314,6 +319,7 @@ export function createApiHandler(deps) {
         const channelCatalog = getStoredChannelCatalog(db);
         return sendJson(res, 200, {
           settings: toPublicTelegramBackupSettings(effective),
+          scheduler_timezone: config.schedulerTimezone,
           last_run: lastRun,
           channel_catalog: channelCatalog,
         });
@@ -326,7 +332,7 @@ export function createApiHandler(deps) {
         }
         updateTelegramBackupSettings(db, validated.patch, { updatedBy: req.user?.username ?? null });
         const effective = resolveTelegramBackupConfig(config, db);
-        return sendJson(res, 200, { settings: toPublicTelegramBackupSettings(effective) });
+        return sendJson(res, 200, { settings: toPublicTelegramBackupSettings(effective), scheduler_timezone: config.schedulerTimezone });
       }
       if (req.method === 'POST' && url.pathname === '/api/settings/telegram-backup/test') {
         const effective = resolveTelegramBackupConfig(config, db);
