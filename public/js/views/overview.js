@@ -133,6 +133,15 @@ const overviewStyles = `
     vertical-align: middle;
   }
 
+  .overview-spark {
+    width: 100px;
+    height: 36px;
+    min-height: 36px;
+    overflow: hidden;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.2);
+  }
+
   @media (max-width: 768px) {
     .portfolio-chart-section {
       justify-content: center;
@@ -373,7 +382,7 @@ export async function renderOverview(ctx) {
                   el('td', {}, s.totals?.runs ? `${Math.round((s.totals.win_rate || 0) * 100)}%` : '—'),
                   el('td', { class: (s.totals?.avg_pnl || 0) >= 0 ? 'good' : 'bad' }, s.totals?.runs ? formatPnl(s.totals.avg_pnl) : '—'),
                   el('td', {}, (s.stats?.sparkline?.length || s.sparkline?.length)
-                    ? el('div', { id: `spark-overview-${s.id}`, style: { width: '80px', height: '24px' } })
+                    ? el('div', { id: `spark-overview-${s.id}`, class: 'overview-spark' })
                     : el('span', { class: 'muted', style: { fontSize: '11px' } }, 'Sem runs')
                   ),
                 ]))),
@@ -390,7 +399,7 @@ export async function renderOverview(ctx) {
           const spark = s.stats?.sparkline || s.sparkline || [];
           const container = document.getElementById(`spark-overview-${s.id}`);
           if (container && spark.length > 0) {
-            renderUplotSparkline(container, spark);
+            renderUplotSparkline(container, spark, { height: 36, width: 100 });
           }
         }
       });

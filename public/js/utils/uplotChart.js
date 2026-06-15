@@ -39,29 +39,42 @@ function loadUplot() {
 
 const SPARKLINE_HEIGHT = 56;
 
+function sparklineLayout(height) {
+  const h = Number(height) > 0 ? Number(height) : SPARKLINE_HEIGHT;
+  if (h <= 32) {
+    return { height: h, strokeWidth: 1.25, padding: [3, 2, 3, 2] };
+  }
+  return { height: h, strokeWidth: 1.5, padding: [6, 4, 6, 4] };
+}
+
 /** Mini sparkline: valores numéricos no eixo X (sem converter para data). */
-export async function renderUplotSparkline(container, values) {
+export async function renderUplotSparkline(container, values, opts = {}) {
   if (!container || !values?.length) return null;
   const uPlot = await loadUplot();
   container.innerHTML = '';
   const xs = values.map((_, i) => i);
   const ys = values.map((v) => Number(v) || 0);
+  const layout = sparklineLayout(opts.height ?? (container.clientHeight || SPARKLINE_HEIGHT));
+  const width = opts.width ?? (container.clientWidth || 200);
   const chart = new uPlot({
-    width: container.clientWidth || 200,
-    height: SPARKLINE_HEIGHT,
+    width,
+    height: layout.height,
     scales: {
       y: {
         auto: true,
         range: (u, min, max) => tightYRange(u, min, max),
       },
     },
-    series: [{}, { stroke: '#f97316', width: 1.5, points: { show: false } }],
+    series: [{}, { stroke: opts.stroke || '#f97316', width: layout.strokeWidth, points: { show: false } }],
     axes: [{ show: false }, { show: false }],
     cursor: { show: false },
     legend: { show: false },
-    padding: [6, 4, 6, 4],
+    padding: layout.padding,
   }, [xs, ys], container);
-  const onResize = () => chart.setSize({ width: container.clientWidth || 200, height: SPARKLINE_HEIGHT });
+  const onResize = () => {
+    const next = sparklineLayout(opts.height ?? (container.clientHeight || SPARKLINE_HEIGHT));
+    chart.setSize({ width: opts.width ?? (container.clientWidth || 200), height: next.height });
+  };
   window.addEventListener('resize', onResize);
   chart.destroy = ((orig) => () => {
     window.removeEventListener('resize', onResize);
