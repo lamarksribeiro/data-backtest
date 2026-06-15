@@ -189,7 +189,7 @@ export function getStrategyVersion(db, strategyId, versionId) {
   return row ? toApiVersion(row) : null;
 }
 
-export function deleteStrategyVersion(db, strategyId, versionId) {
+export function deleteStrategyVersion(db, strategyId, versionId, { deleteRuns = false } = {}) {
   if (!getStrategy(db, strategyId)) return null;
   const version = getStrategyVersion(db, strategyId, versionId);
   if (!version) return null;
@@ -198,14 +198,32 @@ export function deleteStrategyVersion(db, strategyId, versionId) {
   if (Number(total?.count || 0) <= 1) throw new Error('Cannot delete the last strategy version');
 
   const runs = db.prepare('SELECT COUNT(*) AS count FROM backtest_runs WHERE strategy_version_id = ?').get(versionId);
-  if (Number(runs?.count || 0) > 0) throw new Error('Cannot delete a version used by backtest runs');
+  const runsCount = Number(runs?.count || 0);
+  if (runsCount > 0 && !deleteRuns) {
+    throw new Error('Cannot delete a version used by backtest runs');
+  }
 
-  db.prepare('DELETE FROM strategy_versions WHERE strategy_id = ? AND id = ?').run(strategyId, versionId);
-  db.prepare(`
-    UPDATE strategy_definitions
-    SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
-    WHERE id = ?
-  `).run(strategyId);
+  db.exec('BEGIN');
+  try {
+    if (deleteRuns && runsCount > 0) {
+      const runIds = db.prepare('SELECT id FROM backtest_runs WHERE strategy_version_id = ?').all(versionId);
+      for (const { id: runId } of runIds) {
+        db.prepare('DELETE FROM backtest_event_traces WHERE run_id = ?').run(runId);
+      }
+      db.prepare('DELETE FROM backtest_runs WHERE strategy_version_id = ?').run(versionId);
+    }
+    db.prepare('DELETE FROM strategy_versions WHERE strategy_id = ? AND id = ?').run(strategyId, versionId);
+    db.prepare(`
+      UPDATE strategy_definitions
+      SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+      WHERE id = ?
+    `).run(strategyId);
+    db.exec('COMMIT');
+  } catch (err) {
+    db.exec('ROLLBACK');
+    throw err;
+  }
+
   invalidateStrategyStatsCache();
   return version;
 }

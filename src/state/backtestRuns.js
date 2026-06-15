@@ -452,3 +452,19 @@ export function extractEquityFromResultJson(json) {
   }
   return [];
 }
+
+export function deleteBacktestRun(db, id) {
+  const run = db.prepare('SELECT * FROM backtest_runs WHERE id = ?').get(id);
+  if (!run) return null;
+
+  db.exec('BEGIN');
+  try {
+    db.prepare('DELETE FROM backtest_event_traces WHERE run_id = ?').run(id);
+    db.prepare('DELETE FROM backtest_runs WHERE id = ?').run(id);
+    db.exec('COMMIT');
+  } catch (err) {
+    db.exec('ROLLBACK');
+    throw err;
+  }
+  return toApiRun(run);
+}

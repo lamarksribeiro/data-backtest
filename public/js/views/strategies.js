@@ -35,7 +35,30 @@ function buildGlsTemplate(name = 'Nova Estrategia') {
   return `strategy "${safeName}" ${GLS_TEMPLATE_BODY}`;
 }
 
-/** @type {{ list: object[], selectedId: number|null, selectedVersionId: number|null, focusedEditor: object|null, sourceCode: string, validation: object|null, blocks: object[], currentStrategy: object|null, currentVersion: object|null, strategyQuery: string, statusFilter: string }} */
+function renderStrategyPerformanceSummary(stats) {
+  const totals = stats?.totals || {};
+  const runs = totals.runs ?? 0;
+  if (!runs) {
+    return el('p', { class: 'strategy-summary-strip muted' }, 'Nenhuma simulação ainda. Rode um backtest no Estúdio para ver desempenho aqui.');
+  }
+  const wr = totals.win_rate ?? 0;
+  const avgPnl = totals.avg_pnl ?? 0;
+  const bestPnl = totals.best_pnl ?? 0;
+  const parts = [
+    `${runs} run${runs === 1 ? '' : 's'}`,
+    `${Math.round(wr * 100)}% WR`,
+  ];
+  return el('p', { class: 'strategy-summary-strip' }, [
+    parts.join(' · '),
+    ' · ',
+    el('span', {
+      style: { color: avgPnl > 0 ? 'var(--ok)' : (avgPnl < 0 ? 'var(--err)' : 'inherit') },
+    }, `${formatPnl(avgPnl)} médio`),
+    bestPnl ? ` · melhor ${formatPnl(bestPnl)}` : '',
+  ]);
+}
+
+/** @type {{ list: object[], selectedId: number|null, selectedVersionId: number|null, focusedEditor: object|null, sourceCode: string, validation: object|null, blocks: object[], currentStrategy: object|null, currentVersion: object|null, strategyQuery: string, statusFilter: string, historyStrategyId: number|null, historyFilters: object }} */
 const state = {
   list: [],
   selectedId: null,
@@ -51,7 +74,386 @@ const state = {
   librarySort: 'last_use',
   libraryStats: [],
   trashList: [],
+  historyStrategyId: null,
+  historyFilters: {
+    versionQuery: '',
+    versionScope: 'all',
+    runVersionId: '',
+    runQuery: '',
+    runOutcome: 'all',
+  },
 };
+
+const DEFAULT_HISTORY_FILTERS = {
+  versionQuery: '',
+  versionScope: 'all',
+  runVersionId: '',
+  runQuery: '',
+  runOutcome: 'all',
+};
+
+function resetHistoryFilters(strategyId) {
+  if (state.historyStrategyId !== strategyId) {
+    state.historyStrategyId = strategyId;
+    state.historyFilters = { ...DEFAULT_HISTORY_FILTERS };
+  }
+}
+
+function filterVersions(versions, stats, strategy) {
+  const q = state.historyFilters.versionQuery.toLowerCase().trim();
+  return versions.filter((v) => {
+    const vStat = stats.by_version?.find((bv) => bv.version_id === v.id) || {};
+    const runs = vStat.runs ?? 0;
+    if (state.historyFilters.versionScope === 'tested' && runs === 0) return false;
+    if (state.historyFilters.versionScope === 'untested' && runs > 0) return false;
+    if (state.historyFilters.versionScope === 'default' && strategy.default_version_id !== v.id) return false;
+    if (!q) return true;
+    const hay = `v${v.version} ${v.notes || ''}`.toLowerCase();
+    return hay.includes(q);
+  });
+}
+
+function filterRuns(runs, versions) {
+  const q = state.historyFilters.runQuery.toLowerCase().trim();
+  const versionId = state.historyFilters.runVersionId;
+  return runs.filter((run) => {
+    if (versionId && String(run.strategy_version_id || '') !== versionId) return false;
+    const pnl = run.summary?.totalPnl ?? 0;
+    if (state.historyFilters.runOutcome === 'positive' && pnl <= 0) return false;
+    if (state.historyFilters.runOutcome === 'negative' && pnl >= 0) return false;
+    if (!q) return true;
+    const versionLabel = run.strategy_version_id
+      ? `v${versions.find((v) => v.id === run.strategy_version_id)?.version || ''}`
+      : '';
+    const hay = `#${run.id} ${versionLabel} ${run.underlying || ''} ${run.interval || ''}`.toLowerCase();
+    return hay.includes(q);
+  });
+}
+
+function renderVersionTableRow(ctx, strategy, version, versionStat, switchTab) {
+  const isDefault = strategy.default_version_id === version.id;
+  const vRuns = versionStat.runs ?? 0;
+  const vWinRate = versionStat.win_rate ?? 0;
+  const vAvgPnl = versionStat.avg_pnl ?? 0;
+
+  return el('tr', {
+    class: `strategy-history-row${isDefault ? ' is-default' : ''}${state.selectedVersionId === version.id ? ' is-selected' : ''}`,
+    title: 'Clique para abrir no editor GLS',
+    onclick: async (e) => {
+      if (e.target.closest('button')) return;
+      await openStrategyEditor(ctx, strategy.id, version.id);
+      switchTab('code');
+    },
+  }, [
+    el('td', { class: 'mono strategy-history-col--version' }, [
+      el('strong', {}, `v${version.version}`),
+      isDefault ? el('span', { class: 'badge badge--accent badge--compact', style: { marginLeft: '6px' } }, 'padrão') : null,
+    ]),
+    el('td', { class: 'strategy-history-col--notes', title: version.notes || '' },
+      version.notes || el('span', { class: 'muted' }, '—')),
+    el('td', { class: 'mono strategy-history-col--num' }, vRuns > 0 ? String(vRuns) : el('span', { class: 'muted' }, '0')),
+    el('td', { class: 'mono strategy-history-col--num' },
+      vRuns > 0 ? `${Math.round(vWinRate * 100)}%` : el('span', { class: 'muted' }, '—')),
+    el('td', {
+      class: 'mono strategy-history-col--num',
+      style: { color: vRuns > 0 ? (vAvgPnl > 0 ? 'var(--ok)' : (vAvgPnl < 0 ? 'var(--err)' : 'inherit')) : 'inherit' },
+    }, vRuns > 0 ? formatPnl(vAvgPnl) : el('span', { class: 'muted' }, '—')),
+    el('td', { class: 'strategy-history-col--actions' }, el('div', { class: 'btn-group' }, [
+      el('button', {
+        class: `btn btn--ghost btn--sm btn--icon${isDefault ? ' is-active' : ''}`,
+        type: 'button',
+        title: isDefault ? 'Versão padrão no Estúdio' : 'Fixar como padrão',
+        disabled: isDefault,
+        onclick: async (e) => {
+          e.stopPropagation();
+          const res = await ctx.api.patch(`/api/strategies/${strategy.id}`, { default_version_id: version.id });
+          if (!res.ok) return ctx.toast.err(res.error?.message || 'Falha ao fixar versão');
+          strategy.default_version_id = version.id;
+          invalidateStrategyPickerCache();
+          ctx.toast.ok('Versão fixada como padrão');
+          await openStrategyEditor(ctx, strategy.id, version.id);
+        },
+      }, '★'),
+      el('button', {
+        class: 'btn btn--ghost btn--sm btn--icon',
+        type: 'button',
+        title: 'Rodar no Estúdio',
+        onclick: (e) => {
+          e.stopPropagation();
+          ctx.navigate(`studio?strategy=${strategy.id}&version=${version.id}`);
+        },
+      }, '▶'),
+      el('button', {
+        class: 'btn btn--ghost btn--sm btn--icon',
+        type: 'button',
+        title: 'Filtrar simulações desta versão',
+        onclick: (e) => {
+          e.stopPropagation();
+          state.historyFilters.runVersionId = String(version.id);
+          const sel = document.getElementById('strategy-run-version-filter');
+          if (sel) {
+            sel.value = state.historyFilters.runVersionId;
+            sel.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          document.querySelector('#tab-content-stats .strategy-history-section:last-child')
+            ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        },
+      }, el('i', { class: 'fa-solid fa-filter' })),
+      el('button', {
+        class: 'btn btn--ghost btn--sm btn--icon btn--danger-hover',
+        type: 'button',
+        title: 'Excluir versão',
+        onclick: (e) => {
+          e.stopPropagation();
+          deleteVersionFlow(ctx, strategy, version);
+        },
+      }, el('i', { class: 'fa-solid fa-trash-can' })),
+    ])),
+  ]);
+}
+
+function renderRunTableRow(ctx, strategyId, run, versions) {
+  const pnl = run.summary?.totalPnl ?? 0;
+  const wr = run.summary?.winRate ?? 0;
+  const winRateFormatted = wr ? `${Math.round(wr * (wr > 1 ? 1 : 100))}%` : '—';
+  const versionLabel = run.strategy_version_id
+    ? `v${versions.find((v) => v.id === run.strategy_version_id)?.version || '?'}`
+    : '—';
+  const period = `${run.from ? run.from.slice(0, 10) : '?'} → ${run.to ? run.to.slice(0, 10) : '?'}`;
+  const ranAt = run.created_at ? run.created_at.slice(0, 16).replace('T', ' ') : '—';
+
+  return el('tr', {
+    class: `strategy-history-row strategy-history-row--run${pnl > 0 ? ' is-profit' : (pnl < 0 ? ' is-loss' : '')}`,
+    title: 'Clique para abrir no Estúdio',
+    onclick: (e) => {
+      if (e.target.closest('button')) return;
+      ctx.navigate(`studio?run=${run.id}`);
+    },
+  }, [
+    el('td', { class: 'mono strategy-history-col--id' }, `#${run.id}`),
+    el('td', { class: 'mono strategy-history-col--version' }, versionLabel),
+    el('td', { class: 'mono strategy-history-col--asset' }, `${run.underlying} · ${run.interval}`),
+    el('td', { class: 'strategy-history-col--period muted' }, period),
+    el('td', {
+      class: 'mono strategy-history-col--num',
+      style: { color: pnl > 0 ? 'var(--ok)' : (pnl < 0 ? 'var(--err)' : 'inherit'), fontWeight: '600' },
+    }, formatPnl(pnl)),
+    el('td', { class: 'mono strategy-history-col--num muted' }, winRateFormatted),
+    el('td', { class: 'strategy-history-col--date muted' }, ranAt),
+    el('td', { class: 'strategy-history-col--actions' }, el('button', {
+      class: 'btn btn--ghost btn--sm btn--icon btn--danger-hover',
+      type: 'button',
+      title: 'Excluir simulação',
+      onclick: (e) => {
+        e.stopPropagation();
+        deleteRunFlow(ctx, strategyId, run.id);
+      },
+    }, el('i', { class: 'fa-solid fa-trash-can' }))),
+  ]);
+}
+
+function renderHistoryFilterCount(shown, total) {
+  if (shown === total) return el('span', { class: 'strategy-history-count muted' }, `${total} item${total === 1 ? '' : 's'}`);
+  return el('span', { class: 'strategy-history-count muted' }, `${shown} de ${total}`);
+}
+
+function renderStrategyHistoryTab(ctx, { strategy, strategyId, versions, strategyRuns, strategyStats, switchTab }) {
+  const stats = strategyStats || { totals: {}, by_version: [] };
+  const versionsTbody = el('tbody', { id: 'strategy-versions-tbody' });
+  const runsTbody = el('tbody', { id: 'strategy-runs-tbody' });
+  const versionsCountEl = el('span', { class: 'strategy-history-count muted' });
+  const runsCountEl = el('span', { class: 'strategy-history-count muted' });
+
+  function refreshVersionsTable() {
+    const filtered = filterVersions(versions, stats, strategy);
+    mount(versionsCountEl, [renderHistoryFilterCount(filtered.length, versions.length)]);
+    if (!filtered.length) {
+      mount(versionsTbody, el('tr', {}, el('td', {
+        colspan: '6',
+        class: 'strategy-history-empty-cell muted',
+      }, versions.length ? 'Nenhuma versão corresponde ao filtro.' : 'Nenhuma versão salva.')));
+      return;
+    }
+    mount(versionsTbody, filtered.map((v) => {
+      const vStat = stats.by_version?.find((bv) => bv.version_id === v.id) || {};
+      return renderVersionTableRow(ctx, strategy, v, vStat, switchTab);
+    }));
+  }
+
+  function refreshRunsTable() {
+    const filtered = filterRuns(strategyRuns, versions);
+    mount(runsCountEl, [renderHistoryFilterCount(filtered.length, strategyRuns.length)]);
+    if (!filtered.length) {
+      mount(runsTbody, el('tr', {}, el('td', {
+        colspan: '8',
+        class: 'strategy-history-empty-cell muted',
+      }, strategyRuns.length ? 'Nenhuma simulação corresponde ao filtro.' : 'Nenhuma simulação executada ainda.')));
+      return;
+    }
+    mount(runsTbody, filtered.map((r) => renderRunTableRow(ctx, strategyId, r, versions)));
+  }
+
+  function onFilterChange() {
+    refreshVersionsTable();
+    refreshRunsTable();
+  }
+
+  const versionScopeSelect = el('select', {
+    class: 'field__input field__input--sm',
+    value: state.historyFilters.versionScope,
+    onchange: (e) => {
+      state.historyFilters.versionScope = e.target.value;
+      onFilterChange();
+    },
+  }, [
+    el('option', { value: 'all' }, 'Todas'),
+    el('option', { value: 'tested' }, 'Com simulações'),
+    el('option', { value: 'untested' }, 'Sem simulações'),
+    el('option', { value: 'default' }, 'Padrão'),
+  ]);
+  versionScopeSelect.value = state.historyFilters.versionScope;
+
+  const runVersionSelect = el('select', {
+    id: 'strategy-run-version-filter',
+    class: 'field__input field__input--sm',
+    value: state.historyFilters.runVersionId,
+    onchange: (e) => {
+      state.historyFilters.runVersionId = e.target.value;
+      onFilterChange();
+    },
+  }, [
+    el('option', { value: '' }, 'Todas as versões'),
+    ...versions.map((v) => el('option', { value: String(v.id) }, `v${v.version}`)),
+  ]);
+  runVersionSelect.value = state.historyFilters.runVersionId;
+
+  const runOutcomeSelect = el('select', {
+    class: 'field__input field__input--sm',
+    onchange: (e) => {
+      state.historyFilters.runOutcome = e.target.value;
+      onFilterChange();
+    },
+  }, [
+    el('option', { value: 'all' }, 'Qualquer resultado'),
+    el('option', { value: 'positive' }, 'Lucro'),
+    el('option', { value: 'negative' }, 'Prejuízo'),
+  ]);
+  runOutcomeSelect.value = state.historyFilters.runOutcome;
+
+  refreshVersionsTable();
+  refreshRunsTable();
+
+  return el('div', { class: 'strategy-history-tab' }, [
+    renderStrategyPerformanceSummary(strategyStats),
+    el('section', { class: 'strategy-history-section' }, [
+      el('div', { class: 'strategy-history-section__head' }, [
+        el('h3', { class: 'card__title' }, 'Versões'),
+        el('div', { class: 'row', style: { gap: '8px' } }, [
+          versionsCountEl,
+          el('button', {
+            class: 'btn btn--ghost btn--sm',
+            type: 'button',
+            onclick: () => switchTab('code'),
+          }, [el('i', { class: 'fa-solid fa-plus' }), ' Nova versão']),
+        ]),
+      ]),
+      el('div', { class: 'strategy-history-toolbar' }, [
+        el('input', {
+          class: 'field__input field__input--sm strategy-history-search',
+          type: 'search',
+          placeholder: 'Buscar versão ou nota…',
+          value: state.historyFilters.versionQuery,
+          oninput: (e) => {
+            state.historyFilters.versionQuery = e.target.value;
+            refreshVersionsTable();
+          },
+        }),
+        versionScopeSelect,
+      ]),
+      el('div', { class: 'strategy-history-table-wrap' }, [
+        el('table', { class: 'strategy-history-table strategy-history-table--versions' }, [
+          el('thead', {}, el('tr', {}, [
+            el('th', {}, 'Versão'),
+            el('th', {}, 'Notas'),
+            el('th', {}, 'Runs'),
+            el('th', {}, 'Win rate'),
+            el('th', {}, 'PnL médio'),
+            el('th', {}, 'Ações'),
+          ])),
+          versionsTbody,
+        ]),
+      ]),
+    ]),
+    el('section', { class: 'strategy-history-section' }, [
+      el('div', { class: 'strategy-history-section__head' }, [
+        el('h3', { class: 'card__title' }, 'Simulações'),
+        runsCountEl,
+      ]),
+      el('div', { class: 'strategy-history-toolbar' }, [
+        el('input', {
+          class: 'field__input field__input--sm strategy-history-search',
+          type: 'search',
+          placeholder: 'Buscar #, ativo ou intervalo…',
+          value: state.historyFilters.runQuery,
+          oninput: (e) => {
+            state.historyFilters.runQuery = e.target.value;
+            refreshRunsTable();
+          },
+        }),
+        runVersionSelect,
+        runOutcomeSelect,
+      ]),
+      el('div', { class: 'strategy-history-table-wrap' }, [
+        el('table', { class: 'strategy-history-table strategy-history-table--runs' }, [
+          el('thead', {}, el('tr', {}, [
+            el('th', {}, '#'),
+            el('th', {}, 'Versão'),
+            el('th', {}, 'Ativo'),
+            el('th', {}, 'Período'),
+            el('th', {}, 'PnL'),
+            el('th', {}, 'WR'),
+            el('th', {}, 'Executado'),
+            el('th', {}, 'Ações'),
+          ])),
+          runsTbody,
+        ]),
+      ]),
+    ]),
+  ]);
+}
+
+function renderVisualDiff(a, b) {
+  const left = String(a).split('\n');
+  const right = String(b).split('\n');
+  const max = Math.max(left.length, right.length);
+  const elements = [];
+
+  for (let i = 0; i < max; i++) {
+    const l = left[i];
+    const r = right[i];
+    if (l === r) {
+      elements.push(el('div', { class: 'diff-line' }, [
+        el('span', { class: 'diff-line-number' }, String(i + 1)),
+        el('span', { class: 'diff-line-text' }, l ?? '')
+      ]));
+    } else {
+      if (l !== undefined) {
+        elements.push(el('div', { class: 'diff-line diff-line--removed' }, [
+          el('span', { class: 'diff-line-number' }, String(i + 1)),
+          el('span', { class: 'diff-line-text' }, `- ${l}`)
+        ]));
+      }
+      if (r !== undefined) {
+        elements.push(el('div', { class: 'diff-line diff-line--added' }, [
+          el('span', { class: 'diff-line-number' }, String(i + 1)),
+          el('span', { class: 'diff-line-text' }, `+ ${r}`)
+        ]));
+      }
+    }
+  }
+
+  return el('div', { class: 'visual-diff-container' }, elements);
+}
 
 export async function renderStrategies(ctx, params = {}) {
   const routeToken = ctx.getRouteToken?.() ?? 0;
@@ -443,13 +845,15 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
 
   mount(editorPanel, el('p', { class: 'muted' }, 'Carregando detalhes do editor...'));
 
-  const [strategyRes, versionsRes, blocksRes, statsRes] = await Promise.all([
+  const [strategyRes, versionsRes, blocksRes, statsRes, runsRes] = await Promise.all([
     ctx.api.get(`/api/strategies/${strategyId}`),
     ctx.api.get(`/api/strategies/${strategyId}/versions`),
     ctx.api.get('/api/strategy-blocks'),
     ctx.api.get(`/api/strategies/${strategyId}/stats`),
+    ctx.api.get(`/api/backtest/runs?strategy_id=${strategyId}&limit=50`),
   ]);
   const strategyStats = statsRes.ok ? statsRes.data.stats : null;
+  const strategyRuns = runsRes.ok ? runsRes.data.runs || [] : [];
   if (!strategyRes.ok) {
     mount(editorPanel, el('p', { class: 'bad' }, strategyRes.error?.message || 'Falha ao abrir estratégia'));
     return;
@@ -472,6 +876,41 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
   const schema = state.validation?.params_schema || version?.params_schema || {};
   const hasParams = Object.keys(schema).length > 0;
 
+  resetHistoryFilters(strategyId);
+
+  let leftVersionId = versions[1]?.id || versions[0]?.id;
+  let rightVersionId = version?.id || versions[0]?.id;
+
+  const leftSelect = el('select', {
+    class: 'field__input',
+    style: { width: '120px' },
+    onchange: (e) => {
+      leftVersionId = Number(e.target.value);
+      updateVisualDiff();
+    }
+  }, versions.map((v) => el('option', { value: v.id, selected: v.id === leftVersionId }, `v${v.version}`)));
+
+  const rightSelect = el('select', {
+    class: 'field__input',
+    style: { width: '120px' },
+    onchange: (e) => {
+      rightVersionId = Number(e.target.value);
+      updateVisualDiff();
+    }
+  }, versions.map((v) => el('option', { value: v.id, selected: v.id === rightVersionId }, `v${v.version}`)));
+
+  const diffArea = el('div', { id: 'visual-diff-area' });
+
+  function updateVisualDiff() {
+    const left = versions.find((v) => v.id === leftVersionId);
+    const right = versions.find((v) => v.id === rightVersionId);
+    if (!left || !right) {
+      mount(diffArea, el('p', { class: 'muted' }, 'Selecione versões válidas para comparar.'));
+      return;
+    }
+    mount(diffArea, renderVisualDiff(left.source_code, right.source_code));
+  }
+
   mount(editorPanel, [
     el('div', { class: 'strategy-header-row' }, [
       el('div', { class: 'editor-title-block', style: { display: 'flex', alignItems: 'center', gap: '12px' } }, [
@@ -487,48 +926,6 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
         ]),
       ]),
       el('div', { class: 'strategy-header-toolbar' }, [
-        el('div', { class: 'strategy-version-control' }, [
-          el('span', { class: 'strategy-version-control__label' }, [
-            el('i', { class: 'fa-solid fa-code-branch' }),
-            'Versão',
-          ]),
-          el('select', {
-            class: 'strategy-version-control__select',
-            id: 'strategy-version-select',
-            onchange: async (e) => {
-              const nextVersionId = Number(e.target.value);
-              if (!Number.isFinite(nextVersionId)) return;
-              state.selectedVersionId = nextVersionId;
-              ctx.navigate(`strategies/${strategyId}/${nextVersionId}`);
-              await openStrategyEditor(ctx, strategyId, nextVersionId);
-            },
-          }, versions.length
-            ? versions.map((item) => el('option', { value: item.id, selected: item.id === version?.id }, `${strategy.default_version_id === item.id ? '★ ' : ''}v${item.version}${item.notes ? ` — ${item.notes}` : ''} · ${item.created_at ? item.created_at.slice(0, 10) : '—'}`))
-            : [el('option', { value: '' }, 'Sem versões')]),
-          el('button', {
-            class: `btn btn--ghost btn--sm${strategy.default_version_id === version?.id ? ' is-active' : ''}`,
-            type: 'button',
-            title: 'Fixar esta versão como padrão no Estúdio',
-            onclick: async () => {
-              const res = await ctx.api.patch(`/api/strategies/${strategy.id}`, { default_version_id: version.id });
-              if (!res.ok) return ctx.toast.err(res.error?.message || 'Falha ao fixar versão');
-              strategy.default_version_id = version.id;
-              state.currentStrategy = { ...strategy, default_version_id: version.id };
-              invalidateStrategyPickerCache();
-              ctx.toast.ok('Versão fixada como padrão');
-              await openStrategyEditor(ctx, strategyId, version.id);
-            },
-          }, strategy.default_version_id === version?.id ? '★ Padrão' : '★ Fixar padrão'),
-          ...(versions.length > 1
-            ? [el('button', {
-              class: 'btn btn--ghost btn--sm btn--icon strategy-version-control__delete',
-              type: 'button',
-              title: 'Excluir esta versão',
-              onclick: () => deleteVersionFlow(ctx, strategy, version),
-            }, el('i', { class: 'fa-solid fa-trash-can' }))]
-            : []),
-        ]),
-        el('div', { class: 'strategy-header-toolbar__sep', 'aria-hidden': 'true' }),
         el('button', {
           class: 'btn btn--danger btn--sm btn--ghost',
           type: 'button',
@@ -540,28 +937,50 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
       ]),
     ]),
 
-    // Tab Navigation bar
     el('div', { class: 'premium-tabs-nav' }, [
-      el('button', { class: 'premium-tab-link is-active', id: 'tab-link-code', type: 'button', onclick: () => switchTab('code') }, [
+      el('button', { class: 'premium-tab-link is-active', id: 'tab-link-stats', type: 'button', onclick: () => switchTab('stats') }, [
+        el('i', { class: 'fa-solid fa-clock-rotate-left', style: { marginRight: '8px' } }),
+        'Histórico'
+      ]),
+      el('button', { class: 'premium-tab-link', id: 'tab-link-code', type: 'button', onclick: () => switchTab('code') }, [
         el('i', { class: 'fa-solid fa-code', style: { marginRight: '8px' } }),
-        'Editor de Código'
+        'Editor GLS'
       ]),
       el('button', { class: 'premium-tab-link', id: 'tab-link-params', type: 'button', onclick: () => switchTab('params') }, [
         el('i', { class: 'fa-solid fa-sliders', style: { marginRight: '8px' } }),
         'Parâmetros'
       ]),
+      el('button', { class: 'premium-tab-link', id: 'tab-link-diff', type: 'button', onclick: () => switchTab('diff') }, [
+        el('i', { class: 'fa-solid fa-code-compare', style: { marginRight: '8px' } }),
+        'Comparador (Diff)'
+      ]),
       el('button', { class: 'premium-tab-link', id: 'tab-link-config', type: 'button', onclick: () => switchTab('config') }, [
-        el('i', { class: 'fa-solid fa-circle-info', style: { marginRight: '8px' } }),
-        'Ficha Técnica'
+        el('i', { class: 'fa-solid fa-gears', style: { marginRight: '8px' } }),
+        'Configurações'
       ]),
     ]),
 
-    // 1. Tab Código Content
-    el('div', { class: 'premium-tab-content is-active', id: 'tab-content-code' }, [
+    // 1. Tab Histórico (versões + simulações)
+    el('div', { class: 'premium-tab-content is-active', id: 'tab-content-stats' },
+      renderStrategyHistoryTab(ctx, {
+        strategy,
+        strategyId,
+        versions,
+        strategyRuns,
+        strategyStats,
+        switchTab,
+      }),
+    ),
+
+    // 2. Tab Código GLS
+    el('div', { class: 'premium-tab-content', id: 'tab-content-code' }, [
       el('div', { class: 'strategy-code-tab-layout strategy-code-tab-layout--single' }, [
         el('div', { class: 'strategy-code-editor-area' }, [
           el('div', { class: 'row row--between', style: { flexWrap: 'wrap', gap: '8px' } }, [
-            el('span', { class: 'eyebrow' }, 'Linguagem GLS'),
+            el('div', { class: 'row' }, [
+              el('span', { class: 'eyebrow' }, 'Linguagem GLS'),
+              version ? el('span', { class: 'badge badge--idle badge--compact' }, `Versão v${version.version}`) : null,
+            ]),
             el('div', { class: 'row', style: { flexWrap: 'wrap', gap: '8px' } }, [
               el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => toggleGlsDrawer(true) }, [
                 'Ajuda GLS ',
@@ -593,7 +1012,7 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
       ]),
     ]),
 
-    // 2. Tab Parâmetros Content
+    // 3. Tab Parâmetros
     el('div', { class: 'premium-tab-content', id: 'tab-content-params' }, [
       el('div', { class: 'row row--between', style: { marginBottom: '14px' } }, [
         el('div', {}, [
@@ -607,20 +1026,37 @@ async function openStrategyEditor(ctx, strategyId, versionId = null) {
       ]),
     ]),
 
-    // 3. Tab Ficha Técnica / Metadados Content
+    // 4. Tab Comparador (Diff)
+    el('div', { class: 'premium-tab-content', id: 'tab-content-diff' }, [
+      el('div', { class: 'row row--between', style: { marginBottom: '16px', flexWrap: 'wrap', gap: '12px' } }, [
+        el('div', {}, [
+          el('h3', { class: 'card__title' }, 'Comparador de Versões'),
+          el('p', { class: 'muted', style: { fontSize: '12px' } }, 'Compare a diferença de código GLS entre duas versões da estratégia.'),
+        ]),
+        el('div', { class: 'row' }, [
+          el('label', { class: 'row', style: { gap: '6px', fontSize: '13px', alignItems: 'center' } }, [
+            'De: ',
+            leftSelect
+          ]),
+          el('label', { class: 'row', style: { gap: '6px', fontSize: '13px', alignItems: 'center' } }, [
+            'Para: ',
+            rightSelect
+          ])
+        ])
+      ]),
+      diffArea
+    ]),
+
+    // 5. Tab Configurações
     el('div', { class: 'premium-tab-content', id: 'tab-content-config' }, [
       el('div', { style: { maxWidth: '720px' } }, [
         el('h3', { class: 'card__title', style: { marginBottom: '14px' } }, 'Metadados da Estratégia'),
         renderStrategyMetaForm(ctx, strategy),
-        el('h3', { class: 'card__title', style: { marginTop: '20px' } }, 'Evolução por versão'),
-        el('div', { id: 'strategy-evolution-chart', class: 'strategy-evolution-chart' }),
-        el('h3', { class: 'card__title', style: { marginTop: '20px' } }, 'Diff entre versões'),
-        renderVersionDiffPanel(versions, version),
       ]),
     ]),
   ]);
 
-  loadStrategyEvolution(ctx, strategyId);
+  updateVisualDiff();
 
   // Initialize CodeMirror editor
   const editorId = `gls-editor-textarea-${strategyId}`;
@@ -667,24 +1103,6 @@ function switchTab(tabId) {
 
 function shortcut(keys, label) {
   return el('div', { class: 'shortcut-row' }, [el('kbd', {}, keys), el('span', {}, label)]);
-}
-
-async function loadStrategyEvolution(ctx, strategyId) {
-  const res = await ctx.api.get(`/api/strategies/${strategyId}/stats`);
-  if (!res.ok) return;
-  const byVersion = res.data.stats?.by_version || [];
-  const container = document.getElementById('strategy-evolution-chart');
-  if (!container || !byVersion.length) {
-    if (container) mount(container, el('p', { class: 'muted' }, 'Sem runs para comparar versões.'));
-    return;
-  }
-  const labels = byVersion.map((v) => `v${v.version}`);
-  const winRates = byVersion.map((v) => Math.round((v.win_rate ?? 0) * 100));
-  mount(container, el('div', { class: 'evolution-bars' }, byVersion.map((v, i) => el('div', { class: 'evolution-bar' }, [
-    el('span', { class: 'evolution-bar__label' }, labels[i]),
-    el('span', { class: 'evolution-bar__fill', style: { width: `${winRates[i]}%` } }),
-    el('span', { class: 'evolution-bar__value' }, `${winRates[i]}% · avg ${formatPnl(v.avg_pnl)}`),
-  ]))));
 }
 
 function renderVersionDiffPanel(versions, currentVersion) {
@@ -1260,16 +1678,36 @@ async function deleteVersionFlow(ctx, strategy, version) {
   const ok = await confirmDialog({
     title: 'Excluir versão',
     message: `Excluir a versão v${version.version} de "${strategy.name}"?`,
-    detail: 'A exclusão só é permitida se a versão não foi usada em nenhum backtest e se não for a última versão da estratégia.',
-    confirmLabel: 'Excluir versão',
+    detail: 'Deseja realmente excluir esta versão?',
+    confirmLabel: 'Excluir',
     tone: 'danger',
   });
   if (!ok) return;
-  const res = await ctx.api.delete(`/api/strategies/${strategy.id}/versions/${version.id}`);
+
+  let res = await ctx.api.delete(`/api/strategies/${strategy.id}/versions/${version.id}`);
   if (!res.ok) {
-    ctx.toast.err(res.error?.message || 'Falha ao excluir versão');
-    return;
+    const msg = res.error?.message || '';
+    if (msg.includes('used by backtest runs')) {
+      const cascadeOk = await confirmDialog({
+        title: 'Excluir com histórico?',
+        message: `A versão v${version.version} de "${strategy.name}" foi utilizada em simulações de backtest.`,
+        detail: 'Deseja excluir esta versão e apagar permanentemente todo o histórico de simulações de backtest associadas a ela?',
+        confirmLabel: 'Apagar tudo e excluir',
+        tone: 'danger',
+      });
+      if (!cascadeOk) return;
+
+      res = await ctx.api.delete(`/api/strategies/${strategy.id}/versions/${version.id}?delete_runs=true`);
+      if (!res.ok) {
+        ctx.toast.err(res.error?.message || 'Falha ao excluir versão com histórico');
+        return;
+      }
+    } else {
+      ctx.toast.err(res.error?.message || 'Falha ao excluir versão');
+      return;
+    }
   }
+
   ctx.toast.ok(`Versão v${version.version} excluída`);
   state.selectedVersionId = null;
   await renderStrategies(ctx, { id: strategy.id });
@@ -1358,4 +1796,24 @@ function insertBlockIntoEditor(signature) {
   const cleanSig = signature.split(' -> ')[0].trim();
   doc.replaceRange(cleanSig, cursor);
   cm.focus();
+}
+
+async function deleteRunFlow(ctx, strategyId, runId) {
+  const ok = await confirmDialog({
+    title: 'Excluir simulação',
+    message: `Deseja apagar permanentemente a simulação #${runId}?`,
+    detail: 'Esta simulação será removida do histórico e as médias de desempenho da estratégia serão atualizadas instantaneamente.',
+    confirmLabel: 'Excluir simulação',
+    tone: 'danger',
+  });
+  if (!ok) return;
+
+  const res = await ctx.api.delete(`/api/backtest/runs/${runId}`);
+  if (!res.ok) {
+    ctx.toast.err(res.error?.message || 'Falha ao excluir simulação');
+    return;
+  }
+  ctx.toast.ok(`Simulação #${runId} excluída`);
+  invalidateStrategyPickerCache();
+  await openStrategyEditor(ctx, strategyId, state.selectedVersionId);
 }

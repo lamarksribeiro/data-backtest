@@ -49,6 +49,7 @@ import { parseSweepVariants } from '../backtest/sweep.js';
 import { addSseClient, broadcastSse } from './sseHub.js';
 import {
   cancelBacktestRun,
+  deleteBacktestRun,
   failBacktestRun,
   getBacktestRun,
   listBacktestRuns,
@@ -71,7 +72,7 @@ import {
   updateStrategy,
   validateStrategySource,
 } from '../backtestStudio/state/strategies.js';
-import { getStrategyStats, listStrategiesWithStats, listTrashedStrategiesWithStats } from '../backtestStudio/state/strategyStats.js';
+import { getStrategyStats, invalidateStrategyStatsCache, listStrategiesWithStats, listTrashedStrategiesWithStats } from '../backtestStudio/state/strategyStats.js';
 import { getDataCoverage, invalidateCoverageCache } from '../query/coverageUi.js';
 import { invalidateDayEventsCache } from '../api/qualityHandlers.js';
 import { runDataFix } from '../data/fixPipeline.js';
@@ -631,6 +632,14 @@ export function createApiHandler(deps) {
           });
           return sendJson(res, 200, { run: slimRun ?? run });
         }
+        if (req.method === 'DELETE' && backtestRunRoute.kind === 'detail') {
+          if (['running', 'queued'].includes(run.status)) {
+            return sendJson(res, 400, { error: { code: 'DELETE_FAILED', message: 'Cannot delete a running or queued backtest' } });
+          }
+          const deleted = deleteBacktestRun(db, backtestRunRoute.runId);
+          invalidateStrategyStatsCache();
+          return sendJson(res, 200, { deleted: true, run: deleted });
+        }
         if (req.method === 'POST' && backtestRunRoute.kind === 'cancel') {
           if (!['running', 'queued'].includes(run.status)) {
             return sendJson(res, 409, {
@@ -795,10 +804,15 @@ export function createApiHandler(deps) {
         if (req.method === 'DELETE' && strategyRoute.kind === 'version-detail') {
           const strategy = getStrategy(db, strategyRoute.strategyId);
           if (!strategy) return sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Strategy not found' } });
-          const version = deleteStrategyVersion(db, strategyRoute.strategyId, strategyRoute.versionId);
-          return version
-            ? sendJson(res, 200, { deleted: true, version })
-            : sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Strategy version not found' } });
+          const deleteRuns = url.searchParams.get('delete_runs') === '1' || url.searchParams.get('delete_runs') === 'true';
+          try {
+            const version = deleteStrategyVersion(db, strategyRoute.strategyId, strategyRoute.versionId, { deleteRuns });
+            return version
+              ? sendJson(res, 200, { deleted: true, version })
+              : sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Strategy version not found' } });
+          } catch (err) {
+            return sendJson(res, 400, { error: { code: 'DELETE_FAILED', message: err.message } });
+          }
         }
       }
       if (req.method === 'POST' && url.pathname === '/api/backtest/run') {

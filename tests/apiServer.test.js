@@ -496,3 +496,59 @@ function makeBacktestTickRow(ts, underlyingPrice) {
     down_bid_sz_2: 50,
   };
 }
+
+test('data-backtest API deletes completed backtest runs', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-api-delete-run-'));
+  let server = null;
+  try {
+    const config = testServerConfig({
+      lakeRoot: path.join(dir, 'lake'),
+      stateDbPath: path.join(dir, 'state.db'),
+    });
+    const db = openStateDatabase(config.stateDbPath);
+    const authService = createTestAuthService(db);
+    try {
+      server = createApiServer({ config, db, authService });
+      await new Promise((resolve) => server.listen(0, resolve));
+      const baseUrl = `http://127.0.0.1:${server.address().port}`;
+      const run = createRunningBacktestRun(db, {
+        request: {
+          strategy: 'edge-sniper-v2',
+          underlying: 'BTC',
+          interval: '5m',
+          bookDepth: 25,
+          from: '2026-05-31T00:00:00.000Z',
+          to: '2026-05-31T00:05:00.000Z',
+          batchSize: 5000,
+          params: {},
+        },
+        totalTicks: 100,
+      });
+
+      // Tentativa de deletar um run rodando (deve falhar com 400)
+      const failRes = await fetch(`${baseUrl}/api/backtest/runs/${run.id}`, { method: 'DELETE' });
+      assert.equal(failRes.status, 400);
+      const failBody = await failRes.json();
+      assert.equal(failBody.error.code, 'DELETE_FAILED');
+
+      // Atualiza o status para completado
+      db.prepare("UPDATE backtest_runs SET status = 'completed' WHERE id = ?").run(run.id);
+
+      // Tenta deletar agora
+      const successRes = await fetch(`${baseUrl}/api/backtest/runs/${run.id}`, { method: 'DELETE' });
+      assert.equal(successRes.status, 200);
+      const successBody = await successRes.json();
+      assert.equal(successBody.deleted, true);
+
+      // Tenta buscar o run deletado (deve retornar 404)
+      const getRes = await fetch(`${baseUrl}/api/backtest/runs/${run.id}`);
+      assert.equal(getRes.status, 404);
+    } finally {
+      if (server) await new Promise((resolve) => server.close(resolve));
+      closeStateDatabase(db);
+    }
+  } finally {
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
+  }
+});
+
