@@ -4,7 +4,7 @@ import { renderSettingsTabs } from './settingsTabs.js';
 
 const cacheStyles = `
   .cache-page {
-    margin-top: 18px;
+    margin-top: 20px;
   }
 
   .cache-hint {
@@ -17,54 +17,70 @@ const cacheStyles = `
   .cache-group-list {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    margin-top: 12px;
+    gap: 8px;
+    margin-top: 16px;
   }
 
   .cache-group-row {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     gap: 12px;
     color: var(--text-2);
-    font-size: 11.5px;
-    padding: 8px 10px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.02);
+    font-size: 12.5px;
+    padding: 10px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: var(--radius-sm);
+    background: rgba(13, 19, 32, 0.4);
+    transition: background-color 0.2s, border-color 0.2s;
+  }
+
+  .cache-group-row:hover {
+    background: rgba(13, 19, 32, 0.6);
+    border-color: rgba(255, 255, 255, 0.08);
   }
 
   .schedule-card__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 10px;
+    margin: 14px 0;
   }
 
   .schedule-stat {
-    padding: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.025);
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: var(--radius-sm);
+    background: rgba(13, 19, 32, 0.4);
+    transition: background-color 0.2s, border-color 0.2s;
+  }
+
+  .schedule-stat:hover {
+    background: rgba(13, 19, 32, 0.65);
+    border-color: rgba(255, 255, 255, 0.08);
   }
 
   .schedule-stat__label {
     display: block;
     color: var(--text-3);
-    font-size: 10px;
-    letter-spacing: 0.05em;
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
   }
 
   .schedule-stat__value {
-    color: var(--text-0);
-    font-size: 12px;
+    color: var(--text-1);
+    font-size: 12.5px;
+    font-weight: 600;
     font-family: var(--font-mono, monospace);
   }
 
   .schedule-card__actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 10px;
   }
 `;
 

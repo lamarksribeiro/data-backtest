@@ -7,10 +7,10 @@ import { renderSettingsTabs } from './settingsTabs.js';
 const settingsStyles = `
   .settings-grid {
     display: grid;
-    grid-template-columns: minmax(300px, 420px) 1fr;
-    gap: 24px;
+    grid-template-columns: minmax(320px, 450px) 1fr;
+    gap: 28px;
     align-items: start;
-    margin-top: 18px;
+    margin-top: 20px;
   }
 
   @media (max-width: 1050px) {
@@ -20,7 +20,8 @@ const settingsStyles = `
   .settings-form {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
+    margin-top: 8px;
   }
 
   .settings-form label.field {
@@ -34,8 +35,8 @@ const settingsStyles = `
 
   .settings-form__row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+    gap: 14px;
   }
 
   @media (max-width: 768px) {
@@ -52,20 +53,34 @@ const settingsStyles = `
   .schedule-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
   }
 
   .schedule-card {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    padding: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    gap: 16px;
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: var(--radius);
-    background: linear-gradient(180deg, rgba(30, 41, 59, 0.54), rgba(15, 23, 42, 0.42));
+    background: linear-gradient(180deg, rgba(22, 28, 45, 0.45) 0%, rgba(13, 19, 32, 0.6) 100%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .schedule-card.is-disabled { opacity: 0.62; }
+  .schedule-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(249, 115, 22, 0.25);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  }
+
+  .schedule-card.is-disabled {
+    opacity: 0.55;
+  }
 
   .schedule-card__head {
     display: flex;
@@ -76,48 +91,60 @@ const settingsStyles = `
 
   .schedule-card__title {
     margin: 0;
-    font-size: 15px;
+    font-size: 16px;
+    font-weight: 700;
     color: var(--text-0);
+    letter-spacing: -0.01em;
   }
 
   .schedule-card__meta {
-    margin: 5px 0 0;
-    color: var(--text-2);
+    margin: 6px 0 0;
+    color: var(--text-3);
     font-size: 12px;
+    font-weight: 500;
   }
 
   .schedule-card__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 10px;
   }
 
   .schedule-stat {
-    padding: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.025);
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: var(--radius-sm);
+    background: rgba(13, 19, 32, 0.4);
+    transition: background-color 0.2s, border-color 0.2s;
+  }
+
+  .schedule-stat:hover {
+    background: rgba(13, 19, 32, 0.65);
+    border-color: rgba(255, 255, 255, 0.08);
   }
 
   .schedule-stat__label {
     display: block;
     color: var(--text-3);
-    font-size: 10px;
-    letter-spacing: 0.05em;
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
   }
 
   .schedule-stat__value {
-    color: var(--text-0);
-    font-size: 12px;
+    color: var(--text-1);
+    font-size: 12.5px;
+    font-weight: 600;
     font-family: var(--font-mono, monospace);
   }
 
   .schedule-card__actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 10px;
+    margin-top: 4px;
   }
 
   @media (max-width: 480px) {
@@ -134,20 +161,34 @@ const settingsStyles = `
   .schedule-run-list {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    padding-top: 10px;
+    gap: 8px;
+    padding-top: 12px;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
   }
 
   .schedule-run {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     gap: 12px;
     color: var(--text-2);
     font-size: 11.5px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: background-color 0.15s ease;
   }
 
-  .schedule-run code { color: var(--text-0); }
+  .schedule-run:hover {
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .schedule-run code {
+    color: var(--text-0);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: var(--font-mono, monospace);
+  }
 `;
 
 export async function renderSettings(ctx) {
@@ -242,8 +283,9 @@ function renderScheduleForm(ctx, fieldOptions, formCtx) {
       ]),
     ]),
     el('label', { class: 'field' }, ['Intervalo em horas ', el('input', { class: 'field__input', type: 'number', min: '1', max: '168', name: 'every_hours', value: '24' })]),
-    el('label', { class: 'field field--checkbox' }, [
-      el('input', { type: 'checkbox', name: 'enabled', value: '1', checked: true }),
+    el('label', { class: 'switch-field' }, [
+      el('input', { type: 'checkbox', name: 'enabled', value: '1', class: 'switch-field__input', checked: true }),
+      el('span', { class: 'switch-field__slider' }),
       ' Ativar após criar',
     ]),
     el('p', { class: 'settings-hint' }, 'O agendamento nunca tenta preparar o dia corrente. Se hoje é dia 13 UTC, o limite automático é dia 12.'),

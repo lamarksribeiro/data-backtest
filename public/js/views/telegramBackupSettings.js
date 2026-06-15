@@ -3,19 +3,120 @@ import { confirmDialog } from '../utils/confirm.js';
 import { renderSettingsTabs } from './settingsTabs.js';
 
 const backupStyles = `
-  .backup-page { margin-top: 18px; }
-  .backup-hint { margin: 2px 0 0; color: var(--text-3); font-size: 11.5px; line-height: 1.45; }
-  .backup-form { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
-  .backup-form label.field { display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; color: var(--text-2); }
-  .backup-form__row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; }
-  .backup-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; background: rgba(255,255,255,0.02); }
-  .backup-toggle__label { color: var(--text-0); font-size: 12.5px; font-weight: 600; }
-  .backup-toggle__hint { color: var(--text-3); font-size: 11px; margin-top: 3px; }
-  .backup-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
-  .backup-runs { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
-  .backup-run-row { padding: 10px 12px; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; font-size: 11.5px; color: var(--text-2); }
-  .backup-advanced { margin-top: 8px; }
-  .backup-advanced summary { cursor: pointer; color: var(--text-2); font-size: 12px; font-weight: 600; }
+  .backup-page {
+    margin-top: 20px;
+  }
+
+  .backup-hint {
+    margin: 2px 0 0;
+    color: var(--text-3);
+    font-size: 11.5px;
+    line-height: 1.45;
+  }
+
+  .backup-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .backup-form label.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12.5px;
+    color: var(--text-2);
+  }
+
+  .backup-form__row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: 14px;
+  }
+
+  .backup-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: var(--radius-sm);
+    background: rgba(13, 19, 32, 0.35);
+    transition: background-color 0.2s, border-color 0.2s;
+  }
+
+  .backup-toggle:hover {
+    background: rgba(13, 19, 32, 0.55);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .backup-toggle__label {
+    color: var(--text-0);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .backup-toggle__hint {
+    color: var(--text-3);
+    font-size: 11.5px;
+    margin-top: 3px;
+    line-height: 1.4;
+  }
+
+  .backup-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .backup-runs {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .backup-run-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: var(--radius-sm);
+    font-size: 12.5px;
+    color: var(--text-2);
+    background: rgba(13, 19, 32, 0.35);
+    transition: background-color 0.2s, border-color 0.2s;
+  }
+
+  .backup-run-row:hover {
+    background: rgba(13, 19, 32, 0.55);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .backup-advanced {
+    margin-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 12px;
+  }
+
+  .backup-advanced summary {
+    cursor: pointer;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 600;
+    user-select: none;
+    outline: none;
+    transition: color 0.2s ease;
+  }
+
+  .backup-advanced summary:hover {
+    color: var(--accent-strong);
+  }
 `;
 
 export async function renderTelegramBackupSettings(ctx) {
@@ -136,12 +237,21 @@ function renderTelegramBackupPage(ctx, data, runs) {
           }, 'Restaurar'),
         ]),
         runs.length ? el('div', { class: 'backup-runs' }, [
-          el('h3', { style: { fontSize: '13px', margin: 0 } }, 'Histórico recente'),
-          ...runs.map((run) => el('div', { class: 'backup-run-row' }, [
-            el('strong', { style: { color: 'var(--text-0)' } }, run.id),
-            ` · ${run.status} · ${run.mode} · ${run.completed_at || run.created_at}`,
-            run.result?.stats ? ` · up=${run.result.stats.uploaded} skip=${run.result.stats.skipped}` : '',
-          ])),
+          el('h3', { style: { fontSize: '13px', margin: '8px 0 4px 0' } }, 'Histórico recente'),
+          ...runs.map((run) => {
+            let statusClass = 'idle';
+            if (run.status === 'completed') statusClass = 'ok';
+            else if (run.status === 'failed') statusClass = 'err';
+            
+            return el('div', { class: 'backup-run-row' }, [
+              el('div', { style: { display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' } }, [
+                el('code', { style: { color: 'var(--text-0)', padding: '2px 6px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', fontFamily: 'var(--font-mono)' } }, run.id),
+                el('span', { class: 'muted' }, `· ${run.mode} · ${formatDateTime(run.completed_at || run.created_at)}`),
+                run.result?.stats ? el('span', { class: 'muted', style: { fontSize: '11px', opacity: 0.8 } }, `(enviados: ${run.result.stats.uploaded}, pulados: ${run.result.stats.skipped})`) : null,
+              ]),
+              el('span', { class: `badge badge--${statusClass} badge--compact` }, run.status),
+            ]);
+          }),
         ]) : null,
       ]),
     ]),
@@ -174,12 +284,17 @@ function behaviorToggles(formState) {
 }
 
 function toggleRow(label, hint, input) {
+  input.className = 'switch-field__input';
+  const slider = el('span', { class: 'switch-field__slider' });
   return el('div', { class: 'backup-toggle' }, [
-    el('div', {}, [
+    el('div', { style: { flex: 1 } }, [
       el('div', { class: 'backup-toggle__label' }, label),
       el('div', { class: 'backup-toggle__hint' }, hint),
     ]),
-    input,
+    el('label', { class: 'switch-field', style: { margin: 0 } }, [
+      input,
+      slider
+    ]),
   ]);
 }
 
@@ -292,4 +407,11 @@ async function openRestoreModal(ctx, lastRun) {
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function formatDateTime(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
 }
