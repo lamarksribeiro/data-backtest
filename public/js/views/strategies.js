@@ -54,6 +54,7 @@ const state = {
 };
 
 export async function renderStrategies(ctx, params = {}) {
+  const routeToken = ctx.getRouteToken?.() ?? 0;
   if (params.trash) {
     return renderTrashView(ctx);
   }
@@ -94,8 +95,16 @@ export async function renderStrategies(ctx, params = {}) {
   ]);
 
   const res = await ctx.api.get('/api/strategies?stats=1');
+  if ((ctx.getRouteToken?.() ?? routeToken) !== routeToken) return;
   if (!res.ok) {
-    mount(document.getElementById('strategies-root'), el('p', { class: 'bad' }, res.error?.message || 'Falha ao carregar estratégias'));
+    mount(document.getElementById('strategies-root'), el('div', { class: 'stack', style: { gap: '12px' } }, [
+      el('p', { class: 'bad' }, res.error?.message || 'Falha ao carregar estratégias'),
+      el('button', {
+        type: 'button',
+        class: 'btn btn--ghost btn--sm',
+        onclick: () => renderStrategies(ctx, params),
+      }, 'Tentar novamente'),
+    ]));
     return;
   }
   state.list = res.data.strategies || [];
