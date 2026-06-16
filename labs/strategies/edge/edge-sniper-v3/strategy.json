@@ -4,7 +4,7 @@
   "family": "edge",
   "status": "candidate",
   "kind": "gls",
-  "assets": ["BTC"],
+  "assets": ["BTC", "ETH"],
   "intervals": ["5m"],
   "requiresBook": true,
   "defaultBookDepth": 25,

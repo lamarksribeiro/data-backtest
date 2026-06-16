@@ -75,23 +75,23 @@ export function seedEdgeSniperV3Presets(db) {
         JSON.stringify(validation.params_schema || {}),
         JSON.stringify(validation),
         checksum,
-        versionNum === 1 ? 'v1 (Classic Champion - antiga v7)' : 'v2 (OBI Champion - antiga v10)'
+        preset.name || `v${versionNum}`
       );
       console.log(`Versão ${versionNum} para a estratégia Edge Sniper V3 semeada com sucesso no SQLite.`);
-    } else if (checksumSource(existingVersion.source_code) !== checksum) {
+    } else {
       db.prepare(`
         UPDATE strategy_versions
-        SET source_code = ?, params_schema_json = ?, validation_json = ?, checksum = ?,
-            notes = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') || ' - auto updated preset'
+        SET source_code = ?, params_schema_json = ?, validation_json = ?, checksum = ?, notes = ?
         WHERE id = ?
       `).run(
         sourceCode,
         JSON.stringify(validation.params_schema || {}),
         JSON.stringify(validation),
         checksum,
+        preset.name || existingVersion.notes,
         existingVersion.id
       );
-      console.log(`Versão ${versionNum} (ID ${existingVersion.id}) para Edge Sniper V3 atualizada com novo preset.`);
+      console.log(`Versão ${versionNum} (ID ${existingVersion.id}) para Edge Sniper V3 sincronizada no SQLite.`);
     }
   }
 }

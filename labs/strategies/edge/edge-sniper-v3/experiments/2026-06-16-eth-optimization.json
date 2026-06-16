@@ -1,0 +1,17 @@
+{
+  "name": "eth-optimization",
+  "strategyId": "edge-sniper-v3",
+  "strategyFamily": "edge",
+  "dataset": "backtest_ticks",
+  "underlying": "ETH",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-24",
+  "to": "2026-06-14",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "variantWorkers": 8,
+  "defaults": "../defaults.json",
+  "searchSpace": "../search-spaces/eth-optimization.json"
+}

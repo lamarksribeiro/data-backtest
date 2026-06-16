@@ -48,6 +48,7 @@ async function main() {
     dryRun: Boolean(flags['dry-run'] || flags.dryRun),
     from: flags.from,
     to: flags.to,
+    underlying: flags.underlying || flags.u || flags.asset || flags.a,
     dailyMetrics: Boolean(flags['daily-metrics'] || flags.dailyMetrics),
     bookDepth: flags['book-depth'] || flags.bookDepth,
     variantWorkers: flags['variant-workers'] || flags.variantWorkers,
