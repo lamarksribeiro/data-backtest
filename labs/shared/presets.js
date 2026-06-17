@@ -29,14 +29,22 @@ export function resolvePresetParams(preset, strategyRoot) {
   return { ...defaults, ...(preset.params || {}) };
 }
 
-export function listPresets({ strategyFamily = 'edge', strategyId = 'edge-sniper-v2', includeAliases = true } = {}) {
+export function listPresets({ strategyFamily = 'edge', strategyId = 'edge-sniper-v3', includeAliases = true } = {}) {
   const strategyRoot = resolveStrategyRoot(strategyFamily, strategyId);
   const presets = listPresetFiles(strategyRoot).map((file) => loadPresetFile(file));
-  return includeAliases ? withLabVariantAliases(presets) : presets;
+  const ordered = presets.sort((a, b) => {
+    const av = Number(a.studioVersion);
+    const bv = Number(b.studioVersion);
+    if (Number.isFinite(av) && Number.isFinite(bv) && av !== bv) return av - bv;
+    return String(a.id).localeCompare(String(b.id));
+  });
+  return includeAliases ? withLabVariantAliases(ordered) : ordered;
 }
 
-export function loadPreset(presetId, { strategyFamily = 'edge', strategyId = 'edge-sniper-v2' } = {}) {
-  const preset = listPresets({ strategyFamily, strategyId }).find((item) => item.id === presetId);
+export function loadPreset(presetId, { strategyFamily = 'edge', strategyId = 'edge-sniper-v3' } = {}) {
+  const presets = listPresets({ strategyFamily, strategyId });
+  const preset = presets.find((item) => item.id === presetId)
+    || presets.find((item) => item.legacyPresetId === presetId);
   if (!preset) throw new Error(`Unknown lab preset: ${presetId}`);
   const strategyRoot = resolveStrategyRoot(strategyFamily, strategyId);
   return {

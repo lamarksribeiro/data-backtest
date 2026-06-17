@@ -1,17 +1,23 @@
 {
-  "id": "v3",
-  "name": "v3 (ETH Champion v1)",
-  "studioSlug": "esv3-v3",
-  "studioName": "Edge Sniper V3 · v3",
+  "id": "btc-obi",
+  "legacyPresetId": "v2",
+  "underlying": "BTC",
+  "glsSource": "obi",
+  "studioVersion": 2,
+  "name": "BTC · OBI",
+  "studioSlug": "esv3-btc-obi",
+  "studioName": "Edge Sniper V3 · BTC · OBI",
   "role": "champion",
-  "description": "Preset otimizado para ETH com adaptação de escalas de distância e volatilidade absoluta (minDistanceAbs: 2.0, minDistanceNearExpiry: 1.0, minSigma: 0.25). Stop clássico de 0.10. Performance validada com PnL de +202.35 USDC e Profit Factor de 2.57.",
-  "tags": ["eth", "champion", "high-pf"],
-  "labVariantId": "v0224",
+  "description": "Perfil BTC com OBI no score (minEdge 0.07). Champion de profit factor na janela de validação.",
+  "tags": ["btc", "obi", "high-pf", "champion"],
+  "labVariantId": "obi-d50-strict",
   "labSummary": {
-    "totalPnl": 202.35,
-    "profitFactor": 2.57,
-    "entries": 46,
-    "source": "eth-optimization sweep v0224"
+    "totalPnl": 112.01,
+    "profitFactor": 2.15,
+    "positiveDays": 30,
+    "totalDays": 40,
+    "entries": 48,
+    "source": "v10-obi-opt-import 2026-06-14"
   },
   "params": {
     "walletSize": 100,
@@ -23,10 +29,10 @@
     "maxAsk": 0.58,
     "minEdge": 0.07,
     "minDirectionalProb": 0.56,
-    "minDistanceAbs": 2.0,
-    "minDistanceNearExpiry": 1.0,
+    "minDistanceAbs": 50,
+    "minDistanceNearExpiry": 50,
     "nearExpiryThresholdSec": 30,
-    "minSigma": 0.25,
+    "minSigma": 10,
     "sigmaMultiplier": 1,
     "distanceWeight": 2.0,
     "momentumWeight": 0.65,
@@ -38,7 +44,7 @@
     "maxSpread": 0.08,
     "entrySlippageMax": 0.02,
     "minLiquidityRatio": 0.75,
-    "stopBid": 0.10,
+    "stopBid": 0.18,
     "sizePriceAware": true,
     "sizePriceThreshold": 0.52,
     "sizePriceFactor": 0.5,
@@ -66,7 +72,7 @@
     "obiLevels": 5,
     "obiDriftFactor": 0.5,
     "driftHorizonSec": 20,
-    "useObiInScore": false,
-    "obiScoreWeight": 0.25
+    "useObiInScore": true,
+    "obiScoreWeight": 0.35
   }
 }

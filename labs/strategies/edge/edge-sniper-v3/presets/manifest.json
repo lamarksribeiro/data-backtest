@@ -1,9 +1,9 @@
 {
   "strategyId": "edge-sniper-v3",
-  "updatedAt": "2026-06-16",
+  "updatedAt": "2026-06-17",
   "presets": [
-    { "id": "v1", "role": "champion" },
-    { "id": "v2", "role": "champion" },
-    { "id": "v3", "role": "champion" }
+    { "id": "btc-classic", "underlying": "BTC", "glsSource": "classic", "studioVersion": 1, "role": "champion" },
+    { "id": "btc-obi", "underlying": "BTC", "glsSource": "obi", "studioVersion": 2, "role": "champion" },
+    { "id": "eth-obi", "underlying": "ETH", "glsSource": "obi", "studioVersion": 3, "role": "champion" }
   ]
 }

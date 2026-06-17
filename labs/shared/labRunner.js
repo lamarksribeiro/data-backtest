@@ -17,7 +17,7 @@ import { loadPreset } from './presets.js';
 export async function runLabPreset(presetId, options = {}) {
   const { preset, strategyRoot, params } = loadPreset(presetId, {
     strategyFamily: options.strategyFamily || 'edge',
-    strategyId: options.strategyId || 'edge-sniper-v2',
+    strategyId: options.strategyId || 'edge-sniper-v3',
   });
   const tempDir = mkdtempSync(path.join(os.tmpdir(), 'lab-preset-'));
   const experimentFile = path.join(tempDir, 'experiment.json');
@@ -27,7 +27,7 @@ export async function runLabPreset(presetId, options = {}) {
   }, null, 2)}\n`, 'utf8');
   const experiment = {
     name: `preset-${preset.id}`,
-    strategyId: options.strategyId || 'edge-sniper-v2',
+    strategyId: options.strategyId || 'edge-sniper-v3',
     strategyFamily: options.strategyFamily || 'edge',
     dataset: options.dataset || 'backtest_ticks',
     underlying: options.underlying || 'BTC',

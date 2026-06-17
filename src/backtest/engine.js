@@ -1,20 +1,12 @@
 import { DuckDbTickProvider } from './tickProvider.js';
 import { applyPolymarketFeesToBacktestResult } from './fees.js';
-import { createEdgeSniperBacktestRunner } from '../strategies/edgeSniperV2.js';
-import { createGlsBacktestRunner } from '../backtestStudio/gls/runtime.js';
 import { loadConfig } from '../config.js';
-import { analyzeStrategyColumns, analyzeStrategyParallelism } from '../backtestStudio/gls/compiler.js';
+import { analyzeStrategyParallelism } from '../backtestStudio/gls/compiler.js';
 import { runParallelEventSlices } from './eventPool.js';
 import { datasetCacheKey, getDatasetCache } from './datasetCache.js';
 import { createTickCursorView } from './columnStore.js';
 import { loadBacktestColumnSet } from '../query/columnChunkReader.js';
-
-const STRATEGIES = {
-  'edge-sniper-v2': createEdgeSniperBacktestRunner,
-  edgeSniperV2: createEdgeSniperBacktestRunner,
-  'edge-sniper-v3': createEdgeSniperBacktestRunner,
-  edgeSniperV3: createEdgeSniperBacktestRunner,
-};
+import { loadStrategy } from './strategyLoader.js';
 
 export function resolveBacktestDataset(request, columnAnalysis) {
   if (request.dataset) return request.dataset;
@@ -34,18 +26,17 @@ export function availabilityRequestForBacktest(request, columnAnalysis) {
 export async function runBacktest(db, request, { onProgress, progressStartedAt: progressStartedAtInput } = {}) {
   const config = loadConfig();
   const useSoA = config.backtestEngine === 'soa';
-  const createRunner = resolveRunnerFactory(request, config, useSoA);
-  if (!createRunner) throw new Error(`Unsupported strategy: ${request.strategy}`);
+  const strategyDetails = await loadStrategy(request, config);
   const timings = { startedAt: Date.now(), firstBatchAt: null, completedAt: null, duckdbReadMs: 0, processMs: 0, finishMs: 0 };
 
-  const columnAnalysis = request.columnAnalysis
-    ?? (request.glsAst ? analyzeStrategyColumns(request.glsAst, request.bookDepth ?? 25) : null);
+  const glsAst = request.glsAst ?? strategyDetails.glsAst ?? null;
+  const columnAnalysis = request.columnAnalysis ?? strategyDetails.columnAnalysis;
   const dataset = resolveBacktestDataset(request, columnAnalysis);
   const effectiveBookDepth = columnAnalysis?.needsBookLevels
-    ? (columnAnalysis.bookDepth || request.bookDepth)
+    ? (columnAnalysis.bookDepth || request.bookDepth || 25)
     : request.bookDepth;
 
-  const runner = createRunner(request.params ?? {}, {
+  const runner = strategyDetails.createRunner(request.params ?? {}, {
     fastRun: Boolean(request.fastRun),
     onEventFinalized: request.onEventFinalized,
     chartSeriesWriter: request.chartSeriesWriter,
@@ -62,6 +53,7 @@ export async function runBacktest(db, request, { onProgress, progressStartedAt: 
   if (useSoA) {
     ({ ticks, batches } = await runSoAEngine(db, request, {
       runner,
+      glsAst,
       dataset,
       columnAnalysis,
       effectiveBookDepth,
@@ -73,6 +65,7 @@ export async function runBacktest(db, request, { onProgress, progressStartedAt: 
   } else {
     ({ ticks, batches } = await runRowsEngine(db, request, {
       runner,
+      glsAst,
       dataset,
       columnAnalysis,
       effectiveBookDepth,
@@ -205,7 +198,7 @@ async function runSoAEngine(db, request, ctx) {
 
   const processStartedAt = Date.now();
   const workerCount = Number(request.backtestWorkers ?? ctx.config.backtestWorkers ?? 1);
-  const parallelism = request.glsAst ? analyzeStrategyParallelism(request.glsAst) : { parallelSafe: false };
+  const parallelism = ctx.glsAst ? analyzeStrategyParallelism(ctx.glsAst) : { parallelSafe: false };
   const canParallelize = useCompiledSoa
     && workerCount > 1
     && parallelism.parallelSafe
@@ -227,7 +220,7 @@ async function runSoAEngine(db, request, ctx) {
     if (canParallelize) {
       ctx.emitProgress({ phase: 'processing', ticks: 0, batches: 1, totalTicks: ticks, force: true });
       const slices = await runParallelEventSlices({
-        ast: request.glsAst,
+        ast: ctx.glsAst,
         params: request.params ?? {},
         columnSet,
         workerCount,
@@ -323,7 +316,7 @@ async function runRowsEngine(db, request, ctx) {
     from: request.from,
     to: request.to,
     batchSize: request.batchSize,
-    legacy: !request.glsAst,
+    legacy: !ctx.glsAst,
     dataset: ctx.dataset,
   })[Symbol.asyncIterator]();
 
@@ -446,18 +439,6 @@ function formatTimings(timings) {
   };
 }
 
-function resolveRunnerFactory(request, config, useSoA) {
-  if (request.glsAst) {
-    const executionMode = request.glsExecution
-      ?? (useSoA ? 'compiled-soa' : config.glsExecution);
-    return (params, options) => createGlsBacktestRunner(request.glsAst, params, {
-      ...options,
-      executionMode,
-    });
-  }
-  return STRATEGIES[request.strategy];
-}
-
 export function listStrategies() {
-  return Object.keys(STRATEGIES);
+  return [];
 }

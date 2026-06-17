@@ -7,9 +7,7 @@ import { recoverStalePrepareJobs } from './state/prepareJobs.js';
 import { recoverStaleAssetUpdateRuns } from './state/assetUpdateSchedules.js';
 import { createApiServer } from './api/server.js';
 import { createAuthService } from './auth/authService.js';
-import { seedEdgeSniperV2Strategy } from './backtestStudio/gls/seedStrategies.js';
-import { seedEdgeSniperV2Presets } from './backtestStudio/gls/seedEdgeSniperV2Presets.js';
-import { seedEdgeSniperV3Presets } from './backtestStudio/gls/seedEdgeSniperV3Presets.js';
+import { seedPromotedStrategies } from './backtestStudio/gls/seedPromotedStrategies.js';
 
 const config = loadConfig();
 if (!config.TEST_MODE && !config.SESSION_SECRET) {
@@ -25,9 +23,7 @@ if (recoveredJobs > 0) {
 if (recoveredAssetUpdateRuns > 0) {
   console.log(JSON.stringify({ ok: true, recoveredAssetUpdateRuns }));
 }
-seedEdgeSniperV2Strategy(db);
-seedEdgeSniperV2Presets(db);
-seedEdgeSniperV3Presets(db);
+seedPromotedStrategies(db);
 const authService = createAuthService({ db, config });
 if (!config.TEST_MODE) {
   const bootstrapped = await authService.bootstrapAdmin();

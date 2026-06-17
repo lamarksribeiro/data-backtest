@@ -14,5 +14,15 @@
   },
   "promotedToStudio": true,
   "studioSlug": "edge-sniper-v3-gls",
-  "notes": "Estratégia Edge Sniper V3: V1 clássico (edgeSniperV3_v1.gls) e V2 OBI (edgeSniperV3_v2.gls). O strategy.json aponta v2.gls como fonte do sweep; presets v1 devem usar v1.gls via run-preset ou source por versão. Janela de validação do champion: 2026-06-01..2026-06-12 (alinhar com Studio)."
+  "studio": {
+    "description": "Edge Sniper V3 com perfis versionados para BTC e ETH (params e toggles; o ativo é escolhido no backtest).",
+    "tags": ["edge-sniper-v3", "btc", "eth", "lab-strategy"],
+    "defaultVersion": 2,
+    "defaultGlsSource": "obi",
+    "glsSources": {
+      "classic": "src/backtestStudio/gls/strategies/edgeSniperV3_v1.gls",
+      "obi": "src/backtestStudio/gls/strategies/edgeSniperV3_v2.gls"
+    }
+  },
+  "notes": "Perfis no Studio: btc-classic (v1.gls), btc-obi e eth-obi (v2.gls). O ativo (BTC/ETH) é escolhido no backtest; versões carregam apenas params/toggles. Janela de validação: 2026-06-01..2026-06-12."
 }

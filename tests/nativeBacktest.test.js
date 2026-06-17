@@ -9,9 +9,14 @@ import { upsertManifestPartition } from '../src/state/manifest.js';
 import { toPortablePath } from '../src/lake/paths.js';
 import { writeBacktestTicksParquet } from '../src/sync/duckdbParquet.js';
 import { runBacktest } from '../src/backtest/engine.js';
+import { NATIVE_EDGE_SNIPER_PATH, NATIVE_EDGE_SNIPER_TICK_CONTEXT } from './testBacktestHelpers.js';
 
 test('native edge-sniper-v2 backtest runs from manifest backtest_ticks parquet', async () => {
+  const prevEngine = process.env.BACKTEST_ENGINE;
+  const prevLake = process.env.LAKE_ROOT;
+  process.env.BACKTEST_ENGINE = 'rows';
   const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-native-'));
+  process.env.LAKE_ROOT = path.join(dir, 'lake');
   try {
     const db = openStateDatabase(path.join(dir, 'state.db'));
     try {
@@ -34,7 +39,8 @@ test('native edge-sniper-v2 backtest runs from manifest backtest_ticks parquet',
       });
 
       const result = await runBacktest(db, {
-        strategy: 'edge-sniper-v2',
+        strategy: NATIVE_EDGE_SNIPER_PATH,
+        ...NATIVE_EDGE_SNIPER_TICK_CONTEXT,
         underlying: 'BTC',
         interval: '5m',
         bookDepth: 2,
@@ -55,6 +61,10 @@ test('native edge-sniper-v2 backtest runs from manifest backtest_ticks parquet',
       closeStateDatabase(db);
     }
   } finally {
+    if (prevEngine == null) delete process.env.BACKTEST_ENGINE;
+    else process.env.BACKTEST_ENGINE = prevEngine;
+    if (prevLake == null) delete process.env.LAKE_ROOT;
+    else process.env.LAKE_ROOT = prevLake;
     await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
   }
 });

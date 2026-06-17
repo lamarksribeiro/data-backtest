@@ -25,7 +25,7 @@ async function main() {
   const flags = parseArgs(process.argv.slice(2));
   const preset = flags.preset || flags.p;
 
-  const strategyId = flags.strategy || flags['strategy-id'] || 'edge-sniper-v2';
+  const strategyId = flags.strategy || flags['strategy-id'] || 'edge-sniper-v3';
 
   if (flags.list) {
     const presets = listPresets({ strategyId });

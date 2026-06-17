@@ -97,7 +97,7 @@ function buildRequest(ast, window, underlying, interval, bookDepth, options = {}
     interval,
     bookDepth,
     batchSize: 25_000,
-    strategy: 'gls:edge-sniper-v2',
+    strategy: 'gls:edge-sniper-v3',
     strategyLabel: ast.name,
     glsAst: ast,
     columnAnalysis,

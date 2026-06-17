@@ -101,7 +101,7 @@ async function main() {
       interval,
       bookDepth,
       batchSize,
-      strategy: 'gls:edge-sniper-v2',
+      strategy: 'gls:edge-sniper-v3',
       strategyLabel: ast.name,
       glsAst: ast,
       params: {},

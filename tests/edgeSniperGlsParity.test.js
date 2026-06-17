@@ -15,8 +15,9 @@ import { validate } from '../src/backtestStudio/gls/validator.js';
 import { createGlsRunnerFromSource } from '../src/backtestStudio/gls/runtime.js';
 import { compareEdgeSniperParity, compareGlsExecutionParity } from '../src/backtestStudio/gls/parity.js';
 import { getEdgeSniperV2GlsSource } from '../src/backtestStudio/gls/loadStrategySource.js';
-import { seedEdgeSniperV2Strategy } from '../src/backtestStudio/gls/seedStrategies.js';
+import { seedEdgeSniperV3Presets } from '../src/backtestStudio/gls/seedPromotedStrategies.js';
 import { createStrategyVersion, listStrategyVersions } from '../src/backtestStudio/state/strategies.js';
+import { NATIVE_EDGE_SNIPER_PATH, NATIVE_EDGE_SNIPER_TICK_CONTEXT } from './testBacktestHelpers.js';
 
 const RELAXED_PARAMS = {
   minDistanceAbs: 0,
@@ -286,14 +287,20 @@ test('edge-sniper GLS fast-run matches full-run on key scenarios', () => {
   }
 });
 
-test('seed edge-sniper-v2-gls strategy and run via lakehouse engine', async () => {
+test('seed edge-sniper-v3-gls strategy and run via lakehouse engine', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-gls-seed-'));
+  const prevLake = process.env.LAKE_ROOT;
+  const prevEngine = process.env.BACKTEST_ENGINE;
+  process.env.LAKE_ROOT = path.join(dir, 'lake');
+  process.env.BACKTEST_ENGINE = 'rows';
   try {
     const db = openStateDatabase(path.join(dir, 'state.db'));
     try {
-      const strategy = seedEdgeSniperV2Strategy(db);
-      const [version] = listStrategyVersions(db, strategy.id);
-      assert.equal(strategy.slug, 'edge-sniper-v2-gls');
+      const strategy = seedEdgeSniperV3Presets(db);
+      const versions = listStrategyVersions(db, strategy.id);
+      const version = versions.find((item) => item.version === 2) || versions[0];
+      assert.equal(strategy.slug, 'edge-sniper-v3-gls');
+      assert.equal(versions.length, 3);
 
       const parquetPath = path.join(dir, 'lake', 'backtest_ticks', 'part-test.parquet');
       await writeBacktestTicksParquet({
@@ -338,7 +345,8 @@ test('seed edge-sniper-v2-gls strategy and run via lakehouse engine', async () =
       });
 
       const native = await runBacktest(db, {
-        strategy: 'edge-sniper-v2',
+        strategy: NATIVE_EDGE_SNIPER_PATH,
+        ...NATIVE_EDGE_SNIPER_TICK_CONTEXT,
         underlying: 'BTC',
         interval: '5m',
         bookDepth: 2,
@@ -376,6 +384,10 @@ test('seed edge-sniper-v2-gls strategy and run via lakehouse engine', async () =
       closeStateDatabase(db);
     }
   } finally {
+    if (prevLake == null) delete process.env.LAKE_ROOT;
+    else process.env.LAKE_ROOT = prevLake;
+    if (prevEngine == null) delete process.env.BACKTEST_ENGINE;
+    else process.env.BACKTEST_ENGINE = prevEngine;
     await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
   }
 });
@@ -469,20 +481,20 @@ test('edge-sniper-v2-gls lakehouse fast-run matches full-run', async () => {
   }
 });
 
-test('seed edge-sniper-v2-gls creates a new version when embedded source changes', async () => {
+test('seed edge-sniper-v3-gls keeps three asset profiles on reseed', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-gls-seed-update-'));
   try {
     const db = openStateDatabase(path.join(dir, 'state.db'));
     try {
-      const strategy = seedEdgeSniperV2Strategy(db);
-      const [currentVersion] = listStrategyVersions(db, strategy.id);
-      createStrategyVersion(db, strategy.id, { source_code: currentVersion.source_code.replace('param maxOrderValue = 15', 'param maxOrderValue = 14') });
-
-      seedEdgeSniperV2Strategy(db);
+      const strategy = seedEdgeSniperV3Presets(db);
       const versions = listStrategyVersions(db, strategy.id);
       assert.equal(versions.length, 3);
-      assert.equal(versions[0].source_code, currentVersion.source_code);
-      assert.equal(versions[0].validation.ok, true);
+
+      seedEdgeSniperV3Presets(db);
+      const afterReseed = listStrategyVersions(db, strategy.id);
+      assert.equal(afterReseed.length, 3);
+      assert.equal(afterReseed.find((item) => item.version === 1).validation.ok, true);
+      assert.equal(afterReseed.find((item) => item.version === 3).notes, 'ETH · OBI');
     } finally {
       closeStateDatabase(db);
     }

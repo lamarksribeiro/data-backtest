@@ -12,6 +12,7 @@ import { toPortablePath } from '../src/lake/paths.js';
 import { writeBacktestTicksParquet } from '../src/sync/duckdbParquet.js';
 import { createBacktestRun } from '../src/state/backtestRuns.js';
 import { runBacktest } from '../src/backtest/engine.js';
+import { edgeSniperV3GlsAst, NATIVE_EDGE_SNIPER_PATH, NATIVE_EDGE_SNIPER_TICK_CONTEXT } from './testBacktestHelpers.js';
 import { listEventTraces } from '../src/backtestStudio/state/eventTraces.js';
 import {
   createStrategy,
@@ -26,7 +27,7 @@ import {
   updateStrategy,
   validateStrategySource,
 } from '../src/backtestStudio/state/strategies.js';
-import { seedEdgeSniperV2Strategy } from '../src/backtestStudio/gls/seedStrategies.js';
+import { seedEdgeSniperV3Presets } from '../src/backtestStudio/gls/seedPromotedStrategies.js';
 import { getStrategyStats } from '../src/backtestStudio/state/strategyStats.js';
 
 test('persistEventTraces normalizes native runner events', async () => {
@@ -109,15 +110,27 @@ test('backtest studio API exposes run detail, events and chart-data', async () =
         status: 'valid',
       });
 
-      const result = await runBacktest(db, {
-        strategy: 'edge-sniper-v2',
-        underlying: 'BTC',
-        interval: '5m',
-        bookDepth: 2,
-        from: '2026-05-31T00:00:00.000Z',
-        to: '2026-05-31T00:00:12.000Z',
-        batchSize: 5,
-      });
+      const prevEngine = process.env.BACKTEST_ENGINE;
+      const prevLake = process.env.LAKE_ROOT;
+      process.env.BACKTEST_ENGINE = 'rows';
+      process.env.LAKE_ROOT = path.join(dir, 'lake');
+      let result;
+      try {
+        result = await runBacktest(db, {
+          glsAst: edgeSniperV3GlsAst(),
+          underlying: 'BTC',
+          interval: '5m',
+          bookDepth: 2,
+          from: '2026-05-31T00:00:00.000Z',
+          to: '2026-05-31T00:00:12.000Z',
+          batchSize: 5,
+        });
+      } finally {
+        if (prevEngine == null) delete process.env.BACKTEST_ENGINE;
+        else process.env.BACKTEST_ENGINE = prevEngine;
+        if (prevLake == null) delete process.env.LAKE_ROOT;
+        else process.env.LAKE_ROOT = prevLake;
+      }
       const run = createBacktestRun(db, {
         request: { batchSize: 5, params: {} },
         result,
@@ -131,7 +144,7 @@ test('backtest studio API exposes run detail, events and chart-data', async () =
       assert.equal(detail.run.id, run.id);
       assert.ok(Array.isArray(detail.run.equity));
       const full = await getJson(`${baseUrl}/api/backtest/runs/${run.id}?full=1`);
-      assert.equal(full.run.result.strategy, 'EDGE_SNIPER_V2');
+      assert.equal(full.run.result.strategy, result.strategy);
 
       const events = await getJson(`${baseUrl}/api/backtest/runs/${run.id}/events`);
       assert.equal(events.events.length, 1);
@@ -433,32 +446,35 @@ test('trash restores strategy history and seed skips trashed slug', async () => 
   const dbPath = path.join(dir, 'state.db');
   const db = openStateDatabase(dbPath);
   try {
-    const strategy = seedEdgeSniperV2Strategy(db);
+    const strategy = seedEdgeSniperV3Presets(db);
     assert.ok(strategy);
+    const versionRow = db.prepare(`
+      SELECT id FROM strategy_versions WHERE strategy_id = ? ORDER BY version ASC LIMIT 1
+    `).get(strategy.id);
     db.prepare(`
       INSERT INTO backtest_runs (
         strategy, source, underlying, interval, from_ts, to_ts, batch_size,
         params_json, ticks, batches, summary_json, result_json,
         strategy_id, strategy_version_id, status
-      ) VALUES (?, 'lakehouse', 'btc', '5m', '2026-01-01', '2026-01-02', 1000, '{}', 0, 0, ?, '{}', ?, ?, 'completed')
-    `).run(`gls:${strategy.slug}`, JSON.stringify({ totalPnl: 12 }), strategy.id, strategy.latest_version_id);
+      ) VALUES (?, 'lakehouse', 'BTC', '5m', '2026-01-01', '2026-01-02', 1000, '{}', 0, 0, ?, '{}', ?, ?, 'completed')
+    `).run(`gls:${strategy.slug}`, JSON.stringify({ totalPnl: 12 }), strategy.id, versionRow.id);
 
     assert.equal(getStrategyStats(db, strategy.id).totals.runs, 1);
     trashStrategy(db, strategy.id);
     assert.equal(listStrategies(db).length, 0);
     assert.equal(listTrashedStrategies(db).length, 1);
-    assert.equal(seedEdgeSniperV2Strategy(db), null);
+    assert.equal(seedEdgeSniperV3Presets(db), null);
 
     const restored = restoreStrategy(db, strategy.id);
     assert.ok(restored);
     assert.equal(restored.deleted_at, null);
     assert.equal(getStrategyStats(db, strategy.id).totals.runs, 1);
-    assert.ok(seedEdgeSniperV2Strategy(db));
+    assert.ok(seedEdgeSniperV3Presets(db));
 
     trashStrategy(db, strategy.id);
     permanentlyDeleteStrategy(db, strategy.id);
     assert.equal(listTrashedStrategies(db).length, 0);
-    const reseeded = seedEdgeSniperV2Strategy(db);
+    const reseeded = seedEdgeSniperV3Presets(db);
     assert.ok(reseeded);
     assert.notEqual(reseeded.id, strategy.id);
     assert.equal(getStrategyStats(db, reseeded.id).totals.runs, 0);
