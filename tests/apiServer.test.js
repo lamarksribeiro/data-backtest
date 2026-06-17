@@ -42,6 +42,9 @@ test('data-backtest API exposes health, availability and prepare plan', async ()
       const health = await getJson(`${baseUrl}/healthz`);
       assert.equal(health.status, 'ok');
       assert.equal(health.manifest.by_status.valid, 1);
+      assert.equal(typeof health.lake_size_bytes, 'number');
+      assert.equal(typeof health.state_db_size_bytes, 'number');
+      assert.ok(health.state_db_size_bytes > 0);
 
       const page = await fetch(`${baseUrl}/`);
       assert.equal(page.status, 200);

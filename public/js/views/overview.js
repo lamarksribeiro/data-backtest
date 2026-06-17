@@ -1,6 +1,6 @@
 import { el, mount } from '../utils/dom.js';
 import { fetchHealthzCached } from '../utils/healthzCache.js';
-import { formatPnl } from '../utils/format.js';
+import { formatPnl, formatBytes, formatCount, formatCompactCount } from '../utils/format.js';
 import { renderUplotSparkline } from '../utils/uplotChart.js';
 
 // Injeção de estilo CSS premium para o Overview
@@ -333,14 +333,25 @@ export async function renderOverview(ctx) {
       ]);
     }
 
-    // Renderizar informações detalhadas de saúde
+    const manifest = health.manifest || {};
+    const runtime = health.runtime || {};
+    const cacheMb = runtime.dataset_cache?.used_mb;
+    const uptimeMeta = [
+      health.app_version ? `v${health.app_version}` : null,
+      runtime.rss_mb != null ? `RSS ${runtime.rss_mb} MB` : null,
+      cacheMb != null ? `cache ${cacheMb} MB` : null,
+    ].filter(Boolean).join(' · ');
+    const manifestMeta = manifest.partitions != null
+      ? `${formatCount(manifest.partitions)} partições · ${formatCompactCount(manifest.rows)} ticks`
+      : null;
+
     mount(document.getElementById('overview-health-detail'), [
       el('h2', { class: 'card__title' }, 'Diagnósticos e Logs'),
       el('div', { class: 'health-detail-grid', style: { marginTop: '12px' } }, [
-        detailRow('Diretório Lake', health.lake_root || '-'),
-        detailRow('Banco de Dados State', health.state_db_path || '-'),
-        detailRow('Lake Fingerprint', health.lake_fingerprint || '-'),
-        detailRow('Uptime', formatUptime(health.uptime_sec)),
+        detailRow('Diretório Lake', health.lake_root || '—', formatBytes(health.lake_size_bytes)),
+        detailRow('Banco de Dados State', health.state_db_path || '—', formatBytes(health.state_db_size_bytes)),
+        detailRow('Lake Fingerprint', health.lake_fingerprint || '—', manifestMeta),
+        detailRow('Uptime', formatUptime(health.uptime_sec), uptimeMeta || null),
       ]),
     ]);
 
@@ -508,9 +519,13 @@ function formatUptime(sec) {
   return `${h}h ${m % 60}m`;
 }
 
-function detailRow(label, value) {
+function detailRow(label, value, meta = null) {
+  const text = String(value ?? '—');
   return el('div', { class: 'detail-row' }, [
     el('span', { class: 'detail-row__label muted' }, label),
-    el('code', { class: 'detail-row__value' }, String(value)),
+    el('div', { class: 'detail-row__content' }, [
+      el('code', { class: 'detail-row__value', title: text }, text),
+      meta ? el('span', { class: 'detail-row__meta' }, String(meta)) : null,
+    ]),
   ]);
 }
