@@ -555,7 +555,7 @@ export async function renderStrategies(ctx, params = {}) {
   if (!strategyId) {
     ctx.setBreadcrumb('strategies', 'Biblioteca');
     mount(document.getElementById('strategies-root'), renderLibrary(ctx));
-    queueMicrotask(() => _renderLibrarySparklines());
+    requestAnimationFrame(() => _renderLibrarySparklines());
     return;
   }
 
@@ -777,12 +777,12 @@ function strategyCard(ctx, strategy) {
   ]);
 }
 
-// Render sparklines after cards mount
+// Render sparklines after cards mount (rAF garante largura do container após layout)
 export function _renderLibrarySparklines() {
   for (const strategy of state.libraryStats || []) {
     const spark = strategy.stats?.sparkline || strategy.sparkline || [];
     const container = document.getElementById(`spark-${strategy.id}`);
-    if (container && spark.length) renderUplotSparkline(container, spark);
+    if (container && spark.length) void renderUplotSparkline(container, spark);
   }
 }
 

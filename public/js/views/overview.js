@@ -387,12 +387,12 @@ export async function renderOverview(ctx) {
       ]);
 
       // Renderizar fisicamente as sparklines uPlot para cada estratégia listada
-      queueMicrotask(() => {
+      requestAnimationFrame(() => {
         for (const s of approvedSorted) {
           const spark = s.stats?.sparkline || s.sparkline || [];
           const container = document.getElementById(`spark-overview-${s.id}`);
           if (container && spark.length > 0) {
-            renderUplotSparkline(container, spark, { height: 36, width: 100 });
+            void renderUplotSparkline(container, spark, { height: 36, width: 100 });
           }
         }
       });

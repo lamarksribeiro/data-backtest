@@ -47,13 +47,21 @@ function sparklineLayout(height) {
   return { height: h, strokeWidth: 1.5, padding: [6, 4, 6, 4] };
 }
 
+function sparklineSeriesData(values) {
+  const ys = values.map((v) => Number(v) || 0);
+  // uPlot não desenha segmento com um único ponto (points desligados); duplicar para exibir linha.
+  if (ys.length === 1) {
+    return { xs: [0, 1], ys: [ys[0], ys[0]] };
+  }
+  return { xs: ys.map((_, i) => i), ys };
+}
+
 /** Mini sparkline: valores numéricos no eixo X (sem converter para data). */
 export async function renderUplotSparkline(container, values, opts = {}) {
   if (!container || !values?.length) return null;
   const uPlot = await loadUplot();
   container.innerHTML = '';
-  const xs = values.map((_, i) => i);
-  const ys = values.map((v) => Number(v) || 0);
+  const { xs, ys } = sparklineSeriesData(values);
   const layout = sparklineLayout(opts.height ?? (container.clientHeight || SPARKLINE_HEIGHT));
   const width = opts.width ?? (container.clientWidth || 200);
   const chart = new uPlot({
