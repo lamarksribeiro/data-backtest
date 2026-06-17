@@ -225,12 +225,6 @@ async function refreshSettings(ctx, fieldOptions, formCtx = loadContext()) {
 function renderSettingsPage(ctx, fieldOptions, formCtx, schedules, targetToDate, schedulerTimezone) {
   const timezoneLabel = formatSchedulerTimezoneLabel(schedulerTimezone);
   mount(ctx.contentEl, [
-    el('div', { class: 'page-header' }, [
-      el('div', {}, [
-        el('h1', {}, 'Configurações'),
-        el('p', { class: 'page-header__sub' }, 'Agendamentos automáticos para preparar Parquet no lakehouse — jobs de sync e rebuild.'),
-      ]),
-    ]),
     renderSettingsTabs('sync'),
     el('div', { class: 'settings-grid' }, [
       el('section', { class: 'card' }, [

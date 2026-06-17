@@ -77,10 +77,7 @@ export function renderRunContextBanner(run, { compact = false, showId = true, sh
   }
 
   const metaItems = [
-    el('span', { class: 'run-context-banner__meta-item' }, [
-      el('i', { class: 'fa-regular fa-calendar', 'aria-hidden': 'true' }),
-      period,
-    ]),
+    el('span', { class: 'run-context-banner__meta-item' }, period),
   ];
   if (run.ticks) {
     metaItems.push(el('span', { class: 'run-context-banner__meta-item' }, `${Number(run.ticks).toLocaleString('pt-BR')} ticks`));

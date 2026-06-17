@@ -5,7 +5,7 @@ const TAB_STYLES = `
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    margin: 20px 0;
+    margin: 12px 0 20px 0;
     padding: 5px;
     border-radius: 10px;
     background: rgba(13, 19, 32, 0.45);

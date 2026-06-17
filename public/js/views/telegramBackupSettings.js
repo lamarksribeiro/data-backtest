@@ -498,12 +498,6 @@ export async function renderTelegramBackupSettings(ctx) {
 
 function buildBackupLoadingShell() {
   return [
-    el('div', { class: 'page-header' }, [
-      el('div', {}, [
-        el('h1', {}, 'Configurações'),
-        el('p', { class: 'page-header__sub' }, 'Backup de backtest_ticks no Telegram — canal privado com catálogo recuperável.'),
-      ]),
-    ]),
     renderSettingsTabs('backup'),
     el('div', { class: 'backup-grid' }, [
       el('section', { class: 'card' }, el('p', { class: 'muted' }, 'Carregando…')),
@@ -560,17 +554,10 @@ function renderTelegramBackupPage(ctx, data, runs) {
   const progressSlot = el('div', { id: 'backup-progress-slot' });
 
   mount(ctx.contentEl, [
-    el('div', { class: 'page-header' }, [
-      el('div', {}, [
-        el('h1', {}, 'Configurações'),
-        el('p', { class: 'page-header__sub' }, 'Backup de backtest_ticks no Telegram — canal privado com catálogo recuperável.'),
-      ]),
-      el('span', { class: `badge badge--${statusBadge[0]}` }, statusBadge[1]),
-    ]),
     renderSettingsTabs('backup'),
     el('div', { class: 'backup-grid' }, [
       el('div', { class: 'backup-col backup-col--left' }, [
-        renderConnectionCard(formState, settings, ctx),
+        renderConnectionCard(formState, settings, ctx, statusBadge),
         renderBehaviorCard(formState, timezoneLabel),
       ]),
       el('div', { class: 'backup-col backup-col--right' }, [
@@ -596,7 +583,7 @@ function sectionHead(title, hint) {
   ]);
 }
 
-function renderConnectionCard(formState, settings, ctx) {
+function renderConnectionCard(formState, settings, ctx, statusBadge) {
   const enabledInput = el('input', { type: 'checkbox' });
   enabledInput.checked = formState.enabled;
   enabledInput.onchange = () => { formState.enabled = enabledInput.checked; };
@@ -608,7 +595,10 @@ function renderConnectionCard(formState, settings, ctx) {
   chatInput.oninput = () => { formState.chat_id = chatInput.value; };
 
   return el('section', { class: 'card' }, [
-    sectionHead('Conexão Telegram', 'Crie o bot no @BotFather, adicione-o ao canal privado e informe as credenciais.'),
+    el('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' } }, [
+      sectionHead('Conexão Telegram', 'Crie o bot no @BotFather, adicione-o ao canal privado e informe as credenciais.'),
+      el('span', { class: `badge badge--${statusBadge[0]}` }, statusBadge[1]),
+    ]),
     el('form', {
       class: 'backup-form',
       onsubmit: (event) => event.preventDefault(),

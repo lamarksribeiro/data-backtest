@@ -982,15 +982,8 @@ export async function renderData(ctx) {
 
   const fallbackCtx = loadContext();
   mount(ctx.contentEl, [
-    el('div', { class: 'page-header' }, [
-      el('div', {}, [
-        el('h1', {}, 'Dados'),
-        el('p', { class: 'page-header__sub' }, 'Cobertura do lakehouse, preparação e jobs em um só lugar.'),
-      ]),
-    ]),
-    
     // Grid de duas colunas
-    el('div', { class: 'data-dashboard-grid' }, [
+    el('div', { class: 'data-dashboard-grid', style: { marginTop: '12px' } }, [
       // Coluna lateral esquerda (Ações e Jobs)
       el('div', { class: 'data-sidebar-panel' }, [
         el('section', { class: 'card', id: 'data-jobs-section' }, el('p', { class: 'muted' }, 'Carregando jobs…')),

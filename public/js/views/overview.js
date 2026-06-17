@@ -180,14 +180,7 @@ export async function renderOverview(ctx) {
 
   // 1. Layout inicial de carregamento / skeleton
   mount(ctx.contentEl, [
-    el('div', { class: 'page-header' }, [
-      el('div', {}, [
-        el('h1', {}, 'Visão Geral'),
-        el('p', { class: 'page-header__sub' }, 'Saúde do sistema, distribuição de estratégias e desempenho geral do portfólio.'),
-      ]),
-      el('button', { class: 'btn btn--primary btn--sm', type: 'button', onclick: () => ctx.navigate('studio') }, 'Abrir Estúdio'),
-    ]),
-    el('div', { class: 'grid grid--4', id: 'overview-stats' }, [
+    el('div', { class: 'grid grid--4', id: 'overview-stats', style: { marginTop: '12px' } }, [
       el('div', { class: 'stat stat--idle stat-premium' }, [el('span', { class: 'stat__label' }, 'Carregando'), el('span', { class: 'stat__value' }, '…')]),
     ]),
     el('section', { class: 'card', id: 'overview-portfolio-card', style: { marginTop: '16px' } }, [

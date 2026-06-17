@@ -528,26 +528,7 @@ export async function renderStrategies(ctx, params = {}) {
   }
 
   mount(ctx.contentEl, [
-    el('div', { class: 'page-header' }, [
-      el('div', {}, [
-        el('h1', {}, 'Estratégias'),
-        el('p', { class: 'page-header__sub' }, 'Editor GLS, validação e parâmetros integrados.'),
-      ]),
-      el('div', { class: 'row' }, [
-        el('button', { class: 'btn btn--primary btn--sm', type: 'button', onclick: () => createStrategyFlow(ctx) }, 'Nova'),
-        el('button', {
-          class: 'btn btn--ghost btn--sm',
-          type: 'button',
-          title: 'Estratégias removidas da biblioteca',
-          onclick: () => ctx.navigate('strategies/trash'),
-        }, [
-          el('i', { class: 'fa-solid fa-trash-can', style: { marginRight: '6px' } }),
-          'Lixeira',
-        ]),
-        el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => renderStrategies(ctx) }, 'Recarregar'),
-      ]),
-    ]),
-    el('div', { class: 'editor-layout editor-layout--full-width', id: 'strategies-root' }, el('p', { class: 'muted' }, 'Carregando...')),
+    el('div', { class: 'editor-layout editor-layout--full-width', id: 'strategies-root', style: { marginTop: '12px' } }, el('p', { class: 'muted' }, 'Carregando...')),
   ]);
 
   const res = await ctx.api.get('/api/strategies?stats=1');
@@ -616,23 +597,44 @@ function renderLibrary(ctx) {
     }
   }
 
-  return el('div', { class: 'strategy-library' }, [
-    el('div', { class: 'strategy-library__toolbar' }, [
+  return el('div', { class: 'strategy-library', style: { marginTop: '12px' } }, [
+    el('div', { class: 'strategy-library__toolbar', style: { display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' } }, [
       el('input', {
         class: 'field__input search-field-library',
         placeholder: 'Buscar estratégias…',
         value: state.strategyQuery,
         oninput: (e) => { state.strategyQuery = e.target.value; updateKanbanCards(ctx); },
+        style: { flex: '1', minWidth: '200px' }
       }),
       el('select', {
         class: 'field__input sort-field-library',
         onchange: (e) => { state.librarySort = e.target.value; renderStrategies(ctx); },
+        style: { minWidth: '130px' }
       }, [
         el('option', { value: 'last_use', selected: state.librarySort === 'last_use' }, 'Último uso'),
         el('option', { value: 'best_pnl', selected: state.librarySort === 'best_pnl' }, 'Melhor PnL'),
         el('option', { value: 'win_rate', selected: state.librarySort === 'win_rate' }, 'Win rate'),
         el('option', { value: 'name', selected: state.librarySort === 'name' }, 'Nome'),
       ]),
+      el('div', { class: 'row', style: { marginLeft: 'auto', gap: '8px' } }, [
+        el('button', { class: 'btn btn--primary btn--sm', type: 'button', onclick: () => createStrategyFlow(ctx) }, [
+          el('i', { class: 'fa-solid fa-plus', style: { marginRight: '6px' } }),
+          'Nova'
+        ]),
+        el('button', {
+          class: 'btn btn--ghost btn--sm',
+          type: 'button',
+          title: 'Estratégias removidas da biblioteca',
+          onclick: () => ctx.navigate('strategies/trash'),
+        }, [
+          el('i', { class: 'fa-solid fa-trash-can', style: { marginRight: '6px' } }),
+          'Lixeira',
+        ]),
+        el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => renderStrategies(ctx) }, [
+          el('i', { class: 'fa-solid fa-rotate', style: { marginRight: '6px' } }),
+          'Recarregar'
+        ]),
+      ])
     ]),
     el('div', { class: 'strategy-kanban' }, Object.entries(columns).map(([statusKey, col]) => {
       return el('div', { class: `kanban-column kanban-column--${col.class}`, dataset: { status: statusKey } }, [
@@ -1600,21 +1602,23 @@ async function renderTrashView(ctx) {
   ctx.setBreadcrumb('strategies', 'Lixeira');
 
   mount(ctx.contentEl, [
-    el('div', { class: 'page-header' }, [
-      el('div', {}, [
-        el('h1', {}, 'Lixeira'),
-        el('p', { class: 'page-header__sub' }, 'Estratégias removidas da biblioteca. Restaure ou apague permanentemente.'),
+    el('div', { class: 'strategy-library__toolbar', style: { display: 'flex', alignItems: 'center', gap: '12px', marginTop: '12px', marginBottom: '16px' } }, [
+      el('button', {
+        class: 'btn btn--ghost btn--sm',
+        type: 'button',
+        onclick: () => ctx.navigate('strategies'),
+      }, [
+        el('i', { class: 'fa-solid fa-arrow-left', style: { marginRight: '6px' } }),
+        'Biblioteca',
       ]),
-      el('div', { class: 'row' }, [
-        el('button', {
-          class: 'btn btn--ghost btn--sm',
-          type: 'button',
-          onclick: () => ctx.navigate('strategies'),
-        }, [
-          el('i', { class: 'fa-solid fa-arrow-left', style: { marginRight: '6px' } }),
-          'Biblioteca',
-        ]),
-        el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => renderTrashView(ctx) }, 'Recarregar'),
+      el('button', {
+        class: 'btn btn--ghost btn--sm',
+        type: 'button',
+        onclick: () => renderTrashView(ctx),
+        style: { marginLeft: 'auto' }
+      }, [
+        el('i', { class: 'fa-solid fa-rotate', style: { marginRight: '6px' } }),
+        'Recarregar'
       ]),
     ]),
     el('div', { class: 'card trash-actions-card', id: 'strategies-trash-root' }, el('p', { class: 'muted' }, 'Carregando...')),

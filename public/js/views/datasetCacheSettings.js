@@ -116,12 +116,6 @@ function formatBytes(bytes) {
 function renderDatasetCachePage(ctx, cacheStats) {
   const groups = cacheStats?.groups || [];
   mount(ctx.contentEl, [
-    el('div', { class: 'page-header' }, [
-      el('div', {}, [
-        el('h1', {}, 'Configurações'),
-        el('p', { class: 'page-header__sub' }, 'Cache em disco gerado automaticamente no primeiro backtest de cada janela — use esta tela só para consultar uso e limpar.'),
-      ]),
-    ]),
     renderSettingsTabs('cache'),
     el('section', { class: 'card cache-page' }, [
       el('div', { class: 'card__header' }, [

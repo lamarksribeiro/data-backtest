@@ -5,7 +5,7 @@ import { formatPnl, shortId } from '../utils/format.js';
 import { loadStrategyOptions, renderStrategyPicker, backtestPayloadFromPick, resolveInitialStrategyPick, saveLastStrategyPick, getStrategyGroupFromPick, invalidateStrategyPickerCache } from '../utils/strategyPicker.js';
 import { MetricCard, Skeleton, StatusBadge } from '../components/Skeleton.js';
 import { renderRunMetricsPanel, renderTimingSection, resetMetricsViewMode } from '../components/runMetrics.js';
-import { formatRunAssetMeta, renderRunContextBanner } from '../components/runContext.js';
+import { formatRunAssetMeta, formatIntervalLabel, intervalBadgeClass, renderRunContextBanner } from '../components/runContext.js';
 import { renderNoEntryDiagnostic, partitionNoEntryEvents } from '../components/noEntryDiagnostic.js';
 import {
   renderEventOverview,
@@ -55,16 +55,16 @@ function humanizeReason(value) {
 
 function resolveEventResult(ev) {
   if (ev.expiration_result === 'WIN' || ev.result === 'win' || ev.reason === 'expiry_win') {
-    return { tone: 'ok', label: 'Acertou', icon: 'fa-check' };
+    return { tone: 'ok', label: 'Acertou' };
   }
   if (ev.expiration_result === 'LOSS' || ev.result === 'loss' || ev.reason === 'expiry_loss') {
-    return { tone: 'err', label: 'Errou', icon: 'fa-xmark' };
+    return { tone: 'err', label: 'Errou' };
   }
   if (ev.result === 'breakeven' || ev.reason === 'breakeven') {
-    return { tone: 'idle', label: 'Empate', icon: 'fa-minus' };
+    return { tone: 'idle', label: 'Empate' };
   }
   if (ev.result === 'no_entry' || ev.reason === 'no_entry') {
-    return { tone: 'idle', label: 'Sem entrada', icon: 'fa-ban' };
+    return { tone: 'idle', label: 'Sem entrada' };
   }
   const raw = ev.reason || ev.result || '';
   const label = humanizeReason(raw);
@@ -73,16 +73,13 @@ function resolveEventResult(ev) {
   if (lower.includes('stop') || lower.includes('loss') || lower.includes('err')) tone = 'err';
   else if (lower.includes('win') || lower.includes('profit')) tone = 'ok';
   else if (lower.includes('warn')) tone = 'warn';
-  return { tone, label, icon: 'fa-circle-dot' };
+  return { tone, label };
 }
 
 function renderEventResultBadge(ev) {
-  const { tone, label, icon } = resolveEventResult(ev);
+  const { tone, label } = resolveEventResult(ev);
   return el('span', { class: 'col-result' }, [
-    el('span', { class: `event-result-badge badge badge--compact badge--${tone}` }, [
-      el('i', { class: `fa-solid ${icon}`, 'aria-hidden': 'true' }),
-      label,
-    ]),
+    el('span', { class: `event-result-badge badge badge--compact badge--${tone}` }, label),
   ]);
 }
 
@@ -187,10 +184,8 @@ function renderSelectedEventContainerPlaceholder() {
   const container = document.getElementById('studio-selected-event-container');
   if (!container) return;
   mount(container, el('div', { class: 'card card--compact studio-event-placeholder' }, [
-    el('p', { class: 'muted text-center', style: { padding: '24px 0', margin: 0 } }, [
-      el('i', { class: 'fa-solid fa-circle-info', style: { marginRight: '8px', color: 'var(--accent)' } }),
-      'Selecione um evento na tabela de resultados abaixo para visualizar o gráfico de preços e a tradução textual de sua execução.'
-    ])
+    el('p', { class: 'muted text-center', style: { padding: '24px 0', margin: 0 } },
+      'Selecione um evento na tabela abaixo para ver o gráfico e os detalhes da execução.'),
   ]));
 }
 
@@ -210,12 +205,26 @@ const studioState = {
   filterQ: '',
   filterResult: 'all_with_entries',
   filterSort: 'default',
-  runFilters: { status: 'all', sort: 'newest', strategyOnly: true },
+  runFilters: {
+    status: 'all',
+    sort: 'newest',
+    strategyOnly: true,
+    versionId: 'all',
+    underlying: 'all',
+    interval: 'all',
+    pnl: 'all',
+    groupByVersion: false,
+  },
   strategyOptions: [],
   selectedStrategyPick: '',
   coverageUi: null,
   cancellingRunId: null,
+  configAdvancedOpen: false,
+  runFiltersAdvancedOpen: false,
 };
+
+let advancedPopoverDismissHandler = null;
+let activeAdvancedPopover = null;
 
 function debounce(fn, delay) {
   let timer = null;
@@ -373,14 +382,21 @@ function updateRunListProgress(runId, status, progress) {
   const item = document.getElementById(`run-item-${runId}`);
   const pnlEl = item?.querySelector('.studio-run-item__pnl');
   if (!pnlEl) return;
-  if (status === 'queued') pnlEl.textContent = progress?.depends_on_job ? 'Aguardando dados' : 'Fila';
-  else if (status === 'running') pnlEl.textContent = `Rodando (${Number(progress?.percent || 0).toFixed(0)}%)`;
+  if (status === 'queued') pnlEl.textContent = progress?.depends_on_job ? 'Aguardando' : 'Fila';
+  else if (status === 'running') pnlEl.textContent = `${Number(progress?.percent || 0).toFixed(0)}%`;
   else if (status === 'cancelled') pnlEl.textContent = 'Cancelado';
 }
 
 function showStudioEmptyMain(main) {
-  mount(main, el('div', { class: 'card' }, [
-    el('p', { class: 'muted' }, 'Selecione um run à direita ou rode um novo backtest (⌘↵).'),
+  mount(main, el('div', { class: 'studio-empty' }, [
+    el('h2', { class: 'studio-empty__title' }, 'Pronto para analisar'),
+    el('p', { class: 'studio-empty__text' }, 'Selecione um backtest no histórico à direita para ver métricas, curva de patrimônio e eventos — ou configure os parâmetros e rode um novo.'),
+    el('p', { class: 'studio-empty__hint muted' }, [
+      'Atalho: ',
+      el('kbd', { class: 'studio-kbd' }, '⌘'),
+      el('kbd', { class: 'studio-kbd' }, '↵'),
+      ' para rodar novo backtest',
+    ]),
   ]));
 }
 
@@ -522,6 +538,7 @@ export function leaveStudio() {
   studioState.events = [];
   studioState.eventsOffset = 0;
   studioState.eventsHasMore = false;
+  closeAdvancedPopover({ silent: true });
   const drawer = document.getElementById('studio-drawer');
   if (drawer) {
     drawer.hidden = true;
@@ -550,7 +567,7 @@ export async function renderStudio(ctx) {
   studioState.selectedEventId = query.event;
   studioState.compareIds = query.compare;
 
-  mount(ctx.contentEl, el('div', { class: 'studio-container' }, [
+  mount(ctx.contentEl, el('div', { class: 'studio-container', style: { marginTop: '12px' } }, [
     el('div', { class: 'studio-mobile-tabs' }, [
       el('button', {
         class: 'studio-mobile-tab-btn',
@@ -623,47 +640,43 @@ export async function renderStudio(ctx) {
 function renderConfigPanel(ctx, { formCtx, fieldOptions }) {
   const wrap = document.getElementById('studio-config');
   if (!wrap) return;
-  mount(wrap, el('div', { class: 'card' }, [
-    el('h2', { class: 'card__title' }, 'Configurar'),
+  mount(wrap, el('div', { class: 'card studio-config-card' }, [
+    el('div', { class: 'card__header' }, [
+      el('div', {}, [
+        el('h2', { class: 'card__title' }, 'Configurar'),
+        el('p', { class: 'card__sub' }, 'Parâmetros do backtest'),
+      ]),
+    ]),
     el('form', { id: 'studio-form', class: 'studio-form' }, [
-      el('div', { class: 'field studio-strategy-field' }, [
-        el('div', { id: 'studio-strategy-pick' }),
-      ]),
-      el('div', { class: 'row row--wrap', id: 'studio-coverage-indicator' }),
-      el('label', { class: 'field' }, [
-        el('span', { class: 'field__label' }, 'De'),
-        el('input', { type: 'date', name: 'from', value: formCtx.from, class: 'field__input', onchange: () => refreshCoverageIndicator(ctx, formFromDom()) }),
-      ]),
-      el('label', { class: 'field' }, [
-        el('span', { class: 'field__label' }, 'Até (incluso)'),
-        el('input', { type: 'date', name: 'to', value: formCtx.to, class: 'field__input', onchange: () => refreshCoverageIndicator(ctx, formFromDom()) }),
-      ]),
-      el('label', { class: 'field' }, [
-        el('span', { class: 'field__label' }, 'Ativo'),
-        selectField('underlying', fieldOptions.underlyings || [formCtx.underlying], formCtx.underlying),
-      ]),
-      el('label', { class: 'field' }, [
-        el('span', { class: 'field__label' }, 'Intervalo'),
-        selectField('interval', fieldOptions.intervals || [formCtx.interval], formCtx.interval),
-      ]),
-      el('label', { class: 'field' }, [
-        el('span', { class: 'field__label' }, 'Book'),
-        selectField('book_depth', fieldOptions.book_depths || [formCtx.book_depth], formCtx.book_depth),
-      ]),
-      el('label', { class: 'switch-field' }, [
-        el('input', { type: 'checkbox', name: 'fast_run', value: '1', class: 'switch-field__input' }),
-        el('span', { class: 'switch-field__slider' }),
-        ' Modo rápido',
-      ]),
-      el('details', { class: 'advanced-settings-details' }, [
-        el('summary', {}, 'Avançado'),
-        el('label', { class: 'field' }, [
-          'Batch size ',
-          el('input', { type: 'number', name: 'batch_size', min: '1', value: formCtx.batch_size || 5000, class: 'field__input' }),
+      el('div', { class: 'studio-form__scroll' }, [
+        el('div', { class: 'field' }, [
+          el('div', { id: 'studio-strategy-pick' }),
         ]),
+        el('label', { class: 'field' }, [
+          el('div', { class: 'field__label-row' }, [
+            el('span', { class: 'field__label' }, 'De'),
+            el('span', { id: 'studio-coverage-indicator', class: 'studio-coverage-slot' }),
+          ]),
+          el('input', { type: 'date', name: 'from', value: formCtx.from, class: 'field__input', onchange: () => refreshCoverageIndicator(ctx, formFromDom()) }),
+        ]),
+        el('label', { class: 'field' }, [
+          el('span', { class: 'field__label' }, 'Até (incluso)'),
+          el('input', { type: 'date', name: 'to', value: formCtx.to, class: 'field__input', onchange: () => refreshCoverageIndicator(ctx, formFromDom()) }),
+        ]),
+        el('label', { class: 'field' }, [
+          el('span', { class: 'field__label' }, 'Ativo'),
+          selectField('underlying', fieldOptions.underlyings || [formCtx.underlying], formCtx.underlying),
+        ]),
+        el('label', { class: 'field' }, [
+          el('span', { class: 'field__label' }, 'Intervalo'),
+          selectField('interval', fieldOptions.intervals || [formCtx.interval], formCtx.interval),
+        ]),
+        renderConfigAdvancedPopover(ctx, { formCtx, fieldOptions }),
       ]),
-      el('button', { class: 'btn btn--primary', type: 'submit' }, 'Rodar backtest'),
-      el('button', { class: 'btn btn--ghost', type: 'button', id: 'studio-fix-btn' }, 'Corrigir dados'),
+      el('div', { class: 'studio-form__actions' }, [
+        el('button', { class: 'btn btn--primary studio-run-btn', type: 'submit' }, 'Rodar backtest'),
+        el('button', { class: 'btn btn--ghost studio-fix-cta', type: 'button', id: 'studio-fix-btn' }, 'Corrigir dados'),
+      ]),
     ]),
   ]));
 
@@ -674,6 +687,10 @@ function renderConfigPanel(ctx, { formCtx, fieldOptions }) {
     runBacktest(ctx, ev.target);
   });
   document.getElementById('studio-fix-btn')?.addEventListener('click', () => fixDataFromStudio(ctx));
+
+  if (studioState.configAdvancedOpen) {
+    requestAnimationFrame(() => bindAdvancedPopoverDismiss('config'));
+  }
 }
 
 function mountStudioStrategyPicker(ctx) {
@@ -783,7 +800,11 @@ async function refreshCoverageIndicator(ctx, formCtx) {
   });
   const res = await ctx.api.get(`/api/data/coverage?${q}`);
   if (!res.ok) {
-    mount(elWrap, el('span', { class: 'badge badge--idle' }, 'Cobertura indisponível'));
+    mount(elWrap, renderCoverageStatus('idle', 'idle', {
+      icon: 'fa-circle-question',
+      label: '—',
+      title: 'Cobertura indisponível',
+    }));
     return;
   }
   const summary = res.data.coverage?.summary || {};
@@ -791,14 +812,35 @@ async function refreshCoverageIndicator(ctx, formCtx) {
   let state = 'ready';
   if (summary.attention > 0) state = 'attention';
   else if (summary.processing > 0) state = 'processing';
-  const labels = { ready: 'Dados prontos', processing: 'Sincronizando…', attention: 'Atenção nos dados' };
+  const tone = state === 'ready' ? 'ok' : (state === 'processing' ? 'warn' : 'err');
+  const meta = {
+    ready: { icon: 'fa-circle-check', label: 'Pronto', title: 'Dados prontos para o período' },
+    processing: { icon: 'fa-spinner fa-spin', label: 'Sync', title: 'Sincronizando dados do período' },
+    attention: { icon: 'fa-triangle-exclamation', label: 'Atenção', title: 'Há dias que precisam de correção' },
+    idle: { icon: 'fa-circle-question', label: '—', title: 'Cobertura indisponível' },
+  }[state];
   mount(elWrap, [
-    el('span', { class: `badge badge--${state === 'ready' ? 'ok' : 'warn'}` }, labels[state]),
-    state === 'attention' ? el('button', {
-      type: 'button',
-      class: 'btn btn--ghost btn--sm',
-      onclick: () => fixDataFromStudio(ctx),
-    }, 'Corrigir agora') : null,
+    renderCoverageStatus(state, tone, meta),
+    state === 'attention'
+      ? el('button', {
+        type: 'button',
+        class: 'studio-coverage-fix',
+        title: 'Corrigir dados do período',
+        'aria-label': 'Corrigir dados do período',
+        onclick: () => fixDataFromStudio(ctx),
+      }, el('i', { class: 'fa-solid fa-wrench', 'aria-hidden': 'true' }))
+      : null,
+  ]);
+}
+
+function renderCoverageStatus(state, tone, { icon, label, title }) {
+  return el('span', {
+    class: `studio-coverage-status studio-coverage-status--${tone}`,
+    title,
+    'aria-label': title,
+  }, [
+    el('i', { class: `fa-solid ${icon}`, 'aria-hidden': 'true' }),
+    el('span', { class: 'studio-coverage-status__label' }, label),
   ]);
 }
 
@@ -899,15 +941,180 @@ function computeRunStats(runs, strategyId) {
   return { total: filtered.length, totalPnl, bestPnl, winRate };
 }
 
+const RUN_STATUS_LABELS = {
+  all: 'Todos',
+  running: 'Rodando',
+  completed: 'Concluído',
+  failed_runtime: 'Falhou',
+  cancelled: 'Cancelado',
+  partial: 'Parcial',
+  queued: 'Na fila',
+};
+
+const RUN_SORT_LABELS = {
+  newest: 'Mais recentes',
+  best_pnl: 'Melhor PnL',
+  worst_pnl: 'Pior PnL',
+};
+
+const RUN_PNL_LABELS = {
+  all: 'Qualquer PnL',
+  positive: 'Lucrativos',
+  negative: 'Prejuízo',
+  zero: 'Zero',
+};
+
+function countAdvancedRunFilters() {
+  const f = studioState.runFilters;
+  let count = 0;
+  if (f.versionId !== 'all') count += 1;
+  if (!f.strategyOnly) count += 1;
+  if (f.underlying !== 'all') count += 1;
+  if (f.interval !== 'all') count += 1;
+  if (f.status !== 'all') count += 1;
+  if (f.pnl !== 'all') count += 1;
+  if (f.groupByVersion) count += 1;
+  return count;
+}
+
+function resetAdvancedRunFilters() {
+  studioState.runFilters.versionId = 'all';
+  studioState.runFilters.strategyOnly = true;
+  studioState.runFilters.underlying = 'all';
+  studioState.runFilters.interval = 'all';
+  studioState.runFilters.status = 'all';
+  studioState.runFilters.pnl = 'all';
+  studioState.runFilters.groupByVersion = false;
+}
+
+function renderActiveFilterChips() {
+  const f = studioState.runFilters;
+  const chips = [];
+  if (f.versionId !== 'all') {
+    const label = f.versionId === 'selected' ? 'Versão atual' : `Versão ${f.versionId}`;
+    chips.push(label);
+  }
+  if (!f.strategyOnly) chips.push('Todas estratégias');
+  if (f.underlying !== 'all') chips.push(f.underlying);
+  if (f.interval !== 'all') chips.push(formatIntervalLabel(f.interval));
+  if (f.status !== 'all') chips.push(RUN_STATUS_LABELS[f.status] || f.status);
+  if (f.pnl !== 'all') chips.push(RUN_PNL_LABELS[f.pnl] || f.pnl);
+  if (f.groupByVersion) chips.push('Agrupado');
+  if (!chips.length) return null;
+  return el('div', { class: 'studio-run-filters__chips' }, chips.map((label) => (
+    el('span', { class: 'studio-runs-chip' }, label)
+  )));
+}
+
+function selectedConfigVersionId() {
+  const [, , vid] = String(studioState.selectedStrategyPick || '').split(':');
+  const parsed = Number(vid);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function shortVersionNotes(notes) {
+  const text = String(notes || '').trim();
+  if (!text) return '';
+  return text.replace(/^Preset\s+v\d+:\s*/i, '').slice(0, 32);
+}
+
+function versionBadgeLabel(run) {
+  if (run.strategy_snapshot?.version != null) return `v${run.strategy_snapshot.version}`;
+  if (run.strategy_version_id) return `#${run.strategy_version_id}`;
+  return '—';
+}
+
+function versionFilterLabel(entry) {
+  if (entry.notes) {
+    const short = shortVersionNotes(entry.notes);
+    return short ? `v${entry.versionNum} · ${short}` : `v${entry.versionNum}`;
+  }
+  return `v${entry.versionNum}`;
+}
+
+function collectVersionFilterOptions(runs, strategyGroup) {
+  const options = [{ value: 'all', label: 'Todas versões' }];
+  const selectedVid = selectedConfigVersionId();
+  if (selectedVid) {
+    const current = strategyGroup?.versions?.find((v) => Number(v.versionId) === selectedVid);
+    options.push({
+      value: 'selected',
+      label: current?.versionNum != null ? `Versão atual (v${current.versionNum})` : 'Versão atual',
+    });
+  }
+
+  const versionMap = new Map();
+  if (strategyGroup) {
+    for (const version of strategyGroup.versions) {
+      versionMap.set(Number(version.versionId), {
+        versionId: Number(version.versionId),
+        versionNum: version.versionNum,
+        notes: version.notes,
+      });
+    }
+  }
+  for (const run of runs) {
+    if (!run.strategy_version_id) continue;
+    const vid = Number(run.strategy_version_id);
+    if (versionMap.has(vid)) continue;
+    versionMap.set(vid, {
+      versionId: vid,
+      versionNum: run.strategy_snapshot?.version ?? vid,
+      notes: run.strategy_snapshot?.notes ?? null,
+    });
+  }
+
+  const sorted = [...versionMap.values()].sort((a, b) => (b.versionNum ?? 0) - (a.versionNum ?? 0));
+  for (const entry of sorted) {
+    options.push({ value: String(entry.versionId), label: versionFilterLabel(entry) });
+  }
+  return options;
+}
+
+function collectRunFacetOptions(runs, key) {
+  const values = new Set();
+  for (const run of runs) {
+    const value = run[key];
+    if (value) values.add(String(value));
+  }
+  return [{ value: 'all', label: key === 'underlying' ? 'Todos ativos' : 'Todos intervalos' }, ...[...values].sort().map((value) => ({
+    value,
+    label: key === 'interval' ? formatIntervalLabel(value) : value,
+  }))];
+}
+
+function formatRunPeriodShort(from, to) {
+  const fmt = (iso) => {
+    if (!iso) return '?';
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return String(iso).slice(5, 10);
+    return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+  };
+  return `${fmt(from)} – ${fmt(to)}`;
+}
+
 function filterRuns(runs) {
   const pick = studioState.strategyOptions.find((o) => o.value === studioState.selectedStrategyPick);
+  const selectedVid = selectedConfigVersionId();
+  const f = studioState.runFilters;
+
   return runs.filter((run) => {
-    if (studioState.runFilters.strategyOnly && pick?.strategyId && Number(run.strategy_id) !== Number(pick.strategyId)) return false;
-    if (studioState.runFilters.status !== 'all' && (run.status || 'completed') !== studioState.runFilters.status) return false;
+    if (f.strategyOnly && pick?.strategyId && Number(run.strategy_id) !== Number(pick.strategyId)) return false;
+    if (f.status !== 'all' && (run.status || 'completed') !== f.status) return false;
+    if (f.underlying !== 'all' && run.underlying !== f.underlying) return false;
+    if (f.interval !== 'all' && run.interval !== f.interval) return false;
+    if (f.pnl === 'positive' && Number(run.summary?.totalPnl ?? 0) <= 0) return false;
+    if (f.pnl === 'negative' && Number(run.summary?.totalPnl ?? 0) >= 0) return false;
+    if (f.pnl === 'zero' && Number(run.summary?.totalPnl ?? 0) !== 0) return false;
+    if (f.versionId === 'selected') {
+      if (selectedVid && Number(run.strategy_version_id) !== selectedVid) return false;
+    } else if (f.versionId !== 'all' && Number(run.strategy_version_id) !== Number(f.versionId)) {
+      return false;
+    }
     return true;
   }).sort((a, b) => {
-    if (studioState.runFilters.sort === 'best_pnl') return Number(b.summary?.totalPnl ?? 0) - Number(a.summary?.totalPnl ?? 0);
-    if (studioState.runFilters.sort === 'worst_pnl') return Number(a.summary?.totalPnl ?? 0) - Number(b.summary?.totalPnl ?? 0);
+    if (f.sort === 'best_pnl') return Number(b.summary?.totalPnl ?? 0) - Number(a.summary?.totalPnl ?? 0);
+    if (f.sort === 'worst_pnl') return Number(a.summary?.totalPnl ?? 0) - Number(b.summary?.totalPnl ?? 0);
     return Number(b.id) - Number(a.id);
   });
 }
@@ -916,87 +1123,375 @@ function strategyName(run) {
   return run.strategy_snapshot?.name || run.strategy || '-';
 }
 
-function versionLabel(run) {
-  return run.strategy_snapshot?.version != null ? `v${run.strategy_snapshot.version}` : (run.strategy_version_id ? `#${run.strategy_version_id}` : '-');
-}
-
 async function refreshRuns(ctx) {
   const runs = await cachedFetch('runs:list', async () => {
-    const res = await ctx.api.get('/api/backtest/runs?limit=50');
+    const res = await ctx.api.get('/api/backtest/runs?limit=100');
     return res.ok ? res.data.runs : [];
   }, 15_000);
   studioState.runs = runs;
   const panel = document.getElementById('studio-runs');
   if (!panel) return;
 
-  const pick = studioState.strategyOptions.find((o) => o.value === studioState.selectedStrategyPick);
-  const stats = computeRunStats(runs, studioState.runFilters.strategyOnly ? pick?.strategyId : null);
+  const strategyGroup = getStrategyGroupFromPick(studioState.strategyOptions, studioState.selectedStrategyPick);
+  const stats = computeRunStats(runs, studioState.runFilters.strategyOnly ? strategyGroup?.strategyId : null);
+  const scopedRuns = studioState.runFilters.strategyOnly && strategyGroup?.strategyId
+    ? runs.filter((run) => Number(run.strategy_id) === Number(strategyGroup.strategyId))
+    : runs;
   const filtered = filterRuns(runs);
+  const versionOptions = collectVersionFilterOptions(scopedRuns, strategyGroup);
+  if (!versionOptions.some((opt) => opt.value === studioState.runFilters.versionId)) {
+    studioState.runFilters.versionId = 'all';
+  }
 
-  mount(panel, el('div', { class: 'card studio-runs-card' }, [
-    el('details', { class: 'studio-run-stats', open: false }, [
-      el('summary', { class: 'studio-run-stats__summary' }, [
-        el('span', {}, `${stats.total} runs`),
-        el('span', {}, formatPnl(stats.totalPnl)),
-        el('span', {}, `${stats.winRate}% WR`),
-        el('span', {}, `best ${formatPnl(stats.bestPnl)}`),
+  mount(panel, el('div', { class: 'studio-runs-card' }, [
+    el('header', { class: 'studio-runs-card__header' }, [
+      el('div', { class: 'studio-runs-card__top' }, [
+        el('h3', { class: 'studio-runs-card__title' }, 'Histórico'),
+        el('span', { class: 'studio-runs-card__count' }, `${filtered.length}${filtered.length !== runs.length ? ` / ${runs.length}` : ''}`),
+      ]),
+      el('div', { class: 'studio-runs-kpis' }, [
+        el('span', { class: 'studio-runs-kpi' }, [
+          el('strong', {}, String(stats.total)),
+          ' runs',
+        ]),
+        el('span', { class: 'studio-runs-kpi' }, [
+          el('strong', { class: stats.totalPnl >= 0 ? 'pnl-good' : 'pnl-bad' }, formatPnl(stats.totalPnl)),
+          ' PnL',
+        ]),
+        el('span', { class: 'studio-runs-kpi' }, [
+          el('strong', {}, `${stats.winRate}%`),
+          ' WR',
+        ]),
       ]),
     ]),
-    el('div', { class: 'studio-run-filters' }, [
-      filterSelect('Status', studioState.runFilters.status, ['all', 'running', 'completed', 'failed_runtime', 'cancelled'], (v) => {
-        studioState.runFilters.status = v;
-        refreshRuns(ctx);
-      }),
-      filterSelect('Ordem', studioState.runFilters.sort, ['newest', 'best_pnl', 'worst_pnl'], (v) => {
-        studioState.runFilters.sort = v;
-        refreshRuns(ctx);
-      }),
-      el('label', { class: 'switch-field' }, [
-        el('input', {
-          type: 'checkbox',
-          checked: studioState.runFilters.strategyOnly,
-          class: 'switch-field__input',
-          onchange: (e) => { studioState.runFilters.strategyOnly = e.target.checked; refreshRuns(ctx); },
-        }),
-        el('span', { class: 'switch-field__slider' }),
-        ' Só esta estratégia',
-      ]),
+    renderRunFiltersPanel(ctx, { versionOptions, scopedRuns }),
+    el('div', { class: 'studio-runs-scroll' }, [
+      filtered.length
+        ? renderRunList(filtered, ctx)
+        : el('p', { class: 'studio-run-list-empty muted' }, 'Nenhum run corresponde aos filtros.'),
     ]),
-    el('div', { class: 'studio-run-list' }, filtered.map((run) => runListItem(run, ctx))),
   ]));
+  if (studioState.runFiltersAdvancedOpen) {
+    requestAnimationFrame(() => bindAdvancedPopoverDismiss('runs'));
+  }
+}
+
+function unbindAdvancedPopoverDismiss() {
+  if (!advancedPopoverDismissHandler) return;
+  document.removeEventListener('click', advancedPopoverDismissHandler, true);
+  document.removeEventListener('keydown', advancedPopoverDismissHandler);
+  advancedPopoverDismissHandler = null;
+}
+
+function closeAdvancedPopover({ silent = false } = {}) {
+  const which = activeAdvancedPopover;
+  if (which === 'config') studioState.configAdvancedOpen = false;
+  if (which === 'runs') studioState.runFiltersAdvancedOpen = false;
+  activeAdvancedPopover = null;
+  unbindAdvancedPopoverDismiss();
+  document.querySelectorAll('.studio-advanced-popover.is-open').forEach((node) => node.classList.remove('is-open'));
+  document.querySelectorAll('.studio-advanced-trigger.is-active').forEach((node) => node.classList.remove('is-active'));
+  if (!silent && which) {
+    document.getElementById(`studio-${which}-advanced-trigger`)?.focus();
+  }
+}
+
+function toggleAdvancedPopover(which, ctx) {
+  const isOpen = which === 'config' ? studioState.configAdvancedOpen : studioState.runFiltersAdvancedOpen;
+  if (isOpen && activeAdvancedPopover === which) {
+    closeAdvancedPopover();
+    return;
+  }
+  closeAdvancedPopover({ silent: true });
+  activeAdvancedPopover = which;
+  if (which === 'config') studioState.configAdvancedOpen = true;
+  else studioState.runFiltersAdvancedOpen = true;
+  document.getElementById(`studio-${which}-advanced-popover`)?.classList.add('is-open');
+  document.getElementById(`studio-${which}-advanced-trigger`)?.classList.add('is-active');
+  bindAdvancedPopoverDismiss(which);
+}
+
+function bindAdvancedPopoverDismiss(which) {
+  unbindAdvancedPopoverDismiss();
+  activeAdvancedPopover = which;
+  advancedPopoverDismissHandler = (event) => {
+    if (!activeAdvancedPopover) return;
+    if (event.type === 'keydown') {
+      if (event.key !== 'Escape') return;
+      closeAdvancedPopover();
+      return;
+    }
+    const anchor = document.getElementById(`studio-${activeAdvancedPopover}-advanced-anchor`);
+    if (!anchor || anchor.contains(event.target)) return;
+    closeAdvancedPopover();
+  };
+  setTimeout(() => {
+    if (!activeAdvancedPopover) return;
+    document.addEventListener('click', advancedPopoverDismissHandler, true);
+    document.addEventListener('keydown', advancedPopoverDismissHandler);
+  }, 0);
+}
+
+function renderConfigAdvancedPopover(ctx, { formCtx, fieldOptions }) {
+  const open = studioState.configAdvancedOpen;
+  return el('div', { class: 'studio-advanced-anchor', id: 'studio-config-advanced-anchor' }, [
+    el('button', {
+      type: 'button',
+      id: 'studio-config-advanced-trigger',
+      class: `btn btn--ghost btn--sm studio-advanced-trigger${open ? ' is-active' : ''}`,
+      'aria-expanded': open ? 'true' : 'false',
+      'aria-controls': 'studio-config-advanced-popover',
+      onclick: (event) => {
+        event.stopPropagation();
+        toggleAdvancedPopover('config', ctx);
+      },
+    }, 'Avançado'),
+    el('div', {
+      id: 'studio-config-advanced-popover',
+      class: `studio-advanced-popover studio-advanced-popover--config${open ? ' is-open' : ''}`,
+      role: 'dialog',
+      'aria-label': 'Parâmetros avançados do backtest',
+      onclick: (event) => event.stopPropagation(),
+    }, [
+      el('div', { class: 'studio-advanced-popover__head' }, [
+        el('strong', {}, 'Avançado'),
+        el('button', {
+          type: 'button',
+          class: 'btn btn--ghost btn--sm',
+          onclick: () => closeAdvancedPopover(),
+        }, 'Fechar'),
+      ]),
+      el('div', { class: 'studio-advanced-popover__body studio-form studio-advanced-popover__body--compact' }, [
+        el('label', { class: 'field' }, [
+          el('span', { class: 'field__label' }, 'Book'),
+          selectField('book_depth', fieldOptions.book_depths || [formCtx.book_depth], formCtx.book_depth),
+        ]),
+        el('label', { class: 'switch-field' }, [
+          el('input', { type: 'checkbox', name: 'fast_run', value: '1', class: 'switch-field__input' }),
+          el('span', { class: 'switch-field__slider' }),
+          ' Modo rápido',
+        ]),
+        el('label', { class: 'field' }, [
+          el('span', { class: 'field__label' }, 'Batch size'),
+          el('input', { type: 'number', name: 'batch_size', min: '1', value: formCtx.batch_size || 5000, class: 'field__input' }),
+        ]),
+      ]),
+    ]),
+  ]);
+}
+
+function buildRunsAdvancedFilterFields(ctx, { versionOptions, underlyingOptions, intervalOptions, advancedCount }) {
+  const f = studioState.runFilters;
+  return [
+    filterSelect('Versão', f.versionId, versionOptions, (v) => {
+      studioState.runFilters.versionId = v;
+      refreshRuns(ctx);
+    }),
+    el('label', { class: 'field field--checkbox' }, [
+      el('input', {
+        type: 'checkbox',
+        checked: f.strategyOnly,
+        onchange: (e) => {
+          studioState.runFilters.strategyOnly = e.target.checked;
+          if (!e.target.checked) studioState.runFilters.groupByVersion = false;
+          refreshRuns(ctx);
+        },
+      }),
+      ' Só esta estratégia',
+    ]),
+    filterSelect('Ativo', f.underlying, underlyingOptions, (v) => {
+      studioState.runFilters.underlying = v;
+      refreshRuns(ctx);
+    }),
+    filterSelect('Intervalo', f.interval, intervalOptions, (v) => {
+      studioState.runFilters.interval = v;
+      refreshRuns(ctx);
+    }),
+    filterSelect('Status', f.status, [
+      { value: 'all', label: RUN_STATUS_LABELS.all },
+      { value: 'running', label: RUN_STATUS_LABELS.running },
+      { value: 'queued', label: RUN_STATUS_LABELS.queued },
+      { value: 'completed', label: RUN_STATUS_LABELS.completed },
+      { value: 'failed_runtime', label: RUN_STATUS_LABELS.failed_runtime },
+      { value: 'cancelled', label: RUN_STATUS_LABELS.cancelled },
+    ], (v) => {
+      studioState.runFilters.status = v;
+      refreshRuns(ctx);
+    }),
+    filterSelect('PnL', f.pnl, [
+      { value: 'all', label: RUN_PNL_LABELS.all },
+      { value: 'positive', label: RUN_PNL_LABELS.positive },
+      { value: 'negative', label: RUN_PNL_LABELS.negative },
+      { value: 'zero', label: RUN_PNL_LABELS.zero },
+    ], (v) => {
+      studioState.runFilters.pnl = v;
+      refreshRuns(ctx);
+    }),
+    el('label', { class: 'field field--checkbox' }, [
+      el('input', {
+        type: 'checkbox',
+        checked: f.groupByVersion,
+        disabled: !f.strategyOnly,
+        onchange: (e) => {
+          studioState.runFilters.groupByVersion = e.target.checked;
+          refreshRuns(ctx);
+        },
+      }),
+      ' Agrupar por versão',
+    ]),
+    advancedCount > 0
+      ? el('div', { class: 'studio-advanced-popover__footer' }, [
+        el('button', {
+          type: 'button',
+          class: 'btn btn--ghost btn--sm',
+          onclick: () => {
+            resetAdvancedRunFilters();
+            refreshRuns(ctx);
+          },
+        }, 'Limpar filtros'),
+      ])
+      : null,
+  ];
+}
+
+function renderRunsAdvancedPopover(ctx, { versionOptions, underlyingOptions, intervalOptions, advancedCount }) {
+  const open = studioState.runFiltersAdvancedOpen;
+  return el('div', { class: 'studio-advanced-anchor', id: 'studio-runs-advanced-anchor' }, [
+    el('button', {
+      type: 'button',
+      id: 'studio-runs-advanced-trigger',
+      class: `btn btn--ghost btn--sm studio-advanced-trigger${open ? ' is-active' : ''}${advancedCount > 0 ? ' has-filters' : ''}`,
+      'aria-expanded': open ? 'true' : 'false',
+      'aria-controls': 'studio-runs-advanced-popover',
+      onclick: (event) => {
+        event.stopPropagation();
+        toggleAdvancedPopover('runs', ctx);
+      },
+    }, advancedCount > 0 ? `Avançado · ${advancedCount}` : 'Avançado'),
+    el('div', {
+      id: 'studio-runs-advanced-popover',
+      class: `studio-advanced-popover studio-advanced-popover--runs${open ? ' is-open' : ''}`,
+      role: 'dialog',
+      'aria-label': 'Filtros avançados do histórico',
+      onclick: (event) => event.stopPropagation(),
+    }, [
+      el('div', { class: 'studio-advanced-popover__head' }, [
+        el('strong', {}, 'Filtros avançados'),
+        el('button', {
+          type: 'button',
+          class: 'btn btn--ghost btn--sm',
+          onclick: () => closeAdvancedPopover(),
+        }, 'Fechar'),
+      ]),
+      el('div', { class: 'studio-advanced-popover__body studio-form studio-advanced-popover__body--grid' },
+        buildRunsAdvancedFilterFields(ctx, { versionOptions, underlyingOptions, intervalOptions, advancedCount })),
+    ]),
+  ]);
+}
+
+function renderRunFiltersPanel(ctx, { versionOptions, scopedRuns }) {
+  const underlyingOptions = collectRunFacetOptions(scopedRuns, 'underlying');
+  const intervalOptions = collectRunFacetOptions(scopedRuns, 'interval');
+  const advancedCount = countAdvancedRunFilters();
+  const f = studioState.runFilters;
+
+  return el('section', { class: 'studio-runs-toolbar studio-form' }, [
+    filterSelect('Ordem', f.sort, [
+      { value: 'newest', label: RUN_SORT_LABELS.newest },
+      { value: 'best_pnl', label: RUN_SORT_LABELS.best_pnl },
+      { value: 'worst_pnl', label: RUN_SORT_LABELS.worst_pnl },
+    ], (v) => {
+      studioState.runFilters.sort = v;
+      refreshRuns(ctx);
+    }),
+    renderRunsAdvancedPopover(ctx, { versionOptions, underlyingOptions, intervalOptions, advancedCount }),
+    renderActiveFilterChips(),
+  ]);
+}
+
+function renderRunList(runs, ctx) {
+  if (!studioState.runFilters.groupByVersion) {
+    return el('div', { class: 'studio-run-list' }, runs.map((run) => runListItem(run, ctx)));
+  }
+
+  const groups = new Map();
+  for (const run of runs) {
+    const key = versionBadgeLabel(run);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(run);
+  }
+
+  const sortedGroups = [...groups.entries()].sort((left, right) => {
+    const leftNum = Number(String(left[0]).replace(/[^\d]/g, '')) || 0;
+    const rightNum = Number(String(right[0]).replace(/[^\d]/g, '')) || 0;
+    return rightNum - leftNum;
+  });
+
+  return el('div', { class: 'studio-run-list studio-run-list--grouped' }, sortedGroups.map(([label, groupRuns]) => el('section', { class: 'studio-run-group' }, [
+    el('div', { class: 'studio-run-group__head' }, [
+      el('span', { class: 'studio-run-group__version' }, label),
+      el('span', { class: 'studio-run-group__count muted' }, `${groupRuns.length} run${groupRuns.length === 1 ? '' : 's'}`),
+    ]),
+    el('div', { class: 'studio-run-group__items' }, groupRuns.map((run) => runListItem(run, ctx))),
+  ])));
 }
 
 function filterSelect(label, value, options, onChange) {
-  return el('label', { class: 'field field--inline' }, [
-    el('span', { class: 'muted' }, label),
+  const normalized = options.map((opt) => (
+    typeof opt === 'string' ? { value: opt, label: opt } : opt
+  ));
+  return el('label', { class: 'field' }, [
+    el('span', { class: 'field__label' }, label),
     el('select', {
-      class: 'field__input field__input--sm',
+      class: 'field__select',
       onchange: (e) => onChange(e.target.value),
-    }, options.map((opt) => el('option', { value: opt, selected: opt === value }, opt))),
+    }, normalized.map((opt) => el('option', { value: opt.value, selected: opt.value === value }, opt.label))),
   ]);
 }
 
 function runListItem(run, ctx) {
   const active = studioState.selectedRunId === run.id;
   const compareOn = studioState.compareIds.includes(run.id);
+  const pnlVal = Number(run.summary?.totalPnl ?? 0);
+  const pnlTone = run.status === 'completed' || run.status === 'partial'
+    ? (pnlVal > 0 ? 'good' : pnlVal < 0 ? 'bad' : 'idle')
+    : 'idle';
   let pnlText = formatPnl(run.summary?.totalPnl);
-  if (run.status === 'running') pnlText = `Rodando (${run.progress?.percent?.toFixed(0) || 0}%)`;
-  else if (run.status === 'queued') pnlText = run.progress?.depends_on_job ? 'Aguardando dados' : 'Fila';
+  if (run.status === 'running') pnlText = `${run.progress?.percent?.toFixed(0) || 0}%`;
+  else if (run.status === 'queued') pnlText = run.progress?.depends_on_job ? 'Aguardando' : 'Fila';
   else if (run.status === 'cancelled') pnlText = 'Cancelado';
+
+  const versionText = versionBadgeLabel(run);
+  const versionNotes = shortVersionNotes(run.strategy_snapshot?.notes);
+  const showStrategyName = !studioState.runFilters.strategyOnly;
+  const interval = run.interval || '—';
 
   return el('button', {
     type: 'button',
     id: `run-item-${run.id}`,
     class: `studio-run-item${active ? ' is-active' : ''}${compareOn ? ' is-compare' : ''}`,
+    title: `${strategyName(run)} ${versionText} · ${formatRunAssetMeta(run)} · ${formatRunPeriodShort(run.from, run.to)}`,
     onclick: (ev) => {
       if (ev.shiftKey) toggleCompare(run.id);
       else selectRun(ctx, run.id);
     },
   }, [
-    el('span', { class: 'studio-run-item__id' }, `#${run.id}`),
-    StatusBadge({ status: run.status }),
-    el('span', { class: 'studio-run-item__meta muted' }, `${formatRunAssetMeta(run)} · ${versionLabel(run)} · ${run.from?.slice(5, 10) || ''}–${run.to?.slice(5, 10) || ''}`),
-    el('span', { class: 'studio-run-item__pnl' }, pnlText),
+    el('div', { class: 'studio-run-item__accent' }),
+    el('div', { class: 'studio-run-item__body' }, [
+      el('div', { class: 'studio-run-item__row studio-run-item__row--head' }, [
+        el('span', { class: 'studio-run-item__version', title: versionNotes || versionText }, versionText),
+        el('span', { class: 'studio-run-item__id' }, `#${run.id}`),
+        StatusBadge({ status: run.status }),
+        el('span', { class: `studio-run-item__pnl pnl-${pnlTone}` }, pnlText),
+      ]),
+      el('div', { class: 'studio-run-item__row studio-run-item__row--meta' }, [
+        el('span', { class: 'studio-run-item__asset' }, run.underlying || '—'),
+        el('span', { class: `interval-badge interval-badge--sm ${intervalBadgeClass(interval)}` }, formatIntervalLabel(interval)),
+        showStrategyName
+          ? el('span', { class: 'studio-run-item__strategy muted' }, strategyName(run))
+          : el('span', { class: 'studio-run-item__period muted' }, formatRunPeriodShort(run.from, run.to)),
+      ]),
+    ]),
   ]);
 }
 
@@ -1053,15 +1548,27 @@ async function loadRunDetail(ctx, runId) {
   mount(main, el('div', { class: 'studio-result' }, [
     renderRunContextBanner(run),
     renderRunMetricsPanel(summary, { cardId: 'studio-metrics-card' }),
-    el('div', { class: 'studio-equity', id: 'studio-equity-chart' }),
+    el('div', { class: 'card card--compact studio-equity-card' }, [
+      el('div', { class: 'card__header' }, [
+        el('h2', { class: 'card__title' }, 'Curva de patrimônio'),
+      ]),
+      el('div', { class: 'studio-equity', id: 'studio-equity-chart', style: { padding: '16px 8px' } }),
+    ]),
     el('div', { id: 'studio-selected-event-container', class: 'studio-selected-event-container' }),
     renderNoEntryDiagnostic(summary, studioState.events),
-    el('div', { class: 'studio-tabs' }, [
-      el('button', { class: 'btn btn--ghost', type: 'button', onclick: () => showAnalysisTab(ctx, runId, run, summary) }, 'Análise'),
-      el('button', { class: 'btn btn--ghost is-active', type: 'button' }, 'Eventos'),
+    el('div', { class: 'card studio-events-card' }, [
+      el('div', { class: 'card__header' }, [
+        el('h2', { class: 'card__title' }, 'Eventos executados'),
+      ]),
+      el('div', { style: { padding: '0 20px 20px 20px' } }, [
+        el('div', { class: 'studio-tabs', style: { marginTop: '0', marginBottom: '12px' } }, [
+          el('button', { class: 'btn btn--ghost', type: 'button', onclick: () => showAnalysisTab(ctx, runId, run, summary) }, 'Análise'),
+          el('button', { class: 'btn btn--ghost is-active', type: 'button' }, 'Eventos'),
+        ]),
+        el('div', { class: 'studio-events-filter-bar', style: { marginTop: '0', marginBottom: '16px' } }, buildEventFilters(ctx, runId)),
+        el('div', { id: 'studio-events-table-container' }),
+      ]),
     ]),
-    el('div', { class: 'studio-events-filter-bar' }, buildEventFilters(ctx, runId)),
-    el('div', { id: 'studio-events-table-container' }),
   ]));
 
   if (run.equity?.length) {
@@ -1125,7 +1632,7 @@ function buildEventFilters(ctx, runId) {
         const params = new URLSearchParams({ format: 'csv', limit: '5000', q: studioState.filterQ, result: studioState.filterResult, sort: studioState.filterSort });
         window.open(`/api/backtest/runs/${runId}/events?${params}`, '_blank');
       },
-    }, [el('i', { class: 'fa-solid fa-file-arrow-down', 'aria-hidden': 'true' }), 'CSV']),
+    }, 'Exportar CSV'),
   ];
 }
 
@@ -1282,14 +1789,12 @@ function eventRow(ev, ctx, runId, index) {
   const isSelected = studioState.selectedEventId === ev.id;
   const pnlVal = Number(ev.final_pnl || 0);
   const pnlTone = pnlVal > 0 ? 'good' : pnlVal < 0 ? 'bad' : 'idle';
-  const result = resolveEventResult(ev);
-  const rowTone = result.tone === 'ok' ? 'win' : result.tone === 'err' ? 'loss' : '';
   const quantity = ev.quantity;
   const cost = ev.cost;
 
   return el('button', {
     type: 'button',
-    class: `studio-event-row${isSelected ? ' is-selected' : ''}${rowTone ? ` studio-event-row--${rowTone}` : ''}`,
+    class: `studio-event-row${isSelected ? ' is-selected' : ''}`,
     'data-event-id': String(ev.id),
     title: `${formatEventTime(ev.event_start)} · ${ev.condition_id || ''}`,
     onclick: () => selectEventAndRenderInline(ctx, runId, ev.id, index),
@@ -1340,10 +1845,10 @@ async function selectEventAndRenderInline(ctx, runId, eventId, index = 0, { sync
   if (chartData) enrichEventSummaryFromChart(event, chartData);
 
   const tabs = [
-    { id: 'chart', label: 'Gráfico', icon: 'fa-chart-line' },
-    { id: 'timeline', label: 'Linha do Tempo', icon: 'fa-clock-rotate-left' },
-    { id: 'diagnostics', label: 'Diagnóstico', icon: 'fa-circle-nodes' },
-    { id: 'logs', label: 'Tradução do Gráfico (Logs)', icon: 'fa-terminal' },
+    { id: 'chart', label: 'Gráfico' },
+    { id: 'timeline', label: 'Linha do tempo' },
+    { id: 'diagnostics', label: 'Diagnóstico' },
+    { id: 'logs', label: 'Logs' },
   ];
 
   function renderEventDetailContent() {
@@ -1370,7 +1875,7 @@ async function selectEventAndRenderInline(ctx, runId, eventId, index = 0, { sync
               const prevEvent = studioState.events[prevIndex];
               if (prevEvent) selectEventAndRenderInline(ctx, runId, prevEvent.id, prevIndex);
             }
-          }, [el('i', { class: 'fa-solid fa-arrow-left' }), ' Anterior']),
+          }, 'Anterior'),
           el('button', {
             type: 'button',
             class: 'btn btn--ghost btn--sm',
@@ -1380,7 +1885,7 @@ async function selectEventAndRenderInline(ctx, runId, eventId, index = 0, { sync
               const nextEvent = studioState.events[nextIndex];
               if (nextEvent) selectEventAndRenderInline(ctx, runId, nextEvent.id, nextIndex);
             }
-          }, ['Próximo ', el('i', { class: 'fa-solid fa-arrow-right' })]),
+          }, 'Próximo'),
           el('button', {
             type: 'button',
             class: 'btn btn--ghost btn--sm',
@@ -1390,7 +1895,7 @@ async function selectEventAndRenderInline(ctx, runId, eventId, index = 0, { sync
               renderSelectedEventContainerPlaceholder();
               document.querySelectorAll('.studio-event-row').forEach(r => r.classList.remove('is-selected'));
             }
-          }, [el('i', { class: 'fa-solid fa-xmark', style: { marginRight: '4px' } }), 'Limpar']),
+          }, 'Limpar'),
         ])
       ]),
       renderEventOverview(event),
@@ -1398,10 +1903,7 @@ async function selectEventAndRenderInline(ctx, runId, eventId, index = 0, { sync
         type: 'button',
         class: `drawer-tab-link${activeTab === t.id ? ' is-active' : ''}`,
         onclick: () => { studioState.activeEventTab = t.id; renderEventDetailContent(); },
-      }, [
-        el('i', { class: `fa-solid ${t.icon}`, style: { marginRight: '6px' } }),
-        t.label
-      ]))),
+      }, t.label))),
       el('div', { class: `drawer-tab-panel${activeTab === 'chart' ? ' is-active' : ''}` }, [
         el('div', { id: 'studio-event-chart', class: 'studio-event-chart' }),
       ]),

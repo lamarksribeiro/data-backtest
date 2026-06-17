@@ -280,12 +280,12 @@ export function renderStrategyPicker(options, selectedValue = '', onChange = nul
   ]);
 
   wrap.append(
-    el('div', { class: 'studio-strategy-picker__field' }, [
-      el('span', { class: 'studio-strategy-picker__label' }, 'Estratégia'),
+    el('label', { class: 'field' }, [
+      el('span', { class: 'field__label' }, 'Estratégia'),
       strategySelect,
     ]),
-    el('div', { class: 'studio-strategy-picker__field' }, [
-      el('span', { class: 'studio-strategy-picker__label' }, 'Versão'),
+    el('label', { class: 'field' }, [
+      el('span', { class: 'field__label' }, 'Versão'),
       versionWrap,
     ]),
     hidden,
