@@ -288,8 +288,8 @@ function renderRunTableRow(ctx, strategyId, run, versions) {
 }
 
 function renderHistoryFilterCount(shown, total) {
-  if (shown === total) return el('span', { class: 'strategy-history-count muted' }, `${total} item${total === 1 ? '' : 's'}`);
-  return el('span', { class: 'strategy-history-count muted' }, `${shown} de ${total}`);
+  if (shown === total) return el('span', { class: 'strategy-history-count' }, `${total} item${total === 1 ? '' : 's'}`);
+  return el('span', { class: 'strategy-history-count' }, `${shown} de ${total}`);
 }
 
 function renderStrategyHistoryTab(ctx, { strategy, strategyId, versions: initialVersions, strategyRuns: initialRuns, strategyStats: initialStats, switchTab }) {
@@ -301,8 +301,8 @@ function renderStrategyHistoryTab(ctx, { strategy, strategyId, versions: initial
   const summaryEl = el('div', { class: 'strategy-summary-host' });
   const versionsTbody = el('tbody', { id: 'strategy-versions-tbody' });
   const runsTbody = el('tbody', { id: 'strategy-runs-tbody' });
-  const versionsCountEl = el('span', { class: 'strategy-history-count muted' });
-  const runsCountEl = el('span', { class: 'strategy-history-count muted' });
+  const versionsCountEl = el('span', { class: 'strategy-history-count' });
+  const runsCountEl = el('span', { class: 'strategy-history-count' });
   const runsSectionTitleEl = el('h3', { class: 'card__title' }, 'Simulações');
 
   function updateRunsSectionTitle() {

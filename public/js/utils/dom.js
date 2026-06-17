@@ -90,7 +90,13 @@ export function enhanceResponsiveTables(root = document) {
   }
 }
 
+function shouldSkipTableEnhance(table) {
+  return table.classList.contains('strategy-history-table')
+    || table.dataset.tableEnhance === 'off';
+}
+
 function enhanceDataTable(table) {
+  if (shouldSkipTableEnhance(table)) return;
   if (table.dataset.controlsEnhanced === 'true') return;
   const headerRow = table.querySelector('thead tr');
   const tbody = table.querySelector('tbody');
