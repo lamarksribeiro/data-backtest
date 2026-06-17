@@ -238,3 +238,66 @@ test('card_chart keeps equity when comparable runs have identical pnl', async ()
 		await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
 	}
 });
+
+test('listStrategiesWithStats refreshes after completeBacktestRun invalidates cache', async () => {
+	const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-stats-cache-inv-'));
+	try {
+		const db = openStateDatabase(path.join(dir, 'state.db'));
+		try {
+			const strategy = createStrategy(db, { name: 'Cache', slug: 'cache' });
+			const version = createStrategyVersion(db, strategy.id, {
+				source_code: 'strategy "Cache" { onTick(tick, event) {} }',
+			});
+
+			const before = listStrategiesWithStats(db);
+			assert.equal(before.find((row) => row.id === strategy.id)?.totals.runs, 0);
+
+			const { createRunningBacktestRun, completeBacktestRun } = await import('../src/state/backtestRuns.js');
+			const request = {
+				strategy: 'cache',
+				underlying: 'BTC',
+				interval: '5m',
+				bookDepth: 25,
+				from: '2026-06-01T00:00:00.000Z',
+				to: '2026-06-02T00:00:00.000Z',
+				batchSize: 1000,
+				params: {},
+			};
+			const running = createRunningBacktestRun(db, {
+				request,
+				strategyMeta: { strategy_id: strategy.id, strategy_version_id: version.id },
+			});
+			const stale = listStrategiesWithStats(db);
+			assert.equal(stale.find((row) => row.id === strategy.id)?.totals.runs, 0);
+
+			completeBacktestRun(db, running.id, {
+				request,
+				strategyMeta: { strategy_id: strategy.id, strategy_version_id: version.id },
+				result: {
+					strategy: 'cache',
+					source: 'lakehouse',
+					underlying: 'BTC',
+					interval: '5m',
+					bookDepth: 25,
+					from: request.from,
+					to: request.to,
+					ticks: 1,
+					batches: 1,
+					summary: { totalPnl: 7.5, winRate: 0.55 },
+					equity: [{ ts: '2026-06-01T00:05:00.000Z', pnl: 7.5 }],
+					events: [],
+				},
+			});
+
+			const after = listStrategiesWithStats(db);
+			const row = after.find((item) => item.id === strategy.id);
+			assert.equal(row?.totals.runs, 1);
+			assert.equal(row?.card_chart.type, 'equity');
+			assert.deepEqual(row?.card_chart.values, [7.5]);
+		} finally {
+			closeStateDatabase(db);
+		}
+	} finally {
+		await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
+	}
+});

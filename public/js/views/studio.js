@@ -16,7 +16,7 @@ import {
 import { renderEventChartWithMarkers } from '../components/eventChartMarkers.js';
 import { connectSse, disconnectSse } from '../utils/sse.js';
 import { cacheInvalidate, cachedFetch } from '../utils/apiCache.js';
-import { notifyStudioCatalogChanged, registerStudioRefresh } from '../utils/studioCatalogSync.js';
+import { notifyStudioCatalogChanged, notifyRunDataChanged, registerStudioRefresh } from '../utils/studioCatalogSync.js';
 import { navigate as routerNavigate } from '../router.js';
 import { renderUplotLine } from '../utils/uplotChart.js';
 import { confirmDialog } from '../utils/confirm.js';
@@ -2062,13 +2062,11 @@ function bindSse(ctx) {
       updateRunListProgress(event.runId, 'running', event.progress);
     }
     if (event.type === 'run:cancelled') {
-      cacheInvalidate('runs');
-      refreshRuns(ctx);
+      notifyRunDataChanged();
       if (event.runId === studioState.selectedRunId) loadRunDetail(ctx, event.runId);
     }
     if (event.type === 'run:completed' || event.type === 'run:failed') {
-      cacheInvalidate('runs');
-      refreshRuns(ctx);
+      notifyRunDataChanged();
       if (event.runId === studioState.selectedRunId) loadRunDetail(ctx, event.runId);
     }
     if (event.type === 'job:completed') refreshCoverageIndicator(ctx, formFromDom());

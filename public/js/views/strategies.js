@@ -1,10 +1,10 @@
 import { el, mount, emptyState } from '../utils/dom.js';
 import { loadContext } from '../utils/context.js';
 import { backtestPayloadFromPick } from '../utils/strategyPicker.js';
-import { notifyStudioCatalogChanged } from '../utils/studioCatalogSync.js';
+import { notifyStudioCatalogChanged, notifyRunDataChanged, registerStrategiesRefresh } from '../utils/studioCatalogSync.js';
 import { promptDialog, confirmDialog } from '../utils/confirm.js';
 import { formatPnl } from '../utils/format.js';
-import { renderUplotSparkline } from '../utils/uplotChart.js';
+import { renderUplotSparkline, destroyChartsIn } from '../utils/uplotChart.js';
 
 const GLS_TEMPLATE_BODY = `{
   param minDistanceAbs = 50
@@ -85,6 +85,34 @@ const state = {
   historyPanelApi: null,
   historyFocusedVersionId: null,
 };
+
+let strategiesViewCtx = null;
+
+export function unregisterStrategiesView() {
+  strategiesViewCtx = null;
+  registerStrategiesRefresh(null);
+}
+
+function strategiesRouteParams() {
+  const path = location.hash.replace(/^#\/?/, '').split('?')[0];
+  const parts = path.split('/');
+  if (parts[0] !== 'strategies') return null;
+  if (parts[1] === 'trash') return { trash: true };
+  const params = {};
+  if (parts[1]) params.id = parts[1];
+  if (parts[2]) params.versionId = parts[2];
+  return params;
+}
+
+function registerStrategiesView(ctx) {
+  strategiesViewCtx = ctx;
+  registerStrategiesRefresh(async () => {
+    if (!strategiesViewCtx || !document.getElementById('strategies-root')) return;
+    const params = strategiesRouteParams();
+    if (!params) return;
+    await renderStrategies(strategiesViewCtx, params);
+  });
+}
 
 const DEFAULT_HISTORY_FILTERS = {
   versionQuery: '',
@@ -512,6 +540,7 @@ function renderVisualDiff(a, b) {
 
 export async function renderStrategies(ctx, params = {}) {
   const routeToken = ctx.getRouteToken?.() ?? 0;
+  registerStrategiesView(ctx);
   if (params.trash) {
     return renderTrashView(ctx);
   }
@@ -816,6 +845,7 @@ export function _renderLibrarySparklines() {
     const chart = cardChartForStrategy(strategy);
     const container = document.getElementById(`spark-${strategy.id}`);
     if (container && chart?.values?.length) {
+      destroyChartsIn(container);
       void renderUplotSparkline(container, chart.values, { stroke: cardChartStroke(chart) });
     }
   }
@@ -1945,6 +1975,6 @@ async function deleteRunFlow(ctx, strategyId, runId) {
     return;
   }
   ctx.toast.ok(`Simulação #${runId} excluída`);
-  notifyStudioCatalogChanged();
+  notifyRunDataChanged();
   await state.historyPanelApi?.refresh({ scrollSnap });
 }

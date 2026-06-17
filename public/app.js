@@ -7,7 +7,7 @@ import { startSidebarStatus } from './js/utils/sidebarStatus.js';
 import { renderOverview } from './js/views/overview.js';
 import { renderData } from './js/views/data.js';
 import { renderStudio, leaveStudio, redirectLegacyBacktestRoute } from './js/views/studio.js';
-import { renderStrategies } from './js/views/strategies.js';
+import { renderStrategies, unregisterStrategiesView } from './js/views/strategies.js';
 import { renderSettings } from './js/views/settings.js';
 import { renderDatasetCacheSettings } from './js/views/datasetCacheSettings.js';
 import { renderTelegramBackupSettings } from './js/views/telegramBackupSettings.js';
@@ -131,8 +131,10 @@ async function bootstrap() {
   startSidebarStatus(ctx);
   initRouter({
     onLeave(path) {
-      const top = String(path || '').split('?')[0].split('/')[0];
+      const routePath = String(path || '').split('?')[0];
+      const top = routePath.split('/')[0];
       if (top !== 'studio') leaveStudio();
+      if (top !== 'strategies') unregisterStrategiesView();
     },
     routes: {
       overview: () => renderOverview(ctx),

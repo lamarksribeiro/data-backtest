@@ -1,4 +1,5 @@
 import { persistEventTraces, mergeResultIntoEventTraces } from '../backtestStudio/state/eventTraces.js';
+import { invalidateStrategyStatsCache } from '../backtestStudio/state/strategyStats.js';
 import { downsamplePoints } from '../utils/downsample.js';
 
 export function createBacktestRun(db, { request, result, strategyMeta = null, status = 'completed', error = null, durationMs = null, startedAt = null }) {
@@ -57,6 +58,7 @@ export function createBacktestRun(db, { request, result, strategyMeta = null, st
       runId,
     );
     db.exec('COMMIT');
+    if (status === 'completed') invalidateStrategyStatsCache();
     return getBacktestRun(db, runId, { includeResult: false, includeEquity: false });
   } catch (err) {
     db.exec('ROLLBACK');
@@ -225,6 +227,7 @@ export function cancelBacktestRun(db, id, { error = 'Backtest cancelled by user'
         result_json = json_set(COALESCE(result_json, '{}'), '$.summary.cancelled', 1, '$.summary.error', ?)
     WHERE id = ? AND status IN ('running', 'queued')
   `).run(error, durationMs, error, error, id).changes;
+  if (changes) invalidateStrategyStatsCache();
   return changes ? getBacktestRun(db, id, { includeResult: false, includeEquity: false }) : null;
 }
 
@@ -294,6 +297,7 @@ function finishExistingBacktestRun(db, id, { request, result, strategyMeta = nul
       id,
     );
     db.exec('COMMIT');
+    invalidateStrategyStatsCache();
     return getBacktestRun(db, id, { includeResult: false, includeEquity: false });
   } catch (err) {
     db.exec('ROLLBACK');
@@ -502,6 +506,7 @@ export function deleteBacktestRun(db, id) {
     db.prepare('DELETE FROM backtest_event_traces WHERE run_id = ?').run(id);
     db.prepare('DELETE FROM backtest_runs WHERE id = ?').run(id);
     db.exec('COMMIT');
+    invalidateStrategyStatsCache();
   } catch (err) {
     db.exec('ROLLBACK');
     throw err;
