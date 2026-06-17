@@ -195,6 +195,17 @@ function initMobileNav() {
   });
 }
 
+function bindStudioNavPreserve() {
+  document.querySelectorAll('.navlink[data-route="studio"]').forEach((link) => {
+    link.addEventListener('click', (event) => {
+      const current = location.hash.replace(/^#\/?/, '');
+      if (!current.startsWith('studio?')) return;
+      event.preventDefault();
+      navigate(current);
+    });
+  });
+}
+
 function highlightNav(route) {
   if (route !== currentRoute) {
     previousRoute = currentRoute;
@@ -216,4 +227,5 @@ document.querySelectorAll('[data-action="logout"]').forEach((btn) => {
 });
 
 initMobileNav();
+bindStudioNavPreserve();
 bootstrap();

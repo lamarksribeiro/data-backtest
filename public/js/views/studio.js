@@ -240,11 +240,14 @@ let studioCtx = null;
 let openEventToken = 0;
 let progressPollTimer = null;
 let progressElapsedTimer = null;
+let progressPollGeneration = 0;
 let lastProgressSnapshot = null;
 let lastProgressRunId = null;
 let lastProgressReceivedAt = 0;
+let progressLifecycleBound = false;
 
 function clearProgressPoll() {
+  progressPollGeneration += 1;
   if (progressPollTimer) {
     clearInterval(progressPollTimer);
     progressPollTimer = null;
@@ -256,6 +259,25 @@ function clearProgressPoll() {
   lastProgressSnapshot = null;
   lastProgressRunId = null;
   lastProgressReceivedAt = 0;
+}
+
+function resumeProgressTracking(ctx = studioCtx) {
+  if (!ctx || !isStudioRouteActive()) return;
+  const runId = studioState.selectedRunId;
+  if (!runId || !document.getElementById('studio-progress-fill')) return;
+  if (!progressPollTimer) startProgressPoll(ctx, runId);
+  else void fetchRunProgressOnce(ctx, runId);
+}
+
+function bindProgressLifecycle() {
+  if (progressLifecycleBound) return;
+  progressLifecycleBound = true;
+  const onResume = () => {
+    if (document.visibilityState === 'visible') resumeProgressTracking();
+  };
+  document.addEventListener('visibilitychange', onResume);
+  window.addEventListener('pageshow', onResume);
+  window.addEventListener('focus', onResume);
 }
 
 function formatProgressPhase(phase, progress = null) {
@@ -466,26 +488,38 @@ async function cancelRunFromStudio(ctx, run) {
   }
 }
 
+async function fetchRunProgressOnce(ctx, runId, { generation = progressPollGeneration } = {}) {
+  if (generation !== progressPollGeneration) return false;
+  if (!isStudioRouteActive() || studioState.cancellingRunId === runId) return false;
+  if (studioState.selectedRunId !== runId) {
+    clearProgressPoll();
+    return false;
+  }
+  const res = await ctx.api.get(`/api/backtest/runs/${runId}?slim=1`);
+  if (generation !== progressPollGeneration) return false;
+  if (!res.ok) return false;
+  const run = res.data.run;
+  if (run.status !== 'running' && run.status !== 'queued') {
+    clearProgressPoll();
+    cacheInvalidate('runs');
+    await refreshRuns(ctx);
+    if (studioState.selectedRunId === runId) {
+      await loadRunDetail(ctx, runId);
+    }
+    return false;
+  }
+  if (run.progress) applyProgressUi(run.progress, { runId: run.id });
+  updateRunListProgress(runId, run.status, run.progress);
+  return true;
+}
+
 function startProgressPoll(ctx, runId) {
   clearProgressPoll();
-  const pollOnce = async () => {
-    if (studioState.cancellingRunId === runId) return;
-    if (studioState.selectedRunId !== runId) {
-      clearProgressPoll();
-      return;
-    }
-    const res = await ctx.api.get(`/api/backtest/runs/${runId}?slim=1`);
-    if (!res.ok) return;
-    const run = res.data.run;
-    if (run.status !== 'running' && run.status !== 'queued') {
-      clearProgressPoll();
-      cacheInvalidate('runs');
-      await refreshRuns(ctx);
-      await loadRunDetail(ctx, runId);
-      return;
-    }
-    if (run.progress) applyProgressUi(run.progress, { runId: run.id });
-    updateRunListProgress(runId, run.status, run.progress);
+  const generation = progressPollGeneration;
+  const pollOnce = () => {
+    if (generation !== progressPollGeneration) return;
+    if (!isStudioRouteActive()) return;
+    void fetchRunProgressOnce(ctx, runId, { generation });
   };
   pollOnce();
   // Poll complementa SSE (Cloudflare/buffer e runs rápidos podem perder eventos).
@@ -559,7 +593,9 @@ function switchMobileTab(tab) {
 }
 
 export async function renderStudio(ctx) {
+  const routeToken = ctx.getRouteToken?.() ?? 0;
   studioCtx = ctx;
+  bindProgressLifecycle();
   clearProgressPoll();
   ctx.setBreadcrumb('studio', 'Estúdio');
   ctx.renderContextBar?.();
@@ -627,11 +663,13 @@ export async function renderStudio(ctx) {
 
     const runsPromise = refreshRuns(ctx, { force: true });
     if (studioState.selectedRunId) {
-      await Promise.all([runsPromise, loadRunDetail(ctx, studioState.selectedRunId)]);
+      await Promise.all([runsPromise, loadRunDetail(ctx, studioState.selectedRunId, { routeToken })]);
     } else {
       await runsPromise;
+      if ((ctx.getRouteToken?.() ?? routeToken) !== routeToken) return;
       showStudioEmptyMain(document.getElementById('studio-main'));
     }
+    if ((ctx.getRouteToken?.() ?? routeToken) !== routeToken) return;
     bindSse(ctx);
     if (!shortcutsBound) {
       bindShortcuts(ctx);
@@ -1547,9 +1585,11 @@ async function selectRun(ctx, id) {
   switchMobileTab('main');
 }
 
-async function loadRunDetail(ctx, runId) {
+async function loadRunDetail(ctx, runId, { routeToken = ctx.getRouteToken?.() ?? 0, generation = null } = {}) {
   const main = document.getElementById('studio-main');
   if (!main) return;
+  if (generation != null && generation !== progressPollGeneration) return;
+  if ((ctx.getRouteToken?.() ?? routeToken) !== routeToken) return;
   resetMetricsViewMode();
   clearProgressPoll();
 
@@ -1559,6 +1599,7 @@ async function loadRunDetail(ctx, runId) {
   }
 
   const runRes = await ctx.api.get(`/api/backtest/runs/${runId}?slim=1&equity=1`);
+  if ((ctx.getRouteToken?.() ?? routeToken) !== routeToken) return;
   if (!runRes.ok) return mount(main, el('p', { class: 'muted' }, 'Run não encontrado'));
   const run = runRes.data.run;
   studioState.selectedRunMeta = {
@@ -1763,6 +1804,7 @@ function renderProgressPanel(container, run, ctx) {
     ]),
   ]));
   if (run.status === 'running' || run.status === 'queued') startProgressPoll(ctx, run.id);
+  applyProgressUi(progress, { runId: run.id });
 }
 
 function renderCancelledPanel(container, run, ctx) {
@@ -2032,6 +2074,7 @@ function bindSse(ctx) {
     if (event.type === 'job:completed') refreshCoverageIndicator(ctx, formFromDom());
   };
   connectSse(sseHandler);
+  resumeProgressTracking(ctx);
 }
 
 function bindShortcuts(ctx) {
