@@ -1,0 +1,12 @@
+# Copie este bloco para o arquivo SSH config da sua máquina:
+#   Windows: %USERPROFILE%\.ssh\config
+#   macOS/Linux: ~/.ssh/config
+#
+# Requer chave ~/.ssh/brutus_ed25519 (ver docs/operacao/conexao-brutus.md)
+# e acesso de rede ao IP privado 10.40.2.77 (VPN Hulw).
+
+Host Brutus
+    HostName 10.40.2.77
+    User root
+    IdentityFile ~/.ssh/brutus_ed25519
+    IdentitiesOnly yes

@@ -2,6 +2,15 @@
 
 Scripts shell para rodar no host Brutus (via SSH). Executam `docker exec` no container `data-backtest`.
 
+## Primeira vez (outra máquina ou IDE)
+
+Configurar alias SSH `Brutus`, chave Ed25519 e (opcional) MCP Coolify:
+
+- **Guia completo:** [`docs/operacao/conexao-brutus.md`](../../docs/operacao/conexao-brutus.md)
+- **Snippet SSH:** [`ssh-config.example`](ssh-config.example)
+
+Teste rápido: `ssh Brutus "hostname"` → deve imprimir `openclaw`.
+
 ## Arquivos
 
 | Script | Uso |
