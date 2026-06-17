@@ -7,7 +7,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { openStateDatabase, closeStateDatabase } from '../src/state/sqlite.js';
 import { upsertManifestPartition } from '../src/state/manifest.js';
 import { createPrepareJob } from '../src/state/prepareJobs.js';
-import { getDataCoverage, mapStatusToUiState, aggregateCoverageDays } from '../src/query/coverageUi.js';
+import { getDataCoverage, invalidateCoverageCache, mapStatusToUiState, aggregateCoverageDays } from '../src/query/coverageUi.js';
 import { buildDataFixPlan, describeFixActions } from '../src/data/fixPipeline.js';
 import { testServerConfig } from './testAuth.js';
 
@@ -78,6 +78,41 @@ test('getDataCoverage aggregates days with derived ui_state', async () => {
     assert.equal(coverage.summary.processing, 1);
     assert.equal(coverage.days[1].active_jobs[0].id, 1);
   } finally {
+    closeStateDatabase(db);
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
+  }
+});
+
+test('getDataCoverage full cache applies current requested range on cache hit', async () => {
+  invalidateCoverageCache();
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'coverage-ui-cache-'));
+  const config = testServerConfig({ stateDbPath: path.join(dir, 'state.db') });
+  const db = openStateDatabase(config.stateDbPath);
+  try {
+    for (const dt of ['2026-06-01', '2026-06-02', '2026-06-15']) {
+      upsertManifestPartition(db, {
+        dataset: 'backtest_ticks',
+        underlying: 'BTC',
+        interval: '5m',
+        bookDepth: 25,
+        dt,
+        activePath: `/lake/${dt}.parquet`,
+        status: 'valid',
+      });
+    }
+    const base = {
+      underlying: 'BTC',
+      interval: '5m',
+      book_depth: '25',
+      full: '1',
+    };
+    const first = getDataCoverage(db, new URLSearchParams({ ...base, from: '2026-06-01', to: '2026-06-02' }), config);
+    const second = getDataCoverage(db, new URLSearchParams({ ...base, from: '2026-06-01', to: '2026-06-15' }), config);
+    assert.equal(first.to_date, '2026-06-02');
+    assert.equal(second.to_date, '2026-06-15');
+    assert.equal(second.from_date, '2026-06-01');
+  } finally {
+    invalidateCoverageCache();
     closeStateDatabase(db);
     await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
   }

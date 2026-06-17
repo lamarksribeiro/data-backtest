@@ -5762,6 +5762,11 @@ i.fa-solid, i.fa-regular, i.fa-brands {
   border-radius: 6px;
   background: rgba(0, 0, 0, 0.2);
 }
+.strategy-card__chart-caption {
+  font-size: 11px;
+  line-height: 1.35;
+  margin: 4px 0 0;
+}
 .strategy-card__empty {
   font-size: 12px;
   margin: 0;

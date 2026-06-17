@@ -374,7 +374,7 @@ export async function renderOverview(ctx) {
                   el('td', {}, String(s.totals?.runs || 0)),
                   el('td', {}, s.totals?.runs ? `${Math.round((s.totals.win_rate || 0) * 100)}%` : '—'),
                   el('td', { class: (s.totals?.avg_pnl || 0) >= 0 ? 'good' : 'bad' }, s.totals?.runs ? formatPnl(s.totals.avg_pnl) : '—'),
-                  el('td', {}, (s.stats?.sparkline?.length || s.sparkline?.length)
+                  el('td', {}, (s.stats?.card_chart?.values?.length || s.card_chart?.values?.length)
                     ? el('div', { id: `spark-overview-${s.id}`, class: 'overview-spark' })
                     : el('span', { class: 'muted', style: { fontSize: '11px' } }, 'Sem runs')
                   ),
@@ -389,10 +389,12 @@ export async function renderOverview(ctx) {
       // Renderizar fisicamente as sparklines uPlot para cada estratégia listada
       requestAnimationFrame(() => {
         for (const s of approvedSorted) {
-          const spark = s.stats?.sparkline || s.sparkline || [];
+          const chart = s.stats?.card_chart || s.card_chart;
           const container = document.getElementById(`spark-overview-${s.id}`);
-          if (container && spark.length > 0) {
-            void renderUplotSparkline(container, spark, { height: 36, width: 100 });
+          if (container && chart?.values?.length > 0) {
+            const last = chart.values[chart.values.length - 1];
+            const stroke = chart.type === 'evolution' ? '#38bdf8' : (last >= 0 ? '#34d399' : '#f87171');
+            void renderUplotSparkline(container, chart.values, { height: 36, width: 100, stroke });
           }
         }
       });

@@ -362,8 +362,12 @@ const dataStyles = `
     min-width: 0;
   }
 
-  .data-dashboard-grid,
-  .data-main-panel,
+  #data-coverage-section.is-refreshing .coverage-years-container {
+    opacity: 0.55;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+  }
+
   #data-coverage-section,
   .coverage-years-container,
   .coverage-year-group {
@@ -405,7 +409,7 @@ const dataStyles = `
   .coverage-month__weekdays {
     display: grid;
     grid-template-columns: repeat(7, 22px);
-    gap: 6px;
+    gap: 3px;
     margin-bottom: 8px;
     text-align: center;
     font-size: 9.5px;
@@ -419,7 +423,7 @@ const dataStyles = `
     display: grid;
     grid-template-columns: repeat(7, 22px);
     grid-auto-rows: 22px;
-    gap: 6px;
+    gap: 3px;
   }
 
   .coverage-day {
@@ -434,9 +438,11 @@ const dataStyles = `
     font-weight: 600;
     font-family: var(--font-mono, monospace);
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
     user-select: none;
     padding: 0;
+    position: relative;
+    isolation: isolate;
   }
 
   .coverage-day--empty {
@@ -465,6 +471,45 @@ const dataStyles = `
     box-shadow: 0 0 12px var(--ok-glow);
     transform: scale(1.2) translateY(-1px);
     z-index: 2;
+  }
+
+  .coverage-day.in-range.coverage-day--ready:hover {
+    background: rgba(16, 185, 129, 0.28);
+    border-color: transparent !important;
+    box-shadow: none;
+    transform: none;
+    z-index: 1;
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  }
+
+  .coverage-day.in-range.coverage-day--processing:hover {
+    background: rgba(245, 158, 11, 0.22);
+    border-color: transparent !important;
+    box-shadow: none;
+    transform: none;
+    z-index: 1;
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  }
+
+  .coverage-day.in-range.coverage-day--attention:hover {
+    background: rgba(239, 68, 68, 0.22);
+    border-color: transparent !important;
+    box-shadow: none;
+    transform: none;
+    z-index: 1;
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  }
+
+  .coverage-day:focus {
+    outline: none;
+  }
+
+  .coverage-day:focus-visible:not(.is-active-day) {
+    outline: 2px solid rgba(255, 255, 255, 0.45);
+    outline-offset: 1px;
   }
 
   .coverage-day--processing {
@@ -523,10 +568,91 @@ const dataStyles = `
     filter: none;
   }
 
-  .coverage-day.is-selected {
-    box-shadow: 0 0 0 2px var(--accent);
-    border-color: var(--accent) !important;
-    transform: scale(1.15) translateY(-1px);
+  .coverage-day.in-range {
+    z-index: 1;
+    transform: none;
+    box-shadow: none;
+    border-radius: 0;
+    border-color: transparent !important;
+  }
+
+  .coverage-day.in-range::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -2px;
+    right: -2px;
+    background: rgba(249, 115, 22, 0.16);
+    z-index: -1;
+    pointer-events: none;
+    transition: background-color 0.2s ease;
+  }
+
+  .coverage-day.in-range.range-seg-start::before {
+    left: 0;
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+    box-shadow:
+      inset 2px 0 0 var(--accent),
+      inset 0 2px 0 var(--accent),
+      inset 0 -2px 0 var(--accent);
+  }
+
+  .coverage-day.in-range.range-seg-end::before {
+    right: 0;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    box-shadow:
+      inset -2px 0 0 var(--accent),
+      inset 0 2px 0 var(--accent),
+      inset 0 -2px 0 var(--accent);
+  }
+
+  .coverage-day.in-range.range-seg-middle::before {
+    box-shadow:
+      inset 0 2px 0 var(--accent),
+      inset 0 -2px 0 var(--accent);
+  }
+
+  .coverage-day.in-range.range-seg-start.range-seg-end:not(.range-single)::before {
+    left: 0;
+    right: 0;
+    border-radius: 5px;
+    box-shadow: inset 0 0 0 2px var(--accent);
+  }
+
+  .coverage-day.in-range.range-single::before {
+    left: 0;
+    right: 0;
+    border-radius: 5px;
+    box-shadow: inset 0 0 0 2px var(--accent);
+  }
+
+  .coverage-day.in-range:hover {
+    transform: none;
+    z-index: 2;
+  }
+
+  .coverage-day.in-range:hover:not(.is-active-day)::before {
+    background: rgba(249, 115, 22, 0.24);
+  }
+
+  .coverage-day.in-range.is-active-day {
+    z-index: 3;
+  }
+
+  .coverage-day.in-range.is-active-day::before {
+    background: rgba(249, 115, 22, 0.3);
+  }
+
+  .coverage-day.is-active-day::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 6px;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.92);
+    pointer-events: none;
     z-index: 2;
   }
 
@@ -894,7 +1020,7 @@ const dataStyles = `
     .coverage-day--ready:hover,
     .coverage-day--processing:hover,
     .coverage-day--attention:hover,
-    .coverage-day.is-selected {
+    .coverage-day.in-range:hover {
       transform: none;
     }
 
@@ -909,10 +1035,26 @@ let latestJobs = [];
 let jobsTimer = null;
 let jobsRefreshDebounce = null;
 let displayedProgress = {};
+let coverageRefreshToken = 0;
 let dayDrawerLoadToken = 0;
 let dayDrawerAbort = null;
 let eventPreviewAbort = null;
 let dayDrawerPayload = null;
+let activeCoverageDayDt = null;
+
+function setActiveCoverageDay(dt) {
+  activeCoverageDayDt = dt || null;
+  document.querySelectorAll('.coverage-day.is-active-day').forEach((el) => {
+    el.classList.remove('is-active-day');
+    el.blur();
+  });
+  if (!activeCoverageDayDt) return;
+  const target = document.querySelector(`.coverage-day[data-dt="${activeCoverageDayDt}"]`);
+  if (target) {
+    target.classList.add('is-active-day');
+    target.blur();
+  }
+}
 
 const DEFAULT_DAY_HOUR = 0;
 const EVENTS_PAGE_SIZE = 48;
@@ -935,7 +1077,7 @@ export function closeDrawer() {
   eventPreviewAbort?.abort();
   eventPreviewAbort = null;
   dayDrawerPayload = null;
-  document.querySelectorAll('.coverage-day.is-selected').forEach(el => el.classList.remove('is-selected'));
+  setActiveCoverageDay(null);
   const container = document.getElementById('data-partition-details-container');
   if (container) {
     mount(container, buildDetailsEmptyState());
@@ -970,15 +1112,12 @@ export async function renderData(ctx) {
   }
   displayedProgress = {};
 
-  // Injetar a tag de estilos para os mini-calendários se ainda não foi criada
-  if (!document.getElementById('data-custom-styles')) {
-    const styleEl = el('style', { id: 'data-custom-styles' }, dataStyles);
-    document.head.appendChild(styleEl);
-  }
+  ensureDataStyles();
 
   // Se houver overlay sobrando do drawer antigo, remove
   const overlay = document.getElementById('data-drawer-overlay');
   if (overlay) overlay.remove();
+  document.getElementById('data-coverage-section')?.classList.remove('is-refreshing');
 
   const fallbackCtx = loadContext();
   mount(ctx.contentEl, [
@@ -1025,14 +1164,6 @@ function dataFormFromDom() {
     interval: fd.get('interval'),
     book_depth: fd.get('book_depth'),
   };
-}
-
-function applyDayToPrepareForm(day, ctxSaved) {
-  const form = document.getElementById('data-prepare-form');
-  if (!form) return;
-  form.querySelector('[name="from"]').value = day.dt;
-  form.querySelector('[name="to"]').value = day.dt;
-  saveContext({ ...ctxSaved, from: day.dt, to: day.dt });
 }
 
 async function reprocessDay(ctx, day, ctxSaved, { fieldOptions = null } = {}) {
@@ -1157,7 +1288,21 @@ function renderActions(ctx, formCtx, fieldOptions) {
   });
 }
 
+function ensureDataStyles() {
+  let styleEl = document.getElementById('data-custom-styles');
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = 'data-custom-styles';
+    document.head.appendChild(styleEl);
+  }
+  styleEl.textContent = dataStyles;
+}
+
 async function refreshCoverage(ctx, formCtx, { full = true } = {}) {
+  const token = ++coverageRefreshToken;
+  const section = document.getElementById('data-coverage-section');
+  if (section) section.classList.add('is-refreshing');
+
   const q = new URLSearchParams({
     underlying: formCtx.underlying,
     interval: formCtx.interval,
@@ -1166,15 +1311,18 @@ async function refreshCoverage(ctx, formCtx, { full = true } = {}) {
     to: formCtx.to,
   });
   if (full) q.set('full', '1');
-  const res = await ctx.api.get(`/api/data/coverage?${q}`);
-  const section = document.getElementById('data-coverage-section');
-  if (!section) return;
-  if (!res.ok) {
-    mount(section, el('p', { class: 'bad' }, res.error?.message || 'Falha'));
-    return;
-  }
-  const { coverage } = res.data;
-  mount(section, el('div', {}, [
+
+  try {
+    const res = await ctx.api.get(`/api/data/coverage?${q}`);
+    if (token !== coverageRefreshToken) return;
+    if (!section) return;
+    if (!res.ok) {
+      mount(section, el('p', { class: 'bad' }, res.error?.message || 'Falha'));
+      return;
+    }
+    const { coverage } = res.data;
+    const range = { from: formCtx.from, to: formCtx.to };
+    mount(section, el('div', {}, [
     el('div', { class: 'card__header' }, [
       el('div', {}, [
         el('h2', { class: 'card__title' }, `Cobertura · ${coverage.underlying} ${coverage.interval}`),
@@ -1189,14 +1337,23 @@ async function refreshCoverage(ctx, formCtx, { full = true } = {}) {
       ]),
     ]),
     renderCoveragePendingPanel(ctx, coverage, formCtx),
-    renderMonthlyHeatmap(ctx, coverage)
+    renderMonthlyHeatmap(ctx, coverage, range),
   ]));
+    setActiveCoverageDay(activeCoverageDayDt);
+  } finally {
+    if (token === coverageRefreshToken && section) {
+      section.classList.remove('is-refreshing');
+    }
+  }
 }
 
 function renderCoveragePendingPanel(ctx, coverage, formCtx) {
   const days = coverage.days || [];
-  const processing = days.filter((day) => day.ui_state === 'processing');
-  const attention = days.filter((day) => day.ui_state === 'attention');
+  const selectedFrom = formCtx.from;
+  const selectedTo = formCtx.to;
+  const inSelectedRange = (day) => day.dt >= selectedFrom && day.dt <= selectedTo;
+  const processing = days.filter((day) => day.ui_state === 'processing' && inSelectedRange(day));
+  const attention = days.filter((day) => day.ui_state === 'attention' && inSelectedRange(day));
   if (!processing.length && !attention.length) return null;
 
   return el('div', { class: 'data-pending-panel' }, [
@@ -1372,15 +1529,53 @@ function getMonthsRange(days) {
   return months;
 }
 
+function formatCoverageDateKey(year, month, day) {
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function isCoverageDateInRange(dateKey, from, to) {
+  return dateKey >= from && dateKey <= to;
+}
+
+function getCoverageRangeClasses(dateKey, selectedFrom, selectedTo) {
+  if (!isCoverageDateInRange(dateKey, selectedFrom, selectedTo)) {
+    return 'is-out-of-range';
+  }
+
+  const classes = ['in-range'];
+  if (dateKey === selectedFrom && dateKey === selectedTo) {
+    classes.push('range-single');
+    return classes.join(' ');
+  }
+
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const dayOfWeek = new Date(year, month - 1, day).getDay();
+  const prevDate = new Date(year, month - 1, day - 1);
+  const nextDate = new Date(year, month - 1, day + 1);
+  const prevKey = formatCoverageDateKey(prevDate.getFullYear(), prevDate.getMonth() + 1, prevDate.getDate());
+  const nextKey = formatCoverageDateKey(nextDate.getFullYear(), nextDate.getMonth() + 1, nextDate.getDate());
+  const prevInRange = isCoverageDateInRange(prevKey, selectedFrom, selectedTo);
+  const nextInRange = isCoverageDateInRange(nextKey, selectedFrom, selectedTo);
+
+  const segStart = dateKey === selectedFrom || !prevInRange || dayOfWeek === 0;
+  const segEnd = dateKey === selectedTo || !nextInRange || dayOfWeek === 6;
+
+  if (segStart) classes.push('range-seg-start');
+  if (segEnd) classes.push('range-seg-end');
+  if (!segStart && !segEnd) classes.push('range-seg-middle');
+
+  return classes.join(' ');
+}
+
 // Renderiza a cobertura de dados no formato de mini-calendários agrupados por mês e ano (colapsável)
-function renderMonthlyHeatmap(ctx, coverage) {
+function renderMonthlyHeatmap(ctx, coverage, range = {}) {
   const days = coverage.days || [];
   if (days.length === 0) {
     return emptyState('Nenhuma partição no intervalo.');
   }
 
-  const selectedFrom = coverage.from_date || String(coverage.from || '').slice(0, 10);
-  const selectedTo = coverage.to_date || String(coverage.from || '').slice(0, 10);
+  const selectedFrom = range.from || coverage.from_date || String(coverage.from || '').slice(0, 10);
+  const selectedTo = range.to || coverage.to_date || String(coverage.to || coverage.from || '').slice(0, 10);
 
   const monthsRange = getMonthsRange(days);
   
@@ -1428,14 +1623,15 @@ function renderMonthlyHeatmap(ctx, coverage) {
         
         const dayData = days.find(x => x.dt === dateKey);
         if (dayData) {
-          const dtDate = new Date(`${dateKey}T00:00:00.000Z`);
-          const isSelected = dateKey >= selectedFrom && dateKey <= selectedTo;
-          const rangeClass = isSelected ? 'is-selected' : 'is-out-of-range';
+          const isSelected = isCoverageDateInRange(dateKey, selectedFrom, selectedTo);
+          const rangeClass = getCoverageRangeClasses(dateKey, selectedFrom, selectedTo);
           const titleSuffix = isSelected ? '' : ' (Fora do período selecionado)';
+          const activeClass = dateKey === activeCoverageDayDt ? 'is-active-day' : '';
 
           dayElements.push(el('button', {
             type: 'button',
-            class: `coverage-day coverage-day--${dayData.ui_state} ${rangeClass}`,
+            class: `coverage-day coverage-day--${dayData.ui_state} ${rangeClass}${activeClass ? ` ${activeClass}` : ''}`,
+            'data-dt': dateKey,
             title: `${dateKey}: ${UI_LABELS[dayData.ui_state]} (${dayData.raw_status})${titleSuffix}`,
             onclick: () => openPartitionDrawer(ctx, dayData),
           }, String(d)));
@@ -1830,13 +2026,10 @@ async function openPartitionDrawer(ctx, day, fieldOptions = null) {
   eventPreviewAbort?.abort();
   eventPreviewAbort = null;
   
-  // Destacar o dia selecionado no calendário
-  document.querySelectorAll('.coverage-day.is-selected').forEach(el => el.classList.remove('is-selected'));
-  const targetDayEl = document.querySelector(`.coverage-day[title*="${day.dt}:"]`);
-  if (targetDayEl) targetDayEl.classList.add('is-selected');
+  // Destacar só o dia aberto nos detalhes (intervalo do formulário não muda)
+  setActiveCoverageDay(day.dt);
 
   const ctxSaved = loadContext();
-  applyDayToPrepareForm(day, ctxSaved);
   mount(container, buildPartitionDrawerLoading(day));
 
   // Focar suavemente a tela no painel de detalhes integrado

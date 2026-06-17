@@ -32,6 +32,31 @@ export function uiStateTone(state) {
   return 'err';
 }
 
+function applyRequestScopeToCoverage(request, { days, summary, scope }) {
+  const { from_date, to_date } = inclusiveDateRangeFromRequest(request);
+  const requestedDates = partitionDatesForRange(request.from, request.to);
+  const dayByDt = new Map(days.map((d) => [d.dt, d]));
+  const requestedOk = requestedDates.length > 0 && requestedDates.every((dt) => {
+    const partition = dayByDt.get(dt)?.partitions?.[0];
+    return Boolean(partition?.usable);
+  });
+
+  return {
+    dataset: request.dataset,
+    underlying: request.underlying,
+    interval: request.interval,
+    book_depth: request.bookDepth ?? null,
+    from: request.from,
+    to: request.to,
+    from_date,
+    to_date,
+    scope,
+    days,
+    summary,
+    ok: requestedOk,
+  };
+}
+
 export function getDataCoverage(db, params, config) {
   const request = datasetRequestFromParams(params, config);
   const fullHistory = params.get('full') === '1';
@@ -42,6 +67,9 @@ export function getDataCoverage(db, params, config) {
   const now = Date.now();
   const cached = coverageCache.get(cacheKey);
   if (cached && now - cached.at < COVERAGE_CACHE_TTL_MS) {
+    if (fullHistory) {
+      return applyRequestScopeToCoverage(request, cached.value);
+    }
     return cached.value;
   }
 
@@ -90,27 +118,13 @@ export function getDataCoverage(db, params, config) {
   const activeJobsByDate = findActiveJobsByDate(db, rangeRequest);
   const { days, summary } = aggregateCoverageDays(availability.partitions, { activeJobsByDate });
 
-  const requestedDates = new Set(partitionDatesForRange(request.from, request.to));
-  const requestedPartitions = availability.partitions.filter((p) => requestedDates.has(p.dt));
-  const requestedOk = requestedPartitions.length === requestedDates.size
-    && requestedPartitions.every((p) => p.usable);
+  const scope = fullHistory ? 'full' : 'requested';
+  const value = applyRequestScopeToCoverage(request, { days, summary, scope });
 
-  const value = {
-    dataset: request.dataset,
-    underlying: request.underlying,
-    interval: request.interval,
-    book_depth: request.bookDepth ?? null,
-    from: request.from,
-    to: request.to,
-    from_date,
-    to_date,
-    scope: fullHistory ? 'full' : 'requested',
-    days,
-    summary,
-    ok: requestedOk,
-  };
-
-  coverageCache.set(cacheKey, { at: now, value });
+  coverageCache.set(cacheKey, {
+    at: now,
+    value: fullHistory ? { days, summary, scope } : value,
+  });
   return value;
 }
 

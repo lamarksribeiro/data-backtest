@@ -707,9 +707,34 @@ function updateKanbanCards(ctx) {
   });
 }
 
+function cardChartForStrategy(strategy) {
+  return strategy.stats?.card_chart || strategy.card_chart || null;
+}
+
+function formatCardChartCaption(chart) {
+  if (!chart) return '';
+  const asset = chart.underlying && chart.interval ? `${chart.underlying} · ${chart.interval}` : '';
+  const period = chart.from && chart.to ? `${chart.from} → ${chart.to}` : '';
+  const version = chart.version != null ? `v${chart.version}` : '';
+  if (chart.type === 'evolution') {
+    const parts = [`${chart.comparable_runs} execuções`, version, asset, period].filter(Boolean);
+    return parts.join(' · ');
+  }
+  const parts = [`#${chart.run_id}`, version, asset, period].filter(Boolean);
+  return parts.join(' · ');
+}
+
+function cardChartStroke(chart) {
+  if (!chart?.values?.length) return '#f97316';
+  const last = chart.values[chart.values.length - 1];
+  if (chart.type === 'evolution') return '#38bdf8';
+  return last >= 0 ? '#34d399' : '#f87171';
+}
+
 function strategyCard(ctx, strategy) {
   const stats = strategy.stats?.totals || strategy.totals || {};
-  const spark = strategy.stats?.sparkline || strategy.sparkline || [];
+  const cardChart = cardChartForStrategy(strategy);
+  const hasChart = cardChart?.values?.length > 0;
   const versionNum = strategy.latest_version ?? strategy.stats?.by_version?.[0]?.version;
   return el('article', {
     class: `strategy-card${strategy.pinned ? ' is-pinned-card' : ''}`,
@@ -745,9 +770,17 @@ function strategyCard(ctx, strategy) {
       el('span', { class: `badge badge--${strategyStatusTone(strategy.status)}` },
         `${translateStatus(strategy.status)}${versionNum != null ? ` · v${versionNum}` : ''}`),
     ]),
-    spark.length
-      ? el('div', { class: 'strategy-card__spark', id: `spark-${strategy.id}`, 'aria-hidden': 'true' })
-      : el('p', { class: 'muted strategy-card__empty' }, stats.runs ? 'Sem histórico de PnL' : 'Sem runs ainda'),
+    hasChart
+      ? el('div', { class: 'strategy-card__chart' }, [
+        el('div', {
+          class: 'strategy-card__spark',
+          id: `spark-${strategy.id}`,
+          'aria-hidden': 'true',
+          title: formatCardChartCaption(cardChart),
+        }),
+        el('p', { class: 'strategy-card__chart-caption muted' }, formatCardChartCaption(cardChart)),
+      ])
+      : el('p', { class: 'muted strategy-card__empty' }, stats.runs ? 'Sem curva de patrimônio' : 'Sem runs ainda'),
     el('div', { class: 'strategy-card__stats' }, [
       el('span', {}, `${stats.runs ?? 0} runs`),
       el('span', {}, stats.runs ? `${Math.round((stats.win_rate ?? 0) * 100)}% WR` : '—'),
@@ -777,12 +810,14 @@ function strategyCard(ctx, strategy) {
   ]);
 }
 
-// Render sparklines after cards mount (rAF garante largura do container após layout)
+// Render gráficos dos cards após layout (equity do último run ou evolução entre runs comparáveis)
 export function _renderLibrarySparklines() {
   for (const strategy of state.libraryStats || []) {
-    const spark = strategy.stats?.sparkline || strategy.sparkline || [];
+    const chart = cardChartForStrategy(strategy);
     const container = document.getElementById(`spark-${strategy.id}`);
-    if (container && spark.length) void renderUplotSparkline(container, spark);
+    if (container && chart?.values?.length) {
+      void renderUplotSparkline(container, chart.values, { stroke: cardChartStroke(chart) });
+    }
   }
 }
 
