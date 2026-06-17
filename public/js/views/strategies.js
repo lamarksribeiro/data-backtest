@@ -1,6 +1,7 @@
 import { el, mount, emptyState } from '../utils/dom.js';
 import { loadContext } from '../utils/context.js';
-import { backtestPayloadFromPick, invalidateStrategyPickerCache } from '../utils/strategyPicker.js';
+import { backtestPayloadFromPick } from '../utils/strategyPicker.js';
+import { notifyStudioCatalogChanged } from '../utils/studioCatalogSync.js';
 import { promptDialog, confirmDialog } from '../utils/confirm.js';
 import { formatPnl } from '../utils/format.js';
 import { renderUplotSparkline } from '../utils/uplotChart.js';
@@ -191,7 +192,7 @@ function renderVersionTableRow(ctx, strategy, version, versionStat, onVersionFoc
           const res = await ctx.api.patch(`/api/strategies/${strategy.id}`, { default_version_id: version.id });
           if (!res.ok) return ctx.toast.err(res.error?.message || 'Falha ao fixar versão');
           strategy.default_version_id = version.id;
-          invalidateStrategyPickerCache();
+          notifyStudioCatalogChanged();
           ctx.toast.ok('Versão fixada como padrão');
           await state.historyPanelApi?.refresh({ scrollSnap: captureScrollState(ctx) });
         },
@@ -679,6 +680,7 @@ function renderLibrary(ctx) {
                     state.libraryStats = state.list;
                   }
                   renderStrategies(ctx);
+                  notifyStudioCatalogChanged();
                 } else {
                   ctx.toast.err(patchRes.error?.message || 'Falha ao mover estratégia');
                 }
@@ -736,6 +738,7 @@ function strategyCard(ctx, strategy) {
             state.libraryStats = state.list;
           }
           renderStrategies(ctx);
+          notifyStudioCatalogChanged();
         },
       }, '★'),
       el('strong', { class: 'strategy-card__title', onclick: () => ctx.navigate(`strategies/${strategy.id}`) }, strategy.name),
@@ -1362,6 +1365,7 @@ async function updateStrategyMeta(event, ctx, strategyId) {
   
   const listPanel = document.getElementById('strategy-list-panel');
   if (listPanel) mount(listPanel, renderStrategyList(ctx));
+  notifyStudioCatalogChanged();
   ctx.toast.ok('Dados da estratégia atualizados');
 }
 
@@ -1588,7 +1592,7 @@ async function trashStrategyFlow(ctx, strategy) {
     ctx.toast.err(res.error?.message || 'Falha ao mover para lixeira');
     return;
   }
-  invalidateStrategyPickerCache();
+  notifyStudioCatalogChanged();
   ctx.toast.ok('Estratégia movida para a lixeira');
   state.selectedId = null;
   state.selectedVersionId = null;
@@ -1677,7 +1681,7 @@ async function restoreStrategyFlow(ctx, strategy) {
     ctx.toast.err(res.error?.message || 'Falha ao restaurar');
     return;
   }
-  invalidateStrategyPickerCache();
+  notifyStudioCatalogChanged();
   ctx.toast.ok(`"${strategy.name}" restaurada`);
   state.trashList = state.trashList.filter((s) => s.id !== strategy.id);
   await renderTrashView(ctx);
@@ -1702,7 +1706,7 @@ async function permanentDeleteStrategyFlow(ctx, strategy) {
     ctx.toast.err(res.error?.message || 'Falha ao apagar permanentemente');
     return;
   }
-  invalidateStrategyPickerCache();
+  notifyStudioCatalogChanged();
   ctx.toast.ok(deleteRuns ? 'Estratégia e runs apagados' : 'Estratégia apagada (runs preservados)');
   state.trashList = state.trashList.filter((s) => s.id !== strategy.id);
   await renderTrashView(ctx);
@@ -1791,7 +1795,7 @@ async function deleteVersionFlow(ctx, strategy, version) {
   }
 
   ctx.toast.ok(`Versão v${version.version} excluída`);
-  invalidateStrategyPickerCache();
+  notifyStudioCatalogChanged();
   await state.historyPanelApi?.refresh({ scrollSnap });
 
   if (wasCurrent) {
@@ -1906,6 +1910,6 @@ async function deleteRunFlow(ctx, strategyId, runId) {
     return;
   }
   ctx.toast.ok(`Simulação #${runId} excluída`);
-  invalidateStrategyPickerCache();
+  notifyStudioCatalogChanged();
   await state.historyPanelApi?.refresh({ scrollSnap });
 }

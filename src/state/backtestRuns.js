@@ -306,22 +306,62 @@ export function getBacktestRun(db, id, { includeResult = false, includeEquity = 
   return row ? toApiRun(row, { includeResult, includeEquity }) : null;
 }
 
-export function listBacktestRuns(db, { limit = 20, strategy_id: strategyId, strategy_version_id: strategyVersionId, status, underlying, interval, pnl } = {}) {
+export function listBacktestRuns(db, {
+  limit = 20,
+  strategy_id: strategyId,
+  strategy_version_id: strategyVersionId,
+  status,
+  underlying,
+  interval,
+  pnl,
+  include_orphans: includeOrphans = false,
+} = {}) {
+  const RUNS = 'backtest_runs';
   const safeLimit = Math.min(Math.max(Number.parseInt(String(limit), 10) || 20, 1), 100);
   const filters = [];
   const params = [];
 
-  addNumberFilter(filters, params, 'strategy_id', strategyId);
-  addNumberFilter(filters, params, 'strategy_version_id', strategyVersionId);
-  addTextFilter(filters, params, 'status', status);
-  addTextFilter(filters, params, 'underlying', underlying);
-  addTextFilter(filters, params, 'interval', interval);
-  if (pnl === 'positive') filters.push("CAST(json_extract(summary_json, '$.totalPnl') AS REAL) > 0");
-  if (pnl === 'negative') filters.push("CAST(json_extract(summary_json, '$.totalPnl') AS REAL) < 0");
-  if (pnl === 'zero') filters.push("COALESCE(CAST(json_extract(summary_json, '$.totalPnl') AS REAL), 0) = 0");
+  addNumberFilter(filters, params, `${RUNS}.strategy_id`, strategyId);
+  addNumberFilter(filters, params, `${RUNS}.strategy_version_id`, strategyVersionId);
+  addTextFilter(filters, params, `${RUNS}.status`, status);
+  addTextFilter(filters, params, `${RUNS}.underlying`, underlying);
+  addTextFilter(filters, params, `${RUNS}.interval`, interval);
+  if (pnl === 'positive') filters.push(`CAST(json_extract(${RUNS}.summary_json, '$.totalPnl') AS REAL) > 0`);
+  if (pnl === 'negative') filters.push(`CAST(json_extract(${RUNS}.summary_json, '$.totalPnl') AS REAL) < 0`);
+  if (pnl === 'zero') filters.push(`COALESCE(CAST(json_extract(${RUNS}.summary_json, '$.totalPnl') AS REAL), 0) = 0`);
+
+  const hasExplicitStrategy = strategyId != null
+    && strategyId !== ''
+    && strategyId !== 'all'
+    && Number.parseInt(String(strategyId), 10) > 0;
+
+  if (!includeOrphans && !hasExplicitStrategy) {
+    for (const clause of linkedBacktestRunSqlFilters(RUNS)) {
+      filters.push(clause);
+    }
+  }
 
   const where = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
-  return db.prepare(`SELECT * FROM backtest_runs ${where} ORDER BY id DESC LIMIT ?`).all(...params, safeLimit).map((row) => toApiRun(row));
+  return db.prepare(`SELECT ${RUNS}.* FROM ${RUNS} ${where} ORDER BY ${RUNS}.id DESC LIMIT ?`).all(...params, safeLimit).map((row) => toApiRun(row));
+}
+
+/** Runs visíveis no Estúdio: estratégia ativa (não lixeira/arquivada) + versão existente. */
+export function linkedBacktestRunSqlFilters(runsAlias = 'backtest_runs') {
+  return [
+    `${runsAlias}.strategy_id IS NOT NULL`,
+    `${runsAlias}.strategy_version_id IS NOT NULL`,
+    `EXISTS (
+      SELECT 1 FROM strategy_definitions sd
+      WHERE sd.id = ${runsAlias}.strategy_id
+        AND sd.deleted_at IS NULL
+        AND sd.status != 'archived'
+    )`,
+    `EXISTS (
+      SELECT 1 FROM strategy_versions sv
+      WHERE sv.id = ${runsAlias}.strategy_version_id
+        AND sv.strategy_id = ${runsAlias}.strategy_id
+    )`,
+  ];
 }
 
 function addNumberFilter(filters, params, column, value) {

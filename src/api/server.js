@@ -612,6 +612,7 @@ export function createApiHandler(deps) {
           underlying: url.searchParams.get('underlying'),
           interval: url.searchParams.get('interval'),
           pnl: url.searchParams.get('pnl'),
+          include_orphans: url.searchParams.get('include_orphans') === '1',
         }) });
       }
       const backtestRunRoute = matchBacktestRunRoute(url.pathname);

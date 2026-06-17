@@ -16,6 +16,7 @@ import {
 import { renderEventChartWithMarkers } from '../components/eventChartMarkers.js';
 import { connectSse, disconnectSse } from '../utils/sse.js';
 import { cacheInvalidate, cachedFetch } from '../utils/apiCache.js';
+import { notifyStudioCatalogChanged, registerStudioRefresh } from '../utils/studioCatalogSync.js';
 import { navigate as routerNavigate } from '../router.js';
 import { renderUplotLine } from '../utils/uplotChart.js';
 import { confirmDialog } from '../utils/confirm.js';
@@ -539,6 +540,7 @@ export function leaveStudio() {
   studioState.eventsOffset = 0;
   studioState.eventsHasMore = false;
   closeAdvancedPopover({ silent: true });
+  registerStudioRefresh(null);
   const drawer = document.getElementById('studio-drawer');
   if (drawer) {
     drawer.hidden = true;
@@ -561,6 +563,13 @@ export async function renderStudio(ctx) {
   clearProgressPoll();
   ctx.setBreadcrumb('studio', 'Estúdio');
   ctx.renderContextBar?.();
+
+  registerStudioRefresh(async () => {
+    if (!document.getElementById('studio-runs')) return;
+    studioState.strategyOptions = await loadStrategyOptions(ctx.api, { includeArchived: false, force: true });
+    mountStudioStrategyPicker(ctx);
+    await refreshRuns(ctx, { force: true });
+  });
 
   const query = parseStudioQuery();
   studioState.selectedRunId = query.run;
@@ -596,7 +605,7 @@ export async function renderStudio(ctx) {
   try {
     const [apiOptions, strategyOptions] = await Promise.all([
       fetchContextOptionsCached(ctx.api),
-      loadStrategyOptions(ctx.api, { includeArchived: false }),
+      loadStrategyOptions(ctx.api, { includeArchived: false, force: true }),
     ]);
     const fieldOptions = contextBarOptions(apiOptions);
     const formCtx = applyContextOptions(loadContext(), fieldOptions);
@@ -616,7 +625,7 @@ export async function renderStudio(ctx) {
     renderConfigPanel(ctx, { formCtx, fieldOptions });
     void refreshCoverageIndicator(ctx, formCtx);
 
-    const runsPromise = refreshRuns(ctx);
+    const runsPromise = refreshRuns(ctx, { force: true });
     if (studioState.selectedRunId) {
       await Promise.all([runsPromise, loadRunDetail(ctx, studioState.selectedRunId)]);
     } else {
@@ -767,11 +776,9 @@ async function pinStudioStrategyVersion(ctx) {
   const res = await ctx.api.patch(`/api/strategies/${strategyId}`, { default_version_id: versionId });
   if (!res.ok) return ctx.toast.err(res.error?.message || 'Falha ao fixar versão');
 
-  invalidateStrategyPickerCache();
-  studioState.strategyOptions = await loadStrategyOptions(ctx.api, { force: true });
   studioState.selectedStrategyPick = `gls:${strategyId}:${versionId}`;
   saveLastStrategyPick(studioState.selectedStrategyPick);
-  mountStudioStrategyPicker(ctx);
+  notifyStudioCatalogChanged();
   ctx.toast.ok('Versão fixada como padrão');
 }
 
@@ -994,7 +1001,7 @@ function renderActiveFilterChips() {
     const label = f.versionId === 'selected' ? 'Versão atual' : `Versão ${f.versionId}`;
     chips.push(label);
   }
-  if (!f.strategyOnly) chips.push('Todas estratégias');
+  if (!f.strategyOnly) chips.push('Estratégias ativas');
   if (f.underlying !== 'all') chips.push(f.underlying);
   if (f.interval !== 'all') chips.push(formatIntervalLabel(f.interval));
   if (f.status !== 'all') chips.push(RUN_STATUS_LABELS[f.status] || f.status);
@@ -1052,16 +1059,16 @@ function collectVersionFilterOptions(runs, strategyGroup) {
         notes: version.notes,
       });
     }
-  }
-  for (const run of runs) {
-    if (!run.strategy_version_id) continue;
-    const vid = Number(run.strategy_version_id);
-    if (versionMap.has(vid)) continue;
-    versionMap.set(vid, {
-      versionId: vid,
-      versionNum: run.strategy_snapshot?.version ?? vid,
-      notes: run.strategy_snapshot?.notes ?? null,
-    });
+  } else {
+    for (const opt of studioState.strategyOptions) {
+      const vid = Number(opt.versionId);
+      if (!Number.isFinite(vid) || vid <= 0 || versionMap.has(vid)) continue;
+      versionMap.set(vid, {
+        versionId: vid,
+        versionNum: opt.versionNum ?? vid,
+        notes: opt.notes ?? null,
+      });
+    }
   }
 
   const sorted = [...versionMap.values()].sort((a, b) => (b.versionNum ?? 0) - (a.versionNum ?? 0));
@@ -1093,12 +1100,33 @@ function formatRunPeriodShort(from, to) {
   return `${fmt(from)} – ${fmt(to)}`;
 }
 
+function buildPickerLinkage(strategyOptions) {
+  const strategyIds = new Set();
+  const versionIds = new Set();
+  for (const opt of strategyOptions) {
+    const sid = Number(opt.strategyId);
+    const vid = Number(opt.versionId);
+    if (Number.isFinite(sid) && sid > 0) strategyIds.add(sid);
+    if (Number.isFinite(vid) && vid > 0) versionIds.add(vid);
+  }
+  return { strategyIds, versionIds };
+}
+
+function isPickerLinkedRun(run, linkage) {
+  const sid = run.strategy_id != null ? Number(run.strategy_id) : NaN;
+  const vid = run.strategy_version_id != null ? Number(run.strategy_version_id) : NaN;
+  if (!Number.isFinite(sid) || !Number.isFinite(vid)) return false;
+  return linkage.strategyIds.has(sid) && linkage.versionIds.has(vid);
+}
+
 function filterRuns(runs) {
   const pick = studioState.strategyOptions.find((o) => o.value === studioState.selectedStrategyPick);
   const selectedVid = selectedConfigVersionId();
   const f = studioState.runFilters;
+  const linkage = buildPickerLinkage(studioState.strategyOptions);
 
   return runs.filter((run) => {
+    if (!isPickerLinkedRun(run, linkage)) return false;
     if (f.strategyOnly && pick?.strategyId && Number(run.strategy_id) !== Number(pick.strategyId)) return false;
     if (f.status !== 'all' && (run.status || 'completed') !== f.status) return false;
     if (f.underlying !== 'all' && run.underlying !== f.underlying) return false;
@@ -1123,21 +1151,24 @@ function strategyName(run) {
   return run.strategy_snapshot?.name || run.strategy || '-';
 }
 
-async function refreshRuns(ctx) {
+async function refreshRuns(ctx, { force = false } = {}) {
+  if (force) cacheInvalidate('runs');
   const runs = await cachedFetch('runs:list', async () => {
     const res = await ctx.api.get('/api/backtest/runs?limit=100');
     return res.ok ? res.data.runs : [];
   }, 15_000);
-  studioState.runs = runs;
+  const linkage = buildPickerLinkage(studioState.strategyOptions);
+  const linkedRuns = runs.filter((run) => isPickerLinkedRun(run, linkage));
+  studioState.runs = linkedRuns;
   const panel = document.getElementById('studio-runs');
   if (!panel) return;
 
   const strategyGroup = getStrategyGroupFromPick(studioState.strategyOptions, studioState.selectedStrategyPick);
-  const stats = computeRunStats(runs, studioState.runFilters.strategyOnly ? strategyGroup?.strategyId : null);
+  const stats = computeRunStats(linkedRuns, studioState.runFilters.strategyOnly ? strategyGroup?.strategyId : null);
   const scopedRuns = studioState.runFilters.strategyOnly && strategyGroup?.strategyId
-    ? runs.filter((run) => Number(run.strategy_id) === Number(strategyGroup.strategyId))
-    : runs;
-  const filtered = filterRuns(runs);
+    ? linkedRuns.filter((run) => Number(run.strategy_id) === Number(strategyGroup.strategyId))
+    : linkedRuns;
+  const filtered = filterRuns(linkedRuns);
   const versionOptions = collectVersionFilterOptions(scopedRuns, strategyGroup);
   if (!versionOptions.some((opt) => opt.value === studioState.runFilters.versionId)) {
     studioState.runFilters.versionId = 'all';
@@ -1147,7 +1178,7 @@ async function refreshRuns(ctx) {
     el('header', { class: 'studio-runs-card__header' }, [
       el('div', { class: 'studio-runs-card__top' }, [
         el('h3', { class: 'studio-runs-card__title' }, 'Histórico'),
-        el('span', { class: 'studio-runs-card__count' }, `${filtered.length}${filtered.length !== runs.length ? ` / ${runs.length}` : ''}`),
+        el('span', { class: 'studio-runs-card__count' }, `${filtered.length}${filtered.length !== linkedRuns.length ? ` / ${linkedRuns.length}` : ''}`),
       ]),
       el('div', { class: 'studio-runs-kpis' }, [
         el('span', { class: 'studio-runs-kpi' }, [
