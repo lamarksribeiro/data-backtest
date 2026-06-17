@@ -5,6 +5,7 @@ import { formatPnl, shortId } from '../utils/format.js';
 import { loadStrategyOptions, renderStrategyPicker, backtestPayloadFromPick, resolveInitialStrategyPick, saveLastStrategyPick, getStrategyGroupFromPick, invalidateStrategyPickerCache } from '../utils/strategyPicker.js';
 import { MetricCard, Skeleton, StatusBadge } from '../components/Skeleton.js';
 import { renderRunMetricsPanel, renderTimingSection, resetMetricsViewMode } from '../components/runMetrics.js';
+import { formatRunAssetMeta, renderRunContextBanner } from '../components/runContext.js';
 import { renderNoEntryDiagnostic, partitionNoEntryEvents } from '../components/noEntryDiagnostic.js';
 import {
   renderEventOverview,
@@ -994,7 +995,7 @@ function runListItem(run, ctx) {
   }, [
     el('span', { class: 'studio-run-item__id' }, `#${run.id}`),
     StatusBadge({ status: run.status }),
-    el('span', { class: 'studio-run-item__meta muted' }, `${versionLabel(run)} · ${run.from?.slice(5, 10) || ''}–${run.to?.slice(5, 10) || ''}`),
+    el('span', { class: 'studio-run-item__meta muted' }, `${formatRunAssetMeta(run)} · ${versionLabel(run)} · ${run.from?.slice(5, 10) || ''}–${run.to?.slice(5, 10) || ''}`),
     el('span', { class: 'studio-run-item__pnl' }, pnlText),
   ]);
 }
@@ -1050,6 +1051,7 @@ async function loadRunDetail(ctx, runId) {
 
   const summary = run.summary || {};
   mount(main, el('div', { class: 'studio-result' }, [
+    renderRunContextBanner(run),
     renderRunMetricsPanel(summary, { cardId: 'studio-metrics-card' }),
     el('div', { class: 'studio-equity', id: 'studio-equity-chart' }),
     el('div', { id: 'studio-selected-event-container', class: 'studio-selected-event-container' }),
@@ -1161,6 +1163,7 @@ async function loadEvents(ctx, runId, { append = false } = {}) {
 async function showAnalysisTab(ctx, runId, run, summary) {
   const main = document.getElementById('studio-main');
   mount(main, el('div', { class: 'studio-analysis' }, [
+    renderRunContextBanner(run, { showStatus: false }),
     renderTimingSection(run, summary),
     el('p', { class: 'muted', id: 'studio-analysis-loading' }, 'Carregando análise…'),
     el('div', { id: 'studio-analysis-content' }),
@@ -1186,10 +1189,7 @@ function renderProgressPanel(container, run, ctx) {
   const percentVal = progress.percent != null ? Number(progress.percent) : 0;
   mount(container, el('div', { class: 'studio-progress-panel' }, [
     el('div', { class: 'studio-progress-card' }, [
-      el('div', { class: 'studio-progress-card__head' }, [
-        el('strong', {}, `Backtest #${run.id}`),
-        StatusBadge({ status: run.status }),
-      ]),
+      renderRunContextBanner(run, { compact: true }),
       el('p', { class: 'muted', id: 'studio-progress-depends', hidden: !progress.depends_on_job }, progress.depends_on_job ? `Aguardando job #${progress.depends_on_job}` : ''),
       el('div', { class: 'studio-progress-metrics' }, [
         el('div', { class: 'studio-progress-metric' }, [
@@ -1230,10 +1230,7 @@ function renderProgressPanel(container, run, ctx) {
 function renderCancelledPanel(container, run, ctx) {
   mount(container, el('div', { class: 'studio-progress-panel' }, [
     el('div', { class: 'studio-progress-card' }, [
-      el('div', { class: 'studio-progress-card__head' }, [
-        el('strong', {}, `Backtest #${run.id}`),
-        StatusBadge({ status: run.status }),
-      ]),
+      renderRunContextBanner(run, { compact: true }),
       el('p', { class: 'muted' }, run.error || 'Backtest cancelado pelo operador.'),
       run.duration_ms ? el('p', { class: 'muted' }, `Duração até o cancelamento: ${formatDurationMs(run.duration_ms)}`) : null,
       el('button', {
@@ -1463,7 +1460,7 @@ function renderCompare(main, data) {
   mount(main, el('div', { class: 'studio-compare' }, [
     el('h3', {}, 'Comparador'),
     el('div', { class: 'studio-kpis' }, (data.runs || []).map((r) => MetricCard({
-      label: `#${r.id}`,
+      label: `#${r.id} · ${formatRunAssetMeta(r)}`,
       value: formatPnl(r.summary?.totalPnl),
       tone: (r.summary?.totalPnl || 0) >= 0 ? 'ok' : 'err',
     }))),

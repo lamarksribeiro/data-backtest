@@ -6097,6 +6097,70 @@ i.fa-solid, i.fa-regular, i.fa-brands {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.run-context-banner {
+  margin-bottom: 16px;
+}
+.run-context-banner__head {
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+.run-context-banner__title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.run-context-banner__headline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.run-context-banner__id {
+  font-size: 15px;
+  color: var(--text-0);
+}
+.run-context-banner__strategy {
+  font-size: 13px;
+  color: var(--text-1);
+}
+.run-context-banner__chips {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.run-context-banner__meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  font-size: 12px;
+}
+.run-context-banner__meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.run-context-banner--compact {
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.run-context-banner--compact .run-context-banner__head {
+  margin-bottom: 8px;
+}
+.run-context-banner--compact .run-context-banner__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.run-context-banner--compact .run-context-banner__period {
+  font-size: 12px;
+}
+
 /* Run Items Premium */
 .studio-run-item {
   border: 1px solid rgba(255, 255, 255, 0.04) !important;
