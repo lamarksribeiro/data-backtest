@@ -8,6 +8,12 @@ SCRIPT_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
 
 QUEUE="${LAB_QUEUE:-labs/strategies/edge/edge-sniper-v2/queues/brutus-full.txt}"
 PROGRESS_EVERY="${LAB_PROGRESS_EVERY:-20}"
+VARIANT_WORKERS="${VARIANT_WORKERS:-$(( $(nproc 2>/dev/null || echo 32) - 4 ))}"
+LAB_CONTAINER="${LAB_CONTAINER:-$(docker ps | grep le4sptof36h14ry6s5zet5v0 | awk '{print $NF}' | head -1)}"
+if [ -z "$LAB_CONTAINER" ]; then
+  echo "data-backtest container not found" >&2
+  exit 1
+fi
 
 run_queue() {
   while IFS= read -r experiment || [ -n "$experiment" ]; do

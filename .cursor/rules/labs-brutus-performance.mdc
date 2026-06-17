@@ -1,0 +1,37 @@
+---
+description: Executar laboratórios data-backtest no Brutus com máxima performance
+globs: data-backtest/labs/**/*
+alwaysApply: false
+---
+
+# Labs no Brutus — performance
+
+## Quando usar Brutus vs local
+
+| Cenário | Onde |
+|---|---|
+| Smoke test, 1 variante, iteração rápida | PC local (`--variant-workers 4-6`) |
+| Sweep grande (50+ variantes, janela longa) | **Brutus** |
+
+Brutus (32 vCPU) com **28 workers** + modo chunked é ~**2–3× mais rápido** que o PC local (12 threads, 8 workers) em sweeps validados.
+
+## Configuração máxima (Brutus)
+
+- `LAB_MAX_MODE=1` → `variantWorkers = nproc - RESERVE_CPUS`
+- `RESERVE_CPUS=4` → deixa CPU para `data-colector`
+- `BACKTEST_WORKERS=1` → evita oversubscription por variante
+- `DUCKDB_THREADS=4`
+- Experimento com **`"dailyMetrics": true`** (chunked-1d) — obrigatório para muitos workers sem estourar heap Node (~10 GB)
+
+```powershell
+ssh Brutus "nohup env LAB_MAX_MODE=1 RESERVE_CPUS=4 BACKTEST_WORKERS=1 LAB_EXPERIMENT=labs/strategies/.../experiments/meu-sweep.json LAB_LOG=/tmp/lab.log /tmp/labs-brutus/run-benchmark-ab.sh >> /tmp/lab.nohup 2>&1 &"
+```
+
+Scripts: `labs/ops/brutus/` (`run-benchmark-ab.sh`, `run-queue.sh`, `pull-reports.sh`). Container resolvido em runtime (`docker ps | grep le4sptof36h14ry6s5zet5v0`).
+
+## Chunked vs single-pass
+
+- **single-pass**: uma leitura DuckDB, alta RAM — no local use 2–8 workers
+- **chunked-1d** (`dailyMetrics: true`): fatia por dia, baixa RAM — use no Brutus com 28 workers
+
+Não há cluster PC+Brutus no mesmo sweep; é offload de fila inteira.
