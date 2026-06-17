@@ -1,508 +1,24 @@
 import { el, mount, emptyState } from '../utils/dom.js';
 import { confirmDialog, customDialog, phraseConfirmDialog } from '../utils/confirm.js';
-import { renderSettingsTabs } from './settingsTabs.js';
+import { renderSettingsPage } from './settingsTabs.js';
 import { listedUnderlyings } from '../../shared/underlyingAssets.js';
 
 const POLL_INTERVAL_MS = 2000;
 /** @type {{ timer: ReturnType<typeof setInterval> | null, runId: string | null, panelEl: HTMLElement | null }} */
 const activePoll = { timer: null, runId: null, panelEl: null };
 
-const backupStyles = `
-  .backup-grid {
-    display: grid;
-    grid-template-columns: minmax(300px, 420px) 1fr;
-    gap: 24px;
-    align-items: start;
-    margin-top: 20px;
-  }
-
-  @media (max-width: 1050px) {
-    .backup-grid { grid-template-columns: 1fr; }
-  }
-
-  .backup-col {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    min-width: 0;
-  }
-
-  .backup-hint {
-    margin: 4px 0 0;
-    color: var(--text-2);
-    font-size: 12px;
-    line-height: 1.5;
-  }
-
-  .backup-card-head {
-    margin-bottom: 18px;
-  }
-
-  .backup-card-head .card__title {
-    margin: 0;
-  }
-
-  .backup-ops-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 4px;
-  }
-
-  .backup-form {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-
-  .backup-form label.field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    font-weight: 600;
-    font-size: 13px;
-    color: var(--text-1);
-  }
-
-  .backup-form label.field > span:first-child {
-    color: var(--text-0);
-  }
-
-  .backup-form__row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
-    gap: 12px;
-  }
-
-  .backup-form__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    padding-top: 4px;
-  }
-
-  .backup-toggle-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .backup-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 13px 15px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: var(--radius-sm);
-    background: rgba(17, 24, 39, 0.72);
-    transition: border-color 0.2s ease, background-color 0.2s ease;
-  }
-
-  .backup-toggle:hover {
-    border-color: rgba(255, 255, 255, 0.14);
-    background: rgba(17, 24, 39, 0.9);
-  }
-
-  .backup-toggle__label {
-    color: var(--text-0);
-    font-size: 13.5px;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-  }
-
-  .backup-toggle__hint {
-    color: var(--text-2);
-    font-size: 12px;
-    margin-top: 4px;
-    line-height: 1.45;
-  }
-
-  .backup-password-wrap {
-    position: relative;
-    display: flex;
-    align-items: center;
-    width: 100%;
-  }
-
-  .backup-password-wrap .field__input {
-    padding-right: 44px;
-  }
-
-  .backup-password-wrap .field__input::-ms-reveal,
-  .backup-password-wrap .field__input::-ms-clear {
-    display: none;
-  }
-
-  .backup-password-toggle {
-    position: absolute;
-    right: 6px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border: none;
-    border-radius: 8px;
-    background: transparent;
-    color: var(--text-1);
-    cursor: pointer;
-    transition: color 0.15s ease, background-color 0.15s ease;
-  }
-
-  .backup-password-toggle:hover {
-    color: var(--text-0);
-    background: rgba(255, 255, 255, 0.08);
-  }
-
-  .backup-password-toggle:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 1px;
-  }
-
-  .backup-time-field {
-    margin-top: 4px;
-    padding: 12px 14px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: var(--radius-sm);
-    background: rgba(13, 19, 32, 0.25);
-  }
-
-  .backup-advanced {
-    margin-top: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: var(--radius-sm);
-    background: rgba(13, 19, 32, 0.2);
-    overflow: hidden;
-  }
-
-  .backup-advanced summary {
-    cursor: pointer;
-    padding: 11px 14px;
-    color: var(--text-1);
-    font-size: 13px;
-    font-weight: 600;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: color 0.2s ease, background-color 0.2s ease;
-  }
-
-  .backup-advanced summary::-webkit-details-marker { display: none; }
-
-  .backup-advanced summary::before {
-    content: "▸";
-    font-size: 11px;
-    color: var(--accent);
-    transition: transform 0.2s ease;
-  }
-
-  .backup-advanced[open] summary::before { transform: rotate(90deg); }
-
-  .backup-advanced summary:hover {
-    color: var(--text-0);
-    background: rgba(255, 255, 255, 0.02);
-  }
-
-  .backup-advanced__body {
-    padding: 0 14px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .backup-status-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    padding: 18px 20px;
-    border-radius: var(--radius-sm);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    background: linear-gradient(180deg, rgba(22, 28, 45, 0.45) 0%, rgba(13, 19, 32, 0.6) 100%);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  }
-
-  .backup-status-panel.is-found {
-    border-color: rgba(16, 185, 129, 0.28);
-    background: linear-gradient(180deg, rgba(16, 185, 129, 0.1) 0%, rgba(13, 19, 32, 0.55) 100%);
-  }
-
-  .backup-status-panel.is-missing {
-    border-color: rgba(245, 158, 11, 0.28);
-    background: linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, rgba(13, 19, 32, 0.55) 100%);
-  }
-
-  .backup-status-panel__head {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .backup-status-panel__title {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--text-0);
-  }
-
-  .backup-status-panel__sub {
-    margin: 2px 0 0;
-    font-size: 11.5px;
-    color: var(--text-2);
-    line-height: 1.4;
-  }
-
-  .backup-status-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 8px;
-  }
-
-  .backup-status-stat {
-    padding: 10px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    border-radius: var(--radius-sm);
-    background: rgba(13, 19, 32, 0.4);
-  }
-
-  .backup-status-stat__label {
-    display: block;
-    font-size: 9.5px;
-    color: var(--text-3);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-
-  .backup-status-stat__value {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-0);
-    font-family: var(--font-mono, monospace);
-    word-break: break-all;
-  }
-
-  .backup-progress-card {
-    padding: 16px 18px;
-    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
-    border-radius: var(--radius-sm);
-    background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 10%, transparent) 0%, rgba(13, 19, 32, 0.5) 100%);
-    box-shadow: 0 4px 18px rgba(249, 115, 22, 0.08);
-  }
-
-  .backup-progress-card__head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
-  }
-
-  .backup-progress-card__head strong {
-    color: var(--text-0);
-    font-size: 13px;
-  }
-
-  .backup-progress-bar {
-    height: 8px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.08);
-    overflow: hidden;
-  }
-
-  .backup-progress-bar span {
-    display: block;
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent), var(--accent-strong));
-    border-radius: inherit;
-    transition: width 0.35s ease;
-    box-shadow: 0 0 12px rgba(249, 115, 22, 0.35);
-  }
-
-  .backup-progress-meta {
-    margin-top: 12px;
-    display: grid;
-    gap: 5px;
-    font-size: 11.5px;
-    color: var(--text-2);
-  }
-
-  .backup-progress-meta code {
-    font-family: var(--font-mono);
-    color: var(--text-0);
-    font-size: 11px;
-  }
-
-  .backup-history-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .backup-run-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 14px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-left: 3px solid rgba(255, 255, 255, 0.08);
-    border-radius: var(--radius-sm);
-    font-size: 12px;
-    color: var(--text-2);
-    background: rgba(13, 19, 32, 0.35);
-    cursor: pointer;
-    transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
-  }
-
-  .backup-run-row--ok { border-left-color: var(--ok); }
-  .backup-run-row--warn { border-left-color: var(--warn); }
-  .backup-run-row--err { border-left-color: var(--err); }
-  .backup-run-row--idle { border-left-color: var(--text-3); }
-
-  .backup-run-row:hover {
-    border-color: rgba(255, 255, 255, 0.1);
-    background: rgba(13, 19, 32, 0.55);
-    transform: translateX(2px);
-  }
-
-  .backup-run-row__main {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 0;
-  }
-
-  .backup-run-row__top {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .backup-run-row__id {
-    color: var(--text-0);
-    padding: 2px 7px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 5px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-  }
-
-  .backup-run-row__meta {
-    font-size: 11px;
-    color: var(--text-3);
-  }
-
-  .backup-run-row__stats {
-    font-size: 11px;
-    color: var(--text-3);
-  }
-
-  .backup-section-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 14px;
-  }
-
-  .backup-modal-options {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-top: 8px;
-  }
-
-  .backup-modal-option {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-    padding: 12px 14px;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    transition: border-color 0.2s ease, background-color 0.2s ease;
-  }
-
-  .backup-modal-option:hover {
-    border-color: rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.02);
-  }
-
-  .backup-modal-option:has(input:checked) {
-    border-color: color-mix(in srgb, var(--accent) 40%, transparent);
-    background: color-mix(in srgb, var(--accent) 8%, transparent);
-  }
-
-  .backup-modal-option input { margin-top: 3px; accent-color: var(--accent); }
-
-  .backup-modal-option__title {
-    font-weight: 600;
-    color: var(--text-0);
-    font-size: 13px;
-  }
-
-  .backup-modal-option__hint {
-    color: var(--text-2);
-    font-size: 11.5px;
-    margin-top: 3px;
-    line-height: 1.45;
-  }
-
-  .backup-restore-fields {
-    display: none;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 12px;
-  }
-
-  .backup-restore-fields.is-visible { display: flex; }
-
-  .backup-setup-steps {
-    margin-bottom: 4px;
-    padding: 0;
-    border: none;
-    background: none;
-  }
-
-  .backup-setup-steps .backup-hint {
-    margin: 0;
-  }
-
-  .backup-card-head .btn {
-    flex-shrink: 0;
-    align-self: flex-start;
-    margin-top: 2px;
-  }
-
-  #backup-progress-slot:not(:empty) {
-    margin-bottom: 14px;
-  }
-`;
-
 export async function renderTelegramBackupSettings(ctx) {
   ctx.setBreadcrumb('settings', 'Backup Telegram');
   ctx.renderContextBar?.();
-
-  if (!document.getElementById('telegram-backup-settings-styles')) {
-    document.head.appendChild(el('style', { id: 'telegram-backup-settings-styles' }, backupStyles));
-  }
 
   mount(ctx.contentEl, buildBackupLoadingShell());
   await refreshTelegramBackupSettings(ctx);
 }
 
 function buildBackupLoadingShell() {
-  return [
-    renderSettingsTabs('backup'),
-    el('div', { class: 'backup-grid' }, [
-      el('section', { class: 'card' }, el('p', { class: 'muted' }, 'Carregando…')),
-    ]),
-  ];
+  return renderSettingsPage('backup', el('div', { class: 'backup-page' }, [
+    el('section', { class: 'card' }, el('p', { class: 'muted' }, 'Carregando…')),
+  ]));
 }
 
 async function refreshTelegramBackupSettings(ctx) {
@@ -553,14 +69,14 @@ function renderTelegramBackupPage(ctx, data, runs) {
 
   const progressSlot = el('div', { id: 'backup-progress-slot' });
 
-  mount(ctx.contentEl, [
-    renderSettingsTabs('backup'),
-    el('div', { class: 'backup-grid' }, [
-      el('div', { class: 'backup-col backup-col--left' }, [
+  mount(ctx.contentEl, renderSettingsPage('backup', [
+    el('div', { class: 'backup-page' }, [
+      el('div', { class: 'backup-config-split' }, [
         renderConnectionCard(formState, settings, ctx, statusBadge),
         renderBehaviorCard(formState, timezoneLabel),
       ]),
-      el('div', { class: 'backup-col backup-col--right' }, [
+      renderConfigFooter(ctx, formState),
+      el('div', { class: 'backup-ops-split' }, [
         renderOperationsCard(ctx, {
           settings,
           lastRun,
@@ -571,15 +87,25 @@ function renderTelegramBackupPage(ctx, data, runs) {
         renderHistoryCard(ctx, runs, completedRuns, channelCatalog),
       ]),
     ]),
-  ]);
+  ]));
 
   activePoll.panelEl = document.getElementById('backup-progress-slot');
 }
 
 function sectionHead(title, hint) {
-  return el('div', { class: 'backup-card-head' }, [
+  return el('div', { class: 'settings-card__head' }, [
     el('h2', { class: 'card__title' }, title),
-    hint ? el('p', { class: 'backup-hint' }, hint) : null,
+    hint ? el('p', { class: 'card__sub' }, hint) : null,
+  ]);
+}
+
+function renderConfigFooter(ctx, formState) {
+  return el('div', { class: 'backup-config-footer' }, [
+    el('p', { class: 'field__hint' }, 'Conexão e comportamento são salvos juntos.'),
+    el('div', { class: 'backup-config-footer__actions' }, [
+      el('button', { type: 'button', class: 'btn btn--ghost btn--sm', onclick: () => testConnection(ctx) }, 'Testar conexão'),
+      el('button', { type: 'button', class: 'btn btn--primary btn--sm', onclick: () => saveSettings(ctx, formState) }, 'Salvar configurações'),
+    ]),
   ]);
 }
 
@@ -594,38 +120,37 @@ function renderConnectionCard(formState, settings, ctx, statusBadge) {
   const chatInput = el('input', { type: 'text', class: 'field__input', value: formState.chat_id, placeholder: '-100xxxxxxxxxx' });
   chatInput.oninput = () => { formState.chat_id = chatInput.value; };
 
-  return el('section', { class: 'card' }, [
-    el('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' } }, [
-      sectionHead('Conexão Telegram', 'Crie o bot no @BotFather, adicione-o ao canal privado e informe as credenciais.'),
+  return el('section', { class: 'card backup-card' }, [
+    el('div', { class: 'settings-card__head settings-card__head--row' }, [
+      el('div', {}, [
+        el('h2', { class: 'card__title' }, 'Conexão Telegram'),
+        el('p', { class: 'card__sub' }, 'Bot no @BotFather, canal privado e credenciais.'),
+      ]),
       el('span', { class: `badge badge--${statusBadge[0]}` }, statusBadge[1]),
     ]),
     el('form', {
       class: 'backup-form',
       onsubmit: (event) => event.preventDefault(),
     }, [
-      toggleRow('Backup habilitado', 'Interruptor geral do envio automático e manual.', enabledInput),
+      toggleRow('Backup habilitado', 'Envio automático e manual.', enabledInput, { compact: true }),
       el('div', { class: 'backup-form__row' }, [
-        field('Token do bot', passwordField(tokenInput), 'Deixe em branco para manter o token salvo.'),
+        field('Token do bot', passwordField(tokenInput), 'Em branco = manter o token salvo.'),
         field('Chat ID do canal', chatInput, 'ID numérico (-100…) ou @canal.'),
-      ]),
-      el('div', { class: 'backup-form__actions' }, [
-        el('button', { type: 'button', class: 'btn btn--ghost btn--sm', onclick: () => testConnection(ctx) }, 'Testar conexão'),
-        el('button', { type: 'button', class: 'btn btn--primary btn--sm', onclick: () => saveSettings(ctx, formState) }, 'Salvar'),
       ]),
     ]),
   ]);
 }
 
 function renderBehaviorCard(formState, timezoneLabel) {
-  return el('section', { class: 'card' }, [
-    sectionHead('Comportamento', 'Automação, incremental e preferências de envio.'),
-    el('div', { class: 'backup-toggle-list' }, behaviorToggles(formState, timezoneLabel)),
+  return el('section', { class: 'card backup-card' }, [
+    sectionHead('Comportamento', 'Automação e preferências de envio.'),
+    el('div', { class: 'backup-toggle-grid' }, behaviorToggles(formState, timezoneLabel)),
     el('details', { class: 'backup-advanced' }, [
-      el('summary', {}, 'Configurações avançadas'),
+      el('summary', {}, 'Avançado'),
       el('div', { class: 'backup-advanced__body' }, [
         el('div', { class: 'backup-form__row' }, [
-          field('Chunk máximo (MB)', numberInput(formState, 'max_chunk_mb'), 'Padrão 18 MB — limite de download no restore ~20 MB.'),
-          field('Intervalo entre uploads (ms)', numberInput(formState, 'rate_limit_ms'), 'Padrão 3000 ms entre partições.'),
+          field('Chunk máximo (MB)', numberInput(formState, 'max_chunk_mb'), 'Padrão 18 MB.'),
+          field('Intervalo entre uploads (ms)', numberInput(formState, 'rate_limit_ms'), 'Padrão 3000 ms.'),
         ]),
       ]),
     ]),
@@ -697,7 +222,7 @@ function renderHistoryCard(ctx, runs, completedRuns, channelCatalog) {
 
 function renderBackupStatusCard(settings, channelCatalog, lastRun) {
   if (!settings.configured) {
-    return statusPanel('neutral', 'Canal não configurado', 'Informe token e chat_id à esquerda, salve e teste a conexão.');
+    return statusPanel('neutral', 'Canal não configurado', 'Informe token e chat_id, salve e teste a conexão.');
   }
 
   const channelFound = Boolean(channelCatalog?.ok && channelCatalog?.master_file_id);
@@ -1203,31 +728,41 @@ function optionRow(input, title, hint) {
 }
 
 function behaviorToggles(formState, timezoneLabel) {
+  const scheduleTimeWrap = el('div', { class: 'backup-schedule-time' });
+  const scheduleTimeField = el('label', { class: 'field backup-schedule-time__field' }, [
+    el('span', { class: 'field__label' }, `Horário (${timezoneLabel})`),
+    (() => {
+      const input = el('input', { type: 'time', class: 'field__input', value: formState.auto_schedule_time_utc });
+      input.oninput = () => { formState.auto_schedule_time_utc = input.value; };
+      return input;
+    })(),
+  ]);
+
+  const syncScheduleTimeVisibility = (enabled) => {
+    scheduleTimeWrap.hidden = !enabled;
+  };
+
   const defs = [
-    ['auto_after_asset_sync', 'Backup após sync de ativo', 'Dispara backup incremental quando um agendamento de atualização concluir.'],
-    ['auto_schedule_enabled', 'Agendamento diário', `Backup incremental de todos os ativos no horário local (${timezoneLabel}).`],
-    ['incremental_default', 'Incremental por padrão', 'Runs manuais pulam partições inalteradas (sha256).'],
-    ['pin_master_catalog', 'Fixar catálogo mestre', 'Fixa a mensagem master_catalog no canal.'],
+    ['auto_after_asset_sync', 'Após sync de ativo', 'Backup incremental ao concluir agendamento de dados.'],
+    ['auto_schedule_enabled', 'Agendamento diário', 'Incremental de todos os ativos no horário local.', { extra: scheduleTimeWrap }],
+    ['incremental_default', 'Incremental padrão', 'Runs manuais pulam partições inalteradas.'],
+    ['pin_master_catalog', 'Fixar catálogo', 'Fixa master_catalog no canal.'],
     ['silent_uploads', 'Uploads silenciosos', 'Sem notificação push no canal.'],
   ];
-  return defs.map(([key, label, hint]) => {
+
+  const rows = defs.map(([key, label, hint, opts]) => {
     const input = el('input', { type: 'checkbox' });
     input.checked = Boolean(formState[key]);
-    input.onchange = () => { formState[key] = input.checked; };
-    return toggleRow(label, hint, input);
-  }).concat([
-    el('div', { class: 'backup-time-field' }, [
-      el('label', { class: 'field', style: { margin: 0 } }, [
-        el('span', {}, `Horário (${timezoneLabel})`),
-        (() => {
-          const input = el('input', { type: 'time', class: 'field__input', value: formState.auto_schedule_time_utc });
-          input.oninput = () => { formState.auto_schedule_time_utc = input.value; };
-          return input;
-        })(),
-        el('span', { class: 'backup-hint' }, 'Usado quando o agendamento diário estiver ativo.'),
-      ]),
-    ]),
-  ]);
+    input.onchange = () => {
+      formState[key] = input.checked;
+      if (key === 'auto_schedule_enabled') syncScheduleTimeVisibility(input.checked);
+    };
+    if (key === 'auto_schedule_enabled') syncScheduleTimeVisibility(input.checked);
+    return toggleRow(label, hint, input, { compact: true, extra: opts?.extra });
+  });
+
+  scheduleTimeWrap.appendChild(scheduleTimeField);
+  return rows;
 }
 
 function passwordField(input) {
@@ -1245,19 +780,25 @@ function passwordField(input) {
   return el('div', { class: 'backup-password-wrap' }, [input, toggle]);
 }
 
-function toggleRow(label, hint, input) {
+function toggleRow(label, hint, input, { compact = false, extra = null } = {}) {
   input.className = 'switch-field__input';
-  return el('div', { class: 'backup-toggle' }, [
-    el('div', { style: { flex: 1 } }, [
+  const row = el('div', { class: `backup-toggle${compact ? ' backup-toggle--compact' : ''}` }, [
+    el('div', { class: 'backup-toggle__copy' }, [
       el('div', { class: 'backup-toggle__label' }, label),
-      el('div', { class: 'backup-toggle__hint' }, hint),
+      hint ? el('div', { class: 'backup-toggle__hint' }, hint) : null,
+      extra || null,
     ]),
-    el('label', { class: 'switch-field', style: { margin: 0 } }, [input, el('span', { class: 'switch-field__slider' })]),
+    el('label', { class: 'switch-field backup-toggle__switch', style: { margin: 0 } }, [input, el('span', { class: 'switch-field__slider' })]),
   ]);
+  return row;
 }
 
 function field(label, control, hint) {
-  return el('label', { class: 'field' }, [el('span', {}, label), control, hint ? el('span', { class: 'backup-hint' }, hint) : null]);
+  return el('label', { class: 'field' }, [
+    el('span', { class: 'field__label' }, label),
+    control,
+    hint ? el('span', { class: 'field__hint' }, hint) : null,
+  ]);
 }
 
 function numberInput(formState, key) {

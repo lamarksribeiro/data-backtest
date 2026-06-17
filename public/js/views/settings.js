@@ -2,204 +2,13 @@ import { el, mount, emptyState } from '../utils/dom.js';
 import { confirmDialog } from '../utils/confirm.js';
 import { applyContextOptions, contextBarOptions, loadContext, selectField } from '../utils/context.js';
 import { fetchContextOptionsCached } from '../utils/contextOptionsCache.js';
-import { renderSettingsTabs } from './settingsTabs.js';
-
-const settingsStyles = `
-  .settings-grid {
-    display: grid;
-    grid-template-columns: minmax(320px, 450px) 1fr;
-    gap: 28px;
-    align-items: start;
-    margin-top: 20px;
-  }
-
-  @media (max-width: 1050px) {
-    .settings-grid { grid-template-columns: 1fr; }
-  }
-
-  .settings-form {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    margin-top: 8px;
-  }
-
-  .settings-form label.field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    font-weight: 500;
-    font-size: 12.5px;
-    color: var(--text-2);
-  }
-
-  .settings-form__row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
-    gap: 14px;
-  }
-
-  @media (max-width: 768px) {
-    .settings-form__row { grid-template-columns: 1fr; }
-  }
-
-  .settings-hint {
-    margin: 2px 0 0;
-    color: var(--text-3);
-    font-size: 11.5px;
-    line-height: 1.45;
-  }
-
-  .schedule-list {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-
-  .schedule-card {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    padding: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: var(--radius);
-    background: linear-gradient(180deg, rgba(22, 28, 45, 0.45) 0%, rgba(13, 19, 32, 0.6) 100%);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-                border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-                box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .schedule-card:hover {
-    transform: translateY(-2px);
-    border-color: rgba(249, 115, 22, 0.25);
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
-  }
-
-  .schedule-card.is-disabled {
-    opacity: 0.55;
-  }
-
-  .schedule-card__head {
-    display: flex;
-    justify-content: space-between;
-    gap: 14px;
-    align-items: flex-start;
-  }
-
-  .schedule-card__title {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text-0);
-    letter-spacing: -0.01em;
-  }
-
-  .schedule-card__meta {
-    margin: 6px 0 0;
-    color: var(--text-3);
-    font-size: 12px;
-    font-weight: 500;
-  }
-
-  .schedule-card__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 10px;
-  }
-
-  .schedule-stat {
-    padding: 10px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    border-radius: var(--radius-sm);
-    background: rgba(13, 19, 32, 0.4);
-    transition: background-color 0.2s, border-color 0.2s;
-  }
-
-  .schedule-stat:hover {
-    background: rgba(13, 19, 32, 0.65);
-    border-color: rgba(255, 255, 255, 0.08);
-  }
-
-  .schedule-stat__label {
-    display: block;
-    color: var(--text-3);
-    font-size: 9.5px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-
-  .schedule-stat__value {
-    color: var(--text-1);
-    font-size: 12.5px;
-    font-weight: 600;
-    font-family: var(--font-mono, monospace);
-  }
-
-  .schedule-card__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 4px;
-  }
-
-  @media (max-width: 480px) {
-    .schedule-card__head {
-      flex-direction: column;
-      align-items: stretch;
-    }
-
-    .schedule-card__grid {
-      grid-template-columns: 1fr 1fr;
-    }
-  }
-
-  .schedule-run-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding-top: 12px;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-  }
-
-  .schedule-run {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    color: var(--text-2);
-    font-size: 11.5px;
-    padding: 4px 6px;
-    border-radius: 4px;
-    transition: background-color 0.15s ease;
-  }
-
-  .schedule-run:hover {
-    background: rgba(255, 255, 255, 0.02);
-  }
-
-  .schedule-run code {
-    color: var(--text-0);
-    background: rgba(255, 255, 255, 0.05);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-family: var(--font-mono, monospace);
-  }
-`;
+import { renderSettingsPage } from './settingsTabs.js';
 
 export async function renderSettings(ctx) {
-  ctx.setBreadcrumb('settings', 'Sincronização Parquet');
+  ctx.setBreadcrumb('settings', 'Sincronização');
   ctx.renderContextBar?.();
 
-  if (!document.getElementById('settings-custom-styles')) {
-    document.head.appendChild(el('style', { id: 'settings-custom-styles' }, settingsStyles));
-  }
-
-  mount(ctx.contentEl, el('div', { class: 'card' }, el('p', { class: 'muted' }, 'Carregando configurações…')));
+  mount(ctx.contentEl, renderSettingsPage('sync', el('div', { class: 'card' }, el('p', { class: 'muted' }, 'Carregando configurações…'))));
   const apiOptions = await fetchContextOptionsCached(ctx.api);
   const fieldOptions = contextBarOptions(apiOptions);
   const formCtx = applyContextOptions(loadContext(), fieldOptions);
@@ -212,7 +21,7 @@ async function refreshSettings(ctx, fieldOptions, formCtx = loadContext()) {
     mount(ctx.contentEl, el('p', { class: 'bad' }, schedulesRes.error?.message || 'Falha ao carregar configurações'));
     return;
   }
-  renderSettingsPage(
+  renderSettingsView(
     ctx,
     fieldOptions,
     formCtx,
@@ -222,28 +31,31 @@ async function refreshSettings(ctx, fieldOptions, formCtx = loadContext()) {
   );
 }
 
-function renderSettingsPage(ctx, fieldOptions, formCtx, schedules, targetToDate, schedulerTimezone) {
+function renderSettingsView(ctx, fieldOptions, formCtx, schedules, targetToDate, schedulerTimezone) {
   const timezoneLabel = formatSchedulerTimezoneLabel(schedulerTimezone);
-  mount(ctx.contentEl, [
-    renderSettingsTabs('sync'),
-    el('div', { class: 'settings-grid' }, [
+  mount(ctx.contentEl, renderSettingsPage('sync', [
+    el('div', { class: 'settings-layout settings-layout--split' }, [
       el('section', { class: 'card' }, [
-        el('h2', { class: 'card__title' }, 'Novo agendamento'),
-        el('p', { class: 'settings-hint' }, `Cada execução atualiza somente até ${targetToDate || 'o último dia fechado'} e reaproveita o mesmo pipeline dos jobs manuais.`),
+        el('div', { class: 'settings-card__head' }, [
+          el('h2', { class: 'card__title' }, 'Novo agendamento'),
+          el('p', { class: 'card__sub' }, `Atualiza até ${targetToDate || 'o último dia fechado (UTC)'}, usando o mesmo pipeline dos jobs manuais em Dados.`),
+        ]),
         renderScheduleForm(ctx, fieldOptions, formCtx, timezoneLabel),
       ]),
       el('section', { class: 'card' }, [
-        el('div', { class: 'card__header' }, [
+        el('div', { class: 'settings-card__head settings-card__head--row' }, [
           el('div', {}, [
-            el('h2', { class: 'card__title' }, 'Agendamentos ativos'),
-            el('p', { class: 'settings-hint' }, 'Use um agendamento por combinação de ativo, intervalo e book.'),
+            el('h2', { class: 'card__title' }, 'Agendamentos'),
+            el('p', { class: 'card__sub' }, 'Um agendamento por combinação de ativo, intervalo e book.'),
           ]),
           el('span', { class: 'badge badge--ok' }, `Alvo: ${targetToDate || 'ontem UTC'}`),
         ]),
-        schedules.length ? el('div', { class: 'schedule-list' }, schedules.map((schedule) => renderScheduleCard(ctx, schedule, fieldOptions, formCtx, timezoneLabel))) : emptyState('Nenhum agendamento criado.'),
+        schedules.length
+          ? el('div', { class: 'settings-schedule-list' }, schedules.map((schedule) => renderScheduleCard(ctx, schedule, fieldOptions, formCtx, timezoneLabel)))
+          : emptyState('Nenhum agendamento criado.'),
       ]),
     ]),
-  ]);
+  ]));
 }
 
 function renderScheduleForm(ctx, fieldOptions, formCtx, timezoneLabel) {
@@ -253,10 +65,19 @@ function renderScheduleForm(ctx, fieldOptions, formCtx, timezoneLabel) {
   ], 'daily');
 
   const form = el('form', { class: 'settings-form', id: 'asset-update-schedule-form' }, [
-    el('label', { class: 'field' }, ['Nome ', el('input', { class: 'field__input', name: 'name', value: `${formCtx.underlying} ${formCtx.interval} automático` })]),
+    el('label', { class: 'field' }, [
+      el('span', { class: 'field__label' }, 'Nome'),
+      el('input', { class: 'field__input', name: 'name', value: `${formCtx.underlying} ${formCtx.interval} automático` }),
+    ]),
     el('div', { class: 'settings-form__row' }, [
-      el('label', { class: 'field' }, ['Ativo ', selectField('underlying', fieldOptions.underlyings || [formCtx.underlying], formCtx.underlying)]),
-      el('label', { class: 'field' }, ['Intervalo ', selectField('interval', fieldOptions.intervals || [formCtx.interval], formCtx.interval)]),
+      el('label', { class: 'field' }, [
+        el('span', { class: 'field__label' }, 'Ativo'),
+        selectField('underlying', fieldOptions.underlyings || [formCtx.underlying], formCtx.underlying),
+      ]),
+      el('label', { class: 'field' }, [
+        el('span', { class: 'field__label' }, 'Intervalo'),
+        selectField('interval', fieldOptions.intervals || [formCtx.interval], formCtx.interval),
+      ]),
     ]),
     el('div', { class: 'settings-form__row' }, [
       el('label', { class: 'field' }, [
@@ -278,14 +99,19 @@ function renderScheduleForm(ctx, fieldOptions, formCtx, timezoneLabel) {
         el('input', { class: 'field__input', type: 'time', name: 'time_utc', value: '03:00' }),
       ]),
     ]),
-    el('label', { class: 'field' }, ['Intervalo em horas ', el('input', { class: 'field__input', type: 'number', min: '1', max: '168', name: 'every_hours', value: '24' })]),
+    el('label', { class: 'field' }, [
+      el('span', { class: 'field__label' }, 'Intervalo em horas'),
+      el('input', { class: 'field__input', type: 'number', min: '1', max: '168', name: 'every_hours', value: '24' }),
+    ]),
     el('label', { class: 'switch-field' }, [
       el('input', { type: 'checkbox', name: 'enabled', value: '1', class: 'switch-field__input', checked: true }),
       el('span', { class: 'switch-field__slider' }),
       ' Ativar após criar',
     ]),
-    el('p', { class: 'settings-hint' }, 'O agendamento nunca tenta preparar o dia corrente. Se hoje é dia 13 UTC, o limite automático é dia 12.'),
-    el('button', { type: 'submit', class: 'btn btn--primary' }, 'Criar agendamento'),
+    el('p', { class: 'field__hint' }, 'O agendamento nunca prepara o dia corrente. Ex.: em 13 UTC, o limite automático é dia 12.'),
+    el('div', { class: 'settings-form__actions' }, [
+      el('button', { type: 'submit', class: 'btn btn--primary' }, 'Criar agendamento'),
+    ]),
   ]);
 
   form.addEventListener('submit', async (event) => {
@@ -316,23 +142,23 @@ function renderScheduleForm(ctx, fieldOptions, formCtx, timezoneLabel) {
 
 function renderScheduleCard(ctx, schedule, fieldOptions, formCtx, timezoneLabel) {
   const activeRun = schedule.active_run;
-  return el('article', { class: `schedule-card${schedule.enabled ? '' : ' is-disabled'}` }, [
-    el('div', { class: 'schedule-card__head' }, [
+  return el('article', { class: `settings-schedule-card${schedule.enabled ? '' : ' is-disabled'}` }, [
+    el('div', { class: 'settings-schedule-card__head' }, [
       el('div', {}, [
-        el('h3', { class: 'schedule-card__title' }, schedule.name),
-        el('p', { class: 'schedule-card__meta' }, `${schedule.underlying} · ${schedule.interval} · book ${schedule.book_depth}`),
+        el('h3', { class: 'settings-schedule-card__title' }, schedule.name),
+        el('p', { class: 'settings-schedule-card__meta' }, `${schedule.underlying} · ${schedule.interval} · book ${schedule.book_depth}`),
       ]),
       el('span', { class: `badge badge--${schedule.enabled ? 'ok' : 'warn'}` }, schedule.enabled ? 'Ativo' : 'Pausado'),
     ]),
-    el('div', { class: 'schedule-card__grid' }, [
+    el('div', { class: 'settings-stat-grid' }, [
       stat('Cobertura', `${schedule.start_date} → ontem UTC`),
       stat('Frequência', frequencyLabel(schedule, timezoneLabel)),
       stat('Próxima', formatDateTime(schedule.next_run_at) || 'pausado'),
       stat('Último sucesso', formatDateTime(schedule.last_success_at) || 'nunca'),
     ]),
     schedule.last_error ? el('p', { class: 'bad', style: { margin: 0, fontSize: '12px' } }, schedule.last_error) : null,
-    activeRun ? el('p', { class: 'settings-hint' }, `Execução ativa: ${activeRun.status}${activeRun.prepare_job_id ? ` · job #${activeRun.prepare_job_id}` : ''}`) : null,
-    el('div', { class: 'schedule-card__actions' }, [
+    activeRun ? el('p', { class: 'field__hint', style: { margin: 0 } }, `Execução ativa: ${activeRun.status}${activeRun.prepare_job_id ? ` · job #${activeRun.prepare_job_id}` : ''}`) : null,
+    el('div', { class: 'settings-schedule-card__actions' }, [
       el('button', {
         type: 'button',
         class: 'btn btn--primary btn--sm',
@@ -356,7 +182,7 @@ function renderScheduleCard(ctx, schedule, fieldOptions, formCtx, timezoneLabel)
 
 function renderRecentRuns(runs) {
   if (!runs.length) return null;
-  return el('div', { class: 'schedule-run-list' }, runs.slice(0, 3).map((run) => el('div', { class: 'schedule-run' }, [
+  return el('div', { class: 'settings-run-list' }, runs.slice(0, 3).map((run) => el('div', { class: 'settings-run-row' }, [
     el('span', {}, [el('code', {}, run.status), ` · ${run.from_date} → ${run.to_date}`]),
     el('span', {}, run.prepare_job_id ? `job #${run.prepare_job_id}` : formatDateTime(run.completed_at || run.created_at)),
   ])));
@@ -407,9 +233,9 @@ async function deleteSchedule(ctx, schedule, fieldOptions, formCtx) {
 }
 
 function stat(label, value) {
-  return el('div', { class: 'schedule-stat' }, [
-    el('span', { class: 'schedule-stat__label' }, label),
-    el('span', { class: 'schedule-stat__value' }, value),
+  return el('div', { class: 'settings-stat' }, [
+    el('span', { class: 'settings-stat__label' }, label),
+    el('span', { class: 'settings-stat__value' }, value),
   ]);
 }
 
@@ -430,10 +256,9 @@ function formatDateTime(value) {
 }
 
 function simpleSelect(name, options, selected) {
-  const select = el('select', { class: 'field__input', name }, options.map(([value, label]) => {
+  return el('select', { class: 'field__select', name }, options.map(([value, label]) => {
     const option = el('option', { value }, label);
     if (String(value) === String(selected)) option.selected = true;
     return option;
   }));
-  return select;
 }

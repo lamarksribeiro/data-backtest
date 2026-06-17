@@ -1,98 +1,12 @@
 import { el, mount, emptyState } from '../utils/dom.js';
 import { confirmDialog } from '../utils/confirm.js';
-import { renderSettingsTabs } from './settingsTabs.js';
-
-const cacheStyles = `
-  .cache-page {
-    margin-top: 20px;
-  }
-
-  .cache-hint {
-    margin: 2px 0 0;
-    color: var(--text-3);
-    font-size: 11.5px;
-    line-height: 1.45;
-  }
-
-  .cache-group-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-top: 16px;
-  }
-
-  .cache-group-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    color: var(--text-2);
-    font-size: 12.5px;
-    padding: 10px 14px;
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    border-radius: var(--radius-sm);
-    background: rgba(13, 19, 32, 0.4);
-    transition: background-color 0.2s, border-color 0.2s;
-  }
-
-  .cache-group-row:hover {
-    background: rgba(13, 19, 32, 0.6);
-    border-color: rgba(255, 255, 255, 0.08);
-  }
-
-  .schedule-card__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 10px;
-    margin: 14px 0;
-  }
-
-  .schedule-stat {
-    padding: 10px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    border-radius: var(--radius-sm);
-    background: rgba(13, 19, 32, 0.4);
-    transition: background-color 0.2s, border-color 0.2s;
-  }
-
-  .schedule-stat:hover {
-    background: rgba(13, 19, 32, 0.65);
-    border-color: rgba(255, 255, 255, 0.08);
-  }
-
-  .schedule-stat__label {
-    display: block;
-    color: var(--text-3);
-    font-size: 9.5px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-
-  .schedule-stat__value {
-    color: var(--text-1);
-    font-size: 12.5px;
-    font-weight: 600;
-    font-family: var(--font-mono, monospace);
-  }
-
-  .schedule-card__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-`;
+import { renderSettingsPage } from './settingsTabs.js';
 
 export async function renderDatasetCacheSettings(ctx) {
   ctx.setBreadcrumb('settings', 'Cache de backtest');
   ctx.renderContextBar?.();
 
-  if (!document.getElementById('dataset-cache-settings-styles')) {
-    document.head.appendChild(el('style', { id: 'dataset-cache-settings-styles' }, cacheStyles));
-  }
-
-  mount(ctx.contentEl, el('div', { class: 'card' }, el('p', { class: 'muted' }, 'Carregando cache…')));
+  mount(ctx.contentEl, renderSettingsPage('cache', el('div', { class: 'card' }, el('p', { class: 'muted' }, 'Carregando cache…'))));
   await refreshDatasetCacheSettings(ctx);
 }
 
@@ -115,32 +29,31 @@ function formatBytes(bytes) {
 
 function renderDatasetCachePage(ctx, cacheStats) {
   const groups = cacheStats?.groups || [];
-  mount(ctx.contentEl, [
-    renderSettingsTabs('cache'),
-    el('section', { class: 'card cache-page' }, [
-      el('div', { class: 'card__header' }, [
+  mount(ctx.contentEl, renderSettingsPage('cache', [
+    el('section', { class: 'card' }, [
+      el('div', { class: 'settings-card__head settings-card__head--row' }, [
         el('div', {}, [
           el('h2', { class: 'card__title' }, 'Materialização em disco'),
-          el('p', { class: 'cache-hint' }, `Diretório: ${cacheStats?.cache_dir || '—'}. Cada dia ausente é gravado no primeiro backtest que precisar dele.`),
+          el('p', { class: 'card__sub' }, `Diretório: ${cacheStats?.cache_dir || '—'}. Cada dia ausente é gravado no primeiro backtest que precisar dele.`),
         ]),
         el('span', { class: `badge badge--${cacheStats?.enabled ? 'ok' : 'warn'}` }, cacheStats?.enabled ? 'Ativo' : 'Desligado'),
       ]),
-      el('div', { class: 'schedule-card__grid' }, [
+      el('div', { class: 'settings-stat-grid' }, [
         stat('Espaço total', formatBytes(cacheStats?.total_bytes)),
         stat('Arquivos', String(cacheStats?.total_files ?? 0)),
         stat('Grupos', String(groups.length)),
       ]),
       groups.length
-        ? el('div', { class: 'cache-group-list' }, groups.map((g) => el('div', { class: 'cache-group-row' }, [
+        ? el('div', { class: 'settings-list', style: { marginTop: '16px' } }, groups.map((g) => el('div', { class: 'settings-list-row' }, [
           el('span', {}, [
-            el('strong', { style: { color: 'var(--text-0)' } }, g.underlying),
+            el('strong', {}, g.underlying),
             ` · ${g.interval} · book ${g.book_depth ?? 'lite'} · ${g.days_count ?? 0} dias`,
             g.oldest_dt && g.newest_dt ? ` (${g.oldest_dt} → ${g.newest_dt})` : '',
           ]),
-          el('span', {}, formatBytes(g.bytes)),
+          el('span', { class: 'mono' }, formatBytes(g.bytes)),
         ])))
         : emptyState('Nenhum dado materializado ainda. Rode um backtest para preencher o cache automaticamente.'),
-      el('div', { class: 'schedule-card__actions', style: { marginTop: '16px' } }, [
+      el('div', { class: 'settings-form__actions', style: { marginTop: '16px' } }, [
         el('button', {
           type: 'button',
           class: 'btn btn--ghost btn--sm btn--danger',
@@ -149,7 +62,7 @@ function renderDatasetCachePage(ctx, cacheStats) {
         }, 'Limpar tudo'),
       ]),
     ]),
-  ]);
+  ]));
 }
 
 async function clearDatasetCache(ctx) {
@@ -170,8 +83,8 @@ async function clearDatasetCache(ctx) {
 }
 
 function stat(label, value) {
-  return el('div', { class: 'schedule-stat' }, [
-    el('span', { class: 'schedule-stat__label' }, label),
-    el('span', { class: 'schedule-stat__value' }, value),
+  return el('div', { class: 'settings-stat' }, [
+    el('span', { class: 'settings-stat__label' }, label),
+    el('span', { class: 'settings-stat__value' }, value),
   ]);
 }
