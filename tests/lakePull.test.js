@@ -5,7 +5,9 @@ import test from 'node:test';
 import {
   activePathToLakeRelative,
   buildManifestQuery,
+  fetchRemoteManifestRows,
   manifestRowToEntry,
+  parseRemoteManifestJson,
   planLakePull,
 } from '../src/ops/lakePull.js';
 
@@ -77,6 +79,55 @@ test('manifestRowToEntry maps sqlite row to upsert payload', () => {
   assert.equal(entry.bookDepth, 25);
   assert.equal(entry.activePath, '/lake/backtest_ticks/underlying=BTC/interval=5m/book_depth=25/dt=2026-06-01/part-abc.parquet');
   assert.deepEqual(entry.qualityDetails, { events_omitted: 1 });
+});
+
+test('parseRemoteManifestJson parses sqlite3 -json output', () => {
+  const rows = parseRemoteManifestJson('[{"dataset":"backtest_ticks","dt":"2026-06-17","underlying":"BTC"}]');
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].dataset, 'backtest_ticks');
+  assert.deepEqual(parseRemoteManifestJson(''), []);
+});
+
+test('fetchRemoteManifestRows prefers docker exec node over scp', async () => {
+  const calls = [];
+  const rows = await fetchRemoteManifestRows({
+    remoteHost: 'Brutus',
+    remoteStatePath: '/data/goldenlens/backtest-state/data-backtest.db',
+    query: 'SELECT 1',
+    remoteContainer: 'abc123',
+    runCommand: async (command, args) => {
+      calls.push([command, args]);
+      if (command === 'ssh' && args[1]?.includes('docker exec')) {
+        return '[{"dataset":"backtest_ticks","dt":"2026-06-17","underlying":"BTC","active_path":"/lake/x.parquet","status":"valid"}]';
+      }
+      throw new Error(`${command} should not be called`);
+    },
+    log: () => {},
+  });
+
+  assert.equal(rows.length, 1);
+  assert.match(calls[0][1][1], /docker exec -i abc123 node --input-type=module/);
+});
+
+test('fetchRemoteManifestRows falls back to scp when remote node fails', async () => {
+  const calls = [];
+  await assert.rejects(
+    fetchRemoteManifestRows({
+      remoteHost: 'Brutus',
+      remoteStatePath: '/data/goldenlens/backtest-state/data-backtest.db',
+      query: 'SELECT 1',
+      remoteContainer: 'abc123',
+      runCommand: async (command) => {
+        calls.push(command);
+        if (command === 'ssh') throw new Error('docker exec failed');
+        if (command === 'scp') throw new Error('scp failed');
+        throw new Error(`unexpected command: ${command}`);
+      },
+      log: () => {},
+    }),
+    /scp failed/,
+  );
+  assert.deepEqual(calls, ['ssh', 'ssh', 'ssh', 'scp']);
 });
 
 test('planLakePull deduplicates files and builds remote paths', () => {

@@ -28,6 +28,8 @@ function parseArgs(argv) {
     remoteHost: process.env.LAKE_PULL_REMOTE_HOST || 'Brutus',
     remoteLakeRoot: process.env.LAKE_PULL_REMOTE_LAKE || '/data/goldenlens/lakehouse',
     remoteStatePath: process.env.LAKE_PULL_REMOTE_STATE || '/data/goldenlens/backtest-state/data-backtest.db',
+    remoteContainer: process.env.LAKE_PULL_REMOTE_CONTAINER || null,
+    remoteStateInContainer: process.env.LAKE_PULL_REMOTE_STATE_CONTAINER || '/state/data-backtest.db',
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -96,6 +98,7 @@ Remoto (env ou flags):
   --remote-host Brutus
   --remote-lake /data/goldenlens/lakehouse
   --remote-state /data/goldenlens/backtest-state/data-backtest.db
+  --remote-container cc94761cc9d1   Opcional; senao descobre e cacheia automaticamente
 
 Outros:
   --dry-run           Lista o que seria copiado, sem transferir arquivos
@@ -103,7 +106,7 @@ Outros:
 
 Requisitos:
   ssh/scp configurados para o host remoto (alias Brutus)
-  No modo seletivo, o script copia o SQLite remoto temporariamente para listar o manifest
+  No modo seletivo, consulta o manifest via docker exec+node (fallback: scp com cache local)
 `);
 }
 
@@ -164,6 +167,8 @@ async function main() {
         bookDepth: opts.bookDepth,
         datasets: opts.datasets,
         statuses: opts.statuses,
+        remoteContainer: opts.remoteContainer,
+        remoteStateInContainer: opts.remoteStateInContainer,
       },
       runCommand,
       log: console.log,

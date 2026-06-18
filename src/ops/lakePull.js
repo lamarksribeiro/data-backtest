@@ -1,4 +1,4 @@
-import { copyFile, mkdir, rm } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
@@ -132,21 +132,226 @@ export function planLakePull({ rows, remoteLakeRoot, localLakeRoot }) {
   };
 }
 
+export function parseRemoteManifestJson(stdout) {
+  const trimmed = String(stdout || '').trim();
+  if (!trimmed) return [];
+  const parsed = JSON.parse(trimmed);
+  if (!Array.isArray(parsed)) {
+    throw new Error('Unexpected remote manifest response');
+  }
+  return parsed;
+}
+
+function buildRemoteNodeManifestScript(dbPath, query) {
+  const queryB64 = Buffer.from(query, 'utf8').toString('base64');
+  return `
+import { DatabaseSync } from 'node:sqlite';
+const query = Buffer.from('${queryB64}', 'base64').toString('utf8');
+const db = new DatabaseSync(${JSON.stringify(dbPath)}, { readOnly: true });
+try {
+  console.log(JSON.stringify(db.prepare(query).all()));
+} finally {
+  db.close();
+}
+`.trim();
+}
+
+async function readJsonFile(filePath) {
+  try {
+    const raw = await readFile(filePath, 'utf8');
+    return JSON.parse(raw);
+  } catch (err) {
+    if (err.code === 'ENOENT') return null;
+    throw err;
+  }
+}
+
+async function getRemoteFileMtime({ remoteHost, remotePath, runCommand }) {
+  const stdout = await runCommand('ssh', [remoteHost, 'stat', '-c', '%Y', remotePath]);
+  const mtime = Number.parseInt(String(stdout).trim(), 10);
+  if (!Number.isFinite(mtime)) {
+    throw new Error(`Could not read remote mtime for ${remotePath}`);
+  }
+  return mtime;
+}
+
+export async function resolveRemoteContainerTarget({
+  remoteHost,
+  remoteContainer,
+  remoteStateInContainer = '/state/data-backtest.db',
+  cachePath,
+  runCommand,
+  log = console.log,
+}) {
+  if (remoteContainer) {
+    return { containerId: remoteContainer, statePath: remoteStateInContainer };
+  }
+
+  const cached = cachePath ? await readJsonFile(cachePath) : null;
+  if (cached?.containerId) {
+    return {
+      containerId: cached.containerId,
+      statePath: cached.statePath || remoteStateInContainer,
+    };
+  }
+
+  log('[lake:pull] descobrindo container data-backtest no Brutus...');
+  const stdout = await runCommand('ssh', [
+    remoteHost,
+    'docker ps -q | while read id; do if docker inspect -f "{{range .Config.Env}}{{println .}}{{end}}" "$id" | grep -q "^STATE_DB_PATH="; then echo "$id"; break; fi; done',
+  ]);
+  const containerId = String(stdout).trim();
+  if (!containerId) {
+    throw new Error('Container data-backtest nao encontrado no host remoto');
+  }
+
+  const target = { containerId, statePath: remoteStateInContainer };
+  if (cachePath) {
+    await mkdir(path.dirname(cachePath), { recursive: true });
+    await writeFile(cachePath, `${JSON.stringify({ ...target, discoveredAt: new Date().toISOString() }, null, 2)}\n`, 'utf8');
+  }
+  return target;
+}
+
+async function fetchRemoteManifestRowsViaRemoteNode({
+  remoteHost,
+  remoteContainer,
+  remoteStateInContainer,
+  containerCachePath,
+  query,
+  runCommand,
+  log,
+}) {
+  const target = await resolveRemoteContainerTarget({
+    remoteHost,
+    remoteContainer,
+    remoteStateInContainer,
+    cachePath: containerCachePath,
+    runCommand,
+    log,
+  });
+  const script = buildRemoteNodeManifestScript(target.statePath, query);
+  const scriptB64 = Buffer.from(script, 'utf8').toString('base64');
+  log(`[lake:pull] consultando manifest remoto via docker exec (${target.containerId.slice(0, 12)})...`);
+  const stdout = await runCommand('ssh', [
+    remoteHost,
+    `echo ${scriptB64} | base64 -d | docker exec -i ${target.containerId} node --input-type=module`,
+  ]);
+  return parseRemoteManifestJson(stdout);
+}
+
+async function fetchRemoteManifestRowsViaSqlite3({
+  remoteHost,
+  remoteStatePath,
+  query,
+  runCommand,
+}) {
+  const stdout = await runCommand('ssh', [remoteHost, 'sqlite3', '-json', remoteStatePath, query]);
+  return parseRemoteManifestJson(stdout);
+}
+
+async function readManifestRowsFromLocalDb(dbPath, query) {
+  const db = new DatabaseSync(dbPath, { readOnly: true });
+  try {
+    return db.prepare(query).all();
+  } finally {
+    db.close();
+  }
+}
+
+async function fetchRemoteManifestRowsViaScp({
+  remoteHost,
+  remoteStatePath,
+  query,
+  runCommand,
+  cachePath,
+  cacheMetaPath,
+  log,
+}) {
+  let dbPath = cachePath;
+  let usedCache = false;
+
+  if (cachePath && cacheMetaPath) {
+    const remoteMtime = await getRemoteFileMtime({ remoteHost, remotePath: remoteStatePath,  runCommand });
+    const meta = await readJsonFile(cacheMetaPath);
+    try {
+      if (meta?.remoteMtime === remoteMtime) {
+        await stat(cachePath);
+        usedCache = true;
+        log('[lake:pull] reutilizando cache local do state remoto');
+      }
+    } catch {
+      usedCache = false;
+    }
+
+    if (!usedCache) {
+      log('[lake:pull] baixando state remoto via scp (~280MB, pode demorar)...');
+      await mkdir(path.dirname(cachePath), { recursive: true });
+      await runCommand('scp', [`${remoteHost}:${remoteStatePath}`, cachePath]);
+      await writeFile(cacheMetaPath, `${JSON.stringify({ remoteMtime, fetchedAt: new Date().toISOString() }, null, 2)}\n`, 'utf8');
+    }
+  } else {
+    dbPath = path.join(os.tmpdir(), `data-backtest-pull-${process.pid}-${Date.now()}.db`);
+    log('[lake:pull] baixando state remoto via scp (~280MB, pode demorar)...');
+    await runCommand('scp', [`${remoteHost}:${remoteStatePath}`, dbPath]);
+  }
+
+  try {
+    return await readManifestRowsFromLocalDb(dbPath, query);
+  } finally {
+    if (!cachePath) {
+      await rm(dbPath, { force: true });
+    }
+  }
+}
+
 export async function fetchRemoteManifestRows({
   remoteHost,
   remoteStatePath,
   query,
   runCommand,
-  tempDbPath = path.join(os.tmpdir(), `data-backtest-pull-${process.pid}-${Date.now()}.db`),
+  log = console.log,
+  remoteContainer = null,
+  remoteStateInContainer = '/state/data-backtest.db',
+  containerCachePath = null,
+  stateCachePath = null,
+  stateCacheMetaPath = null,
 }) {
-  await runCommand('scp', [`${remoteHost}:${remoteStatePath}`, tempDbPath]);
-  const db = new DatabaseSync(tempDbPath, { readOnly: true });
   try {
-    return db.prepare(query).all();
-  } finally {
-    db.close();
-    await rm(tempDbPath, { force: true });
+    return await fetchRemoteManifestRowsViaRemoteNode({
+      remoteHost,
+      remoteContainer,
+      remoteStateInContainer,
+      containerCachePath,
+      query,
+      runCommand,
+      log,
+    });
+  } catch (err) {
+    log(`[lake:pull] docker exec indisponivel, tentando sqlite3 no host: ${err.message}`);
   }
+
+  try {
+    log('[lake:pull] consultando manifest remoto via ssh+sqlite3...');
+    return await fetchRemoteManifestRowsViaSqlite3({
+      remoteHost,
+      remoteStatePath,
+      query,
+      runCommand,
+    });
+  } catch (err) {
+    log(`[lake:pull] sqlite3 remoto indisponivel, fallback scp: ${err.message}`);
+  }
+
+  return fetchRemoteManifestRowsViaScp({
+    remoteHost,
+    remoteStatePath,
+    query,
+    runCommand,
+    cachePath: stateCachePath,
+    cacheMetaPath: stateCacheMetaPath,
+    log,
+  });
 }
 
 export async function runLakePull({
@@ -213,11 +418,18 @@ export async function runLakePull({
   }
 
   const query = buildManifestQuery(filters);
+  const stateDir = path.dirname(config.stateDbPath);
   const rows = await fetchRemoteManifestRows({
     remoteHost,
     remoteStatePath,
     query,
     runCommand,
+    log,
+    remoteContainer: filters.remoteContainer ?? null,
+    remoteStateInContainer: filters.remoteStateInContainer ?? '/state/data-backtest.db',
+    containerCachePath: path.join(stateDir, '.lake-pull-remote-container.json'),
+    stateCachePath: path.join(stateDir, '.lake-pull-remote-state-cache.db'),
+    stateCacheMetaPath: path.join(stateDir, '.lake-pull-remote-state-cache.json'),
   });
   if (!rows.length) {
     return {
