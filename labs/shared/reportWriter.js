@@ -16,6 +16,7 @@ export function writeLabReport(reportDir, report) {
   writeJson(path.join(reportDir, 'top-results.json'), report.topResults);
   writeJson(path.join(reportDir, 'metadata.json'), report.metadata);
   writeFileSync(path.join(reportDir, 'summary.md'), renderSummaryMarkdown(report), 'utf8');
+  writeFileSync(path.join(reportDir, 'report.html'), renderSummaryHtml(report), 'utf8');
 }
 
 export function gitMetadata() {
@@ -93,4 +94,122 @@ function formatNumber(value) {
   const number = Number(value);
   if (!Number.isFinite(number)) return '0';
   return String(Math.round(number * 10000) / 10000);
+}
+
+function renderSummaryHtml(report) {
+  const { metadata, topResults } = report;
+  const champion = topResults[0];
+  const series = champion?.summary?.daily?.series || [];
+  const chart = renderEquitySvg(series);
+  const rows = topResults.slice(0, 15).map((item) => `
+    <tr>
+      <td>${item.rank}</td>
+      <td><code>${escapeHtml(item.id)}</code></td>
+      <td class="num ${Number(item.summary.totalPnl) >= 0 ? 'pos' : 'neg'}">${formatNumber(item.summary.totalPnl)}</td>
+      <td class="num">${item.summary.entries ?? 0}</td>
+      <td class="num">${formatNumber(item.summary.winRate)}</td>
+      <td class="num">${formatNumber(item.summary.profitFactor)}</td>
+      <td class="num">${formatNumber(item.summary.maxDrawdown)}</td>
+      <td class="num">${item.summary.daily ? `${item.summary.daily.profitableDays}/${item.summary.daily.days}` : 'n/a'}</td>
+    </tr>`).join('');
+
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>${escapeHtml(metadata.experimentName)}</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b1020; --card:#121a2e; --text:#e8edf7; --muted:#8b9bb8; --pos:#3dd68c; --neg:#ff6b7a; --line:#5b8cff; --grid:#1e2a44; }
+    * { box-sizing: border-box; }
+    body { margin:0; font:14px/1.5 system-ui,Segoe UI,sans-serif; background:var(--bg); color:var(--text); }
+    main { max-width:1100px; margin:0 auto; padding:24px; }
+    h1 { margin:0 0 8px; font-size:1.6rem; }
+    .meta { color:var(--muted); margin-bottom:20px; }
+    .card { background:var(--card); border:1px solid var(--grid); border-radius:14px; padding:18px; margin-bottom:18px; }
+    .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-top:12px; }
+    .stat { background:#0d1426; border-radius:10px; padding:12px; }
+    .stat label { display:block; color:var(--muted); font-size:12px; }
+    .stat strong { font-size:1.25rem; }
+    table { width:100%; border-collapse:collapse; }
+    th, td { padding:8px 10px; border-bottom:1px solid var(--grid); text-align:left; }
+    th { color:var(--muted); font-weight:600; }
+    .num { text-align:right; font-variant-numeric:tabular-nums; }
+    .pos { color:var(--pos); }
+    .neg { color:var(--neg); }
+    svg { width:100%; height:auto; display:block; }
+    code { font-size:12px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>${escapeHtml(metadata.experimentName)}</h1>
+    <p class="meta">${escapeHtml(metadata.strategyId)} · ${escapeHtml(metadata.window.from)} → ${escapeHtml(metadata.window.to)} · ${metadata.variantCount} variantes</p>
+    <section class="card">
+      <h2>Campeão: <code>${escapeHtml(champion?.id || 'n/a')}</code></h2>
+      ${chart}
+      <div class="stats">
+        <div class="stat"><label>PnL total</label><strong class="${Number(champion?.summary?.totalPnl) >= 0 ? 'pos' : 'neg'}">${formatNumber(champion?.summary?.totalPnl)}</strong></div>
+        <div class="stat"><label>Profit Factor</label><strong>${formatNumber(champion?.summary?.profitFactor)}</strong></div>
+        <div class="stat"><label>Max Drawdown</label><strong>${formatNumber(champion?.summary?.maxDrawdown)}</strong></div>
+        <div class="stat"><label>Dias positivos</label><strong>${champion?.summary?.daily ? `${champion.summary.daily.profitableDays}/${champion.summary.daily.days}` : 'n/a'}</strong></div>
+        <div class="stat"><label>Entradas</label><strong>${champion?.summary?.entries ?? 0}</strong></div>
+        <div class="stat"><label>Win %</label><strong>${formatNumber(champion?.summary?.winRate)}</strong></div>
+      </div>
+    </section>
+    <section class="card">
+      <h2>Top resultados</h2>
+      <table>
+        <thead><tr><th>#</th><th>Variante</th><th>PnL</th><th>Entradas</th><th>Win %</th><th>PF</th><th>Max DD</th><th>Dias +</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>`;
+}
+
+function renderEquitySvg(series) {
+  if (!series.length) {
+    return '<p style="color:var(--muted)">Sem série diária (use dailyMetrics: true no experimento).</p>';
+  }
+  const width = 960;
+  const height = 320;
+  const pad = { top: 24, right: 20, bottom: 40, left: 56 };
+  const values = series.map((p) => Number(p.cumulativePnl || 0));
+  const minY = Math.min(0, ...values);
+  const maxY = Math.max(0, ...values);
+  const spanY = maxY - minY || 1;
+  const innerW = width - pad.left - pad.right;
+  const innerH = height - pad.top - pad.bottom;
+  const xAt = (index) => pad.left + (index / Math.max(series.length - 1, 1)) * innerW;
+  const yAt = (value) => pad.top + innerH - ((value - minY) / spanY) * innerH;
+  const zeroY = yAt(0);
+  const points = series.map((point, index) => `${xAt(index).toFixed(1)},${yAt(point.cumulativePnl).toFixed(1)}`).join(' ');
+  const area = `${points} ${xAt(series.length - 1).toFixed(1)},${zeroY.toFixed(1)} ${xAt(0).toFixed(1)},${zeroY.toFixed(1)}`;
+  const ticks = 4;
+  const yTicks = Array.from({ length: ticks + 1 }, (_, i) => minY + (spanY * i) / ticks);
+  const yGrid = yTicks.map((value) => {
+    const y = yAt(value).toFixed(1);
+    return `<line x1="${pad.left}" y1="${y}" x2="${width - pad.right}" y2="${y}" stroke="var(--grid)" />
+      <text x="${pad.left - 8}" y="${y}" fill="var(--muted)" font-size="11" text-anchor="end" dominant-baseline="middle">${formatNumber(value)}</text>`;
+  }).join('');
+  const xLabels = [0, Math.floor((series.length - 1) / 2), series.length - 1]
+    .filter((v, i, arr) => arr.indexOf(v) === i)
+    .map((index) => `<text x="${xAt(index).toFixed(1)}" y="${height - 10}" fill="var(--muted)" font-size="11" text-anchor="middle">${escapeHtml(series[index].dt || '')}</text>`)
+    .join('');
+  return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Curva de equity cumulativa">
+    ${yGrid}
+    <line x1="${pad.left}" y1="${zeroY.toFixed(1)}" x2="${width - pad.right}" y2="${zeroY.toFixed(1)}" stroke="#334466" stroke-dasharray="4 4" />
+    <polygon points="${area}" fill="rgba(91,140,255,0.18)" />
+    <polyline points="${points}" fill="none" stroke="var(--line)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />
+    ${xLabels}
+  </svg>`;
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }

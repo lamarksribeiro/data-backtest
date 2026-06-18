@@ -1,0 +1,10 @@
+{
+  "name": "phase2-sizing",
+  "description": "Kelly, box arb e frequência de entradas (fixar params da fase 1 no experimento).",
+  "grid": {
+    "kellyFraction": [0.14, 0.18, 0.22, 0.26],
+    "maxKellyPct": [0.12, 0.16, 0.2],
+    "boxMaxSumAsk": [0.98, 0.985, 0.99],
+    "maxEntriesPerEvent": [5, 6, 8]
+  }
+}

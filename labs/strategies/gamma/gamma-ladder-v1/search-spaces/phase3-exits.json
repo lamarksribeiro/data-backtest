@@ -1,0 +1,10 @@
+{
+  "name": "phase3-exits",
+  "description": "Take-profit, trailing, stop e hedge lock.",
+  "grid": {
+    "takeProfitBid": [0.84, 0.88, 0.92],
+    "trailAfterBid": [0.7, 0.74, 0.78],
+    "stopBid": [0.1, 0.12, 0.16],
+    "hedgeMinLockedProfit": [0.04, 0.05, 0.07]
+  }
+}

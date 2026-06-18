@@ -1,0 +1,153 @@
+{
+  "name": "presets-quick",
+  "description": "10 perfis curados do tune-gamma-ladder (polymarket-test).",
+  "variants": [
+    {
+      "id": "balanced-early",
+      "params": {
+        "minEdge": 0.055,
+        "minDirectionalProb": 0.58,
+        "minDistanceAbs": 24,
+        "maxAsk": 0.72,
+        "cooldownSec": 9,
+        "maxEntriesPerEvent": 6,
+        "maxEntryValue": 8,
+        "maxEventExposure": 35,
+        "modelWeight": 0.66,
+        "kellyFraction": 0.2
+      }
+    },
+    {
+      "id": "balanced-tight",
+      "params": {
+        "minEdge": 0.07,
+        "minDirectionalProb": 0.6,
+        "minDistanceAbs": 35,
+        "maxAsk": 0.68,
+        "cooldownSec": 10,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 7,
+        "maxEventExposure": 30,
+        "modelWeight": 0.7,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "sniper-many",
+      "params": {
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "maxAsk": 0.64,
+        "cooldownSec": 6,
+        "maxEntriesPerEvent": 8,
+        "maxEntryValue": 6,
+        "maxEventExposure": 36,
+        "modelWeight": 0.72,
+        "kellyFraction": 0.16
+      }
+    },
+    {
+      "id": "late-conviction",
+      "params": {
+        "entryWindowStart": 170,
+        "minEdge": 0.075,
+        "minDirectionalProb": 0.64,
+        "minDistanceAbs": 35,
+        "maxAsk": 0.7,
+        "cooldownSec": 7,
+        "maxEntriesPerEvent": 7,
+        "modelWeight": 0.76,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "market-blend",
+      "params": {
+        "minEdge": 0.06,
+        "minDirectionalProb": 0.6,
+        "minDistanceAbs": 28,
+        "maxAsk": 0.74,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 6,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.55,
+        "kellyFraction": 0.2
+      }
+    },
+    {
+      "id": "high-prob",
+      "params": {
+        "minEdge": 0.095,
+        "minDirectionalProb": 0.68,
+        "minDistanceAbs": 55,
+        "maxAsk": 0.62,
+        "cooldownSec": 12,
+        "maxEntriesPerEvent": 4,
+        "maxEntryValue": 8,
+        "maxEventExposure": 28,
+        "modelWeight": 0.76,
+        "kellyFraction": 0.16
+      }
+    },
+    {
+      "id": "micro-ladder",
+      "params": {
+        "minEdge": 0.065,
+        "minDirectionalProb": 0.6,
+        "minDistanceAbs": 30,
+        "maxAsk": 0.66,
+        "cooldownSec": 5,
+        "maxEntriesPerEvent": 9,
+        "maxEntryValue": 4,
+        "maxEventExposure": 26,
+        "modelWeight": 0.68,
+        "kellyFraction": 0.24
+      }
+    },
+    {
+      "id": "vol-conservative",
+      "params": {
+        "minEdge": 0.085,
+        "minDirectionalProb": 0.64,
+        "minDistanceAbs": 45,
+        "maxAsk": 0.66,
+        "cooldownSec": 9,
+        "maxEntriesPerEvent": 5,
+        "maxEventExposure": 28,
+        "modelWeight": 0.62,
+        "sigmaMultiplier": 1.45,
+        "kellyFraction": 0.14
+      }
+    },
+    {
+      "id": "wide-entry",
+      "params": {
+        "minEdge": 0.05,
+        "minDirectionalProb": 0.57,
+        "minDistanceAbs": 18,
+        "maxAsk": 0.8,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 8,
+        "maxEntryValue": 6,
+        "maxEventExposure": 32,
+        "modelWeight": 0.64,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "edge-sniper-plus",
+      "params": {
+        "minEdge": 0.07,
+        "minDirectionalProb": 0.56,
+        "minDistanceAbs": 40,
+        "maxAsk": 0.66,
+        "cooldownSec": 7,
+        "maxEntriesPerEvent": 6,
+        "modelWeight": 0.72,
+        "kellyFraction": 0.18
+      }
+    }
+  ]
+}

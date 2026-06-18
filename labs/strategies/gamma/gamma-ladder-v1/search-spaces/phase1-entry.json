@@ -1,0 +1,10 @@
+{
+  "name": "phase1-entry",
+  "description": "Grid de filtros de entrada calibrado para dados BTC pós-maio (book depth 25).",
+  "grid": {
+    "minEdge": [0.04, 0.05, 0.06, 0.07, 0.08],
+    "minDirectionalProb": [0.52, 0.54, 0.56, 0.58, 0.6],
+    "minDistanceAbs": [12, 18, 24, 30, 40],
+    "modelWeight": [0.58, 0.65, 0.72, 0.78]
+  }
+}

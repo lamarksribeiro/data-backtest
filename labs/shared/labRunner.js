@@ -350,6 +350,12 @@ function summarizeDaily(days) {
   const flatDays = pnls.length - profitableDays - losingDays;
   const sorted = [...pnls].sort((a, b) => a - b);
   const median = sorted.length ? sorted[Math.floor(sorted.length / 2)] : 0;
+  let cumulative = 0;
+  const series = days.map((day) => {
+    const pnl = Number(day.totalPnl || 0);
+    cumulative += pnl;
+    return { dt: day.dt, pnl, cumulativePnl: cumulative };
+  });
   return {
     days: days.length,
     profitableDays,
@@ -361,6 +367,7 @@ function summarizeDaily(days) {
     avgDailyPnl: days.length ? pnls.reduce((sum, pnl) => sum + pnl, 0) / days.length : 0,
     medianDailyPnl: median,
     maxDailyDrawdown: days.reduce((max, day) => Math.max(max, Number(day.maxDrawdown || 0)), 0),
+    series,
   };
 }
 
