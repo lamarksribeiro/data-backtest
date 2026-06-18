@@ -533,7 +533,12 @@ async function openBackupStartModal(ctx, settings, baseline = { ready: false }) 
   });
 }
 
+let backupStartInFlight = false;
+
 async function startBackup(ctx, state) {
+  if (backupStartInFlight) return;
+  backupStartInFlight = true;
+  try {
   const incremental = Boolean(state.incremental);
   const res = await ctx.api.post('/api/backup/telegram/runs', {
     underlying: state.scope === 'single' ? state.underlying : undefined,
@@ -550,6 +555,9 @@ async function startBackup(ctx, state) {
   ctx.toast.ok(state.dryRun ? 'Dry-run enfileirado' : 'Backup iniciado');
   attachProgressPanel(ctx, res.data.run_id, 'backup');
   startPolling(ctx, res.data.run_id);
+  } finally {
+    backupStartInFlight = false;
+  }
 }
 
 async function openRestoreModal(ctx, { lastRun, completedRuns, channelCatalog, preselectRunId = null, preselectSource = null }) {

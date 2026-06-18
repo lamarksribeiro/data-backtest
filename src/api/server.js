@@ -27,7 +27,7 @@ import { datasetRequestFromObject, datasetRequestFromParams } from '../query/req
 import { createPrepareJobRunner } from '../prepare/runner.js';
 import { createAssetUpdateScheduler, lastClosedUtcDate } from '../scheduler/assetUpdates.js';
 import { createTelegramBackupScheduler, enqueueTelegramBackupAfterAssetSync } from '../scheduler/telegramBackup.js';
-import { enqueueTelegramBackup, enqueueTelegramRestore, getTelegramBackupRunStatus, isTelegramBackupRunning, cancelTelegramBackupRun, cancelAllActiveTelegramBackupRuns } from '../backup/runner.js';
+import { enqueueTelegramBackup, enqueueTelegramRestore, getTelegramBackupRunStatus, isTelegramBackupRunning, isTelegramBackupBusy, cancelTelegramBackupRun, cancelAllActiveTelegramBackupRuns } from '../backup/runner.js';
 import { testTelegramBackupConnection } from '../backup/upload.js';
 import { discoverTelegramBackupCatalog } from '../backup/discover.js';
 import { listTelegramBackupRuns, getLastCompletedTelegramBackupRun, clearTelegramBackupLocalRecords, getIncrementalBackupBaseline } from '../state/telegramBackup.js';
@@ -388,6 +388,9 @@ export function createApiHandler(deps) {
         if (!backupConfig.configured) {
           return sendJson(res, 400, { error: { code: 'NOT_CONFIGURED', message: 'Token e chat_id são obrigatórios.' } });
         }
+        if (isTelegramBackupBusy(db)) {
+          return sendJson(res, 409, { error: { code: 'BACKUP_BUSY', message: 'Aguarde o backup ou restore em andamento terminar.' } });
+        }
         const result = enqueueTelegramBackup({
           config,
           db,
@@ -406,6 +409,10 @@ export function createApiHandler(deps) {
             manual: body.manual === true,
           },
         });
+        if (!result.ok) {
+          const status = result.code === 'BACKUP_BUSY' || result.code === 'ALREADY_RUNNING' ? 409 : 400;
+          return sendJson(res, status, { error: { code: result.code, message: result.message }, ...result });
+        }
         return sendJson(res, 202, result);
       }
       if (req.method === 'POST' && url.pathname === '/api/backup/telegram/restore') {
@@ -416,6 +423,9 @@ export function createApiHandler(deps) {
         const backupConfig = resolveTelegramBackupConfig(config, db);
         if (!backupConfig.configured) {
           return sendJson(res, 400, { error: { code: 'NOT_CONFIGURED', message: 'Token e chat_id são obrigatórios.' } });
+        }
+        if (isTelegramBackupBusy(db)) {
+          return sendJson(res, 409, { error: { code: 'BACKUP_BUSY', message: 'Aguarde o backup ou restore em andamento terminar.' } });
         }
         const result = enqueueTelegramRestore({
           config,

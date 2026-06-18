@@ -144,6 +144,11 @@ export async function runTelegramBackup({
           partitionEntries.push(entry);
         } catch (err) {
           stats.errors += 1;
+          console.warn('[telegram-backup] partition failed', {
+            underlying: manifestRow.underlying,
+            dt: manifestRow.dt,
+            error: err.message,
+          });
           const errorEntry = {
             dt: manifestRow.dt,
             error: err.message,

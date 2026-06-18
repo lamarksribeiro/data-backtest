@@ -5,6 +5,7 @@ import { loadConfig } from './config.js';
 import { openStateDatabase, closeStateDatabase } from './state/sqlite.js';
 import { recoverStalePrepareJobs } from './state/prepareJobs.js';
 import { recoverStaleAssetUpdateRuns } from './state/assetUpdateSchedules.js';
+import { recoverStaleTelegramBackupRuns } from './state/telegramBackup.js';
 import { createApiServer } from './api/server.js';
 import { createAuthService } from './auth/authService.js';
 import { seedPromotedStrategies } from './backtestStudio/gls/seedPromotedStrategies.js';
@@ -17,11 +18,15 @@ if (!config.TEST_MODE && !config.SESSION_SECRET) {
 const db = openStateDatabase(config.stateDbPath);
 const recoveredJobs = recoverStalePrepareJobs(db);
 const recoveredAssetUpdateRuns = recoverStaleAssetUpdateRuns(db);
+const recoveredTelegramBackupRuns = recoverStaleTelegramBackupRuns(db);
 if (recoveredJobs > 0) {
   console.log(JSON.stringify({ ok: true, recoveredPrepareJobs: recoveredJobs }));
 }
 if (recoveredAssetUpdateRuns > 0) {
   console.log(JSON.stringify({ ok: true, recoveredAssetUpdateRuns }));
+}
+if (recoveredTelegramBackupRuns > 0) {
+  console.log(JSON.stringify({ ok: true, recoveredTelegramBackupRuns }));
 }
 seedPromotedStrategies(db);
 const authService = createAuthService({ db, config });

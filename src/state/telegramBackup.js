@@ -1,5 +1,19 @@
 import { manifestRowToJson } from '../backup/catalog.js';
 
+export function recoverStaleTelegramBackupRuns(db) {
+  const stale = db.prepare(`
+    SELECT id FROM telegram_backup_runs
+    WHERE status IN ('queued', 'running')
+  `).all();
+  for (const row of stale) {
+    cancelTelegramBackupRunRecord(db, row.id, {
+      phase: 'cancelled',
+      reason: 'stale_after_restart',
+    });
+  }
+  return stale.length;
+}
+
 export function createTelegramBackupRun(db, run) {
   db.prepare(`
     INSERT INTO telegram_backup_runs (id, status, mode, underlying, request_json, created_at)
@@ -100,6 +114,20 @@ export function deleteArtifactsForRun(db, runId) {
 }
 
 export function insertTelegramBackupArtifact(db, artifact) {
+  db.prepare(`
+    DELETE FROM telegram_backup_artifacts
+    WHERE underlying = ? AND dataset = ? AND interval = ?
+      AND COALESCE(book_depth, -1) = COALESCE(?, -1)
+      AND dt = ? AND chunk_index = ?
+  `).run(
+    artifact.underlying,
+    artifact.dataset,
+    artifact.interval,
+    artifact.bookDepth ?? null,
+    artifact.dt,
+    artifact.chunkIndex ?? 0,
+  );
+
   const result = db.prepare(`
     INSERT INTO telegram_backup_artifacts (
       run_id, underlying, dataset, interval, book_depth, dt, sha256, file_sha256, bytes,
