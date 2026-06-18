@@ -1,0 +1,17 @@
+{
+  "name": "vsmr-sweep",
+  "strategyId": "vsmr",
+  "strategyFamily": "volatility",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-06-07",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "defaults": "../defaults.json",
+  "searchSpace": "../search-spaces/grid-search.json"
+}

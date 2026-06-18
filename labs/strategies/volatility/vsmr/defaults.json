@@ -1,0 +1,15 @@
+{
+  "walletSize": 100,
+  "maxOrderValue": 15,
+  "minShares": 5,
+  "entryWindowStart": 150,
+  "entryWindowEnd": 45,
+  "vrThreshold": 2.0,
+  "minNetEdge": 0.08,
+  "minAsk": 0.10,
+  "maxAsk": 0.88,
+  "maxSpread": 0.06,
+  "entrySlippageMax": 0.02,
+  "minLiquidityRatio": 0.60,
+  "volLookbackSec": 45
+}

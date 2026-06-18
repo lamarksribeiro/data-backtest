@@ -1,0 +1,27 @@
+{
+  "id": "vsmr",
+  "name": "Volatility Spike Mean Reversion",
+  "family": "volatility",
+  "status": "candidate",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "src/backtestStudio/gls/strategies/VolatilitySpikeMeanReversion.gls"
+  },
+  "promotedToStudio": true,
+  "studioSlug": "vsmr-gls",
+  "studio": {
+    "description": "Estratégia quantitativa baseada em choques de volatilidade adverso temporários que criam mispricing no favorito da Polymarket.",
+    "tags": ["vsmr", "btc", "volatility", "mean-reversion"],
+    "defaultVersion": 1,
+    "defaultGlsSource": "classic",
+    "glsSources": {
+      "classic": "src/backtestStudio/gls/strategies/VolatilitySpikeMeanReversion.gls"
+    }
+  },
+  "notes": "Estratégia focada na subprecificação de favoritos após spikes de volatilidade em sub-velas. Janela: 2026-05-04 a 2026-06-07."
+}
