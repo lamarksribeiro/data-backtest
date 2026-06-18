@@ -81,6 +81,9 @@ function emitStatement(stmt, depth) {
       return `${pad}if (__truthy(${emitExpr(stmt.test)})) {\n${consequent}\n${pad}}${alternate}`;
     }
     case 'ExprStmt':
+      if (stmt.expr?.type === 'Identifier' && stmt.expr.name === 'return') {
+        return `${pad}return;`;
+      }
       return `${pad}${emitExpr(stmt.expr)};`;
     default:
       return `${pad}/* unsupported stmt ${stmt.type} */`;

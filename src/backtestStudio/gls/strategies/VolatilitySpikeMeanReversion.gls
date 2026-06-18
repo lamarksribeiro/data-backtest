@@ -1,0 +1,71 @@
+strategy "Volatility Spike Mean Reversion" {
+  param walletSize = 100
+  param maxOrderValue = 15
+  param minShares = 5
+  param entryWindowStart = 150
+  param entryWindowEnd = 45
+  param vrThreshold = 2.0
+  param minNetEdge = 0.08
+  param minAsk = 0.10
+  param maxAsk = 0.88
+  param maxSpread = 0.06
+  param entrySlippageMax = 0.02
+  param minLiquidityRatio = 0.60
+  param volLookbackSec = 45
+
+  onEventStart(event) {
+    state.entered = false
+  }
+
+  onTick(tick, event) {
+    if (!state.entered) {
+      let secsLeft = time.secondsUntil(event.end, tick.ts)
+      if (secsLeft <= params.entryWindowStart && secsLeft >= params.entryWindowEnd) {
+        let volFast = signals.volatility(samples, 15)
+        let volSlow = signals.volatility(samples, params.volLookbackSec)
+        if (volSlow > 0.0001) {
+          let vr = volFast / volSlow
+          if (vr >= params.vrThreshold) {
+            let btc = tick.underlyingPrice
+            let ptb = event.priceToBeat
+            let dist = btc - ptb
+            let fav = market.sideFromPrice(btc, ptb)
+            
+            // Choque de preço adverso recente: o BTC se moveu contra a direção do favorito nos últimos 15s
+            let btcPast = signals.underlyingAgo(samples, 15)
+            if (btcPast) {
+              let signDist = (dist >= 0) * 2.0 - 1.0
+              let priceChange = btc - btcPast
+              if (priceChange * signDist < 0) {
+                // Probabilidade teórica de longo prazo
+                let sigmaTotal = volSlow * math.sqrt(secsLeft)
+                let z = math.abs(dist) / sigmaTotal
+                let pFair = math.normalCdf(z)
+
+                let ask = book.ask(fav, tick)
+                let bid = book.bid(fav, tick)
+                let spread = ask - bid
+                if (ask >= params.minAsk && ask <= params.maxAsk && spread <= params.maxSpread) {
+                  let edge = pFair - ask
+                  if (edge >= params.minNetEdge) {
+                    // Executa a compra taker pelo book
+                    let maxPrice = ask + params.entrySlippageMax
+                    let budget = math.min(params.maxOrderValue, params.walletSize + runState.totalPnl)
+                    let bought = enter(fav, { price: ask, maxPrice: maxPrice, budget: budget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "vsmr_panic_entry" })
+                    if (bought) {
+                      state.entered = true
+                      mark("entry", { side: fav, ask: ask, edge: edge })
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  onEventEnd(event) {
+  }
+}

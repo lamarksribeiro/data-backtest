@@ -1,0 +1,7 @@
+{
+  "strategyId": "vsmr",
+  "updatedAt": "2026-06-18",
+  "presets": [
+    { "id": "v1", "role": "champion" }
+  ]
+}

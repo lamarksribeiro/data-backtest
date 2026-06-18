@@ -1,0 +1,33 @@
+{
+  "id": "v1",
+  "name": "v1 (Volatility Spike Mean Reversion)",
+  "studioSlug": "vsmr-v1",
+  "studioName": "Volatility Spike Mean Reversion · v1",
+  "role": "champion",
+  "description": "Variante campeã otimizada baseada em choques de volatilidade adversos temporários. Apresenta o maior profit factor (1.54) com taxa de acerto de 68% e drawdown reduzido.",
+  "tags": ["champion", "depth25", "efficient"],
+  "labVariantId": "v0081",
+  "labSummary": {
+    "totalPnl": 260.03,
+    "profitFactor": 1.54,
+    "positiveDays": 16,
+    "totalDays": 35,
+    "entries": 103,
+    "source": "vsmr-sweep 2026-06-18"
+  },
+  "params": {
+    "walletSize": 100,
+    "maxOrderValue": 15,
+    "minShares": 5,
+    "entryWindowStart": 120,
+    "entryWindowEnd": 30,
+    "vrThreshold": 1.8,
+    "minNetEdge": 0.09,
+    "minAsk": 0.1,
+    "maxAsk": 0.88,
+    "maxSpread": 0.06,
+    "entrySlippageMax": 0.02,
+    "minLiquidityRatio": 0.6,
+    "volLookbackSec": 60
+  }
+}
