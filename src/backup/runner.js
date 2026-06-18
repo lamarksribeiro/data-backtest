@@ -1,8 +1,17 @@
 import { restoreFromTelegram } from './restore.js';
 import { runTelegramBackup } from './upload.js';
 import {
+  cancelAllTelegramRunControls,
+  listActiveTelegramRunControlIds,
+  registerTelegramRunControl,
+  releaseTelegramRunControl,
+  requestCancelTelegramRun,
+} from './runControl.js';
+import {
+  cancelTelegramBackupRunRecord,
   createTelegramBackupRun,
   getTelegramBackupRun,
+  listActiveTelegramBackupRuns,
   updateTelegramBackupRun,
 } from '../state/telegramBackup.js';
 
@@ -14,17 +23,20 @@ export function enqueueTelegramBackup({ config, db, backupConfig, request }) {
     return { ok: false, code: 'ALREADY_RUNNING', message: 'Backup já em execução.', run_id: runId };
   }
 
+  const control = registerTelegramRunControl(runId);
   const promise = runTelegramBackup({
     config,
     db,
     backupConfig,
     request: { ...request, runId },
     runId,
+    shouldCancel: () => control.isCancelled(),
     onProgress: (progress) => {
       updateTelegramBackupRun(db, runId, { progressJson: progress });
     },
   }).finally(() => {
     activeRuns.delete(runId);
+    releaseTelegramRunControl(runId);
   });
 
   activeRuns.set(runId, promise);
@@ -45,6 +57,7 @@ export function enqueueTelegramRestore({ config, db, backupConfig, request }) {
     requestJson: { kind: 'restore', ...request },
   });
 
+  const control = registerTelegramRunControl(runId);
   const promise = (async () => {
     updateTelegramBackupRun(db, runId, {
       status: 'running',
@@ -62,6 +75,7 @@ export function enqueueTelegramRestore({ config, db, backupConfig, request }) {
         catalogPath: request.catalogPath ?? null,
         underlying: request.underlying ?? null,
         dryRun: request.dryRun === true,
+        shouldCancel: () => control.isCancelled(),
         onProgress: (progress) => {
           updateTelegramBackupRun(db, runId, { progressJson: { ...progress, kind: 'restore' } });
         },
@@ -75,6 +89,9 @@ export function enqueueTelegramRestore({ config, db, backupConfig, request }) {
       });
       return result;
     } catch (err) {
+      if (err?.code === 'CANCELLED') {
+        return finalizeCancelledRun(db, runId, { kind: 'restore' });
+      }
       updateTelegramBackupRun(db, runId, {
         status: 'failed',
         completedAt: new Date().toISOString(),
@@ -85,10 +102,47 @@ export function enqueueTelegramRestore({ config, db, backupConfig, request }) {
     }
   })().finally(() => {
     activeRuns.delete(runId);
+    releaseTelegramRunControl(runId);
   });
 
   activeRuns.set(runId, promise);
   return { ok: true, run_id: runId, status: 'queued' };
+}
+
+export function cancelTelegramBackupRun(db, runId) {
+  const run = getTelegramBackupRun(db, runId);
+  if (!run) {
+    return { ok: false, code: 'NOT_FOUND', message: 'Run não encontrado.' };
+  }
+  if (!['queued', 'running'].includes(run.status)) {
+    return {
+      ok: false,
+      code: 'NOT_CANCELLABLE',
+      message: `Run não pode ser cancelado no status ${run.status}.`,
+      run_id: runId,
+    };
+  }
+
+  requestCancelTelegramRun(runId);
+  cancelTelegramBackupRunRecord(db, runId, run.progress);
+  return { ok: true, run_id: runId, status: 'cancelled' };
+}
+
+export function cancelAllActiveTelegramBackupRuns(db) {
+  cancelAllTelegramRunControls();
+  const active = listActiveTelegramBackupRuns(db);
+  const cancelled = [];
+  for (const run of active) {
+    const result = cancelTelegramBackupRun(db, run.id);
+    if (result.ok) cancelled.push(run.id);
+  }
+  for (const runId of listActiveTelegramRunControlIds()) {
+    if (!cancelled.includes(runId)) {
+      requestCancelTelegramRun(runId);
+      cancelled.push(runId);
+    }
+  }
+  return { ok: true, cancelled_run_ids: cancelled };
 }
 
 export async function waitTelegramBackupRun(runId) {
@@ -105,6 +159,14 @@ export function getTelegramBackupRunStatus(db, runId) {
 
 export function isTelegramBackupRunning() {
   return activeRuns.size > 0;
+}
+
+function finalizeCancelledRun(db, runId, extraProgress = {}) {
+  const run = getTelegramBackupRun(db, runId);
+  if (run?.status !== 'cancelled') {
+    cancelTelegramBackupRunRecord(db, runId, { ...(run?.progress || {}), ...extraProgress });
+  }
+  return { ok: false, code: 'CANCELLED', message: 'Cancelado pelo usuário.' };
 }
 
 function summarizeRestoreFailure(result) {

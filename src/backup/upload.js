@@ -1,11 +1,16 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
+import { assertNotCancelled, isBackupCancelledError } from './cancel.js';
 import { runBackupCheck } from '../ops/backupCheck.js';
 import { resolveTelegramBackupConfig } from '../state/telegramBackupSettings.js';
 import {
   createTelegramBackupRun,
-  getLatestArtifactShaForPartition,
+  buildSkippedPartitionCatalogEntry,
+  cancelTelegramBackupRunRecord,
+  getLastCompletedAssetCatalog,
+  getLastCompletedMasterCatalog,
+  getLatestFileShaForPartition,
   insertTelegramBackupArtifact,
   updateTelegramBackupRun,
 } from '../state/telegramBackup.js';
@@ -29,6 +34,7 @@ export async function runTelegramBackup({
   request = {},
   runId = `br-${new Date().toISOString().replace(/[:.]/g, '-')}`,
   onProgress = null,
+  shouldCancel = () => false,
 }) {
   const effective = backupConfig ?? resolveTelegramBackupConfig(config, db);
   if (!request.force && !effective.enabled && !request.cli) {
@@ -74,6 +80,7 @@ export async function runTelegramBackup({
   };
 
   try {
+    assertNotCancelled(shouldCancel);
     const groups = selectGroups(db, request);
     if (!groups.length) {
       throw new Error('Nenhuma partição backtest_ticks válida encontrada para backup.');
@@ -84,13 +91,16 @@ export async function runTelegramBackup({
     const totalPartitions = groups.reduce((sum, g) => sum + g.partitions.length, 0);
 
     for (const group of groups) {
+      assertNotCancelled(shouldCancel);
       const partitionEntries = [];
+      let groupUploaded = 0;
       const exclusions = listEventExclusionsForAsset(db, {
         underlying: group.underlying,
         interval: group.interval,
       });
 
       for (const manifestRow of group.partitions) {
+        assertNotCancelled(shouldCancel);
         processed += 1;
         onProgress?.({
           phase: 'upload',
@@ -122,7 +132,10 @@ export async function runTelegramBackup({
             stats,
           });
           if (entry.skipped) stats.skipped += 1;
-          else stats.uploaded += 1;
+          else {
+            stats.uploaded += 1;
+            groupUploaded += 1;
+          }
           partitionEntries.push(entry);
         } catch (err) {
           stats.errors += 1;
@@ -135,17 +148,24 @@ export async function runTelegramBackup({
         }
       }
 
-      const catalog = buildAssetCatalog({
-        underlying: group.underlying,
-        interval: group.interval,
-        bookDepth: group.bookDepth,
-        backupRunId: runId,
-        lakeRootHint: config.lakeRoot,
-        partitions: partitionEntries.filter((p) => !p.error),
-        eventExclusions: exclusions,
-      });
+      const validPartitions = partitionEntries.filter((p) => !p.error);
+      const shouldPublishAssetCatalog = request.dryRun
+        || !request.incremental
+        || request.force
+        || groupUploaded > 0
+        || !getLastCompletedAssetCatalog(db, group.underlying);
 
-      if (!request.dryRun) {
+      if (!request.dryRun && shouldPublishAssetCatalog) {
+        assertNotCancelled(shouldCancel);
+        const catalog = buildAssetCatalog({
+          underlying: group.underlying,
+          interval: group.interval,
+          bookDepth: group.bookDepth,
+          backupRunId: runId,
+          lakeRootHint: config.lakeRoot,
+          partitions: validPartitions,
+          eventExclusions: exclusions,
+        });
         onProgress?.({
           phase: 'catalog',
           underlying: group.underlying,
@@ -168,8 +188,27 @@ export async function runTelegramBackup({
           catalog: catalogRef,
           partitions: catalog.stats.partitions,
           bytes: catalog.stats.bytes,
+          published: true,
+        });
+      } else if (!request.dryRun) {
+        const previous = getLastCompletedAssetCatalog(db, group.underlying);
+        if (!previous) {
+          throw new Error(`Catálogo anterior ausente para ${group.underlying}; rode backup completo.`);
+        }
+        assetCatalogs.push({
+          ...previous,
+          reused: true,
         });
       } else {
+        const catalog = buildAssetCatalog({
+          underlying: group.underlying,
+          interval: group.interval,
+          bookDepth: group.bookDepth,
+          backupRunId: runId,
+          lakeRootHint: config.lakeRoot,
+          partitions: validPartitions,
+          eventExclusions: exclusions,
+        });
         assetCatalogs.push({
           underlying: group.underlying,
           interval: group.interval,
@@ -182,7 +221,9 @@ export async function runTelegramBackup({
     }
 
     let masterRef = null;
-    if (!request.dryRun) {
+    const anyCatalogPublished = assetCatalogs.some((asset) => asset.published);
+    if (!request.dryRun && anyCatalogPublished) {
+      assertNotCancelled(shouldCancel);
       onProgress?.({ phase: 'master_catalog', processed, total: totalPartitions, stats });
       const master = buildMasterCatalog({
         backupRunId: runId,
@@ -215,17 +256,24 @@ export async function runTelegramBackup({
         masterRef.message_id ? `master_catalog message_id=${masterRef.message_id}` : '',
       ].filter(Boolean).join('\n');
       await client.sendMessage(summary, { disableNotification: effective.silentUploads });
+    } else if (!request.dryRun) {
+      masterRef = getLastCompletedMasterCatalog(db);
     }
 
     const result = {
       ok: true,
       run_id: runId,
       dry_run: Boolean(request.dryRun),
-      stats,
+      stats: {
+        ...stats,
+        catalogs_published: assetCatalogs.filter((asset) => asset.published).length,
+        catalogs_reused: assetCatalogs.filter((asset) => asset.reused).length,
+      },
       asset_catalogs: assetCatalogs,
       master_catalog: masterRef,
     };
 
+    assertNotCancelled(shouldCancel);
     updateTelegramBackupRun(db, runId, {
       status: stats.errors > 0 && !request.continueOnError ? 'failed' : 'completed',
       completedAt: new Date().toISOString(),
@@ -236,6 +284,16 @@ export async function runTelegramBackup({
 
     return result;
   } catch (err) {
+    if (isBackupCancelledError(err)) {
+      cancelTelegramBackupRunRecord(db, runId, { phase: 'cancelled', stats });
+      return {
+        ok: false,
+        code: 'CANCELLED',
+        message: err.message,
+        run_id: runId,
+        stats,
+      };
+    }
     updateTelegramBackupRun(db, runId, {
       status: 'failed',
       completedAt: new Date().toISOString(),
@@ -257,7 +315,7 @@ async function uploadPartition({
   stats,
 }) {
   const fileInfo = await loadPartitionFileInfo(config, manifestRow);
-  const latestSha = getLatestArtifactShaForPartition(db, {
+  const latestSha = getLatestFileShaForPartition(db, {
     underlying: manifestRow.underlying,
     dataset: 'backtest_ticks',
     interval: manifestRow.interval,
@@ -266,26 +324,24 @@ async function uploadPartition({
   });
 
   if (request.incremental && !request.force && latestSha === fileInfo.sha256) {
-    if (!request.dryRun) {
-      insertTelegramBackupArtifact(db, {
-        runId,
-        underlying: manifestRow.underlying,
-        dataset: 'backtest_ticks',
-        interval: manifestRow.interval,
-        bookDepth: manifestRow.book_depth,
-        dt: manifestRow.dt,
-        sha256: fileInfo.sha256,
-        bytes: fileInfo.bytes,
-        skipped: true,
-      });
+    const skippedEntry = buildSkippedPartitionCatalogEntry(db, manifestRow, fileInfo);
+    if (skippedEntry) {
+      if (!request.dryRun) {
+        insertTelegramBackupArtifact(db, {
+          runId,
+          underlying: manifestRow.underlying,
+          dataset: 'backtest_ticks',
+          interval: manifestRow.interval,
+          bookDepth: manifestRow.book_depth,
+          dt: manifestRow.dt,
+          sha256: fileInfo.sha256,
+          fileSha256: fileInfo.sha256,
+          bytes: fileInfo.bytes,
+          skipped: true,
+        });
+      }
+      return skippedEntry;
     }
-    return {
-      dt: manifestRow.dt,
-      sha256: fileInfo.sha256,
-      bytes: fileInfo.bytes,
-      skipped: true,
-      reason: 'unchanged',
-    };
   }
 
   if (request.dryRun) {
@@ -355,6 +411,7 @@ async function uploadPartition({
           bookDepth: manifestRow.book_depth,
           dt: manifestRow.dt,
           sha256: chunk.sha256,
+          fileSha256: chunk.index === 0 ? fileSha256 : null,
           bytes: chunk.bytes,
           chunkIndex: chunk.index,
           chunkCount,
@@ -396,6 +453,7 @@ async function uploadPartition({
         bookDepth: manifestRow.book_depth,
         dt: manifestRow.dt,
         sha256: fileInfo.sha256,
+        fileSha256: fileInfo.sha256,
         bytes: fileInfo.bytes,
         chunkIndex: 0,
         chunkCount: 1,

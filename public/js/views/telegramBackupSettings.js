@@ -190,13 +190,17 @@ function renderOperationsCard(ctx, { settings, lastRun, channelCatalog, complete
         disabled: busy,
         onclick: () => discoverChannelBackups(ctx),
       }, 'Atualizar detecção') : null,
+      (busy || settings.enabled || settings.auto_schedule_enabled || settings.auto_after_asset_sync) ? el('button', {
+        type: 'button',
+        class: 'btn btn--ghost btn--sm btn--danger',
+        onclick: () => stopAndResetBackup(ctx),
+      }, 'Parar e limpar tudo') : null,
     ].filter(Boolean)),
     renderBackupStatusCard(settings, channelCatalog, lastRun),
   ]);
 }
 
 function renderHistoryCard(ctx, runs, completedRuns, channelCatalog) {
-  const busy = Boolean(activePoll.runId);
   const hasRuns = runs.length > 0;
 
   return el('section', { class: 'card' }, [
@@ -207,12 +211,13 @@ function renderHistoryCard(ctx, runs, completedRuns, channelCatalog) {
           ? 'Clique em um run concluído para restaurar a partir dele.'
           : 'Nenhum run nesta instalação — use Restaurar para recuperar do canal.'),
       ]),
-      hasRuns ? el('button', {
-        type: 'button',
-        class: 'btn btn--ghost btn--sm btn--danger',
-        disabled: busy,
-        onclick: () => clearLocalBackupHistory(ctx),
-      }, 'Limpar histórico') : null,
+      el('div', { class: 'backup-history-actions' }, [
+        hasRuns ? el('button', {
+          type: 'button',
+          class: 'btn btn--ghost btn--sm btn--danger',
+          onclick: () => clearLocalBackupHistory(ctx),
+        }, 'Limpar histórico') : null,
+      ].filter(Boolean)),
     ]),
     hasRuns
       ? el('div', { class: 'backup-history-list' }, runs.map((run) => renderRunRow(run, ctx, completedRuns, channelCatalog)))
@@ -290,12 +295,13 @@ function renderRunRow(run, ctx, completedRuns, channelCatalog) {
   let statusClass = 'idle';
   if (run.status === 'completed') statusClass = 'ok';
   else if (run.status === 'failed') statusClass = 'err';
+  else if (run.status === 'cancelled') statusClass = 'idle';
   else if (run.status === 'running' || run.status === 'queued') statusClass = 'warn';
 
   const isRestore = run.request?.kind === 'restore';
   const label = isRestore ? 'restore' : run.mode;
   const statsText = run.result?.stats
-    ? `↑ ${run.result.stats.uploaded} enviados · ↷ ${run.result.stats.skipped} pulados`
+    ? `↑ ${run.result.stats.uploaded} enviados · ↷ ${run.result.stats.skipped} pulados${run.result.stats.catalogs_reused ? ` · cat. reutilizados ${run.result.stats.catalogs_reused}` : ''}`
     : run.result?.restored
       ? `${run.result.restored.partitions} partições restauradas`
       : null;
@@ -329,40 +335,48 @@ function attachProgressPanel(ctx, runId, kind) {
   if (!slot) return;
   activePoll.runId = runId;
   activePoll.panelEl = slot;
-  slot.replaceChildren(buildProgressCard(runId, kind, null));
+  slot.replaceChildren(buildProgressCard(ctx, runId, kind, null));
 }
 
-function buildProgressCard(runId, kind, run) {
+function buildProgressCard(ctx, runId, kind, run) {
   const progress = run?.progress || {};
   const isRestore = kind === 'restore' || progress.kind === 'restore';
   const processed = Number(progress.processed || 0);
   const total = Number(progress.total || 0);
   const pct = total > 0 ? Math.min(100, Math.round((processed / total) * 100)) : (run?.status === 'running' ? 5 : 0);
   const stats = progress.stats || run?.result?.stats;
+  const cancellable = !run || run.status === 'queued' || run.status === 'running';
 
   return el('div', { class: 'backup-progress-card', id: 'backup-progress-card' }, [
     el('div', { class: 'backup-progress-card__head' }, [
       el('strong', {}, isRestore ? 'Restauração em andamento' : 'Backup em andamento'),
-      el('span', { class: 'badge badge--warn badge--compact' }, run?.status || 'running'),
+      el('div', { class: 'backup-progress-card__actions' }, [
+        cancellable ? el('button', {
+          type: 'button',
+          class: 'btn btn--ghost btn--sm btn--danger',
+          onclick: () => cancelActiveBackup(ctx, runId),
+        }, 'Cancelar') : null,
+        el('span', { class: 'badge badge--warn badge--compact' }, run?.status || 'running'),
+      ].filter(Boolean)),
     ]),
     el('div', { class: 'backup-progress-bar' }, [el('span', { style: { width: `${pct}%` } })]),
     el('div', { class: 'backup-progress-meta' }, [
       el('div', {}, `Fase: ${formatPhase(progress.phase, isRestore)}`),
       total > 0 ? el('div', {}, `Progresso: ${processed} / ${total} (${pct}%)`) : el('div', {}, 'Calculando total de partições…'),
       progress.underlying ? el('div', {}, `Ativo: ${progress.underlying}${progress.dt ? ` · ${progress.dt}` : ''}`) : null,
-      stats ? el('div', {}, `Enviados: ${stats.uploaded ?? 0} · Pulados: ${stats.skipped ?? 0} · Erros: ${stats.errors ?? 0}`) : null,
+      stats ? el('div', {}, `Enviados: ${stats.uploaded ?? 0} · Pulados: ${stats.skipped ?? 0} · Erros: ${stats.errors ?? 0}${stats.catalogs_reused ? ` · Catálogos reutilizados: ${stats.catalogs_reused}` : ''}`) : null,
       el('div', {}, ['Run: ', el('code', {}, runId)]),
       el('div', { class: 'backup-hint' }, 'O processo continua em segundo plano. Você pode permanecer nesta página — não há limite de tempo.'),
     ]),
   ]);
 }
 
-function updateProgressCard(run) {
+function updateProgressCard(ctx, run) {
   const card = document.getElementById('backup-progress-card');
   const slot = document.getElementById('backup-progress-slot');
   if (!slot || !card) return;
   const kind = run.request?.kind === 'restore' ? 'restore' : 'backup';
-  slot.replaceChildren(buildProgressCard(run.id, kind, run));
+  slot.replaceChildren(buildProgressCard(ctx, run.id, kind, run));
 }
 
 function startPolling(ctx, runId) {
@@ -374,7 +388,7 @@ function startPolling(ctx, runId) {
     const res = await ctx.api.get(`/api/backup/telegram/runs/${encodeURIComponent(runId)}`, { timeoutMs: 60_000 });
     if (!res.ok) return;
     const run = res.data.run;
-    updateProgressCard(run);
+    updateProgressCard(ctx, run);
 
     if (run.status === 'completed') {
       stopPolling();
@@ -391,6 +405,12 @@ function startPolling(ctx, runId) {
     if (run.status === 'failed') {
       stopPolling();
       ctx.toast.err(run.error || 'Operação falhou');
+      await refreshTelegramBackupSettings(ctx);
+      return;
+    }
+    if (run.status === 'cancelled') {
+      stopPolling();
+      ctx.toast.ok('Operação cancelada');
       await refreshTelegramBackupSettings(ctx);
     }
   };
@@ -699,11 +719,48 @@ async function confirmAndRestore(ctx, state) {
   startPolling(ctx, res.data.run_id);
 }
 
+async function cancelActiveBackup(ctx, runId) {
+  const ok = await confirmDialog({
+    title: 'Cancelar operação',
+    message: 'Interrompe o backup ou restore em andamento.',
+    confirmLabel: 'Cancelar operação',
+    danger: true,
+  });
+  if (!ok) return;
+  const res = await ctx.api.post(`/api/backup/telegram/runs/${encodeURIComponent(runId)}/cancel`);
+  if (!res.ok) {
+    ctx.toast.err(res.error?.message || 'Falha ao cancelar');
+    return;
+  }
+  ctx.toast.ok('Cancelamento solicitado');
+  await refreshTelegramBackupSettings(ctx);
+}
+
+async function stopAndResetBackup(ctx) {
+  const ok = await phraseConfirmDialog({
+    title: 'Parar e limpar backup',
+    message: 'Cancela qualquer operação em andamento, desliga automações e apaga o histórico local.',
+    detail: 'Token/chat_id e mensagens no canal Telegram não são removidos. O backup ficará desligado até você salvar de novo com “Backup habilitado”.',
+    confirmLabel: 'Parar e limpar',
+  });
+  if (!ok) return;
+  const res = await ctx.api.post('/api/backup/telegram/stop-all', { confirm: true });
+  if (!res.ok) {
+    ctx.toast.err(res.error?.message || 'Falha ao parar backup');
+    return;
+  }
+  const cancelled = res.data.cancelled_run_ids?.length ?? 0;
+  const clearedRuns = res.data.cleared?.runs_removed ?? 0;
+  stopPolling();
+  ctx.toast.ok(`Backup parado${cancelled ? ` · ${cancelled} operação(ões) cancelada(s)` : ''}${clearedRuns ? ` · ${clearedRuns} run(s) removido(s)` : ''}`);
+  await refreshTelegramBackupSettings(ctx);
+}
+
 async function clearLocalBackupHistory(ctx) {
   const ok = await phraseConfirmDialog({
     title: 'Limpar histórico local',
     message: 'Apaga runs de backup/restore e o registro incremental local (artifacts).',
-    detail: 'Credenciais do Telegram e dados do lake não são alterados. Mensagens no canal continuam no Telegram — apague lá manualmente se quiser.',
+    detail: 'Operações em andamento serão canceladas primeiro. Credenciais do Telegram e dados do lake não são alterados. Mensagens no canal continuam no Telegram — apague lá manualmente se quiser.',
     confirmLabel: 'Limpar tudo',
   });
   if (!ok) return;
@@ -870,6 +927,7 @@ function formatPhase(phase, isRestore) {
     restore: 'Restaurando partições',
     done: 'Concluído',
     failed: 'Falhou',
+    cancelled: 'Cancelado',
   };
   if (!phase) return isRestore ? 'Preparando restore' : 'Preparando backup';
   return map[phase] || phase;

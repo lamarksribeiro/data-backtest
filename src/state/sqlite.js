@@ -217,7 +217,7 @@ CREATE TABLE IF NOT EXISTS telegram_backup_settings (
 
 CREATE TABLE IF NOT EXISTS telegram_backup_runs (
   id TEXT PRIMARY KEY,
-  status TEXT NOT NULL CHECK (status IN ('queued', 'running', 'completed', 'failed')),
+  status TEXT NOT NULL CHECK (status IN ('queued', 'running', 'completed', 'failed', 'cancelled')),
   mode TEXT NOT NULL CHECK (mode IN ('full', 'incremental')),
   underlying TEXT,
   request_json TEXT,
@@ -296,6 +296,10 @@ const TELEGRAM_BACKUP_SETTINGS_MIGRATIONS = [
   'ALTER TABLE telegram_backup_settings ADD COLUMN discovered_summary_json TEXT',
 ];
 
+const TELEGRAM_BACKUP_ARTIFACTS_MIGRATIONS = [
+  'ALTER TABLE telegram_backup_artifacts ADD COLUMN file_sha256 TEXT',
+];
+
 export function openStateDatabase(stateDbPath) {
   mkdirSync(path.dirname(stateDbPath), { recursive: true });
   const db = new DatabaseSync(stateDbPath);
@@ -312,6 +316,8 @@ export function openStateDatabase(stateDbPath) {
   migrateBacktestRunsV3Indexes(db);
   applyColumnMigrations(db, 'backtest_runs', BACKTEST_RUNS_V3_COLUMNS);
   applyColumnMigrations(db, 'telegram_backup_settings', TELEGRAM_BACKUP_SETTINGS_MIGRATIONS);
+  applyColumnMigrations(db, 'telegram_backup_artifacts', TELEGRAM_BACKUP_ARTIFACTS_MIGRATIONS);
+  migrateTelegramBackupRuns(db);
   ensureTelegramBackupSettingsRow(db);
   return db;
 }
@@ -323,6 +329,45 @@ function ensureTelegramBackupSettingsRow(db) {
       INSERT INTO telegram_backup_settings (id, updated_at)
       VALUES (1, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
     `).run();
+  }
+}
+
+function migrateTelegramBackupRuns(db) {
+  const table = db.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'telegram_backup_runs'").get();
+  if (!table?.sql || table.sql.includes("'cancelled'")) return;
+
+  db.exec('PRAGMA foreign_keys = OFF');
+  try {
+    db.exec(`
+      CREATE TABLE telegram_backup_runs_new (
+        id TEXT PRIMARY KEY,
+        status TEXT NOT NULL CHECK (status IN ('queued', 'running', 'completed', 'failed', 'cancelled')),
+        mode TEXT NOT NULL CHECK (mode IN ('full', 'incremental')),
+        underlying TEXT,
+        request_json TEXT,
+        result_json TEXT,
+        progress_json TEXT,
+        error TEXT,
+        created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+        started_at TEXT,
+        completed_at TEXT
+      );
+
+      INSERT INTO telegram_backup_runs_new (
+        id, status, mode, underlying, request_json, result_json, progress_json, error,
+        created_at, started_at, completed_at
+      )
+      SELECT
+        id, status, mode, underlying, request_json, result_json, progress_json, error,
+        created_at, started_at, completed_at
+      FROM telegram_backup_runs;
+
+      DROP TABLE telegram_backup_runs;
+      ALTER TABLE telegram_backup_runs_new RENAME TO telegram_backup_runs;
+      CREATE INDEX IF NOT EXISTS telegram_backup_runs_created_idx ON telegram_backup_runs(created_at DESC);
+    `);
+  } finally {
+    db.exec('PRAGMA foreign_keys = ON');
   }
 }
 

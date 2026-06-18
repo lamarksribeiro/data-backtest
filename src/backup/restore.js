@@ -8,6 +8,7 @@ import { addEventExclusion } from '../state/eventExclusions.js';
 import { resolveTelegramBackupConfig } from '../state/telegramBackupSettings.js';
 import { getTelegramBackupRun, listTelegramBackupRuns } from '../state/telegramBackup.js';
 import { createTelegramClient } from './telegramClient.js';
+import { assertNotCancelled } from './cancel.js';
 import { parseCatalogJson } from './catalog.js';
 import { mergeChunks, sha256Buffer, sha256File, withTempDir } from './chunker.js';
 
@@ -22,6 +23,7 @@ export async function restoreFromTelegram({
   underlying = null,
   dryRun = false,
   onProgress = null,
+  shouldCancel = () => false,
 }) {
   const effective = backupConfig ?? resolveTelegramBackupConfig(config, db);
   if (!effective.botToken || !effective.chatId) {
@@ -79,6 +81,7 @@ export async function restoreFromTelegram({
   onProgress?.({ phase: 'restore', processed: 0, total: totalPartitions, kind: 'restore' });
 
   for (const asset of workItems) {
+    assertNotCancelled(shouldCancel);
     if (!asset.catalog?.file_id) {
       restored.errors.push({ underlying: asset.underlying, error: 'missing catalog file_id' });
       continue;
@@ -102,6 +105,7 @@ export async function restoreFromTelegram({
     }
 
     for (const partition of catalog.partitions || []) {
+      assertNotCancelled(shouldCancel);
       processed += 1;
       onProgress?.({
         phase: 'restore',

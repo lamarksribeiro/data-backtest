@@ -10,7 +10,13 @@ import {
   clearTelegramBackupLocalRecords,
   countTelegramBackupLocalRecords,
   createTelegramBackupRun,
+  buildSkippedPartitionCatalogEntry,
+  cancelTelegramBackupRunRecord,
+  getLatestFileShaForPartition,
+  getLatestPartitionUploadArtifacts,
+  getLastCompletedAssetCatalog,
   insertTelegramBackupArtifact,
+  updateTelegramBackupRun,
 } from '../src/state/telegramBackup.js';
 import { openStateDatabase, closeStateDatabase } from '../src/state/sqlite.js';
 import { writeFile } from 'node:fs/promises';
@@ -183,6 +189,180 @@ describe('telegram backup limits', () => {
     assert.equal(TELEGRAM_DEFAULT_CHUNK_BYTES, 18 * 1024 * 1024);
     assert.equal(clampTelegramChunkBytes(50331648), TELEGRAM_MAX_CHUNK_BYTES);
     assert.equal(clampTelegramChunkBytes(1024 * 1024), 1024 * 1024);
+  });
+});
+
+describe('telegram backup incremental state', () => {
+  const manifestRow = {
+    id: 1,
+    underlying: 'BTC',
+    interval: '5m',
+    book_depth: 25,
+    dt: '2026-01-01',
+    active_path: 'backtest_ticks/underlying=BTC/interval=5m/book_depth=25/dt=2026-01-01/part.parquet',
+    run_id: 'lake-run',
+    dataset: 'backtest_ticks',
+    status: 'valid',
+  };
+
+  it('compares file sha for chunked uploads via file_sha256', () => {
+    const dbPath = path.join(tmpdir(), `tg-backup-sha-${Date.now()}.db`);
+    const db = openStateDatabase(dbPath);
+    try {
+      createTelegramBackupRun(db, { id: 'br-chunk', status: 'completed', mode: 'full' });
+      insertTelegramBackupArtifact(db, {
+        runId: 'br-chunk',
+        underlying: 'BTC',
+        dataset: 'backtest_ticks',
+        interval: '5m',
+        bookDepth: 25,
+        dt: '2026-01-01',
+        sha256: 'chunk0sha',
+        fileSha256: 'filesha-full',
+        bytes: 100,
+        chunkIndex: 0,
+        chunkCount: 2,
+        telegramFileId: 'fid-0',
+        telegramMessageId: 10,
+      });
+      insertTelegramBackupArtifact(db, {
+        runId: 'br-chunk',
+        underlying: 'BTC',
+        dataset: 'backtest_ticks',
+        interval: '5m',
+        bookDepth: 25,
+        dt: '2026-01-01',
+        sha256: 'chunk1sha',
+        bytes: 50,
+        chunkIndex: 1,
+        chunkCount: 2,
+        telegramFileId: 'fid-1',
+        telegramMessageId: 11,
+      });
+      assert.equal(getLatestFileShaForPartition(db, {
+        underlying: 'BTC',
+        dataset: 'backtest_ticks',
+        interval: '5m',
+        bookDepth: 25,
+        dt: '2026-01-01',
+      }), 'filesha-full');
+    } finally {
+      closeStateDatabase(db);
+    }
+  });
+
+  it('hydrates skipped partition catalog entry from prior upload', () => {
+    const dbPath = path.join(tmpdir(), `tg-backup-skip-${Date.now()}.db`);
+    const db = openStateDatabase(dbPath);
+    try {
+      createTelegramBackupRun(db, { id: 'br-prev', status: 'completed', mode: 'full' });
+      insertTelegramBackupArtifact(db, {
+        runId: 'br-prev',
+        underlying: 'BTC',
+        dataset: 'backtest_ticks',
+        interval: '5m',
+        bookDepth: 25,
+        dt: '2026-01-01',
+        sha256: 'abc123',
+        fileSha256: 'abc123',
+        bytes: 2048,
+        telegramFileId: 'file-btc',
+        telegramMessageId: 42,
+      });
+      const entry = buildSkippedPartitionCatalogEntry(db, manifestRow, { sha256: 'abc123', bytes: 2048 });
+      assert.equal(entry.skipped, true);
+      assert.equal(entry.telegram.file_id, 'file-btc');
+      assert.equal(entry.sha256, 'abc123');
+      assert.ok(entry.manifest_row?.active_path);
+    } finally {
+      closeStateDatabase(db);
+    }
+  });
+
+  it('reuses last completed asset catalog by underlying', () => {
+    const dbPath = path.join(tmpdir(), `tg-backup-catalog-${Date.now()}.db`);
+    const db = openStateDatabase(dbPath);
+    try {
+      createTelegramBackupRun(db, { id: 'br-1', status: 'completed', mode: 'incremental' });
+      updateTelegramBackupRun(db, 'br-1', {
+        completedAt: new Date().toISOString(),
+        resultJson: {
+          asset_catalogs: [{
+            underlying: 'BTC',
+            catalog: { file_id: 'catalog-btc', message_id: 7 },
+            partitions: 10,
+            bytes: 1000,
+          }],
+          master_catalog: { file_id: 'master-1', message_id: 8 },
+        },
+      });
+      const asset = getLastCompletedAssetCatalog(db, 'BTC');
+      assert.equal(asset.catalog.file_id, 'catalog-btc');
+      assert.equal(getLastCompletedAssetCatalog(db, 'ETH'), null);
+    } finally {
+      closeStateDatabase(db);
+    }
+  });
+
+  it('groups latest upload artifacts by run id', () => {
+    const dbPath = path.join(tmpdir(), `tg-backup-artifacts-${Date.now()}.db`);
+    const db = openStateDatabase(dbPath);
+    try {
+      createTelegramBackupRun(db, { id: 'br-old', status: 'completed', mode: 'full' });
+      createTelegramBackupRun(db, { id: 'br-new', status: 'completed', mode: 'full' });
+      insertTelegramBackupArtifact(db, {
+        runId: 'br-old',
+        underlying: 'BTC',
+        dataset: 'backtest_ticks',
+        interval: '5m',
+        bookDepth: 25,
+        dt: '2026-01-01',
+        sha256: 'old',
+        fileSha256: 'old-file',
+        bytes: 1,
+        telegramFileId: 'old-fid',
+      });
+      insertTelegramBackupArtifact(db, {
+        runId: 'br-new',
+        underlying: 'BTC',
+        dataset: 'backtest_ticks',
+        interval: '5m',
+        bookDepth: 25,
+        dt: '2026-01-01',
+        sha256: 'new',
+        fileSha256: 'new-file',
+        bytes: 2,
+        telegramFileId: 'new-fid',
+        createdAt: '2099-01-01T00:00:00.000Z',
+      });
+      const rows = getLatestPartitionUploadArtifacts(db, {
+        underlying: 'BTC',
+        dataset: 'backtest_ticks',
+        interval: '5m',
+        bookDepth: 25,
+        dt: '2026-01-01',
+      });
+      assert.equal(rows.length, 1);
+      assert.equal(rows[0].telegram_file_id, 'new-fid');
+    } finally {
+      closeStateDatabase(db);
+    }
+  });
+
+  it('marks run as cancelled', () => {
+    const dbPath = path.join(tmpdir(), `tg-backup-cancel-${Date.now()}.db`);
+    const db = openStateDatabase(dbPath);
+    try {
+      createTelegramBackupRun(db, { id: 'br-cancel', status: 'running', mode: 'incremental' });
+      updateTelegramBackupRun(db, 'br-cancel', {
+        progressJson: { phase: 'upload', processed: 3, total: 10 },
+      });
+      const cancelled = cancelTelegramBackupRunRecord(db, 'br-cancel');
+      assert.equal(cancelled.status, 'cancelled');
+      assert.equal(cancelled.progress?.phase, 'cancelled');
+    } finally {
+      closeStateDatabase(db);
+    }
   });
 });
 

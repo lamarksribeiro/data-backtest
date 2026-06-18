@@ -27,7 +27,7 @@ import { datasetRequestFromObject, datasetRequestFromParams } from '../query/req
 import { createPrepareJobRunner } from '../prepare/runner.js';
 import { createAssetUpdateScheduler, lastClosedUtcDate } from '../scheduler/assetUpdates.js';
 import { createTelegramBackupScheduler, enqueueTelegramBackupAfterAssetSync } from '../scheduler/telegramBackup.js';
-import { enqueueTelegramBackup, enqueueTelegramRestore, getTelegramBackupRunStatus, isTelegramBackupRunning } from '../backup/runner.js';
+import { enqueueTelegramBackup, enqueueTelegramRestore, getTelegramBackupRunStatus, isTelegramBackupRunning, cancelTelegramBackupRun, cancelAllActiveTelegramBackupRuns } from '../backup/runner.js';
 import { testTelegramBackupConnection } from '../backup/upload.js';
 import { discoverTelegramBackupCatalog } from '../backup/discover.js';
 import { listTelegramBackupRuns, getLastCompletedTelegramBackupRun, clearTelegramBackupLocalRecords } from '../state/telegramBackup.js';
@@ -365,6 +365,14 @@ export function createApiHandler(deps) {
         if (!run) return sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Run not found' } });
         return sendJson(res, 200, { run });
       }
+      if (telegramBackupRunRoute?.kind === 'cancel' && req.method === 'POST') {
+        const result = cancelTelegramBackupRun(db, telegramBackupRunRoute.runId);
+        if (!result.ok) {
+          const status = result.code === 'NOT_FOUND' ? 404 : 409;
+          return sendJson(res, status, { error: { code: result.code, message: result.message }, ...result });
+        }
+        return sendJson(res, 200, result);
+      }
       if (req.method === 'POST' && url.pathname === '/api/backup/telegram/runs') {
         const body = await readJson(req);
         const backupConfig = resolveTelegramBackupConfig(config, db);
@@ -426,11 +434,35 @@ export function createApiHandler(deps) {
         if (body.confirm !== true) {
           return sendJson(res, 400, { error: { code: 'CONFIRM_REQUIRED', message: 'Envie confirm: true para limpar o histórico local.' } });
         }
-        if (isTelegramBackupRunning()) {
-          return sendJson(res, 409, { error: { code: 'BACKUP_BUSY', message: 'Aguarde o backup ou restore em andamento terminar.' } });
-        }
+        cancelAllActiveTelegramBackupRuns(db);
         const cleared = clearTelegramBackupLocalRecords(db);
         return sendJson(res, 200, { ok: true, ...cleared });
+      }
+      if (req.method === 'POST' && url.pathname === '/api/backup/telegram/stop-all') {
+        const body = await readJson(req);
+        if (body.confirm !== true) {
+          return sendJson(res, 400, { error: { code: 'CONFIRM_REQUIRED', message: 'Envie confirm: true para parar o backup.' } });
+        }
+        const cancelled = cancelAllActiveTelegramBackupRuns(db);
+        let cleared = null;
+        if (body.clear_local !== false) {
+          cleared = clearTelegramBackupLocalRecords(db);
+        }
+        let settings = null;
+        if (body.disable_automation !== false) {
+          updateTelegramBackupSettings(db, {
+            enabled: false,
+            auto_after_asset_sync: false,
+            auto_schedule_enabled: false,
+          }, { updatedBy: req.user?.username ?? null });
+          settings = toPublicTelegramBackupSettings(resolveTelegramBackupConfig(config, db));
+        }
+        return sendJson(res, 200, {
+          ok: true,
+          cancelled_run_ids: cancelled.cancelled_run_ids,
+          cleared,
+          settings,
+        });
       }
       const assetScheduleRoute = matchAssetUpdateScheduleRoute(url.pathname);
       if (assetScheduleRoute) {
@@ -1376,6 +1408,9 @@ function matchAssetUpdateScheduleRoute(pathname) {
 
 function matchTelegramBackupRunRoute(pathname) {
   const parts = pathname.split('/').filter(Boolean);
+  if (parts.length === 6 && parts[0] === 'api' && parts[1] === 'backup' && parts[2] === 'telegram' && parts[3] === 'runs' && parts[5] === 'cancel') {
+    return { kind: 'cancel', runId: parts[4] };
+  }
   if (parts.length === 5 && parts[0] === 'api' && parts[1] === 'backup' && parts[2] === 'telegram' && parts[3] === 'runs') {
     return { kind: 'detail', runId: parts[4] };
   }

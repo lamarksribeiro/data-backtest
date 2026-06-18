@@ -1,3 +1,5 @@
+import { manifestRowToJson } from '../backup/catalog.js';
+
 export function createTelegramBackupRun(db, run) {
   db.prepare(`
     INSERT INTO telegram_backup_runs (id, status, mode, underlying, request_json, created_at)
@@ -71,10 +73,10 @@ export function updateTelegramBackupRun(db, id, patch) {
 export function insertTelegramBackupArtifact(db, artifact) {
   const result = db.prepare(`
     INSERT INTO telegram_backup_artifacts (
-      run_id, underlying, dataset, interval, book_depth, dt, sha256, bytes,
+      run_id, underlying, dataset, interval, book_depth, dt, sha256, file_sha256, bytes,
       chunk_index, chunk_count, telegram_message_id, telegram_file_id,
       catalog_message_id, skipped, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     artifact.runId,
     artifact.underlying,
@@ -83,6 +85,7 @@ export function insertTelegramBackupArtifact(db, artifact) {
     artifact.bookDepth ?? null,
     artifact.dt,
     artifact.sha256,
+    artifact.fileSha256 ?? null,
     artifact.bytes,
     artifact.chunkIndex ?? 0,
     artifact.chunkCount ?? 1,
@@ -95,16 +98,102 @@ export function insertTelegramBackupArtifact(db, artifact) {
   return result.lastInsertRowid;
 }
 
-export function getLatestArtifactShaForPartition(db, { underlying, dataset, interval, bookDepth, dt }) {
+export function getLatestFileShaForPartition(db, { underlying, dataset, interval, bookDepth, dt }) {
   const row = db.prepare(`
-    SELECT sha256 FROM telegram_backup_artifacts
+    SELECT COALESCE(file_sha256, sha256) AS file_sha
+    FROM telegram_backup_artifacts
     WHERE underlying = ? AND dataset = ? AND interval = ?
       AND COALESCE(book_depth, -1) = COALESCE(?, -1)
       AND dt = ? AND skipped = 0 AND chunk_index = 0
     ORDER BY created_at DESC
     LIMIT 1
   `).get(underlying, dataset, interval, bookDepth ?? null, dt);
-  return row?.sha256 ?? null;
+  return row?.file_sha ?? null;
+}
+
+/** @deprecated use getLatestFileShaForPartition */
+export function getLatestArtifactShaForPartition(db, params) {
+  return getLatestFileShaForPartition(db, params);
+}
+
+export function getLatestPartitionUploadArtifacts(db, { underlying, dataset, interval, bookDepth, dt }) {
+  const rows = db.prepare(`
+    SELECT * FROM telegram_backup_artifacts
+    WHERE underlying = ? AND dataset = ? AND interval = ?
+      AND COALESCE(book_depth, -1) = COALESCE(?, -1)
+      AND dt = ? AND skipped = 0
+    ORDER BY created_at DESC
+  `).all(underlying, dataset, interval, bookDepth ?? null, dt);
+  if (!rows.length) return [];
+
+  const latestRunId = rows[0].run_id;
+  return rows
+    .filter((row) => row.run_id === latestRunId)
+    .sort((a, b) => a.chunk_index - b.chunk_index);
+}
+
+export function buildSkippedPartitionCatalogEntry(db, manifestRow, fileInfo) {
+  const chunks = getLatestPartitionUploadArtifacts(db, {
+    underlying: manifestRow.underlying,
+    dataset: 'backtest_ticks',
+    interval: manifestRow.interval,
+    bookDepth: manifestRow.book_depth,
+    dt: manifestRow.dt,
+  });
+  if (!chunks.length || !chunks[0].telegram_file_id) return null;
+
+  const chunkCount = chunks[0].chunk_count ?? 1;
+  const fileSha = chunks[0].file_sha256
+    ?? (chunkCount === 1 ? chunks[0].sha256 : fileInfo.sha256);
+
+  const base = {
+    dt: manifestRow.dt,
+    sha256: fileSha,
+    bytes: fileInfo.bytes,
+    manifest_row: manifestRowToJson(manifestRow),
+    skipped: true,
+    reason: 'unchanged',
+  };
+
+  if (chunkCount > 1) {
+    return {
+      ...base,
+      chunks: chunks.map((row) => ({
+        chunk_index: row.chunk_index,
+        sha256: row.sha256,
+        telegram: telegramRefFromArtifactRow(row),
+      })),
+    };
+  }
+
+  return {
+    ...base,
+    telegram: telegramRefFromArtifactRow(chunks[0]),
+  };
+}
+
+export function getLastCompletedAssetCatalog(db, underlying) {
+  const target = String(underlying || '').toUpperCase();
+  const runs = listTelegramBackupRuns(db, { limit: 50 });
+  for (const run of runs) {
+    if (run.status !== 'completed') continue;
+    const asset = run.result?.asset_catalogs?.find((item) => item.underlying === target);
+    if (asset?.catalog?.file_id) return asset;
+  }
+  return null;
+}
+
+export function getLastCompletedMasterCatalog(db) {
+  const run = getLastCompletedTelegramBackupRun(db);
+  return run?.result?.master_catalog ?? null;
+}
+
+function telegramRefFromArtifactRow(row) {
+  if (!row?.telegram_file_id) return null;
+  return {
+    file_id: row.telegram_file_id,
+    message_id: row.telegram_message_id ?? null,
+  };
 }
 
 export function getLastCompletedTelegramBackupRun(db) {
@@ -121,6 +210,20 @@ export function countTelegramBackupLocalRecords(db) {
   const runs = db.prepare('SELECT COUNT(*) AS c FROM telegram_backup_runs').get().c;
   const artifacts = db.prepare('SELECT COUNT(*) AS c FROM telegram_backup_artifacts').get().c;
   return { runs, artifacts };
+}
+
+export function cancelTelegramBackupRunRecord(db, runId, progress = null) {
+  const run = getTelegramBackupRun(db, runId);
+  updateTelegramBackupRun(db, runId, {
+    status: 'cancelled',
+    completedAt: new Date().toISOString(),
+    error: 'Cancelado pelo usuário',
+    progressJson: {
+      ...(progress || run?.progress || {}),
+      phase: 'cancelled',
+    },
+  });
+  return getTelegramBackupRun(db, runId);
 }
 
 export function clearTelegramBackupLocalRecords(db) {
