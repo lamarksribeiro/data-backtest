@@ -70,6 +70,35 @@ export function updateTelegramBackupRun(db, id, patch) {
   return getTelegramBackupRun(db, id);
 }
 
+export function getIncrementalBackupBaseline(db) {
+  const counts = countTelegramBackupLocalRecords(db);
+  const lastCompleted = getLastCompletedTelegramBackupRun(db);
+  const hasMaster = Boolean(lastCompleted?.result?.master_catalog?.file_id);
+  const uploadedArtifacts = db.prepare(`
+    SELECT COUNT(*) AS c FROM telegram_backup_artifacts WHERE skipped = 0 AND telegram_file_id IS NOT NULL
+  `).get().c;
+  return {
+    ready: hasMaster && uploadedArtifacts > 0,
+    has_master_catalog: hasMaster,
+    artifact_count: counts.artifacts,
+    uploaded_artifact_count: uploadedArtifacts,
+    completed_run_id: lastCompleted?.id ?? null,
+  };
+}
+
+export function deletePartitionArtifacts(db, { underlying, dataset, interval, bookDepth, dt }) {
+  return db.prepare(`
+    DELETE FROM telegram_backup_artifacts
+    WHERE underlying = ? AND dataset = ? AND interval = ?
+      AND COALESCE(book_depth, -1) = COALESCE(?, -1)
+      AND dt = ?
+  `).run(underlying, dataset, interval, bookDepth ?? null, dt).changes;
+}
+
+export function deleteArtifactsForRun(db, runId) {
+  return db.prepare('DELETE FROM telegram_backup_artifacts WHERE run_id = ?').run(runId).changes;
+}
+
 export function insertTelegramBackupArtifact(db, artifact) {
   const result = db.prepare(`
     INSERT INTO telegram_backup_artifacts (
@@ -213,6 +242,7 @@ export function countTelegramBackupLocalRecords(db) {
 }
 
 export function cancelTelegramBackupRunRecord(db, runId, progress = null) {
+  deleteArtifactsForRun(db, runId);
   const run = getTelegramBackupRun(db, runId);
   updateTelegramBackupRun(db, runId, {
     status: 'cancelled',

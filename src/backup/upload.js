@@ -8,6 +8,8 @@ import {
   createTelegramBackupRun,
   buildSkippedPartitionCatalogEntry,
   cancelTelegramBackupRunRecord,
+  deletePartitionArtifacts,
+  getIncrementalBackupBaseline,
   getLastCompletedAssetCatalog,
   getLastCompletedMasterCatalog,
   getLatestFileShaForPartition,
@@ -52,12 +54,14 @@ export async function runTelegramBackup({
   }
 
   const mode = request.incremental ? 'incremental' : 'full';
+  const baseline = getIncrementalBackupBaseline(db);
+  const plan = resolveBackupPlan(request, baseline);
   createTelegramBackupRun(db, {
     id: runId,
     status: 'queued',
-    mode,
+    mode: plan.incremental ? 'incremental' : 'full',
     underlying: request.underlying ?? null,
-    requestJson: request,
+    requestJson: { ...request, incremental: plan.incremental, baseline_snapshot: baseline },
   });
 
   updateTelegramBackupRun(db, runId, {
@@ -87,6 +91,7 @@ export async function runTelegramBackup({
     }
 
     const assetCatalogs = [];
+    const partitionErrors = [];
     let processed = 0;
     const totalPartitions = groups.reduce((sum, g) => sum + g.partitions.length, 0);
 
@@ -128,7 +133,7 @@ export async function runTelegramBackup({
             effective,
             runId,
             manifestRow,
-            request,
+            request: { ...request, incremental: plan.incremental },
             stats,
           });
           if (entry.skipped) stats.skipped += 1;
@@ -139,66 +144,66 @@ export async function runTelegramBackup({
           partitionEntries.push(entry);
         } catch (err) {
           stats.errors += 1;
-          partitionEntries.push({
+          const errorEntry = {
             dt: manifestRow.dt,
             error: err.message,
             manifest_row: manifestRowToJson(manifestRow),
-          });
+          };
+          partitionErrors.push(errorEntry);
+          partitionEntries.push(errorEntry);
           if (!request.continueOnError) throw err;
         }
       }
 
       const validPartitions = partitionEntries.filter((p) => !p.error);
+      const groupHasErrors = partitionEntries.some((p) => p.error);
       const shouldPublishAssetCatalog = request.dryRun
-        || !request.incremental
-        || request.force
+        || plan.forceCatalogPublish
         || groupUploaded > 0
+        || groupHasErrors
         || !getLastCompletedAssetCatalog(db, group.underlying);
 
       if (!request.dryRun && shouldPublishAssetCatalog) {
         assertNotCancelled(shouldCancel);
-        const catalog = buildAssetCatalog({
-          underlying: group.underlying,
-          interval: group.interval,
-          bookDepth: group.bookDepth,
-          backupRunId: runId,
-          lakeRootHint: config.lakeRoot,
-          partitions: validPartitions,
-          eventExclusions: exclusions,
-        });
-        onProgress?.({
-          phase: 'catalog',
-          underlying: group.underlying,
+        await publishAssetCatalog({
+          client,
+          effective,
+          config,
+          db,
+          runId,
+          group,
+          validPartitions,
+          exclusions,
+          assetCatalogs,
+          onProgress,
           processed,
-          total: totalPartitions,
+          totalPartitions,
           stats,
-        });
-        const catalogJson = JSON.stringify(catalog, null, 2);
-        const catalogBuffer = Buffer.from(catalogJson, 'utf8');
-        const catalogMessage = await client.sendDocumentBuffer(catalogBuffer, {
-          filename: `catalog-${group.underlying}.json`,
-          caption: `#GLBackup #catalog #${group.underlying}`,
-          disableNotification: effective.silentUploads,
-        });
-        const catalogRef = telegramRefFromMessage(catalogMessage);
-        assetCatalogs.push({
-          underlying: group.underlying,
-          interval: group.interval,
-          book_depth: group.bookDepth,
-          catalog: catalogRef,
-          partitions: catalog.stats.partitions,
-          bytes: catalog.stats.bytes,
-          published: true,
         });
       } else if (!request.dryRun) {
         const previous = getLastCompletedAssetCatalog(db, group.underlying);
-        if (!previous) {
-          throw new Error(`Catálogo anterior ausente para ${group.underlying}; rode backup completo.`);
+        if (previous) {
+          assetCatalogs.push({
+            ...previous,
+            reused: true,
+          });
+        } else {
+          await publishAssetCatalog({
+            client,
+            effective,
+            config,
+            db,
+            runId,
+            group,
+            validPartitions,
+            exclusions,
+            assetCatalogs,
+            onProgress,
+            processed,
+            totalPartitions,
+            stats,
+          });
         }
-        assetCatalogs.push({
-          ...previous,
-          reused: true,
-        });
       } else {
         const catalog = buildAssetCatalog({
           underlying: group.underlying,
@@ -261,7 +266,7 @@ export async function runTelegramBackup({
     }
 
     const result = {
-      ok: true,
+      ok: stats.errors === 0,
       run_id: runId,
       dry_run: Boolean(request.dryRun),
       stats: {
@@ -271,15 +276,22 @@ export async function runTelegramBackup({
       },
       asset_catalogs: assetCatalogs,
       master_catalog: masterRef,
+      partition_errors: partitionErrors,
+      baseline,
+      plan: {
+        incremental: plan.incremental,
+        force_catalog_publish: plan.forceCatalogPublish,
+      },
     };
 
     assertNotCancelled(shouldCancel);
+    const finalStatus = stats.errors > 0 ? 'failed' : 'completed';
     updateTelegramBackupRun(db, runId, {
-      status: stats.errors > 0 && !request.continueOnError ? 'failed' : 'completed',
+      status: finalStatus,
       completedAt: new Date().toISOString(),
       resultJson: result,
-      progressJson: { phase: 'done', stats },
-      error: stats.errors > 0 ? `${stats.errors} partition error(s)` : null,
+      progressJson: { phase: finalStatus === 'failed' ? 'failed' : 'done', stats },
+      error: stats.errors > 0 ? summarizePartitionErrors(partitionErrors) : null,
     });
 
     return result;
@@ -353,6 +365,14 @@ async function uploadPartition({
       would_chunk: fileInfo.bytes > effective.maxChunkBytes,
     };
   }
+
+  deletePartitionArtifacts(db, {
+    underlying: manifestRow.underlying,
+    dataset: 'backtest_ticks',
+    interval: manifestRow.interval,
+    bookDepth: manifestRow.book_depth,
+    dt: manifestRow.dt,
+  });
 
   return withTempDir('tg-backup', async (tmpDir) => {
     const chunks = fileInfo.bytes > effective.maxChunkBytes
@@ -514,6 +534,71 @@ function selectGroups(db, request) {
     bookDepth: resolvedBookDepth,
     partitions,
   }];
+}
+
+function resolveBackupPlan(request, baseline) {
+  const wantsIncremental = Boolean(request.incremental) && !request.force;
+  const incremental = wantsIncremental && baseline.ready;
+  return {
+    incremental,
+    forceCatalogPublish: !incremental,
+  };
+}
+
+async function publishAssetCatalog({
+  client,
+  effective,
+  config,
+  runId,
+  group,
+  validPartitions,
+  exclusions,
+  assetCatalogs,
+  onProgress,
+  processed,
+  totalPartitions,
+  stats,
+}) {
+  const catalog = buildAssetCatalog({
+    underlying: group.underlying,
+    interval: group.interval,
+    bookDepth: group.bookDepth,
+    backupRunId: runId,
+    lakeRootHint: config.lakeRoot,
+    partitions: validPartitions,
+    eventExclusions: exclusions,
+  });
+  onProgress?.({
+    phase: 'catalog',
+    underlying: group.underlying,
+    processed,
+    total: totalPartitions,
+    stats,
+  });
+  const catalogJson = JSON.stringify(catalog, null, 2);
+  const catalogBuffer = Buffer.from(catalogJson, 'utf8');
+  const catalogMessage = await client.sendDocumentBuffer(catalogBuffer, {
+    filename: `catalog-${group.underlying}.json`,
+    caption: `#GLBackup #catalog #${group.underlying}`,
+    disableNotification: effective.silentUploads,
+  });
+  const catalogRef = telegramRefFromMessage(catalogMessage);
+  assetCatalogs.push({
+    underlying: group.underlying,
+    interval: group.interval,
+    book_depth: group.bookDepth,
+    catalog: catalogRef,
+    partitions: catalog.stats.partitions,
+    bytes: catalog.stats.bytes,
+    published: true,
+  });
+}
+
+function summarizePartitionErrors(partitionErrors) {
+  if (!partitionErrors.length) return null;
+  const sample = partitionErrors.slice(0, 3).map((entry) => `${entry.dt}: ${entry.error}`).join(' · ');
+  const suffix = partitionErrors.length > 3 ? ` · +${partitionErrors.length - 3} outras` : '';
+  return `${partitionErrors.length} partição(ões) com falha — ${sample}${suffix}`;
 }
 
 export async function testTelegramBackupConnection(backupConfig, { db = null } = {}) {

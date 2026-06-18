@@ -30,7 +30,7 @@ import { createTelegramBackupScheduler, enqueueTelegramBackupAfterAssetSync } fr
 import { enqueueTelegramBackup, enqueueTelegramRestore, getTelegramBackupRunStatus, isTelegramBackupRunning, cancelTelegramBackupRun, cancelAllActiveTelegramBackupRuns } from '../backup/runner.js';
 import { testTelegramBackupConnection } from '../backup/upload.js';
 import { discoverTelegramBackupCatalog } from '../backup/discover.js';
-import { listTelegramBackupRuns, getLastCompletedTelegramBackupRun, clearTelegramBackupLocalRecords } from '../state/telegramBackup.js';
+import { listTelegramBackupRuns, getLastCompletedTelegramBackupRun, clearTelegramBackupLocalRecords, getIncrementalBackupBaseline } from '../state/telegramBackup.js';
 import {
   resolveTelegramBackupConfig,
   toPublicTelegramBackupSettings,
@@ -323,6 +323,7 @@ export function createApiHandler(deps) {
           scheduler_timezone: config.schedulerTimezone,
           last_run: lastRun,
           channel_catalog: channelCatalog,
+          incremental_baseline: getIncrementalBackupBaseline(db),
         });
       }
       if (req.method === 'PUT' && url.pathname === '/api/settings/telegram-backup') {
@@ -376,8 +377,13 @@ export function createApiHandler(deps) {
       if (req.method === 'POST' && url.pathname === '/api/backup/telegram/runs') {
         const body = await readJson(req);
         const backupConfig = resolveTelegramBackupConfig(config, db);
-        if (!backupConfig.enabled && !body.force) {
-          return sendJson(res, 403, { error: { code: 'DISABLED', message: 'Backup Telegram desabilitado nas configurações.' } });
+        if (!backupConfig.enabled && !body.force && body.manual !== true) {
+          return sendJson(res, 403, {
+            error: {
+              code: 'DISABLED',
+              message: 'Backup Telegram desabilitado. Marque “Backup habilitado”, salve, ou use envio manual explícito.',
+            },
+          });
         }
         if (!backupConfig.configured) {
           return sendJson(res, 400, { error: { code: 'NOT_CONFIGURED', message: 'Token e chat_id são obrigatórios.' } });
@@ -397,6 +403,7 @@ export function createApiHandler(deps) {
             from: body.from ? String(body.from) : null,
             to: body.to ? String(body.to) : null,
             continueOnError: true,
+            manual: body.manual === true,
           },
         });
         return sendJson(res, 202, result);
@@ -457,6 +464,7 @@ export function createApiHandler(deps) {
           }, { updatedBy: req.user?.username ?? null });
           settings = toPublicTelegramBackupSettings(resolveTelegramBackupConfig(config, db));
         }
+        saveChannelCatalogDiscovery(db, { ok: false });
         return sendJson(res, 200, {
           ok: true,
           cancelled_run_ids: cancelled.cancelled_run_ids,

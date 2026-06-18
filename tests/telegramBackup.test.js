@@ -15,8 +15,10 @@ import {
   getLatestFileShaForPartition,
   getLatestPartitionUploadArtifacts,
   getLastCompletedAssetCatalog,
+  getIncrementalBackupBaseline,
   insertTelegramBackupArtifact,
   updateTelegramBackupRun,
+  deleteArtifactsForRun,
 } from '../src/state/telegramBackup.js';
 import { openStateDatabase, closeStateDatabase } from '../src/state/sqlite.js';
 import { writeFile } from 'node:fs/promises';
@@ -354,12 +356,57 @@ describe('telegram backup incremental state', () => {
     const db = openStateDatabase(dbPath);
     try {
       createTelegramBackupRun(db, { id: 'br-cancel', status: 'running', mode: 'incremental' });
+      insertTelegramBackupArtifact(db, {
+        runId: 'br-cancel',
+        underlying: 'BTC',
+        dataset: 'backtest_ticks',
+        interval: '5m',
+        bookDepth: 25,
+        dt: '2026-01-01',
+        sha256: 'abc',
+        fileSha256: 'abc',
+        bytes: 10,
+        telegramFileId: 'fid',
+      });
       updateTelegramBackupRun(db, 'br-cancel', {
         progressJson: { phase: 'upload', processed: 3, total: 10 },
       });
       const cancelled = cancelTelegramBackupRunRecord(db, 'br-cancel');
       assert.equal(cancelled.status, 'cancelled');
       assert.equal(cancelled.progress?.phase, 'cancelled');
+      assert.equal(getIncrementalBackupBaseline(db).ready, false);
+    } finally {
+      closeStateDatabase(db);
+    }
+  });
+
+  it('detects incremental baseline from completed run and artifacts', () => {
+    const dbPath = path.join(tmpdir(), `tg-backup-baseline-${Date.now()}.db`);
+    const db = openStateDatabase(dbPath);
+    try {
+      createTelegramBackupRun(db, { id: 'br-done', status: 'completed', mode: 'full' });
+      updateTelegramBackupRun(db, 'br-done', {
+        completedAt: new Date().toISOString(),
+        resultJson: {
+          master_catalog: { file_id: 'master-1' },
+          asset_catalogs: [{ underlying: 'BTC', catalog: { file_id: 'cat-1' } }],
+        },
+      });
+      insertTelegramBackupArtifact(db, {
+        runId: 'br-done',
+        underlying: 'BTC',
+        dataset: 'backtest_ticks',
+        interval: '5m',
+        bookDepth: 25,
+        dt: '2026-01-01',
+        sha256: 'abc',
+        fileSha256: 'abc',
+        bytes: 10,
+        telegramFileId: 'fid',
+      });
+      const baseline = getIncrementalBackupBaseline(db);
+      assert.equal(baseline.ready, true);
+      assert.equal(baseline.uploaded_artifact_count, 1);
     } finally {
       closeStateDatabase(db);
     }

@@ -43,6 +43,7 @@ async function refreshTelegramBackupSettings(ctx) {
 
 function renderTelegramBackupPage(ctx, data, runs) {
   const settings = data.settings || {};
+  const baseline = data.incremental_baseline || { ready: false };
   const timezoneLabel = formatSchedulerTimezoneLabel(data.scheduler_timezone);
   const lastRun = data.last_run;
   const channelCatalog = data.channel_catalog;
@@ -71,6 +72,7 @@ function renderTelegramBackupPage(ctx, data, runs) {
 
   mount(ctx.contentEl, renderSettingsPage('backup', [
     el('div', { class: 'backup-page' }, [
+      renderBackupAlertBanner(settings, baseline),
       el('div', { class: 'backup-config-split' }, [
         renderConnectionCard(formState, settings, ctx, statusBadge),
         renderBehaviorCard(formState, timezoneLabel),
@@ -79,6 +81,7 @@ function renderTelegramBackupPage(ctx, data, runs) {
       el('div', { class: 'backup-ops-split' }, [
         renderOperationsCard(ctx, {
           settings,
+          baseline,
           lastRun,
           channelCatalog,
           completedRuns,
@@ -90,6 +93,24 @@ function renderTelegramBackupPage(ctx, data, runs) {
   ]));
 
   activePoll.panelEl = document.getElementById('backup-progress-slot');
+}
+
+function renderBackupAlertBanner(settings, baseline) {
+  const alerts = [];
+  if (settings.configured && !settings.enabled) {
+    alerts.push(el('div', { class: 'backup-alert backup-alert--warn' }, [
+      el('strong', {}, 'Backup desligado'),
+      el('span', {}, ' — automações estão desligadas. Marque “Backup habilitado” e salve para reativar o agendamento. O envio manual pelo botão “Iniciar backup” continua disponível.'),
+    ]));
+  }
+  if (!baseline.ready) {
+    alerts.push(el('div', { class: 'backup-alert backup-alert--info' }, [
+      el('strong', {}, 'Sem baseline incremental local'),
+      el('span', {}, ' — após limpar histórico ou primeiro envio, o próximo backup será completo (todas as partições + catálogos).'),
+    ]));
+  }
+  if (!alerts.length) return null;
+  return el('div', { class: 'backup-alerts' }, alerts);
 }
 
 function sectionHead(title, hint) {
@@ -157,22 +178,27 @@ function renderBehaviorCard(formState, timezoneLabel) {
   ]);
 }
 
-function renderOperationsCard(ctx, { settings, lastRun, channelCatalog, completedRuns, progressSlot }) {
+function renderOperationsCard(ctx, { settings, baseline, lastRun, channelCatalog, completedRuns, progressSlot }) {
   const busy = Boolean(activePoll.runId);
   const configured = settings.configured;
   const channelFound = Boolean(channelCatalog?.ok && channelCatalog?.master_file_id);
   const canRestore = configured && !busy && (channelFound || completedRuns.length > 0);
 
-  return el('section', { class: 'card' }, [
-    sectionHead('Operações', 'Envie, restaure ou atualize a detecção no canal.'),
+  return el('section', { class: 'card backup-ops-card' }, [
+    sectionHead('Operações', 'Envie, restaure ou interrompa o backup no canal.'),
     progressSlot,
     el('div', { class: 'backup-ops-toolbar' }, [
       el('button', {
         type: 'button',
         class: 'btn btn--primary btn--sm',
         disabled: !configured || busy,
-        onclick: () => openBackupStartModal(ctx, settings),
+        onclick: () => openBackupStartModal(ctx, settings, baseline),
       }, 'Iniciar backup'),
+      busy ? el('button', {
+        type: 'button',
+        class: 'btn btn--ghost btn--sm btn--danger',
+        onclick: () => cancelActiveBackup(ctx, activePoll.runId),
+      }, 'Cancelar operação') : null,
       el('button', {
         type: 'button',
         class: 'btn btn--ghost btn--sm',
@@ -190,11 +216,11 @@ function renderOperationsCard(ctx, { settings, lastRun, channelCatalog, complete
         disabled: busy,
         onclick: () => discoverChannelBackups(ctx),
       }, 'Atualizar detecção') : null,
-      (busy || settings.enabled || settings.auto_schedule_enabled || settings.auto_after_asset_sync) ? el('button', {
+      el('button', {
         type: 'button',
         class: 'btn btn--ghost btn--sm btn--danger',
         onclick: () => stopAndResetBackup(ctx),
-      }, 'Parar e limpar tudo') : null,
+      }, 'Parar e limpar tudo'),
     ].filter(Boolean)),
     renderBackupStatusCard(settings, channelCatalog, lastRun),
   ]);
@@ -301,10 +327,10 @@ function renderRunRow(run, ctx, completedRuns, channelCatalog) {
   const isRestore = run.request?.kind === 'restore';
   const label = isRestore ? 'restore' : run.mode;
   const statsText = run.result?.stats
-    ? `↑ ${run.result.stats.uploaded} enviados · ↷ ${run.result.stats.skipped} pulados${run.result.stats.catalogs_reused ? ` · cat. reutilizados ${run.result.stats.catalogs_reused}` : ''}`
+    ? `↑ ${run.result.stats.uploaded} enviados · ↷ ${run.result.stats.skipped} pulados${run.result.stats.errors ? ` · ✕ ${run.result.stats.errors} falhas` : ''}${run.result.stats.catalogs_reused ? ` · cat. reutilizados ${run.result.stats.catalogs_reused}` : ''}`
     : run.result?.restored
       ? `${run.result.restored.partitions} partições restauradas`
-      : null;
+      : run.error || null;
 
   return el('div', {
     class: `backup-run-row backup-run-row--${statusClass}`,
@@ -345,19 +371,15 @@ function buildProgressCard(ctx, runId, kind, run) {
   const total = Number(progress.total || 0);
   const pct = total > 0 ? Math.min(100, Math.round((processed / total) * 100)) : (run?.status === 'running' ? 5 : 0);
   const stats = progress.stats || run?.result?.stats;
-  const cancellable = !run || run.status === 'queued' || run.status === 'running';
+  const statusLabel = run?.status || 'running';
+  const statusTone = statusLabel === 'failed' ? 'err' : (statusLabel === 'cancelled' ? 'idle' : 'warn');
 
   return el('div', { class: 'backup-progress-card', id: 'backup-progress-card' }, [
     el('div', { class: 'backup-progress-card__head' }, [
-      el('strong', {}, isRestore ? 'Restauração em andamento' : 'Backup em andamento'),
-      el('div', { class: 'backup-progress-card__actions' }, [
-        cancellable ? el('button', {
-          type: 'button',
-          class: 'btn btn--ghost btn--sm btn--danger',
-          onclick: () => cancelActiveBackup(ctx, runId),
-        }, 'Cancelar') : null,
-        el('span', { class: 'badge badge--warn badge--compact' }, run?.status || 'running'),
-      ].filter(Boolean)),
+      el('div', { class: 'backup-progress-card__title-wrap' }, [
+        el('strong', {}, isRestore ? 'Restauração em andamento' : 'Backup em andamento'),
+        el('span', { class: `badge badge--${statusTone} badge--compact` }, statusLabel),
+      ]),
     ]),
     el('div', { class: 'backup-progress-bar' }, [el('span', { style: { width: `${pct}%` } })]),
     el('div', { class: 'backup-progress-meta' }, [
@@ -365,9 +387,16 @@ function buildProgressCard(ctx, runId, kind, run) {
       total > 0 ? el('div', {}, `Progresso: ${processed} / ${total} (${pct}%)`) : el('div', {}, 'Calculando total de partições…'),
       progress.underlying ? el('div', {}, `Ativo: ${progress.underlying}${progress.dt ? ` · ${progress.dt}` : ''}`) : null,
       stats ? el('div', {}, `Enviados: ${stats.uploaded ?? 0} · Pulados: ${stats.skipped ?? 0} · Erros: ${stats.errors ?? 0}${stats.catalogs_reused ? ` · Catálogos reutilizados: ${stats.catalogs_reused}` : ''}`) : null,
+      run?.error ? el('div', { class: 'backup-progress-error' }, run.error) : null,
       el('div', {}, ['Run: ', el('code', {}, runId)]),
-      el('div', { class: 'backup-hint' }, 'O processo continua em segundo plano. Você pode permanecer nesta página — não há limite de tempo.'),
     ]),
+    (run?.status === 'queued' || run?.status === 'running' || !run) ? el('div', { class: 'backup-progress-card__footer' }, [
+      el('button', {
+        type: 'button',
+        class: 'btn btn--ghost btn--sm btn--danger',
+        onclick: () => cancelActiveBackup(ctx, runId),
+      }, 'Cancelar operação'),
+    ]) : null,
   ]);
 }
 
@@ -404,7 +433,9 @@ function startPolling(ctx, runId) {
     }
     if (run.status === 'failed') {
       stopPolling();
-      ctx.toast.err(run.error || 'Operação falhou');
+      const uploaded = run.result?.stats?.uploaded ?? 0;
+      const errors = run.result?.stats?.errors ?? 0;
+      ctx.toast.err(run.error || (errors ? `Backup falhou — ${errors} partição(ões) com erro (${uploaded} enviadas)` : 'Operação falhou'));
       await refreshTelegramBackupSettings(ctx);
       return;
     }
@@ -426,11 +457,11 @@ function stopPolling() {
   }
 }
 
-async function openBackupStartModal(ctx, settings) {
+async function openBackupStartModal(ctx, settings, baseline = { ready: false }) {
   const state = {
     scope: 'single',
     underlying: 'BTC',
-    incremental: settings.incremental_default,
+    incremental: baseline.ready ? settings.incremental_default : false,
     dryRun: false,
   };
 
@@ -444,6 +475,7 @@ async function openBackupStartModal(ctx, settings) {
   const singleRadio = el('input', { type: 'radio', name: 'backup-scope', value: 'single', checked: true });
   const incrementalCb = el('input', { type: 'checkbox' });
   incrementalCb.checked = state.incremental;
+  incrementalCb.disabled = !baseline.ready;
   incrementalCb.onchange = () => { state.incremental = incrementalCb.checked; };
   const dryRunCb = el('input', { type: 'checkbox' });
   dryRunCb.onchange = () => { state.dryRun = dryRunCb.checked; };
@@ -474,6 +506,7 @@ async function openBackupStartModal(ctx, settings) {
         el('span', {}, 'Incremental (pular inalterados)'),
         incrementalCb,
       ]),
+      !baseline.ready ? el('p', { class: 'backup-hint', style: { marginTop: '8px' } }, 'Histórico local vazio: o envio será completo, mesmo com incremental marcado.') : null,
       el('label', { class: 'backup-toggle' }, [
         el('span', {}, 'Dry-run (simular sem enviar)'),
         dryRunCb,
@@ -501,12 +534,14 @@ async function openBackupStartModal(ctx, settings) {
 }
 
 async function startBackup(ctx, state) {
+  const incremental = Boolean(state.incremental);
   const res = await ctx.api.post('/api/backup/telegram/runs', {
     underlying: state.scope === 'single' ? state.underlying : undefined,
     all_underlyings: state.scope === 'all',
-    incremental: state.incremental,
+    incremental,
     dry_run: state.dryRun,
-    force: !state.incremental,
+    force: !incremental,
+    manual: true,
   });
   if (!res.ok) {
     ctx.toast.err(res.error?.message || 'Falha ao iniciar backup');

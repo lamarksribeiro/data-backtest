@@ -8636,17 +8636,71 @@ html, body {
     background: rgba(255, 255, 255, 0.02);
   }
 
-  .backup-progress-card__head {
+  .backup-alerts {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .backup-alert {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--text-2);
+  }
+
+  .backup-alert strong {
+    color: var(--text-0);
+  }
+
+  .backup-alert--warn {
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    background: rgba(245, 158, 11, 0.08);
+  }
+
+  .backup-alert--info {
+    border: 1px solid rgba(96, 165, 250, 0.28);
+    background: rgba(96, 165, 250, 0.08);
+  }
+
+  .backup-progress-card__head {
     margin-bottom: 12px;
   }
 
-  .backup-progress-card__head strong {
+  .backup-progress-card__title-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .backup-progress-card__title-wrap strong {
     color: var(--text-0);
     font-size: 13px;
+  }
+
+  .backup-progress-card__footer {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .backup-progress-error {
+    color: var(--err);
+    word-break: break-word;
+  }
+
+  .backup-history-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
   }
 
   .backup-progress-bar {
