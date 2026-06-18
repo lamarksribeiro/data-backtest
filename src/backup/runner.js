@@ -45,12 +45,21 @@ export function enqueueTelegramBackup({ config, db, backupConfig, request }) {
   const slot = reserveBackupSlot(db, runId);
   if (!slot.ok) return slot;
 
+  const mode = request.incremental ? 'incremental' : 'full';
+  createTelegramBackupRun(db, {
+    id: runId,
+    status: 'queued',
+    mode,
+    underlying: request.underlying ?? null,
+    requestJson: { kind: 'backup', ...request, runId },
+  });
+
   const control = registerTelegramRunControl(runId);
   const promise = runTelegramBackup({
     config,
     db,
     backupConfig,
-    request: { ...request, runId },
+    request: { ...request, runId, skipRunCreate: true },
     runId,
     shouldCancel: () => control.isCancelled(),
     onProgress: (progress) => {
@@ -187,6 +196,35 @@ export function isTelegramBackupRunning() {
 
 export function isTelegramBackupBusy(db) {
   return backupSlotBusy(db);
+}
+
+export function getActiveTelegramBackupRunId(db) {
+  if (activeRuns.size > 0) {
+    return [...activeRuns.keys()][0];
+  }
+  return listActiveTelegramBackupRuns(db)[0]?.id ?? null;
+}
+
+export async function waitForTelegramBackupIdle({ timeoutMs = 20_000 } = {}) {
+  if (activeRuns.size === 0) {
+    return { ok: true, active: 0, timed_out: false };
+  }
+  const promises = [...activeRuns.values()];
+  let timedOut = false;
+  await Promise.race([
+    Promise.allSettled(promises),
+    new Promise((resolve) => {
+      setTimeout(() => {
+        timedOut = true;
+        resolve();
+      }, timeoutMs);
+    }),
+  ]);
+  return {
+    ok: activeRuns.size === 0,
+    active: activeRuns.size,
+    timed_out: timedOut && activeRuns.size > 0,
+  };
 }
 
 function finalizeCancelledRun(db, runId, extraProgress = {}) {

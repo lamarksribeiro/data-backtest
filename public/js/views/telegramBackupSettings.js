@@ -6,6 +6,17 @@ import { listedUnderlyings } from '../../shared/underlyingAssets.js';
 const POLL_INTERVAL_MS = 2000;
 /** @type {{ timer: ReturnType<typeof setInterval> | null, runId: string | null, panelEl: HTMLElement | null }} */
 const activePoll = { timer: null, runId: null, panelEl: null };
+let backupStartModalOpen = false;
+let backupStartInFlight = false;
+let backupOpsInFlight = false;
+
+function findActiveBackupRun(runs = []) {
+  return runs.find((run) => run.status === 'queued' || run.status === 'running') ?? null;
+}
+
+function isBackupUiBusy(runs = []) {
+  return Boolean(findActiveBackupRun(runs)) || backupStartModalOpen || backupStartInFlight || backupOpsInFlight;
+}
 
 export async function renderTelegramBackupSettings(ctx) {
   ctx.setBreadcrumb('settings', 'Backup Telegram');
@@ -86,6 +97,7 @@ function renderTelegramBackupPage(ctx, data, runs) {
           channelCatalog,
           completedRuns,
           progressSlot,
+          runs,
         }),
         renderHistoryCard(ctx, runs, completedRuns, channelCatalog),
       ]),
@@ -178,8 +190,9 @@ function renderBehaviorCard(formState, timezoneLabel) {
   ]);
 }
 
-function renderOperationsCard(ctx, { settings, baseline, lastRun, channelCatalog, completedRuns, progressSlot }) {
-  const busy = Boolean(activePoll.runId);
+function renderOperationsCard(ctx, { settings, baseline, lastRun, channelCatalog, completedRuns, progressSlot, runs }) {
+  const activeRun = findActiveBackupRun(runs);
+  const busy = isBackupUiBusy(runs);
   const configured = settings.configured;
   const channelFound = Boolean(channelCatalog?.ok && channelCatalog?.master_file_id);
   const canRestore = configured && !busy && (channelFound || completedRuns.length > 0);
@@ -192,12 +205,12 @@ function renderOperationsCard(ctx, { settings, baseline, lastRun, channelCatalog
         type: 'button',
         class: 'btn btn--primary btn--sm',
         disabled: !configured || busy,
-        onclick: () => openBackupStartModal(ctx, settings, baseline),
+        onclick: () => void openBackupStartModal(ctx, settings, baseline),
       }, 'Iniciar backup'),
-      busy ? el('button', {
+      activeRun ? el('button', {
         type: 'button',
         class: 'btn btn--ghost btn--sm btn--danger',
-        onclick: () => cancelActiveBackup(ctx, activePoll.runId),
+        onclick: () => cancelActiveBackup(ctx, activeRun.id),
       }, 'Cancelar operação') : null,
       el('button', {
         type: 'button',
@@ -455,9 +468,25 @@ function stopPolling() {
     clearInterval(activePoll.timer);
     activePoll.timer = null;
   }
+  activePoll.runId = null;
 }
 
 async function openBackupStartModal(ctx, settings, baseline = { ready: false }) {
+  if (backupStartModalOpen || backupStartInFlight || backupOpsInFlight) return;
+
+  const runsRes = await ctx.api.get('/api/backup/telegram/runs?limit=5');
+  if (runsRes.ok) {
+    const active = findActiveBackupRun(runsRes.data.runs);
+    if (active) {
+      ctx.toast.warn('Já há um backup ou restore em andamento.');
+      attachProgressPanel(ctx, active.id, active.request?.kind === 'restore' ? 'restore' : 'backup');
+      startPolling(ctx, active.id);
+      return;
+    }
+  }
+
+  backupStartModalOpen = true;
+  try {
   const state = {
     scope: 'single',
     underlying: 'BTC',
@@ -517,23 +546,30 @@ async function openBackupStartModal(ctx, settings, baseline = { ready: false }) 
       const overlay = document.querySelector('.modal-overlay');
       const footer = overlay?.querySelector('.modal__footer');
       if (!footer) return;
+      const confirmBtn = el('button', {
+        class: 'btn btn--primary',
+        type: 'button',
+        disabled: true,
+        onclick: async () => {
+          if (confirmBtn.disabled || backupStartInFlight) return;
+          syncScope();
+          close(null);
+          await startBackup(ctx, state);
+        },
+      }, 'Iniciar');
       footer.replaceChildren(
         el('button', { class: 'btn btn--ghost', type: 'button', onclick: () => close(null) }, 'Cancelar'),
-        el('button', {
-          class: 'btn btn--primary',
-          type: 'button',
-          onclick: async () => {
-            syncScope();
-            close(null);
-            await startBackup(ctx, state);
-          },
-        }, 'Iniciar'),
+        confirmBtn,
       );
+      window.setTimeout(() => {
+        confirmBtn.disabled = false;
+      }, 350);
     },
   });
+  } finally {
+    backupStartModalOpen = false;
+  }
 }
-
-let backupStartInFlight = false;
 
 async function startBackup(ctx, state) {
   if (backupStartInFlight) return;
@@ -549,6 +585,13 @@ async function startBackup(ctx, state) {
     manual: true,
   });
   if (!res.ok) {
+    const busyRunId = res.data?.run_id;
+    if (res.error?.code === 'BACKUP_BUSY' && busyRunId) {
+      ctx.toast.warn(res.error.message || 'Backup já em andamento');
+      attachProgressPanel(ctx, busyRunId, 'backup');
+      startPolling(ctx, busyRunId);
+      return;
+    }
     ctx.toast.err(res.error?.message || 'Falha ao iniciar backup');
     return;
   }
@@ -787,16 +830,21 @@ async function stopAndResetBackup(ctx) {
     confirmLabel: 'Parar e limpar',
   });
   if (!ok) return;
-  const res = await ctx.api.post('/api/backup/telegram/stop-all', { confirm: true });
-  if (!res.ok) {
-    ctx.toast.err(res.error?.message || 'Falha ao parar backup');
-    return;
+  backupOpsInFlight = true;
+  try {
+    const res = await ctx.api.post('/api/backup/telegram/stop-all', { confirm: true });
+    if (!res.ok) {
+      ctx.toast.err(res.error?.message || 'Falha ao parar backup');
+      return;
+    }
+    const cancelled = res.data.cancelled_run_ids?.length ?? 0;
+    const clearedRuns = res.data.cleared?.runs_removed ?? 0;
+    stopPolling();
+    ctx.toast.ok(`Backup parado${cancelled ? ` · ${cancelled} operação(ões) cancelada(s)` : ''}${clearedRuns ? ` · ${clearedRuns} run(s) removido(s)` : ''}`);
+    await refreshTelegramBackupSettings(ctx);
+  } finally {
+    backupOpsInFlight = false;
   }
-  const cancelled = res.data.cancelled_run_ids?.length ?? 0;
-  const clearedRuns = res.data.cleared?.runs_removed ?? 0;
-  stopPolling();
-  ctx.toast.ok(`Backup parado${cancelled ? ` · ${cancelled} operação(ões) cancelada(s)` : ''}${clearedRuns ? ` · ${clearedRuns} run(s) removido(s)` : ''}`);
-  await refreshTelegramBackupSettings(ctx);
 }
 
 async function clearLocalBackupHistory(ctx) {

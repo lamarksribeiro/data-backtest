@@ -27,7 +27,7 @@ import { datasetRequestFromObject, datasetRequestFromParams } from '../query/req
 import { createPrepareJobRunner } from '../prepare/runner.js';
 import { createAssetUpdateScheduler, lastClosedUtcDate } from '../scheduler/assetUpdates.js';
 import { createTelegramBackupScheduler, enqueueTelegramBackupAfterAssetSync } from '../scheduler/telegramBackup.js';
-import { enqueueTelegramBackup, enqueueTelegramRestore, getTelegramBackupRunStatus, isTelegramBackupRunning, isTelegramBackupBusy, cancelTelegramBackupRun, cancelAllActiveTelegramBackupRuns } from '../backup/runner.js';
+import { enqueueTelegramBackup, enqueueTelegramRestore, getTelegramBackupRunStatus, isTelegramBackupRunning, isTelegramBackupBusy, getActiveTelegramBackupRunId, cancelTelegramBackupRun, cancelAllActiveTelegramBackupRuns, waitForTelegramBackupIdle } from '../backup/runner.js';
 import { testTelegramBackupConnection } from '../backup/upload.js';
 import { discoverTelegramBackupCatalog } from '../backup/discover.js';
 import { listTelegramBackupRuns, getLastCompletedTelegramBackupRun, clearTelegramBackupLocalRecords, getIncrementalBackupBaseline } from '../state/telegramBackup.js';
@@ -389,7 +389,10 @@ export function createApiHandler(deps) {
           return sendJson(res, 400, { error: { code: 'NOT_CONFIGURED', message: 'Token e chat_id são obrigatórios.' } });
         }
         if (isTelegramBackupBusy(db)) {
-          return sendJson(res, 409, { error: { code: 'BACKUP_BUSY', message: 'Aguarde o backup ou restore em andamento terminar.' } });
+          return sendJson(res, 409, {
+            error: { code: 'BACKUP_BUSY', message: 'Aguarde o backup ou restore em andamento terminar.' },
+            run_id: getActiveTelegramBackupRunId(db),
+          });
         }
         const result = enqueueTelegramBackup({
           config,
@@ -425,7 +428,10 @@ export function createApiHandler(deps) {
           return sendJson(res, 400, { error: { code: 'NOT_CONFIGURED', message: 'Token e chat_id são obrigatórios.' } });
         }
         if (isTelegramBackupBusy(db)) {
-          return sendJson(res, 409, { error: { code: 'BACKUP_BUSY', message: 'Aguarde o backup ou restore em andamento terminar.' } });
+          return sendJson(res, 409, {
+            error: { code: 'BACKUP_BUSY', message: 'Aguarde o backup ou restore em andamento terminar.' },
+            run_id: getActiveTelegramBackupRunId(db),
+          });
         }
         const result = enqueueTelegramRestore({
           config,
@@ -452,6 +458,7 @@ export function createApiHandler(deps) {
           return sendJson(res, 400, { error: { code: 'CONFIRM_REQUIRED', message: 'Envie confirm: true para limpar o histórico local.' } });
         }
         cancelAllActiveTelegramBackupRuns(db);
+        await waitForTelegramBackupIdle();
         const cleared = clearTelegramBackupLocalRecords(db);
         return sendJson(res, 200, { ok: true, ...cleared });
       }
@@ -461,6 +468,7 @@ export function createApiHandler(deps) {
           return sendJson(res, 400, { error: { code: 'CONFIRM_REQUIRED', message: 'Envie confirm: true para parar o backup.' } });
         }
         const cancelled = cancelAllActiveTelegramBackupRuns(db);
+        const drained = await waitForTelegramBackupIdle();
         let cleared = null;
         if (body.clear_local !== false) {
           cleared = clearTelegramBackupLocalRecords(db);
@@ -479,6 +487,7 @@ export function createApiHandler(deps) {
           ok: true,
           cancelled_run_ids: cancelled.cancelled_run_ids,
           cleared,
+          drain: drained,
           settings,
         });
       }

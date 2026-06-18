@@ -48,21 +48,32 @@ export async function runTelegramBackup({
 
   if (!request.dryRun && !request.skipCheck) {
     const check = await runBackupCheck(config, db);
+    assertNotCancelled(shouldCancel);
     if (!check.backup_ready) {
+      if (request.skipRunCreate) {
+        updateTelegramBackupRun(db, runId, {
+          status: 'failed',
+          completedAt: new Date().toISOString(),
+          error: 'Lake não está pronto para backup.',
+          progressJson: { phase: 'failed' },
+        });
+      }
       return { ok: false, code: 'BACKUP_NOT_READY', message: 'Lake não está pronto para backup.', check };
     }
   }
 
-  const mode = request.incremental ? 'incremental' : 'full';
+  assertNotCancelled(shouldCancel);
   const baseline = getIncrementalBackupBaseline(db);
   const plan = resolveBackupPlan(request, baseline);
-  createTelegramBackupRun(db, {
-    id: runId,
-    status: 'queued',
-    mode: plan.incremental ? 'incremental' : 'full',
-    underlying: request.underlying ?? null,
-    requestJson: { ...request, incremental: plan.incremental, baseline_snapshot: baseline },
-  });
+  if (!request.skipRunCreate) {
+    createTelegramBackupRun(db, {
+      id: runId,
+      status: 'queued',
+      mode: plan.incremental ? 'incremental' : 'full',
+      underlying: request.underlying ?? null,
+      requestJson: { ...request, incremental: plan.incremental, baseline_snapshot: baseline },
+    });
+  }
 
   updateTelegramBackupRun(db, runId, {
     status: 'running',
