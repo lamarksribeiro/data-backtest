@@ -176,16 +176,56 @@ function renderScheduleCard(ctx, schedule, fieldOptions, formCtx, timezoneLabel)
         onclick: () => deleteSchedule(ctx, schedule, fieldOptions, formCtx),
       }, 'Excluir'),
     ]),
-    renderRecentRuns(schedule.recent_runs || []),
+    renderRunHistory(schedule.recent_runs || []),
   ]);
 }
 
-function renderRecentRuns(runs) {
+const RUN_STATUS_LABELS = {
+  completed: 'Concluído',
+  failed: 'Falhou',
+  running: 'Executando',
+  queued: 'Na fila',
+  skipped: 'Ignorado',
+  cancelled: 'Cancelado',
+};
+
+function runStatusTone(status) {
+  if (status === 'completed') return 'ok';
+  if (status === 'failed' || status === 'cancelled') return 'err';
+  if (status === 'running' || status === 'queued') return 'warn';
+  return 'idle';
+}
+
+function renderRunHistory(runs) {
   if (!runs.length) return null;
-  return el('div', { class: 'settings-run-list' }, runs.slice(0, 3).map((run) => el('div', { class: 'settings-run-row' }, [
-    el('span', {}, [el('code', {}, run.status), ` · ${run.from_date} → ${run.to_date}`]),
-    el('span', {}, run.prepare_job_id ? `job #${run.prepare_job_id}` : formatDateTime(run.completed_at || run.created_at)),
-  ])));
+  const [latest, ...older] = runs;
+  const latestRow = renderRunRow(latest, { label: 'Última execução' });
+  if (!older.length) {
+    return el('div', { class: 'settings-run-history' }, latestRow);
+  }
+  return el('div', { class: 'settings-run-history' }, [
+    latestRow,
+    el('details', { class: 'settings-run-history__details' }, [
+      el('summary', { class: 'settings-run-history__summary' }, `${older.length} execuç${older.length === 1 ? 'ão' : 'ões'} anterior${older.length === 1 ? '' : 'es'}`),
+      el('div', { class: 'settings-run-list' }, older.map((run) => renderRunRow(run))),
+    ]),
+  ]);
+}
+
+function renderRunRow(run, { label = null } = {}) {
+  const status = run.status || 'completed';
+  const statusLabel = RUN_STATUS_LABELS[status] || status;
+  const when = formatDateTime(run.completed_at || run.started_at || run.created_at);
+  const range = `${run.from_date} → ${run.to_date}`;
+  const jobRef = run.prepare_job_id ? `job #${run.prepare_job_id}` : null;
+  return el('div', { class: 'settings-run-row' }, [
+    el('span', { class: 'settings-run-row__main' }, [
+      label ? el('span', { class: 'settings-run-row__label' }, label) : null,
+      el('span', { class: `badge badge--compact badge--${runStatusTone(status)}` }, statusLabel),
+      el('span', { class: 'settings-run-row__range' }, range),
+    ]),
+    el('span', { class: 'settings-run-row__meta' }, [jobRef, when].filter(Boolean).join(' · ')),
+  ]);
 }
 
 async function runScheduleNow(ctx, schedule, fieldOptions, formCtx) {
