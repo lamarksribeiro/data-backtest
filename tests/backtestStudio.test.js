@@ -27,7 +27,8 @@ import {
   updateStrategy,
   validateStrategySource,
 } from '../src/backtestStudio/state/strategies.js';
-import { seedEdgeSniperV3Presets } from '../src/backtestStudio/gls/seedPromotedStrategies.js';
+import { seedEdgeSniperV3Presets, seedPromotedStrategy } from '../src/backtestStudio/gls/seedPromotedStrategies.js';
+import { listPromotedStrategies } from '../labs/shared/discoverStrategies.js';
 import { getStrategyStats } from '../src/backtestStudio/state/strategyStats.js';
 
 test('persistEventTraces normalizes native runner events', async () => {
@@ -446,7 +447,8 @@ test('trash restores strategy history and seed skips trashed slug', async () => 
   const dbPath = path.join(dir, 'state.db');
   const db = openStateDatabase(dbPath);
   try {
-    const strategy = seedEdgeSniperV3Presets(db);
+    const edgeManifest = listPromotedStrategies().find((item) => item.id === 'edge-sniper-v3');
+    const { strategy } = seedPromotedStrategy(db, edgeManifest);
     assert.ok(strategy);
     const versionRow = db.prepare(`
       SELECT id FROM strategy_versions WHERE strategy_id = ? ORDER BY version ASC LIMIT 1

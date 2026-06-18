@@ -5,8 +5,41 @@ import path from 'node:path';
 import { createGlsBacktestRunner } from '../backtestStudio/gls/runtime.js';
 import { parse as parseGls } from '../backtestStudio/gls/parser.js';
 import { analyzeStrategyColumns } from '../backtestStudio/gls/compiler.js';
+import {
+  createGammaLadderGlsRunner,
+  GAMMA_LADDER_COLUMN_ANALYSIS,
+  isGammaLadderStrategy,
+} from '../backtestStudio/gls/gammaLadder/glsAdapter.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+function buildGlsStrategyLoad(glsAst, request, config, options = {}) {
+  if (isGammaLadderStrategy(glsAst)) {
+    return {
+      kind: 'gamma-ladder',
+      glsAst,
+      columnAnalysis: request.columnAnalysis ?? GAMMA_LADDER_COLUMN_ANALYSIS,
+      createRunner: (params, runnerOptions) => createGammaLadderGlsRunner(params, {
+        ...runnerOptions,
+        bookDepth: request.bookDepth ?? config.backtestBookDepth,
+        fastRun: runnerOptions?.fastRun,
+      }),
+    };
+  }
+
+  const executionMode = request.glsExecution ?? (config.backtestEngine === 'soa' ? 'compiled-soa' : config.glsExecution);
+  const columnAnalysis = request.columnAnalysis ?? analyzeStrategyColumns(glsAst, request.bookDepth ?? 25);
+  return {
+    kind: 'gls',
+    glsAst,
+    columnAnalysis,
+    createRunner: (params, runnerOptions) => createGlsBacktestRunner(glsAst, params, {
+      ...runnerOptions,
+      executionMode,
+      extensionLibraries: request.extensionLibraries,
+    }),
+  };
+}
 
 function resolveStrategyPath(strategyIdent) {
   if (strategyIdent.startsWith('file:///')) {
@@ -21,20 +54,7 @@ function resolveStrategyPath(strategyIdent) {
  */
 export async function loadStrategy(request, config = {}) {
   if (request.glsAst) {
-    const glsAst = request.glsAst;
-    const executionMode = request.glsExecution ?? (config.backtestEngine === 'soa' ? 'compiled-soa' : config.glsExecution);
-    const columnAnalysis = request.columnAnalysis ?? analyzeStrategyColumns(glsAst, request.bookDepth ?? 25);
-
-    return {
-      kind: 'gls',
-      glsAst,
-      columnAnalysis,
-      createRunner: (params, options) => createGlsBacktestRunner(glsAst, params, {
-        ...options,
-        executionMode,
-        extensionLibraries: request.extensionLibraries,
-      }),
-    };
+    return buildGlsStrategyLoad(request.glsAst, request, config);
   }
 
   const strategyIdent = request.strategy;
@@ -53,18 +73,7 @@ export async function loadStrategy(request, config = {}) {
 
     const sourceCode = readFileSync(filePath, 'utf8');
     const glsAst = parseGls(sourceCode);
-    const executionMode = request.glsExecution ?? (config.backtestEngine === 'soa' ? 'compiled-soa' : config.glsExecution);
-    const columnAnalysis = request.columnAnalysis ?? analyzeStrategyColumns(glsAst, request.bookDepth ?? 25);
-
-    return {
-      kind: 'gls',
-      glsAst,
-      columnAnalysis,
-      createRunner: (params, options) => createGlsBacktestRunner(glsAst, params, {
-        ...options,
-        executionMode,
-      }),
-    };
+    return buildGlsStrategyLoad(glsAst, request, config);
   }
 
   const resolvedPath = resolveStrategyPath(strategyIdent);

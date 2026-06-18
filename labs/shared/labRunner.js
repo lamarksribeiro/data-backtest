@@ -7,6 +7,10 @@ import { loadConfig } from '../../src/config.js';
 import { openStateDatabase, closeStateDatabase } from '../../src/state/sqlite.js';
 import { parse } from '../../src/backtestStudio/gls/parser.js';
 import { analyzeStrategyColumns } from '../../src/backtestStudio/gls/compiler.js';
+import {
+  GAMMA_LADDER_COLUMN_ANALYSIS,
+  isGammaLadderStrategy,
+} from '../../src/backtestStudio/gls/gammaLadder/glsAdapter.js';
 import { checkDatasetAvailability } from '../../src/query/availability.js';
 import { runBacktestSweep } from '../../src/backtest/sweep.js';
 import { expandParamGrid, countParamGridVariants } from './paramGrid.js';
@@ -63,7 +67,9 @@ export async function runLabExperiment(experimentPath, options = {}) {
   const strategyRoot = path.resolve('labs/strategies', experiment.strategyFamily, experiment.strategyId);
   const strategy = readJson(path.join(strategyRoot, 'strategy.json'));
   const defaults = readOptionalJson(resolveReference(experiment.defaults || 'defaults.json', experimentDir, strategyRoot)) || {};
-  const searchSpace = readOptionalJson(resolveReference(experiment.searchSpace, experimentDir, strategyRoot)) || { grid: {} };
+  const searchSpace = experiment.searchSpace && typeof experiment.searchSpace === 'object'
+    ? experiment.searchSpace
+    : (readOptionalJson(resolveReference(experiment.searchSpace, experimentDir, strategyRoot)) || { grid: {} });
   const totalVariantCount = countParamGridVariants(searchSpace);
   const maxVariants = Math.max(Number(options.maxVariants || experiment.maxVariants || config.sweepMaxVariants), 1);
   const variants = expandParamGrid(searchSpace, { maxVariants });
@@ -71,7 +77,9 @@ export async function runLabExperiment(experimentPath, options = {}) {
   const sourceCode = readFileSync(sourcePath, 'utf8');
   const glsAst = parse(sourceCode);
   const bookDepth = experiment.bookDepth ?? strategy.defaultBookDepth ?? config.backtestBookDepth;
-  const columnAnalysis = analyzeStrategyColumns(glsAst, bookDepth ?? config.backtestBookDepth);
+  const columnAnalysis = isGammaLadderStrategy(glsAst)
+    ? GAMMA_LADDER_COLUMN_ANALYSIS
+    : analyzeStrategyColumns(glsAst, bookDepth ?? config.backtestBookDepth);
   const request = buildBacktestRequest({ experiment, strategy, defaults, glsAst, columnAnalysis, bookDepth, options });
   const availabilityRequest = {
     ...request,

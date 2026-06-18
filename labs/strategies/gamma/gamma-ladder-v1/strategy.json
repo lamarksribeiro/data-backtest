@@ -1,0 +1,23 @@
+{
+  "id": "gamma-ladder-v1",
+  "name": "Gamma Ladder V1",
+  "family": "gamma",
+  "status": "candidate",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "src/backtestStudio/gls/strategies/gammaLadderV1.gls"
+  },
+  "promotedToStudio": true,
+  "studioSlug": "gamma-ladder-v1-gls",
+  "studio": {
+    "description": "Gamma Ladder V1 com motor dedicado (box, hedge e Kelly). Lógica de execução em src/backtestStudio/gls/gammaLadder/.",
+    "tags": ["gamma-ladder-v1", "btc", "lab-strategy"],
+    "defaultVersion": 1
+  },
+  "notes": "Port GLS da Gamma Ladder V1 (motor em src/backtestStudio/gls/gammaLadder/)."
+}

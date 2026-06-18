@@ -3,6 +3,11 @@ import { Worker } from 'node:worker_threads';
 import { loadConfig } from '../config.js';
 import { analyzeStrategyColumns, analyzeStrategyParallelism } from '../backtestStudio/gls/compiler.js';
 import { createGlsBacktestRunner } from '../backtestStudio/gls/runtime.js';
+import {
+  createGammaLadderGlsRunner,
+  GAMMA_LADDER_COLUMN_ANALYSIS,
+  isGammaLadderStrategy,
+} from '../backtestStudio/gls/gammaLadder/glsAdapter.js';
 import { datasetCacheKey, getDatasetCache } from './datasetCache.js';
 import { loadBacktestColumnSet } from '../query/columnChunkReader.js';
 import { runParallelEventSlices } from './eventPool.js';
@@ -35,8 +40,11 @@ export async function runBacktestSweep(db, baseRequest, variants, { onProgress, 
     params: variant?.params && typeof variant.params === 'object' ? variant.params : {},
   }));
 
+  const isGammaLadder = isGammaLadderStrategy(baseRequest.glsAst);
   const columnAnalysis = baseRequest.columnAnalysis
-    ?? analyzeStrategyColumns(baseRequest.glsAst, baseRequest.bookDepth ?? 25);
+    ?? (isGammaLadder
+      ? GAMMA_LADDER_COLUMN_ANALYSIS
+      : analyzeStrategyColumns(baseRequest.glsAst, baseRequest.bookDepth ?? 25));
   const dataset = resolveBacktestDataset(baseRequest, columnAnalysis);
   const effectiveBookDepth = columnAnalysis?.needsBookLevels
     ? (columnAnalysis.bookDepth || baseRequest.bookDepth)
@@ -73,7 +81,8 @@ export async function runBacktestSweep(db, baseRequest, variants, { onProgress, 
     && workerCount > 1
     && columnSet.events.length > 1;
 
-  const executionMode = 'compiled-soa';
+  const executionMode = isGammaLadder ? 'gamma-ladder' : 'compiled-soa';
+  const useGammaSoa = isGammaLadder;
   const variantResults = [];
   const processStartedAt = Date.now();
 
@@ -81,13 +90,15 @@ export async function runBacktestSweep(db, baseRequest, variants, { onProgress, 
     const variant = normalized[index];
     const variantStartedAt = Date.now();
     const params = { ...(baseRequest.params ?? {}), ...variant.params };
-    const runner = createGlsBacktestRunner(baseRequest.glsAst, params, {
-      executionMode,
-      fastRun: true,
-      bookDepth: effectiveBookDepth,
-    });
+    const runner = isGammaLadder
+      ? createGammaLadderGlsRunner(params, { fastRun: true, bookDepth: effectiveBookDepth })
+      : createGlsBacktestRunner(baseRequest.glsAst, params, {
+        executionMode,
+        fastRun: true,
+        bookDepth: effectiveBookDepth,
+      });
 
-    if (canParallelize) {
+    if (canParallelize && !isGammaLadder) {
       const slices = await runParallelEventSlices({
         ast: baseRequest.glsAst,
         params,
@@ -100,11 +111,11 @@ export async function runBacktestSweep(db, baseRequest, variants, { onProgress, 
         runner.importParallelSlices(slices);
       } else {
         runner.bindColumnSet(columnSet);
-        await runSequentialSoA(runner, columnSet, true);
+        await runSequentialSoA(runner, columnSet, !useGammaSoa);
       }
     } else {
       runner.bindColumnSet(columnSet);
-      await runSequentialSoA(runner, columnSet, true);
+      await runSequentialSoA(runner, columnSet, !useGammaSoa);
     }
 
     const result = runner.finish();

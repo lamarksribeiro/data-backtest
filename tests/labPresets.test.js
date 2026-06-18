@@ -10,11 +10,11 @@ import { renderPresetGls } from '../labs/shared/renderPresetGls.js';
 import { seedPromotedStrategies } from '../src/backtestStudio/gls/seedPromotedStrategies.js';
 import { openStateDatabase, closeStateDatabase } from '../src/state/sqlite.js';
 
-test('listPromotedStrategies discovers edge-sniper-v3 from labs', () => {
+test('listPromotedStrategies discovers promoted lab strategies', () => {
   const promoted = listPromotedStrategies();
-  assert.equal(promoted.length, 1);
-  assert.equal(promoted[0].id, 'edge-sniper-v3');
-  assert.equal(promoted[0].studioSlug, 'edge-sniper-v3-gls');
+  const ids = promoted.map((item) => item.id).sort();
+  assert.deepEqual(ids, ['edge-sniper-v3', 'gamma-ladder-v1', 'vsmr']);
+  assert.equal(promoted.find((item) => item.id === 'gamma-ladder-v1').studioSlug, 'gamma-ladder-v1-gls');
 });
 
 test('seedPromotedStrategies seeds versions from lab manifests', () => {
@@ -23,16 +23,28 @@ test('seedPromotedStrategies seeds versions from lab manifests', () => {
   const db = openStateDatabase(dbPath);
   try {
     const results = seedPromotedStrategies(db);
-    assert.equal(results.length, 1);
-    assert.equal(results[0].slug, 'edge-sniper-v3-gls');
-    const versions = db.prepare(`
+    assert.equal(results.length, 3);
+    const slugs = results.map((row) => row.slug).sort();
+    assert.deepEqual(slugs, ['edge-sniper-v3-gls', 'gamma-ladder-v1-gls', 'vsmr-gls']);
+
+    const edge = results.find((row) => row.slug === 'edge-sniper-v3-gls');
+    const edgeVersions = db.prepare(`
       SELECT version, notes FROM strategy_versions
       WHERE strategy_id = ?
       ORDER BY version ASC
-    `).all(results[0].strategy.id);
-    assert.equal(versions.length, 3);
-    assert.equal(versions[0].notes, 'BTC · Classic');
-    assert.equal(versions[2].notes, 'ETH · OBI');
+    `).all(edge.strategy.id);
+    assert.equal(edgeVersions.length, 3);
+    assert.equal(edgeVersions[0].notes, 'BTC · Classic');
+    assert.equal(edgeVersions[2].notes, 'ETH · OBI');
+
+    const gamma = results.find((row) => row.slug === 'gamma-ladder-v1-gls');
+    const gammaVersions = db.prepare(`
+      SELECT version, notes FROM strategy_versions
+      WHERE strategy_id = ?
+      ORDER BY version ASC
+    `).all(gamma.strategy.id);
+    assert.equal(gammaVersions.length, 1);
+    assert.equal(gammaVersions[0].notes, 'BTC · V1');
   } finally {
     closeStateDatabase(db);
   }

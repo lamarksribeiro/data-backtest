@@ -292,6 +292,17 @@ export async function runSequentialSoA(runner, columnSet, compiledSoa, onProgres
     emitProgress(total);
     return;
   }
+
+  if (runner.executionMode === 'gamma-ladder' && typeof runner.bindColumnSet === 'function') {
+    runner.bindColumnSet(columnSet);
+    for (let i = 0; i < columnSet.length; i += 1) {
+      runner.processIndex(i);
+      emitProgress(i + 1);
+      await yieldIfNeeded(i);
+    }
+    return;
+  }
+
   const cursor = createTickCursorView(columnSet);
   for (let i = 0; i < columnSet.length; i += 1) {
     cursor.setIndex(i);

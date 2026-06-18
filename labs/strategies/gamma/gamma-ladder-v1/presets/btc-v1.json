@@ -1,0 +1,9 @@
+{
+  "id": "btc-v1",
+  "underlying": "BTC",
+  "studioVersion": 1,
+  "name": "BTC · V1",
+  "studioName": "Gamma Ladder V1 · BTC · V1",
+  "role": "champion",
+  "description": "Perfil base portado do polymarket-test (box + hedge + Kelly)."
+}

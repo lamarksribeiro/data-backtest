@@ -1,0 +1,7 @@
+{
+  "strategyId": "gamma-ladder-v1",
+  "updatedAt": "2026-06-17",
+  "presets": [
+    { "id": "btc-v1", "underlying": "BTC", "studioVersion": 1, "role": "champion" }
+  ]
+}

@@ -45,6 +45,7 @@
     "lab:seed-presets": "node labs/cli/seed-presets.js",
     "lab:consolidate": "node labs/cli/consolidate.js",
     "lab:bench-sweep": "node labs/cli/bench-sweep-mode.js",
+    "lab:gamma-ladder": "node labs/cli/run.js --experiment labs/strategies/gamma/gamma-ladder-v1/experiments/smoke-2d.json",
     "lab:esv3:analyze-stop": "node labs/strategies/edge/edge-sniper-v3/scripts/analyze-immediate-stop.js",
     "lab:esv3:counterfactual-stop": "node labs/cli/run.js --experiment labs/strategies/edge/edge-sniper-v3/experiments/2026-06-14-stop-bid-counterfactual.json",
     "lab:esv3:compare-studio": "node scratch/compare-studio-lab-esv3.js"
