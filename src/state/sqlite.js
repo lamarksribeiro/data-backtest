@@ -2,6 +2,9 @@ import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 
+import { seedNativeLibraryIfEmpty } from '../backtestStudio/nativeLibrary/seed.js';
+import { bindStrategyLibraryDatabase } from '../backtestStudio/nativeLibrary/registry.js';
+
 const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS lake_manifest (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -311,6 +314,7 @@ export function openStateDatabase(stateDbPath) {
   migrateBacktestRuns(db);
   migratePrepareJobs(db);
   migrateStrategyV3(db);
+  migrateStrategyV6(db);
   migrateStrategyDefinitions(db);
   repairStrategyDefinitionsForeignKeys(db);
   migrateBacktestRunsV3Indexes(db);
@@ -319,7 +323,49 @@ export function openStateDatabase(stateDbPath) {
   applyColumnMigrations(db, 'telegram_backup_artifacts', TELEGRAM_BACKUP_ARTIFACTS_MIGRATIONS);
   migrateTelegramBackupRuns(db);
   ensureTelegramBackupSettingsRow(db);
+  seedNativeLibraryIfEmpty(db);
+  bindStrategyLibraryDatabase(db);
   return db;
+}
+
+export function migrateStrategyV6(db) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS strategy_library_definitions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      slug TEXT NOT NULL UNIQUE,
+      name TEXT NOT NULL,
+      description TEXT,
+      status TEXT NOT NULL DEFAULT 'draft',
+      created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+      updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS strategy_library_versions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      library_id INTEGER NOT NULL REFERENCES strategy_library_definitions(id),
+      version INTEGER NOT NULL,
+      language TEXT NOT NULL DEFAULT 'strategy-js-v1',
+      source_code TEXT NOT NULL,
+      validation_json TEXT NOT NULL DEFAULT '{}',
+      compiled_json TEXT,
+      checksum TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+      UNIQUE(library_id, version)
+    );
+
+    CREATE TABLE IF NOT EXISTS strategy_presets (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      strategy_id INTEGER NOT NULL REFERENCES strategy_definitions(id),
+      strategy_version_id INTEGER NOT NULL REFERENCES strategy_versions(id),
+      name TEXT NOT NULL,
+      params_json TEXT NOT NULL,
+      tags_json TEXT NOT NULL DEFAULT '[]',
+      created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+    );
+
+    CREATE INDEX IF NOT EXISTS strategy_presets_strategy_idx ON strategy_presets(strategy_id, strategy_version_id);
+    CREATE INDEX IF NOT EXISTS strategy_library_versions_lib_idx ON strategy_library_versions(library_id, version);
+  `);
 }
 
 function ensureTelegramBackupSettingsRow(db) {

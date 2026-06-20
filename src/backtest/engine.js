@@ -82,6 +82,26 @@ export async function runBacktest(db, request, { onProgress, progressStartedAt: 
   timings.finishMs = Date.now() - finishStartedAt;
   timings.completedAt = Date.now();
   emitProgress({ phase: 'finalizing', ticks, batches, totalTicks, force: true });
+
+  if (request.strategyMeta) {
+    result.summary = result.summary || {};
+    result.summary.timings = {
+      ...(result.summary.timings || {}),
+      ...formatTimings(timings),
+      strategyMeta: {
+        language: request.strategyMeta.language,
+        compilerMode: request.strategyMeta.compilerMode,
+        compileCacheHit: request.strategyMeta.compileCacheHit,
+        compileMs: request.strategyMeta.compileMs,
+        columnsUsed: request.strategyMeta.columnsUsed,
+        bookDepthUsed: request.strategyMeta.bookDepthUsed,
+        parallelSafe: request.strategyMeta.parallelSafe,
+        workerCount: request.backtestWorkers ?? config.backtestWorkers ?? 1,
+        preset_id: request.strategyMeta.preset_id ?? null,
+      },
+    };
+  }
+
   return {
     strategy: result.strategy,
     source: 'lakehouse',

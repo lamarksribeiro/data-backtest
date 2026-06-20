@@ -7,11 +7,25 @@ import { seedPromotedStrategies } from '../../src/backtestStudio/gls/seedPromote
 import { listPromotedStrategies } from '../../labs/shared/discoverStrategies.js';
 
 async function main() {
+  const dryRun = process.argv.includes('--dry-run');
   const config = loadConfig();
   const db = openStateDatabase(config.stateDbPath);
   try {
     const promoted = listPromotedStrategies();
-    const results = seedPromotedStrategies(db);
+    if (dryRun) {
+      console.log(JSON.stringify({
+        ok: true,
+        dryRun: true,
+        wouldPromote: promoted.map((item) => ({
+          id: item.id,
+          slug: item.studioSlug,
+          strategyFamily: item.strategyFamily,
+        })),
+        note: 'No database writes performed. Remove --dry-run to import.',
+      }, null, 2));
+      return;
+    }
+    const results = seedPromotedStrategies(db, { jsOnly: true });
     console.log(JSON.stringify({
       ok: true,
       promoted: promoted.map((item) => ({ id: item.id, slug: item.studioSlug })),

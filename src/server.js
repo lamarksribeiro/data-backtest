@@ -28,7 +28,9 @@ if (recoveredAssetUpdateRuns > 0) {
 if (recoveredTelegramBackupRuns > 0) {
   console.log(JSON.stringify({ ok: true, recoveredTelegramBackupRuns }));
 }
-seedPromotedStrategies(db);
+if (config.TEST_MODE || String(process.env.SEED_PROMOTED_STRATEGIES || '').trim() === '1') {
+  seedPromotedStrategies(db);
+}
 const authService = createAuthService({ db, config });
 if (!config.TEST_MODE) {
   const bootstrapped = await authService.bootstrapAdmin();

@@ -85,6 +85,22 @@ import {
 } from './qualityHandlers.js';
 import { parse } from '../backtestStudio/gls/parser.js';
 import { listBlockSignatures } from '../backtestStudio/gls/blocks.js';
+import { getRuntimeCapabilities } from '../backtestStudio/strategyJs/index.js';
+import { composeStrategyJsFromSource } from '../backtestStudio/strategyJs/composeStrategyJs.js';
+import { resolveVersionForBacktest } from '../backtestStudio/strategyJs/resolveVersion.js';
+import {
+  listStrategyLibraries,
+  getStrategyLibraryBySlug,
+} from '../backtestStudio/state/strategyLibrary.js';
+import {
+  listStrategyPresets,
+  getStrategyPreset,
+  createStrategyPreset,
+  updateStrategyPreset,
+  deleteStrategyPreset,
+  mergePresetParams,
+  extractDefaultParamsFromSchema,
+} from '../backtestStudio/state/strategyPresets.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = path.resolve(__dirname, '../../public');
@@ -696,7 +712,7 @@ export function createApiHandler(deps) {
           if (['running', 'queued'].includes(run.status)) {
             return sendJson(res, 400, { error: { code: 'DELETE_FAILED', message: 'Cannot delete a running or queued backtest' } });
           }
-          const deleted = deleteBacktestRun(db, backtestRunRoute.runId);
+          const deleted = deleteBacktestRun(db, backtestRunRoute.runId, { stateDbPath: config.stateDbPath });
           invalidateStrategyStatsCache();
           return sendJson(res, 200, { deleted: true, run: deleted });
         }
@@ -762,6 +778,30 @@ export function createApiHandler(deps) {
       }
       if (req.method === 'GET' && url.pathname === '/api/strategy-blocks') {
         return sendJson(res, 200, { blocks: listBlockSignatures() });
+      }
+      if (req.method === 'GET' && url.pathname === '/api/strategy-runtime/capabilities') {
+        return sendJson(res, 200, getRuntimeCapabilities());
+      }
+      if (req.method === 'GET' && url.pathname === '/api/strategy-library') {
+        return sendJson(res, 200, { libraries: listStrategyLibraries(db) });
+      }
+      const libraryRoute = matchStrategyLibraryRoute(url.pathname);
+      if (libraryRoute && req.method === 'GET') {
+        const library = getStrategyLibraryBySlug(db, libraryRoute.slug);
+        return library
+          ? sendJson(res, 200, { library })
+          : sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Strategy library not found' } });
+      }
+      if (req.method === 'POST' && url.pathname === '/api/strategies/convert-to-strategy-js') {
+        const body = await readJson(req);
+        try {
+          const source = String(body.source_code || '').trim();
+          if (!source) throw new Error('source_code is required');
+          const converted = composeStrategyJsFromSource(source);
+          return sendJson(res, 200, { source_code: converted, language: 'strategy-js-v1' });
+        } catch (err) {
+          return sendJson(res, 400, { error: { code: 'CONVERT_FAILED', message: err.message } });
+        }
       }
       if (req.method === 'GET' && url.pathname === '/api/strategies/trash') {
         if (url.searchParams.get('stats') === '1') {
@@ -873,6 +913,48 @@ export function createApiHandler(deps) {
           } catch (err) {
             return sendJson(res, 400, { error: { code: 'DELETE_FAILED', message: err.message } });
           }
+        }
+        if (req.method === 'GET' && strategyRoute.kind === 'presets') {
+          const strategy = getStrategy(db, strategyRoute.strategyId);
+          if (!strategy) return sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Strategy not found' } });
+          const versionId = positiveOptionalInt(url.searchParams.get('strategy_version_id'));
+          return sendJson(res, 200, {
+            presets: listStrategyPresets(db, strategyRoute.strategyId, { strategyVersionId: versionId }),
+          });
+        }
+        if (req.method === 'POST' && strategyRoute.kind === 'presets') {
+          const strategy = getStrategy(db, strategyRoute.strategyId);
+          if (!strategy) return sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Strategy not found' } });
+          try {
+            const body = await readJson(req);
+            const preset = createStrategyPreset(db, strategyRoute.strategyId, body);
+            return sendJson(res, 200, { preset });
+          } catch (err) {
+            return sendJson(res, 400, { error: { code: 'REQUEST_FAILED', message: err.message } });
+          }
+        }
+        if (req.method === 'GET' && strategyRoute.kind === 'preset-detail') {
+          const preset = getStrategyPreset(db, strategyRoute.strategyId, strategyRoute.presetId);
+          return preset
+            ? sendJson(res, 200, { preset })
+            : sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Strategy preset not found' } });
+        }
+        if (req.method === 'PATCH' && strategyRoute.kind === 'preset-detail') {
+          try {
+            const body = await readJson(req);
+            const preset = updateStrategyPreset(db, strategyRoute.strategyId, strategyRoute.presetId, body);
+            return preset
+              ? sendJson(res, 200, { preset })
+              : sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Strategy preset not found' } });
+          } catch (err) {
+            return sendJson(res, 400, { error: { code: 'REQUEST_FAILED', message: err.message } });
+          }
+        }
+        if (req.method === 'DELETE' && strategyRoute.kind === 'preset-detail') {
+          const preset = deleteStrategyPreset(db, strategyRoute.strategyId, strategyRoute.presetId);
+          return preset
+            ? sendJson(res, 200, { deleted: true, preset })
+            : sendJson(res, 404, { error: { code: 'NOT_FOUND', message: 'Strategy preset not found' } });
         }
       }
       if (req.method === 'POST' && url.pathname === '/api/backtest/run') {
@@ -1252,14 +1334,6 @@ function statusForError(err) {
 
 function backtestRequestFromBody(body, config, db) {
   const dataRequest = datasetRequestFromObject({ dataset: 'backtest_ticks', ...body }, config);
-  const base = {
-    ...dataRequest,
-    batchSize: positiveIntValue(body.batch_size ?? body.batchSize, 10_000),
-    params: parseParams(body.params),
-    fastRun: body.fast_run === true || body.fastRun === true,
-    variantWorkers: positiveOptionalInt(body.variant_workers ?? body.variantWorkers),
-  };
-
   const strategyId = positiveOptionalInt(body.strategy_id);
   const strategyVersionId = positiveOptionalInt(body.strategy_version_id);
   if (!strategyId || !strategyVersionId) {
@@ -1271,9 +1345,44 @@ function backtestRequestFromBody(body, config, db) {
   const version = getStrategyVersion(db, strategyId, strategyVersionId);
   if (!version) throw new Error('Strategy version not found');
   if (!version.validation?.ok) throw new Error('Strategy version failed validation');
-  const glsAst = parse(version.source_code);
-  const columnAnalysis = analyzeStrategyColumns(glsAst, dataRequest.bookDepth ?? 25);
+
+  const presetId = positiveOptionalInt(body.preset_id ?? body.presetId);
+  let preset = null;
+  if (presetId) {
+    preset = getStrategyPreset(db, strategyId, presetId);
+    if (!preset) throw new Error('Strategy preset not found');
+    if (preset.strategy_version_id !== strategyVersionId) {
+      throw new Error('preset_id does not match strategy_version_id');
+    }
+  }
+
+  const defaultParams = extractDefaultParamsFromSchema(version.params_schema || {});
+  const bodyParams = parseParams(body.params);
+  const presetParams = preset?.params || body.strategyMeta?.preset_params || null;
+  const mergedParams = mergePresetParams(defaultParams, presetParams || {}, bodyParams);
+
+  const base = {
+    ...dataRequest,
+    batchSize: positiveIntValue(body.batch_size ?? body.batchSize, 10_000),
+    params: mergedParams,
+    fastRun: body.fast_run === true || body.fastRun === true,
+    variantWorkers: positiveOptionalInt(body.variant_workers ?? body.variantWorkers),
+  };
+
+  const resolved = resolveVersionForBacktest(version, { bookDepth: dataRequest.bookDepth ?? 25, db });
+  const glsAst = resolved.glsAst;
+  const extensionLibraries = resolved.extensionLibraries ?? [];
+  const requestBookDepth = dataRequest.bookDepth ?? 25;
+  const artifactBookDepth = resolved.columnAnalysis?.bookDepth ?? requestBookDepth;
+  const generatedSource = artifactBookDepth === requestBookDepth
+    ? (resolved.generatedSource ?? null)
+    : null;
+  const columnAnalysis = resolved.columnAnalysis ?? analyzeStrategyColumns(glsAst, dataRequest.bookDepth ?? 25);
   const glsExecution = normalizeOptionalGlsExecution(body.gls_execution ?? body.glsExecution);
+  const strategyLabel = resolved.strategyMeta?.strategyLabel
+    || version.source_code.match(/strategy\s+"([^"]+)"/)?.[1]
+    || version.source_code.match(/name:\s*["']([^"']+)["']/)?.[1]
+    || strategy.name;
   return {
     ...base,
     feeOptions: {
@@ -1282,10 +1391,17 @@ function backtestRequestFromBody(body, config, db) {
       enabled: body.applyPolymarketFees !== false,
     },
     strategy: `gls:${strategy.slug}`,
-    strategyLabel: version.source_code.match(/strategy\s+"([^"]+)"/)?.[1] || strategy.name,
+    strategyLabel,
     glsAst,
     columnAnalysis,
     glsExecution,
+    extensionLibraries,
+    generatedSource,
+    db,
+    runnerLibrary: resolved.runnerLibrary ?? null,
+    embeddedRunner: resolved.embeddedRunner ?? false,
+    embeddedModels: resolved.embeddedModels ?? false,
+    strategySourceCode: resolved.strategySourceCode ?? null,
     strategyMeta: {
       strategy_id: strategyId,
       strategy_version_id: strategyVersionId,
@@ -1296,6 +1412,12 @@ function backtestRequestFromBody(body, config, db) {
       source_code: version.source_code,
       params_schema: version.params_schema,
       checksum: version.checksum,
+      dependencies: resolved.strategyMeta?.dependencies ?? version.compiled?.dependencies ?? [],
+      preset_id: preset?.id ?? null,
+      preset_name: preset?.name ?? null,
+      execution_kind: version.validation?.execution_kind ?? resolved.strategyMeta?.execution_kind ?? null,
+      editable_logic: version.validation?.editable_logic,
+      ...resolved.strategyMeta,
     },
   };
 }
@@ -1487,7 +1609,7 @@ function csvEscape(value) {
 function matchStrategyRoute(pathname) {
   const parts = pathname.split('/').filter(Boolean);
   if (parts.length < 3 || parts[0] !== 'api' || parts[1] !== 'strategies') return null;
-  if (parts[2] === 'validate') return null;
+  if (parts[2] === 'validate' || parts[2] === 'convert-to-strategy-js') return null;
   const strategyId = Number.parseInt(parts[2], 10);
   if (!Number.isFinite(strategyId)) return null;
   if (parts.length === 3) return { kind: 'detail', strategyId };
@@ -1500,7 +1622,20 @@ function matchStrategyRoute(pathname) {
     const versionId = Number.parseInt(parts[4], 10);
     return Number.isFinite(versionId) ? { kind: 'version-detail', strategyId, versionId } : null;
   }
+  if (parts[3] === 'presets' && parts.length === 4) return { kind: 'presets', strategyId };
+  if (parts[3] === 'presets' && parts.length === 5) {
+    const presetId = Number.parseInt(parts[4], 10);
+    return Number.isFinite(presetId) ? { kind: 'preset-detail', strategyId, presetId } : null;
+  }
   return null;
+}
+
+function matchStrategyLibraryRoute(pathname) {
+  const parts = pathname.split('/').filter(Boolean);
+  if (parts.length !== 3 || parts[0] !== 'api' || parts[1] !== 'strategy-library') return null;
+  const slug = parts[2];
+  if (!slug) return null;
+  return { slug: decodeURIComponent(slug) };
 }
 
 function toEventDetailResponse(event) {

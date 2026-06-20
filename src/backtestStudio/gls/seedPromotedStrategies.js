@@ -11,6 +11,9 @@ import {
   getStrategyBySlug,
   validateStrategySource,
 } from '../state/strategies.js';
+import { glsToStrategyJs } from '../strategyJs/glsToStrategyJs.js';
+import { buildCompiledArtifact } from '../strategyJs/resolveVersion.js';
+import { composeStrategyJsFromGls } from '../strategyJs/composeStrategyJs.js';
 
 function checksumSource(sourceCode) {
   return createHash('sha256').update(String(sourceCode)).digest('hex');
@@ -21,7 +24,8 @@ function readGlsSource(relPath) {
 }
 
 function resolveStudioSlug(manifest) {
-  return manifest.studioSlug || `${manifest.strategyId}-gls`;
+  const raw = manifest.studioSlug || manifest.strategyId || manifest.id;
+  return String(raw).replace(/-gls$/i, '');
 }
 
 function resolveStudioTags(manifest) {
@@ -72,12 +76,35 @@ function resolveVersionNotes(preset) {
   return preset.name || preset.id;
 }
 
+function resolveVersionPayload(glsSource, { jsOnly, db = null }) {
+  if (!jsOnly) {
+    const validation = validateStrategySource({ language: 'gls-v1', source_code: glsSource });
+    return {
+      language: 'gls-v1',
+      sourceCode: glsSource,
+      validation,
+      compiled: null,
+    };
+  }
+  const sourceCode = composeStrategyJsFromGls(glsSource);
+  const validation = validateStrategySource({ language: 'strategy-js-v1', source_code: sourceCode, db });
+  const compiled = validation.ok ? buildCompiledArtifact(sourceCode) : null;
+  return {
+    language: 'strategy-js-v1',
+    sourceCode,
+    validation,
+    compiled,
+  };
+}
+
 function upsertStrategyVersion(db, {
   strategyId,
   versionNum,
+  language,
   sourceCode,
   validation,
   checksum,
+  compiled,
   notes,
   existingVersions,
 }) {
@@ -85,14 +112,15 @@ function upsertStrategyVersion(db, {
   if (!existingVersion) {
     db.prepare(`
       INSERT INTO strategy_versions (
-        strategy_id, version, language, source_code, params_schema_json, validation_json, checksum, notes
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        strategy_id, version, language, source_code, params_schema_json, compiled_json, validation_json, checksum, notes
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       strategyId,
       versionNum,
-      'gls-v1',
+      language,
       sourceCode,
       JSON.stringify(validation.params_schema || {}),
+      compiled ? JSON.stringify(compiled) : null,
       JSON.stringify(validation),
       checksum,
       notes,
@@ -102,11 +130,13 @@ function upsertStrategyVersion(db, {
 
   db.prepare(`
     UPDATE strategy_versions
-    SET source_code = ?, params_schema_json = ?, validation_json = ?, checksum = ?, notes = ?
+    SET language = ?, source_code = ?, params_schema_json = ?, compiled_json = ?, validation_json = ?, checksum = ?, notes = ?
     WHERE id = ?
   `).run(
+    language,
     sourceCode,
     JSON.stringify(validation.params_schema || {}),
+    compiled ? JSON.stringify(compiled) : null,
     JSON.stringify(validation),
     checksum,
     notes,
@@ -137,14 +167,28 @@ function ensureDefaultVersion(db, strategyRowId, manifest) {
   `).run(versionRow.id, strategyRowId);
 }
 
-export function seedPromotedStrategy(db, manifest) {
+function findStrategyByLegacySlug(db, slug, manifest) {
+  const direct = getStrategyBySlug(db, slug);
+  if (direct) return direct;
+  const legacySlug = `${manifest.strategyId}-gls`;
+  if (legacySlug !== slug) {
+    const legacy = getStrategyBySlug(db, legacySlug);
+    if (legacy) {
+      db.prepare('UPDATE strategy_definitions SET slug = ? WHERE id = ?').run(slug, legacy.id);
+      return getStrategy(db, legacy.id);
+    }
+  }
+  return null;
+}
+
+export function seedPromotedStrategy(db, manifest, { jsOnly = true } = {}) {
   const slug = resolveStudioSlug(manifest);
   const trashed = db.prepare('SELECT id, deleted_at FROM strategy_definitions WHERE slug = ?').get(slug);
   if (trashed?.deleted_at) {
     return { slug, strategy: null, skipped: 'trashed' };
   }
 
-  let strategy = getStrategyBySlug(db, slug);
+  let strategy = findStrategyByLegacySlug(db, slug, manifest);
   if (!strategy) {
     strategy = createStrategy(db, {
       slug,
@@ -174,20 +218,27 @@ export function seedPromotedStrategy(db, manifest) {
     const versionNum = resolvePresetVersion(preset);
     const baseSource = resolvePresetGlsSource(manifest, preset);
     const params = resolvePresetParams(preset, manifest.strategyRoot);
-    const sourceCode = renderPresetGls(baseSource, params, resolveDisplayName(manifest, preset));
-    const validation = validateStrategySource({ language: 'gls-v1', source_code: sourceCode });
-    const checksum = checksumSource(sourceCode);
+    const glsSource = renderPresetGls(baseSource, params, resolveDisplayName(manifest, preset));
+    const payload = resolveVersionPayload(glsSource, { jsOnly, db });
+    if (!payload.validation.ok) {
+      console.warn(`[seed] skip ${slug} v${versionNum}: ${payload.validation.errors?.[0]?.message}`);
+      continue;
+    }
+    const checksum = checksumSource(payload.sourceCode);
     const notes = resolveVersionNotes(preset);
     const action = upsertStrategyVersion(db, {
       strategyId: strategy.id,
       versionNum,
-      sourceCode,
-      validation,
+      language: payload.language,
+      sourceCode: payload.sourceCode,
+      validation: payload.validation,
       checksum,
+      compiled: payload.compiled,
       notes,
       existingVersions,
     });
-    console.log(`[seed] ${slug} v${versionNum} (${preset.id}) ${action === 'seeded' ? 'semeada' : 'sincronizada'}.`);
+    const lang = jsOnly ? 'js' : 'gls';
+    console.log(`[seed] ${slug} v${versionNum} (${preset.id}) ${lang} ${action === 'seeded' ? 'semeada' : 'sincronizada'}.`);
   }
 
   db.prepare(`
@@ -201,13 +252,13 @@ export function seedPromotedStrategy(db, manifest) {
   return { slug, strategy: getStrategy(db, strategy.id) };
 }
 
-export function seedPromotedStrategies(db, { manifests = null } = {}) {
+export function seedPromotedStrategies(db, { manifests = null, jsOnly = true } = {}) {
   const promoted = manifests || listPromotedStrategies();
-  return promoted.map((manifest) => seedPromotedStrategy(db, manifest));
+  return promoted.map((manifest) => seedPromotedStrategy(db, manifest, { jsOnly }));
 }
 
 /** Compat: retorna a estratégia Edge Sniper V3 após seed genérico. */
 export function seedEdgeSniperV3Presets(db) {
   const results = seedPromotedStrategies(db);
-  return results.find((row) => row.slug === 'edge-sniper-v3-gls')?.strategy ?? null;
+  return results.find((row) => row.slug === 'edge-sniper-v3')?.strategy ?? null;
 }

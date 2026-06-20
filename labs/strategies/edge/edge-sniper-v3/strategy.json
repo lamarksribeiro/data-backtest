@@ -13,7 +13,7 @@
     "path": "src/backtestStudio/gls/strategies/edgeSniperV3_v2.gls"
   },
   "promotedToStudio": true,
-  "studioSlug": "edge-sniper-v3-gls",
+  "studioSlug": "edge-sniper-v3",
   "studio": {
     "description": "Edge Sniper V3 com perfis versionados para BTC e ETH (params e toggles; o ativo é escolhido no backtest).",
     "tags": ["edge-sniper-v3", "btc", "eth", "lab-strategy"],

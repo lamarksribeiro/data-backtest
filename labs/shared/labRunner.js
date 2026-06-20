@@ -7,10 +7,10 @@ import { loadConfig } from '../../src/config.js';
 import { openStateDatabase, closeStateDatabase } from '../../src/state/sqlite.js';
 import { parse } from '../../src/backtestStudio/gls/parser.js';
 import { analyzeStrategyColumns } from '../../src/backtestStudio/gls/compiler.js';
-import {
-  GAMMA_LADDER_COLUMN_ANALYSIS,
-  isGammaLadderStrategy,
-} from '../../src/backtestStudio/gls/gammaLadder/glsAdapter.js';
+import { compileStrategyJs } from '../../src/backtestStudio/strategyJs/compile.js';
+import { glsToStrategyJs } from '../../src/backtestStudio/strategyJs/glsToStrategyJs.js';
+import { composeGammaLadderStrategyJs } from '../../src/backtestStudio/strategyJs/composeGammaLadder.js';
+import { EMBEDDED_RUNNER_COLUMN_ANALYSIS } from '../../src/backtestStudio/strategyJs/embeddedRunnerAdapter.js';
 import { checkDatasetAvailability } from '../../src/query/availability.js';
 import { runBacktestSweep } from '../../src/backtest/sweep.js';
 import { expandParamGrid, countParamGridVariants } from './paramGrid.js';
@@ -77,16 +77,27 @@ export async function runLabExperiment(experimentPath, options = {}) {
   const sourceCode = readFileSync(sourcePath, 'utf8');
   const glsAst = parse(sourceCode);
   const bookDepth = experiment.bookDepth ?? strategy.defaultBookDepth ?? config.backtestBookDepth;
-  const columnAnalysis = isGammaLadderStrategy(glsAst)
-    ? GAMMA_LADDER_COLUMN_ANALYSIS
-    : analyzeStrategyColumns(glsAst, bookDepth ?? config.backtestBookDepth);
-  const request = buildBacktestRequest({ experiment, strategy, defaults, glsAst, columnAnalysis, bookDepth, options });
+  const db = openStateDatabase(config.stateDbPath);
+  const gammaLadder = isGammaLadderAst(glsAst);
+  let embeddedRunner = false;
+  let strategySourceCode = null;
+  let columnAnalysis = analyzeStrategyColumns(glsAst, bookDepth ?? config.backtestBookDepth);
+  if (gammaLadder) {
+    columnAnalysis = EMBEDDED_RUNNER_COLUMN_ANALYSIS;
+    strategySourceCode = composeGammaLadderStrategyJs(sourceCode);
+    const compiled = compileStrategyJs(strategySourceCode, { db });
+    if (!compiled.ok) {
+      throw new Error(compiled.errors?.[0]?.message || 'Gamma Ladder Strategy JS compilation failed');
+    }
+    embeddedRunner = true;
+  }
+  const request = buildBacktestRequest({
+    experiment, strategy, defaults, glsAst, columnAnalysis, bookDepth, options, db, embeddedRunner, strategySourceCode,
+  });
   const availabilityRequest = {
     ...request,
     dataset: experiment.dataset,
   };
-
-  const db = openStateDatabase(config.stateDbPath);
   const startedAt = performance.now();
   const envBackup = {
     BACKTEST_ENGINE: process.env.BACKTEST_ENGINE,
@@ -371,7 +382,11 @@ function summarizeDaily(days) {
   };
 }
 
-function buildBacktestRequest({ experiment, strategy, defaults, glsAst, columnAnalysis, bookDepth, options }) {
+function buildBacktestRequest({
+  experiment, strategy, defaults, glsAst, columnAnalysis, bookDepth, options, db = null,
+  embeddedRunner = false, strategySourceCode = null,
+}) {
+  const executionKind = embeddedRunner ? 'embedded-runner' : (experiment.glsExecution || 'compiled-soa');
   return {
     from: parseDateStart(experiment.from).toISOString(),
     to: parseDateEnd(experiment.to).toISOString(),
@@ -386,16 +401,24 @@ function buildBacktestRequest({ experiment, strategy, defaults, glsAst, columnAn
     columnAnalysis,
     params: defaults,
     fastRun: experiment.fastRun !== false,
-    glsExecution: experiment.glsExecution || 'compiled-soa',
+    glsExecution: executionKind,
     backtestWorkers: Number(options.workers || experiment.backtestWorkers || process.env.BACKTEST_WORKERS || 1),
     feeOptions: experiment.feeOptions || undefined,
+    db,
+    embeddedRunner,
+    strategySourceCode,
     strategyMeta: {
       lab: true,
       id: strategy.id,
       family: strategy.family,
       source: strategy.source,
+      execution_kind: executionKind,
     },
   };
+}
+
+function isGammaLadderAst(ast) {
+  return String(ast?.name || '').toLowerCase().includes('gamma ladder');
 }
 
 export function resolveChunkDays(experiment, options = {}) {

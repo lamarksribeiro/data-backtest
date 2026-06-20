@@ -194,6 +194,7 @@ strategy "Early Close" {
 
 test('sweep reuses column set and returns per-variant summaries', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-sweep-'));
+  const prevEngine = process.env.BACKTEST_ENGINE;
   process.env.BACKTEST_ENGINE = 'soa';
   try {
     const db = openStateDatabase(path.join(dir, 'state.db'));
@@ -275,6 +276,8 @@ test('sweep reuses column set and returns per-variant summaries', async () => {
       closeStateDatabase(db);
     }
   } finally {
+    if (prevEngine == null) delete process.env.BACKTEST_ENGINE;
+    else process.env.BACKTEST_ENGINE = prevEngine;
     await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
   }
 });

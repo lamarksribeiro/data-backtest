@@ -5,24 +5,37 @@ import path from 'node:path';
 import { createGlsBacktestRunner } from '../backtestStudio/gls/runtime.js';
 import { parse as parseGls } from '../backtestStudio/gls/parser.js';
 import { analyzeStrategyColumns } from '../backtestStudio/gls/compiler.js';
-import {
-  createGammaLadderGlsRunner,
-  GAMMA_LADDER_COLUMN_ANALYSIS,
-  isGammaLadderStrategy,
-} from '../backtestStudio/gls/gammaLadder/glsAdapter.js';
+import { bindStrategyLibraryDatabase } from '../backtestStudio/nativeLibrary/registry.js';
+import { createLibraryRunnerAdapter, LIBRARY_RUNNER_COLUMN_ANALYSIS } from '../backtestStudio/strategyLibrary/runnerAdapter.js';
+import { createEmbeddedRunnerAdapter, EMBEDDED_RUNNER_COLUMN_ANALYSIS } from '../backtestStudio/strategyJs/embeddedRunnerAdapter.js';
+import { findRunnerDependency } from '../backtestStudio/strategyLibrary/kind.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-function buildGlsStrategyLoad(glsAst, request, config, options = {}) {
-  if (isGammaLadderStrategy(glsAst)) {
+function buildGlsStrategyLoad(glsAst, request, config) {
+  if (request.embeddedRunner && request.strategySourceCode) {
+    const bookDepth = request.bookDepth ?? config.backtestBookDepth;
     return {
-      kind: 'gamma-ladder',
+      kind: 'embedded-runner',
       glsAst,
-      columnAnalysis: request.columnAnalysis ?? GAMMA_LADDER_COLUMN_ANALYSIS,
-      createRunner: (params, runnerOptions) => createGammaLadderGlsRunner(params, {
+      columnAnalysis: request.columnAnalysis ?? EMBEDDED_RUNNER_COLUMN_ANALYSIS,
+      createRunner: (params, runnerOptions) => createEmbeddedRunnerAdapter(request.strategySourceCode, params, {
+        ...runnerOptions,
+        bookDepth,
+      }),
+    };
+  }
+
+  const runnerDep = request.runnerLibrary;
+  if (runnerDep && request.db) {
+    bindStrategyLibraryDatabase(request.db);
+    return {
+      kind: 'library-runner',
+      glsAst,
+      columnAnalysis: request.columnAnalysis ?? LIBRARY_RUNNER_COLUMN_ANALYSIS,
+      createRunner: (params, runnerOptions) => createLibraryRunnerAdapter(request.db, runnerDep, params, {
         ...runnerOptions,
         bookDepth: request.bookDepth ?? config.backtestBookDepth,
-        fastRun: runnerOptions?.fastRun,
       }),
     };
   }
@@ -36,7 +49,12 @@ function buildGlsStrategyLoad(glsAst, request, config, options = {}) {
     createRunner: (params, runnerOptions) => createGlsBacktestRunner(glsAst, params, {
       ...runnerOptions,
       executionMode,
-      extensionLibraries: request.extensionLibraries,
+      extensionLibraries: request.embeddedModels ? [] : request.extensionLibraries,
+      generatedSource: request.generatedSource,
+      embeddedModels: request.embeddedModels ?? false,
+      embeddedModelsSource: request.embeddedModels ? request.strategySourceCode : null,
+      strategySourceCode: request.strategySourceCode ?? null,
+      db: request.db,
     }),
   };
 }
@@ -48,10 +66,6 @@ function resolveStrategyPath(strategyIdent) {
   return path.resolve(strategyIdent);
 }
 
-/**
- * Carrega metadados e factory de uma estratégia para execução de backtest.
- * Runtime não usa registry fixo em código — estratégias vivem no SQLite (GLS) ou path explícito.
- */
 export async function loadStrategy(request, config = {}) {
   if (request.glsAst) {
     return buildGlsStrategyLoad(request.glsAst, request, config);
@@ -63,6 +77,10 @@ export async function loadStrategy(request, config = {}) {
   }
 
   if (strategyIdent.endsWith('.gls') || strategyIdent.startsWith('gls:')) {
+    const allowFile = config.TEST_MODE || request.allowFileStrategy === true;
+    if (!allowFile) {
+      throw new Error('File-based GLS strategies are disabled in production. Use strategy_id and strategy_version_id from SQLite.');
+    }
     const cleanIdent = strategyIdent.startsWith('gls:') ? strategyIdent.slice(4) : strategyIdent;
     let filePath;
     try {
@@ -74,6 +92,11 @@ export async function loadStrategy(request, config = {}) {
     const sourceCode = readFileSync(filePath, 'utf8');
     const glsAst = parseGls(sourceCode);
     return buildGlsStrategyLoad(glsAst, request, config);
+  }
+
+  const allowModule = config.TEST_MODE || request.allowFileStrategy === true;
+  if (!allowModule) {
+    throw new Error('File-based strategy modules are disabled in production. Use strategy_id and strategy_version_id from SQLite.');
   }
 
   const resolvedPath = resolveStrategyPath(strategyIdent);
@@ -117,4 +140,9 @@ export async function loadStrategy(request, config = {}) {
     columnAnalysis,
     createRunner,
   };
+}
+
+export function resolveRunnerLibraryFromDependencies(db, dependencies = []) {
+  if (!db) return null;
+  return findRunnerDependency(db, dependencies);
 }

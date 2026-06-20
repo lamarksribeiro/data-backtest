@@ -3,6 +3,22 @@ import { escapeHtml } from './format.js';
 
 const PICKER_CACHE_TTL_MS = 30_000;
 const STRATEGY_PICK_STORAGE_KEY = 'data-backtest-strategy-pick';
+const STRATEGY_PICK_PREFIX = 'js:';
+
+function isStrategyPick(value) {
+  const raw = String(value || '');
+  return raw.startsWith(`${STRATEGY_PICK_PREFIX}`) || raw.startsWith('gls:');
+}
+
+function normalizeStrategyPick(value) {
+  const raw = String(value || '');
+  if (!isStrategyPick(raw)) return '';
+  return raw.replace(/^gls:/, `${STRATEGY_PICK_PREFIX}`);
+}
+
+function buildStrategyPick(strategyId, versionId) {
+  return `${STRATEGY_PICK_PREFIX}${strategyId}:${versionId}`;
+}
 
 /** @type {{ options: object[], at: number } | null} */
 let pickerCache = null;
@@ -43,16 +59,17 @@ function groupOptionsByStrategy(options) {
 export function loadLastStrategyPick() {
   try {
     const raw = localStorage.getItem(STRATEGY_PICK_STORAGE_KEY);
-    return raw && String(raw).startsWith('gls:') ? String(raw) : '';
+    return normalizeStrategyPick(raw);
   } catch {
     return '';
   }
 }
 
 export function saveLastStrategyPick(pick) {
-  if (!pick || !String(pick).startsWith('gls:')) return;
+  const normalized = normalizeStrategyPick(pick);
+  if (!normalized) return;
   try {
-    localStorage.setItem(STRATEGY_PICK_STORAGE_KEY, String(pick));
+    localStorage.setItem(STRATEGY_PICK_STORAGE_KEY, normalized);
   } catch {
     // ignore quota / private mode
   }
@@ -81,6 +98,7 @@ export function resolveInitialStrategyPick(options, { strategyId = null, version
   if (strategyId && versionId) {
     const exact = options.find((o) => o.strategyId === strategyId && o.versionId === versionId);
     if (exact) return exact.value;
+    return buildStrategyPick(strategyId, versionId);
   }
 
   const saved = loadLastStrategyPick();
@@ -91,7 +109,7 @@ export function resolveInitialStrategyPick(options, { strategyId = null, version
   if (!first) return options[0].value;
 
   const vid = resolveVersionIdForStrategy(first, first.versions);
-  return `gls:${first.strategyId}:${vid}`;
+  return buildStrategyPick(first.strategyId, vid);
 }
 
 function formatVersionLabel(version, strat) {
@@ -107,9 +125,9 @@ function mapPickerRows(rows, { includeArchived = false } = {}) {
   for (const row of rows) {
     if (!includeArchived && row.status === 'archived') continue;
     options.push({
-      value: `gls:${row.strategy_id}:${row.version_id}`,
+      value: buildStrategyPick(row.strategy_id, row.version_id),
       label: `${row.name} · v${row.version}${row.notes ? ` — ${row.notes}` : ''}`,
-      kind: 'gls',
+      kind: 'strategy-js',
       strategyId: row.strategy_id,
       versionId: row.version_id,
       versionNum: row.version,
@@ -167,9 +185,9 @@ export async function loadStrategyOptions(api, { includeArchived = false, stats 
         const meta = [wr, runs].filter(Boolean).join(' · ');
         const notes = version.notes ? ` — ${version.notes}` : '';
         options.push({
-          value: `gls:${strategy.id}:${version.id}`,
+          value: buildStrategyPick(strategy.id, version.id),
           label: `${strategy.name} · v${version.version}${meta ? ` · ${meta}` : ''}${notes}`,
-          kind: 'gls',
+          kind: 'strategy-js',
           strategyId: strategy.id,
           versionId: version.id,
           versionNum: version.version,
@@ -236,7 +254,7 @@ export function renderStrategyPicker(options, selectedValue = '', onChange = nul
   const hidden = el('input', {
     type: 'hidden',
     name: 'strategy_pick',
-    value: current ? `gls:${current.strategyId}:${initialVid}` : (selectedValue || options[0]?.value || ''),
+    value: current ? buildStrategyPick(current.strategyId, initialVid) : normalizeStrategyPick(selectedValue || options[0]?.value || ''),
   });
 
   const versionSelect = el('select', {
@@ -266,7 +284,7 @@ export function renderStrategyPicker(options, selectedValue = '', onChange = nul
       selected: String(v.versionId) === String(vid),
     }, formatVersionLabel(v, strat))));
 
-    hidden.value = `gls:${strat.strategyId}:${vid}`;
+    hidden.value = buildStrategyPick(strat.strategyId, vid);
     onChange?.(hidden.value);
   }
 

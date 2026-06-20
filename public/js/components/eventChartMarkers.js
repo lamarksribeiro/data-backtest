@@ -12,7 +12,7 @@ const MARKER_STYLES = {
   reverse: { color: '#c4b5fd', label: 'Reversão' },
 };
 
-/** Só execução de trade no gráfico — marks GLS ficam na Linha do Tempo / Logs. */
+/** Só execução de trade no gráfico — marks de trace ficam na Linha do Tempo / Logs. */
 const CHART_MARKER_KINDS = new Set([
   'entry', 'exit', 'stop', 'trail_stop', 'take_profit', 'partial', 'reverse',
 ]);

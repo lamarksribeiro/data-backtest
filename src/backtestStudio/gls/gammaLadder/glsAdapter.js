@@ -12,6 +12,33 @@ export function isGammaLadderStrategy(astOrName) {
   return String(name || '').toLowerCase().includes('gamma ladder');
 }
 
+export function getExecutionKind(versionOrAst) {
+  if (versionOrAst?.validation?.execution_kind) {
+    return versionOrAst.validation.execution_kind;
+  }
+  if (versionOrAst?.validation_json) {
+    try {
+      const parsed = typeof versionOrAst.validation_json === 'string'
+        ? JSON.parse(versionOrAst.validation_json)
+        : versionOrAst.validation_json;
+      if (parsed?.execution_kind) return parsed.execution_kind;
+    } catch {
+      // ignore
+    }
+  }
+  if (isGammaLadderStrategy(versionOrAst)) return 'native-extension';
+  return 'compiled-soa';
+}
+
+export function enrichGammaLadderValidation(validation, ast) {
+  if (!validation || !isGammaLadderStrategy(ast)) return validation;
+  return {
+    ...validation,
+    execution_kind: 'native-extension',
+    editable_logic: false,
+  };
+}
+
 export function createGammaLadderGlsRunner(rawParams = {}, options = {}) {
   const inner = createGammaLadderBacktestRunner(rawParams);
   const bookDepth = options.bookDepth ?? 25;

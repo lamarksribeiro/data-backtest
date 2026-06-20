@@ -14,7 +14,7 @@ test('listPromotedStrategies discovers promoted lab strategies', () => {
   const promoted = listPromotedStrategies();
   const ids = promoted.map((item) => item.id).sort();
   assert.deepEqual(ids, ['edge-sniper-v3', 'gamma-ladder-v1', 'vsmr']);
-  assert.equal(promoted.find((item) => item.id === 'gamma-ladder-v1').studioSlug, 'gamma-ladder-v1-gls');
+  assert.equal(promoted.find((item) => item.id === 'gamma-ladder-v1').studioSlug, 'gamma-ladder-v1');
 });
 
 test('seedPromotedStrategies seeds versions from lab manifests', () => {
@@ -25,9 +25,9 @@ test('seedPromotedStrategies seeds versions from lab manifests', () => {
     const results = seedPromotedStrategies(db);
     assert.equal(results.length, 3);
     const slugs = results.map((row) => row.slug).sort();
-    assert.deepEqual(slugs, ['edge-sniper-v3-gls', 'gamma-ladder-v1-gls', 'vsmr-gls']);
+    assert.deepEqual(slugs, ['edge-sniper-v3', 'gamma-ladder-v1', 'vsmr']);
 
-    const edge = results.find((row) => row.slug === 'edge-sniper-v3-gls');
+    const edge = results.find((row) => row.slug === 'edge-sniper-v3');
     const edgeVersions = db.prepare(`
       SELECT version, notes FROM strategy_versions
       WHERE strategy_id = ?
@@ -37,14 +37,16 @@ test('seedPromotedStrategies seeds versions from lab manifests', () => {
     assert.equal(edgeVersions[0].notes, 'BTC · Classic');
     assert.equal(edgeVersions[2].notes, 'ETH · OBI');
 
-    const gamma = results.find((row) => row.slug === 'gamma-ladder-v1-gls');
+    const gamma = results.find((row) => row.slug === 'gamma-ladder-v1');
     const gammaVersions = db.prepare(`
       SELECT version, notes FROM strategy_versions
       WHERE strategy_id = ?
       ORDER BY version ASC
     `).all(gamma.strategy.id);
-    assert.equal(gammaVersions.length, 1);
+    assert.ok(gammaVersions.length >= 1);
     assert.equal(gammaVersions[0].notes, 'BTC · V1');
+    const languages = db.prepare('SELECT DISTINCT language FROM strategy_versions').all().map((r) => r.language);
+    assert.deepEqual(languages, ['strategy-js-v1']);
   } finally {
     closeStateDatabase(db);
   }

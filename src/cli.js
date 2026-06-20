@@ -27,6 +27,7 @@ import { getStrategy, getStrategyVersion } from './backtestStudio/state/strategi
 import { parse } from './backtestStudio/gls/parser.js';
 import { warmupDatasetDiskCache } from './backtest/datasetDiskLoader.js';
 import { clearDatasetDiskCache, scanDatasetDiskCache } from './backtest/datasetDiskStore.js';
+import { pruneOrphanChartSidecars, scanChartSidecarDir } from './backtest/chartSidecar.js';
 import { runTelegramBackup } from './backup/upload.js';
 import { restoreFromTelegram } from './backup/restore.js';
 import { verifyTelegramBackup } from './backup/verify.js';
@@ -87,6 +88,8 @@ Commands:
   cache:dataset     Materializes daily ColumnSet cache on disk for a date window
   cache:dataset:stats Shows disk cache usage summary
   cache:dataset:clear Clears disk cache (optional filters)
+  cache:event-series:stats Shows chart sidecar usage under state/event-series
+  cache:event-series:prune Removes run-*.jsonl files with no matching backtest_runs row
   backup:telegram       Upload backtest_ticks partitions to Telegram
   backup:telegram:restore Restore lake + manifest from Telegram catalog
   backup:telegram:verify  Compare local lake vs remote Telegram catalog
@@ -520,6 +523,19 @@ async function main() {
         interval: flags.interval ? String(flags.interval) : undefined,
         dataset: flags.dataset ? String(flags.dataset) : undefined,
         bookDepth: flags['book-depth'] != null ? optionalIntFlag(flags, 'book-depth') : undefined,
+      });
+      printJson({ ok: true, ...result });
+      return;
+    }
+
+    if (command === 'cache:event-series:stats') {
+      printJson(scanChartSidecarDir(config.stateDbPath));
+      return;
+    }
+
+    if (command === 'cache:event-series:prune') {
+      const result = pruneOrphanChartSidecars(config.stateDbPath, db, {
+        dryRun: optionalBoolFlag(flags, 'dry-run'),
       });
       printJson({ ok: true, ...result });
       return;

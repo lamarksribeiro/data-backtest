@@ -275,7 +275,7 @@ export async function renderOverview(ctx) {
       let insightTitle = 'Métricas do Portfólio';
       let insightText = '';
       if (totalStrategies === 0) {
-        insightText = 'Nenhuma estratégia foi criada ainda. Vá para a tela de Estratégias ou abra o Estúdio para programar suas primeiras lógicas GLS.';
+        insightText = 'Nenhuma estratégia foi criada ainda. Vá para a tela de Estratégias ou abra o Estúdio para programar suas primeiras estratégias em Strategy JS.';
       } else {
         const topProfitable = [...validatedStrategies].sort((a, b) => (b.totals?.avg_pnl || 0) - (a.totals?.avg_pnl || 0))[0];
         if (validatedStrategies.length === 0) {

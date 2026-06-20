@@ -40,6 +40,7 @@ test('native edge-sniper-v2 backtest runs from manifest backtest_ticks parquet',
 
       const result = await runBacktest(db, {
         strategy: NATIVE_EDGE_SNIPER_PATH,
+        allowFileStrategy: true,
         ...NATIVE_EDGE_SNIPER_TICK_CONTEXT,
         underlying: 'BTC',
         interval: '5m',

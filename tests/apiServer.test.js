@@ -415,10 +415,10 @@ test('data-backtest API runs versioned strategy only when data is ready', async 
       assert.equal(asyncRun.run.progress.total_ticks, 12);
 
       let asyncDetail = null;
-      for (let i = 0; i < 20; i += 1) {
+      for (let i = 0; i < 200; i += 1) {
         asyncDetail = await getJson(`${baseUrl}/api/backtest/runs/${asyncRun.run.id}`);
-        if (asyncDetail.run.status !== 'running') break;
-        await new Promise((resolve) => setTimeout(resolve, 20));
+        if (!['running', 'queued'].includes(asyncDetail.run.status)) break;
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
       assert.equal(asyncDetail.run.status, 'completed');
       assert.equal(asyncDetail.run.ticks, 12);

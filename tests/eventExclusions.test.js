@@ -4,6 +4,20 @@ import path from 'node:path';
 import os from 'node:os';
 import { mkdtemp, rm } from 'node:fs/promises';
 
+async function removeTempDir(dir) {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    try {
+      await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
+      return;
+    } catch (err) {
+      if (attempt === 4 || (err.code !== 'ENOTEMPTY' && err.code !== 'EBUSY' && err.code !== 'EPERM')) {
+        throw err;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 50 * (attempt + 1)));
+    }
+  }
+}
+
 import { openStateDatabase, closeStateDatabase } from '../src/state/sqlite.js';
 import {
   addEventExclusion,
@@ -59,7 +73,7 @@ test('event exclusions persist and restore in sqlite', async () => {
     assert.equal(listEventExclusionsForDay(db, { dt: '2026-06-01', underlying: 'BTC', interval: '5m', marketId: 'market-1' }).length, 0);
   } finally {
     closeStateDatabase(db);
-    await rm(dir, { recursive: true, force: true });
+    await removeTempDir(dir);
   }
 });
 

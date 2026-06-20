@@ -299,8 +299,9 @@ test('seed edge-sniper-v3-gls strategy and run via lakehouse engine', async () =
       const strategy = seedEdgeSniperV3Presets(db);
       const versions = listStrategyVersions(db, strategy.id);
       const version = versions.find((item) => item.version === 2) || versions[0];
-      assert.equal(strategy.slug, 'edge-sniper-v3-gls');
+      assert.equal(strategy.slug, 'edge-sniper-v3');
       assert.equal(versions.length, 3);
+      assert.equal(version.language, 'strategy-js-v1');
 
       const parquetPath = path.join(dir, 'lake', 'backtest_ticks', 'part-test.parquet');
       await writeBacktestTicksParquet({
@@ -346,6 +347,7 @@ test('seed edge-sniper-v3-gls strategy and run via lakehouse engine', async () =
 
       const native = await runBacktest(db, {
         strategy: NATIVE_EDGE_SNIPER_PATH,
+        allowFileStrategy: true,
         ...NATIVE_EDGE_SNIPER_TICK_CONTEXT,
         underlying: 'BTC',
         interval: '5m',
@@ -394,6 +396,8 @@ test('seed edge-sniper-v3-gls strategy and run via lakehouse engine', async () =
 
 test('edge-sniper-v2-gls lakehouse fast-run matches full-run', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-gls-fast-parity-'));
+  const prevEngine = process.env.BACKTEST_ENGINE;
+  process.env.BACKTEST_ENGINE = 'soa';
   try {
     const db = openStateDatabase(path.join(dir, 'state.db'));
     try {
@@ -477,6 +481,8 @@ test('edge-sniper-v2-gls lakehouse fast-run matches full-run', async () => {
       closeStateDatabase(db);
     }
   } finally {
+    if (prevEngine == null) delete process.env.BACKTEST_ENGINE;
+    else process.env.BACKTEST_ENGINE = prevEngine;
     await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
   }
 });

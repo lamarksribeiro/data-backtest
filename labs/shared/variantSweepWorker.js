@@ -4,34 +4,38 @@ import { runSequentialSoA } from '../../src/backtest/engine.js';
 import { applyPolymarketFeesToBacktestResult } from '../../src/backtest/fees.js';
 import { wrapSharedColumnSet } from '../../src/backtest/columnStore.js';
 import { createGlsBacktestRunner } from '../../src/backtestStudio/gls/runtime.js';
-import {
-  createGammaLadderGlsRunner,
-  isGammaLadderStrategy,
-} from '../../src/backtestStudio/gls/gammaLadder/glsAdapter.js';
+import { createLibraryRunnerAdapter } from '../../src/backtestStudio/strategyLibrary/runnerAdapter.js';
+import { createEmbeddedRunnerAdapter } from '../../src/backtestStudio/strategyJs/embeddedRunnerAdapter.js';
 
 (async () => {
 try {
   const columnSet = wrapSharedColumnSet(workerData.sharedColumnSet);
   const request = workerData.request;
   const variants = workerData.variants || [];
-  const isGammaLadder = isGammaLadderStrategy(request.glsAst);
-  const bookDepth = request.bookDepth;
+  const isEmbeddedRunner = Boolean(request.embeddedRunner && request.strategySourceCode);
+  const isLibraryRunner = Boolean(request.runnerLibrary && request.db);
+  const useCustomSoa = isEmbeddedRunner || isLibraryRunner;
+  const bookDepth = request.effectiveBookDepth ?? request.bookDepth;
   const results = [];
 
   for (let index = 0; index < variants.length; index += 1) {
     const variant = variants[index];
     const startedAt = Date.now();
     const params = { ...(request.params || {}), ...(variant.params || {}) };
-    const runner = isGammaLadder
-      ? createGammaLadderGlsRunner(params, { fastRun: true, bookDepth })
-      : createGlsBacktestRunner(request.glsAst, params, {
-        executionMode: request.glsExecution || 'compiled-soa',
-        fastRun: true,
-        bookDepth,
-      });
+    const runner = isEmbeddedRunner
+      ? createEmbeddedRunnerAdapter(request.strategySourceCode, params, { fastRun: true, bookDepth })
+      : (isLibraryRunner
+        ? createLibraryRunnerAdapter(request.db, request.runnerLibrary, params, { fastRun: true, bookDepth })
+        : createGlsBacktestRunner(request.glsAst, params, {
+          executionMode: 'compiled-soa',
+          fastRun: true,
+          bookDepth,
+          extensionLibraries: request.extensionLibraries,
+          generatedSource: request.generatedSource,
+        }));
 
     runner.bindColumnSet(columnSet);
-    await runSequentialSoA(runner, columnSet, !isGammaLadder);
+    await runSequentialSoA(runner, columnSet, !useCustomSoa);
 
     const result = runner.finish();
     applyPolymarketFeesToBacktestResult(result, request.feeOptions);

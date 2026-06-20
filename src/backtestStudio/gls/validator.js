@@ -1,11 +1,25 @@
 import { parse, extractParamsSchema, syntaxError } from './parser.js';
 import { HOOKS, isKnownCall, ORDER_FUNCTIONS } from './blocks.js';
+import { analyzeStrategyColumns } from './compiler.js';
+
 
 const WRITABLE_ROOTS = new Set(['state', 'runState']);
+
+const TICK_PROP_TO_COLUMN = {
+  underlyingPrice: 'underlying_price',
+  priceToBeat: 'price_to_beat',
+  upPrice: 'up_price',
+  downPrice: 'down_price',
+  conditionId: 'condition_id',
+  eventStart: 'event_start',
+  eventEnd: 'event_end',
+  marketId: 'market_id',
+  ts: 'ts',
+};
 const MAX_BODY_STATEMENTS = 500;
 const MAX_HOOKS = 10;
 
-export function validate(source, { language = 'gls-v1' } = {}) {
+export function validate(source, { language = 'gls-v1', bookDepth = 25 } = {}) {
   const errors = [];
   const warnings = [];
   const code = String(source || '').trim();
@@ -30,6 +44,14 @@ export function validate(source, { language = 'gls-v1' } = {}) {
     });
     return fail(errors, language, warnings);
   }
+
+  return validateAst(ast, { language, errors, warnings, bookDepth });
+}
+
+/** Valida um AST GLS já parseado (ex.: lowering Strategy JS). */
+export function validateAst(ast, { language = 'gls-v1', errors: seedErrors = null, warnings: seedWarnings = null, bookDepth = 25 } = {}) {
+  const errors = seedErrors ?? [];
+  const warnings = seedWarnings ?? [];
 
   if (!ast.name) {
     errors.push({ line: ast.loc?.line || 1, column: 1, code: 'MISSING_NAME', message: 'Strategy name is required' });
@@ -68,14 +90,57 @@ export function validate(source, { language = 'gls-v1' } = {}) {
     warnings.push({ line: 1, column: 1, code: 'MISSING_ON_TICK', message: 'onTick hook is absent; strategy will not react to ticks' });
   }
 
+  if (errors.length === 0) {
+    const columnAnalysis = analyzeStrategyColumns(ast, bookDepth);
+    const columnErrors = validateColumnAnalysisComplete(ast, columnAnalysis);
+    errors.push(...columnErrors);
+  }
+
   return {
     ok: errors.length === 0,
     errors,
     warnings,
     params_schema: extractParamsSchema(ast),
     ast,
-    language: 'gls-v1',
+    language: String(language || 'gls-v1'),
   };
+}
+
+function validateColumnAnalysisComplete(ast, analysis) {
+  const errors = [];
+  const usedTickProps = collectTickProps(ast);
+  for (const prop of usedTickProps) {
+    const col = TICK_PROP_TO_COLUMN[prop];
+    if (col && !analysis.scalarColumns.includes(col)) {
+      errors.push({
+        line: 1,
+        column: 1,
+        code: 'COLUMN_ANALYSIS_INCOMPLETE',
+        message: `Column analysis could not map tick.${prop}`,
+        fix_hint: 'Use only known tick properties with static access.',
+      });
+    }
+  }
+  return errors;
+}
+
+function collectTickProps(ast) {
+  const props = new Set();
+  function walk(node) {
+    if (!node || typeof node !== 'object') return;
+    if (node.type === 'Member' && node.object?.type === 'Identifier' && node.object.name === 'tick') {
+      props.add(node.property);
+    }
+    for (const key of Object.keys(node)) {
+      const val = node[key];
+      if (Array.isArray(val)) val.forEach(walk);
+      else if (val && typeof val === 'object') walk(val);
+    }
+  }
+  for (const hook of Object.values(ast.hooks || {})) {
+    for (const stmt of hook?.body || []) walk(stmt);
+  }
+  return props;
 }
 
 function validateBlock(body, errors, outerScope) {
@@ -143,6 +208,12 @@ function validateExpr(node, errors, scope) {
       break;
     case 'Member':
       validateExpr(node.object, errors, scope);
+      if (node.object?.type === 'Identifier' && node.object.name === 'tick') {
+        const col = TICK_PROP_TO_COLUMN[node.property];
+        if (!col) {
+          pushError(errors, node, 'UNKNOWN_TICK_PROPERTY', `tick.${node.property} cannot be compiled to columns`, 'Use a known tick property with static access.');
+        }
+      }
       break;
     case 'ObjectLiteral':
       for (const prop of node.properties || []) validateExpr(prop.value, errors, scope);
@@ -192,12 +263,13 @@ function rootIdentifier(node) {
   return '';
 }
 
-function pushError(errors, node, code, message) {
+function pushError(errors, node, code, message, fix_hint = null) {
   errors.push({
     line: node.loc?.line || 1,
     column: node.loc?.column || 1,
     code,
     message,
+    ...(fix_hint ? { fix_hint } : {}),
   });
 }
 

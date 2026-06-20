@@ -6,7 +6,44 @@ import { promptDialog, confirmDialog } from '../utils/confirm.js';
 import { formatPnl } from '../utils/format.js';
 import { renderUplotSparkline, destroyChartsIn } from '../utils/uplotChart.js';
 
-const GLS_TEMPLATE_BODY = `{
+const STRATEGY_JS_TEMPLATE_BODY = `export default strategy({
+  name: "Nova Estrategia",
+
+  params: {
+    minDistanceAbs: 50,
+    maxAsk: 0.58,
+    budget: 15,
+  },
+
+  onEventStart({ state }) {
+    state.entered = false;
+  },
+
+  onTick(ctx) {
+    const { tick, event, state, params } = ctx;
+    const dist = market.distanceFromPtb(tick.underlyingPrice, event.priceToBeat);
+    const side = market.sideFromPrice(tick.underlyingPrice, event.priceToBeat);
+    const ask = book.ask(side, tick);
+    if (!state.entered && dist >= params.minDistanceAbs && ask <= params.maxAsk) {
+      orders.enter(side, { price: ask, budget: params.budget, reason: "entry" });
+      state.entered = true;
+      trace.mark("entry");
+    }
+  },
+
+  onEventEnd() {
+    orders.closeOpenPosition({ reason: "event_end" });
+  },
+});`;
+
+function buildStrategyJsTemplate(name = 'Nova Estrategia') {
+  const safeName = String(name || 'Nova Estrategia').replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  return STRATEGY_JS_TEMPLATE_BODY.replace('Nova Estrategia', safeName);
+}
+
+function buildGlsTemplate(name = 'Nova Estrategia') {
+  const safeName = String(name || 'Nova Estrategia').replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  return `strategy "${safeName}" {
   param minDistanceAbs = 50
   param maxAsk = 0.58
   param budget = 15
@@ -30,10 +67,10 @@ const GLS_TEMPLATE_BODY = `{
     closeOpenPosition({ reason: "event_end" })
   }
 }`;
+}
 
-function buildGlsTemplate(name = 'Nova Estrategia') {
-  const safeName = String(name || 'Nova Estrategia').replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-  return `strategy "${safeName}" ${GLS_TEMPLATE_BODY}`;
+function buildDefaultTemplate(name, language = 'strategy-js-v1') {
+  return language === 'gls-v1' ? buildGlsTemplate(name) : buildStrategyJsTemplate(name);
 }
 
 function renderStrategyPerformanceSummary(stats) {
@@ -68,6 +105,8 @@ const state = {
   sourceCode: '',
   validation: null,
   blocks: [],
+  capabilities: null,
+  editorLanguage: 'strategy-js-v1',
   currentStrategy: null,
   currentVersion: null,
   strategyQuery: '',
@@ -84,6 +123,9 @@ const state = {
   },
   historyPanelApi: null,
   historyFocusedVersionId: null,
+  presets: [],
+  selectedPresetId: null,
+  presetCompareId: null,
 };
 
 let strategiesViewCtx = null;
@@ -972,10 +1014,11 @@ async function openStrategyEditor(ctx, strategyId, versionId = null, options = {
     mount(editorPanel, el('p', { class: 'muted' }, 'Carregando detalhes do editor...'));
   }
 
-  const [strategyRes, versionsRes, blocksRes, statsRes, runsRes] = await Promise.all([
+  const [strategyRes, versionsRes, blocksRes, capsRes, statsRes, runsRes] = await Promise.all([
     ctx.api.get(`/api/strategies/${strategyId}`),
     ctx.api.get(`/api/strategies/${strategyId}/versions`),
     ctx.api.get('/api/strategy-blocks'),
+    ctx.api.get('/api/strategy-runtime/capabilities'),
     ctx.api.get(`/api/strategies/${strategyId}/stats`),
     ctx.api.get(`/api/backtest/runs?strategy_id=${strategyId}&limit=50`),
   ]);
@@ -995,10 +1038,15 @@ async function openStrategyEditor(ctx, strategyId, versionId = null, options = {
     : versions[0];
   state.selectedVersionId = version?.id ?? null;
   state.currentVersion = version ?? null;
+  state.selectedPresetId = null;
+  state.presetCompareId = null;
+  await loadStrategyPresets(ctx, strategyId, state.selectedVersionId);
 
-  state.sourceCode = version?.source_code || buildGlsTemplate(strategy.name);
+  state.capabilities = capsRes.ok ? capsRes.data : null;
+  state.editorLanguage = version?.language || state.capabilities?.default_language || 'strategy-js-v1';
+  state.sourceCode = version?.source_code || buildDefaultTemplate(strategy.name, state.editorLanguage);
   state.validation = version?.validation || null;
-  state.blocks = blocksRes.data?.blocks || [];
+  state.blocks = blocksRes.data?.blocks || state.capabilities?.blocks || [];
   
   const schema = state.validation?.params_schema || version?.params_schema || {};
   const hasParams = Object.keys(schema).length > 0;
@@ -1071,7 +1119,7 @@ async function openStrategyEditor(ctx, strategyId, versionId = null, options = {
       ]),
       el('button', { class: 'premium-tab-link', id: 'tab-link-code', type: 'button', onclick: () => switchTab('code') }, [
         el('i', { class: 'fa-solid fa-code', style: { marginRight: '8px' } }),
-        'Editor GLS'
+        'Editor'
       ]),
       el('button', { class: 'premium-tab-link', id: 'tab-link-params', type: 'button', onclick: () => switchTab('params') }, [
         el('i', { class: 'fa-solid fa-sliders', style: { marginRight: '8px' } }),
@@ -1099,13 +1147,13 @@ async function openStrategyEditor(ctx, strategyId, versionId = null, options = {
       }),
     ),
 
-    // 2. Tab Código GLS
+    // 2. Tab Editor Strategy JS
     el('div', { class: 'premium-tab-content', id: 'tab-content-code' }, [
       el('div', { class: 'strategy-code-tab-layout strategy-code-tab-layout--single' }, [
         el('div', { class: 'strategy-code-editor-area' }, [
           el('div', { class: 'row row--between', style: { flexWrap: 'wrap', gap: '8px' } }, [
             el('div', { class: 'row', style: { flexWrap: 'wrap', gap: '10px', alignItems: 'center' } }, [
-              el('span', { class: 'eyebrow' }, 'Linguagem GLS'),
+              el('span', { class: 'badge', style: { fontSize: '11px' } }, 'Strategy JS'),
               versions.length ? el('select', {
                 id: 'strategy-editor-version-select',
                 class: 'field__input field__input--sm strategy-editor-version-select',
@@ -1121,7 +1169,7 @@ async function openStrategyEditor(ctx, strategyId, versionId = null, options = {
             ]),
             el('div', { class: 'row', style: { flexWrap: 'wrap', gap: '8px' } }, [
               el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => toggleGlsDrawer(true) }, [
-                'Ajuda GLS ',
+                'Ajuda ',
                 el('i', { class: 'fa-solid fa-circle-question', style: { marginLeft: '4px' } })
               ]),
               el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => validateTabCode(ctx) }, [
@@ -1132,7 +1180,11 @@ async function openStrategyEditor(ctx, strategyId, versionId = null, options = {
                 el('i', { class: 'fa-solid fa-bolt', style: { marginRight: '4px' } }),
                 'Testar'
               ]),
-              el('button', { class: 'btn btn--primary btn--sm', type: 'button', onclick: () => saveTabCodeVersion(ctx, strategy.id) }, [
+              el('button', {
+                class: 'btn btn--primary btn--sm',
+                type: 'button',
+                onclick: () => saveTabCodeVersion(ctx, strategy.id),
+              }, [
                 el('i', { class: 'fa-solid fa-floppy-disk', style: { marginRight: '6px' } }),
                 'Salvar Versão'
               ]),
@@ -1146,19 +1198,24 @@ async function openStrategyEditor(ctx, strategyId, versionId = null, options = {
             ]),
             el('div', { id: 'strategy-validation' }, renderValidationDetails(state.validation)),
           ]),
+          el('div', { class: 'validation-console-card', id: 'strategy-runtime-panel' }, renderRuntimePanel(version, state.validation)),
         ]),
       ]),
     ]),
 
     // 3. Tab Parâmetros
     el('div', { class: 'premium-tab-content', id: 'tab-content-params' }, [
-      el('div', { class: 'row row--between', style: { marginBottom: '14px' } }, [
+      el('div', { class: 'row row--between', style: { marginBottom: '14px', flexWrap: 'wrap', gap: '10px' } }, [
         el('div', {}, [
-          el('h3', { class: 'card__title' }, 'Parâmetros Declarados'),
-          el('p', { class: 'muted', style: { fontSize: '12px' } }, 'Edite os valores numéricos ou booleanos diretamente na estrutura do código.'),
+          el('h3', { class: 'card__title' }, 'Parâmetros e Presets'),
+          el('p', { class: 'muted', style: { fontSize: '12px' } }, 'Ajuste parâmetros sem recriar versão de código — salve como preset.'),
         ]),
-        el('button', { class: 'btn btn--primary btn--sm', type: 'button', disabled: !hasParams, onclick: () => saveParamsVersion(ctx, strategy.id) }, 'Salvar parâmetros e recriar versão'),
+        el('div', { class: 'row', style: { gap: '8px', flexWrap: 'wrap' } }, [
+          el('button', { class: 'btn btn--ghost btn--sm', type: 'button', disabled: !hasParams, onclick: () => saveParamsAsPreset(ctx, strategy.id) }, 'Salvar preset'),
+          el('button', { class: 'btn btn--primary btn--sm', type: 'button', disabled: !hasParams, onclick: () => saveParamsVersion(ctx, strategy.id) }, 'Salvar no código (nova versão)'),
+        ]),
       ]),
+      el('div', { id: 'strategy-presets-panel', style: { marginBottom: '16px' } }, renderPresetsPanel(ctx, strategy.id, version)),
       el('div', { class: 'strategy-workbench', id: 'strategy-workbench-root' }, [
         hasParams ? renderParamsForm(schema) : emptyState('Esta versão de estratégia não declara parâmetros editáveis no cabeçalho param.'),
       ]),
@@ -1169,7 +1226,7 @@ async function openStrategyEditor(ctx, strategyId, versionId = null, options = {
       el('div', { class: 'row row--between', style: { marginBottom: '16px', flexWrap: 'wrap', gap: '12px' } }, [
         el('div', {}, [
           el('h3', { class: 'card__title' }, 'Comparador de Versões'),
-          el('p', { class: 'muted', style: { fontSize: '12px' } }, 'Compare a diferença de código GLS entre duas versões da estratégia.'),
+          el('p', { class: 'muted', style: { fontSize: '12px' } }, 'Compare a diferença de código Strategy JS entre duas versões da estratégia.'),
         ]),
         el('div', { class: 'row' }, [
           el('label', { class: 'row', style: { gap: '6px', fontSize: '13px', alignItems: 'center' } }, [
@@ -1324,13 +1381,18 @@ function renderParamsForm(schema) {
 }
 
 async function validateStrategySource(ctx, source = state.sourceCode) {
-  const res = await ctx.api.post('/api/strategies/validate', { source_code: source });
+  const res = await ctx.api.post('/api/strategies/validate', {
+    source_code: source,
+    language: 'strategy-js-v1',
+  });
   if (!res.ok) {
     ctx.toast.err(res.error?.message || 'Falha ao validar');
     return null;
   }
   state.validation = res.data.validation;
   renderValidation(state.validation);
+  const runtimePanel = document.getElementById('strategy-runtime-panel');
+  if (runtimePanel) mount(runtimePanel, renderRuntimePanel(state.currentVersion, state.validation));
   return state.validation;
 }
 
@@ -1351,6 +1413,57 @@ function renderValidation(validation) {
 function renderValidationBadge(validation) {
   if (!validation) return el('span', { class: 'badge badge--idle' }, 'Não validado');
   return el('span', { class: `badge ${validation.ok ? 'badge--ok' : 'badge--err'}` }, validation.ok ? 'Válido' : 'Inválido');
+}
+
+function formatStrategyLanguage(lang) {
+  if (lang === 'strategy-js-v1') return 'Strategy JS';
+  return lang || 'Strategy JS';
+}
+
+function renderRuntimePanel(version, validation) {
+  const lang = formatStrategyLanguage(validation?.language || version?.language || state.editorLanguage || 'strategy-js-v1');
+  const cols = validation?.column_analysis?.scalarColumns || version?.compiled?.column_analysis?.scalarColumns || [];
+  const parallel = validation?.parallelism || version?.compiled?.parallelism;
+  const compile = validation?.compile || version?.compiled?.compile;
+  const executionKind = validation?.execution_kind || version?.validation?.execution_kind;
+  const dependencies = validation?.dependencies || version?.compiled?.dependencies || [];
+  const cacheReady = Boolean(version?.compiled?.ir_json && version?.compiled?.generated_source);
+  return el('div', {}, [
+    el('div', { class: 'validation-console-card__header' }, el('span', {}, 'Runtime')),
+
+    el('dl', { class: 'runtime-meta-list', style: { margin: 0, fontSize: '12px', display: 'grid', gridTemplateColumns: '140px 1fr', gap: '4px 12px' } }, [
+      el('dt', { class: 'muted' }, 'Linguagem'),
+      el('dd', {}, lang),
+      executionKind ? [el('dt', { class: 'muted' }, 'Execução'), el('dd', {}, executionKind)] : null,
+      el('dt', { class: 'muted' }, 'Checksum'),
+      el('dd', { class: 'mono' }, version?.checksum?.slice(0, 12) || '—'),
+      el('dt', { class: 'muted' }, 'Modo'),
+      el('dd', {}, compile?.mode || 'compiled-soa'),
+      el('dt', { class: 'muted' }, 'Cache'),
+      el('dd', {}, cacheReady ? 'artefato persistido' : 'recompilar no save'),
+      compile?.compileMs != null ? [el('dt', { class: 'muted' }, 'compileMs'), el('dd', {}, String(compile.compileMs))] : null,
+      el('dt', { class: 'muted' }, 'Paralelo'),
+      el('dd', {}, parallel ? (parallel.parallelSafe ? 'sim' : `não (${parallel.usesRunState ? 'runState' : 'dependência'})`) : '—'),
+      el('dt', { class: 'muted' }, 'Colunas'),
+      el('dd', { class: 'mono' }, cols.length ? cols.slice(0, 8).join(', ') + (cols.length > 8 ? '…' : '') : '—'),
+      dependencies.length ? [el('dt', { class: 'muted' }, 'Dependências'), el('dd', { class: 'mono' }, dependencies.map((dep) => `${dep.alias || dep.slug}@${dep.slug}:${dep.version}`).join(', '))] : null,
+    ]),
+  ]);
+}
+
+async function convertGlsToStrategyJs(ctx) {
+  if (state.focusedEditor) state.sourceCode = state.focusedEditor.getValue();
+  const res = await ctx.api.post('/api/strategies/convert-to-strategy-js', { source_code: state.sourceCode });
+  if (!res.ok) {
+    ctx.toast.err(res.error?.message || 'Falha na conversão');
+    return;
+  }
+  state.editorLanguage = 'strategy-js-v1';
+  state.sourceCode = res.data.source_code;
+  if (state.focusedEditor) state.focusedEditor.setValue(state.sourceCode);
+  const langSelect = document.getElementById('strategy-language-select');
+  if (langSelect) langSelect.value = 'strategy-js-v1';
+  ctx.toast.ok('Convertido para Strategy JS — valide e salve uma nova versão');
 }
 
 function renderValidationDetails(validation) {
@@ -1443,15 +1556,189 @@ async function validateTabCode(ctx) {
   if (state.focusedEditor) state.sourceCode = state.focusedEditor.getValue();
   const validation = await validateStrategySource(ctx, state.sourceCode);
   if (!validation) return;
-  if (validation.ok) ctx.toast.ok('Código GLS válido');
+  if (validation.ok) ctx.toast.ok('Código Strategy JS válido');
   else ctx.toast.err(`Código inválido: ${validation.errors?.length || 0} erro(s)`);
+}
+
+async function loadStrategyPresets(ctx, strategyId, versionId) {
+  if (!strategyId || !versionId) {
+    state.presets = [];
+    return [];
+  }
+  const res = await ctx.api.get(`/api/strategies/${strategyId}/presets?strategy_version_id=${versionId}`);
+  if (!res.ok) {
+    state.presets = [];
+    return [];
+  }
+  state.presets = res.data.presets || [];
+  return state.presets;
+}
+
+function renderPresetsPanel(ctx, strategyId, version) {
+  const presets = state.presets || [];
+  if (!version) return emptyState('Selecione uma versão para gerenciar presets.');
+  if (!presets.length) {
+    return el('div', { class: 'card', style: { padding: '12px' } }, [
+      el('p', { class: 'muted', style: { margin: 0 } }, 'Nenhum preset salvo para esta versão. Ajuste parâmetros abaixo e clique em "Salvar preset".'),
+    ]);
+  }
+  const comparePreset = presets.find((p) => p.id === state.presetCompareId);
+  const selectedPreset = presets.find((p) => p.id === state.selectedPresetId);
+  return el('div', { class: 'card', style: { padding: '12px' } }, [
+    el('h4', { class: 'card__title', style: { marginBottom: '10px' } }, 'Presets'),
+    el('div', { class: 'row', style: { flexWrap: 'wrap', gap: '8px', marginBottom: '10px' } }, presets.map((preset) => el('button', {
+      class: `btn btn--sm ${state.selectedPresetId === preset.id ? 'btn--primary' : 'btn--ghost'}`,
+      type: 'button',
+      onclick: () => applyPresetToForm(preset),
+    }, preset.name))),
+    el('div', { class: 'row', style: { flexWrap: 'wrap', gap: '8px' } }, [
+      el('button', {
+        class: 'btn btn--ghost btn--sm',
+        type: 'button',
+        disabled: !state.selectedPresetId,
+        onclick: () => runBacktestWithPreset(ctx, strategyId),
+      }, 'Rodar backtest com preset'),
+      el('select', {
+        class: 'field__input field__input--sm',
+        onchange: (e) => { state.presetCompareId = Number(e.target.value) || null; refreshPresetsPanel(ctx, strategyId, version); },
+      }, [
+        el('option', { value: '' }, 'Comparar com…'),
+        ...presets.map((p) => el('option', { value: p.id, selected: p.id === state.presetCompareId }, p.name)),
+      ]),
+      el('button', {
+        class: 'btn btn--ghost btn--sm',
+        type: 'button',
+        disabled: !state.selectedPresetId || !state.presetCompareId,
+        onclick: () => compareSelectedPresets(),
+      }, 'Comparar'),
+      el('button', {
+        class: 'btn btn--ghost btn--sm',
+        type: 'button',
+        disabled: !state.selectedPresetId,
+        onclick: () => deleteSelectedPreset(ctx, strategyId, version),
+      }, 'Excluir preset'),
+    ]),
+    comparePreset && selectedPreset ? el('pre', {
+      class: 'code-block',
+      style: { marginTop: '10px', fontSize: '11px', maxHeight: '160px', overflow: 'auto' },
+    }, formatPresetDiff(selectedPreset.params, comparePreset.params)) : null,
+  ]);
+}
+
+function formatPresetDiff(left, right) {
+  const keys = [...new Set([...Object.keys(left || {}), ...Object.keys(right || {})])].sort();
+  return keys.map((key) => {
+    const a = left?.[key];
+    const b = right?.[key];
+    if (a === b) return `  ${key}: ${JSON.stringify(a)}`;
+    return `- ${key}: ${JSON.stringify(a)} → ${JSON.stringify(b)}`;
+  }).join('\n');
+}
+
+function applyPresetToForm(preset) {
+  state.selectedPresetId = preset.id;
+  const form = document.getElementById('strategy-params-form');
+  if (!form) return;
+  for (const [key, value] of Object.entries(preset.params || {})) {
+    const input = form.elements[key];
+    if (!input) continue;
+    input.value = String(value);
+  }
+}
+
+function compareSelectedPresets() {
+  const panel = document.getElementById('strategy-presets-panel');
+  if (panel && state.currentStrategy) {
+    mount(panel, renderPresetsPanel(strategiesViewCtx, state.currentStrategy.id, state.currentVersion));
+  }
+}
+
+function refreshPresetsPanel(ctx, strategyId, version) {
+  const panel = document.getElementById('strategy-presets-panel');
+  if (panel) mount(panel, renderPresetsPanel(ctx, strategyId, version));
+}
+
+async function saveParamsAsPreset(ctx, strategyId) {
+  const form = document.getElementById('strategy-params-form');
+  if (!form || !state.selectedVersionId) return;
+  const schema = state.validation?.params_schema || state.currentVersion?.params_schema || {};
+  const params = {};
+  try {
+    for (const [key, def] of Object.entries(schema)) {
+      const input = form.elements[key];
+      if (!input) continue;
+      params[key] = parseParamValue(input.value, typeof def?.default);
+    }
+  } catch (err) {
+    ctx.toast.err(err.message || 'Parâmetro inválido');
+    return;
+  }
+  const name = await promptDialog({
+    title: 'Nome do preset',
+    message: 'Nome para este conjunto de parâmetros:',
+    placeholder: 'Ex.: agressivo BTC 5m',
+    confirmLabel: 'Salvar',
+  });
+  if (!name) return;
+  const res = await ctx.api.post(`/api/strategies/${strategyId}/presets`, {
+    strategy_version_id: state.selectedVersionId,
+    name,
+    params,
+  });
+  if (!res.ok) {
+    ctx.toast.err(res.error?.message || 'Falha ao salvar preset');
+    return;
+  }
+  await loadStrategyPresets(ctx, strategyId, state.selectedVersionId);
+  state.selectedPresetId = res.data.preset.id;
+  refreshPresetsPanel(ctx, strategyId, state.currentVersion);
+  ctx.toast.ok(`Preset "${name}" salvo`);
+}
+
+async function deleteSelectedPreset(ctx, strategyId, version) {
+  if (!state.selectedPresetId) return;
+  const ok = await confirmDialog({ title: 'Excluir preset', message: 'Remover este preset?', confirmLabel: 'Excluir' });
+  if (!ok) return;
+  const res = await ctx.api.delete(`/api/strategies/${strategyId}/presets/${state.selectedPresetId}`);
+  if (!res.ok) {
+    ctx.toast.err(res.error?.message || 'Falha ao excluir preset');
+    return;
+  }
+  state.selectedPresetId = null;
+  await loadStrategyPresets(ctx, strategyId, state.selectedVersionId);
+  refreshPresetsPanel(ctx, strategyId, version);
+  ctx.toast.ok('Preset excluído');
+}
+
+async function runBacktestWithPreset(ctx, strategyId) {
+  if (!state.selectedPresetId || !state.selectedVersionId) return;
+  const saved = loadContext();
+  const res = await ctx.api.post('/api/backtest/run', {
+    strategy_id: strategyId,
+    strategy_version_id: state.selectedVersionId,
+    preset_id: state.selectedPresetId,
+    from: saved.from,
+    to: saved.to,
+    underlying: saved.underlying,
+    interval: saved.interval,
+    book_depth: Number(saved.book_depth),
+    batch_size: 25000,
+    fast_run: true,
+    async: true,
+  });
+  if (!res.ok) {
+    ctx.toast.err(res.error?.message || 'Falha ao iniciar backtest');
+    return;
+  }
+  ctx.toast.ok(`Backtest com preset enfileirado · run #${res.data.run.id}`);
+  ctx.navigate(`studio?run=${res.data.run.id}`);
 }
 
 async function testStrategyQuick(ctx, strategyId) {
   if (state.focusedEditor) state.sourceCode = state.focusedEditor.getValue();
   const validation = await validateStrategySource(ctx, state.sourceCode);
   if (!validation?.ok) {
-    ctx.toast.warn('Valide e corrija o código GLS antes de testar');
+    ctx.toast.warn('Valide e corrija o código Strategy JS antes de testar');
     return;
   }
   if (!state.selectedVersionId) {
@@ -1484,13 +1771,14 @@ async function testStrategyQuick(ctx, strategyId) {
 }
 
 async function saveSourceVersion(ctx, strategyId, source) {
+  const saveLanguage = state.editorLanguage || state.currentVersion?.language || 'strategy-js-v1';
   if (!hasSourceChanged(source, state.currentVersion?.source_code)) {
     ctx.toast.warn('Nenhuma alteração detectada. Versão não criada.');
     return null;
   }
   const validation = await validateStrategySource(ctx, source);
   if (!validation?.ok) {
-    ctx.toast.warn('Corrija os erros de validação do GLS antes de salvar.');
+    ctx.toast.warn('Corrija os erros de validação antes de salvar.');
     return null;
   }
   const notes = await promptDialog({
@@ -1502,6 +1790,7 @@ async function saveSourceVersion(ctx, strategyId, source) {
   if (notes === null) return null;
   const res = await ctx.api.post(`/api/strategies/${strategyId}/versions`, {
     source_code: source,
+    language: state.editorLanguage || 'auto',
     notes: notes || undefined,
   });
   if (!res.ok) {
@@ -1637,9 +1926,23 @@ async function createStrategyFlow(ctx) {
     ctx.toast.err(created.error?.message || 'Falha ao criar');
     return;
   }
-  state.selectedId = created.data.strategy.id;
-  ctx.navigate(`strategies/${state.selectedId}`);
-  await renderStrategies(ctx, { id: state.selectedId });
+  const actualSlug = created.data?.strategy?.slug;
+  if (actualSlug && actualSlug !== slug) {
+    ctx.toast.info(`Slug "${slug}" já existia — criada como "${actualSlug}"`);
+  }
+  const strategyId = created.data.strategy.id;
+  const initial = await ctx.api.post(`/api/strategies/${strategyId}/versions`, {
+    source_code: buildStrategyJsTemplate(name.trim()),
+    language: 'strategy-js-v1',
+    notes: 'Versão inicial Strategy JS',
+  });
+  if (!initial.ok) {
+    ctx.toast.warn('Estratégia criada, mas falhou ao salvar template inicial');
+  }
+  state.selectedId = strategyId;
+  state.selectedVersionId = initial.ok ? initial.data.version.id : null;
+  ctx.navigate(`strategies/${strategyId}${state.selectedVersionId ? `/${state.selectedVersionId}` : ''}`);
+  await renderStrategies(ctx, { id: strategyId, versionId: state.selectedVersionId });
 }
 
 async function trashStrategyFlow(ctx, strategy) {
@@ -1894,7 +2197,7 @@ function createGlsDrawer() {
   return el('div', { class: 'gls-drawer', id: 'gls-help-drawer' }, [
     el('div', { class: 'gls-drawer__header' }, [
       el('h3', {}, [
-        'Ajuda GLS ',
+        'Ajuda Strategy JS ',
         el('i', { class: 'fa-solid fa-circle-question', style: { marginLeft: '4px', color: 'var(--accent)' } })
       ]),
       el('button', { class: 'btn btn--icon btn--ghost', type: 'button', onclick: () => toggleGlsDrawer(false) }, el('i', { class: 'fa-solid fa-xmark' })),
@@ -1909,7 +2212,25 @@ function createGlsDrawer() {
         ]),
       ]),
       el('section', { class: 'editor-help-card' }, [
-        el('h4', { style: { margin: '0 0 8px 0' } }, 'Blocos GLS'),
+        el('h4', { style: { margin: '0 0 8px 0' } }, 'Contrato para IA'),
+        el('textarea', {
+          class: 'field__input',
+          rows: '6',
+          readonly: true,
+          style: { fontSize: '11px', fontFamily: 'var(--mono)' },
+        }, state.capabilities?.ai_contract || 'Carregue /api/strategy-runtime/capabilities'),
+        el('button', {
+          class: 'btn btn--ghost btn--sm',
+          type: 'button',
+          style: { marginTop: '8px' },
+          onclick: () => {
+            const text = state.capabilities?.ai_contract || '';
+            navigator.clipboard?.writeText(text);
+          },
+        }, 'Copiar para prompt'),
+      ]),
+      el('section', { class: 'editor-help-card' }, [
+        el('h4', { style: { margin: '0 0 8px 0' } }, 'APIs do runtime'),
         el('div', { class: 'strategy-search-wrap', style: { position: 'relative' } }, [
           el('i', { class: 'fa-solid fa-magnifying-glass search-icon', style: { position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-3)', pointerEvents: 'none' } }),
           el('input', {

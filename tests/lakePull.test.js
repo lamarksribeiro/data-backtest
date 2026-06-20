@@ -127,7 +127,7 @@ test('fetchRemoteManifestRows falls back to scp when remote node fails', async (
     }),
     /scp failed/,
   );
-  assert.deepEqual(calls, ['ssh', 'ssh', 'ssh', 'scp']);
+  assert.deepEqual(calls, ['ssh', 'ssh', 'scp']);
 });
 
 test('planLakePull deduplicates files and builds remote paths', () => {

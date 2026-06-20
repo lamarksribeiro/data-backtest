@@ -11,6 +11,11 @@ import {
   snapshotTickCursorView,
 } from '../../backtest/columnStore.js';
 import { parse } from './parser.js';
+import { compileStrategyJs } from '../strategyJs/compile.js';
+import { inferNativeLibrariesFromAst } from '../strategyJs/dependencies.js';
+import { ensureStrategyLibraryDatabase } from '../nativeLibrary/registry.js';
+import { applyEmbeddedModelsToLib } from '../strategyJs/embeddedModels.js';
+import { getCachedSoaHooks } from '../strategyJs/compiledCache.js';
 import { loadConfig } from '../../config.js';
 
 const DEFAULT_LIMITS = {
@@ -40,7 +45,19 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
     ...(fastRun ? { maxLogsPerEvent: 0, maxMarksPerEvent: 0 } : {}),
   };
   const onEventFinalized = typeof options.onEventFinalized === 'function' ? options.onEventFinalized : null;
-  const lib = createStandardLibrary();
+  const embeddedModelsSource = options.embeddedModelsSource ?? (options.embeddedModels ? options.strategySourceCode : null);
+  const nativeLibraries = embeddedModelsSource
+    ? []
+    : (options.nativeLibraries
+      ?? options.extensionLibraries
+      ?? inferNativeLibrariesFromAst(ast));
+  if (nativeLibraries.length > 0) {
+    ensureStrategyLibraryDatabase(options.db);
+  }
+  const lib = createStandardLibrary({ nativeLibraries });
+  if (embeddedModelsSource) {
+    applyEmbeddedModelsToLib(embeddedModelsSource, lib);
+  }
 
   const events = [];
   const equity = [];
@@ -67,7 +84,7 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
   const executionMode = options.executionMode ?? loadConfig().glsExecution;
   const compiled = executionMode === 'compiled' ? compileStrategy(ast) : null;
   const compiledSoa = executionMode === 'compiled-soa'
-    ? compileStrategySoa(ast, options.bookDepth ?? 25)
+    ? (getCachedSoaHooks(options.generatedSource) ?? compileStrategySoa(ast, options.bookDepth ?? 25))
     : null;
   const interpreter = executionMode === 'interpreter' ? createInterpreter() : null;
   let columnSet = null;
@@ -657,6 +674,24 @@ function setPath(obj, path, value) {
 }
 
 export function createGlsRunnerFromSource(source, params = {}, options = {}) {
-  const ast = parse(source);
+  const ast = resolveSourceToAst(source, options);
   return createGlsBacktestRunner(ast, params, options);
+}
+
+function resolveSourceToAst(source, options = {}) {
+  const code = String(source || '').trim();
+  const language = options.language || detectSourceLanguage(code);
+  if (language === 'strategy-js-v1') {
+    const result = compileStrategyJs(code);
+    if (!result.ok) throw new Error(result.errors[0]?.message || 'Strategy JS compilation failed');
+    return result.ast;
+  }
+  return parse(code);
+}
+
+function detectSourceLanguage(code) {
+  if (/^export\s+default\s+strategy\s*\(/.test(code) || /^strategy\s*\(\s*\{/.test(code)) {
+    return 'strategy-js-v1';
+  }
+  return 'gls-v1';
 }

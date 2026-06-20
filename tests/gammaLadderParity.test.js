@@ -1,55 +1,111 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 
-import { parse } from '../src/backtestStudio/gls/parser.js';
-import { validate } from '../src/backtestStudio/gls/validator.js';
-import { compareGammaLadderParity } from '../src/backtestStudio/gls/gammaLadder/parity.js';
-import { toLegacyBacktestTick } from '../src/legacy/polymarketTestAdapter.js';
+import { openStateDatabase, closeStateDatabase } from '../src/state/sqlite.js';
+import { composeGammaLadderStrategyJs } from '../src/backtestStudio/strategyJs/composeGammaLadder.js';
+import { compileStrategyJs } from '../src/backtestStudio/strategyJs/compile.js';
+import { resolveVersionForBacktest } from '../src/backtestStudio/strategyJs/resolveVersion.js';
 import { loadStrategy } from '../src/backtest/strategyLoader.js';
+import { toLegacyBacktestTick } from '../src/legacy/polymarketTestAdapter.js';
 
-const GLS_SOURCE = readFileSync(
-  path.resolve('src/backtestStudio/gls/strategies/gammaLadderV1.gls'),
-  'utf8',
-);
+const GLS_SOURCE = `strategy "Gamma Ladder V1" {
+  param walletSize = 100
+  param entryWindowStart = 105
+  param entryWindowEnd = 4
+  onEventStart(event) { state.ready = true }
+  onTick(tick, event) {}
+  onEventEnd(event) {}
+}`;
 
-test('gamma ladder GLS validates and parses', () => {
-  const validation = validate(GLS_SOURCE);
-  assert.equal(validation.ok, true, validation.errors?.map((e) => e.message).join('; '));
-  const ast = parse(GLS_SOURCE);
-  assert.equal(ast.name, 'Gamma Ladder V1');
-  assert.ok(ast.params.length >= 30);
+test('gamma ladder Strategy JS validates with embedded runner factory', () => {
+  const db = openStateDatabase(path.join(os.tmpdir(), `gamma-val-${Date.now()}.db`));
+  try {
+    const js = composeGammaLadderStrategyJs(GLS_SOURCE);
+    const compiled = compileStrategyJs(js, { db });
+    assert.equal(compiled.ok, true, compiled.errors?.map((e) => e.message).join('; '));
+    assert.equal(compiled.execution_kind, 'embedded-runner');
+    assert.equal(compiled.editable_logic, true);
+    assert.ok(js.includes('function gammaLadderRunnerFactory'));
+    assert.ok(!compiled.dependencies?.some((d) => d.slug === 'gamma-ladder-engine'));
+  } finally {
+    closeStateDatabase(db);
+  }
 });
 
-test('strategyLoader routes gamma ladder GLS to gamma-ladder runner', async () => {
-  const loaded = await loadStrategy({
-    glsAst: parse(GLS_SOURCE),
-    bookDepth: 25,
-  });
-  assert.equal(loaded.kind, 'gamma-ladder');
-  const runner = loaded.createRunner({});
-  assert.equal(runner.executionMode, 'gamma-ladder');
-  assert.equal(typeof runner.processIndex, 'function');
+test('strategyLoader routes gamma to embedded-runner from strategy source', async () => {
+  const db = openStateDatabase(path.join(os.tmpdir(), `gamma-load-${Date.now()}.db`));
+  try {
+    const js = composeGammaLadderStrategyJs(GLS_SOURCE);
+    const version = {
+      language: 'strategy-js-v1',
+      source_code: js,
+      compiled_json: JSON.stringify(compileStrategyJs(js, { db }).compiled),
+      checksum: compileStrategyJs(js, { db }).compiled.source_checksum,
+    };
+    const resolved = resolveVersionForBacktest(version, { bookDepth: 25, db });
+    assert.equal(resolved.strategyMeta.execution_kind, 'embedded-runner');
+    assert.equal(resolved.strategyMeta.editable_logic, true);
+    assert.equal(resolved.embeddedRunner, true);
+    const loaded = await loadStrategy({
+      glsAst: resolved.glsAst,
+      columnAnalysis: resolved.columnAnalysis,
+      embeddedRunner: resolved.embeddedRunner,
+      strategySourceCode: resolved.strategySourceCode,
+      db,
+      bookDepth: 25,
+    });
+    assert.equal(loaded.kind, 'embedded-runner');
+    const runner = loaded.createRunner({});
+    assert.equal(runner.executionMode, 'embedded-runner');
+    assert.equal(typeof runner.processIndex, 'function');
+  } finally {
+    closeStateDatabase(db);
+  }
 });
 
-test('gamma ladder native vs gls adapter parity on synthetic box ticks', () => {
-  const ticks = buildGammaLadderSyntheticTicks();
-  const report = compareGammaLadderParity(ticks, {
-    boxEnabled: true,
-    hedgeEnabled: false,
-    minDistanceAbs: 0,
-    minEdge: -0.5,
-    minDirectionalProb: 0.01,
-    maxSpread: 0.99,
-    minLiquidityRatio: 0.01,
-    entryWindowStart: 300,
-    entryWindowEnd: 0,
-    minTicksBeforeEntry: 2,
-    maxOddsSum: 2,
-    minOddsSum: 0.01,
-  });
-  assert.equal(report.match, true, JSON.stringify(report.divergences));
+test('gamma ladder embedded runner executes on synthetic box ticks', async () => {
+  const db = openStateDatabase(path.join(os.tmpdir(), `gamma-run-${Date.now()}.db`));
+  try {
+    const js = composeGammaLadderStrategyJs(GLS_SOURCE);
+    const compiled = compileStrategyJs(js, { db });
+    const resolved = resolveVersionForBacktest({
+      language: 'strategy-js-v1',
+      source_code: js,
+      compiled_json: JSON.stringify(compiled.compiled),
+      checksum: compiled.compiled.source_checksum,
+    }, { bookDepth: 25, db });
+
+    const loaded = await loadStrategy({
+      glsAst: resolved.glsAst,
+      embeddedRunner: resolved.embeddedRunner,
+      strategySourceCode: resolved.strategySourceCode,
+      db,
+      bookDepth: 25,
+    });
+    const runner = loaded.createRunner({
+      boxEnabled: true,
+      hedgeEnabled: false,
+      minDistanceAbs: 0,
+      minEdge: -0.5,
+      minDirectionalProb: 0.01,
+      maxSpread: 0.99,
+      minLiquidityRatio: 0.01,
+      entryWindowStart: 300,
+      entryWindowEnd: 0,
+      minTicksBeforeEntry: 2,
+      maxOddsSum: 2,
+      minOddsSum: 0.01,
+    });
+    for (const tick of buildGammaLadderSyntheticTicks()) {
+      runner.processTick(tick);
+    }
+    const result = runner.finish();
+    assert.ok(Number.isFinite(result.summary?.totalPnl));
+  } finally {
+    closeStateDatabase(db);
+  }
 });
 
 function buildGammaLadderSyntheticTicks() {

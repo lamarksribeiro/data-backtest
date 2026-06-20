@@ -807,6 +807,94 @@ Response:
 }
 ```
 
+### `GET /api/strategy-runtime/capabilities`
+
+Retorna linguagens suportadas, template Strategy JS, blocos e contrato para IA.
+
+Response:
+
+```json
+{
+  "languages": ["gls-v1", "strategy-js-v1"],
+  "default_language": "strategy-js-v1",
+  "stdlib_version": "stdlib-v3",
+  "compiler_version": "compiler-soa-v2",
+  "blocks": [],
+  "syntax": { "forbidden": ["import", "require"], "allowedHooks": ["onEventStart", "onTick", "onEventEnd"] },
+  "template": "export default strategy({...})",
+  "ai_contract": "..."
+}
+```
+
+### `POST /api/strategies/convert-to-strategy-js`
+
+Converte fonte GLS v1 para Strategy JS v1.
+
+Request: `{ "source_code": "strategy \"X\" { ... }" }`
+
+Response: `{ "source_code": "export default strategy({...})", "language": "strategy-js-v1" }`
+
+### `GET /api/strategy-library`
+
+Lista bibliotecas nativas versionadas (`strategy_library_*`).
+
+Response:
+
+```json
+{
+  "libraries": [
+    {
+      "slug": "edge-sniper-models",
+      "name": "Edge Sniper Models",
+      "versions": [{ "version": 1, "language": "native-bundled" }]
+    }
+  ]
+}
+```
+
+### `GET /api/strategy-library/:slug`
+
+Detalhe de uma biblioteca e suas versoes.
+
+### `GET /api/strategies/:id/presets`
+
+Query opcional: `strategy_version_id`. Lista presets da estrategia.
+
+### `POST /api/strategies/:id/presets`
+
+Request:
+
+```json
+{
+  "strategy_version_id": 12,
+  "name": "agressivo",
+  "params": { "minEdge": 0.09 },
+  "tags": ["btc"]
+}
+```
+
+### `GET/PATCH/DELETE /api/strategies/:id/presets/:presetId`
+
+CRUD de preset individual.
+
+### Backtest com preset
+
+`POST /api/backtest/run` e `POST /api/backtest/sweep` aceitam `preset_id` (opcional). Os `params` do preset sao mesclados sobre os defaults de `params_schema` da versao; `params` no body ainda pode sobrescrever.
+
+Request exemplo:
+
+```json
+{
+  "strategy_id": 1,
+  "strategy_version_id": 2,
+  "preset_id": 5,
+  "from": "2026-06-01",
+  "to": "2026-06-07",
+  "underlying": "BTC",
+  "interval": "5m"
+}
+```
+
 ### `GET /api/strategy-blocks`
 
 Lista assinaturas MVP da biblioteca padrao GLS (somente leitura; CRUD de blocos customizados nao faz parte do MVP).
@@ -912,6 +1000,57 @@ created_at
 ```
 
 `created_by` fica reservado para autenticacao futura; nao entra no MVP.
+
+Versoes GLS legadas podem incluir em `validation_json`:
+
+```json
+{
+  "execution_kind": "native-extension",
+  "editable_logic": false
+}
+```
+
+(Gamma Ladder e outras extensoes nativas.)
+
+### `strategy_library_definitions`
+
+```text
+id
+slug (unique)
+name
+description
+status
+created_at
+updated_at
+```
+
+### `strategy_library_versions`
+
+```text
+id
+library_id
+version
+language
+source_code
+validation_json
+compiled_json
+checksum
+created_at
+```
+
+### `strategy_presets`
+
+```text
+id
+strategy_id
+strategy_version_id
+name
+params_json
+tags_json
+created_at
+```
+
+Presets separam ajuste de parametros da logica versionada em `strategy_versions`.
 
 ### `backtest_event_traces`
 

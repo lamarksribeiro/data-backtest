@@ -5,7 +5,32 @@ import { analyzeStrategyColumns } from './compiler.js';
  * Codegen GLS v2 — hot loop Struct-of-Arrays (V4 F2).
  * Lê colunas por índice; locals reais; calls estáticos da stdlib.
  */
+export function buildSoaGeneratedSource(ast, bookDepth = 25) {
+  const bindings = buildSoaBindings(ast, bookDepth);
+  return {
+    onEventStart: buildSoaHookSource(ast.hooks?.onEventStart, bindings),
+    onTick: buildSoaHookSource(ast.hooks?.onTick, bindings),
+    onEventEnd: buildSoaHookSource(ast.hooks?.onEventEnd, bindings),
+  };
+}
+
+export function hydrateSoaHooksFromGeneratedSource(generatedSource) {
+  if (!generatedSource || typeof generatedSource !== 'object') return null;
+  const hooks = {};
+  for (const name of ['onEventStart', 'onTick', 'onEventEnd']) {
+    const src = generatedSource[name];
+    hooks[name] = src ? compileSoaHookFromSource(src) : null;
+  }
+  if (!hooks.onTick && !hooks.onEventStart && !hooks.onEventEnd) return null;
+  return hooks;
+}
+
 export function compileStrategySoa(ast, bookDepth = 25) {
+  const generated = buildSoaGeneratedSource(ast, bookDepth);
+  return hydrateSoaHooksFromGeneratedSource(generated);
+}
+
+function buildSoaBindings(ast, bookDepth) {
   const analysis = analyzeStrategyColumns(ast, bookDepth);
   const columnSet = new Set(analysis.scalarColumns);
   for (const side of ['up', 'down']) {
@@ -17,24 +42,18 @@ export function compileStrategySoa(ast, bookDepth = 25) {
     }
   }
 
-  const bindings = [...columnSet].map((name) => {
+  return [...columnSet].map((name) => {
     const storage = storageColumnName(name);
     return `const __c_${sanitize(name)} = cols.get(${JSON.stringify(storage)});`;
   }).join('\n');
-
-  return {
-    onEventStart: compileSoaHook(ast.hooks?.onEventStart, bindings),
-    onTick: compileSoaHook(ast.hooks?.onTick, bindings),
-    onEventEnd: compileSoaHook(ast.hooks?.onEventEnd, bindings),
-  };
 }
 
-function compileSoaHook(hook, bindings) {
+function buildSoaHookSource(hook, bindings) {
   if (!hook?.body?.length) return null;
   const localNames = collectLetNames(hook.body);
   const body = hook.body.map((stmt) => emitStatement(stmt, localNames, 0)).join('\n');
   const lets = localNames.map((n) => `let ${n};`).join('\n');
-  const src = `
+  return `
 'use strict';
 ${bindings}
 function __truthy(v) { return Boolean(v); }
@@ -53,6 +72,9 @@ ${lets}
 ${body}
 };
 `;
+}
+
+function compileSoaHookFromSource(src) {
   // eslint-disable-next-line no-new-func
   const factory = new Function('cols', src);
   const boundByColumns = new WeakMap();

@@ -4,17 +4,17 @@ import { runSequentialSoA } from './engine.js';
 import { applyPolymarketFeesToBacktestResult } from './fees.js';
 import { wrapSharedColumnSet } from './columnStore.js';
 import { createGlsBacktestRunner } from '../backtestStudio/gls/runtime.js';
-import {
-  createGammaLadderGlsRunner,
-  isGammaLadderStrategy,
-} from '../backtestStudio/gls/gammaLadder/glsAdapter.js';
+import { createLibraryRunnerAdapter } from '../backtestStudio/strategyLibrary/runnerAdapter.js';
+import { createEmbeddedRunnerAdapter } from '../backtestStudio/strategyJs/embeddedRunnerAdapter.js';
 
 (async () => {
 try {
   const columnSet = wrapSharedColumnSet(workerData.sharedColumnSet);
   const request = workerData.request;
   const variants = workerData.variants || [];
-  const isGammaLadder = isGammaLadderStrategy(request.glsAst);
+  const isEmbeddedRunner = Boolean(request.embeddedRunner && request.strategySourceCode);
+  const isLibraryRunner = Boolean(request.runnerLibrary && request.db);
+  const useCustomSoa = isEmbeddedRunner || isLibraryRunner;
   const bookDepth = request.effectiveBookDepth ?? request.bookDepth;
   const results = [];
 
@@ -22,16 +22,20 @@ try {
     const variant = variants[index];
     const startedAt = Date.now();
     const params = { ...(request.params || {}), ...(variant.params || {}) };
-    const runner = isGammaLadder
-      ? createGammaLadderGlsRunner(params, { fastRun: true, bookDepth })
-      : createGlsBacktestRunner(request.glsAst, params, {
-        executionMode: 'compiled-soa',
-        fastRun: true,
-        bookDepth,
-      });
+    const runner = isEmbeddedRunner
+      ? createEmbeddedRunnerAdapter(request.strategySourceCode, params, { fastRun: true, bookDepth })
+      : (isLibraryRunner
+        ? createLibraryRunnerAdapter(request.db, request.runnerLibrary, params, { fastRun: true, bookDepth })
+        : createGlsBacktestRunner(request.glsAst, params, {
+          executionMode: 'compiled-soa',
+          fastRun: true,
+          bookDepth,
+          extensionLibraries: request.extensionLibraries,
+          generatedSource: request.generatedSource,
+        }));
 
     runner.bindColumnSet(columnSet);
-    await runSequentialSoA(runner, columnSet, !isGammaLadder);
+    await runSequentialSoA(runner, columnSet, !useCustomSoa);
 
     const result = runner.finish();
     applyPolymarketFeesToBacktestResult(result, request.feeOptions);
@@ -50,12 +54,11 @@ try {
       workerIndex: workerData.workerIndex,
       completed: index + 1,
       total: variants.length,
-      variantId: variant.id,
     });
   }
 
-  parentPort?.postMessage({ type: 'done', workerIndex: workerData.workerIndex, results });
+  parentPort?.postMessage({ type: 'done', results });
 } catch (err) {
-  parentPort?.postMessage({ type: 'error', error: err.message, stack: err.stack });
+  parentPort?.postMessage({ type: 'error', error: err?.message || String(err) });
 }
 })();

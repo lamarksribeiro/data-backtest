@@ -1,4 +1,4 @@
-import { toLegacyBacktestTick } from '../../../legacy/polymarketTestAdapter.js';
+import { toLegacyBacktestTick } from '../../legacy/polymarketTestAdapter.js';
 
 export function legacyTickFromCursor(cursor, columnSet, bookDepth = 25) {
   const index = cursor.index;

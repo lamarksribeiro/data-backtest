@@ -21,7 +21,5 @@ export function getEdgeSniperV3V2GlsSource() {
   return loadGlsStrategySource('edgeSniperV3_v2');
 }
 
-export function getGammaLadderV1GlsSource() {
-  return loadGlsStrategySource('gammaLadderV1');
-}
+
 

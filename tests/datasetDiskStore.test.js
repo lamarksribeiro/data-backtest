@@ -44,7 +44,7 @@ test('readValidPartitionMeta rejects empty cache when manifest has rows', async 
 	});
 	const manifestRow = { status: 'valid', source_fingerprint: 'fp', active_path: 'lake/a.parquet', rows: 5000 };
 	assert.equal(readValidPartitionMeta(binPath, metaPath, manifestRow), null);
-	await rm(root, { recursive: true, force: true });
+	await rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
 });
 
 test('scan and clear dataset disk cache', async () => {
@@ -71,5 +71,5 @@ test('scan and clear dataset disk cache', async () => {
 	assert.equal(scan.groups.length, 1);
 	const cleared = clearDatasetDiskCache(config);
 	assert.ok(cleared.removed_files >= 2);
-	await rm(root, { recursive: true, force: true });
+	await rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
 });

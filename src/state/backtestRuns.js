@@ -1,3 +1,4 @@
+import { removeChartSidecarRun } from '../backtest/chartSidecar.js';
 import { persistEventTraces, mergeResultIntoEventTraces } from '../backtestStudio/state/eventTraces.js';
 import { invalidateStrategyStatsCache } from '../backtestStudio/state/strategyStats.js';
 import { downsamplePoints } from '../utils/downsample.js';
@@ -497,7 +498,7 @@ export function extractEquityFromResultJson(json) {
   return [];
 }
 
-export function deleteBacktestRun(db, id) {
+export function deleteBacktestRun(db, id, { stateDbPath = null } = {}) {
   const run = db.prepare('SELECT * FROM backtest_runs WHERE id = ?').get(id);
   if (!run) return null;
 
@@ -511,5 +512,13 @@ export function deleteBacktestRun(db, id) {
     db.exec('ROLLBACK');
     throw err;
   }
-  return toApiRun(run);
+
+  let sidecar = null;
+  if (stateDbPath) {
+    sidecar = removeChartSidecarRun(stateDbPath, id);
+  }
+
+  const deleted = toApiRun(run);
+  if (sidecar) deleted.sidecar_removed = sidecar;
+  return deleted;
 }

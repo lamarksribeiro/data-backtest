@@ -13,7 +13,7 @@
     "path": "src/backtestStudio/gls/strategies/VolatilitySpikeMeanReversion.gls"
   },
   "promotedToStudio": true,
-  "studioSlug": "vsmr-gls",
+  "studioSlug": "vsmr",
   "studio": {
     "description": "Estratégia quantitativa baseada em choques de volatilidade adverso temporários que criam mispricing no favorito da Polymarket.",
     "tags": ["vsmr", "btc", "volatility", "mean-reversion"],

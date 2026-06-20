@@ -5,6 +5,7 @@ import {
 	existsSync,
 	mkdirSync,
 	openSync,
+	readdirSync,
 	readFileSync,
 	readSync,
 	renameSync,
@@ -269,6 +270,91 @@ export async function readChartSidecarForEvent(filePath, conditionId) {
 
 export function clearChartSidecarCache() {
 	indexCache.clear();
+}
+
+const RUN_SIDECAR_RE = /^run-(\d+)\.jsonl$/;
+
+export function eventSeriesDir(stateDbPath) {
+	return path.join(path.dirname(stateDbPath), 'event-series');
+}
+
+export function removeChartSidecarRun(stateDbPath, runId) {
+	const jsonlPath = chartSidecarPath(stateDbPath, runId);
+	let removedBytes = 0;
+	let removedFiles = 0;
+	for (const filePath of [jsonlPath, chartSidecarIndexPath(jsonlPath)]) {
+		if (!existsSync(filePath)) continue;
+		removedBytes += statSync(filePath).size;
+		removedFiles += 1;
+		unlinkSync(filePath);
+	}
+	indexCache.delete(jsonlPath);
+	indexBuildPromises.delete(jsonlPath);
+	return { removed_files: removedFiles, removed_bytes: removedBytes };
+}
+
+export function scanChartSidecarDir(stateDbPath) {
+	const dir = eventSeriesDir(stateDbPath);
+	if (!existsSync(dir)) {
+		return { total_bytes: 0, total_files: 0, run_files: 0, runs: [] };
+	}
+
+	const runs = [];
+	let totalBytes = 0;
+	let totalFiles = 0;
+	for (const entry of readdirSync(dir, { withFileTypes: true })) {
+		if (!entry.isFile()) continue;
+		const match = entry.name.match(RUN_SIDECAR_RE);
+		if (!match) continue;
+		const jsonlPath = path.join(dir, entry.name);
+		const idxPath = chartSidecarIndexPath(jsonlPath);
+		let bytes = statSync(jsonlPath).size;
+		totalFiles += 1;
+		if (existsSync(idxPath)) {
+			bytes += statSync(idxPath).size;
+			totalFiles += 1;
+		}
+		totalBytes += bytes;
+		runs.push({ run_id: Number(match[1]), bytes });
+	}
+	runs.sort((a, b) => a.run_id - b.run_id);
+	return { total_bytes: totalBytes, total_files: totalFiles, run_files: runs.length, runs };
+}
+
+export function pruneOrphanChartSidecars(stateDbPath, db, { dryRun = false } = {}) {
+	const scan = scanChartSidecarDir(stateDbPath);
+	if (!scan.run_files) {
+		return { dry_run: dryRun, removed_files: 0, removed_bytes: 0, orphan_runs: [] };
+	}
+
+	const activeIds = new Set(
+		db.prepare('SELECT id FROM backtest_runs').all().map((row) => Number(row.id)),
+	);
+	const orphanRuns = scan.runs.filter((row) => !activeIds.has(row.run_id));
+	let removedFiles = 0;
+	let removedBytes = 0;
+
+	if (!dryRun) {
+		for (const row of orphanRuns) {
+			const result = removeChartSidecarRun(stateDbPath, row.run_id);
+			removedFiles += result.removed_files;
+			removedBytes += result.removed_bytes;
+		}
+	} else {
+		for (const row of orphanRuns) {
+			removedFiles += existsSync(chartSidecarPath(stateDbPath, row.run_id)) ? 1 : 0;
+			const idxPath = chartSidecarIndexPath(chartSidecarPath(stateDbPath, row.run_id));
+			if (existsSync(idxPath)) removedFiles += 1;
+			removedBytes += row.bytes;
+		}
+	}
+
+	return {
+		dry_run: dryRun,
+		removed_files: removedFiles,
+		removed_bytes: removedBytes,
+		orphan_runs: orphanRuns.map((row) => row.run_id),
+	};
 }
 
 function num(value) {

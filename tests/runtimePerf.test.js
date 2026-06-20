@@ -6,7 +6,19 @@ import path from 'node:path';
 import os from 'node:os';
 
 import { extractEquityFromResultJson } from '../src/state/backtestRuns.js';
-import { readChartSidecarForEvent, appendChartSidecarLine, buildEventChartSeries, chartSidecarIndexPath } from '../src/backtest/chartSidecar.js';
+import {
+  readChartSidecarForEvent,
+  appendChartSidecarLine,
+  buildEventChartSeries,
+  chartSidecarIndexPath,
+  chartSidecarPath,
+  ensureChartSidecarDir,
+  pruneOrphanChartSidecars,
+  removeChartSidecarRun,
+  scanChartSidecarDir,
+} from '../src/backtest/chartSidecar.js';
+import { openStateDatabase, closeStateDatabase } from '../src/state/sqlite.js';
+import { createBacktestRun } from '../src/state/backtestRuns.js';
 import { createColumnSetBuilder, createTickCursorView, snapshotTickCursorView } from '../src/backtest/columnStore.js';
 import { chartSeriesHasChartablePoints, chartSeriesIsUsable } from '../src/backtestStudio/state/eventTraces.js';
 import { loadConfig } from '../src/config.js';
@@ -124,6 +136,76 @@ test('chart sidecar streams large jsonl without loading entire file', async () =
     assert.equal(first.series.underlying[0].value, 0);
     assert.equal(last.series.underlying[0].value, 4999);
   } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('removeChartSidecarRun deletes jsonl and idx', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'sidecar-remove-'));
+  const stateDbPath = path.join(dir, 'state.db');
+  try {
+    ensureChartSidecarDir(stateDbPath);
+    const file = chartSidecarPath(stateDbPath, 42);
+    appendChartSidecarLine(file, 'cond-a', { series: { underlying: [{ ts: 't', value: 1 }] }, meta: {} });
+    assert.ok(existsSync(file));
+    assert.ok(existsSync(chartSidecarIndexPath(file)));
+
+    const removed = removeChartSidecarRun(stateDbPath, 42);
+    assert.equal(removed.removed_files, 2);
+    assert.ok(removed.removed_bytes > 0);
+    assert.equal(existsSync(file), false);
+    assert.equal(existsSync(chartSidecarIndexPath(file)), false);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('pruneOrphanChartSidecars removes sidecars without backtest_runs row', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'sidecar-prune-'));
+  const stateDbPath = path.join(dir, 'state.db');
+  const db = openStateDatabase(stateDbPath);
+  try {
+    ensureChartSidecarDir(stateDbPath);
+    appendChartSidecarLine(chartSidecarPath(stateDbPath, 7), 'orphan', {
+      series: { underlying: [{ ts: 't', value: 1 }] },
+      meta: {},
+    });
+
+    const run = createBacktestRun(db, {
+      request: { batchSize: 1000, params: {} },
+      result: {
+        strategy: 'test',
+        source: 'lakehouse',
+        underlying: 'BTC',
+        interval: '5m',
+        from: '2026-01-01T00:00:00.000Z',
+        to: '2026-01-02T00:00:00.000Z',
+        ticks: 1,
+        batches: 1,
+        summary: {},
+        events: [],
+        equity: [],
+        log: [],
+      },
+    });
+    appendChartSidecarLine(chartSidecarPath(stateDbPath, run.id), 'active', {
+      series: { underlying: [{ ts: 't', value: 2 }] },
+      meta: {},
+    });
+
+    const before = scanChartSidecarDir(stateDbPath);
+    assert.equal(before.run_files, 2);
+
+    const dry = pruneOrphanChartSidecars(stateDbPath, db, { dryRun: true });
+    assert.deepEqual(dry.orphan_runs, [7]);
+    assert.ok(existsSync(chartSidecarPath(stateDbPath, 7)));
+
+    const pruned = pruneOrphanChartSidecars(stateDbPath, db);
+    assert.deepEqual(pruned.orphan_runs, [7]);
+    assert.equal(existsSync(chartSidecarPath(stateDbPath, 7)), false);
+    assert.ok(existsSync(chartSidecarPath(stateDbPath, run.id)));
+  } finally {
+    closeStateDatabase(db);
     await rm(dir, { recursive: true, force: true });
   }
 });

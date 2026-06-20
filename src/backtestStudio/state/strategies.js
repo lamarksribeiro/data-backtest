@@ -1,6 +1,11 @@
 import { createHash } from 'node:crypto';
-import { validate as validateGls } from '../gls/validator.js';
+import { validateStrategySource as validateSource } from '../strategyJs/index.js';
+import { composeStrategyJsFromSource } from '../strategyJs/composeStrategyJs.js';
+import { buildCompiledArtifact } from '../strategyJs/resolveVersion.js';
 import { invalidateStrategyStatsCache } from './strategyStats.js';
+import { findRunnerDependency } from '../strategyLibrary/kind.js';
+import { detectEmbeddedRunner } from '../strategyJs/embeddedRunner.js';
+import { detectEmbeddedModels } from '../strategyJs/embeddedModels.js';
 
 const ALLOWED_STATUS = new Set(['draft', 'validated', 'failed', 'archived']);
 
@@ -29,8 +34,20 @@ export function getStrategyBySlug(db, slug) {
   return row ? toApiStrategy(db, row) : null;
 }
 
+export function allocateUniqueSlug(db, slug, { excludeId = null } = {}) {
+  const base = normalizeSlug(slug);
+  const taken = (candidate) => {
+    const row = db.prepare('SELECT id FROM strategy_definitions WHERE slug = ?').get(candidate);
+    return row && Number(row.id) !== Number(excludeId);
+  };
+  if (!taken(base)) return base;
+  let index = 2;
+  while (taken(`${base}-${index}`)) index += 1;
+  return `${base}-${index}`;
+}
+
 export function createStrategy(db, { slug, name, description = null, tags = [] }) {
-  const normalizedSlug = normalizeSlug(slug);
+  const normalizedSlug = allocateUniqueSlug(db, slug);
   const normalizedName = normalizeName(name);
   const result = db.prepare(`
     INSERT INTO strategy_definitions (slug, name, description, tags_json)
@@ -149,7 +166,7 @@ export function listStrategyVersions(db, strategyId) {
     SELECT * FROM strategy_versions
     WHERE strategy_id = ?
     ORDER BY version DESC, id DESC
-  `).all(strategyId).map(toApiVersion);
+  `).all(strategyId).map((row) => toApiVersion(row, db));
 }
 
 /** Uma query para o picker do Estúdio (evita N+1 de /versions por estratégia). */
@@ -186,7 +203,7 @@ export function listStrategiesForPicker(db) {
 
 export function getStrategyVersion(db, strategyId, versionId) {
   const row = db.prepare('SELECT * FROM strategy_versions WHERE strategy_id = ? AND id = ?').get(strategyId, versionId);
-  return row ? toApiVersion(row) : null;
+  return row ? toApiVersion(row, db) : null;
 }
 
 export function deleteStrategyVersion(db, strategyId, versionId, { deleteRuns = false } = {}) {
@@ -269,11 +286,29 @@ export function forkStrategy(db, strategyId, { versionId = null, name = null } =
   return getStrategy(db, forked.id);
 }
 
-export function createStrategyVersion(db, strategyId, { language = 'gls-v1', source_code: sourceCode, notes = null }) {
+function detectLanguage(sourceCode, language) {
+  if (language && language !== 'auto') return String(language).trim();
+  const code = String(sourceCode || '').trim();
+  if (/^export\s+default\s+strategy\s*\(/.test(code) || /^strategy\s*\(\s*\{/.test(code)) {
+    return 'strategy-js-v1';
+  }
+  if (/^strategy\s+"/.test(code) || /^strategy\s+'/.test(code)) {
+    return 'gls-v1';
+  }
+  return 'strategy-js-v1';
+}
+
+export function createStrategyVersion(db, strategyId, { language = 'auto', source_code: sourceCode, notes = null }) {
   const strategy = getStrategy(db, strategyId);
   if (!strategy) return null;
   const code = String(sourceCode || '').trim();
   if (!code) throw new Error('source_code is required');
+
+  let resolvedLanguage = detectLanguage(code, language);
+  const finalCode = composeStrategyJsFromSource(code);
+  if (resolvedLanguage === 'gls-v1') {
+    resolvedLanguage = 'strategy-js-v1';
+  }
 
   const latestRow = db.prepare(`
     SELECT version, source_code
@@ -282,23 +317,25 @@ export function createStrategyVersion(db, strategyId, { language = 'gls-v1', sou
     ORDER BY version DESC, id DESC
     LIMIT 1
   `).get(strategyId);
-  if (latestRow && normalizeSource(latestRow.source_code) === normalizeSource(code)) {
+  if (latestRow && normalizeSource(latestRow.source_code) === normalizeSource(finalCode)) {
     throw new Error('source_code is unchanged from the latest version');
   }
   const version = Number(latestRow?.version || 0) + 1;
-  const validation = validateStrategySource({ language, source_code: code });
+  const validation = validateStrategySource({ language: resolvedLanguage, source_code: finalCode, db });
+  const compiled = validation.ok && resolvedLanguage === 'strategy-js-v1' ? buildCompiledArtifact(finalCode, 25) : null;
   const result = db.prepare(`
     INSERT INTO strategy_versions (
-      strategy_id, version, language, source_code, params_schema_json, validation_json, checksum, notes
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      strategy_id, version, language, source_code, params_schema_json, compiled_json, validation_json, checksum, notes
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     strategyId,
     version,
-    String(language || 'gls-v1'),
-    code,
+    resolvedLanguage,
+    finalCode,
     JSON.stringify(validation.params_schema || {}),
+    compiled ? JSON.stringify(compiled) : null,
     JSON.stringify(validation),
-    checksumSource(code),
+    checksumSource(finalCode),
     notes != null ? String(notes).trim() || null : null,
   );
 
@@ -312,10 +349,9 @@ export function createStrategyVersion(db, strategyId, { language = 'gls-v1', sou
   return getStrategyVersion(db, strategyId, result.lastInsertRowid);
 }
 
-export function validateStrategySource({ language = 'gls-v1', source_code: sourceCode }) {
-  const result = validateGls(sourceCode, { language });
-  const { ast, ...publicResult } = result;
-  return publicResult;
+export function validateStrategySource({ language = 'auto', source_code: sourceCode, bookDepth = 25 } = {}) {
+  const resolvedLanguage = detectLanguage(sourceCode, language);
+  return validateSource({ language: resolvedLanguage, source_code: sourceCode, bookDepth });
 }
 
 function toApiStrategy(db, row) {
@@ -347,8 +383,9 @@ function normalizeSource(source) {
   return String(source || '').replace(/\r\n/g, '\n').trim();
 }
 
-function toApiVersion(row) {
-  const validation = JSON.parse(row.validation_json);
+function toApiVersion(row, db = null) {
+  const validation = enrichVersionValidation(JSON.parse(row.validation_json), db, row.source_code);
+  const compiled = row.compiled_json ? JSON.parse(row.compiled_json) : null;
   return {
     id: Number(row.id),
     strategy_id: Number(row.strategy_id),
@@ -357,9 +394,40 @@ function toApiVersion(row) {
     source_code: row.source_code,
     params_schema: JSON.parse(row.params_schema_json),
     validation,
+    compiled,
     checksum: row.checksum,
     notes: row.notes || null,
     created_at: row.created_at,
+  };
+}
+
+function enrichVersionValidation(validation, db, sourceCode = '') {
+  if (!validation || typeof validation !== 'object') return validation;
+  if (validation.execution_kind) return validation;
+  if (detectEmbeddedRunner(sourceCode)) {
+    return {
+      ...validation,
+      execution_kind: 'embedded-runner',
+      editable_logic: true,
+    };
+  }
+  const embeddedModels = detectEmbeddedModels(sourceCode);
+  if (embeddedModels) {
+    return {
+      ...validation,
+      execution_kind: 'compiled-soa',
+      editable_logic: true,
+      inlined_models: [embeddedModels.library],
+    };
+  }
+  const dependencies = validation.dependencies || [];
+  const runnerLibrary = db ? findRunnerDependency(db, dependencies) : null;
+  if (!runnerLibrary) return validation;
+  return {
+    ...validation,
+    execution_kind: 'library-runner',
+    editable_logic: false,
+    runner_library: runnerLibrary,
   };
 }
 

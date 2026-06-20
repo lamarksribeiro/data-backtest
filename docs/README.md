@@ -11,6 +11,7 @@ documentação por finalidade: **arquitetura** (decisões e planos), **implement
 |--------|-----------|
 | Corrigir a lentidão da UI durante jobs Parquet e backtests (isolamento de jobs) | [arquitetura/arquitetura-v5-isolamento-jobs.md](arquitetura/arquitetura-v5-isolamento-jobs.md) |
 | Entender a correção definitiva de performance do backtest (hot path colunar) | [arquitetura/arquitetura-v4-hot-path-colunar.md](arquitetura/arquitetura-v4-hot-path-colunar.md) |
+| Desacoplar estratégias do deploy usando Strategy JS no editor | [arquitetura/arquitetura-v6-strategy-js-editor.md](arquitetura/arquitetura-v6-strategy-js-editor.md) |
 | Entender o plano de evolução atual (Estúdio único, Dados simples, biblioteca de estratégias) | [arquitetura/arquitetura-v3-consolidacao-ux.md](arquitetura/arquitetura-v3-consolidacao-ux.md) |
 | Ver o que a V2 entregou (motor rápido, SSE, Estúdio) | [arquitetura/arquitetura-v2-performance-ux.md](arquitetura/arquitetura-v2-performance-ux.md) |
 | Usar o Backtest Studio (escrever estratégias GLS, rodar backtests) | [referencia/manual-backtest-studio.md](referencia/manual-backtest-studio.md) |
@@ -24,6 +25,7 @@ documentação por finalidade: **arquitetura** (decisões e planos), **implement
 | Documento | Conteúdo |
 |-----------|----------|
 | [arquitetura-v5-isolamento-jobs.md](arquitetura/arquitetura-v5-isolamento-jobs.md) | **Proposta de responsividade**: por que jobs de preparação (Parquet) e backtests travam o dashboard (event loop bloqueado, SQLite síncrono, amplificação no frontend) e como corrigir — prepare jobs em worker_thread, progress/jobs slim, frontend orientado a SSE, coverage limitada, fases I0–I6 |
+| [arquitetura-v6-strategy-js-editor.md](arquitetura/arquitetura-v6-strategy-js-editor.md) | **Proposta de desacoplamento de estratégias**: trocar GLS como linguagem principal por Strategy JS (subconjunto seguro de JavaScript no editor), manter compilação para `compiled-soa`, remover seeds como fonte primária, migrar modelos específicos para código versionado no banco e preservar performance |
 | [arquitetura-v4-hot-path-colunar.md](arquitetura/arquitetura-v4-hot-path-colunar.md) | **Plano de performance atual (prioridade máxima)**: correção definitiva — fronteira colunar DuckDB→TypedArrays (Parquet permanece o único formato em disco), hot loop Struct-of-Arrays sem objetos por tick, codegen GLS v2, paralelismo por evento com SharedArrayBuffer, fases F0–F5 |
 | [arquitetura-v3-consolidacao-ux.md](arquitetura/arquitetura-v3-consolidacao-ux.md) | **Plano diretor de UX**: Estúdio como tela única de backtest, view Dados com 3 estados derivados + correção em 1 clique, biblioteca de estratégias com stats/fork/diff/versões, fases U1–U7 |
 | [arquitetura-v2-performance-ux.md](arquitetura/arquitetura-v2-performance-ux.md) | Plano V2 (implementado): compilador GLS→JS, pipeline com prefetch, fila + SSE, Estúdio de painel único, comparador de runs, fases R1–R9 |

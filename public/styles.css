@@ -4836,6 +4836,17 @@ kbd {
   grid-template-columns: 1fr !important;
 }
 
+.strategy-code-tab-layout--runner {
+  grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.4fr) !important;
+  min-height: 640px;
+}
+
+.strategy-code-engine-area .CodeMirror {
+  flex: 1;
+  min-height: 420px;
+  height: auto !important;
+}
+
 /* Estilos do Explorador de Arquivos */
 .explorer-breadcrumbs {
   background: rgba(15, 23, 42, 0.4);

@@ -67,6 +67,6 @@ test('writeColumnSetPartition writes bin and meta atomically', async () => {
 		const loaded = readColumnSetPartition(binPath);
 		assert.equal(loaded.length, 4);
 	} finally {
-		await rm(dir, { recursive: true, force: true });
+		await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
 	}
 });

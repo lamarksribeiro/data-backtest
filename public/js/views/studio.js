@@ -647,7 +647,7 @@ export async function renderStudio(ctx) {
     const formCtx = applyContextOptions(loadContext(), fieldOptions);
     studioState.strategyOptions = strategyOptions;
     if (query.strategy && query.version) {
-      studioState.selectedStrategyPick = `gls:${query.strategy}:${query.version}`;
+      studioState.selectedStrategyPick = `js:${query.strategy}:${query.version}`;
     } else {
       studioState.selectedStrategyPick = resolveInitialStrategyPick(strategyOptions, {
         strategyId: query.strategy,
@@ -814,7 +814,7 @@ async function pinStudioStrategyVersion(ctx) {
   const res = await ctx.api.patch(`/api/strategies/${strategyId}`, { default_version_id: versionId });
   if (!res.ok) return ctx.toast.err(res.error?.message || 'Falha ao fixar versão');
 
-  studioState.selectedStrategyPick = `gls:${strategyId}:${versionId}`;
+  studioState.selectedStrategyPick = `js:${strategyId}:${versionId}`;
   saveLastStrategyPick(studioState.selectedStrategyPick);
   notifyStudioCatalogChanged();
   ctx.toast.ok('Versão fixada como padrão');

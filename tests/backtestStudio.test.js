@@ -207,14 +207,20 @@ test('strategy CRUD API creates definitions and versions', async () => {
       assert.equal(strategy.slug, 'simple-ptb');
       assert.equal(strategy.latest_version, null);
 
+      const glsSource = 'strategy "Simple PTB" { param minDistanceAbs = 50 }';
       const version = createStrategyVersion(db, strategy.id, {
         language: 'gls-v1',
-        source_code: 'strategy "Simple PTB" { param minDistanceAbs = 50 }',
+        source_code: glsSource,
       });
       assert.equal(version.version, 1);
+      assert.equal(version.language, 'strategy-js-v1');
       assert.equal(version.validation.ok, true);
       assert.throws(
-        () => createStrategyVersion(db, strategy.id, { source_code: 'strategy "Simple PTB" { param minDistanceAbs = 50 }' }),
+        () => createStrategyVersion(db, strategy.id, { source_code: version.source_code }),
+        /unchanged/,
+      );
+      assert.throws(
+        () => createStrategyVersion(db, strategy.id, { source_code: glsSource }),
         /unchanged/,
       );
 
