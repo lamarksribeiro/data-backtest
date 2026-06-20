@@ -84,6 +84,7 @@ async function main() {
     glsAst: resolved.glsAst,
     columnAnalysis: resolved.columnAnalysis,
     embeddedRunner: resolved.embeddedRunner,
+    embeddedModels: resolved.embeddedModels,
     strategySourceCode: resolved.strategySourceCode,
     db,
     strategyMeta: resolved.strategyMeta,
