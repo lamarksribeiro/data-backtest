@@ -10,3 +10,4 @@ dist/
 /state/
 /.tmp/
 /reports/labs/
+/reports/bench/

@@ -60,18 +60,18 @@ async function main() {
     SELECT sv.*, sd.slug
     FROM strategy_versions sv
     JOIN strategy_definitions sd ON sd.id = sv.strategy_id
-    WHERE sd.slug = 'edge-sniper-v3' AND sv.language = 'strategy-js-v1'
+    WHERE sd.slug = 'edge-sniper-v3-gls' AND sv.language = 'strategy-js-v1'
     ORDER BY sv.version DESC
     LIMIT 1
   `).get();
 
   if (!version) {
-    console.error(JSON.stringify({ ok: false, error: 'edge-sniper-v3 Strategy JS version not found' }));
+    console.error(JSON.stringify({ ok: false, error: 'edge-sniper-v3-gls Strategy JS version not found' }));
     closeStateDatabase(db);
     process.exit(1);
   }
 
-  const resolved = resolveVersionForBacktest(version, { bookDepth });
+  const resolved = resolveVersionForBacktest(version, { bookDepth, db });
   const started = performance.now();
   const result = await runBacktest(db, {
     from: window.from,
@@ -83,8 +83,9 @@ async function main() {
     fastRun: true,
     glsAst: resolved.glsAst,
     columnAnalysis: resolved.columnAnalysis,
-    extensionLibraries: resolved.extensionLibraries,
-    generatedSource: resolved.generatedSource,
+    embeddedRunner: resolved.embeddedRunner,
+    strategySourceCode: resolved.strategySourceCode,
+    db,
     strategyMeta: resolved.strategyMeta,
     params: {},
   });
