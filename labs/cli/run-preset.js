@@ -2,7 +2,19 @@
 import 'dotenv/config';
 
 import { runLabPreset } from '../shared/labRunner.js';
+import { discoverLabStrategies } from '../shared/discoverStrategies.js';
 import { listPresets } from '../shared/presets.js';
+
+function resolveStrategyContext(flags) {
+  const strategyId = flags.strategy || flags['strategy-id'] || 'edge-sniper-v3';
+  const explicitFamily = flags['strategy-family'] || flags.family;
+  if (explicitFamily) return { strategyId, strategyFamily: explicitFamily };
+  const manifest = discoverLabStrategies().find((item) => item.id === strategyId);
+  return {
+    strategyId,
+    strategyFamily: manifest?.family || 'edge',
+  };
+}
 
 function parseArgs(argv) {
   const flags = {};
@@ -25,10 +37,10 @@ async function main() {
   const flags = parseArgs(process.argv.slice(2));
   const preset = flags.preset || flags.p;
 
-  const strategyId = flags.strategy || flags['strategy-id'] || 'edge-sniper-v3';
+  const { strategyId, strategyFamily } = resolveStrategyContext(flags);
 
   if (flags.list) {
-    const presets = listPresets({ strategyId });
+    const presets = listPresets({ strategyId, strategyFamily });
     console.log(JSON.stringify(presets.map((item) => ({
       id: item.id,
       name: item.name,
@@ -40,11 +52,12 @@ async function main() {
   }
 
   if (!preset) {
-    throw new Error('Usage: npm run lab:run-preset -- --preset <id> [--strategy <id>] [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--daily-metrics] [--dry-run] [--list]');
+    throw new Error('Usage: npm run lab:run-preset -- --preset <id> [--strategy <id>] [--strategy-family <family>] [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--daily-metrics] [--dry-run] [--list]');
   }
 
   const result = await runLabPreset(preset, {
     strategyId,
+    strategyFamily,
     dryRun: Boolean(flags['dry-run'] || flags.dryRun),
     from: flags.from,
     to: flags.to,

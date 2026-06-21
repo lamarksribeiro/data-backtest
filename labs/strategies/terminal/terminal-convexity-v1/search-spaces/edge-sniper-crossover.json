@@ -1,0 +1,80 @@
+{
+  "name": "edge-sniper-crossover",
+  "description": "Crossover de técnicas da Edge Sniper (velocidade de book, spread estrito e momentum de distância física) aplicadas na Convexidade Terminal com janela reaberta.",
+  "variants": [
+    {
+      "id": "crossover-bid-momentum-strict",
+      "params": {
+        "entryWindowEnd": 8,
+        "requireBidMomentum": true,
+        "minBidVelocity": -0.04
+      }
+    },
+    {
+      "id": "crossover-bid-momentum-soft",
+      "params": {
+        "entryWindowEnd": 8,
+        "requireBidMomentum": true,
+        "minBidVelocity": -0.06
+      }
+    },
+    {
+      "id": "crossover-spread-08",
+      "params": {
+        "entryWindowEnd": 8,
+        "maxSpread": 0.08
+      }
+    },
+    {
+      "id": "crossover-spread-10",
+      "params": {
+        "entryWindowEnd": 8,
+        "maxSpread": 0.10
+      }
+    },
+    {
+      "id": "crossover-dist-vel-05",
+      "params": {
+        "entryWindowEnd": 8,
+        "minDistanceVelocity": 0.05
+      }
+    },
+    {
+      "id": "crossover-dist-vel-10",
+      "params": {
+        "entryWindowEnd": 8,
+        "minDistanceVelocity": 0.10
+      }
+    },
+    {
+      "id": "crossover-proj-dist-30",
+      "params": {
+        "entryWindowEnd": 8,
+        "minProjectedDistance": 30
+      }
+    },
+    {
+      "id": "crossover-combined-winrate-boost",
+      "params": {
+        "entryWindowEnd": 8,
+        "maxSpread": 0.10,
+        "requireBidMomentum": true,
+        "minBidVelocity": -0.05,
+        "minDistanceVelocity": 0.02,
+        "minMarketLag": 0.01
+      }
+    },
+    {
+      "id": "crossover-combined-ultra-strict",
+      "params": {
+        "entryWindowEnd": 8,
+        "maxSpread": 0.08,
+        "requireBidMomentum": true,
+        "minBidVelocity": -0.04,
+        "minDistanceVelocity": 0.05,
+        "minMarketLag": 0.02,
+        "minModelEdge": 0.11
+      }
+    }
+  ]
+}

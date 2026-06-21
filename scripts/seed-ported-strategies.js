@@ -25,6 +25,8 @@ import {
 } from '../src/backtestStudio/state/strategyLibrary.js';
 import { loadBootstrapLibraryEntries } from '../src/backtestStudio/strategyLibrary/bootstrapEntries.js';
 import { invalidateStrategyStatsCache } from '../src/backtestStudio/state/strategyStats.js';
+import { listPresets, resolvePresetParams } from '../labs/shared/presets.js';
+import { renderPresetGls } from '../labs/shared/renderPresetGls.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.join(__dirname, '..');
@@ -154,6 +156,94 @@ function pruneLegacyImportedVersions(db, strategyId, keepVersion = 1) {
   return removed;
 }
 
+function resolvePresetVersion(preset) {
+  if (preset.studioVersion != null) {
+    const version = Number(preset.studioVersion);
+    if (!Number.isInteger(version) || version < 1) {
+      throw new Error(`Preset ${preset.id} tem studioVersion inválido: ${preset.studioVersion}`);
+    }
+    return version;
+  }
+  const legacy = parseInt(String(preset.id).replace(/\D/g, ''), 10);
+  if (legacy >= 1) return legacy;
+  throw new Error(`Preset ${preset.id} precisa de studioVersion ou id numérico (ex: v1)`);
+}
+
+function readManifestGlsSource(manifest) {
+  const glsPath = manifest.source?.glsPath || manifest.source?.path;
+  if (glsPath && String(glsPath).endsWith('.gls')) {
+    return readFileSync(path.resolve(ROOT_DIR, glsPath), 'utf8');
+  }
+  throw new Error(`${manifest.id}: GLS source not found for lab presets`);
+}
+
+function resolveDefaultPresetVersion(manifest, presets) {
+  const fromManifest = Number(manifest.studio?.defaultVersion);
+  if (Number.isInteger(fromManifest) && fromManifest >= 1) return fromManifest;
+  const champion = presets.find((preset) => preset.role === 'champion');
+  if (champion) return resolvePresetVersion(champion);
+  return resolvePresetVersion(presets[presets.length - 1]);
+}
+
+function seedCompiledNativeFromLabPresets(db, manifest, strategy, slug) {
+  const presets = listPresets({
+    strategyFamily: manifest.family,
+    strategyId: manifest.id,
+    includeAliases: false,
+  }).sort((left, right) => resolvePresetVersion(left) - resolvePresetVersion(right));
+  if (!presets.length) return null;
+
+  const baseGls = readManifestGlsSource(manifest);
+  const versions = [];
+
+  for (const preset of presets) {
+    const versionNum = resolvePresetVersion(preset);
+    const params = resolvePresetParams(preset, manifest.strategyRoot);
+    const displayName = preset.studioName || `${manifest.name} · ${preset.name || preset.id}`;
+    const glsSource = renderPresetGls(baseGls, params, displayName);
+    const sourceCode = composeStrategyJsFromGls(glsSource);
+    const validation = validateStrategySource({ language: 'strategy-js-v1', source_code: sourceCode, db });
+    if (!validation.ok) {
+      console.warn(`[seed-strategy] skip ${slug} v${versionNum} (${preset.id}): ${validation.errors?.[0]?.message}`);
+      continue;
+    }
+    const compiled = buildCompiledArtifact(sourceCode, { bookDepth: 25, db });
+    const action = upsertStrategyVersion(db, strategy.id, versionNum, {
+      language: 'strategy-js-v1',
+      sourceCode,
+      validation,
+      compiled,
+      checksum: checksum(sourceCode),
+      notes: preset.name || preset.id,
+    });
+    versions.push({ version: versionNum, preset: preset.id, action, execution_kind: validation.execution_kind });
+    console.log(`[seed-strategy] ${slug} v${versionNum} (${preset.id}) ${action} (${validation.execution_kind})`);
+  }
+
+  const defaultVersion = resolveDefaultPresetVersion(manifest, presets);
+  const versionRow = db.prepare(`
+    SELECT id FROM strategy_versions WHERE strategy_id = ? AND version = ?
+  `).get(strategy.id, defaultVersion);
+  if (versionRow) {
+    db.prepare('UPDATE strategy_definitions SET default_version_id = ? WHERE id = ?')
+      .run(versionRow.id, strategy.id);
+  }
+
+  const removed = pruneLegacyImportedVersions(db, strategy.id, defaultVersion);
+  if (removed > 0) {
+    console.log(`[seed-strategy] ${slug} pruned ${removed} legacy preset version(s)`);
+  }
+
+  return {
+    slug,
+    presetSeed: true,
+    versions,
+    defaultVersion,
+    execution_kind: 'compiled-soa',
+    pruned: removed,
+  };
+}
+
 function resolveManifestSourceCode(manifest) {
   if (manifest.portStatus === 'compiled-native' && manifest.source?.glsPath) {
     const glsPath = path.resolve(ROOT_DIR, manifest.source.glsPath);
@@ -175,6 +265,11 @@ function seedManifest(db, manifest) {
       description: manifest.studio?.description || manifest.notes || manifest.name,
       tags: manifest.studio?.tags || [manifest.id, 'ported'],
     });
+  }
+
+  if (manifest.portStatus === 'compiled-native') {
+    const presetSeed = seedCompiledNativeFromLabPresets(db, manifest, strategy, slug);
+    if (presetSeed) return presetSeed;
   }
 
   const sourceCode = resolveManifestSourceCode(manifest);

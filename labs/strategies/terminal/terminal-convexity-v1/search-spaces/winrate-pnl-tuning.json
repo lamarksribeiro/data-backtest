@@ -1,0 +1,70 @@
+{
+  "name": "winrate-pnl-tuning",
+  "description": "Sintonia de Win Rate e PnL reabrindo a janela tardia (end=9) mas compensando com edge, probabilidade e lag rígidos.",
+  "variants": [
+    {
+      "id": "reopen-prob-38-edge-10",
+      "params": { "entryWindowEnd": 9, "minModelProb": 0.38, "minModelEdge": 0.10 }
+    },
+    {
+      "id": "reopen-prob-38-edge-12",
+      "params": { "entryWindowEnd": 9, "minModelProb": 0.38, "minModelEdge": 0.12 }
+    },
+    {
+      "id": "reopen-prob-40-edge-10",
+      "params": { "entryWindowEnd": 9, "minModelProb": 0.40, "minModelEdge": 0.10 }
+    },
+    {
+      "id": "reopen-prob-40-edge-12",
+      "params": { "entryWindowEnd": 9, "minModelProb": 0.40, "minModelEdge": 0.12 }
+    },
+    {
+      "id": "reopen-prob-42-edge-10",
+      "params": { "entryWindowEnd": 9, "minModelProb": 0.42, "minModelEdge": 0.10 }
+    },
+    {
+      "id": "reopen-prob-42-edge-12",
+      "params": { "entryWindowEnd": 9, "minModelProb": 0.42, "minModelEdge": 0.12 }
+    },
+    {
+      "id": "reopen-lag-01-prob-38-edge-10",
+      "params": { "entryWindowEnd": 9, "minMarketLag": 0.01, "minModelProb": 0.38, "minModelEdge": 0.10 }
+    },
+    {
+      "id": "reopen-lag-01-prob-38-edge-12",
+      "params": { "entryWindowEnd": 9, "minMarketLag": 0.01, "minModelProb": 0.38, "minModelEdge": 0.12 }
+    },
+    {
+      "id": "reopen-lag-01-prob-40-edge-10",
+      "params": { "entryWindowEnd": 9, "minMarketLag": 0.01, "minModelProb": 0.40, "minModelEdge": 0.10 }
+    },
+    {
+      "id": "reopen-lag-01-prob-40-edge-12",
+      "params": { "entryWindowEnd": 9, "minMarketLag": 0.01, "minModelProb": 0.40, "minModelEdge": 0.12 }
+    },
+    {
+      "id": "reopen-lag-02-prob-38-edge-10",
+      "params": { "entryWindowEnd": 9, "minMarketLag": 0.02, "minModelProb": 0.38, "minModelEdge": 0.10 }
+    },
+    {
+      "id": "reopen-lag-02-prob-38-edge-12",
+      "params": { "entryWindowEnd": 9, "minMarketLag": 0.02, "minModelProb": 0.38, "minModelEdge": 0.12 }
+    },
+    {
+      "id": "reopen-lag-02-prob-40-edge-10",
+      "params": { "entryWindowEnd": 9, "minMarketLag": 0.02, "minModelProb": 0.40, "minModelEdge": 0.10 }
+    },
+    {
+      "id": "reopen-lag-02-prob-40-edge-12",
+      "params": { "entryWindowEnd": 9, "minMarketLag": 0.02, "minModelProb": 0.40, "minModelEdge": 0.12 }
+    },
+    {
+      "id": "reopen-end-8-prob-38-edge-10",
+      "params": { "entryWindowEnd": 8, "minModelProb": 0.38, "minModelEdge": 0.10 }
+    },
+    {
+      "id": "reopen-end-8-prob-40-edge-12",
+      "params": { "entryWindowEnd": 8, "minModelProb": 0.40, "minModelEdge": 0.12 }
+    }
+  ]
+}

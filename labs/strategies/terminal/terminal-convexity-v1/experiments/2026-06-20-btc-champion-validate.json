@@ -1,0 +1,95 @@
+{
+  "name": "btc-champion-v2-validation",
+  "strategyId": "terminal-convexity-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-06-19",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "variantWorkers": 1,
+  "dailyMetrics": true,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "champion-v2",
+        "params": {
+          "entryWindowStart": 14,
+          "entryWindowEnd": 8,
+          "minModelProb": 0.36,
+          "minModelEdge": 0.09,
+          "minMarketLag": 0.0,
+          "stopIfCrossed": false,
+          "stopReverseEnabled": true,
+          "stopReverseBudgetFactor": 1.25
+        }
+      },
+      {
+        "id": "min-sigma-2",
+        "params": {
+          "entryWindowStart": 14,
+          "entryWindowEnd": 8,
+          "minModelProb": 0.36,
+          "minModelEdge": 0.09,
+          "minMarketLag": 0.0,
+          "stopIfCrossed": false,
+          "stopReverseEnabled": true,
+          "stopReverseBudgetFactor": 1.25,
+          "minSigma": 2
+        }
+      },
+      {
+        "id": "min-sigma-2-vol-50",
+        "params": {
+          "entryWindowStart": 14,
+          "entryWindowEnd": 8,
+          "minModelProb": 0.36,
+          "minModelEdge": 0.09,
+          "minMarketLag": 0.0,
+          "stopIfCrossed": false,
+          "stopReverseEnabled": true,
+          "stopReverseBudgetFactor": 1.25,
+          "minSigma": 2,
+          "volLookbackSec": 50
+        }
+      },
+      {
+        "id": "min-sigma-2-limit-1_2",
+        "params": {
+          "entryWindowStart": 14,
+          "entryWindowEnd": 8,
+          "minModelProb": 0.36,
+          "minModelEdge": 0.09,
+          "minMarketLag": 0.0,
+          "stopIfCrossed": false,
+          "stopReverseEnabled": true,
+          "stopReverseBudgetFactor": 1.25,
+          "minSigma": 2,
+          "volLookbackSec": 50,
+          "maxTerminalVol": 1.2
+        }
+      },
+      {
+        "id": "min-sigma-2-limit-0_8",
+        "params": {
+          "entryWindowStart": 14,
+          "entryWindowEnd": 8,
+          "minModelProb": 0.36,
+          "minModelEdge": 0.09,
+          "minMarketLag": 0.0,
+          "stopIfCrossed": false,
+          "stopReverseEnabled": true,
+          "stopReverseBudgetFactor": 1.25,
+          "minSigma": 2,
+          "volLookbackSec": 50,
+          "maxTerminalVol": 0.8
+        }
+      }
+    ]
+  }
+}

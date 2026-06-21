@@ -1,0 +1,102 @@
+{
+  "name": "edge-sniper-features",
+  "description": "Espaço de busca para calibrar Size Price Aware e Trailing Stop aplicados sobre o setup campeão com momentum de bid.",
+  "variants": [
+    {
+      "id": "features-baseline",
+      "params": {
+        "entryWindowEnd": 8,
+        "requireBidMomentum": true,
+        "minBidVelocity": -0.06
+      }
+    },
+    {
+      "id": "features-size-price-30",
+      "params": {
+        "entryWindowEnd": 8,
+        "requireBidMomentum": true,
+        "minBidVelocity": -0.06,
+        "sizePriceAware": true,
+        "sizePriceThreshold": 0.30,
+        "sizePriceFactor": 0.5
+      }
+    },
+    {
+      "id": "features-size-price-35",
+      "params": {
+        "entryWindowEnd": 8,
+        "requireBidMomentum": true,
+        "minBidVelocity": -0.06,
+        "sizePriceAware": true,
+        "sizePriceThreshold": 0.35,
+        "sizePriceFactor": 0.5
+      }
+    },
+    {
+      "id": "features-trail-50",
+      "params": {
+        "entryWindowEnd": 8,
+        "requireBidMomentum": true,
+        "minBidVelocity": -0.06,
+        "trailAfterBid": 0.50,
+        "trailDrop": 0.15
+      }
+    },
+    {
+      "id": "features-trail-60",
+      "params": {
+        "entryWindowEnd": 8,
+        "requireBidMomentum": true,
+        "minBidVelocity": -0.06,
+        "trailAfterBid": 0.60,
+        "trailDrop": 0.15
+      }
+    },
+    {
+      "id": "features-trail-70",
+      "params": {
+        "entryWindowEnd": 8,
+        "requireBidMomentum": true,
+        "minBidVelocity": -0.06,
+        "trailAfterBid": 0.70,
+        "trailDrop": 0.15
+      }
+    },
+    {
+      "id": "features-trail-60-drop-10",
+      "params": {
+        "entryWindowEnd": 8,
+        "requireBidMomentum": true,
+        "minBidVelocity": -0.06,
+        "trailAfterBid": 0.60,
+        "trailDrop": 0.10
+      }
+    },
+    {
+      "id": "features-combined-soft",
+      "params": {
+        "entryWindowEnd": 8,
+        "requireBidMomentum": true,
+        "minBidVelocity": -0.06,
+        "sizePriceAware": true,
+        "sizePriceThreshold": 0.35,
+        "sizePriceFactor": 0.5,
+        "trailAfterBid": 0.60,
+        "trailDrop": 0.15
+      }
+    },
+    {
+      "id": "features-combined-strict",
+      "params": {
+        "entryWindowEnd": 8,
+        "requireBidMomentum": true,
+        "minBidVelocity": -0.06,
+        "sizePriceAware": true,
+        "sizePriceThreshold": 0.30,
+        "sizePriceFactor": 0.5,
+        "trailAfterBid": 0.50,
+        "trailDrop": 0.12
+      }
+    }
+  ]
+}

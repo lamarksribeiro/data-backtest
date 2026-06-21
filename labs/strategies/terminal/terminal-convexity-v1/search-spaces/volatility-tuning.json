@@ -1,0 +1,70 @@
+{
+  "name": "volatility-tuning",
+  "description": "Tuning de minSigma, maxTerminalVol e minModelEdge para períodos ruidosos de alta volatilidade.",
+  "variants": [
+    {
+      "id": "vol-limit-1.0-edge-09",
+      "params": { "minSigma": 2, "maxTerminalVol": 1.0, "minModelEdge": 0.09 }
+    },
+    {
+      "id": "vol-limit-1.2-edge-09",
+      "params": { "minSigma": 2, "maxTerminalVol": 1.2, "minModelEdge": 0.09 }
+    },
+    {
+      "id": "vol-limit-1.4-edge-09",
+      "params": { "minSigma": 2, "maxTerminalVol": 1.4, "minModelEdge": 0.09 }
+    },
+    {
+      "id": "vol-limit-1.6-edge-09",
+      "params": { "minSigma": 2, "maxTerminalVol": 1.6, "minModelEdge": 0.09 }
+    },
+    {
+      "id": "vol-limit-1.2-edge-11",
+      "params": { "minSigma": 2, "maxTerminalVol": 1.2, "minModelEdge": 0.11 }
+    },
+    {
+      "id": "vol-limit-1.4-edge-11",
+      "params": { "minSigma": 2, "maxTerminalVol": 1.4, "minModelEdge": 0.11 }
+    },
+    {
+      "id": "vol-limit-1.6-edge-11",
+      "params": { "minSigma": 2, "maxTerminalVol": 1.6, "minModelEdge": 0.11 }
+    },
+    {
+      "id": "vol-limit-1.2-edge-13",
+      "params": { "minSigma": 2, "maxTerminalVol": 1.2, "minModelEdge": 0.13 }
+    },
+    {
+      "id": "vol-limit-1.4-edge-13",
+      "params": { "minSigma": 2, "maxTerminalVol": 1.4, "minModelEdge": 0.13 }
+    },
+    {
+      "id": "vol-limit-1.6-edge-13",
+      "params": { "minSigma": 2, "maxTerminalVol": 1.6, "minModelEdge": 0.13 }
+    },
+    {
+      "id": "sigma-8-vol-1.2",
+      "params": { "minSigma": 8, "maxTerminalVol": 1.2 }
+    },
+    {
+      "id": "sigma-8-vol-1.4",
+      "params": { "minSigma": 8, "maxTerminalVol": 1.4 }
+    },
+    {
+      "id": "sigma-8-vol-1.6",
+      "params": { "minSigma": 8, "maxTerminalVol": 1.6 }
+    },
+    {
+      "id": "sigma-8-vol-1.2-edge-11",
+      "params": { "minSigma": 8, "maxTerminalVol": 1.2, "minModelEdge": 0.11 }
+    },
+    {
+      "id": "sigma-8-vol-1.4-edge-11",
+      "params": { "minSigma": 8, "maxTerminalVol": 1.4, "minModelEdge": 0.11 }
+    },
+    {
+      "id": "sigma-8-vol-1.6-edge-11",
+      "params": { "minSigma": 8, "maxTerminalVol": 1.6, "minModelEdge": 0.11 }
+    }
+  ]
+}

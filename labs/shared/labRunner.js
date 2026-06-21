@@ -502,10 +502,11 @@ function finiteCap(value, cap) {
 }
 
 function resolveSourcePath(source, strategyRoot) {
-  if (!source?.path) throw new Error('strategy.source.path is required');
-  const fromRoot = path.resolve(source.path);
+  const sourcePath = source?.path || source?.glsPath;
+  if (!sourcePath) throw new Error('strategy.source.path or strategy.source.glsPath is required');
+  const fromRoot = path.resolve(sourcePath);
   if (fromRoot.startsWith(process.cwd())) return fromRoot;
-  return path.resolve(strategyRoot, source.path);
+  return path.resolve(strategyRoot, sourcePath);
 }
 
 function resolveReference(reference, experimentDir, strategyRoot) {

@@ -258,7 +258,17 @@ export default strategy({
     stopReverseMinLiquidityRatio: 0.5,
     stopReverseMinBid: 0.001,
     stopReverseBudgetMode: "same-cost",
-    stopReverseBudgetFactor: 1,
+    stopReverseBudgetFactor: 1.25,
+    entryWindowExcludeStart: 13,
+    entryWindowExcludeEnd: 10,
+    minAheadDistDOWN: 30,
+    minModelProbDOWN: 0.38,
+    minModelEdgeDOWN: 0.11,
+    sizePriceAware: false,
+    sizePriceThreshold: 0.30,
+    sizePriceFactor: 0.5,
+    trailAfterBid: 0,
+    trailDrop: 0.15,
   },
 
   onEventStart({ state }) {
@@ -319,17 +329,32 @@ export default strategy({
             state.closed = profited.closed;
             trace.mark("exit", { "reason": "profit_exit", "price": params.profitExitBid });
           }
+        } else if (Number(params.trailAfterBid ?? 0) > 0 && state.maxBid >= Number(params.trailAfterBid) && state.maxBid - bid >= Number(params.trailDrop ?? 0.15)) {
+          const trailed = orders.exit({ "price": bid, "reason": "trail" });
+          if (trailed) {
+            state.closed = trailed.closed;
+            trace.mark("exit", { "reason": "trail", "price": bid });
+          }
         } else {
-          if (params.stopIfCrossed) {
-            state.signedDistance = (tick.underlyingPrice - event.priceToBeat);
-            if ((side == "DOWN")) {
-              state.signedDistance = (event.priceToBeat - tick.underlyingPrice);
+          state.signedDistance = tick.underlyingPrice - event.priceToBeat;
+          if (side == "DOWN") {
+            state.signedDistance = event.priceToBeat - tick.underlyingPrice;
+          }
+          state.lateFlipExitOn = params.lateFlipExitEnabled == true || params.lateFlipExitEnabled == 1;
+          if (state.lateFlipExitOn && secsLeft <= params.lateFlipExitSec && state.signedDistance <= params.lateFlipExitCrossDist && bid >= params.stopMinBid) {
+            const lateFlipped = orders.exit({ "price": bid, "reason": "late_flip_exit" });
+            if (lateFlipped) {
+              state.closed = lateFlipped.closed;
+              trace.mark("exit", { "reason": "late_flip_exit", "price": bid });
             }
-            if (((state.signedDistance <= params.stopCrossDist) && (bid >= params.stopMinBid))) {
-              const stopped = orders.exit({ "price": bid, "reason": "cross_stop" });
-              if (stopped) {
-                state.closed = stopped.closed;
-                trace.mark("exit", { "reason": "cross_stop", "price": bid });
+          } else {
+            if (params.stopIfCrossed) {
+              if (((state.signedDistance <= params.stopCrossDist) && (bid >= params.stopMinBid))) {
+                const stopped = orders.exit({ "price": bid, "reason": "cross_stop" });
+                if (stopped) {
+                  state.closed = stopped.closed;
+                  trace.mark("exit", { "reason": "cross_stop", "price": bid });
+                }
               }
             }
           }
@@ -349,12 +374,16 @@ export default strategy({
           state.lastCandidateAsk = best.ask;
           state.lastCandidateEdge = best.edge;
           state.lastCandidateProbability = best.probability;
+          state.orderValueCap = params.maxOrderValue;
+          if (params.sizePriceAware && best.ask > params.sizePriceThreshold) {
+            state.orderValueCap = params.maxOrderValue * params.sizePriceFactor;
+          }
           const maxFillPrice = math.min(params.maxAsk, (best.ask + params.entrySlippageMax));
-          const liq = book.liquidityRatio(best.side, tick, params.maxOrderValue, maxFillPrice);
+          const liq = book.liquidityRatio(best.side, tick, state.orderValueCap, maxFillPrice);
           state.lastLiquidityRatio = liq;
           state.lastNoEntryReason = "liquidity_below_min";
           if ((liq >= params.minLiquidityRatio)) {
-            const budget = math.min(risk.capOrderValue(params.maxOrderValue, params.maxOrderValue), (params.walletSize + runState.totalPnl));
+            const budget = math.min(risk.capOrderValue(state.orderValueCap, params.maxOrderValue), (params.walletSize + runState.totalPnl));
             state.lastNoEntryReason = "entry_rejected";
             const bought = orders.enter(best.side, { "price": best.ask, "maxPrice": maxFillPrice, "budget": budget, "minShares": params.minShares, "minLiquidityRatio": params.minLiquidityRatio, "tick": tick, "reason": "entry" });
             if (bought) {

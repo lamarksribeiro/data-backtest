@@ -1,0 +1,21 @@
+{
+  "id": "v1-legacy",
+  "legacyPresetId": "v1",
+  "underlying": "BTC",
+  "studioVersion": 1,
+  "name": "Default (Legacy)",
+  "studioSlug": "tc-v1-legacy",
+  "studioName": "Terminal Convexity V1 · Legacy",
+  "role": "baseline",
+  "description": "Parâmetros originais pré-laboratório (cross-stop ativo, sem stop-reverse).",
+  "tags": ["btc", "legacy", "baseline"],
+  "params": {
+    "entryWindowStart": 15,
+    "entryWindowEnd": 8,
+    "minModelProb": 0.32,
+    "minModelEdge": 0.08,
+    "minMarketLag": -0.02,
+    "stopIfCrossed": true,
+    "stopReverseEnabled": false
+  }
+}

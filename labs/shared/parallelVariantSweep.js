@@ -83,10 +83,19 @@ function splitVariants(variants, workerCount) {
   return chunks.filter((chunk) => chunk.length > 0);
 }
 
+function cloneRequestForWorker(request) {
+  const {
+    db: _db,
+    strategyMeta: _strategyMeta,
+    ...cloneable
+  } = request || {};
+  return cloneable;
+}
+
 function runWorker({ workerIndex, request, sharedColumnSet, variants, onProgress }) {
   return new Promise((resolve, reject) => {
     const worker = new Worker(new URL('./variantSweepWorker.js', import.meta.url), {
-      workerData: { workerIndex, request, sharedColumnSet, variants },
+      workerData: { workerIndex, request: cloneRequestForWorker(request), sharedColumnSet, variants },
     });
     worker.on('message', (msg) => {
       if (msg?.type === 'progress') {

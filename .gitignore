@@ -11,3 +11,6 @@ dist/
 /.tmp/
 /reports/labs/
 /reports/bench/
+/agent-tools/
+/terminals/
+/mcps/

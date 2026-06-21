@@ -2,7 +2,7 @@
   "id": "terminal-convexity-v1",
   "name": "Terminal Convexity V1",
   "family": "terminal",
-  "status": "candidate",
+  "status": "champion",
   "kind": "compiled-soa",
   "assets": [
     "BTC"
@@ -14,6 +14,7 @@
   "defaultBookDepth": 25,
   "source": {
     "type": "compiled-soa",
+    "path": "src/backtestStudio/gls/strategies/terminalConvexityV1.gls",
     "glsPath": "src/backtestStudio/gls/strategies/terminalConvexityV1.gls",
     "modelsSlug": "terminal-convexity-models",
     "modelsVersion": 1
@@ -30,7 +31,7 @@
       "ported",
       "btc"
     ],
-    "defaultVersion": 1
+    "defaultVersion": 2
   },
   "notes": "compiled-soa via terminalConvexityV1.gls + terminal-convexity-models@1. Paridade alvo: terminal-convexity-runner."
 }

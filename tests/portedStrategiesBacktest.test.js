@@ -61,6 +61,36 @@ test('seedPortedStrategies seeds all promoted ported and compiled-native strateg
   }
 });
 
+test('terminal-convexity-v1 seeds lab presets as studio versions', () => {
+  const db = openStateDatabase(':memory:');
+  bindStrategyLibraryDatabase(db);
+  seedPortedStrategies(db);
+
+  const strategy = getStrategyBySlug(db, 'terminal-convexity-v1');
+  assert.ok(strategy, 'terminal-convexity-v1');
+  const versions = db.prepare(`
+    SELECT version, notes FROM strategy_versions
+    WHERE strategy_id = ?
+    ORDER BY version ASC
+  `).all(strategy.id);
+  assert.equal(versions.length, 2);
+  assert.equal(versions[0].notes, 'Default (Legacy)');
+  assert.equal(versions[1].notes, 'BTC · Champion');
+
+  const defaultRow = db.prepare('SELECT default_version_id FROM strategy_definitions WHERE id = ?').get(strategy.id);
+  const defaultVersion = db.prepare('SELECT version FROM strategy_versions WHERE id = ?').get(defaultRow.default_version_id);
+  assert.equal(defaultVersion.version, 2);
+
+  const champion = db.prepare(`
+    SELECT validation_json FROM strategy_versions
+    WHERE strategy_id = ? AND version = 2
+  `).get(strategy.id);
+  const validation = JSON.parse(champion.validation_json);
+  assert.equal(validation.execution_kind, 'compiled-soa');
+  assert.equal(validation.params_schema?.lateFlipExitEnabled?.default, true);
+  assert.equal(validation.params_schema?.stopIfCrossed?.default, false);
+});
+
 test('every seeded ported strategy resolves book dataset and runs synthetic ticks', async () => {
   const db = openStateDatabase(':memory:');
   bindStrategyLibraryDatabase(db);

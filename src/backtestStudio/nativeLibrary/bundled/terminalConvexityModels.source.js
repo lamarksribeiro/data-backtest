@@ -138,7 +138,12 @@ function createLibrary(lib) {
     const z = projectedDistance / Math.max(sigma, 0.000001);
     const probability = libClamp(lib.math.normalCdf(z), 0.001, 0.999);
     const theta = normalPdf(z) * Math.abs(projectedDistance) / (2 * Math.max(sigma, 0.000001) * timeRemainingSec);
-    return { probability, theta, sigma, signedDistance, drift, projectedDistance, z };
+    const fastSignedDistance = signedSide * (sampleUnderlyingValue(fastSample) - priceToBeat);
+    const distanceVelocity = (signedDistance - fastSignedDistance) / fastSec;
+    return {
+      probability, theta, sigma, signedDistance, drift, fastDrift, slowDrift, projectedDistance, z,
+      distanceVelocity, vol,
+    };
   }
 
   function scoreTerminalSides(samples, tick, event, params = {}) {
@@ -182,6 +187,10 @@ function createLibrary(lib) {
           sigma: model.sigma,
           signedDistance: model.signedDistance,
           drift: model.drift,
+          fastDrift: model.fastDrift,
+          distanceVelocity: model.distanceVelocity,
+          projectedDistance: model.projectedDistance,
+          vol: model.vol,
           bidVelocity,
           convexityScore,
         };
@@ -190,17 +199,37 @@ function createLibrary(lib) {
         if (!Number.isFinite(candidate.ask) || !Number.isFinite(candidate.bid)) return false;
         if (candidate.timeRemainingSec > Number(params.entryWindowStart ?? 15)) return false;
         if (candidate.timeRemainingSec < Number(params.entryWindowEnd ?? 8)) return false;
-        if (candidate.signedDistance < Number(params.minAheadDist ?? 25)) return false;
+
+        // Filtro de exclusão temporal (zona cinzenta)
+        if (Number(params.entryWindowExcludeStart ?? 0) > 0 && Number(params.entryWindowExcludeEnd ?? 0) > 0) {
+          if (candidate.timeRemainingSec <= Number(params.entryWindowExcludeStart) && candidate.timeRemainingSec >= Number(params.entryWindowExcludeEnd)) {
+            return false;
+          }
+        }
+
+        // Filtros de entrada assimétricos (DOWN vs UP)
+        if (candidate.side === 'DOWN') {
+          if (candidate.signedDistance < Number(params.minAheadDistDOWN ?? params.minAheadDist ?? 25)) return false;
+          if (candidate.modelProbability < Number(params.minModelProbDOWN ?? params.minModelProb ?? 0.32)) return false;
+          if (candidate.modelEdge < Number(params.minModelEdgeDOWN ?? params.minModelEdge ?? 0.08)) return false;
+        } else {
+          if (candidate.signedDistance < Number(params.minAheadDist ?? 25)) return false;
+          if (candidate.modelProbability < Number(params.minModelProb ?? 0.32)) return false;
+          if (candidate.modelEdge < Number(params.minModelEdge ?? 0.08)) return false;
+        }
+
         if (candidate.signedDistance > Number(params.maxAheadDist ?? 55)) return false;
         if (candidate.ask < Number(params.minAsk ?? 0.04)) return false;
         if (candidate.ask > Number(params.maxAsk ?? 0.45)) return false;
         if (Number.isFinite(candidate.spread) && candidate.spread > Number(params.maxSpread ?? 0.14)) return false;
-        if (candidate.modelProbability < Number(params.minModelProb ?? 0.32)) return false;
-        if (candidate.modelEdge < Number(params.minModelEdge ?? 0.08)) return false;
         if (candidate.marketLag < Number(params.minMarketLag ?? -0.02)) return false;
         if (candidate.theta < Number(params.minTheta ?? 0)) return false;
         const requireBidMomentum = params.requireBidMomentum === true || params.requireBidMomentum === 'true' || params.requireBidMomentum === 1;
         if (requireBidMomentum && candidate.bidVelocity < Number(params.minBidVelocity ?? -0.08)) return false;
+        if (Number(params.minDrift ?? 0) > 0 && candidate.drift < Number(params.minDrift)) return false;
+        if (Number(params.minDistanceVelocity ?? 0) > 0 && candidate.distanceVelocity < Number(params.minDistanceVelocity)) return false;
+        if (Number(params.minProjectedDistance ?? 0) > 0 && candidate.projectedDistance < Number(params.minProjectedDistance)) return false;
+        if (Number(params.maxTerminalVol ?? 0) > 0 && candidate.vol > Number(params.maxTerminalVol)) return false;
         return true;
       })
       .sort((left, right) => right.convexityScore - left.convexityScore || right.modelEdge - left.modelEdge);

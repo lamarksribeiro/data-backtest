@@ -1,0 +1,102 @@
+{
+  "name": "hypothesis-failure-fixes",
+  "description": "Variantes direcionadas pelos padrões de falha: cross_stop, expiry_loss, marketLag.",
+  "variants": [
+    {
+      "id": "no-cross-stop",
+      "params": { "stopIfCrossed": false }
+    },
+    {
+      "id": "cross-stop-loose",
+      "params": { "stopCrossDist": -6 }
+    },
+    {
+      "id": "market-lag-positive",
+      "params": { "minMarketLag": 0.0 }
+    },
+    {
+      "id": "market-lag-strict",
+      "params": { "minMarketLag": 0.02 }
+    },
+    {
+      "id": "tighter-edge",
+      "params": { "minModelEdge": 0.10, "minModelProb": 0.38 }
+    },
+    {
+      "id": "tighter-edge-lag",
+      "params": { "minModelEdge": 0.10, "minModelProb": 0.38, "minMarketLag": 0.0 }
+    },
+    {
+      "id": "stop-reverse-on",
+      "params": { "stopReverseEnabled": true, "stopReverseBudgetFactor": 1.25 }
+    },
+    {
+      "id": "no-cross-plus-reverse",
+      "params": { "stopIfCrossed": false, "stopReverseEnabled": true }
+    },
+    {
+      "id": "profit-exit-92",
+      "params": { "profitExitBid": 0.92 }
+    },
+    {
+      "id": "profit-exit-88",
+      "params": { "profitExitBid": 0.88 }
+    },
+    {
+      "id": "window-late",
+      "params": { "entryWindowStart": 13, "entryWindowEnd": 9 }
+    },
+    {
+      "id": "window-early",
+      "params": { "entryWindowStart": 11, "entryWindowEnd": 7 }
+    },
+    {
+      "id": "dist-strict",
+      "params": { "minAheadDist": 30, "maxAheadDist": 50 }
+    },
+    {
+      "id": "bid-momentum",
+      "params": { "requireBidMomentum": true, "minBidVelocity": -0.04 }
+    },
+    {
+      "id": "champion-v1",
+      "params": {
+        "stopIfCrossed": false,
+        "minModelEdge": 0.10,
+        "minModelProb": 0.38,
+        "minMarketLag": 0.0,
+        "minAheadDist": 28,
+        "entryWindowStart": 14,
+        "entryWindowEnd": 9,
+        "maxSpread": 0.12
+      }
+    },
+    {
+      "id": "champion-v2",
+      "params": {
+        "stopIfCrossed": false,
+        "stopReverseEnabled": true,
+        "stopReverseBudgetFactor": 1.25,
+        "minModelEdge": 0.09,
+        "minModelProb": 0.36,
+        "minMarketLag": 0.0,
+        "entryWindowStart": 14,
+        "entryWindowEnd": 8
+      }
+    },
+    {
+      "id": "champion-v3",
+      "params": {
+        "stopCrossDist": -5,
+        "minModelEdge": 0.10,
+        "minModelProb": 0.40,
+        "minMarketLag": 0.01,
+        "minAheadDist": 30,
+        "maxAsk": 0.42,
+        "maxSpread": 0.11,
+        "requireBidMomentum": true,
+        "minBidVelocity": -0.06
+      }
+    }
+  ]
+}
