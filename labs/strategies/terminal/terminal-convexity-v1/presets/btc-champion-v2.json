@@ -1,0 +1,39 @@
+{
+  "id": "btc-champion-v2",
+  "underlying": "BTC",
+  "studioVersion": 2,
+  "name": "BTC · Champion V2",
+  "studioSlug": "tc-btc-champion-v2",
+  "studioName": "Terminal Convexity V1 · BTC · Champion V2",
+  "role": "candidate",
+  "description": "Campeão do laboratório V2 2026-06-20: foco exclusivo na abertura (janela 14s-13s) para evitar ruídos de junho.",
+  "tags": ["btc", "candidate", "depth25", "lab-optimized"],
+  "labVariantId": "v2-late-flip",
+  "labSummary": {
+    "totalPnl": 496.63,
+    "profitFactor": 2.65,
+    "positiveDays": 24,
+    "totalDays": 47,
+    "entries": 49,
+    "winRate": 43.59,
+    "source": "crossover-v2 2026-06-20"
+  },
+  "params": {
+    "entryWindowStart": 14,
+    "entryWindowEnd": 13,
+    "minModelProb": 0.36,
+    "minModelEdge": 0.09,
+    "minMarketLag": 0.0,
+    "stopIfCrossed": false,
+    "stopReverseEnabled": true,
+    "stopReverseBudgetFactor": 1.25,
+    "lateFlipExitEnabled": true,
+    "lateFlipExitSec": 4,
+    "lateFlipExitCrossDist": 0,
+    "entryWindowExcludeStart": 13,
+    "entryWindowExcludeEnd": 10,
+    "minAheadDistDOWN": 30,
+    "minModelProbDOWN": 0.38,
+    "minModelEdgeDOWN": 0.11
+  }
+}

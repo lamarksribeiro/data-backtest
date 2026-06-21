@@ -1,8 +1,9 @@
 {
   "strategyId": "terminal-convexity-v1",
-  "updatedAt": "2026-06-20",
+  "updatedAt": "2026-06-21",
   "presets": [
     { "id": "v1-legacy", "underlying": "BTC", "studioVersion": 1, "role": "baseline" },
-    { "id": "btc-champion", "underlying": "BTC", "studioVersion": 2, "role": "champion" }
+    { "id": "btc-champion-v2", "underlying": "BTC", "studioVersion": 2, "role": "candidate" },
+    { "id": "btc-champion", "underlying": "BTC", "studioVersion": 3, "role": "champion" }
   ]
 }

@@ -1,10 +1,10 @@
 {
   "id": "btc-champion",
   "underlying": "BTC",
-  "studioVersion": 2,
-  "name": "BTC · Champion",
+  "studioVersion": 3,
+  "name": "BTC · Champion V3",
   "studioSlug": "tc-btc-champion",
-  "studioName": "Terminal Convexity V1 · BTC · Champion",
+  "studioName": "Terminal Convexity V1 · BTC · Champion V3",
   "role": "champion",
   "description": "Campeão do laboratório V3 2026-06-21: stop-reverse ativo, cross-stop desabilitado, momentum do book (Edge Sniper) e Size Price Aware integrados.",
   "tags": ["btc", "champion", "depth25", "lab-optimized", "crossover-v3"],

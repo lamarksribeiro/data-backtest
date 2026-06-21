@@ -31,7 +31,7 @@
       "ported",
       "btc"
     ],
-    "defaultVersion": 2
+    "defaultVersion": 3
   },
   "notes": "compiled-soa via terminalConvexityV1.gls + terminal-convexity-models@1. Paridade alvo: terminal-convexity-runner."
 }
