@@ -1,0 +1,35 @@
+{
+  "id": "fusion-five-v1",
+  "name": "Fusion Five V1",
+  "family": "portfolio",
+  "status": "candidate",
+  "kind": "portfolio-runner",
+  "assets": [
+    "BTC"
+  ],
+  "intervals": [
+    "5m"
+  ],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "library-runner",
+    "runnerSlug": "fusion-five-runner",
+    "runnerVersion": 1
+  },
+  "portStatus": "ported",
+  "sourceRepo": "polymarket-test",
+  "sourceService": "fusionFiveBacktest.js",
+  "promotedToStudio": true,
+  "studioSlug": "fusion-five-v1",
+  "studio": {
+    "description": "Fusion Five V1 portado do polymarket-test via library-runner.",
+    "tags": [
+      "fusion-five-v1",
+      "ported",
+      "btc"
+    ],
+    "defaultVersion": 1
+  },
+  "notes": "Runner: fusion-five-runner@1. Origem read-only: polymarket-test/fusionFiveBacktest.js"
+}

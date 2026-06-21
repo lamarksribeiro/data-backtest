@@ -1,4 +1,10 @@
 import { openBacktestTickSession, queryTicks } from '../query/duckdbQuery.js';
+import {
+  bestPrice,
+  buildSortedBookLevels,
+  finiteOrNull,
+  levelsFromFlattened,
+} from '../backtestStudio/strategyLibrary/runtime/bookLevels.js';
 
 const DEFAULT_BATCH_SIZE = 10_000;
 
@@ -73,41 +79,64 @@ export async function* getTicksForBacktestBatches(db, opts = {}) {
   }
 }
 
-export function toLegacyBacktestTick(row, { index = 0, bookDepth = 25 } = {}) {
+/**
+ * @param {'both'|'parsed'|'string'} bookFormat
+ *   - both: JSON strings + _parsed_* (legacy duckdb batches)
+ *   - parsed: sorted arrays on book fields (fast library-runner path)
+ *   - string: JSON strings only
+ */
+export function toLegacyBacktestTick(row, {
+  index = 0,
+  bookDepth = 25,
+  bookFormat = 'both',
+  target = null,
+} = {}) {
   const upBookAsks = levelsFromFlattened(row, 'up_ask', bookDepth);
   const upBookBids = levelsFromFlattened(row, 'up_bid', bookDepth);
   const downBookAsks = levelsFromFlattened(row, 'down_ask', bookDepth);
   const downBookBids = levelsFromFlattened(row, 'down_bid', bookDepth);
 
-  const upBookAsksParsed = upBookAsks.map(l => ({ price: l.price, size: l.size, key: String(l.price) }));
-  Object.defineProperty(upBookAsksParsed, '_isParsed', { value: true, enumerable: false });
-  const upBookBidsParsed = upBookBids.map(l => ({ price: l.price, size: l.size, key: String(l.price) }));
-  Object.defineProperty(upBookBidsParsed, '_isParsed', { value: true, enumerable: false });
-  const downBookAsksParsed = downBookAsks.map(l => ({ price: l.price, size: l.size, key: String(l.price) }));
-  Object.defineProperty(downBookAsksParsed, '_isParsed', { value: true, enumerable: false });
-  const downBookBidsParsed = downBookBids.map(l => ({ price: l.price, size: l.size, key: String(l.price) }));
-  Object.defineProperty(downBookBidsParsed, '_isParsed', { value: true, enumerable: false });
+  const upBookAsksParsed = buildSortedBookLevels(upBookAsks, 'ask');
+  const upBookBidsParsed = buildSortedBookLevels(upBookBids, 'bid');
+  const downBookAsksParsed = buildSortedBookLevels(downBookAsks, 'ask');
+  const downBookBidsParsed = buildSortedBookLevels(downBookBids, 'bid');
 
-  const tick = {
-    id: index + 1,
-    event_start: row.event_start,
-    event_end: row.event_end,
-    condition_id: row.condition_id,
-    ts: row.ts,
-    btc_price: row.underlying_price,
-    btc_binance: null,
-    price_to_beat: row.price_to_beat,
-    up_price: row.up_price,
-    down_price: row.down_price,
-    up_best_bid: bestPrice(upBookBids, 'bid') ?? row.up_best_bid,
-    up_best_ask: bestPrice(upBookAsks, 'ask') ?? row.up_best_ask,
-    down_best_bid: bestPrice(downBookBids, 'bid') ?? row.down_best_bid,
-    down_best_ask: bestPrice(downBookAsks, 'ask') ?? row.down_best_ask,
-    up_book_asks: JSON.stringify(upBookAsks),
-    up_book_bids: JSON.stringify(upBookBids),
-    down_book_asks: JSON.stringify(downBookAsks),
-    down_book_bids: JSON.stringify(downBookBids),
+  const useParsedBooks = bookFormat === 'parsed';
+  const useStringBooks = bookFormat === 'string' || bookFormat === 'both';
+
+  const tick = target ?? {
+    _parsed_up_book_asks: upBookAsksParsed,
+    _parsed_up_book_bids: upBookBidsParsed,
+    _parsed_down_book_asks: downBookAsksParsed,
+    _parsed_down_book_bids: downBookBidsParsed,
   };
+
+  tick.id = index + 1;
+  tick.event_start = row.event_start;
+  tick.event_end = row.event_end;
+  tick.condition_id = row.condition_id;
+  tick.ts = row.ts;
+  tick.btc_price = row.underlying_price;
+  tick.btc_binance = null;
+  tick.price_to_beat = row.price_to_beat;
+  tick.up_price = row.up_price;
+  tick.down_price = row.down_price;
+  tick.up_best_bid = bestPrice(upBookBids, 'bid') ?? row.up_best_bid;
+  tick.up_best_ask = bestPrice(upBookAsks, 'ask') ?? row.up_best_ask;
+  tick.down_best_bid = bestPrice(downBookBids, 'bid') ?? row.down_best_bid;
+  tick.down_best_ask = bestPrice(downBookAsks, 'ask') ?? row.down_best_ask;
+
+  if (useParsedBooks) {
+    tick.up_book_asks = upBookAsksParsed;
+    tick.up_book_bids = upBookBidsParsed;
+    tick.down_book_asks = downBookAsksParsed;
+    tick.down_book_bids = downBookBidsParsed;
+  } else if (useStringBooks) {
+    tick.up_book_asks = JSON.stringify(upBookAsks);
+    tick.up_book_bids = JSON.stringify(upBookBids);
+    tick.down_book_asks = JSON.stringify(downBookAsks);
+    tick.down_book_bids = JSON.stringify(downBookBids);
+  }
 
   tick._parsed_up_book_asks = upBookAsksParsed;
   tick._parsed_up_book_bids = upBookBidsParsed;
@@ -115,33 +144,13 @@ export function toLegacyBacktestTick(row, { index = 0, bookDepth = 25 } = {}) {
   tick._parsed_down_book_bids = downBookBidsParsed;
 
   if (row._tsMs !== undefined) tick._tsMs = row._tsMs;
+  else delete tick._tsMs;
   if (row._eventStartMs !== undefined) tick._eventStartMs = row._eventStartMs;
+  else delete tick._eventStartMs;
   if (row._eventEndMs !== undefined) tick._eventEndMs = row._eventEndMs;
+  else delete tick._eventEndMs;
 
   return tick;
-}
-
-function levelsFromFlattened(row, prefix, depth) {
-  const levels = [];
-  for (let i = 1; i <= depth; i += 1) {
-    const price = finiteOrNull(row[`${prefix}_px_${i}`]);
-    const size = finiteOrNull(row[`${prefix}_sz_${i}`]);
-    if (price == null || size == null || size <= 0) continue;
-    levels.push({ price, size });
-  }
-  return levels;
-}
-
-function bestPrice(levels, direction) {
-  const prices = levels.map((level) => level.price).filter(Number.isFinite);
-  if (!prices.length) return null;
-  return direction === 'bid' ? Math.max(...prices) : Math.min(...prices);
-}
-
-function finiteOrNull(value) {
-  if (value == null) return null;
-  const numberValue = Number(value);
-  return Number.isFinite(numberValue) ? numberValue : null;
 }
 
 function normalizeBatchSize(value) {

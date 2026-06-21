@@ -234,11 +234,15 @@ Parâmetros da estratégia podem ser passados como JSON:
 npm run backtest:run -- --strategy-id 1 --strategy-version-id 1 --from 2026-05-01 --to 2026-05-02 --underlying BTC --interval 5m --book-depth 25 --params '{"minDistanceAbs":40,"maxOrderValue":10}'
 ```
 
-## Research Labs e adapter legado
+## Research Labs
 
-Research Labs externos (ex.: scripts do `polymarket-test`) consomem o lakehouse via adapter ou query layer. Estratégias candidatas entram no Backtest Studio quando precisam ser salvas, versionadas e comparadas.
+Pesquisa e backtest acontecem **somente** no `data-backtest` (labs + Backtest Studio + lakehouse). O repositório `polymarket-test` **não é mais usado em runtime** — serve apenas como **fonte de leitura** para portar estratégias, parâmetros e documentação já existentes.
 
-Para adaptar códigos legados do `polymarket-test`, crie o adapter com o state DB aberto e use as assinaturas equivalentes:
+Estratégias candidatas entram no Backtest Studio quando precisam ser salvas, versionadas e comparadas.
+
+O adapter legado abaixo existe só para **validar paridade durante a migração** (comparar um run novo no lakehouse com o comportamento documentado no código antigo). Não é o caminho operacional de pesquisa:
+
+Para comparar código legado ainda não portado, use o adapter com o state DB aberto:
 
 ```js
 import { createPolymarketTestAdapter } from './src/legacy/polymarketTestAdapter.js';
@@ -251,17 +255,8 @@ for await (const batch of adapter.getTicksForBacktestBatches(from, to, 1000)) {
 }
 ```
 
-Primeiro alvo legado com source opt-in: `polymarket-test/scripts/tune-bs-lead.js`.
-
-```bash
-cd ../polymarket-test
-npm run tune:bs-lead:lakehouse -- --from 2026-05-01 --to 2026-05-02 --book-depth 25
-```
-
-Sem `--data-source lakehouse`, o script continua usando Postgres.
-
 ## Projetos relacionados
 
 - `data-colector` — coleta OLTP e API administrativa
 - `data-robot` — robô de trading real
-- `polymarket-test` — Research Lab legado e referência de paridade (não faz parte do Backtest Studio)
+- `polymarket-test` — **arquivo morto / somente leitura** para port de estratégias; não executar backtests nem pesquisa nele

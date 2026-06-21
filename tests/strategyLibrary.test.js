@@ -10,6 +10,7 @@ import {
   getStrategyLibraryBySlug,
 } from '../src/backtestStudio/state/strategyLibrary.js';
 import { createStandardLibrary } from '../src/backtestStudio/gls/standardLibrary.js';
+import { resolveNativeModels, ensureStrategyLibraryDatabase } from '../src/backtestStudio/nativeLibrary/registry.js';
 import { composeStrategyJsFromGls } from '../src/backtestStudio/strategyJs/composeStrategyJs.js';
 import { applyEmbeddedModelsToLib } from '../src/backtestStudio/strategyJs/embeddedModels.js';
 
@@ -22,6 +23,22 @@ test('migrateStrategyV6 does not seed strategy-specific libraries in SQLite', ()
     assert.ok(!slugs.includes('edge-sniper-models'));
     assert.ok(!slugs.includes('gamma-ladder-engine'));
     assert.equal(getStrategyLibraryBySlug(db, 'edge-sniper-models'), null);
+  } finally {
+    closeStateDatabase(db);
+  }
+});
+
+test('createStandardLibrary resolves bundled edge-sniper-models without SQLite seed', () => {
+  const dir = path.join(os.tmpdir(), `strategy-library-bundled-${Date.now()}`);
+  const db = openStateDatabase(path.join(dir, 'state.db'));
+  try {
+    ensureStrategyLibraryDatabase(db);
+    assert.equal(getStrategyLibraryBySlug(db, 'edge-sniper-models'), null);
+    const lib = createStandardLibrary({
+      nativeLibraries: [{ slug: 'edge-sniper-models', version: 1 }],
+    });
+    assert.equal(typeof lib.model.scoreSides, 'function');
+    assert.equal(typeof resolveNativeModels(lib, 'edge-sniper-models', 1)?.scoreSides, 'function');
   } finally {
     closeStateDatabase(db);
   }

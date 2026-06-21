@@ -1,0 +1,35 @@
+{
+  "id": "boundary-coherence-entropy-deviation-v1",
+  "name": "BCED V1",
+  "family": "edge",
+  "status": "candidate",
+  "kind": "library-runner",
+  "assets": [
+    "BTC"
+  ],
+  "intervals": [
+    "5m"
+  ],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "library-runner",
+    "runnerSlug": "bced-runner",
+    "runnerVersion": 1
+  },
+  "portStatus": "ported",
+  "sourceRepo": "polymarket-test",
+  "sourceService": "boundaryCoherenceEntropyDeviationBacktest.js",
+  "promotedToStudio": true,
+  "studioSlug": "boundary-coherence-entropy-deviation-v1",
+  "studio": {
+    "description": "BCED V1 portado do polymarket-test via library-runner.",
+    "tags": [
+      "boundary-coherence-entropy-deviation-v1",
+      "ported",
+      "btc"
+    ],
+    "defaultVersion": 1
+  },
+  "notes": "Runner: bced-runner@1. Origem read-only: polymarket-test/boundaryCoherenceEntropyDeviationBacktest.js"
+}

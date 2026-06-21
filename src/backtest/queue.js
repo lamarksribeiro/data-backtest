@@ -10,6 +10,7 @@ import {
   listBacktestRunsWaitingForJob,
   listQueuedBacktestRuns,
   markBacktestRunRunning,
+  minimalResultForRequest,
   updateBacktestRunProgress,
 } from '../state/backtestRuns.js';
 
@@ -68,7 +69,7 @@ export function createBacktestQueue({ config, db, onEvent }) {
 
   function startWorker(run) {
     const startedAt = Date.now();
-    const request = pendingRequests.get(run.id) || JSON.parse(run.dataset_request_json || '{}');
+    const request = pendingRequests.get(run.id) || parseStoredDatasetRequest(db, run);
     pendingRequests.delete(run.id);
     const running = markBacktestRunRunning(db, run.id, { startedAt });
     if (!running) return;
@@ -191,21 +192,9 @@ export function createBacktestQueue({ config, db, onEvent }) {
 
   function handleFailure(runId, request, startedAt, error) {
     stopActiveRunner(runId);
-    const failedResult = {
-      strategy: request.strategyLabel || request.strategy,
-      source: 'lakehouse',
-      underlying: request.underlying,
-      interval: request.interval,
-      bookDepth: request.bookDepth,
-      from: new Date(request.from).toISOString(),
-      to: new Date(request.to).toISOString(),
-      ticks: 0,
-      batches: 0,
+    const failedResult = minimalResultForRequest(request, {
       summary: { failed: true, error },
-      events: [],
-      equity: [],
-      log: [],
-    };
+    });
     let run = null;
     try {
       run = failBacktestRun(db, runId, {
@@ -271,4 +260,15 @@ function safeUpdateBacktestRunProgress(db, runId, progress) {
 
 function isClosedDbError(err) {
   return err?.code === 'ERR_INVALID_STATE' && /database is not open/i.test(err.message || '');
+}
+
+function parseStoredDatasetRequest(db, run) {
+  const raw = run.dataset_request_json
+    ?? db.prepare('SELECT dataset_request_json FROM backtest_runs WHERE id = ?').get(run.id)?.dataset_request_json;
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
 }

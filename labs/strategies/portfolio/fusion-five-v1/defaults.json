@@ -1,0 +1,24 @@
+{
+  "walletSize": 100,
+  "selectionMode": "stack",
+  "includeModules": [
+    "terminal",
+    "cofre",
+    "impulse",
+    "edge",
+    "gamma"
+  ],
+  "priority": [
+    "terminal",
+    "cofre",
+    "impulse",
+    "edge",
+    "gamma"
+  ],
+  "maxStackedModulesPerEvent": 0,
+  "edgeParams": {},
+  "gammaParams": {},
+  "cofreParams": {},
+  "impulseParams": {},
+  "terminalParams": {}
+}

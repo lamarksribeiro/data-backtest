@@ -174,3 +174,17 @@ test('edge sniper GLS port compiles with inlined models in editor source', () =>
   assert.ok(detectEmbeddedModels(converted));
   assert.equal(validation.editable_logic, true);
 });
+
+test('resolveVersionForBacktest exposes embedded models for composed edge sniper', () => {
+  const source = composeStrategyJsFromGls(getEdgeSniperV2GlsSource());
+  const resolved = resolveVersionForBacktest({
+    language: 'strategy-js-v1',
+    source_code: source,
+  }, { bookDepth: 25 });
+  assert.equal(resolved.embeddedModels, true);
+  assert.ok(resolved.strategySourceCode?.includes('function createLibrary'));
+  assert.ok(resolved.generatedSource?.onTick);
+  const lib = createStandardLibrary();
+  applyEmbeddedModelsToLib(resolved.strategySourceCode, lib);
+  assert.equal(typeof lib.model.scoreSides, 'function');
+});

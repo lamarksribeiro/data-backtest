@@ -21,7 +21,7 @@ export const BLOCK_CATALOG = {
   risk: ['sizeByBudget', 'capOrderValue', 'stopBid', 'takeProfit', 'trailingStop'],
   time: ['secondsUntil', 'secondsSince', 'inWindow', 'isNearExpiry'],
   math: ['abs', 'min', 'max', 'clamp', 'sqrt', 'logistic', 'erf', 'normalCdf'],
-  model: ['directionProbability', 'scoreSides', 'scoreImpulseElasticitySides', 'orderBookImbalance'],
+  model: ['directionProbability', 'scoreSides', 'scoreImpulseElasticitySides', 'scoreTerminalSides', 'orderBookImbalance'],
   debug: ['log', 'mark', 'metric'],
 };
 

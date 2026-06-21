@@ -313,7 +313,10 @@ export async function runSequentialSoA(runner, columnSet, compiledSoa, onProgres
     return;
   }
 
-  if (runner.executionMode === 'gamma-ladder' && typeof runner.bindColumnSet === 'function') {
+  if (
+    ['library-runner', 'library-runner-soa', 'portfolio-runner', 'portfolio-runner-soa', 'gamma-ladder'].includes(runner.executionMode)
+    && typeof runner.bindColumnSet === 'function'
+  ) {
     runner.bindColumnSet(columnSet);
     for (let i = 0; i < columnSet.length; i += 1) {
       runner.processIndex(i);

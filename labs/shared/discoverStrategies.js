@@ -42,6 +42,55 @@ export function discoverLabStrategies({ labsRoot = DEFAULT_LABS_ROOT } = {}) {
   return results.sort((a, b) => String(a.studioSlug || a.id).localeCompare(String(b.studioSlug || b.id)));
 }
 
+export const PROMOTED_KIND_GLS = 'gls';
+export const PROMOTED_KIND_LIBRARY = 'library';
+export const PROMOTED_KIND_COMPILED = 'compiled-native';
+
+export function resolveStrategyKind(manifest) {
+  if (manifest.portStatus === 'compiled-native' || manifest.kind === 'compiled-soa') {
+    return PROMOTED_KIND_COMPILED;
+  }
+  if (manifest.kind === 'library-runner' || manifest.kind === 'portfolio-runner') {
+    return PROMOTED_KIND_LIBRARY;
+  }
+  if (manifest.source?.type === 'library-runner') {
+    return PROMOTED_KIND_LIBRARY;
+  }
+  if (manifest.kind === 'gls' || manifest.source?.type === 'file') {
+    return PROMOTED_KIND_GLS;
+  }
+  return manifest.kind || 'unknown';
+}
+
+export function isGlsStrategy(manifest) {
+  return resolveStrategyKind(manifest) === PROMOTED_KIND_GLS;
+}
+
+export function isLibraryStrategy(manifest) {
+  return resolveStrategyKind(manifest) === PROMOTED_KIND_LIBRARY;
+}
+
+export function isCompiledNativeStrategy(manifest) {
+  return resolveStrategyKind(manifest) === PROMOTED_KIND_COMPILED;
+}
+
 export function listPromotedStrategies(options = {}) {
-  return discoverLabStrategies(options).filter((manifest) => manifest.promotedToStudio === true);
+  const { kind = null, ...discoverOptions } = options;
+  const promoted = discoverLabStrategies(discoverOptions).filter((manifest) => manifest.promotedToStudio === true);
+  if (kind === PROMOTED_KIND_GLS) return promoted.filter(isGlsStrategy);
+  if (kind === PROMOTED_KIND_LIBRARY) return promoted.filter(isLibraryStrategy);
+  if (kind === PROMOTED_KIND_COMPILED) return promoted.filter(isCompiledNativeStrategy);
+  return promoted;
+}
+
+export function listPromotedGlsStrategies(options = {}) {
+  return listPromotedStrategies({ ...options, kind: PROMOTED_KIND_GLS });
+}
+
+export function listPromotedLibraryStrategies(options = {}) {
+  return listPromotedStrategies({ ...options, kind: PROMOTED_KIND_LIBRARY });
+}
+
+export function listPromotedCompiledStrategies(options = {}) {
+  return listPromotedStrategies({ ...options, kind: PROMOTED_KIND_COMPILED });
 }

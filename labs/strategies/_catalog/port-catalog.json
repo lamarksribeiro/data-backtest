@@ -1,0 +1,364 @@
+{
+  "alreadyPorted": [
+    {
+      "id": "edge-sniper-v3",
+      "portStatus": "ported",
+      "notes": "Substitui edge-sniper-v2"
+    },
+    {
+      "id": "gamma-ladder-v1",
+      "portStatus": "ported",
+      "notes": "embedded-runner"
+    },
+    {
+      "id": "vsmr",
+      "portStatus": "ported",
+      "notes": "Volatility Spike Mean Reversion"
+    }
+  ],
+  "runners": [
+    {
+      "id": "edge-sniper-runner-module",
+      "family": "edge",
+      "name": "Edge Sniper Runner (module)",
+      "sourceFile": "edgeSniperBacktest.js",
+      "createFn": "createEdgeSniperBacktestRunner",
+      "runnerSlug": "edge-sniper-runner",
+      "strategyLabel": "EDGE_SNIPER_V2",
+      "usesStopReverse": true,
+      "tier": "module",
+      "promotedToStudio": false
+    },
+    {
+      "id": "gamma-ladder-runner-module",
+      "family": "gamma",
+      "name": "Gamma Ladder Runner (module)",
+      "sourceFile": "gammaLadderBacktest.js",
+      "createFn": "createGammaLadderBacktestRunner",
+      "runnerSlug": "gamma-ladder-runner",
+      "strategyLabel": "GAMMA_LADDER_V1",
+      "usesStopReverse": true,
+      "tier": "module",
+      "promotedToStudio": false
+    },
+    {
+      "id": "terminal-convexity-v1",
+      "family": "terminal",
+      "name": "Terminal Convexity V1",
+      "sourceFile": "terminalConvexityBacktest.js",
+      "createFn": "createTerminalConvexityBacktestRunner",
+      "runnerSlug": "terminal-convexity-runner",
+      "strategyLabel": "TERMINAL_CONVEXITY_V1",
+      "usesStopReverse": true,
+      "tier": "A",
+      "promotedToStudio": true
+    },
+    {
+      "id": "cofre-sete-v1",
+      "family": "carry",
+      "name": "Cofre Sete V1",
+      "sourceFile": "cofreSeteBacktest.js",
+      "createFn": "createCofreSeteBacktestRunner",
+      "runnerSlug": "cofre-sete-runner",
+      "strategyLabel": "COFRE_SETE_V1",
+      "usesStopReverse": true,
+      "tier": "A",
+      "promotedToStudio": true
+    },
+    {
+      "id": "impulse-elasticity",
+      "family": "impulse",
+      "name": "Impulse Elasticity V1",
+      "sourceFile": "impulseElasticityBacktest.js",
+      "createFn": "createImpulseElasticityBacktestRunner",
+      "runnerSlug": "impulse-elasticity-runner",
+      "strategyLabel": "IMPULSE_ELASTICITY_V1",
+      "usesStopReverse": true,
+      "tier": "A",
+      "promotedToStudio": true
+    },
+    {
+      "id": "lead-inertia-v1",
+      "family": "momentum",
+      "name": "Lead Inertia V1",
+      "sourceFile": "leadInertiaBacktest.js",
+      "createFn": "createLeadInertiaBacktestRunner",
+      "runnerSlug": "lead-inertia-runner",
+      "strategyLabel": "LEAD_INERTIA_V1",
+      "usesStopReverse": false,
+      "tier": "A",
+      "promotedToStudio": true
+    },
+    {
+      "id": "volatility-compression-lock-v1",
+      "family": "volatility",
+      "name": "Volatility Compression Lock V1",
+      "sourceFile": "volatilityCompressionLockBacktest.js",
+      "createFn": "createVolatilityCompressionLockBacktestRunner",
+      "runnerSlug": "volatility-compression-lock-runner",
+      "strategyLabel": "VOLATILITY_COMPRESSION_LOCK_V1",
+      "usesStopReverse": true,
+      "tier": "A",
+      "promotedToStudio": true
+    },
+    {
+      "id": "stable-carry-compression-v1",
+      "family": "carry",
+      "name": "Stable Carry Compression V1",
+      "sourceFile": "stableCarryCompressionBacktest.js",
+      "createFn": "createStableCarryCompressionBacktestRunner",
+      "runnerSlug": "stable-carry-compression-runner",
+      "strategyLabel": "STABLE_CARRY_COMPRESSION_V1",
+      "usesStopReverse": true,
+      "tier": "A",
+      "promotedToStudio": true
+    },
+    {
+      "id": "convergence-undershoot-v1",
+      "family": "mean-reversion",
+      "name": "Convergence Undershoot V1",
+      "sourceFile": "convergenceUndershootBacktest.js",
+      "createFn": "createConvergenceUndershootBacktestRunner",
+      "runnerSlug": "convergence-undershoot-runner",
+      "strategyLabel": "CONVERGENCE_UNDERSHOOT_V1",
+      "usesStopReverse": true,
+      "tier": "A",
+      "promotedToStudio": true
+    },
+    {
+      "id": "momentum-edge-v1",
+      "family": "momentum",
+      "name": "Momentum Edge V1",
+      "sourceFile": "momentumBacktest.js",
+      "createFn": "createMomentumBacktestRunner",
+      "runnerSlug": "momentum-edge-runner",
+      "strategyLabel": "MOMENTUM_EDGE_V1",
+      "usesStopReverse": false,
+      "tier": "A",
+      "promotedToStudio": true
+    },
+    {
+      "id": "boundary-coherence-entropy-deviation-v1",
+      "family": "edge",
+      "name": "BCED V1",
+      "sourceFile": "boundaryCoherenceEntropyDeviationBacktest.js",
+      "createFn": "createBoundaryCoherenceEntropyDeviationBacktestRunner",
+      "runnerSlug": "bced-runner",
+      "strategyLabel": "BCED_V1",
+      "usesStopReverse": false,
+      "tier": "B",
+      "promotedToStudio": true
+    },
+    {
+      "id": "empirical-residual-manifold-v1",
+      "family": "edge",
+      "name": "ERM V1",
+      "sourceFile": "empiricalResidualManifoldBacktest.js",
+      "createFn": "createEmpiricalResidualManifoldBacktestRunner",
+      "runnerSlug": "erm-runner",
+      "strategyLabel": "ERM_V1",
+      "usesStopReverse": false,
+      "tier": "B",
+      "calibrationFile": "data/ermCalibrationData.json",
+      "promotedToStudio": true
+    },
+    {
+      "id": "bs-lead-v1",
+      "family": "momentum",
+      "name": "BS Lead V1",
+      "sourceFile": "bsLeadBacktest.js",
+      "createFn": "createBSLeadBacktestRunner",
+      "runnerSlug": "bs-lead-runner",
+      "strategyLabel": "BS_LEAD_V1",
+      "usesStopReverse": true,
+      "tier": "A",
+      "promotedToStudio": false
+    }
+  ],
+  "portfolios": [
+    {
+      "id": "fusion-five-v1",
+      "family": "portfolio",
+      "name": "Fusion Five V1",
+      "sourceFile": "fusionFiveBacktest.js",
+      "createFn": "createFusionFiveBacktestRunner",
+      "runnerSlug": "fusion-five-runner",
+      "strategyLabel": "FUSION_FIVE_V1",
+      "tier": "C",
+      "promotedToStudio": true,
+      "modules": [
+        {
+          "key": "terminal",
+          "name": "Terminal Convexity V1",
+          "slug": "terminal-convexity-runner",
+          "version": 1,
+          "paramsKey": "terminalParams"
+        },
+        {
+          "key": "cofre",
+          "name": "Cofre Sete V1",
+          "slug": "cofre-sete-runner",
+          "version": 1,
+          "paramsKey": "cofreParams"
+        },
+        {
+          "key": "impulse",
+          "name": "Impulse Elasticity V1",
+          "slug": "impulse-elasticity-runner",
+          "version": 1,
+          "paramsKey": "impulseParams"
+        },
+        {
+          "key": "edge",
+          "name": "Edge Sniper V1",
+          "slug": "edge-sniper-runner",
+          "version": 1,
+          "paramsKey": "edgeParams"
+        },
+        {
+          "key": "gamma",
+          "name": "Gamma Ladder V1",
+          "slug": "gamma-ladder-runner",
+          "version": 1,
+          "paramsKey": "gammaParams"
+        }
+      ]
+    },
+    {
+      "id": "omni-edge-v1",
+      "family": "portfolio",
+      "name": "Omni Edge V1",
+      "sourceFile": "omniEdgeBacktest.js",
+      "createFn": "createOmniEdgeBacktestRunner",
+      "runnerSlug": "omni-edge-runner",
+      "strategyLabel": "OMNI_EDGE_V1",
+      "tier": "C",
+      "promotedToStudio": true,
+      "modules": [
+        {
+          "key": "terminal",
+          "name": "Terminal Convexity V1",
+          "slug": "terminal-convexity-runner",
+          "version": 1,
+          "paramsKey": "terminalParams"
+        },
+        {
+          "key": "lead",
+          "name": "Lead Inertia V1",
+          "slug": "lead-inertia-runner",
+          "version": 1,
+          "paramsKey": "leadParams"
+        },
+        {
+          "key": "stable",
+          "name": "Stable Carry Compression V1",
+          "slug": "stable-carry-compression-runner",
+          "version": 1,
+          "paramsKey": "stableParams"
+        },
+        {
+          "key": "gamma",
+          "name": "Gamma Ladder V1",
+          "slug": "gamma-ladder-runner",
+          "version": 1,
+          "paramsKey": "gammaParams"
+        },
+        {
+          "key": "cofre",
+          "name": "Cofre Sete V1",
+          "slug": "cofre-sete-runner",
+          "version": 1,
+          "paramsKey": "cofreParams"
+        },
+        {
+          "key": "impulse",
+          "name": "Impulse Elasticity V1",
+          "slug": "impulse-elasticity-runner",
+          "version": 1,
+          "paramsKey": "impulseParams"
+        },
+        {
+          "key": "edge",
+          "name": "Edge Sniper V1",
+          "slug": "edge-sniper-runner",
+          "version": 1,
+          "paramsKey": "edgeParams"
+        },
+        {
+          "key": "vcl",
+          "name": "Volatility Compression Lock V1",
+          "slug": "volatility-compression-lock-runner",
+          "version": 1,
+          "paramsKey": "vclParams"
+        }
+      ]
+    }
+  ],
+  "rejected": [
+    {
+      "id": "ambiguity-equilibrium-dispersal-v1",
+      "portStatus": "rejected",
+      "sourceDoc": "docs/rejeitadas/ambiguity-equilibrium-dispersal-v1.md"
+    },
+    {
+      "id": "dynamic-probability-decoupling-v1",
+      "portStatus": "rejected",
+      "sourceDoc": "docs/rejeitadas/dynamic-probability-decoupling-v1.md"
+    },
+    {
+      "id": "coherence-hazard-edge-v1",
+      "portStatus": "rejected",
+      "sourceDoc": "docs/rejeitadas/coherence-hazard-edge-v1.md"
+    },
+    {
+      "id": "residual-coherence-gap-v1",
+      "portStatus": "rejected",
+      "sourceDoc": "docs/rejeitadas/residual-coherence-gap-v1.md"
+    },
+    {
+      "id": "sigma-adaptive-drift-v1",
+      "portStatus": "rejected",
+      "sourceDoc": "docs/rejeitadas/sigma-adaptive-drift-v1.md"
+    }
+  ],
+  "backlog": [
+    {
+      "id": "strike-boundary-repricing-inelasticity-v1",
+      "portStatus": "backlog",
+      "tier": "E",
+      "priority": 1,
+      "sourceDoc": "docs/estrategias/nao-implementadas/strike-boundary-repricing-inelasticity-v1.md"
+    },
+    {
+      "id": "stochastic-escape-barrier-theory-v1",
+      "portStatus": "backlog",
+      "tier": "E",
+      "priority": 2,
+      "sourceDoc": "docs/estrategias/nao-implementadas/stochastic-escape-barrier-theory-v1.md"
+    },
+    {
+      "id": "transition-acceleration-threshold-v1",
+      "portStatus": "backlog",
+      "tier": "E",
+      "priority": 2,
+      "sourceDoc": "docs/estrategias/nao-implementadas/transition-acceleration-threshold-v1.md"
+    },
+    {
+      "id": "u-shape-volatility-v1",
+      "portStatus": "backlog",
+      "tier": "E",
+      "priority": 2,
+      "sourceDoc": "docs/estrategias/nao-implementadas/u-shape-volatility-v1.md"
+    },
+    {
+      "id": "sch-theory-v1",
+      "portStatus": "backlog",
+      "tier": "E",
+      "priority": 2,
+      "sourceDoc": "docs/estrategias/nao-implementadas/sch-theory-v1.md"
+    }
+  ],
+  "sourceRepo": "polymarket-test",
+  "sourceMode": "read-only",
+  "targetRepo": "data-backtest"
+}

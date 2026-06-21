@@ -404,6 +404,7 @@ function toApiRun(row, { includeResult = false, includeEquity = false } = {}) {
     strategy_id: row.strategy_id != null ? Number(row.strategy_id) : null,
     strategy_version_id: row.strategy_version_id != null ? Number(row.strategy_version_id) : null,
     strategy_snapshot: row.strategy_snapshot_json ? JSON.parse(row.strategy_snapshot_json) : null,
+    dataset_request_json: row.dataset_request_json ?? null,
     status: row.status ?? 'completed',
     error: row.error ?? null,
     duration_ms: row.duration_ms ?? null,
@@ -417,20 +418,38 @@ function toApiRun(row, { includeResult = false, includeEquity = false } = {}) {
   return run;
 }
 
-function stripRequestForSnapshot(request) {
-  const { glsAst, strategyMeta, ...rest } = request;
+export function stripRequestForSnapshot(request) {
+  const {
+    glsAst,
+    strategyMeta,
+    db,
+    generatedSource,
+    columnAnalysis,
+    extensionLibraries,
+    runnerLibrary,
+    embeddedRunner,
+    embeddedModels,
+    strategySourceCode,
+    ...rest
+  } = request;
   return rest;
 }
 
-function minimalResultForRequest(request, { summary = {} } = {}) {
+export function safeIsoTimestamp(value) {
+  if (value == null || value === '') return null;
+  const parsed = new Date(value);
+  return Number.isFinite(parsed.getTime()) ? parsed.toISOString() : null;
+}
+
+export function minimalResultForRequest(request, { summary = {} } = {}) {
   return {
     strategy: request.strategyLabel || request.strategy,
     source: 'lakehouse',
     underlying: request.underlying,
     interval: request.interval,
     bookDepth: request.bookDepth,
-    from: new Date(request.from).toISOString(),
-    to: new Date(request.to).toISOString(),
+    from: safeIsoTimestamp(request.from),
+    to: safeIsoTimestamp(request.to),
     ticks: 0,
     batches: 0,
     summary,

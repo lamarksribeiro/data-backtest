@@ -9,6 +9,8 @@ import { recoverStaleTelegramBackupRuns } from './state/telegramBackup.js';
 import { createApiServer } from './api/server.js';
 import { createAuthService } from './auth/authService.js';
 import { seedPromotedStrategies } from './backtestStudio/gls/seedPromotedStrategies.js';
+import { bindStrategyLibraryDatabase } from './backtestStudio/nativeLibrary/registry.js';
+import { seedPortedStrategies } from '../scripts/seed-ported-strategies.js';
 
 const config = loadConfig();
 if (!config.TEST_MODE && !config.SESSION_SECRET) {
@@ -16,6 +18,7 @@ if (!config.TEST_MODE && !config.SESSION_SECRET) {
 }
 
 const db = openStateDatabase(config.stateDbPath);
+bindStrategyLibraryDatabase(db);
 const recoveredJobs = recoverStalePrepareJobs(db);
 const recoveredAssetUpdateRuns = recoverStaleAssetUpdateRuns(db);
 const recoveredTelegramBackupRuns = recoverStaleTelegramBackupRuns(db);
@@ -31,6 +34,7 @@ if (recoveredTelegramBackupRuns > 0) {
 if (config.TEST_MODE || String(process.env.SEED_PROMOTED_STRATEGIES || '').trim() === '1') {
   seedPromotedStrategies(db);
 }
+seedPortedStrategies(db);
 const authService = createAuthService({ db, config });
 if (!config.TEST_MODE) {
   const bootstrapped = await authService.bootstrapAdmin();

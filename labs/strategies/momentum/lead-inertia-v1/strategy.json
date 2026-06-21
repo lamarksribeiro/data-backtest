@@ -1,0 +1,35 @@
+{
+  "id": "lead-inertia-v1",
+  "name": "Lead Inertia V1",
+  "family": "momentum",
+  "status": "candidate",
+  "kind": "library-runner",
+  "assets": [
+    "BTC"
+  ],
+  "intervals": [
+    "5m"
+  ],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "library-runner",
+    "runnerSlug": "lead-inertia-runner",
+    "runnerVersion": 1
+  },
+  "portStatus": "ported",
+  "sourceRepo": "polymarket-test",
+  "sourceService": "leadInertiaBacktest.js",
+  "promotedToStudio": true,
+  "studioSlug": "lead-inertia-v1",
+  "studio": {
+    "description": "Lead Inertia V1 portado do polymarket-test via library-runner.",
+    "tags": [
+      "lead-inertia-v1",
+      "ported",
+      "btc"
+    ],
+    "defaultVersion": 1
+  },
+  "notes": "Runner: lead-inertia-runner@1. Origem read-only: polymarket-test/leadInertiaBacktest.js"
+}

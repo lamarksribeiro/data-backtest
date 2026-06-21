@@ -1,6 +1,7 @@
 import { createTickCursorView } from '../../backtest/columnStore.js';
 import { loadStrategyLibraryRunner } from './loadRunner.js';
-import { legacyTickFromAny, legacyTickFromCursor } from './tickBridge.js';
+import { legacyTickFromAny } from './tickBridge.js';
+import { createLegacyTickFacadeBinding } from './legacyTickFacade.js';
 
 export const LIBRARY_RUNNER_COLUMN_ANALYSIS = {
   needsBookLevels: true,
@@ -19,14 +20,14 @@ export function createLibraryRunnerAdapter(db, { slug, version }, rawParams = {}
 
   const bookDepth = options.bookDepth ?? 25;
   let columnSet = null;
-  let tickCursor = null;
+  let tickBinding = null;
   let ticksProcessed = 0;
 
   return {
-    executionMode: 'library-runner',
+    executionMode: 'library-runner-soa',
     bindColumnSet(nextColumnSet) {
       columnSet = nextColumnSet;
-      tickCursor = createTickCursorView(columnSet);
+      tickBinding = createLegacyTickFacadeBinding(columnSet, bookDepth);
     },
     beginEvent() {},
     endEvent() {},
@@ -35,10 +36,14 @@ export function createLibraryRunnerAdapter(db, { slug, version }, rawParams = {}
       inner.processTick(legacyTickFromAny(rawTick, bookDepth));
     },
     processIndex(rowIndex) {
-      if (!columnSet || !tickCursor) return;
-      tickCursor.setIndex(rowIndex);
+      if (!columnSet || !tickBinding) return;
       ticksProcessed += 1;
-      inner.processTick(legacyTickFromCursor(tickCursor, columnSet, bookDepth));
+      const facade = tickBinding.atRow(rowIndex);
+      if (typeof inner.processIndex === 'function') {
+        inner.processIndex(tickBinding.cursor, facade);
+        return;
+      }
+      inner.processTick(facade);
     },
     importParallelSlices() {
       throw new Error('library-runner does not support parallel event slices yet');

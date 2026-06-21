@@ -237,6 +237,7 @@ export function createStandardLibrary({ nativeLibraries = [] } = {}) {
     if (!nativeModels) continue;
     if (nativeModels.directionProbability) lib.model.directionProbability = nativeModels.directionProbability;
     if (nativeModels.scoreSides) lib.model.scoreSides = nativeModels.scoreSides;
+    if (nativeModels.scoreTerminalSides) lib.model.scoreTerminalSides = nativeModels.scoreTerminalSides;
     if (nativeModels.scoreImpulseElasticitySides) lib.model.scoreImpulseElasticitySides = nativeModels.scoreImpulseElasticitySides;
   }
 

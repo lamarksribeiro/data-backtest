@@ -8,7 +8,11 @@ export function detectEmbeddedModels(sourceCode) {
   const code = String(sourceCode || '');
   if (!code.includes('function createLibrary')) return null;
   if (/strategyLibrary\s*\(\s*["']edge-sniper-models/.test(code)) return null;
-  if (!/model\.(directionProbability|scoreSides|scoreImpulseElasticitySides)\s*\(/.test(code)) return null;
+  const usesEdge = /model\.(directionProbability|scoreSides|scoreImpulseElasticitySides)\s*\(/.test(code);
+  const usesTerminal = /model\.scoreTerminalSides\s*\(/.test(code);
+  if (!usesEdge && !usesTerminal) return null;
+  if (usesEdge && usesTerminal) return { library: 'edge-sniper-models' };
+  if (usesTerminal) return { library: 'terminal-convexity-models' };
   return { library: 'edge-sniper-models' };
 }
 
@@ -52,6 +56,7 @@ function patchLibModel(lib, models) {
   if (models.directionProbability) lib.model.directionProbability = models.directionProbability;
   if (models.scoreSides) lib.model.scoreSides = models.scoreSides;
   if (models.scoreImpulseElasticitySides) lib.model.scoreImpulseElasticitySides = models.scoreImpulseElasticitySides;
+  if (models.scoreTerminalSides) lib.model.scoreTerminalSides = models.scoreTerminalSides;
 }
 
 function checksum(value) {

@@ -7,12 +7,16 @@ import {
 	resetChartSidecarRun,
 } from './chartSidecar.js';
 import { openStateDatabase, closeStateDatabase } from '../state/sqlite.js';
+import { bindStrategyLibraryDatabase } from '../backtestStudio/nativeLibrary/registry.js';
 import {
 	completeBacktestRun,
 	failBacktestRun,
+	markBacktestRunRunning,
+	minimalResultForRequest,
 } from '../state/backtestRuns.js';
 import { appendEventTraceBatch } from '../backtestStudio/state/eventTraces.js';
 import { releaseBacktestResources } from './releaseResources.js';
+import { rehydrateBacktestRequest } from './rehydrateRequest.js';
 
 const FLUSH_BATCH_EVENTS = 200;
 
@@ -24,6 +28,8 @@ export async function runBacktestJob({
 	onProgress = null,
 }) {
 	const db = openStateDatabase(stateDbPath);
+	bindStrategyLibraryDatabase(db);
+	markBacktestRunRunning(db, runId, { startedAt });
 	const fastRun = Boolean(request?.fastRun);
 	const sidecarFile = chartSidecarPath(stateDbPath, runId);
 	ensureChartSidecarDir(stateDbPath);
@@ -38,8 +44,9 @@ export async function runBacktestJob({
 	};
 
 	try {
+		const hydrated = rehydrateBacktestRequest(db, request, { runId });
 		const backtestRequest = {
-			...request,
+			...hydrated,
 			fastRun,
 			onEventFinalized: fastRun
 				? null
@@ -56,9 +63,9 @@ export async function runBacktestJob({
 		flushTraces();
 
 		const run = completeBacktestRun(db, runId, {
-			request,
+			request: hydrated,
 			result,
-			strategyMeta: request.strategyMeta ?? null,
+			strategyMeta: hydrated.strategyMeta ?? null,
 			startedAt: result.timings?.runStartedAt ?? startedAt,
 		});
 		return { ok: true, runId: run.id };
@@ -66,25 +73,14 @@ export async function runBacktestJob({
 		flushTraces();
 		const traceCount = db.prepare('SELECT COUNT(*) AS c FROM backtest_event_traces WHERE run_id = ?').get(runId)?.c || 0;
 		const isPartial = Boolean(err.partialResult?.ticks) || traceCount > 0;
-		const failedResult = err.partialResult || {
-			strategy: request.strategyLabel || request.strategy,
-			source: 'lakehouse',
-			underlying: request.underlying,
-			interval: request.interval,
-			bookDepth: request.bookDepth,
-			from: new Date(request.from).toISOString(),
-			to: new Date(request.to).toISOString(),
-			ticks: 0,
-			batches: 0,
+		const hydrated = rehydrateBacktestRequest(db, request, { runId });
+		const failedResult = err.partialResult || minimalResultForRequest(hydrated, {
 			summary: { failed: true, error: err.message },
-			events: [],
-			equity: [],
-			log: [],
-		};
+		});
 		failBacktestRun(db, runId, {
-			request,
+			request: hydrated,
 			result: failedResult,
-			strategyMeta: request.strategyMeta ?? null,
+			strategyMeta: hydrated.strategyMeta ?? null,
 			error: err.message,
 			startedAt,
 			partial: isPartial,

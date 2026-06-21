@@ -17,6 +17,7 @@ import { parse as parseGls } from '../src/backtestStudio/gls/parser.js';
 import { analyzeStrategyColumns } from '../src/backtestStudio/gls/compiler.js';
 import { getEdgeSniperV2GlsSource } from '../src/backtestStudio/gls/loadStrategySource.js';
 import { checkDatasetAvailability } from '../src/query/availability.js';
+import { detectEmbeddedModels } from '../src/backtestStudio/strategyJs/embeddedModels.js';
 
 const GLS_SOURCE = getEdgeSniperV2GlsSource();
 const JS_SOURCE = composeStrategyJsFromGls(GLS_SOURCE);
@@ -94,8 +95,10 @@ async function main() {
   const glsAst = parseGls(GLS_SOURCE);
   const jsCompile = compileStrategyJs(JS_SOURCE, { bookDepth });
   const columnAnalysis = analyzeStrategyColumns(glsAst, bookDepth);
+  const jsEmbeddedModels = detectEmbeddedModels(JS_SOURCE);
 
-  async function bench(label, glsAstInput, compileMeta = null) {
+  async function bench(label, glsAstInput, options = {}) {
+    const { compileMeta = null, columnAnalysis: columnAnalysisOverride = columnAnalysis } = options;
     const started = performance.now();
     const compileStarted = performance.now();
     const result = await runBacktest(db, {
@@ -107,8 +110,12 @@ async function main() {
       batchSize: 25000,
       fastRun: true,
       glsAst: glsAstInput,
-      columnAnalysis,
+      columnAnalysis: columnAnalysisOverride,
       params: {},
+      db,
+      embeddedModels: options.embeddedModels ?? false,
+      strategySourceCode: options.strategySourceCode ?? null,
+      generatedSource: options.generatedSource ?? null,
       strategyMeta: compileMeta ? {
         language: 'strategy-js-v1',
         compilerMode: 'compiled-soa',
@@ -131,7 +138,13 @@ async function main() {
   try {
     const rows = [];
     rows.push(await bench('gls-v1', glsAst));
-    rows.push(await bench('strategy-js-v1', jsCompile.ast, jsCompile.compiled));
+    rows.push(await bench('strategy-js-v1', jsCompile.ast, {
+      compileMeta: jsCompile.compiled,
+      columnAnalysis: jsCompile.column_analysis,
+      embeddedModels: Boolean(jsEmbeddedModels),
+      strategySourceCode: JS_SOURCE,
+      generatedSource: jsCompile.compiled.generated_source,
+    }));
 
     const report = {
       ok: true,

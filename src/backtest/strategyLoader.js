@@ -7,10 +7,16 @@ import { parse as parseGls } from '../backtestStudio/gls/parser.js';
 import { analyzeStrategyColumns } from '../backtestStudio/gls/compiler.js';
 import { bindStrategyLibraryDatabase } from '../backtestStudio/nativeLibrary/registry.js';
 import { createLibraryRunnerAdapter, LIBRARY_RUNNER_COLUMN_ANALYSIS } from '../backtestStudio/strategyLibrary/runnerAdapter.js';
+import { createPortfolioRunnerAdapter, PORTFOLIO_RUNNER_COLUMN_ANALYSIS } from '../backtestStudio/strategyLibrary/portfolioRunnerAdapter.js';
 import { createEmbeddedRunnerAdapter, EMBEDDED_RUNNER_COLUMN_ANALYSIS } from '../backtestStudio/strategyJs/embeddedRunnerAdapter.js';
 import { findRunnerDependency } from '../backtestStudio/strategyLibrary/kind.js';
+import { ensureStrategyLibraryDatabase } from '../backtestStudio/nativeLibrary/registry.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+function resolveRunnerDatabase(requestDb) {
+  return requestDb?.prepare ? requestDb : ensureStrategyLibraryDatabase();
+}
 
 function buildGlsStrategyLoad(glsAst, request, config) {
   if (request.embeddedRunner && request.strategySourceCode) {
@@ -27,16 +33,21 @@ function buildGlsStrategyLoad(glsAst, request, config) {
   }
 
   const runnerDep = request.runnerLibrary;
-  if (runnerDep && request.db) {
-    bindStrategyLibraryDatabase(request.db);
+  if (runnerDep) {
+    const runnerDb = resolveRunnerDatabase(request.db);
+    bindStrategyLibraryDatabase(runnerDb);
+    const isPortfolio = runnerDep.kind === 'portfolio';
     return {
-      kind: 'library-runner',
+      kind: isPortfolio ? 'portfolio-runner' : 'library-runner',
       glsAst,
-      columnAnalysis: request.columnAnalysis ?? LIBRARY_RUNNER_COLUMN_ANALYSIS,
-      createRunner: (params, runnerOptions) => createLibraryRunnerAdapter(request.db, runnerDep, params, {
-        ...runnerOptions,
-        bookDepth: request.bookDepth ?? config.backtestBookDepth,
-      }),
+      columnAnalysis: request.columnAnalysis ?? (isPortfolio ? PORTFOLIO_RUNNER_COLUMN_ANALYSIS : LIBRARY_RUNNER_COLUMN_ANALYSIS),
+      createRunner: (params, runnerOptions) => {
+        const adapterFactory = isPortfolio ? createPortfolioRunnerAdapter : createLibraryRunnerAdapter;
+        return adapterFactory(runnerDb, runnerDep, params, {
+          ...runnerOptions,
+          bookDepth: request.bookDepth ?? config.backtestBookDepth,
+        });
+      },
     };
   }
 

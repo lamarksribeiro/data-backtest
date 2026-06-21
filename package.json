@@ -55,7 +55,10 @@
     "lab:esv3:analyze-stop": "node labs/strategies/edge/edge-sniper-v3/scripts/analyze-immediate-stop.js",
     "lab:esv3:counterfactual-stop": "node labs/cli/run.js --experiment labs/strategies/edge/edge-sniper-v3/experiments/2026-06-14-stop-bid-counterfactual.json",
     "lab:esv3:compare-studio": "node scratch/compare-studio-lab-esv3.js",
-    "embed:strategy-libraries": "node scripts/embed-strategy-libraries.js"
+    "embed:strategy-libraries": "node scripts/embed-strategy-libraries.js",
+    "port:polymarket": "node scripts/port-from-polymarket.js",
+    "seed:ported-strategies": "node scripts/seed-ported-strategies.js",
+    "verify:ported-strategies": "node scripts/verify-ported-strategies.js"
   },
   "dependencies": {
     "@duckdb/node-api": "^1.5.3-r.2",

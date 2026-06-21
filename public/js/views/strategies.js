@@ -997,6 +997,15 @@ function renderStrategyHeaderMeta(strategy) {
   ]);
 }
 
+function pickDefaultStrategyVersion(strategy, versions = []) {
+  if (!versions.length) return null;
+  if (strategy?.default_version_id != null) {
+    const preferred = versions.find((item) => item.id === strategy.default_version_id);
+    if (preferred) return preferred;
+  }
+  return versions[0];
+}
+
 async function openStrategyEditor(ctx, strategyId, versionId = null, options = {}) {
   const scrollSnap = options.preserveScroll ? captureScrollState(ctx) : null;
   const editorPanel = document.getElementById('strategy-editor');
@@ -1034,8 +1043,8 @@ async function openStrategyEditor(ctx, strategyId, versionId = null, options = {
   ctx.setBreadcrumb('strategies', strategy.name);
   const versions = versionsRes.ok ? versionsRes.data.versions || [] : [];
   const version = versionId
-    ? versions.find((item) => item.id === versionId) || versions[0]
-    : versions[0];
+    ? versions.find((item) => item.id === versionId) || pickDefaultStrategyVersion(strategy, versions)
+    : pickDefaultStrategyVersion(strategy, versions);
   state.selectedVersionId = version?.id ?? null;
   state.currentVersion = version ?? null;
   state.selectedPresetId = null;

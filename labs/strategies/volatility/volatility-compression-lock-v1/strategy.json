@@ -1,0 +1,35 @@
+{
+  "id": "volatility-compression-lock-v1",
+  "name": "Volatility Compression Lock V1",
+  "family": "volatility",
+  "status": "candidate",
+  "kind": "library-runner",
+  "assets": [
+    "BTC"
+  ],
+  "intervals": [
+    "5m"
+  ],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "library-runner",
+    "runnerSlug": "volatility-compression-lock-runner",
+    "runnerVersion": 1
+  },
+  "portStatus": "ported",
+  "sourceRepo": "polymarket-test",
+  "sourceService": "volatilityCompressionLockBacktest.js",
+  "promotedToStudio": true,
+  "studioSlug": "volatility-compression-lock-v1",
+  "studio": {
+    "description": "Volatility Compression Lock V1 portado do polymarket-test via library-runner.",
+    "tags": [
+      "volatility-compression-lock-v1",
+      "ported",
+      "btc"
+    ],
+    "defaultVersion": 1
+  },
+  "notes": "Runner: volatility-compression-lock-runner@1. Origem read-only: polymarket-test/volatilityCompressionLockBacktest.js"
+}

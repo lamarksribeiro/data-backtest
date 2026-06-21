@@ -6,14 +6,19 @@ import { estimateColumnSetSize } from './columnStore.js';
 
 const caches = new Map();
 
+function safeIso(value) {
+  const parsed = new Date(value);
+  return Number.isFinite(parsed.getTime()) ? parsed.toISOString() : String(value ?? '');
+}
+
 export function datasetCacheKey(request, columnSignature) {
   return JSON.stringify({
     dataset: request.dataset || 'backtest_ticks',
     underlying: request.underlying,
     interval: request.interval,
     bookDepth: request.bookDepth,
-    from: new Date(request.from).toISOString(),
-    to: new Date(request.to).toISOString(),
+    from: safeIso(request.from),
+    to: safeIso(request.to),
     columns: columnSignature || null,
     engine: 'soa',
   });

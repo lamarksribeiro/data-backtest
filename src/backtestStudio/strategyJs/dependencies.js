@@ -4,7 +4,15 @@ export const NATIVE_MODEL_FUNCTIONS = new Set([
   'directionProbability',
   'scoreSides',
   'scoreImpulseElasticitySides',
+  'scoreTerminalSides',
 ]);
+
+const NATIVE_MODEL_SLUG_BY_FUNCTION = {
+  directionProbability: 'edge-sniper-models',
+  scoreSides: 'edge-sniper-models',
+  scoreImpulseElasticitySides: 'edge-sniper-models',
+  scoreTerminalSides: 'terminal-convexity-models',
+};
 
 export function extractDependenciesObject(node) {
   if (node?.type !== 'ObjectExpression') return [];
@@ -47,7 +55,7 @@ export function requiredNativeLibrariesForModelCall(path) {
   if (!path?.startsWith('model.')) return null;
   const fn = path.slice('model.'.length);
   if (!NATIVE_MODEL_FUNCTIONS.has(fn)) return null;
-  return 'edge-sniper-models';
+  return NATIVE_MODEL_SLUG_BY_FUNCTION[fn] ?? null;
 }
 
 export function isModelCallAllowed(path, dependencies) {
@@ -66,16 +74,44 @@ export function dependenciesToExtensionLibraries(dependencies = []) {
 
 export function inferNativeDependencies(sourceCode) {
   const code = String(sourceCode || '');
-  if (!/model\.(directionProbability|scoreSides|scoreImpulseElasticitySides)\s*\(/.test(code)) {
-    return [];
+  const deps = [];
+  if (/model\.(directionProbability|scoreSides|scoreImpulseElasticitySides)\s*\(/.test(code)) {
+    deps.push({ alias: 'edgeModels', slug: 'edge-sniper-models', version: 1 });
   }
-  return [{ alias: 'edgeModels', slug: 'edge-sniper-models', version: 1 }];
+  if (/model\.scoreTerminalSides\s*\(/.test(code)) {
+    deps.push({ alias: 'tcModels', slug: 'terminal-convexity-models', version: 1 });
+  }
+  return deps;
 }
 
 export function inferNativeLibrariesFromAst(ast) {
   if (!ast) return [];
-  if (!astUsesHeavyModel(ast)) return [];
-  return [{ slug: 'edge-sniper-models', version: 1, alias: 'edgeModels' }];
+  const slugs = new Set();
+  walkAstForModelCalls(ast, (fn) => {
+    const slug = NATIVE_MODEL_SLUG_BY_FUNCTION[fn];
+    if (slug) slugs.add(slug);
+  });
+  return [...slugs].map((slug) => ({
+    slug,
+    version: 1,
+    alias: slug === 'terminal-convexity-models' ? 'tcModels' : 'edgeModels',
+  }));
+}
+
+function walkAstForModelCalls(ast, onFn) {
+  function walk(node) {
+    if (!node || typeof node !== 'object') return;
+    if (node.type === 'Call') {
+      const path = glsCallPath(node.callee);
+      const fn = path?.startsWith('model.') ? path.slice('model.'.length) : null;
+      if (fn && NATIVE_MODEL_FUNCTIONS.has(fn)) onFn(fn);
+    }
+    for (const value of Object.values(node)) {
+      if (Array.isArray(value)) value.forEach(walk);
+      else if (value && typeof value === 'object') walk(value);
+    }
+  }
+  walk(ast);
 }
 
 function astUsesHeavyModel(ast) {

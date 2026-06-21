@@ -9,7 +9,7 @@ O objetivo dos labs e criar estrategias novas, otimizar estrategias antigas e va
 - Estrategias sao pacotes organizados, nao scripts soltos.
 - Experimentos devem ser reproduziveis por configuracao.
 - Resultados gerados ficam fora do catalogo da estrategia.
-- `polymarket-test` e referencia de paridade, nao o motor principal.
+- `polymarket-test` nao e mais usado; lemos de la apenas para portar estrategias e docs para o `data-backtest`.
 - Otimizacao usa `BACKTEST_ENGINE=soa`, `GLS_EXECUTION=compiled-soa` e `fastRun` sempre que possivel.
 
 ## Estrutura

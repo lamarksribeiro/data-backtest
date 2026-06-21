@@ -1,6 +1,35 @@
 import { toLegacyBacktestTick } from '../../legacy/polymarketTestAdapter.js';
+import { libraryRunnerTickColumnNames } from './tickColumns.js';
 
-export function legacyTickFromCursor(cursor, columnSet, bookDepth = 25) {
+export function createLegacyTickBuilder(bookDepth = 25) {
+  const columnNames = libraryRunnerTickColumnNames(bookDepth);
+  const row = {};
+  const tick = toLegacyBacktestTick(row, { index: 0, bookDepth, bookFormat: 'parsed', target: {} });
+
+  return {
+    fromCursor(cursor, columnSet, index = cursor.index) {
+      row.ts = cursor.ts;
+      row.event_start = cursor.event_start;
+      row.event_end = cursor.event_end;
+      row.condition_id = cursor.condition_id;
+
+      for (const name of columnNames) {
+        const column = columnSet.columns.get(name);
+        if (!column) continue;
+        const value = column[index];
+        row[name] = Number.isNaN(value) ? null : value;
+      }
+
+      return toLegacyBacktestTick(row, { index, bookDepth, bookFormat: 'parsed', target: tick });
+    },
+  };
+}
+
+export function legacyTickFromCursor(cursor, columnSet, bookDepth = 25, builder = null) {
+  if (builder) {
+    return builder.fromCursor(cursor, columnSet, cursor.index);
+  }
+
   const index = cursor.index;
   const row = {
     ts: cursor.ts,
@@ -8,13 +37,13 @@ export function legacyTickFromCursor(cursor, columnSet, bookDepth = 25) {
     event_end: cursor.event_end,
     condition_id: cursor.condition_id,
   };
-  for (const [name, column] of columnSet.columns.entries()) {
-    if (name.startsWith('_')) continue;
-    if (name in row) continue;
+  for (const name of libraryRunnerTickColumnNames(bookDepth)) {
+    const column = columnSet.columns.get(name);
+    if (!column) continue;
     const value = column[index];
     row[name] = Number.isNaN(value) ? null : value;
   }
-  return toLegacyBacktestTick(row, { index, bookDepth });
+  return toLegacyBacktestTick(row, { index, bookDepth, bookFormat: 'parsed' });
 }
 
 export function legacyTickFromAny(tick, bookDepth = 25) {
@@ -38,5 +67,5 @@ export function legacyTickFromAny(tick, bookDepth = 25) {
       row[key] = tick[key];
     }
   }
-  return toLegacyBacktestTick(row, { index: tick.id ?? 0, bookDepth });
+  return toLegacyBacktestTick(row, { index: tick.id ?? 0, bookDepth, bookFormat: 'parsed' });
 }

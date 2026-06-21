@@ -1,17 +1,35 @@
 {
   "id": "impulse-elasticity",
-  "name": "Impulse Elasticity",
+  "name": "Impulse Elasticity V1",
   "family": "impulse",
   "status": "candidate",
-  "kind": "gls",
-  "assets": ["BTC"],
-  "intervals": ["5m"],
+  "kind": "library-runner",
+  "assets": [
+    "BTC"
+  ],
+  "intervals": [
+    "5m"
+  ],
   "requiresBook": true,
   "defaultBookDepth": 25,
   "source": {
-    "type": "file",
-    "path": "src/backtestStudio/gls/strategies/impulseElasticity.gls"
+    "type": "library-runner",
+    "runnerSlug": "impulse-elasticity-runner",
+    "runnerVersion": 1
   },
-  "promotedToStudio": false,
-  "notes": "Estratégia baseada em divergência e elasticidade instantânea do consenso do book pós choques de BTC."
+  "portStatus": "ported",
+  "sourceRepo": "polymarket-test",
+  "sourceService": "impulseElasticityBacktest.js",
+  "promotedToStudio": true,
+  "studioSlug": "impulse-elasticity",
+  "studio": {
+    "description": "Impulse Elasticity V1 portado do polymarket-test via library-runner.",
+    "tags": [
+      "impulse-elasticity",
+      "ported",
+      "btc"
+    ],
+    "defaultVersion": 1
+  },
+  "notes": "Runner: impulse-elasticity-runner@1. Origem read-only: polymarket-test/impulseElasticityBacktest.js"
 }

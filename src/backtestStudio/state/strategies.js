@@ -178,6 +178,7 @@ export function listStrategiesForPicker(db) {
       sd.name,
       sd.status,
       sd.pinned,
+      sd.tags_json,
       sd.default_version_id,
       sv.id AS version_id,
       sv.version,
@@ -196,6 +197,7 @@ export function listStrategiesForPicker(db) {
     name: row.name,
     status: row.status,
     pinned: Boolean(row.pinned),
+    tags: JSON.parse(row.tags_json || '[]'),
     default_version_id: row.default_version_id != null ? Number(row.default_version_id) : null,
     notes: row.notes || null,
   }));
@@ -423,9 +425,10 @@ function enrichVersionValidation(validation, db, sourceCode = '') {
   const dependencies = validation.dependencies || [];
   const runnerLibrary = db ? findRunnerDependency(db, dependencies) : null;
   if (!runnerLibrary) return validation;
+  const executionKind = runnerLibrary.kind === 'portfolio' ? 'portfolio-runner' : 'library-runner';
   return {
     ...validation,
-    execution_kind: 'library-runner',
+    execution_kind: executionKind,
     editable_logic: false,
     runner_library: runnerLibrary,
   };

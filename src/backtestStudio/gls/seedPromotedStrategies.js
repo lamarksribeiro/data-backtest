@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { listPromotedStrategies } from '../../../labs/shared/discoverStrategies.js';
+import { listPromotedGlsStrategies } from '../../../labs/shared/discoverStrategies.js';
 import { listPresets, resolvePresetParams } from '../../../labs/shared/presets.js';
 import { renderPresetGls } from '../../../labs/shared/renderPresetGls.js';
 import {
@@ -253,7 +253,7 @@ export function seedPromotedStrategy(db, manifest, { jsOnly = true } = {}) {
 }
 
 export function seedPromotedStrategies(db, { manifests = null, jsOnly = true } = {}) {
-  const promoted = manifests || listPromotedStrategies();
+  const promoted = manifests || listPromotedGlsStrategies();
   return promoted.map((manifest) => seedPromotedStrategy(db, manifest, { jsOnly }));
 }
 

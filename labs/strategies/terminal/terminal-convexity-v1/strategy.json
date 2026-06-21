@@ -1,0 +1,36 @@
+{
+  "id": "terminal-convexity-v1",
+  "name": "Terminal Convexity V1",
+  "family": "terminal",
+  "status": "candidate",
+  "kind": "compiled-soa",
+  "assets": [
+    "BTC"
+  ],
+  "intervals": [
+    "5m"
+  ],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "compiled-soa",
+    "glsPath": "src/backtestStudio/gls/strategies/terminalConvexityV1.gls",
+    "modelsSlug": "terminal-convexity-models",
+    "modelsVersion": 1
+  },
+  "portStatus": "compiled-native",
+  "sourceRepo": "polymarket-test",
+  "sourceService": "terminalConvexityBacktest.js",
+  "promotedToStudio": true,
+  "studioSlug": "terminal-convexity-v1",
+  "studio": {
+    "description": "Terminal Convexity V1 nativa compiled-soa (modelo terminal-convexity-models).",
+    "tags": [
+      "terminal-convexity-v1",
+      "ported",
+      "btc"
+    ],
+    "defaultVersion": 1
+  },
+  "notes": "compiled-soa via terminalConvexityV1.gls + terminal-convexity-models@1. Paridade alvo: terminal-convexity-runner."
+}

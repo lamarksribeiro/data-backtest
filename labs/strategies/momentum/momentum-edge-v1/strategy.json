@@ -1,0 +1,35 @@
+{
+  "id": "momentum-edge-v1",
+  "name": "Momentum Edge V1",
+  "family": "momentum",
+  "status": "candidate",
+  "kind": "library-runner",
+  "assets": [
+    "BTC"
+  ],
+  "intervals": [
+    "5m"
+  ],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "library-runner",
+    "runnerSlug": "momentum-edge-runner",
+    "runnerVersion": 1
+  },
+  "portStatus": "ported",
+  "sourceRepo": "polymarket-test",
+  "sourceService": "momentumBacktest.js",
+  "promotedToStudio": true,
+  "studioSlug": "momentum-edge-v1",
+  "studio": {
+    "description": "Momentum Edge V1 portado do polymarket-test via library-runner.",
+    "tags": [
+      "momentum-edge-v1",
+      "ported",
+      "btc"
+    ],
+    "defaultVersion": 1
+  },
+  "notes": "Runner: momentum-edge-runner@1. Origem read-only: polymarket-test/momentumBacktest.js"
+}

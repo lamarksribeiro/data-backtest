@@ -5,16 +5,40 @@ import test from 'node:test';
 
 import { getEdgeSniperV3V1GlsSource } from '../src/backtestStudio/gls/loadStrategySource.js';
 import { loadPreset, listPresets } from '../labs/shared/presets.js';
-import { listPromotedStrategies } from '../labs/shared/discoverStrategies.js';
+import {
+  listPromotedStrategies,
+  listPromotedGlsStrategies,
+  listPromotedLibraryStrategies,
+  listPromotedCompiledStrategies,
+} from '../labs/shared/discoverStrategies.js';
 import { renderPresetGls } from '../labs/shared/renderPresetGls.js';
 import { seedPromotedStrategies } from '../src/backtestStudio/gls/seedPromotedStrategies.js';
 import { openStateDatabase, closeStateDatabase } from '../src/state/sqlite.js';
 
-test('listPromotedStrategies discovers promoted lab strategies', () => {
-  const promoted = listPromotedStrategies();
+test('listPromotedGlsStrategies discovers GLS lab strategies', () => {
+  const promoted = listPromotedGlsStrategies();
   const ids = promoted.map((item) => item.id).sort();
   assert.deepEqual(ids, ['edge-sniper-v3', 'gamma-ladder-v1', 'vsmr']);
   assert.equal(promoted.find((item) => item.id === 'gamma-ladder-v1').studioSlug, 'gamma-ladder-v1');
+});
+
+test('listPromotedLibraryStrategies discovers ported library runners', () => {
+  const promoted = listPromotedLibraryStrategies();
+  assert.ok(promoted.length >= 10);
+  for (const manifest of promoted) {
+    assert.equal(manifest.portStatus, 'ported');
+    assert.ok(['library-runner', 'portfolio-runner'].includes(manifest.kind));
+  }
+  const compiled = listPromotedCompiledStrategies();
+  assert.deepEqual(compiled.map((item) => item.id), ['terminal-convexity-v1']);
+  assert.equal(compiled[0].kind, 'compiled-soa');
+  assert.equal(compiled[0].portStatus, 'compiled-native');
+
+  const allPromoted = listPromotedStrategies();
+  assert.equal(
+    allPromoted.length,
+    listPromotedGlsStrategies().length + promoted.length + compiled.length,
+  );
 });
 
 test('seedPromotedStrategies seeds versions from lab manifests', () => {

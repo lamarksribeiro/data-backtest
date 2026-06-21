@@ -60,13 +60,17 @@ async function main() {
     SELECT sv.*, sd.slug
     FROM strategy_versions sv
     JOIN strategy_definitions sd ON sd.id = sv.strategy_id
-    WHERE sd.slug = 'edge-sniper-v3-gls' AND sv.language = 'strategy-js-v1'
-    ORDER BY sv.version DESC
+    WHERE sd.slug IN ('edge-sniper-v3', 'edge-sniper-v3-gls')
+      AND sv.language = 'strategy-js-v1'
+    ORDER BY CASE sd.slug WHEN 'edge-sniper-v3' THEN 0 ELSE 1 END, sv.version DESC
     LIMIT 1
   `).get();
 
   if (!version) {
-    console.error(JSON.stringify({ ok: false, error: 'edge-sniper-v3-gls Strategy JS version not found' }));
+    console.error(JSON.stringify({
+      ok: false,
+      error: 'edge-sniper-v3 Strategy JS version not found (run lab:seed-presets)',
+    }));
     closeStateDatabase(db);
     process.exit(1);
   }

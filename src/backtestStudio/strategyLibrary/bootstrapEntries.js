@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.resolve(__dirname, '../../../data/strategy-libraries');
-const SQLITE_LIBRARY_EXCLUDE = new Set(['gamma-ladder-engine', 'edge-sniper-models']);
+const SQLITE_LIBRARY_EXCLUDE = new Set(['gamma-ladder-engine', 'edge-sniper-models', 'terminal-convexity-models']);
 
 export function loadBootstrapLibraryEntries() {
   let files = [];

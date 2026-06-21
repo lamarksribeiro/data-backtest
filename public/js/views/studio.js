@@ -220,7 +220,6 @@ const studioState = {
   selectedStrategyPick: '',
   coverageUi: null,
   cancellingRunId: null,
-  configAdvancedOpen: false,
   runFiltersAdvancedOpen: false,
 };
 
@@ -696,29 +695,31 @@ function renderConfigPanel(ctx, { formCtx, fieldOptions }) {
     ]),
     el('form', { id: 'studio-form', class: 'studio-form' }, [
       el('div', { class: 'studio-form__scroll' }, [
-        el('div', { class: 'field' }, [
-          el('div', { id: 'studio-strategy-pick' }),
-        ]),
-        el('label', { class: 'field' }, [
-          el('div', { class: 'field__label-row' }, [
-            el('span', { class: 'field__label' }, 'De'),
-            el('span', { id: 'studio-coverage-indicator', class: 'studio-coverage-slot' }),
+        el('div', { id: 'studio-strategy-pick' }),
+        el('div', { class: 'studio-form__grid' }, [
+          el('label', { class: 'field' }, [
+            el('div', { class: 'field__label-row' }, [
+              el('span', { class: 'field__label' }, 'De'),
+              el('span', { id: 'studio-coverage-indicator', class: 'studio-coverage-slot' }),
+            ]),
+            el('input', { type: 'date', name: 'from', value: formCtx.from, class: 'field__input', onchange: () => refreshCoverageIndicator(ctx, formFromDom()) }),
           ]),
-          el('input', { type: 'date', name: 'from', value: formCtx.from, class: 'field__input', onchange: () => refreshCoverageIndicator(ctx, formFromDom()) }),
+          el('label', { class: 'field' }, [
+            el('span', { class: 'field__label' }, 'Até'),
+            el('input', { type: 'date', name: 'to', value: formCtx.to, class: 'field__input', onchange: () => refreshCoverageIndicator(ctx, formFromDom()) }),
+          ]),
         ]),
-        el('label', { class: 'field' }, [
-          el('span', { class: 'field__label' }, 'Até (incluso)'),
-          el('input', { type: 'date', name: 'to', value: formCtx.to, class: 'field__input', onchange: () => refreshCoverageIndicator(ctx, formFromDom()) }),
+        el('div', { class: 'studio-form__grid' }, [
+          el('label', { class: 'field' }, [
+            el('span', { class: 'field__label' }, 'Ativo'),
+            selectField('underlying', fieldOptions.underlyings || [formCtx.underlying], formCtx.underlying),
+          ]),
+          el('label', { class: 'field' }, [
+            el('span', { class: 'field__label' }, 'Intervalo'),
+            selectField('interval', fieldOptions.intervals || [formCtx.interval], formCtx.interval),
+          ]),
         ]),
-        el('label', { class: 'field' }, [
-          el('span', { class: 'field__label' }, 'Ativo'),
-          selectField('underlying', fieldOptions.underlyings || [formCtx.underlying], formCtx.underlying),
-        ]),
-        el('label', { class: 'field' }, [
-          el('span', { class: 'field__label' }, 'Intervalo'),
-          selectField('interval', fieldOptions.intervals || [formCtx.interval], formCtx.interval),
-        ]),
-        renderConfigAdvancedPopover(ctx, { formCtx, fieldOptions }),
+        renderConfigExtraFields({ formCtx, fieldOptions }),
       ]),
       el('div', { class: 'studio-form__actions' }, [
         el('button', { class: 'btn btn--primary studio-run-btn', type: 'submit' }, 'Rodar backtest'),
@@ -735,9 +736,6 @@ function renderConfigPanel(ctx, { formCtx, fieldOptions }) {
   });
   document.getElementById('studio-fix-btn')?.addEventListener('click', () => fixDataFromStudio(ctx));
 
-  if (studioState.configAdvancedOpen) {
-    requestAnimationFrame(() => bindAdvancedPopoverDismiss('config'));
-  }
 }
 
 function mountStudioStrategyPicker(ctx) {
@@ -757,6 +755,9 @@ function mountStudioStrategyPicker(ctx) {
     },
   }, el('i', { class: 'fa-regular fa-star', 'aria-hidden': 'true' }));
   pinBtn.addEventListener('mousedown', (event) => event.preventDefault());
+
+  strategyPickWrap.querySelector('.studio-strategy-picker')
+    ?.dispatchEvent(new CustomEvent('studio-strategy-picker:destroy'));
 
   strategyPickWrap.replaceChildren(renderStrategyPicker(
     studioState.strategyOptions,
@@ -1254,7 +1255,6 @@ function unbindAdvancedPopoverDismiss() {
 
 function closeAdvancedPopover({ silent = false } = {}) {
   const which = activeAdvancedPopover;
-  if (which === 'config') studioState.configAdvancedOpen = false;
   if (which === 'runs') studioState.runFiltersAdvancedOpen = false;
   activeAdvancedPopover = null;
   unbindAdvancedPopoverDismiss();
@@ -1266,15 +1266,14 @@ function closeAdvancedPopover({ silent = false } = {}) {
 }
 
 function toggleAdvancedPopover(which, ctx) {
-  const isOpen = which === 'config' ? studioState.configAdvancedOpen : studioState.runFiltersAdvancedOpen;
+  const isOpen = studioState.runFiltersAdvancedOpen;
   if (isOpen && activeAdvancedPopover === which) {
     closeAdvancedPopover();
     return;
   }
   closeAdvancedPopover({ silent: true });
   activeAdvancedPopover = which;
-  if (which === 'config') studioState.configAdvancedOpen = true;
-  else studioState.runFiltersAdvancedOpen = true;
+  studioState.runFiltersAdvancedOpen = true;
   document.getElementById(`studio-${which}-advanced-popover`)?.classList.add('is-open');
   document.getElementById(`studio-${which}-advanced-trigger`)?.classList.add('is-active');
   bindAdvancedPopoverDismiss(which);
@@ -1301,50 +1300,28 @@ function bindAdvancedPopoverDismiss(which) {
   }, 0);
 }
 
-function renderConfigAdvancedPopover(ctx, { formCtx, fieldOptions }) {
-  const open = studioState.configAdvancedOpen;
-  return el('div', { class: 'studio-advanced-anchor', id: 'studio-config-advanced-anchor' }, [
-    el('button', {
-      type: 'button',
-      id: 'studio-config-advanced-trigger',
-      class: `btn btn--ghost btn--sm studio-advanced-trigger${open ? ' is-active' : ''}`,
-      'aria-expanded': open ? 'true' : 'false',
-      'aria-controls': 'studio-config-advanced-popover',
-      onclick: (event) => {
-        event.stopPropagation();
-        toggleAdvancedPopover('config', ctx);
-      },
-    }, 'Avançado'),
-    el('div', {
-      id: 'studio-config-advanced-popover',
-      class: `studio-advanced-popover studio-advanced-popover--config${open ? ' is-open' : ''}`,
-      role: 'dialog',
-      'aria-label': 'Parâmetros avançados do backtest',
-      onclick: (event) => event.stopPropagation(),
-    }, [
-      el('div', { class: 'studio-advanced-popover__head' }, [
-        el('strong', {}, 'Avançado'),
-        el('button', {
-          type: 'button',
-          class: 'btn btn--ghost btn--sm',
-          onclick: () => closeAdvancedPopover(),
-        }, 'Fechar'),
+function renderConfigExtraFields({ formCtx, fieldOptions }) {
+  return el('div', { class: 'studio-config-extra' }, [
+    el('div', { class: 'studio-form__grid' }, [
+      el('label', { class: 'field' }, [
+        el('span', { class: 'field__label' }, 'Book'),
+        selectField('book_depth', fieldOptions.book_depths || [formCtx.book_depth], formCtx.book_depth),
       ]),
-      el('div', { class: 'studio-advanced-popover__body studio-form studio-advanced-popover__body--compact' }, [
-        el('label', { class: 'field' }, [
-          el('span', { class: 'field__label' }, 'Book'),
-          selectField('book_depth', fieldOptions.book_depths || [formCtx.book_depth], formCtx.book_depth),
-        ]),
-        el('label', { class: 'switch-field' }, [
-          el('input', { type: 'checkbox', name: 'fast_run', value: '1', class: 'switch-field__input' }),
-          el('span', { class: 'switch-field__slider' }),
-          ' Modo rápido',
-        ]),
-        el('label', { class: 'field' }, [
-          el('span', { class: 'field__label' }, 'Batch size'),
-          el('input', { type: 'number', name: 'batch_size', min: '1', value: formCtx.batch_size || 5000, class: 'field__input' }),
-        ]),
+      el('label', { class: 'field' }, [
+        el('span', { class: 'field__label' }, 'Batch size'),
+        el('input', {
+          type: 'number',
+          name: 'batch_size',
+          min: '1',
+          value: formCtx.batch_size || 5000,
+          class: 'field__input',
+        }),
       ]),
+    ]),
+    el('label', { class: 'switch-field studio-config-extra__switch' }, [
+      el('input', { type: 'checkbox', name: 'fast_run', value: '1', class: 'switch-field__input' }),
+      el('span', { class: 'switch-field__slider' }),
+      ' Modo rápido',
     ]),
   ]);
 }
@@ -1615,6 +1592,10 @@ async function loadRunDetail(ctx, runId, { routeToken = ctx.getRouteToken?.() ??
     renderCancelledPanel(main, run, ctx);
     return;
   }
+  if (run.status === 'failed_runtime' || run.status === 'failed') {
+    renderFailedRunPanel(main, run, ctx);
+    return;
+  }
 
   const summary = run.summary || {};
   mount(main, el('div', { class: 'studio-result' }, [
@@ -1805,6 +1786,23 @@ function renderProgressPanel(container, run, ctx) {
   ]));
   if (run.status === 'running' || run.status === 'queued') startProgressPoll(ctx, run.id);
   applyProgressUi(progress, { runId: run.id });
+}
+
+function renderFailedRunPanel(container, run, ctx) {
+  const summaryError = run.summary?.error || run.summary?.failed?.error;
+  mount(container, el('div', { class: 'studio-progress-panel' }, [
+    el('div', { class: 'studio-progress-card' }, [
+      renderRunContextBanner(run, { compact: true }),
+      el('p', { class: 'status-badge status-badge--err' }, RUN_STATUS_LABELS[run.status] || 'Falhou'),
+      el('p', { class: 'muted' }, run.error || summaryError || 'O backtest falhou em runtime.'),
+      run.duration_ms ? el('p', { class: 'muted' }, `Duração: ${formatDurationMs(run.duration_ms)}`) : null,
+      el('button', {
+        type: 'button',
+        class: 'btn btn--ghost btn--sm',
+        onclick: () => exitRunSelection(ctx),
+      }, 'Voltar para seleção'),
+    ]),
+  ]));
 }
 
 function renderCancelledPanel(container, run, ctx) {

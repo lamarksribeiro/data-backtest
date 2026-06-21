@@ -5,6 +5,20 @@ const PICKER_CACHE_TTL_MS = 30_000;
 const STRATEGY_PICK_STORAGE_KEY = 'data-backtest-strategy-pick';
 const STRATEGY_PICK_PREFIX = 'js:';
 
+const STATUS_LABELS = {
+  validated: 'Aprovadas',
+  draft: 'Em Teste',
+  failed: 'Falharam',
+};
+
+const STATUS_ORDER = ['validated', 'draft', 'failed'];
+
+const STATUS_TONE = {
+  validated: 'ok',
+  draft: 'warn',
+  failed: 'err',
+};
+
 function isStrategyPick(value) {
   const raw = String(value || '');
   return raw.startsWith(`${STRATEGY_PICK_PREFIX}`) || raw.startsWith('gls:');
@@ -32,6 +46,15 @@ function sortVersions(versions) {
   });
 }
 
+function normalizePickerStatus(status) {
+  return STATUS_ORDER.includes(status) ? status : 'draft';
+}
+
+function compareStrategies(a, b) {
+  if (a.pinned !== b.pinned) return b.pinned ? 1 : -1;
+  return (b.strategyId ?? 0) - (a.strategyId ?? 0);
+}
+
 function groupOptionsByStrategy(options) {
   const byStrategy = new Map();
   for (const opt of options) {
@@ -40,6 +63,9 @@ function groupOptionsByStrategy(options) {
       byStrategy.set(key, {
         strategyId: key,
         label: opt.label.split(' · ')[0],
+        slug: opt.slug || '',
+        tags: opt.tags || [],
+        status: normalizePickerStatus(opt.status),
         versions: [],
         defaultVersionId: opt.defaultVersionId ?? null,
         pinned: Boolean(opt.pinned),
@@ -50,10 +76,71 @@ function groupOptionsByStrategy(options) {
   for (const strat of byStrategy.values()) {
     strat.versions = sortVersions(strat.versions);
   }
-  return [...byStrategy.values()].sort((a, b) => {
-    if (a.pinned !== b.pinned) return b.pinned ? 1 : -1;
-    return (b.strategyId ?? 0) - (a.strategyId ?? 0);
-  });
+  return [...byStrategy.values()].sort(compareStrategies);
+}
+
+function strategyMatchesQuery(strat, query) {
+  const q = String(query || '').trim().toLowerCase();
+  if (!q) return true;
+  const statusLabel = STATUS_LABELS[strat.status] || '';
+  const haystack = [
+    strat.label,
+    strat.slug,
+    statusLabel,
+    ...(strat.tags || []),
+  ].join(' ').toLowerCase();
+  return haystack.includes(q);
+}
+
+function formatStrategyLabel(strat) {
+  return strat.pinned ? `★ ${strat.label}` : strat.label;
+}
+
+function filterVisibleStrategies(strategies, { query = '', selectedId = '' } = {}) {
+  const selected = strategies.find((s) => String(s.strategyId) === String(selectedId)) || null;
+  const matching = strategies.filter((s) => strategyMatchesQuery(s, query));
+  const visible = new Map(matching.map((s) => [String(s.strategyId), s]));
+  if (selected && !visible.has(String(selected.strategyId))) {
+    visible.set(String(selected.strategyId), selected);
+  }
+  const list = [...visible.values()].sort(compareStrategies);
+  return { list, selected, total: strategies.length, visible: list.length };
+}
+
+function buildStrategyMenuItems(list, selectedId, onPick) {
+  const grouped = new Map(STATUS_ORDER.map((status) => [status, []]));
+  for (const strat of list) {
+    grouped.get(strat.status)?.push(strat);
+  }
+
+  const nodes = [];
+  for (const status of STATUS_ORDER) {
+    const items = grouped.get(status) || [];
+    if (!items.length) continue;
+    const tone = STATUS_TONE[status] || 'idle';
+    nodes.push(el('div', {
+      class: `studio-strategy-picker__group-label studio-strategy-picker__group-label--${tone}`,
+    }, STATUS_LABELS[status]));
+    for (const strat of items) {
+      const isSelected = String(strat.strategyId) === String(selectedId);
+      nodes.push(el('button', {
+        type: 'button',
+        role: 'option',
+        class: `studio-strategy-picker__option${isSelected ? ' is-selected' : ''}`,
+        'aria-selected': isSelected ? 'true' : 'false',
+        onclick: (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          onPick(strat.strategyId);
+        },
+      }, formatStrategyLabel(strat)));
+    }
+  }
+
+  if (!nodes.length) {
+    nodes.push(el('div', { class: 'studio-strategy-picker__menu-empty muted' }, 'Nenhuma estratégia encontrada'));
+  }
+  return nodes;
 }
 
 export function loadLastStrategyPick() {
@@ -134,6 +221,7 @@ function mapPickerRows(rows, { includeArchived = false } = {}) {
       slug: row.slug,
       status: row.status,
       pinned: row.pinned,
+      tags: row.tags || [],
       defaultVersionId: row.default_version_id ?? null,
       notes: row.notes,
     });
@@ -194,6 +282,7 @@ export async function loadStrategyOptions(api, { includeArchived = false, stats 
           slug: strategy.slug,
           status: strategy.status,
           pinned: strategy.pinned,
+          tags: strategy.tags || [],
           defaultVersionId: strategy.default_version_id ?? null,
           notes: version.notes,
         });
@@ -238,16 +327,54 @@ export function renderStrategyPicker(options, selectedValue = '', onChange = nul
   const strategies = groupOptionsByStrategy(options);
   const [, selSid, selVid] = String(selectedValue || '').split(':');
 
-  const strategySelect = el('select', {
-    name: 'strategy_id_pick',
-    class: 'field__input studio-strategy-picker__strategy',
-    'aria-label': 'Estratégia',
-  }, strategies.map((s) => el('option', {
-    value: String(s.strategyId),
-    selected: String(s.strategyId) === String(selSid),
-  }, s.label)));
-
   const current = strategies.find((s) => String(s.strategyId) === String(selSid)) || strategies[0];
+  let selectedStrategyId = String(selSid || current?.strategyId || '');
+  let menuOpen = false;
+  let dismissHandler = null;
+
+  const searchInput = el('input', {
+    type: 'search',
+    class: 'field__input studio-strategy-picker__search',
+    placeholder: 'Buscar por nome ou slug…',
+    'aria-label': 'Buscar estratégia',
+    autocomplete: 'off',
+  });
+
+  const searchHint = el('span', { class: 'studio-strategy-picker__hint muted' });
+
+  const strategyIdHidden = el('input', {
+    type: 'hidden',
+    name: 'strategy_id_pick',
+    value: selectedStrategyId,
+  });
+
+  const triggerLabel = el('span', { class: 'studio-strategy-picker__trigger-label' });
+  const trigger = el('button', {
+    type: 'button',
+    class: 'field__input studio-strategy-picker__trigger',
+    'aria-haspopup': 'listbox',
+    'aria-expanded': 'false',
+    'aria-label': 'Selecionar estratégia',
+    disabled: !strategies.length,
+    onclick: (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (menuOpen) closeMenu();
+      else openMenu({ focusSearch: false });
+    },
+  }, [
+    triggerLabel,
+    el('i', { class: 'fa-solid fa-chevron-down studio-strategy-picker__trigger-icon', 'aria-hidden': 'true' }),
+  ]);
+
+  const menu = el('div', {
+    class: 'studio-strategy-picker__menu',
+    role: 'listbox',
+    hidden: true,
+  });
+
+  const comboWrap = el('div', { class: 'studio-strategy-picker__combo' }, [trigger, menu]);
+
   const initialVid = (selSid && selVid && current?.versions.some((v) => String(v.versionId) === String(selVid)))
     ? selVid
     : resolveVersionIdForStrategy(current, current?.versions);
@@ -263,8 +390,82 @@ export function renderStrategyPicker(options, selectedValue = '', onChange = nul
     'aria-label': 'Versão',
   });
 
+  function updateSearchHint(counts) {
+    if (!counts.visible) {
+      searchHint.textContent = 'Nenhuma estratégia corresponde à busca';
+      searchHint.hidden = false;
+      return;
+    }
+    if (counts.visible === counts.total) {
+      searchHint.textContent = '';
+      searchHint.hidden = true;
+      return;
+    }
+    searchHint.textContent = `${counts.visible} de ${counts.total} estratégias`;
+    searchHint.hidden = false;
+  }
+
+  function updateTriggerLabel() {
+    const strat = strategies.find((s) => String(s.strategyId) === String(selectedStrategyId));
+    triggerLabel.textContent = strat ? formatStrategyLabel(strat) : 'Selecione uma estratégia';
+    trigger.disabled = !strategies.length;
+  }
+
+  function renderMenu() {
+    const counts = filterVisibleStrategies(strategies, {
+      query: searchInput.value,
+      selectedId: selectedStrategyId,
+    });
+    menu.replaceChildren(...buildStrategyMenuItems(counts.list, selectedStrategyId, selectStrategy));
+    updateSearchHint(counts);
+  }
+
+  function bindDismiss() {
+    if (dismissHandler) return;
+    dismissHandler = (event) => {
+      if (!comboWrap.contains(event.target) && event.target !== searchInput) {
+        closeMenu();
+      }
+    };
+    document.addEventListener('pointerdown', dismissHandler, true);
+  }
+
+  function unbindDismiss() {
+    if (!dismissHandler) return;
+    document.removeEventListener('pointerdown', dismissHandler, true);
+    dismissHandler = null;
+  }
+
+  function openMenu({ focusSearch = false } = {}) {
+    if (!strategies.length) return;
+    menuOpen = true;
+    menu.hidden = false;
+    trigger.setAttribute('aria-expanded', 'true');
+    comboWrap.classList.add('is-open');
+    renderMenu();
+    bindDismiss();
+    if (focusSearch) searchInput.focus();
+  }
+
+  function closeMenu() {
+    menuOpen = false;
+    menu.hidden = true;
+    trigger.setAttribute('aria-expanded', 'false');
+    comboWrap.classList.remove('is-open');
+    unbindDismiss();
+  }
+
+  function selectStrategy(strategyId) {
+    const prev = selectedStrategyId;
+    selectedStrategyId = String(strategyId);
+    strategyIdHidden.value = selectedStrategyId;
+    updateTriggerLabel();
+    closeMenu();
+    syncValue({ strategyChanged: prev !== selectedStrategyId });
+  }
+
   function syncValue({ strategyChanged = false } = {}) {
-    const sid = strategySelect.value;
+    const sid = selectedStrategyId;
     const strat = strategies.find((s) => String(s.strategyId) === sid) || strategies[0];
     if (!strat) return;
 
@@ -288,9 +489,27 @@ export function renderStrategyPicker(options, selectedValue = '', onChange = nul
     onChange?.(hidden.value);
   }
 
+  updateTriggerLabel();
+  renderMenu();
   syncValue();
-  strategySelect.addEventListener('change', () => syncValue({ strategyChanged: true }));
+
+  searchInput.addEventListener('input', () => {
+    if (!menuOpen) openMenu();
+    else renderMenu();
+  });
+  searchInput.addEventListener('focus', () => {
+    if (!menuOpen) openMenu();
+  });
+  searchInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      closeMenu();
+      searchInput.blur();
+    }
+  });
+
   versionSelect.addEventListener('change', () => syncValue({ strategyChanged: false }));
+
+  wrap.addEventListener('studio-strategy-picker:destroy', unbindDismiss);
 
   const versionWrap = el('div', { class: 'studio-strategy-picker__version-wrap' }, [
     versionSelect,
@@ -300,12 +519,21 @@ export function renderStrategyPicker(options, selectedValue = '', onChange = nul
   wrap.append(
     el('label', { class: 'field' }, [
       el('span', { class: 'field__label' }, 'Estratégia'),
-      strategySelect,
+      el('div', { class: 'studio-strategy-picker__search-wrap' }, [
+        el('i', {
+          class: 'fa-solid fa-magnifying-glass studio-strategy-picker__search-icon',
+          'aria-hidden': 'true',
+        }),
+        searchInput,
+      ]),
+      comboWrap,
+      searchHint,
     ]),
     el('label', { class: 'field' }, [
       el('span', { class: 'field__label' }, 'Versão'),
       versionWrap,
     ]),
+    strategyIdHidden,
     hidden,
   );
   return wrap;

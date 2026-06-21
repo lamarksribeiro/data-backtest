@@ -5062,7 +5062,7 @@ i.fa-solid, i.fa-regular, i.fa-brands {
 .studio-config .studio-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   min-width: 0;
 }
 
@@ -5073,7 +5073,7 @@ i.fa-solid, i.fa-regular, i.fa-brands {
 .studio-strategy-picker {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   width: 100%;
   min-width: 0;
 }
@@ -5089,7 +5089,137 @@ i.fa-solid, i.fa-regular, i.fa-brands {
   padding-right: 52px;
 }
 
-.studio-strategy-picker__strategy,
+.studio-strategy-picker__search-wrap {
+  position: relative;
+}
+
+.studio-strategy-picker__search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-3);
+  pointer-events: none;
+  font-size: 12px;
+}
+
+.studio-strategy-picker__search {
+  width: 100%;
+  min-width: 0;
+  padding-left: 34px;
+}
+
+.studio-strategy-picker__hint {
+  display: block;
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.studio-strategy-picker__hint[hidden] {
+  display: none;
+}
+
+.studio-strategy-picker__combo {
+  position: relative;
+}
+
+.studio-strategy-picker__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.studio-strategy-picker__trigger-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.studio-strategy-picker__trigger-icon {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--text-3);
+  transition: transform 0.15s ease;
+}
+
+.studio-strategy-picker__combo.is-open .studio-strategy-picker__trigger-icon {
+  transform: rotate(180deg);
+}
+
+.studio-strategy-picker__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  max-height: min(240px, 38vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--ds-surface, #111827);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--ds-radius, 10px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  padding: 4px 0;
+}
+
+.studio-strategy-picker__menu[hidden] {
+  display: none;
+}
+
+.studio-strategy-picker__menu-empty {
+  padding: 12px;
+  font-size: 12px;
+  text-align: center;
+}
+
+.studio-strategy-picker__group-label {
+  padding: 8px 12px 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--ds-surface, #111827);
+}
+
+.studio-strategy-picker__group-label--ok { color: #10b981; }
+.studio-strategy-picker__group-label--warn { color: #f59e0b; }
+.studio-strategy-picker__group-label--err { color: #ef4444; }
+
+.studio-strategy-picker__option {
+  display: block;
+  width: 100%;
+  padding: 7px 12px 7px 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-0);
+  text-align: left;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+.studio-strategy-picker__option:hover,
+.studio-strategy-picker__option:focus-visible {
+  background: rgba(255, 255, 255, 0.06);
+  outline: none;
+}
+
+.studio-strategy-picker__option.is-selected {
+  background: rgba(59, 130, 246, 0.14);
+}
+
 .studio-strategy-picker__version {
   width: 100%;
   min-width: 0;
@@ -5343,6 +5473,10 @@ i.fa-solid, i.fa-regular, i.fa-brands {
 }
 
 @media (max-width: 1100px) {
+  .studio-config .studio-form__grid {
+    grid-template-columns: 1fr;
+  }
+
   .studio-advanced-popover--runs {
     right: auto;
     left: 0;
@@ -7577,10 +7711,11 @@ html, body {
   min-height: 0;
   margin-bottom: 0;
   overflow: visible;
+  padding: 14px 16px 16px;
 }
 
 .studio-config .studio-form {
-  gap: 14px;
+  gap: 10px;
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
@@ -7592,15 +7727,41 @@ html, body {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
 }
 
+.studio-config-extra {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.studio-config-extra__switch {
+  margin-top: 2px;
+  font-size: 12px;
+}
+
+.studio-config .studio-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  min-width: 0;
+}
+
+.studio-config .card__header {
+  margin-bottom: 10px;
+}
+
+.studio-config .card__sub {
+  font-size: 11px;
+}
+
 /* Strategy picker refinado */
 .studio-strategy-picker {
-  gap: 14px;
   padding: 0;
   border: none;
   background: transparent;
@@ -7672,8 +7833,9 @@ html, body {
   flex-direction: column;
   gap: 8px;
   margin-top: auto;
-  padding-top: 14px;
+  padding-top: 10px;
   border-top: 1px solid var(--border);
+  flex-shrink: 0;
 }
 .studio-run-btn.btn--primary {
   width: 100%;

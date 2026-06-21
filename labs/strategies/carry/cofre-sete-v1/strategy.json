@@ -1,0 +1,35 @@
+{
+  "id": "cofre-sete-v1",
+  "name": "Cofre Sete V1",
+  "family": "carry",
+  "status": "candidate",
+  "kind": "library-runner",
+  "assets": [
+    "BTC"
+  ],
+  "intervals": [
+    "5m"
+  ],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "library-runner",
+    "runnerSlug": "cofre-sete-runner",
+    "runnerVersion": 1
+  },
+  "portStatus": "ported",
+  "sourceRepo": "polymarket-test",
+  "sourceService": "cofreSeteBacktest.js",
+  "promotedToStudio": true,
+  "studioSlug": "cofre-sete-v1",
+  "studio": {
+    "description": "Cofre Sete V1 portado do polymarket-test via library-runner.",
+    "tags": [
+      "cofre-sete-v1",
+      "ported",
+      "btc"
+    ],
+    "defaultVersion": 1
+  },
+  "notes": "Runner: cofre-sete-runner@1. Origem read-only: polymarket-test/cofreSeteBacktest.js"
+}

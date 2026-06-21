@@ -16,6 +16,8 @@ import { lowerToGlsAst } from './lowerToGlsAst.js';
 import { extractHelperFunctions, inlineHelpersInConfig } from './inlineHelpers.js';
 import { buildSoaGeneratedSource } from '../gls/compilerSoa.js';
 import { findRunnerDependency } from '../strategyLibrary/kind.js';
+import { LIBRARY_RUNNER_COLUMN_ANALYSIS } from '../strategyLibrary/runnerAdapter.js';
+import { PORTFOLIO_RUNNER_COLUMN_ANALYSIS } from '../strategyLibrary/portfolioRunnerAdapter.js';
 import { detectEmbeddedRunner } from './embeddedRunner.js';
 import { detectEmbeddedModels } from './embeddedModels.js';
 import { EMBEDDED_RUNNER_COLUMN_ANALYSIS } from './embeddedRunnerAdapter.js';
@@ -84,7 +86,14 @@ export function compileStrategyJs(source, { bookDepth = 25, db = null } = {}) {
     };
   }
 
-  const columnAnalysis = analyzeStrategyColumns(glsAst, bookDepth);
+  const dependencies = config.dependencies || [];
+  const runnerLibrary = db ? findRunnerDependency(db, dependencies) : null;
+  const columnAnalysis = runnerLibrary
+    ? {
+      ...(runnerLibrary.kind === 'portfolio' ? PORTFOLIO_RUNNER_COLUMN_ANALYSIS : LIBRARY_RUNNER_COLUMN_ANALYSIS),
+      bookDepth,
+    }
+    : analyzeStrategyColumns(glsAst, bookDepth);
   const parallelism = analyzeStrategyParallelism(glsAst);
   const columnCheck = validateColumnAnalysisComplete(glsAst, columnAnalysis);
   if (!columnCheck.ok) {
@@ -116,10 +125,10 @@ export function compileStrategyJs(source, { bookDepth = 25, db = null } = {}) {
     },
   };
 
-  const dependencies = config.dependencies || [];
-  const runnerLibrary = db ? findRunnerDependency(db, dependencies) : null;
   const embeddedModels = detectEmbeddedModels(code);
-  const executionKind = runnerLibrary ? 'library-runner' : 'compiled-soa';
+  const executionKind = runnerLibrary
+    ? (runnerLibrary.kind === 'portfolio' ? 'portfolio-runner' : 'library-runner')
+    : 'compiled-soa';
 
   return {
     ok: true,

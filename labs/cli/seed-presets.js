@@ -4,14 +4,14 @@ import 'dotenv/config';
 import { loadConfig } from '../../src/config.js';
 import { openStateDatabase, closeStateDatabase } from '../../src/state/sqlite.js';
 import { seedPromotedStrategies } from '../../src/backtestStudio/gls/seedPromotedStrategies.js';
-import { listPromotedStrategies } from '../../labs/shared/discoverStrategies.js';
+import { listPromotedGlsStrategies } from '../../labs/shared/discoverStrategies.js';
 
 async function main() {
   const dryRun = process.argv.includes('--dry-run');
   const config = loadConfig();
   const db = openStateDatabase(config.stateDbPath);
   try {
-    const promoted = listPromotedStrategies();
+    const promoted = listPromotedGlsStrategies();
     if (dryRun) {
       console.log(JSON.stringify({
         ok: true,

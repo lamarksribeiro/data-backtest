@@ -1,5 +1,7 @@
 # Catalogo De Estrategias
 
+Fonte canônica de estratégias no ecossistema GoldenLens. Estratégias que ainda existem apenas no `polymarket-test` devem ser **portadas para cá** — o repositório antigo é somente leitura (código, params, docs em `docs/estrategias/`).
+
 Organize estrategias por familia de comportamento, nao por ativo.
 
 Exemplos de familias:

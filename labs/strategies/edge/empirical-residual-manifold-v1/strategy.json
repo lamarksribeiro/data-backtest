@@ -1,0 +1,35 @@
+{
+  "id": "empirical-residual-manifold-v1",
+  "name": "ERM V1",
+  "family": "edge",
+  "status": "candidate",
+  "kind": "library-runner",
+  "assets": [
+    "BTC"
+  ],
+  "intervals": [
+    "5m"
+  ],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "library-runner",
+    "runnerSlug": "erm-runner",
+    "runnerVersion": 1
+  },
+  "portStatus": "ported",
+  "sourceRepo": "polymarket-test",
+  "sourceService": "empiricalResidualManifoldBacktest.js",
+  "promotedToStudio": true,
+  "studioSlug": "empirical-residual-manifold-v1",
+  "studio": {
+    "description": "ERM V1 portado do polymarket-test via library-runner.",
+    "tags": [
+      "empirical-residual-manifold-v1",
+      "ported",
+      "btc"
+    ],
+    "defaultVersion": 1
+  },
+  "notes": "Runner: erm-runner@1. Origem read-only: polymarket-test/empiricalResidualManifoldBacktest.js"
+}
