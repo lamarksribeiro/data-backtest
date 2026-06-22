@@ -233,16 +233,85 @@ export function listEventTraces(db, runId, {
   return db.prepare(sql).all(...params).map(toApiEventSummary);
 }
 
+const JSON_SORT_NULL = -1e18;
+
+export function normalizeEventSort(sort) {
+  const raw = String(sort || 'default').trim();
+  if (!raw || raw === 'default') return { column: 'event_start', dir: 'asc' };
+
+  const legacy = {
+    pnl_asc: { column: 'pnl', dir: 'asc' },
+    pnl_desc: { column: 'pnl', dir: 'desc' },
+    event_start: { column: 'event_start', dir: 'asc' },
+    event_start_desc: { column: 'event_start', dir: 'desc' },
+  };
+  if (legacy[raw]) return legacy[raw];
+
+  const [column, dir] = raw.split(':');
+  if (!column) return { column: 'default', dir: null };
+  return { column, dir: dir === 'asc' ? 'asc' : 'desc' };
+}
+
+export function buildEventOrderClause(sort) {
+  return orderClauseForSort(sort);
+}
+
 function orderClauseForSort(sort) {
-  switch (String(sort)) {
-    case 'pnl_asc': return 'final_pnl ASC, event_start ASC';
-    case 'pnl_desc': return 'final_pnl DESC, event_start ASC';
-    case 'event_start': return 'event_start ASC';
-    case 'event_start_desc': return 'event_start DESC';
+  const { column, dir } = normalizeEventSort(sort);
+  const direction = dir === 'asc' ? 'ASC' : 'DESC';
+
+  switch (column) {
+    case 'pnl':
+      return dir === 'asc'
+        ? 'final_pnl ASC, event_start ASC'
+        : 'final_pnl DESC, event_start ASC';
+    case 'event_start':
+      return `event_start ${direction}`;
+    case 'side':
+      return `COALESCE(side, '') ${direction}, event_start ASC`;
+    case 'quantity':
+      return `${jsonNumberExpr('$.quantity')} ${direction}, event_start ASC`;
+    case 'cost':
+      return `${jsonNumberExpr('$.cost')} ${direction}, event_start ASC`;
+    case 'dist':
+      return `${distanceExpr()} ${direction}, event_start ASC`;
+    case 'trest':
+      return `${timeRemainingExpr()} ${direction}, event_start ASC`;
+    case 'result':
+      return `${resultRankExpr()} ${direction}, event_start ASC`;
     default:
-      return `CASE WHEN entries_count > 0 OR result IN ('win', 'loss') THEN 0 ELSE 1 END ASC,
-        ABS(final_pnl) DESC, event_start ASC`;
+      return 'event_start ASC';
   }
+}
+
+function jsonNumberExpr(path) {
+  return `COALESCE(CAST(json_extract(summary_json, '${path}') AS REAL), ${JSON_SORT_NULL})`;
+}
+
+function distanceExpr() {
+  return `COALESCE(
+    CAST(json_extract(summary_json, '$.entryDistanceToPtb') AS REAL),
+    CAST(json_extract(summary_json, '$.diagnostics.distanceToPtb') AS REAL),
+    ${JSON_SORT_NULL}
+  )`;
+}
+
+function timeRemainingExpr() {
+  return `COALESCE(
+    CAST(json_extract(summary_json, '$.entryTimeRemaining') AS REAL),
+    CAST(json_extract(summary_json, '$.diagnostics.lastSecsLeft') AS REAL),
+    ${JSON_SORT_NULL}
+  )`;
+}
+
+function resultRankExpr() {
+  return `CASE result
+    WHEN 'win' THEN 4
+    WHEN 'breakeven' THEN 3
+    WHEN 'loss' THEN 2
+    WHEN 'no_entry' THEN 1
+    ELSE 0
+  END`;
 }
 
 export function getEventTrace(db, runId, eventTraceId) {

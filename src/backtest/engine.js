@@ -1,5 +1,6 @@
 import { DuckDbTickProvider } from './tickProvider.js';
 import { applyPolymarketFeesToBacktestResult } from './fees.js';
+import { finalizeEquityMetrics } from './equityMetrics.js';
 import { loadConfig } from '../config.js';
 import { analyzeStrategyParallelism } from '../backtestStudio/gls/compiler.js';
 import { runParallelEventSlices } from './eventPool.js';
@@ -79,6 +80,7 @@ export async function runBacktest(db, request, { onProgress, progressStartedAt: 
   const finishStartedAt = Date.now();
   const result = runner.finish();
   applyPolymarketFeesToBacktestResult(result, request.feeOptions);
+  finalizeEquityMetrics(result);
   timings.finishMs = Date.now() - finishStartedAt;
   timings.completedAt = Date.now();
   emitProgress({ phase: 'finalizing', ticks, batches, totalTicks, force: true });

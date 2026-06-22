@@ -1,3 +1,9 @@
+import {
+  buildEquityCurveFromEvents,
+  computeMaxDrawdown,
+  computeRecoveryFactor,
+} from './equityMetrics.js';
+
 export const POLYMARKET_FEE_RATES = Object.freeze({
   crypto: 0.07,
   sports: 0.03,
@@ -307,7 +313,9 @@ function recomputeSummary(result, fees) {
   summary.sortino = downsideStd > 0 ? avgPnl / downsideStd : 0;
   summary.sortinoRatio = summary.sortino;
   summary.finalWallet = (toFiniteNumber(result.params?.walletSize) ?? toFiniteNumber(summary.finalWallet) ?? 0) + totalPnl;
-  summary.maxDrawdown = rebuildEquity(result, events);
+  result.equity = buildEquityCurveFromEvents(events);
+  summary.maxDrawdown = computeMaxDrawdown(result.equity);
+  summary.recoveryFactor = computeRecoveryFactor(totalPnl, summary.maxDrawdown);
   summary.volume = fees.volume;
   summary.fees = fees;
   summary.totalFees = fees.totalFee;
@@ -319,21 +327,6 @@ function std(values) {
   if (!Array.isArray(values) || values.length < 2) return 0;
   const avg = values.reduce((sum, value) => sum + value, 0) / values.length;
   return Math.sqrt(values.reduce((sum, value) => sum + (value - avg) ** 2, 0) / values.length);
-}
-
-function rebuildEquity(result, events) {
-  let cumulative = 0;
-  result.equity = events.map((event) => {
-    cumulative += toFiniteNumber(event?.finalPnl) ?? 0;
-    return { ts: event?.closedAt || event?.eventEnd || event?.entryTime || null, pnl: cumulative };
-  }).filter((point) => point.ts != null);
-  let peak = 0;
-  let maxDrawdown = 0;
-  for (const point of result.equity) {
-    peak = Math.max(peak, Number(point.pnl || 0));
-    maxDrawdown = Math.max(maxDrawdown, peak - Number(point.pnl || 0));
-  }
-  return maxDrawdown;
 }
 
 function isEnteredEvent(event) {

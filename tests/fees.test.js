@@ -59,6 +59,8 @@ test('applyPolymarketFeesToBacktestResult adjusts pnl and summary metrics', () =
   assert.equal(result.summary.sharpeRatio, result.summary.sharpe);
   assert.equal(result.summary.sortinoRatio, result.summary.sortino);
   assert.ok(result.equity.length);
+  assert.equal(round(result.summary.maxDrawdown), 2.28);
+  assert.equal(round(result.summary.recoveryFactor), 0.625);
 });
 
 function round(value) {

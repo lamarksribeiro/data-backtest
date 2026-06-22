@@ -1,5 +1,6 @@
 import { el } from '../utils/dom.js';
 import { formatPnl } from '../utils/format.js';
+import { enrichSummaryWithEquity } from '../utils/equityMetrics.js';
 
 let viewMode = 'panel';
 
@@ -7,15 +8,15 @@ export function resetMetricsViewMode() {
   viewMode = 'panel';
 }
 
-export function renderRunMetricsPanel(summary, { onToggle, cardId = 'run-metrics-card' } = {}) {
-  return renderGroupedMetrics(summary, { onToggle, cardId });
+export function renderRunMetricsPanel(summary, { onToggle, cardId = 'run-metrics-card', equity } = {}) {
+  return renderGroupedMetrics(summary, { onToggle, cardId, equity });
 }
 
 export function renderTimingSection(run, summary) {
   return renderTimingBlock(run, summary);
 }
 
-export function renderGroupedMetrics(summary, { onToggle, cardId = 'run-metrics-card' } = {}) {
+export function renderGroupedMetrics(summary, { onToggle, cardId = 'run-metrics-card', equity } = {}) {
   if (!summary || !Object.keys(summary).length) {
     return el('section', { class: 'card' }, [
       el('h2', { class: 'card__title' }, 'Métricas completas'),
@@ -30,7 +31,7 @@ export function renderGroupedMetrics(summary, { onToggle, cardId = 'run-metrics-
       viewMode = viewMode === 'panel' ? 'json' : 'panel';
       const card = document.getElementById(cardId);
       if (card) {
-        const next = renderGroupedMetrics(summary, { cardId });
+        const next = renderGroupedMetrics(summary, { cardId, equity });
         card.replaceWith(next);
       } else {
         onToggle?.();
@@ -38,7 +39,7 @@ export function renderGroupedMetrics(summary, { onToggle, cardId = 'run-metrics-
     },
   }, viewMode === 'panel' ? 'Ver JSON' : 'Ver painel');
 
-  const header = el('div', { class: 'card__header', style: { marginBottom: '16px' } }, [
+  const header = el('div', { class: 'card__header metrics-card__header' }, [
     el('h2', { class: 'card__title' }, 'Métricas da Execução'),
     toggleBtn,
   ]);
@@ -50,83 +51,40 @@ export function renderGroupedMetrics(summary, { onToggle, cardId = 'run-metrics-
     ]);
   }
 
-  const totalEntries = summary.totalEntries ?? summary.entries ?? 0;
-  const wins = summary.totalWins ?? summary.wins ?? 0;
-  const losses = summary.totalLosses ?? summary.losses ?? 0;
-  const winRate = summary.winRate ?? (totalEntries > 0 ? (wins / totalEntries) * 100 : 0);
+  const metrics = enrichSummaryWithEquity(summary, equity);
+  const totalEntries = metrics.totalEntries ?? metrics.entries ?? 0;
+  const wins = metrics.totalWins ?? metrics.wins ?? 0;
+  const losses = metrics.totalLosses ?? metrics.losses ?? 0;
+  const winRate = metrics.winRate ?? (totalEntries > 0 ? (wins / totalEntries) * 100 : 0);
+  const maxDrawdown = metrics.maxDrawdown ?? 0;
 
-  // KPIs de Alto Impacto (Hero Cards)
-  const heroGrid = el('div', { class: 'metrics-hero-grid' }, [
-    // 1. PnL Líquido
-    el('div', { class: `metrics-hero-card metrics-hero-card--pnl-${tonePnl(summary.totalPnl)}` }, [
-      el('span', { class: 'metrics-hero-card__label' }, 'PnL Líquido'),
-      el('span', { class: `metrics-hero-card__value metric-item__value--${tonePnl(summary.totalPnl)}` }, formatPnl(summary.totalPnl ?? 0)),
-      el('span', { class: 'metrics-hero-card__sub' }, [
-        'Retorno Médio: ',
-        el('strong', { class: `pnl-${tonePnl(summary.avgPnl)}` }, formatPnl(summary.avgPnl ?? 0))
-      ])
-    ]),
-    // 2. Taxa de Acerto (Win Rate)
-    el('div', { class: 'metrics-hero-card metrics-hero-card--winrate' }, [
-      el('span', { class: 'metrics-hero-card__label' }, 'Taxa de Acerto'),
-      el('span', { class: 'metrics-hero-card__value' }, `${formatRate(winRate)}%`),
-      el('div', { class: 'win-rate-progress-wrap' }, [
-        el('div', { class: 'win-rate-progress-bar', style: { width: `${Math.min(100, Math.max(0, winRate))}%` } })
-      ]),
-      el('span', { class: 'metrics-hero-card__sub' }, [
-        el('strong', {}, String(wins)), ' vitórias / ',
-        el('strong', {}, String(losses)), ' derrotas'
-      ])
-    ]),
-    // 3. Drawdown Máximo
-    el('div', { class: 'metrics-hero-card metrics-hero-card--drawdown' }, [
-      el('span', { class: 'metrics-hero-card__label' }, 'Drawdown Máximo'),
-      el('span', { class: 'metrics-hero-card__value metric-item__value--bad' }, formatPnl(summary.maxDrawdown ?? 0)),
-      el('span', { class: 'metrics-hero-card__sub' }, [
-        'Fator Recuperação: ',
-        el('strong', {}, formatRateValue(summary.recoveryFactor))
-      ])
-    ]),
-    // 4. Fator de Lucro (Profit Factor)
-    el('div', { class: 'metrics-hero-card metrics-hero-card--factor' }, [
-      el('span', { class: 'metrics-hero-card__label' }, 'Fator de Lucro'),
-      el('span', { class: `metrics-hero-card__value metric-item__value--${(summary.profitFactor ?? 0) >= 1 ? 'good' : 'bad'}` }, formatRateValue(summary.profitFactor)),
-      el('span', { class: 'metrics-hero-card__sub' }, [
-        'Sharpe: ',
-        el('strong', {}, formatRateValue(summary.sharpeRatio ?? summary.sharpe)),
-        ' | Sortino: ',
-        el('strong', {}, formatRateValue(summary.sortinoRatio ?? summary.sortino))
-      ])
-    ])
+  const kpiStrip = el('div', { class: 'metrics-kpi-strip' }, [
+    kpiCell('PnL líquido', formatPnl(metrics.totalPnl ?? 0), tonePnl(metrics.totalPnl), `média ${formatPnl(metrics.avgPnl ?? 0)}`),
+    kpiCell('Taxa de acerto', `${formatRate(winRate)}%`, winRate >= 50 ? 'good' : 'bad', `${wins}W · ${losses}L`),
+    kpiCell('Drawdown acum.', formatDrawdown(maxDrawdown), 'bad', `recup. ${formatRateValue(metrics.recoveryFactor)}`),
+    kpiCell('Fator de lucro', formatRateValue(metrics.profitFactor), (metrics.profitFactor ?? 0) >= 1 ? 'good' : 'bad', `Sharpe ${formatRateValue(metrics.sharpeRatio ?? metrics.sharpe)}`),
   ]);
 
-  return el('section', { class: 'card', id: cardId }, [
-    header,
-    heroGrid,
-    el('div', { class: 'metrics-dashboard-grid' }, [
-      metricsGroup('Geral & Risco', [
-        metricItem('Volume Operado', formatVolume(summary.volume ?? summary.fees?.volume ?? 0)),
-        metricItem('Taxas Pagas', formatPnl(summary.feesPaid ?? summary.totalFees ?? summary.fees?.totalFee ?? 0)),
-        metricItem('Sharpe Ratio', formatRateValue(summary.sharpeRatio ?? summary.sharpe)),
-        metricItem('Sortino Ratio', formatRateValue(summary.sortinoRatio ?? summary.sortino)),
-        metricItem('Fator Recuperação', formatRateValue(summary.recoveryFactor)),
-        metricItem('Fator de Lucro', formatRateValue(summary.profitFactor), (summary.profitFactor ?? 0) >= 1 ? 'good' : 'bad'),
-      ]),
-      metricsGroup('Assertividade', [
-        metricItem('Total Operações', totalEntries),
-        metricItem('Vitórias (Win)', wins, 'good'),
-        metricItem('Derrotas (Loss)', losses, 'bad'),
-        metricItem('Taxa de Acerto', `${formatRate(winRate)}%`, winRate >= 50 ? 'good' : 'bad'),
-      ], winRate),
-      metricsGroup('Médias e Limites', [
-        metricItem('Retorno Médio', formatPnl(summary.avgPnl ?? 0), tonePnl(summary.avgPnl)),
-        metricItem('Média Vencedora', formatPnl(summary.avgWin ?? 0), 'good'),
-        metricItem('Média Perdedora', formatPnl(summary.avgLoss ?? 0), 'bad'),
-        metricItem('Razão Win/Loss', formatRateValue(summary.winLossRatio ?? (summary.avgLoss ? Math.abs(summary.avgWin / summary.avgLoss) : 0))),
-        metricItem('Maior Vitória', formatPnl(summary.maxWin ?? 0), 'good'),
-        metricItem('Maior Derrota', formatPnl(summary.maxLoss ?? 0), 'bad'),
-      ]),
+  const moreMetrics = el('details', { class: 'metrics-more' }, [
+    el('summary', { class: 'metrics-more__summary' }, 'Mais métricas'),
+    el('div', { class: 'metrics-dense-grid' }, [
+      denseItem('Sortino', formatRateValue(metrics.sortinoRatio ?? metrics.sortino)),
+      denseItem('Volume', formatVolume(metrics.volume ?? metrics.fees?.volume ?? 0)),
+      denseItem('Taxas pagas', formatPnl(metrics.feesPaid ?? metrics.totalFees ?? metrics.fees?.totalFee ?? 0)),
+      denseItem('Total operações', String(totalEntries)),
+      denseItem('Retorno médio', formatPnl(metrics.avgPnl ?? 0), tonePnl(metrics.avgPnl)),
+      denseItem('Média vencedora', formatPnl(metrics.avgWin ?? 0), 'good'),
+      denseItem('Média perdedora', formatPnl(metrics.avgLoss ?? 0), 'bad'),
+      denseItem('Razão Win/Loss', formatRateValue(metrics.winLossRatio ?? (metrics.avgLoss ? Math.abs(metrics.avgWin / metrics.avgLoss) : 0))),
+      denseItem('Maior vitória', formatPnl(metrics.maxWin ?? 0), 'good'),
+      denseItem('Maior derrota', formatPnl(metrics.maxLoss ?? 0), 'bad'),
     ]),
+  ]);
+
+  return el('section', { class: 'card card--compact metrics-card', id: cardId }, [
+    header,
+    kpiStrip,
+    moreMetrics,
   ]);
 }
 
@@ -155,25 +113,23 @@ export function renderTimingBlock(run, summary) {
   ]);
 }
 
-function metricsGroup(title, items, winRate = null) {
-  const group = el('div', { class: 'metrics-group-card' }, [
-    el('h3', { class: 'metrics-group-title' }, title),
-    el('div', { class: 'metrics-grid' }, items),
-  ]);
-  if (winRate != null) {
-    group.appendChild(el('div', { class: 'win-rate-progress-wrap' }, [
-      el('div', { class: 'win-rate-progress-bar', style: { width: `${Math.min(100, Math.max(0, winRate))}%` } }),
-    ]));
-  }
-  return group;
-}
-
-function metricItem(label, value, tone = '') {
-  let valClass = 'metric-item__value';
+function kpiCell(label, value, tone = '', hint = '') {
+  let valClass = 'metrics-kpi-cell__value';
   if (tone === 'good') valClass += ' metric-item__value--good';
   if (tone === 'bad') valClass += ' metric-item__value--bad';
-  return el('div', { class: 'metric-item' }, [
-    el('span', { class: 'metric-item__label' }, label),
+  return el('div', { class: 'metrics-kpi-cell' }, [
+    el('span', { class: 'metrics-kpi-cell__label' }, label),
+    el('span', { class: valClass }, String(value ?? '-')),
+    hint ? el('span', { class: 'metrics-kpi-cell__hint muted' }, hint) : null,
+  ]);
+}
+
+function denseItem(label, value, tone = '') {
+  let valClass = 'metrics-dense-item__value';
+  if (tone === 'good') valClass += ' metric-item__value--good';
+  if (tone === 'bad') valClass += ' metric-item__value--bad';
+  return el('div', { class: 'metrics-dense-item' }, [
+    el('span', { class: 'metrics-dense-item__label' }, label),
     el('span', { class: valClass }, String(value ?? '-')),
   ]);
 }
@@ -224,4 +180,10 @@ function formatRateValue(val) {
   const num = Number(val);
   if (!Number.isFinite(num)) return String(val);
   return num.toFixed(2);
+}
+
+function formatDrawdown(value) {
+  const magnitude = Math.abs(Number(value) || 0);
+  if (magnitude <= 0) return formatPnl(0);
+  return `-${formatPnl(magnitude)}`;
 }

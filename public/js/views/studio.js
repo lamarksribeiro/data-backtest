@@ -5,6 +5,7 @@ import { formatPnl, shortId } from '../utils/format.js';
 import { loadStrategyOptions, renderStrategyPicker, backtestPayloadFromPick, resolveInitialStrategyPick, saveLastStrategyPick, getStrategyGroupFromPick, invalidateStrategyPickerCache } from '../utils/strategyPicker.js';
 import { MetricCard, Skeleton, StatusBadge } from '../components/Skeleton.js';
 import { renderRunMetricsPanel, renderTimingSection, resetMetricsViewMode } from '../components/runMetrics.js';
+import { computeMaxDrawdown } from '../utils/equityMetrics.js';
 import { formatRunAssetMeta, formatIntervalLabel, intervalBadgeClass, renderRunContextBanner } from '../components/runContext.js';
 import { renderNoEntryDiagnostic, partitionNoEntryEvents } from '../components/noEntryDiagnostic.js';
 import {
@@ -205,7 +206,7 @@ const studioState = {
   eventIndex: 0,
   filterQ: '',
   filterResult: 'all_with_entries',
-  filterSort: 'default',
+  filterSort: 'event_start:asc',
   runFilters: {
     status: 'all',
     sort: 'newest',
@@ -225,6 +226,51 @@ const studioState = {
 
 let advancedPopoverDismissHandler = null;
 let activeAdvancedPopover = null;
+
+const EVENT_SORT_COLUMNS = [
+  { key: 'event_start', label: 'Hora Evento', className: 'col-time', defaultDir: 'asc' },
+  { key: 'side', label: 'Posição', className: 'col-side', defaultDir: 'asc' },
+  { key: 'quantity', label: 'Contratos', className: 'col-qty', defaultDir: 'desc' },
+  { key: 'cost', label: 'Custo', className: 'col-cost', defaultDir: 'desc' },
+  { key: 'pnl', label: 'P&L (Líquido)', className: 'col-pnl', defaultDir: 'desc' },
+  { key: 'dist', label: 'Dist PTB', className: 'col-dist', defaultDir: 'desc' },
+  { key: 'trest', label: 'T.Rest', className: 'col-trest', defaultDir: 'desc' },
+  { key: 'result', label: 'Resultado', className: 'col-result', defaultDir: 'desc' },
+];
+
+function parseEventSort(sort) {
+  const raw = String(sort || 'default').trim();
+  if (!raw || raw === 'default') return { column: 'event_start', dir: 'asc' };
+  const legacy = {
+    pnl_asc: { column: 'pnl', dir: 'asc' },
+    pnl_desc: { column: 'pnl', dir: 'desc' },
+    event_start: { column: 'event_start', dir: 'asc' },
+    event_start_desc: { column: 'event_start', dir: 'desc' },
+  };
+  if (legacy[raw]) return legacy[raw];
+  const [column, dir] = raw.split(':');
+  return { column, dir: dir === 'asc' ? 'asc' : 'desc' };
+}
+
+function toggleEventColumnSort(column) {
+  const current = parseEventSort(studioState.filterSort);
+  if (current.column === column) {
+    return `${column}:${current.dir === 'desc' ? 'asc' : 'desc'}`;
+  }
+  const meta = EVENT_SORT_COLUMNS.find((item) => item.key === column);
+  return `${column}:${meta?.defaultDir || 'desc'}`;
+}
+
+function sortIndicator(column) {
+  const current = parseEventSort(studioState.filterSort);
+  if (current.column !== column) return '';
+  return current.dir === 'asc' ? '↑' : '↓';
+}
+
+function isDefaultEventSort(sort) {
+  const current = parseEventSort(sort);
+  return current.column === 'event_start' && current.dir === 'asc';
+}
 
 function debounce(fn, delay) {
   let timer = null;
@@ -1600,10 +1646,13 @@ async function loadRunDetail(ctx, runId, { routeToken = ctx.getRouteToken?.() ??
   const summary = run.summary || {};
   mount(main, el('div', { class: 'studio-result' }, [
     renderRunContextBanner(run),
-    renderRunMetricsPanel(summary, { cardId: 'studio-metrics-card' }),
+    renderRunMetricsPanel(summary, { cardId: 'studio-metrics-card', equity: run.equity }),
     el('div', { class: 'card card--compact studio-equity-card' }, [
-      el('div', { class: 'card__header' }, [
+      el('div', { class: 'card__header studio-equity-card__title-row' }, [
         el('h2', { class: 'card__title' }, 'Curva de patrimônio'),
+        run.equity?.length
+          ? el('span', { class: 'studio-equity-card__caption muted' }, equityDrawdownCaption(run.equity))
+          : null,
       ]),
       el('div', { class: 'studio-equity', id: 'studio-equity-chart', style: { padding: '16px 8px' } }),
     ]),
@@ -1670,13 +1719,6 @@ function buildEventFilters(ctx, runId) {
         { value: 'breakeven', label: 'Empate' },
         { value: 'no_entry', label: 'Sem Entrada (Oculto)' }
       ].map((item) => el('option', { value: item.value, selected: studioState.filterResult === item.value }, item.label))),
-    ]),
-    el('div', { class: 'field' }, [
-      el('span', { class: 'field__label' }, 'Ordenar'),
-      el('select', {
-        class: 'field__input',
-        onchange: (ev) => { studioState.filterSort = ev.target.value; studioState.eventsOffset = 0; loadEvents(ctx, runId); },
-      }, ['default', 'pnl_desc', 'pnl_asc', 'event_start_desc', 'event_start'].map((v) => el('option', { value: v, selected: studioState.filterSort === v }, v))),
     ]),
     el('button', {
       type: 'button',
@@ -1820,20 +1862,41 @@ function renderCancelledPanel(container, run, ctx) {
   ]));
 }
 
+function renderSortableColumnHeader(ctx, runId, { key, label, className }) {
+  const active = parseEventSort(studioState.filterSort).column === key;
+  return el('button', {
+    type: 'button',
+    class: `studio-col-sort ${className}${active ? ' is-active' : ''}`,
+    title: 'Clique para ordenar',
+    onclick: (ev) => {
+      ev.stopPropagation();
+      studioState.filterSort = toggleEventColumnSort(key);
+      studioState.eventsOffset = 0;
+      loadEvents(ctx, runId);
+    },
+  }, [
+    label,
+    active ? el('span', { class: 'studio-col-sort__arrow', 'aria-hidden': 'true' }, sortIndicator(key)) : null,
+  ]);
+}
+
 function renderVirtualEventTable(events, ctx, runId) {
   const rowH = 40;
   const wrap = el('div', { class: 'studio-events-wrap' }, [
     el('div', { class: 'studio-table-header-row' }, [
-      el('span', { class: 'col-index' }, '#'),
-      el('span', { class: 'col-time' }, 'Hora Evento'),
-      el('span', { class: 'col-side' }, 'Posição'),
-      el('span', { class: 'col-qty' }, 'Contratos'),
-      el('span', { class: 'col-cost' }, 'Custo'),
-      el('span', { class: 'col-pnl' }, 'P&L (Líquido)'),
-      el('span', { class: 'col-dist' }, 'Dist PTB'),
-      el('span', { class: 'col-trest' }, 'T.Rest'),
-      el('span', { class: 'col-result' }, 'Resultado'),
-    ])
+      el('button', {
+        type: 'button',
+        class: `studio-col-sort col-index${isDefaultEventSort(studioState.filterSort) ? ' is-active' : ''}`,
+        title: 'Ordenar por data (mais antigo primeiro)',
+        onclick: (ev) => {
+          ev.stopPropagation();
+          studioState.filterSort = 'event_start:asc';
+          studioState.eventsOffset = 0;
+          loadEvents(ctx, runId);
+        },
+      }, '#'),
+      ...EVENT_SORT_COLUMNS.map((col) => renderSortableColumnHeader(ctx, runId, col)),
+    ]),
   ]);
   const viewport = el('div', { class: 'studio-events-viewport', style: { maxHeight: '360px', overflow: 'auto' } });
   const spacer = el('div', { style: { height: `${events.length * rowH}px`, position: 'relative' } });
@@ -2071,6 +2134,12 @@ function bindSse(ctx) {
   };
   connectSse(sseHandler);
   resumeProgressTracking(ctx);
+}
+
+function equityDrawdownCaption(equity) {
+  const maxDrawdown = computeMaxDrawdown(equity);
+  if (!Number.isFinite(maxDrawdown) || maxDrawdown <= 0) return 'Drawdown máx. acumulado: 0.00';
+  return `Drawdown máx. acumulado: -${formatPnl(maxDrawdown)}`;
 }
 
 function bindShortcuts(ctx) {
