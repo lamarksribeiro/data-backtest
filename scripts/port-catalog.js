@@ -3,9 +3,9 @@
 export const POLYMARKET_TEST_ROOT = 'D:/Projetos/projeto-goldenlens/polymarket-test';
 
 export const ALREADY_PORTED = [
-  { id: 'edge-sniper-v3', portStatus: 'ported', notes: 'Substitui edge-sniper-v2' },
-  { id: 'gamma-ladder-v1', portStatus: 'ported', notes: 'embedded-runner' },
-  { id: 'vsmr', portStatus: 'ported', notes: 'Volatility Spike Mean Reversion' },
+  { id: 'edge-sniper-v3', portStatus: 'ported', notes: 'Substitui edge-sniper-v2', sourceDoc: 'docs/estrategias/implementadas/edge-sniper-v3.md' },
+  { id: 'gamma-ladder-v1', portStatus: 'ported', notes: 'embedded-runner', sourceDoc: 'docs/estrategias/implementadas/gamma-ladder-v1.md' },
+  { id: 'vsmr', portStatus: 'ported', notes: 'Volatility Spike Mean Reversion', sourceDoc: 'docs/estrategias/implementadas/vsmr-v1.md' },
 ];
 
 export const INDIVIDUAL_RUNNERS = [
@@ -20,6 +20,7 @@ export const INDIVIDUAL_RUNNERS = [
     usesStopReverse: true,
     tier: 'A',
     promotedToStudio: true,
+    sourceDoc: 'docs/estrategias/implementadas/terminal-convexity-v1.md',
   },
   {
     id: 'cofre-sete-v1',
@@ -32,6 +33,7 @@ export const INDIVIDUAL_RUNNERS = [
     usesStopReverse: true,
     tier: 'A',
     promotedToStudio: true,
+    sourceDoc: 'docs/estrategias/implementadas/cofre-sete-v1.md',
   },
   {
     id: 'impulse-elasticity',
@@ -44,6 +46,7 @@ export const INDIVIDUAL_RUNNERS = [
     usesStopReverse: true,
     tier: 'A',
     promotedToStudio: true,
+    sourceDoc: 'docs/estrategias/implementadas/impulse-elasticity-v1.md',
   },
   {
     id: 'lead-inertia-v1',
@@ -56,6 +59,7 @@ export const INDIVIDUAL_RUNNERS = [
     usesStopReverse: false,
     tier: 'A',
     promotedToStudio: true,
+    sourceDoc: 'docs/estrategias/implementadas/lead-inertia-v1.md',
   },
   {
     id: 'volatility-compression-lock-v1',
@@ -68,6 +72,7 @@ export const INDIVIDUAL_RUNNERS = [
     usesStopReverse: true,
     tier: 'A',
     promotedToStudio: true,
+    sourceDoc: 'docs/estrategias/implementadas/volatility-compression-lock-v1.md',
   },
   {
     id: 'stable-carry-compression-v1',
@@ -80,6 +85,7 @@ export const INDIVIDUAL_RUNNERS = [
     usesStopReverse: true,
     tier: 'A',
     promotedToStudio: true,
+    sourceDoc: 'docs/estrategias/implementadas/stable-carry-compression-v1.md',
   },
   {
     id: 'convergence-undershoot-v1',
@@ -92,6 +98,7 @@ export const INDIVIDUAL_RUNNERS = [
     usesStopReverse: true,
     tier: 'A',
     promotedToStudio: true,
+    sourceDoc: 'docs/estrategias/implementadas/convergence-undershoot-theory.md',
   },
   {
     id: 'momentum-edge-v1',
@@ -104,6 +111,7 @@ export const INDIVIDUAL_RUNNERS = [
     usesStopReverse: false,
     tier: 'A',
     promotedToStudio: true,
+    sourceDoc: 'docs/estrategias/implementadas/momentum-edge-theory-v1.md',
   },
   {
     id: 'boundary-coherence-entropy-deviation-v1',
@@ -116,6 +124,7 @@ export const INDIVIDUAL_RUNNERS = [
     usesStopReverse: false,
     tier: 'B',
     promotedToStudio: true,
+    sourceDoc: 'docs/estrategias/implementadas/boundary-coherence-entropy-deviation-v1.md',
   },
   {
     id: 'empirical-residual-manifold-v1',
@@ -129,6 +138,7 @@ export const INDIVIDUAL_RUNNERS = [
     tier: 'B',
     calibrationFile: 'data/ermCalibrationData.json',
     promotedToStudio: true,
+    sourceDoc: 'docs/estrategias/implementadas/empirical-residual-manifold-v1.md',
   },
   {
     id: 'bs-lead-v1',
@@ -141,6 +151,7 @@ export const INDIVIDUAL_RUNNERS = [
     usesStopReverse: true,
     tier: 'A',
     promotedToStudio: false,
+    sourceDoc: 'docs/estrategias/implementadas/bs-lead-v1.md',
   },
 ];
 
@@ -155,6 +166,7 @@ export const PORTFOLIO_RUNNERS = [
     strategyLabel: 'FUSION_FIVE_V1',
     tier: 'C',
     promotedToStudio: true,
+    sourceDoc: 'docs/estrategias/implementadas/fusion-five-v1.md',
     modules: [
       { key: 'terminal', name: 'Terminal Convexity V1', slug: 'terminal-convexity-runner', version: 1, paramsKey: 'terminalParams' },
       { key: 'cofre', name: 'Cofre Sete V1', slug: 'cofre-sete-runner', version: 1, paramsKey: 'cofreParams' },
@@ -173,6 +185,7 @@ export const PORTFOLIO_RUNNERS = [
     strategyLabel: 'OMNI_EDGE_V1',
     tier: 'C',
     promotedToStudio: true,
+    sourceDoc: 'docs/estrategias/implementadas/omni-edge-v1.md',
     modules: [
       { key: 'terminal', name: 'Terminal Convexity V1', slug: 'terminal-convexity-runner', version: 1, paramsKey: 'terminalParams' },
       { key: 'lead', name: 'Lead Inertia V1', slug: 'lead-inertia-runner', version: 1, paramsKey: 'leadParams' },
@@ -220,6 +233,8 @@ export const REJECTED_STRATEGIES = [
   { id: 'coherence-hazard-edge-v1', portStatus: 'rejected', sourceDoc: 'docs/rejeitadas/coherence-hazard-edge-v1.md' },
   { id: 'residual-coherence-gap-v1', portStatus: 'rejected', sourceDoc: 'docs/rejeitadas/residual-coherence-gap-v1.md' },
   { id: 'sigma-adaptive-drift-v1', portStatus: 'rejected', sourceDoc: 'docs/rejeitadas/sigma-adaptive-drift-v1.md' },
+  { id: 'order-book-imbalance-transition-pressure-v1', portStatus: 'rejected', sourceDoc: 'docs/rejeitadas/order-book-imbalance-transition-pressure-v1.md' },
+  { id: 'tptca-theory-v1', portStatus: 'rejected', sourceDoc: 'docs/rejeitadas/tptca-theory-v1.md' },
 ];
 
 export const BACKLOG_STRATEGIES = [
@@ -228,6 +243,11 @@ export const BACKLOG_STRATEGIES = [
   { id: 'transition-acceleration-threshold-v1', portStatus: 'backlog', tier: 'E', priority: 2, sourceDoc: 'docs/estrategias/nao-implementadas/transition-acceleration-threshold-v1.md' },
   { id: 'u-shape-volatility-v1', portStatus: 'backlog', tier: 'E', priority: 2, sourceDoc: 'docs/estrategias/nao-implementadas/u-shape-volatility-v1.md' },
   { id: 'sch-theory-v1', portStatus: 'backlog', tier: 'E', priority: 2, sourceDoc: 'docs/estrategias/nao-implementadas/sch-theory-v1.md' },
+  { id: 'avdt-v1', portStatus: 'backlog', tier: 'E', priority: 3, sourceDoc: 'docs/estrategias/nao-implementadas/avdt-v1.md' },
+  { id: 'barrier-gravitational-equilibrium-theory-v1', portStatus: 'backlog', tier: 'E', priority: 3, sourceDoc: 'docs/estrategias/nao-implementadas/barrier-gravitational-equilibrium-theory-v1.md' },
+  { id: 'kinetic-probability-lag-theory-v1', portStatus: 'backlog', tier: 'E', priority: 3, sourceDoc: 'docs/estrategias/nao-implementadas/kinetic-probability-lag-theory-v1.md' },
+  { id: 'path-memory-asymmetry-v1', portStatus: 'backlog', tier: 'E', priority: 3, sourceDoc: 'docs/estrategias/nao-implementadas/path-memory-asymmetry-v1.md' },
+  { id: 'repricing-inertia-index-v1', portStatus: 'backlog', tier: 'E', priority: 3, notes: 'Reserva de pesquisa — holdout positivo, PF < 2', sourceDoc: 'docs/estrategias/nao-implementadas/repricing-inertia-index-v1.md' },
 ];
 
 export function allRunnerEntries() {

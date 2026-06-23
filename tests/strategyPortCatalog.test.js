@@ -42,8 +42,23 @@ test('port catalog exists with runners portfolios rejected and backlog', () => {
   assert.equal(disk.runners.length, expected.runners.length);
   assert.equal(disk.portfolios.length, expected.portfolios.length);
   assert.ok(disk.rejected.length >= 5);
-  assert.ok(disk.backlog.length >= 5);
+  assert.ok(disk.backlog.length >= 10);
   assert.equal(disk.sourceMode, 'read-only');
+});
+
+test('port catalog sourceDoc paths resolve to transferred strategy docs', () => {
+  const catalog = fullPortCatalog();
+  const withDocs = [
+    ...catalog.alreadyPorted,
+    ...catalog.runners.filter((entry) => entry.sourceDoc),
+    ...catalog.portfolios.filter((entry) => entry.sourceDoc),
+    ...catalog.backlog,
+    ...catalog.rejected,
+  ];
+  for (const entry of withDocs) {
+    const docPath = path.join(ROOT, entry.sourceDoc);
+    assert.ok(existsSync(docPath), `${entry.id}: missing ${entry.sourceDoc}`);
+  }
 });
 
 test('every bootstrap library json compiles createBacktestRunner', () => {

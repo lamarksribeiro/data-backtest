@@ -19,6 +19,20 @@ documentação por finalidade: **arquitetura** (decisões e planos), **implement
 | Seguir boas práticas de performance no laboratório (sweeps) | [referencia/guia-performance-laboratorio.md](referencia/guia-performance-laboratorio.md) |
 | Operar o lakehouse (sync, validação, rebuild, backup) | [operacao/operacao-lakehouse.md](operacao/operacao-lakehouse.md) |
 | Consultar endpoints e schemas | [referencia/contratos-api-schemas.md](referencia/contratos-api-schemas.md) |
+| Ler teoria e resultados das estratégias (implementadas, backlog, rejeitadas) | [estrategias/README.md](estrategias/README.md) |
+
+## Estratégias — teorias e resultados
+
+| Documento | Conteúdo |
+|-----------|----------|
+| [estrategias/README.md](estrategias/README.md) | Índice por estágio: implementadas no Studio, backlog de port, rejeitadas |
+| [estrategias/analise-comparativa-estrategias.md](estrategias/analise-comparativa-estrategias.md) | Comparativo de janelas, gatilhos e sinergia entre teorias |
+| [estrategias/implementadas/README.md](estrategias/implementadas/README.md) | Índice das 19 docs de estratégias portadas |
+| [analise-quantitativa/estudo-correlacao-binance-polymarket.md](analise-quantitativa/estudo-correlacao-binance-polymarket.md) | Estudo lead-lag Binance (origem BS-Lead) |
+| [estrategias/nao-implementadas/](estrategias/nao-implementadas/) | Teorias com lab no polymarket-test, pendentes de port |
+| [rejeitadas/](rejeitadas/) | Teorias arquivadas e estudos de falha |
+
+Catálogo de port (status, prioridade, `sourceDoc`): `labs/strategies/_catalog/port-catalog.json`.
 
 ## Arquitetura — decisões e planos
 
