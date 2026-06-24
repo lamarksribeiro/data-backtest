@@ -6,6 +6,7 @@ export const ALREADY_PORTED = [
   { id: 'edge-sniper-v3', portStatus: 'ported', notes: 'Substitui edge-sniper-v2', sourceDoc: 'docs/estrategias/implementadas/edge-sniper-v3.md' },
   { id: 'gamma-ladder-v1', portStatus: 'ported', notes: 'embedded-runner', sourceDoc: 'docs/estrategias/implementadas/gamma-ladder-v1.md' },
   { id: 'vsmr', portStatus: 'ported', notes: 'Volatility Spike Mean Reversion', sourceDoc: 'docs/estrategias/implementadas/vsmr-v1.md' },
+  { id: 'quantum-entropic-manifold', portStatus: 'ported', notes: 'Quantum Entropic Manifold V2 (GLS nativo)', sourceDoc: 'labs/strategies/edge/quantum-entropic-manifold/strategy.json' },
 ];
 
 export const INDIVIDUAL_RUNNERS = [

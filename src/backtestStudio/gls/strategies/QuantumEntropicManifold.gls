@@ -1,0 +1,272 @@
+strategy "Quantum Entropic Manifold V2" {
+  param walletSize = 100
+  param maxOrderValue = 15
+  param minShares = 5
+  param entryWindowStart = 105
+  param entryWindowEnd = 4
+  param minAsk = 0.08
+  param maxAsk = 0.58
+  param maxSpread = 0.08
+  param minLiquidityRatio = 0.75
+  param entrySlippageMax = 0.02
+
+  // Parâmetros do Modelo Consagrado da Edge Sniper V3 OBI
+  param minEdge = 0.07
+  param minDirectionalProb = 0.56
+  param minDistanceAbs = 50
+  param minDistanceNearExpiry = 50
+  param nearExpiryThresholdSec = 30
+  param minSigma = 10
+  param sigmaMultiplier = 1.0
+  param distanceWeight = 2.0
+  param momentumWeight = 0.65
+  param momentumSec = 6
+  param slowMomentumSec = 18
+  param slowMomentumWeight = 0.35
+  param lagWeight = 0.45
+  param volLookbackSec = 45
+  param useBlackScholesProb = false
+  param useObiInScore = true
+  param obiScoreWeight = 0.35
+  param obiLevels = 5
+  param sizePriceAware = true
+  param sizePriceThreshold = 0.52
+  param sizePriceFactor = 0.5
+
+  // Módulo Quântico de Sizing (Quantum Coherence Sizing)
+  param quantumObiFactor = 0.85
+  param quantumCoherenceHighThreshold = 0.82
+  param quantumCoherenceLowThreshold = 0.52
+  param quantumSizingHighFactor = 1.45 // Amplificação de trade de alta coerência
+  param quantumSizingLowFactor = 0.55  // Redução de trade de baixa coerência
+
+  // Módulo de Teoria da Informação (Shannon Entropy Filter)
+  param entropyCompressionCap = 0.88 // Evitar entrar em momentos ruidosos / consolidações caóticas
+
+  // Módulo Termodinâmico de Risco (Thermo-Adaptive Stop)
+  param temperatureStopScale = 0.15 // Ajuste de volatilidade no trailing stop
+  param stopBid = 0.18
+  param takeProfitBid = 0.92
+  param takeProfitPct = 0.35
+  param trailAfterBid = 0.78
+  param trailDrop = 0.10
+  param lateExitSec = 16
+  param lateExitMinBid = 0.64
+
+  // Parâmetros de Stop-Reverse (Reversão Quântica de Emergência)
+  param stopReverseEnabled = true
+  param stopReverseMaxAttempts = 1
+  param stopReverseMaxSecondsRemaining = 60
+  param stopReverseMinSecondsRemaining = 2
+  param stopReverseMinDistanceAbs = 10
+  param stopReverseMaxAsk = 0.98
+  param stopReverseSlippageMax = 0.02
+  param stopReverseMinLiquidityRatio = 0.75
+  param stopReverseBudgetMode = "same-cost"
+  param stopReverseBudgetFactor = 1.25
+
+  onEventStart(event) {
+    state.entered = false
+    state.tookProfit = false
+    state.closed = false
+    state.stopReverseCount = 0
+    state.maxBid = 0
+    state.lastNoEntryReason = "outside_entry_window"
+    state.quantumSizingFactor = 1.0
+    state.activeTrailDrop = params.trailDrop
+  }
+
+  onTick(tick, event) {
+    let secsLeft = time.secondsUntil(event.end, tick.ts)
+    let elapsed = time.secondsSince(event.start, tick.ts)
+
+    if (position.open) {
+      let side = position.side
+      let bid = book.bid(side, tick)
+      if (bid > state.maxBid) {
+        state.maxBid = bid
+      }
+      state.reversedThisTick = false
+
+      // Stop-Reverse Quântico de Emergência
+      if (params.stopReverseEnabled && state.stopReverseCount < params.stopReverseMaxAttempts && secsLeft <= params.stopReverseMaxSecondsRemaining && secsLeft >= params.stopReverseMinSecondsRemaining) {
+        state.adverseDistance = tick.underlyingPrice - event.priceToBeat
+        if (side == "UP") {
+          state.adverseDistance = event.priceToBeat - tick.underlyingPrice
+        }
+        state.stopReverseMinDistance = signals.stopReverseMinDistance(params, secsLeft)
+        if (state.adverseDistance >= state.stopReverseMinDistance) {
+          let reverseSide = prices.oppositeSide(side)
+          let reverseAsk = book.ask(reverseSide, tick)
+          let reverseMaxPrice = math.min(params.stopReverseMaxAsk, reverseAsk + params.stopReverseSlippageMax)
+          state.reverseBudgetBase = position.totalCost
+          if (params.stopReverseBudgetMode == "open-cost") {
+            state.reverseBudgetBase = position.openCost
+          }
+          if (params.stopReverseBudgetMode == "sale-proceeds") {
+            state.reverseBudgetBase = position.shares * bid
+          }
+          if (params.stopReverseBudgetMode == "max-order") {
+            state.reverseBudgetBase = params.maxOrderValue
+          }
+          let reverseBudget = math.min(params.maxOrderValue, params.walletSize + runState.totalPnl, state.reverseBudgetBase * params.stopReverseBudgetFactor)
+          let reverseLiq = book.liquidityRatio(reverseSide, tick, reverseBudget, reverseMaxPrice)
+          if (reverseAsk <= params.stopReverseMaxAsk && reverseLiq >= params.stopReverseMinLiquidityRatio) {
+            let reversed = reverse(reverseSide, { exitPrice: bid, price: reverseAsk, maxPrice: reverseMaxPrice, budget: reverseBudget, minShares: params.minShares, minLiquidityRatio: params.stopReverseMinLiquidityRatio, tick: tick, ignoreConsumed: true, reason: "stop_reverse", exitReason: "stop_reverse_exit" })
+            if (reversed) {
+              state.stopReverseCount = state.stopReverseCount + 1
+              state.maxBid = book.bid(reverseSide, tick)
+              state.reversedThisTick = true
+              mark("reverse", { from: side, to: reverseSide, price: reverseAsk })
+            }
+          }
+        }
+      }
+
+      // Gestão Clássica de Risco e Saída Adaptativa (Thermo-Adaptive Stop)
+      if (!state.reversedThisTick) {
+        if (bid <= params.stopBid && secsLeft > params.lateExitSec) {
+          let stopped = exit({ price: bid, reason: "stop_bid" })
+          if (stopped) {
+            state.closed = stopped.closed
+            mark("exit", { reason: "stop_bid", price: bid })
+          }
+        } else {
+          if (!state.tookProfit && bid >= params.takeProfitBid && params.takeProfitPct > 0) {
+            let sold = exit({ price: params.takeProfitBid, pct: params.takeProfitPct, minShares: params.minShares, reason: "partial_edge" })
+            if (sold) {
+              state.tookProfit = true
+              mark("partial", { price: bid })
+            }
+          }
+          if (state.maxBid >= params.trailAfterBid && state.maxBid - bid >= state.activeTrailDrop) {
+            let trailed = exit({ price: bid, reason: "trail" })
+            if (trailed) {
+              state.closed = trailed.closed
+              mark("exit", { reason: "trail", price: bid })
+            }
+          } else {
+            if (secsLeft <= params.lateExitSec && bid >= params.lateExitMinBid) {
+              let derisked = exit({ price: bid, reason: "late_exit" })
+              if (derisked) {
+                state.closed = derisked.closed
+                mark("exit", { reason: "late_exit", price: bid })
+              }
+            }
+          }
+        }
+      }
+    } else {
+      state.lastNoEntryReason = "outside_entry_window"
+      if (state.closed) {
+        state.lastNoEntryReason = "event_closed_after_exit"
+      }
+      
+      // BLOQUEIO ABSOLUTO DE RE-ENTRADA: Garante no máximo 1 entrada por evento (protege contra overtrading e taxas)
+      if (!state.entered && !state.closed && time.inWindow(secsLeft, params.entryWindowStart, params.entryWindowEnd)) {
+        state.lastNoEntryReason = "waiting_momentum"
+
+        // FILTRO DE MOMENTUM TEMPORAL CONSAGRADO: Exige elapsed >= 4s ou params.momentumSec para estabilização
+        if (elapsed >= math.max(4, params.momentumSec)) {
+          let minDist = signals.effectiveMinDistance(secsLeft, params.minDistanceAbs, params.minDistanceNearExpiry, params.nearExpiryThresholdSec)
+          let dist = market.distanceFromPtb(tick.underlyingPrice, event.priceToBeat)
+          state.lastDistance = dist
+          state.lastMinDistance = minDist
+          state.lastNoEntryReason = "distance_below_min"
+
+          // FILTRO DE DISTÂNCIA MÍNIMA CONSAGRADO: Garante que o BTC está a uma distância segura do PTB para tendência
+          if (dist >= minDist) {
+            state.lastNoEntryReason = "no_candidate"
+
+            // 1. Chamar o Modelo Base Consagrado (Edge Sniper V3 OBI) para Probabilidade Direcional
+            let scored = model.scoreSides(samples, tick, event, params)
+            let best = scored.best
+
+            if (best) {
+              state.lastNoEntryReason = "calculating_entropic_physics"
+
+              // 2. Teoria da Informação: Entropia de Shannon (Medida de Desordem de Ticks)
+              let p0 = tick.underlyingPrice
+              state.p5 = signals.underlyingAgo(samples, 5)
+              if (!state.p5) { state.p5 = p0 }
+              state.p15 = signals.underlyingAgo(samples, 15)
+              if (!state.p15) { state.p15 = state.p5 }
+              state.p30 = signals.underlyingAgo(samples, 30)
+              if (!state.p30) { state.p30 = state.p15 }
+
+              let up0 = (p0 > state.p5) * 1.0
+              let up1 = (state.p5 > state.p15) * 1.0
+              let up2 = (state.p15 > state.p30) * 1.0
+              let p_up = (up0 + up1 + up2) / 3.0
+              // Parábola de entropia binária 4p(1-p)
+              let shannonEntropy = 4.0 * p_up * (1.0 - p_up)
+
+              // Filtro Quântico de Compressão Entrópica (Bloqueia em mercados caóticos e ruidosos)
+              if (shannonEntropy <= params.entropyCompressionCap) {
+
+                // 3. Termodinâmica: Temperatura do Mercado (Volatilidade)
+                let diff5 = math.abs(p0 - state.p5)
+                let diff15 = math.abs(state.p5 - state.p15)
+                let diff30 = math.abs(state.p15 - state.p30)
+                let recentVolRaw = (diff5 + diff15 + diff30) / 3.0
+                let temperature = math.max(1.0, recentVolRaw)
+
+                // Ajuste Termodinâmico Suave do Trailing Stop (Thermo-Adaptive Stop)
+                // Impede que o trailing stop aperte abaixo de um limite saudável (mínimo 0.08) para evitar falsas saídas instantâneas
+                let stopAdjustment = (temperature - 1.0) * params.temperatureStopScale
+                state.activeTrailDrop = math.max(0.08, math.min(0.20, params.trailDrop * (1.0 + stopAdjustment)))
+
+                // 4. Mecânica Quântica: Sizing por Coerência de Fase
+                let obiSide = model.orderBookImbalance(best.side, tick, 5)
+                let quantumCoherence = best.probability * (1.0 + (obiSide * params.quantumObiFactor))
+
+                state.quantumSizingFactor = 1.0
+                if (quantumCoherence >= params.quantumCoherenceHighThreshold) {
+                  state.quantumSizingFactor = params.quantumSizingHighFactor // Amplifica em trades de altíssima convicção quântica
+                }
+                if (quantumCoherence <= params.quantumCoherenceLowThreshold) {
+                  state.quantumSizingFactor = params.quantumSizingLowFactor   // Minimiza a alocação em estados coerentes desfavoráveis
+                }
+
+                // 5. Execução de Ordens com Sizing Quântico
+                let ask = best.ask
+                state.lastNoEntryReason = "invalid_pricing_or_spread"
+                let spread = book.spread(best.side, tick)
+                if (ask >= params.minAsk && ask <= params.maxAsk && spread <= params.maxSpread) {
+                  let maxFillPrice = math.min(params.maxAsk, ask + params.entrySlippageMax)
+                  
+                  // Cap do valor da ordem clássico baseado em preço
+                  state.orderValueCap = params.maxOrderValue
+                  if (params.sizePriceAware && ask > params.sizePriceThreshold) {
+                    state.orderValueCap = params.maxOrderValue * params.sizePriceFactor
+                  }
+                  
+                  // Ajusta o orçamento da ordem de acordo com o fator quântico de sizing
+                  let targetBudget = state.orderValueCap * state.quantumSizingFactor
+                  let liq = book.liquidityRatio(best.side, tick, targetBudget, maxFillPrice)
+                  state.lastNoEntryReason = "liquidity_below_min"
+                  if (liq >= params.minLiquidityRatio) {
+                    let budget = math.min(targetBudget, params.walletSize + runState.totalPnl)
+                    state.lastNoEntryReason = "entry_rejected"
+                    let bought = enter(best.side, { price: ask, maxPrice: maxFillPrice, budget: budget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "entry" })
+                    if (bought) {
+                      state.lastNoEntryReason = "entered"
+                      state.entered = true
+                      mark("entry", { side: best.side, ask: ask, prob: best.probability, coherence: quantumCoherence, entropy: shannonEntropy, vol: temperature, sizingFactor: state.quantumSizingFactor })
+                      log("entry", best.side)
+                    }
+                  }
+                }
+              } else {
+                state.lastNoEntryReason = "entropic_noise_blocked"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  onEventEnd(event) {
+  }
+}

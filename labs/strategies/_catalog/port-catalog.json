@@ -17,6 +17,12 @@
       "portStatus": "ported",
       "notes": "Volatility Spike Mean Reversion",
       "sourceDoc": "docs/estrategias/implementadas/vsmr-v1.md"
+    },
+    {
+      "id": "quantum-entropic-manifold",
+      "portStatus": "ported",
+      "notes": "Quantum Entropic Manifold V2 (GLS nativo)",
+      "sourceDoc": "labs/strategies/edge/quantum-entropic-manifold/strategy.json"
     }
   ],
   "runners": [

@@ -18,7 +18,7 @@ import { openStateDatabase, closeStateDatabase } from '../src/state/sqlite.js';
 test('listPromotedGlsStrategies discovers GLS lab strategies', () => {
   const promoted = listPromotedGlsStrategies();
   const ids = promoted.map((item) => item.id).sort();
-  assert.deepEqual(ids, ['edge-sniper-v3', 'gamma-ladder-v1', 'vsmr']);
+  assert.deepEqual(ids, ['edge-sniper-v3', 'gamma-ladder-v1', 'quantum-entropic-manifold', 'vsmr']);
   assert.equal(promoted.find((item) => item.id === 'gamma-ladder-v1').studioSlug, 'gamma-ladder-v1');
 });
 
@@ -47,9 +47,9 @@ test('seedPromotedStrategies seeds versions from lab manifests', () => {
   const db = openStateDatabase(dbPath);
   try {
     const results = seedPromotedStrategies(db);
-    assert.equal(results.length, 3);
+    assert.equal(results.length, 4);
     const slugs = results.map((row) => row.slug).sort();
-    assert.deepEqual(slugs, ['edge-sniper-v3', 'gamma-ladder-v1', 'vsmr']);
+    assert.deepEqual(slugs, ['edge-sniper-v3', 'gamma-ladder-v1', 'quantum-entropic-manifold', 'vsmr']);
 
     const edge = results.find((row) => row.slug === 'edge-sniper-v3');
     const edgeVersions = db.prepare(`
@@ -69,6 +69,16 @@ test('seedPromotedStrategies seeds versions from lab manifests', () => {
     `).all(gamma.strategy.id);
     assert.ok(gammaVersions.length >= 1);
     assert.equal(gammaVersions[0].notes, 'BTC · V1');
+
+    const qem = results.find((row) => row.slug === 'quantum-entropic-manifold');
+    const qemVersions = db.prepare(`
+      SELECT version, notes, validation_json FROM strategy_versions
+      WHERE strategy_id = ?
+      ORDER BY version ASC
+    `).all(qem.strategy.id);
+    assert.equal(qemVersions.length, 1);
+    assert.equal(qemVersions[0].notes, 'BTC · Quantum Entropic Champion');
+    assert.equal(JSON.parse(qemVersions[0].validation_json).ok, true);
     const languages = db.prepare('SELECT DISTINCT language FROM strategy_versions').all().map((r) => r.language);
     assert.deepEqual(languages, ['strategy-js-v1']);
   } finally {
@@ -94,6 +104,14 @@ test('loadPreset merges defaults with overrides', () => {
 test('loadPreset resolves legacy preset ids', () => {
   const { preset } = loadPreset('v2', { strategyId: 'edge-sniper-v3' });
   assert.equal(preset.id, 'btc-obi');
+});
+
+test('loadPreset resolves quantum-entropic-manifold champion params', () => {
+  const { preset, params } = loadPreset('btc-qem-june-champion', { strategyId: 'quantum-entropic-manifold' });
+  assert.equal(preset.studioSlug, 'qem-btc-june-champion');
+  assert.equal(params.minEdge, 0.06);
+  assert.equal(params.quantumSizingHighFactor, 1.65);
+  assert.equal(params.entropyCompressionCap, 0.94);
 });
 
 test('renderPresetGls patches param defaults in source', () => {

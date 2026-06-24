@@ -1,0 +1,23 @@
+{
+  "id": "quantum-entropic-manifold",
+  "name": "Quantum Entropic Manifold",
+  "family": "edge",
+  "status": "candidate",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "src/backtestStudio/gls/strategies/QuantumEntropicManifold.gls"
+  },
+  "promotedToStudio": true,
+  "studioSlug": "quantum-entropic-manifold",
+  "studio": {
+    "description": "Estratégia revolucionária Quantum Entropic Manifold V2 com Shannon Entropy, Quantum Sizing e Thermo-Adaptive Stops.",
+    "tags": ["btc", "quantum", "entropic", "thermo", "depth25", "lab-strategy"],
+    "defaultVersion": 1
+  },
+  "notes": "Estratégia baseada em tunelamento quântico, entropia termodinâmica de Shannon e crossover de energia livre de Helmholtz. Desenvolvida em junho de 2026."
+}

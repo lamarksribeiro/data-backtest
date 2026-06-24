@@ -22,6 +22,7 @@ import { resolveDataRequest } from './query/dataMode.js';
 import { queryCandles, queryTicks } from './query/duckdbQuery.js';
 import { getTicksForBacktestBatch } from './legacy/polymarketTestAdapter.js';
 import { runBacktest } from './backtest/engine.js';
+import { rehydrateBacktestRequest } from './backtest/rehydrateRequest.js';
 import { runBackupCheck } from './ops/backupCheck.js';
 import { getStrategy, getStrategyVersion } from './backtestStudio/state/strategies.js';
 import { parse } from './backtestStudio/gls/parser.js';
@@ -257,11 +258,12 @@ async function main() {
       const version = getStrategyVersion(db, strategyId, strategyVersionId);
       if (!version) throw new Error('Strategy version not found');
       if (!version.validation?.ok) throw new Error('Strategy version failed validation');
-      const result = await runBacktest(db, {
+      const isGls = version.language === 'gls-v1';
+      const rawRequest = {
         ...range,
-        strategy: `gls:${strategy.slug}`,
-        strategyLabel: version.source_code.match(/strategy\s+"([^"]+)"/)?.[1] || strategy.name,
-        glsAst: parse(version.source_code),
+        strategy: isGls ? `gls:${strategy.slug}` : `js:${strategy.slug}`,
+        strategyLabel: isGls ? (version.source_code.match(/strategy\s+"([^"]+)"/)?.[1] || strategy.name) : strategy.name,
+        ...(isGls ? { glsAst: parse(version.source_code) } : {}),
         strategyMeta: {
           strategy_id: strategyId,
           strategy_version_id: strategyVersionId,
@@ -278,7 +280,9 @@ async function main() {
         bookDepth: optionalIntFlag(flags, 'book-depth') ?? config.backtestBookDepth,
         batchSize: optionalIntFlag(flags, 'batch-size') ?? optionalIntFlag(flags, 'limit') ?? 5000,
         params: parseJsonFlag(flags, 'params') ?? {},
-      });
+      };
+      const hydratedRequest = rehydrateBacktestRequest(db, rawRequest);
+      const result = await runBacktest(db, hydratedRequest);
       printJson(result);
       return;
     }
