@@ -303,12 +303,20 @@ const TELEGRAM_BACKUP_ARTIFACTS_MIGRATIONS = [
   'ALTER TABLE telegram_backup_artifacts ADD COLUMN file_sha256 TEXT',
 ];
 
-export function openStateDatabase(stateDbPath) {
+export function openStateDatabase(stateDbPath, options = {}) {
+  const readOnly = Boolean(options.readOnly);
   mkdirSync(path.dirname(stateDbPath), { recursive: true });
-  const db = new DatabaseSync(stateDbPath);
-  db.exec('PRAGMA journal_mode = WAL');
+  const db = new DatabaseSync(stateDbPath, { readOnly, timeout: 30000 });
+  db.exec('PRAGMA busy_timeout = 30000');
   db.exec('PRAGMA foreign_keys = ON');
-  db.exec('PRAGMA busy_timeout = 5000');
+
+  if (readOnly) {
+    db.exec('PRAGMA query_only = ON');
+    bindStrategyLibraryDatabase(db);
+    return db;
+  }
+
+  db.exec('PRAGMA journal_mode = WAL');
   db.exec(SCHEMA_SQL);
   migrateLakeManifest(db);
   migrateBacktestRuns(db);

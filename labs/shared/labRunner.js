@@ -77,7 +77,7 @@ export async function runLabExperiment(experimentPath, options = {}) {
   const sourceCode = readFileSync(sourcePath, 'utf8');
   const glsAst = parse(sourceCode);
   const bookDepth = experiment.bookDepth ?? strategy.defaultBookDepth ?? config.backtestBookDepth;
-  const db = openStateDatabase(config.stateDbPath);
+  const db = openStateDatabase(config.stateDbPath, { readOnly: true });
   const gammaLadder = isGammaLadderAst(glsAst);
   let embeddedRunner = false;
   let strategySourceCode = null;
@@ -97,6 +97,7 @@ export async function runLabExperiment(experimentPath, options = {}) {
   const availabilityRequest = {
     ...request,
     dataset: experiment.dataset,
+    autoAcceptReviewPartitions: false,
   };
   const startedAt = performance.now();
   const envBackup = {
@@ -393,6 +394,7 @@ function buildBacktestRequest({
     underlying: String(experiment.underlying || 'BTC').toUpperCase(),
     interval: String(experiment.interval || '5m'),
     dataset: experiment.dataset,
+    autoAcceptReviewPartitions: false,
     bookDepth,
     batchSize: Number(experiment.batchSize || 25_000),
     strategy: `gls:${strategy.id}`,
