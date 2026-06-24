@@ -70,7 +70,7 @@ O projeto ja esta muito mais perto do alvo do que a documentacao historica indic
 | Presets | Tabela, API e UI para salvar parametros sem recriar codigo | `state/strategyPresets.js`, `public/js/views/strategies.js` |
 | Bibliotecas nativas | Existe tabela e seed de `edge-sniper-models` como biblioteca nativa versionada | `state/strategyLibrary.js`, `nativeLibrary/*` |
 | File loaders | Caminho por arquivo/modulo fica bloqueado fora de `TEST_MODE` ou flag explicita | `src/backtest/strategyLoader.js` |
-| Seed automatico | Promoted strategies so rodam no boot em `TEST_MODE` ou `SEED_PROMOTED_STRATEGIES=1` | `src/server.js` |
+| Seed automatico | Promoted strategies sincronizam no boot (opt-out: `SEED_PROMOTED_STRATEGIES=0`) | `src/server.js` |
 | Scripts | Existem migracao GLS->JS, benchmark Strategy JS e verificacao no lake real | `scripts/migrate-strategies-to-js.js`, `scripts/bench-strategy-js.js`, `scripts/verify-strategy-js-backtest.js` |
 | Testes | Existem suites especificas para Strategy JS, presets, biblioteca nativa e loader | `tests/strategyJs*.test.js`, `tests/strategyPresets.test.js`, `tests/strategyLibrary.test.js` |
 
