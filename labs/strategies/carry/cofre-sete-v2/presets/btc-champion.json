@@ -1,0 +1,9 @@
+{
+  "id": "btc-champion",
+  "name": "BTC · Champion Optimized",
+  "studioName": "Cofre Sete V2 · BTC Champion",
+  "studioVersion": 1,
+  "role": "champion",
+  "description": "Preset campeão da otimização grid + busca aleatória (treino 01-02 jun, validação 03 jun/2026).",
+  "params": {}
+}

@@ -1,0 +1,8 @@
+{
+  "strategyId": "cofre-sete-v2",
+  "updatedAt": "2026-06-24",
+  "presets": [
+    { "id": "v1-baseline", "underlying": "BTC", "studioVersion": 1, "role": "baseline" },
+    { "id": "btc-champion", "underlying": "BTC", "studioVersion": 1, "role": "champion" }
+  ]
+}

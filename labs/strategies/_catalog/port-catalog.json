@@ -23,6 +23,12 @@
       "portStatus": "ported",
       "notes": "Quantum Entropic Manifold V2 (GLS nativo)",
       "sourceDoc": "labs/strategies/edge/quantum-entropic-manifold/strategy.json"
+    },
+    {
+      "id": "cofre-sete-v2",
+      "portStatus": "ported",
+      "notes": "Evolução otimizada da Cofre Sete V1 (parâmetros campeão jun/2026)",
+      "sourceDoc": "labs/strategies/carry/cofre-sete-v2/strategy.json"
     }
   ],
   "runners": [

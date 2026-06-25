@@ -1,0 +1,16 @@
+{
+  "id": "v1-baseline",
+  "name": "V1 Baseline",
+  "studioName": "Cofre Sete V2 · V1 Baseline",
+  "studioVersion": 1,
+  "role": "baseline",
+  "description": "Parâmetros originais da Cofre Sete V1 para comparação A/B.",
+  "params": {
+    "cooldownSec": 8,
+    "maxAsk": 0.74,
+    "minDirectionalProb": 0.57,
+    "minDistanceAbs": 25,
+    "trailDrop": 0.13,
+    "stopBid": 0.1
+  }
+}

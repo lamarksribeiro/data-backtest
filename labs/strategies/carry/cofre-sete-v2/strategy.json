@@ -1,0 +1,35 @@
+{
+  "id": "cofre-sete-v2",
+  "name": "Cofre Sete V2",
+  "family": "carry",
+  "status": "candidate",
+  "kind": "library-runner",
+  "assets": [
+    "BTC"
+  ],
+  "intervals": [
+    "5m"
+  ],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "library-runner",
+    "runnerSlug": "cofre-sete-runner",
+    "runnerVersion": 1
+  },
+  "portStatus": "ported",
+  "sourceRepo": "data-backtest",
+  "sourceService": "labs/strategies/carry/cofre-sete-v2",
+  "promotedToStudio": true,
+  "studioSlug": "cofre-sete-v2",
+  "studio": {
+    "description": "Cofre Sete V2 com parâmetros otimizados via grid + busca aleatória (jun/2026). Evolução da V1 com cooldown mais curto, distância mínima maior e stops ajustados.",
+    "tags": [
+      "cofre-sete-v2",
+      "optimized",
+      "btc"
+    ],
+    "defaultVersion": 1
+  },
+  "notes": "Runner: cofre-sete-runner@1. Parâmetros campeões derivados de otimização treino/validação (01-03 jun/2026) e validação estendida (01-19 jun/2026)."
+}
