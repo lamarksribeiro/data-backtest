@@ -1,5 +1,6 @@
 {
   "presets": [
-    "v1"
+    "v1",
+    "btc-champion"
   ]
 }

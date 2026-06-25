@@ -4,17 +4,18 @@ import { getStrategyBySlug } from '../src/backtestStudio/state/strategies.js';
 import { resolveVersionForBacktest } from '../src/backtestStudio/strategyJs/resolveVersion.js';
 import { loadStrategy } from '../src/backtest/strategyLoader.js';
 import { DuckDbTickProvider } from '../src/backtest/tickProvider.js';
+import { applyPolymarketFeesToBacktestResult } from '../src/backtest/fees.js';
 import { writeFileSync } from 'node:fs';
 
 async function main() {
   const db = openStateDatabase('./state/data-backtest.db', { readOnly: true });
   bindStrategyLibraryDatabase(db);
 
-  // Ajustado o contrato de datas (to deve ser estritamente maior que from, ex.: AAAA-MM-DD + 1 dia)
+  // Amostragem estatística de 3 dias totais para calibração rápida e estável
   const trainFrom = '2026-06-01';
-  const trainTo = '2026-06-03'; // Cobre dias 1 e 2 de junho
+  const trainTo = '2026-06-03';
   const valFrom = '2026-06-03';
-  const valTo = '2026-06-04';   // Cobre o dia 3 de junho
+  const valTo = '2026-06-04';
 
   console.log(`1. Carregando ticks do lakehouse DuckDB para Treino (${trainFrom} a ${trainTo})...`);
   const provider = new DuckDbTickProvider(db, {
@@ -77,33 +78,41 @@ async function main() {
     bookDepth: 25,
   });
 
-  // Função para rodar o teste na memória
+  // Função para rodar o teste na memória APLICANDO AS TAXAS OPERACIONAIS LIQUIDAS
   function runBacktestMem(ticksList, params) {
     const runner = loaded.createRunner(params, { fastRun: true, bookDepth: 25 });
     for (const tick of ticksList) {
       runner.processTick(tick);
     }
-    return runner.finish();
+    const rawResult = runner.finish();
+    
+    // Aplicar as taxas Polymarket de 0.07 (crypto) no resultado
+    const resultWithFees = applyPolymarketFeesToBacktestResult(rawResult, { 
+      enabled: true, 
+      category: 'crypto' 
+    });
+    
+    return resultWithFees;
   }
 
-  console.log('4. Rodando o Baseline (parâmetros padrão)...');
+  console.log('4. Rodando o Baseline (parâmetros padrão com taxas aplicadas)...');
   const baselineTrain = runBacktestMem(trainTicks, {});
   const baselineVal = runBacktestMem(valTicks, {});
 
-  console.log('\n=== BASELINE TREINO ===');
-  console.log(`PnL: $${baselineTrain.summary.totalPnl.toFixed(2)} | Trades: ${baselineTrain.summary.totalEntries} | PF: ${baselineTrain.summary.profitFactor.toFixed(2)} | DD: $${baselineTrain.summary.maxDrawdown.toFixed(2)}`);
-  console.log('\n=== BASELINE VALIDAÇÃO ===');
-  console.log(`PnL: $${baselineVal.summary.totalPnl.toFixed(2)} | Trades: ${baselineVal.summary.totalEntries} | PF: ${baselineVal.summary.profitFactor.toFixed(2)} | DD: $${baselineVal.summary.maxDrawdown.toFixed(2)}`);
+  console.log('\n=== BASELINE TREINO (LÍQUIDO PÓS-TAXAS) ===');
+  console.log(`PnL Líquido: $${baselineTrain.summary.totalPnl.toFixed(2)} | Taxas Pagas: $${baselineTrain.summary.totalFees.toFixed(2)} | Trades: ${baselineTrain.summary.totalEntries} | PF Líquido: ${baselineTrain.summary.profitFactor.toFixed(2)} | DD Líquido: $${baselineTrain.summary.maxDrawdown.toFixed(2)}`);
+  console.log('\n=== BASELINE VALIDAÇÃO (LÍQUIDO PÓS-TAXAS) ===');
+  console.log(`PnL Líquido: $${baselineVal.summary.totalPnl.toFixed(2)} | Taxas Pagas: $${baselineVal.summary.totalFees.toFixed(2)} | Trades: ${baselineVal.summary.totalEntries} | PF Líquido: ${baselineVal.summary.profitFactor.toFixed(2)} | DD Líquido: $${baselineVal.summary.maxDrawdown.toFixed(2)}`);
 
-  console.log('\n5. Iniciando Otimização de Parâmetros (Treino)...');
+  console.log('\n5. Iniciando Otimização de Parâmetros Líquidos (Treino)...');
   
   const candidates = [];
   const baseParams = baselineTrain.params;
 
-  // Espaço de busca focado
-  const edges = [0.045, 0.055, 0.065, 0.075, 0.085];
+  // Espaço de busca focado em reduzir o "fee drag" (sobre-operação) e maximizar o ganho líquido
+  const edges = [0.055, 0.065, 0.075, 0.085, 0.095]; // Aumentamos o minEdge para filtrar apenas trades de alta margem
   const probs = [0.55, 0.57, 0.59, 0.61];
-  const distances = [20, 25, 30, 40];
+  const distances = [25, 35, 45, 60]; // Aumentamos a distância mínima para filtrar ruído e economizar taxas
   const maxAsks = [0.68, 0.74, 0.80];
   const kellyFractions = [0.15, 0.22, 0.30];
   const trapToggles = [false, true];
@@ -140,15 +149,15 @@ async function main() {
     const hedgeEnabled = Math.random() > 0.5;
     const takeProfitBid = takeProfits[Math.floor(Math.random() * takeProfits.length)];
     const stopBid = stopBids[Math.floor(Math.random() * stopBids.length)];
-    const cooldownSec = Math.random() > 0.5 ? 5 : 8;
-    const trailDrop = Math.random() > 0.5 ? 0.10 : 0.13;
+    const cooldownSec = Math.random() > 0.5 ? 5 : 10; // Aumentamos cooldown para evitar trades colados que geram taxas duplicadas
+    const trailDrop = Math.random() > 0.5 ? 0.10 : 0.14;
 
     let trapParams = {};
     if (trapEnabled) {
       trapParams = {
-        trapMaxValue: Math.random() > 0.5 ? 2.5 : 4,
-        trapMinDecelZ: Math.random() > 0.5 ? 0.40 : 0.20,
-        trapMinEdge: Math.random() > 0.5 ? 0.0 : -0.04,
+        trapMaxValue: Math.random() > 0.5 ? 2.0 : 3.5,
+        trapMinDecelZ: Math.random() > 0.5 ? 0.50 : 0.30,
+        trapMinEdge: Math.random() > 0.5 ? 0.01 : -0.02,
       };
     }
 
@@ -171,7 +180,7 @@ async function main() {
   }
 
   console.log(`Candidatos gerados: ${candidates.length}`);
-  console.log('Executando simulações na CPU...');
+  console.log('Executando simulações na CPU com foco em PnL Líquido...');
 
   const results = [];
   const startSweep = performance.now();
@@ -183,14 +192,15 @@ async function main() {
       const res = runBacktestMem(trainTicks, params);
       const s = res.summary;
       
-      // Penaliza drawdowns e poucos trades
-      const score = s.totalPnl - (s.maxDrawdown * 1.5) - (Math.abs(s.maxLoss) * 2.0) - (s.totalEntries < 5 ? 500 : 0);
+      // Penaliza drawdowns líquidos e penaliza severamente o excesso de trades ineficientes (fee drag)
+      const score = s.totalPnl - (s.maxDrawdown * 1.8) - (Math.abs(s.maxLoss) * 2.0) - (s.totalEntries < 5 ? 500 : 0);
 
       results.push({
         name,
         params,
         trainSummary: {
           totalPnl: s.totalPnl,
+          totalFees: s.totalFees,
           totalEntries: s.totalEntries,
           totalWins: s.totalWins,
           totalLosses: s.totalLosses,
@@ -223,12 +233,14 @@ async function main() {
       const resVal = runBacktestMem(valTicks, candidate.params);
       const sVal = resVal.summary;
       
-      const scoreFinal = candidate.trainSummary.score + sVal.totalPnl - (sVal.maxDrawdown * 1.5);
+      // Score combinado focado exclusivamente no PnL líquido
+      const scoreFinal = candidate.trainSummary.score + sVal.totalPnl - (sVal.maxDrawdown * 1.8);
 
       finalRanked.push({
         ...candidate,
         valSummary: {
           totalPnl: sVal.totalPnl,
+          totalFees: sVal.totalFees,
           totalEntries: sVal.totalEntries,
           totalWins: sVal.totalWins,
           totalLosses: sVal.totalLosses,
@@ -246,16 +258,16 @@ async function main() {
 
   finalRanked.sort((a, b) => b.scoreFinal - a.scoreFinal);
 
-  console.log('\n=== CLASSIFICAÇÃO DOS TOP CANDIDATOS (ORDENADOS POR ROBUSTEZ COMBINADA) ===');
+  console.log('\n=== CLASSIFICAÇÃO DOS TOP CANDIDATOS (ORDENADOS POR ROBUSTEZ LÍQUIDA COMBINADA) ===');
   for (let i = 0; i < finalRanked.length; i++) {
     const r = finalRanked[i];
     const t = r.trainSummary;
     const v = r.valSummary;
-    console.log(`#${i + 1} | Treino PnL: +$${t.totalPnl.toFixed(2)} (PF: ${t.profitFactor.toFixed(2)}) | Validação PnL: +$${v.totalPnl.toFixed(2)} (PF: ${v.profitFactor.toFixed(2)}) | Score: ${r.scoreFinal.toFixed(1)}`);
+    console.log(`#${i + 1} | Treino PnL Líq: +$${t.totalPnl.toFixed(2)} (Fees: $${t.totalFees.toFixed(2)}, PF: ${t.profitFactor.toFixed(2)}) | Validação PnL Líq: +$${v.totalPnl.toFixed(2)} (Fees: $${v.totalFees.toFixed(2)}, PF: ${v.profitFactor.toFixed(2)}) | Score: ${r.scoreFinal.toFixed(1)}`);
   }
 
   const champion = finalRanked[0];
-  console.log('\n=== CAMPEÃO DA OTIMIZAÇÃO (MAIS ROBUSTO) ===');
+  console.log('\n=== CAMPEÃO DA OTIMIZAÇÃO LÍQUIDA ===');
   console.log(JSON.stringify(champion.params, null, 2));
 
   // Salva no formato preset de cofre-sete-v1
