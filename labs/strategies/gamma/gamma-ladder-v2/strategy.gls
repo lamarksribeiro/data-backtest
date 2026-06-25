@@ -1,0 +1,65 @@
+strategy "Gamma Ladder V2" {
+  param walletSize = 100
+  param entryWindowStart = 105
+  param entryWindowEnd = 4
+  param maxEventExposure = 35
+  param maxEntryValue = 7
+  param minShares = 5
+  param maxEntriesPerEvent = 6
+  param cooldownSec = 7
+  param minAsk = 0.04
+  param maxAsk = 0.66
+  param minEdge = 0.07
+  param minDirectionalProb = 0.56
+  param minDistanceAbs = 40
+  param minSigma = 8
+  param sigmaMultiplier = 1
+  param modelWeight = 0.72
+  param driftWeight = 0.38
+  param driftClampSigma = 0.85
+  param momentumSec = 8
+  param slowMomentumSec = 28
+  param slowMomentumWeight = 0.28
+  param volLookbackSec = 55
+  param maxSpread = 0.10
+  param maxOddsSum = 1.18
+  param minOddsSum = 0.82
+  param entrySlippageMax = 0.02
+  param minLiquidityRatio = 0.70
+  param fallbackBookSize = 0
+  param kellyFraction = 0.18
+  param maxKellyPct = 0.16
+  param boxEnabled = true
+  param boxMaxSumAsk = 0.985
+  param boxMinProfit = 0.012
+  param boxMaxPairValue = 12
+  param hedgeEnabled = true
+  param hedgeMinLockedProfit = 0.05
+  param hedgeMaxAsk = 0.58
+  param takeProfitBid = 0.88
+  param takeProfitPct = 0.40
+  param trailAfterBid = 0.74
+  param trailDrop = 0.14
+  param stopBid = 0.12
+  param edgeExitBelow = -0.04
+  param lateExitSec = 8
+  param lateExitMinBid = 0.62
+  param minTicksBeforeEntry = 8
+  param entropyCompressionCap = 0.94
+  param quantumObiFactor = 0.85
+  param quantumCoherenceHighThreshold = 0.78
+  param quantumCoherenceLowThreshold = 0.52
+  param quantumSizingHighFactor = 1.50
+  param quantumSizingLowFactor = 0.60
+  param temperatureStopScale = 0.12
+
+  onEventStart(event) {
+    state.ready = true
+  }
+
+  onTick(tick, event) {
+  }
+
+  onEventEnd(event) {
+  }
+}

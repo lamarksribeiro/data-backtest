@@ -1,3 +1,5 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { glsToStrategyJs } from './glsToStrategyJs.js';
 import { inferNativeDependencies } from './dependencies.js';
 import { composeGammaLadderStrategyJs } from './composeGammaLadder.js';
@@ -6,6 +8,10 @@ import { inlineModelLibraryInStrategy } from './inlineModelLibrary.js';
 export function composeStrategyJsFromGls(glsSource, options = {}) {
   const source = String(glsSource || '');
   if (/gamma\s+ladder/i.test(source)) {
+    if (/gamma\s+ladder\s+v2/i.test(source)) {
+      const enginePath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../data/strategy-libraries/gamma-ladder-engine.v2.json');
+      return composeGammaLadderStrategyJs(source, { ...options, enginePath });
+    }
     return composeGammaLadderStrategyJs(source, options);
   }
 

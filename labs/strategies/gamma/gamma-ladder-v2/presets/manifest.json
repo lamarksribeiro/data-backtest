@@ -1,0 +1,7 @@
+{
+  "strategyId": "gamma-ladder-v2",
+  "updatedAt": "2026-06-24",
+  "presets": [
+    { "id": "btc-qem-hybrid-champion", "underlying": "BTC", "studioVersion": 1, "role": "champion" }
+  ]
+}

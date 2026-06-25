@@ -1,0 +1,465 @@
+{
+  "name": "qem-hybrid-sweeps",
+  "description": "Varredura de parâmetros entrópicos, quânticos e termodinâmicos para otimização do preset híbrido.",
+  "variants": [
+    {
+      "id": "qem_cap0.88_obi0.70_stop0.08",
+      "params": {
+        "entropyCompressionCap": 0.88,
+        "quantumObiFactor": 0.7,
+        "temperatureStopScale": 0.08,
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.75,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "qem_cap0.88_obi0.70_stop0.12",
+      "params": {
+        "entropyCompressionCap": 0.88,
+        "quantumObiFactor": 0.7,
+        "temperatureStopScale": 0.12,
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.75,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "qem_cap0.88_obi0.70_stop0.18",
+      "params": {
+        "entropyCompressionCap": 0.88,
+        "quantumObiFactor": 0.7,
+        "temperatureStopScale": 0.18,
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.75,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "qem_cap0.88_obi0.85_stop0.08",
+      "params": {
+        "entropyCompressionCap": 0.88,
+        "quantumObiFactor": 0.85,
+        "temperatureStopScale": 0.08,
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.75,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "qem_cap0.88_obi0.85_stop0.12",
+      "params": {
+        "entropyCompressionCap": 0.88,
+        "quantumObiFactor": 0.85,
+        "temperatureStopScale": 0.12,
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.75,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "qem_cap0.88_obi0.85_stop0.18",
+      "params": {
+        "entropyCompressionCap": 0.88,
+        "quantumObiFactor": 0.85,
+        "temperatureStopScale": 0.18,
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.75,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "qem_cap0.88_obi1.10_stop0.08",
+      "params": {
+        "entropyCompressionCap": 0.88,
+        "quantumObiFactor": 1.1,
+        "temperatureStopScale": 0.08,
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.75,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "qem_cap0.88_obi1.10_stop0.12",
+      "params": {
+        "entropyCompressionCap": 0.88,
+        "quantumObiFactor": 1.1,
+        "temperatureStopScale": 0.12,
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.75,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "qem_cap0.88_obi1.10_stop0.18",
+      "params": {
+        "entropyCompressionCap": 0.88,
+        "quantumObiFactor": 1.1,
+        "temperatureStopScale": 0.18,
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.75,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "qem_cap0.94_obi0.70_stop0.08",
+      "params": {
+        "entropyCompressionCap": 0.94,
+        "quantumObiFactor": 0.7,
+        "temperatureStopScale": 0.08,
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.75,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "qem_cap0.94_obi0.70_stop0.12",
+      "params": {
+        "entropyCompressionCap": 0.94,
+        "quantumObiFactor": 0.7,
+        "temperatureStopScale": 0.12,
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.75,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "qem_cap0.94_obi0.70_stop0.18",
+      "params": {
+        "entropyCompressionCap": 0.94,
+        "quantumObiFactor": 0.7,
+        "temperatureStopScale": 0.18,
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.75,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "qem_cap0.94_obi0.85_stop0.08",
+      "params": {
+        "entropyCompressionCap": 0.94,
+        "quantumObiFactor": 0.85,
+        "temperatureStopScale": 0.08,
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.75,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "qem_cap0.94_obi0.85_stop0.12",
+      "params": {
+        "entropyCompressionCap": 0.94,
+        "quantumObiFactor": 0.85,
+        "temperatureStopScale": 0.12,
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.75,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "qem_cap0.94_obi0.85_stop0.18",
+      "params": {
+        "entropyCompressionCap": 0.94,
+        "quantumObiFactor": 0.85,
+        "temperatureStopScale": 0.18,
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.75,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "qem_cap0.94_obi1.10_stop0.08",
+      "params": {
+        "entropyCompressionCap": 0.94,
+        "quantumObiFactor": 1.1,
+        "temperatureStopScale": 0.08,
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.75,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "qem_cap0.94_obi1.10_stop0.12",
+      "params": {
+        "entropyCompressionCap": 0.94,
+        "quantumObiFactor": 1.1,
+        "temperatureStopScale": 0.12,
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.75,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "qem_cap0.94_obi1.10_stop0.18",
+      "params": {
+        "entropyCompressionCap": 0.94,
+        "quantumObiFactor": 1.1,
+        "temperatureStopScale": 0.18,
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.75,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "qem_cap0.98_obi0.70_stop0.08",
+      "params": {
+        "entropyCompressionCap": 0.98,
+        "quantumObiFactor": 0.7,
+        "temperatureStopScale": 0.08,
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.75,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "qem_cap0.98_obi0.70_stop0.12",
+      "params": {
+        "entropyCompressionCap": 0.98,
+        "quantumObiFactor": 0.7,
+        "temperatureStopScale": 0.12,
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.75,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "qem_cap0.98_obi0.70_stop0.18",
+      "params": {
+        "entropyCompressionCap": 0.98,
+        "quantumObiFactor": 0.7,
+        "temperatureStopScale": 0.18,
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.75,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "qem_cap0.98_obi0.85_stop0.08",
+      "params": {
+        "entropyCompressionCap": 0.98,
+        "quantumObiFactor": 0.85,
+        "temperatureStopScale": 0.08,
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.75,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "qem_cap0.98_obi0.85_stop0.12",
+      "params": {
+        "entropyCompressionCap": 0.98,
+        "quantumObiFactor": 0.85,
+        "temperatureStopScale": 0.12,
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.75,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "qem_cap0.98_obi0.85_stop0.18",
+      "params": {
+        "entropyCompressionCap": 0.98,
+        "quantumObiFactor": 0.85,
+        "temperatureStopScale": 0.18,
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.75,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "qem_cap0.98_obi1.10_stop0.08",
+      "params": {
+        "entropyCompressionCap": 0.98,
+        "quantumObiFactor": 1.1,
+        "temperatureStopScale": 0.08,
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.75,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "qem_cap0.98_obi1.10_stop0.12",
+      "params": {
+        "entropyCompressionCap": 0.98,
+        "quantumObiFactor": 1.1,
+        "temperatureStopScale": 0.12,
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.75,
+        "kellyFraction": 0.18
+      }
+    },
+    {
+      "id": "qem_cap0.98_obi1.10_stop0.18",
+      "params": {
+        "entropyCompressionCap": 0.98,
+        "quantumObiFactor": 1.1,
+        "temperatureStopScale": 0.18,
+        "minEdge": 0.08,
+        "minDirectionalProb": 0.62,
+        "minDistanceAbs": 45,
+        "cooldownSec": 8,
+        "maxEntriesPerEvent": 5,
+        "maxEntryValue": 8,
+        "maxEventExposure": 32,
+        "modelWeight": 0.75,
+        "kellyFraction": 0.18
+      }
+    }
+  ]
+}

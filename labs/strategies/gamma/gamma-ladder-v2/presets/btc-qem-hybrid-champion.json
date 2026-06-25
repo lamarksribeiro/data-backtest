@@ -1,0 +1,27 @@
+{
+  "id": "btc-qem-hybrid-champion",
+  "underlying": "BTC",
+  "studioVersion": 1,
+  "name": "BTC · Quantum Entropic Hybrid Champion",
+  "studioName": "Gamma Ladder V2 · BTC · QEM Hybrid Champion",
+  "role": "champion",
+  "description": "Preset híbrido campeão que combina arbitragem por Box, Hedging dinâmico, filtro de entropia de Shannon e modulador Quantum OBI Sizing com trailing stop termo-adaptativo.",
+  "params": {
+    "minEdge": 0.08,
+    "minDirectionalProb": 0.62,
+    "minDistanceAbs": 45,
+    "cooldownSec": 8,
+    "maxEntriesPerEvent": 5,
+    "maxEntryValue": 8,
+    "maxEventExposure": 32,
+    "modelWeight": 0.75,
+    "kellyFraction": 0.18,
+    "entropyCompressionCap": 0.94,
+    "quantumObiFactor": 0.85,
+    "quantumCoherenceHighThreshold": 0.78,
+    "quantumCoherenceLowThreshold": 0.52,
+    "quantumSizingHighFactor": 1.50,
+    "quantumSizingLowFactor": 0.60,
+    "temperatureStopScale": 0.18
+  }
+}

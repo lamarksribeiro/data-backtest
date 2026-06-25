@@ -84,7 +84,12 @@ export async function runLabExperiment(experimentPath, options = {}) {
   let columnAnalysis = analyzeStrategyColumns(glsAst, bookDepth ?? config.backtestBookDepth);
   if (gammaLadder) {
     columnAnalysis = EMBEDDED_RUNNER_COLUMN_ANALYSIS;
-    strategySourceCode = composeGammaLadderStrategyJs(sourceCode);
+    if (String(glsAst.name || '').toLowerCase().includes('v2')) {
+      const enginePath = path.resolve('data/strategy-libraries/gamma-ladder-engine.v2.json');
+      strategySourceCode = composeGammaLadderStrategyJs(sourceCode, { enginePath });
+    } else {
+      strategySourceCode = composeGammaLadderStrategyJs(sourceCode);
+    }
     const compiled = compileStrategyJs(strategySourceCode, { db });
     if (!compiled.ok) {
       throw new Error(compiled.errors?.[0]?.message || 'Gamma Ladder Strategy JS compilation failed');
