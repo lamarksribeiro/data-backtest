@@ -1,8 +1,8 @@
 /* ============================================================
    Design Tokens — fonte única da verdade
-   As variáveis --bg-*/--text-*/--accent/--radius/etc. abaixo
+   Variáveis --bg-*, --text-*, --accent, --radius etc. abaixo
    continuam sendo a API consumida pelo styles.css; as escalas
-   nomeadas (--space-*/--fs-*/--radius-*/--bp-*/--surface-*)
+   nomeadas (--space-*, --fs-*, --radius-*, --bp-*, --surface-*)
    ampliam a base para novos componentes sem valores mágicos.
    ============================================================ */
 :root {
