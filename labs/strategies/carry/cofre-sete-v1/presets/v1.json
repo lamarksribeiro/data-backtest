@@ -1,6 +1,8 @@
 {
   "id": "v1",
   "name": "Default",
+  "studioName": "Cofre Sete V1 · Default",
   "studioVersion": 1,
+  "role": "baseline",
   "params": {}
 }

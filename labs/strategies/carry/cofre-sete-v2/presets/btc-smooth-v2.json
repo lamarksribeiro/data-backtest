@@ -1,0 +1,14 @@
+{
+  "id": "btc-smooth-v2",
+  "name": "BTC · Smooth V2",
+  "studioName": "Cofre Sete V2 · BTC Smooth V2",
+  "studioVersion": 2,
+  "role": "champion",
+  "labVariantId": "btc-linear",
+  "description": "Perfil smooth-v2 validado (01-19 jun/2026): ~63% do PnL campeão com ~22% menos drawdown.",
+  "window": {
+    "from": "2026-06-01",
+    "to": "2026-06-19"
+  },
+  "params": {}
+}

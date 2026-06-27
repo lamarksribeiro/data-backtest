@@ -19,7 +19,9 @@ import {
  * F5 — sweep multi-variante: 1× leitura ColumnSet, N× fast-run compiled-soa.
  */
 export async function runBacktestSweep(db, baseRequest, variants, { onProgress, maxVariants } = {}) {
-  if (!baseRequest?.glsAst) throw new Error('Sweep requires a GLS strategy (glsAst)');
+  if (!baseRequest?.glsAst && !baseRequest?.runnerLibrary) {
+    throw new Error('Sweep requires a GLS strategy (glsAst) or library runner');
+  }
   if (!Array.isArray(variants) || !variants.length) throw new Error('variants must be a non-empty array');
 
   const config = loadConfig();
@@ -75,7 +77,9 @@ export async function runBacktestSweep(db, baseRequest, variants, { onProgress, 
     });
   }
 
-  const parallelism = analyzeStrategyParallelism(baseRequest.glsAst);
+  const parallelism = baseRequest.glsAst
+    ? analyzeStrategyParallelism(baseRequest.glsAst)
+    : { parallelSafe: false };
   const workerCount = Number(baseRequest.backtestWorkers ?? config.backtestWorkers ?? 1);
   const canParallelize = parallelism.parallelSafe
     && workerCount > 1

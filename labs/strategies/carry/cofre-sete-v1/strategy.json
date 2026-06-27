@@ -29,7 +29,7 @@
       "ported",
       "btc"
     ],
-    "defaultVersion": 1
+    "defaultVersion": 2
   },
   "notes": "Runner: cofre-sete-runner@1. Origem read-only: polymarket-test/cofreSeteBacktest.js"
 }

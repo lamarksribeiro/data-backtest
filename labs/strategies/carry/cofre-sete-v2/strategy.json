@@ -23,13 +23,13 @@
   "promotedToStudio": true,
   "studioSlug": "cofre-sete-v2",
   "studio": {
-    "description": "Cofre Sete V2 com parâmetros otimizados via grid + busca aleatória (jun/2026). Evolução da V1 com cooldown mais curto, distância mínima maior e stops ajustados.",
+    "description": "Cofre Sete V2 com perfil linear anti-drawdown (smooth-v2, jun/2026). Sizing Kelly reduzido, cap de entradas direcionais, throttle por equity e filtros dinâmicos de edge em drawdown.",
     "tags": [
       "cofre-sete-v2",
       "optimized",
       "btc"
     ],
-    "defaultVersion": 1
+    "defaultVersion": 2
   },
   "notes": "Runner: cofre-sete-runner@1. Parâmetros campeões derivados de otimização treino/validação (01-03 jun/2026) e validação estendida (01-19 jun/2026)."
 }

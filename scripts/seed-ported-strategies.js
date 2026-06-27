@@ -27,6 +27,7 @@ import { loadBootstrapLibraryEntries } from '../src/backtestStudio/strategyLibra
 import { invalidateStrategyStatsCache } from '../src/backtestStudio/state/strategyStats.js';
 import { listPresets, resolvePresetParams } from '../labs/shared/presets.js';
 import { renderPresetGls } from '../labs/shared/renderPresetGls.js';
+import { renderPresetStrategyJs } from '../labs/shared/renderPresetStrategyJs.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.join(__dirname, '..');
@@ -252,6 +253,66 @@ function resolveManifestSourceCode(manifest) {
   return readFileSync(path.join(manifest.strategyRoot, 'strategy.js'), 'utf8');
 }
 
+function seedLibraryRunnerFromLabPresets(db, manifest, strategy, slug) {
+  const presets = listPresets({
+    strategyFamily: manifest.family,
+    strategyId: manifest.id,
+    includeAliases: false,
+  }).sort((left, right) => resolvePresetVersion(left) - resolvePresetVersion(right));
+  if (!presets.length) return null;
+
+  const baseSource = readFileSync(path.join(manifest.strategyRoot, 'strategy.js'), 'utf8');
+  const versions = [];
+
+  for (const preset of presets) {
+    const versionNum = resolvePresetVersion(preset);
+    const params = resolvePresetParams(preset, manifest.strategyRoot);
+    const displayName = preset.studioName || `${manifest.name} · ${preset.name || preset.id}`;
+    const sourceCode = renderPresetStrategyJs(baseSource, params, displayName);
+    const validation = validateStrategySource({ language: 'strategy-js-v1', source_code: sourceCode, db });
+    if (!validation.ok) {
+      console.warn(`[seed-strategy] skip ${slug} v${versionNum} (${preset.id}): ${validation.errors?.[0]?.message}`);
+      continue;
+    }
+    const compiled = buildCompiledArtifact(sourceCode, { bookDepth: 25, db });
+    const action = upsertStrategyVersion(db, strategy.id, versionNum, {
+      language: 'strategy-js-v1',
+      sourceCode,
+      validation,
+      compiled,
+      checksum: checksum(sourceCode),
+      notes: preset.name || preset.id,
+    });
+    versions.push({ version: versionNum, preset: preset.id, action, execution_kind: validation.execution_kind });
+    console.log(`[seed-strategy] ${slug} v${versionNum} (${preset.id}) ${action} (${validation.execution_kind})`);
+  }
+
+  if (!versions.length) return null;
+
+  const defaultVersion = resolveDefaultPresetVersion(manifest, presets);
+  const versionRow = db.prepare(`
+    SELECT id FROM strategy_versions WHERE strategy_id = ? AND version = ?
+  `).get(strategy.id, defaultVersion);
+  if (versionRow) {
+    db.prepare('UPDATE strategy_definitions SET default_version_id = ? WHERE id = ?')
+      .run(versionRow.id, strategy.id);
+  }
+
+  const removed = pruneLegacyImportedVersions(db, strategy.id, defaultVersion);
+  if (removed > 0) {
+    console.log(`[seed-strategy] ${slug} pruned ${removed} legacy preset version(s)`);
+  }
+
+  return {
+    slug,
+    presetSeed: true,
+    versions,
+    defaultVersion,
+    execution_kind: 'library-runner',
+    pruned: removed,
+  };
+}
+
 function seedManifest(db, manifest) {
   const slug = manifest.studioSlug || manifest.id;
   const trashed = db.prepare('SELECT id, deleted_at FROM strategy_definitions WHERE slug = ?').get(slug);
@@ -269,6 +330,11 @@ function seedManifest(db, manifest) {
 
   if (manifest.portStatus === 'compiled-native') {
     const presetSeed = seedCompiledNativeFromLabPresets(db, manifest, strategy, slug);
+    if (presetSeed) return presetSeed;
+  }
+
+  if (manifest.portStatus === 'ported' && manifest.kind === 'library-runner') {
+    const presetSeed = seedLibraryRunnerFromLabPresets(db, manifest, strategy, slug);
     if (presetSeed) return presetSeed;
   }
 

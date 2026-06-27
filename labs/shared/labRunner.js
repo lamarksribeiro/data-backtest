@@ -8,9 +8,13 @@ import { openStateDatabase, closeStateDatabase } from '../../src/state/sqlite.js
 import { parse } from '../../src/backtestStudio/gls/parser.js';
 import { analyzeStrategyColumns } from '../../src/backtestStudio/gls/compiler.js';
 import { compileStrategyJs } from '../../src/backtestStudio/strategyJs/compile.js';
+import { validateStrategySource } from '../../src/backtestStudio/strategyJs/index.js';
 import { glsToStrategyJs } from '../../src/backtestStudio/strategyJs/glsToStrategyJs.js';
 import { composeGammaLadderStrategyJs } from '../../src/backtestStudio/strategyJs/composeGammaLadder.js';
 import { EMBEDDED_RUNNER_COLUMN_ANALYSIS } from '../../src/backtestStudio/strategyJs/embeddedRunnerAdapter.js';
+import { bindStrategyLibraryDatabase } from '../../src/backtestStudio/nativeLibrary/registry.js';
+import { LIBRARY_RUNNER_COLUMN_ANALYSIS } from '../../src/backtestStudio/strategyLibrary/runnerAdapter.js';
+import { renderPresetStrategyJs } from './renderPresetStrategyJs.js';
 import { checkDatasetAvailability } from '../../src/query/availability.js';
 import { runBacktestSweep } from '../../src/backtest/sweep.js';
 import { expandParamGrid, countParamGridVariants } from './paramGrid.js';
@@ -73,16 +77,41 @@ export async function runLabExperiment(experimentPath, options = {}) {
   const totalVariantCount = countParamGridVariants(searchSpace);
   const maxVariants = Math.max(Number(options.maxVariants || experiment.maxVariants || config.sweepMaxVariants), 1);
   const variants = expandParamGrid(searchSpace, { maxVariants });
-  const sourcePath = resolveSourcePath(strategy.source, strategyRoot);
-  const sourceCode = readFileSync(sourcePath, 'utf8');
-  const glsAst = parse(sourceCode);
   const bookDepth = experiment.bookDepth ?? strategy.defaultBookDepth ?? config.backtestBookDepth;
   const db = openStateDatabase(config.stateDbPath, { readOnly: true });
-  const gammaLadder = isGammaLadderAst(glsAst);
+  bindStrategyLibraryDatabase(db);
+  const libraryRunner = isLibraryRunnerStrategy(strategy);
+  let sourcePath;
+  let glsAst = null;
+  let gammaLadder = false;
   let embeddedRunner = false;
   let strategySourceCode = null;
-  let columnAnalysis = analyzeStrategyColumns(glsAst, bookDepth ?? config.backtestBookDepth);
+  let runnerLibrary = null;
+  let columnAnalysis = LIBRARY_RUNNER_COLUMN_ANALYSIS;
+
+  if (libraryRunner) {
+    sourcePath = path.join(strategyRoot, 'strategy.js');
+    const baseJs = readFileSync(sourcePath, 'utf8');
+    const rendered = renderPresetStrategyJs(baseJs, defaults, strategy.name);
+    const validation = validateStrategySource({ language: 'strategy-js-v1', source_code: rendered, db });
+    if (!validation.ok) {
+      throw new Error(validation.errors?.[0]?.message || `${strategy.id}: strategy-js validation failed`);
+    }
+    runnerLibrary = validation.runner_library;
+    if (!runnerLibrary) {
+      throw new Error(`${strategy.id}: missing runner library dependency`);
+    }
+    columnAnalysis = validation.column_analysis || LIBRARY_RUNNER_COLUMN_ANALYSIS;
+  } else {
+    sourcePath = resolveSourcePath(strategy.source, strategyRoot);
+    const sourceCode = readFileSync(sourcePath, 'utf8');
+    glsAst = parse(sourceCode);
+    columnAnalysis = analyzeStrategyColumns(glsAst, bookDepth ?? config.backtestBookDepth);
+    gammaLadder = isGammaLadderAst(glsAst);
+  }
+
   if (gammaLadder) {
+    const sourceCode = readFileSync(sourcePath, 'utf8');
     columnAnalysis = EMBEDDED_RUNNER_COLUMN_ANALYSIS;
     if (String(glsAst.name || '').toLowerCase().includes('v2')) {
       const enginePath = path.resolve('data/strategy-libraries/gamma-ladder-engine.v2.json');
@@ -97,7 +126,18 @@ export async function runLabExperiment(experimentPath, options = {}) {
     embeddedRunner = true;
   }
   const request = buildBacktestRequest({
-    experiment, strategy, defaults, glsAst, columnAnalysis, bookDepth, options, db, embeddedRunner, strategySourceCode,
+    experiment,
+    strategy,
+    defaults,
+    glsAst,
+    columnAnalysis,
+    bookDepth,
+    options,
+    db,
+    embeddedRunner,
+    strategySourceCode,
+    runnerLibrary,
+    libraryRunner,
   });
   const availabilityRequest = {
     ...request,
@@ -390,9 +430,11 @@ function summarizeDaily(days) {
 
 function buildBacktestRequest({
   experiment, strategy, defaults, glsAst, columnAnalysis, bookDepth, options, db = null,
-  embeddedRunner = false, strategySourceCode = null,
+  embeddedRunner = false, strategySourceCode = null, runnerLibrary = null, libraryRunner = false,
 }) {
-  const executionKind = embeddedRunner ? 'embedded-runner' : (experiment.glsExecution || 'compiled-soa');
+  const executionKind = embeddedRunner
+    ? 'embedded-runner'
+    : (libraryRunner ? 'library-runner' : (experiment.glsExecution || 'compiled-soa'));
   return {
     from: parseDateStart(experiment.from).toISOString(),
     to: parseDateEnd(experiment.to).toISOString(),
@@ -414,6 +456,7 @@ function buildBacktestRequest({
     db,
     embeddedRunner,
     strategySourceCode,
+    runnerLibrary,
     strategyMeta: {
       lab: true,
       id: strategy.id,
@@ -506,6 +549,10 @@ function finiteCap(value, cap) {
   const number = Number(value);
   if (!Number.isFinite(number)) return 0;
   return Math.min(number, cap);
+}
+
+function isLibraryRunnerStrategy(strategy) {
+  return strategy?.kind === 'library-runner' || strategy?.source?.type === 'library-runner';
 }
 
 function resolveSourcePath(source, strategyRoot) {

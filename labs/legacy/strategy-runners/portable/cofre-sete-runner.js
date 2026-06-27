@@ -213,6 +213,19 @@ const DEFAULT_PARAMS = {
   lateExitMinBid: 0.64,
   protectedExitSkipProfit: 0.04,
   minTicksBeforeEntry: 8,
+  drawdownKellyThrottle: false,
+  drawdownKellyFloor: 0.35,
+  equityPeakThrottlePct: 0.12,
+  lossStreakPause: 0,
+  lossStreakCooldownEvents: 0,
+  maxVolForDirectional: 0,
+  eventWorstCaseStop: 0,
+  autoDeriskEnabled: false,
+  autoDeriskWorstPnl: -6,
+  directionalMinQualityScore: 0,
+  maxDirectionalPerEvent: 8,
+  boxPriorityMode: false,
+  minBoxProfitBeforeDirectional: 0,
 };
 
 function toFiniteNumber(value) {
@@ -282,6 +295,9 @@ function mergeCofreSeteParams(raw = {}) {
     'trapMaxDistanceAbs', 'trapMinDecelZ', 'trapMinEdge', 'takeProfitBid',
     'takeProfitPct', 'trailAfterBid', 'trailDrop', 'stopBid', 'edgeExitBelow',
     'lateExitSec', 'lateExitMinBid', 'protectedExitSkipProfit', 'minTicksBeforeEntry',
+    'drawdownKellyFloor', 'equityPeakThrottlePct', 'lossStreakPause', 'lossStreakCooldownEvents',
+    'maxVolForDirectional', 'eventWorstCaseStop', 'autoDeriskWorstPnl', 'directionalMinQualityScore',
+    'maxDirectionalPerEvent', 'minBoxProfitBeforeDirectional',
   ];
 
   for (const key of numericKeys) {
@@ -357,6 +373,19 @@ function mergeCofreSeteParams(raw = {}) {
   params.lateExitMinBid = normalizePrice(params.lateExitMinBid, DEFAULT_PARAMS.lateExitMinBid);
   params.protectedExitSkipProfit = Math.max(0, params.protectedExitSkipProfit);
   params.minTicksBeforeEntry = Math.max(1, Math.floor(params.minTicksBeforeEntry));
+  params.drawdownKellyThrottle = toBool(raw.drawdownKellyThrottle, params.drawdownKellyThrottle);
+  params.drawdownKellyFloor = clamp(params.drawdownKellyFloor, 0.05, 1);
+  params.equityPeakThrottlePct = clamp(params.equityPeakThrottlePct, 0, 1);
+  params.lossStreakPause = Math.max(0, Math.floor(params.lossStreakPause));
+  params.lossStreakCooldownEvents = Math.max(0, Math.floor(params.lossStreakCooldownEvents));
+  params.maxVolForDirectional = Math.max(0, params.maxVolForDirectional);
+  params.eventWorstCaseStop = Math.max(0, params.eventWorstCaseStop);
+  params.autoDeriskEnabled = toBool(raw.autoDeriskEnabled, params.autoDeriskEnabled);
+  params.autoDeriskWorstPnl = Math.min(0, params.autoDeriskWorstPnl);
+  params.directionalMinQualityScore = Math.max(0, params.directionalMinQualityScore);
+  params.maxDirectionalPerEvent = Math.max(1, Math.floor(params.maxDirectionalPerEvent));
+  params.boxPriorityMode = toBool(raw.boxPriorityMode, params.boxPriorityMode);
+  params.minBoxProfitBeforeDirectional = Math.max(0, params.minBoxProfitBeforeDirectional);
   applyStopReverseParams(params, raw, { stopReverseBudgetMode: 'open-cost' });
   return params;
 }
@@ -610,13 +639,15 @@ function modelProbUpDetailed(state, tick, params) {
   return { probability, pStat, pMarket, sigma, distance, drift, acceleration, imbalance, askSum };
 }
 
-function scoreDirectionalCandidates(state, tick, params) {
+function scoreDirectionalCandidates(state, tick, params, runtime = {}) {
   const btcPrice = toFiniteNumber(tick.btc_price);
   const priceToBeat = toFiniteNumber(state.priceToBeat ?? tick.price_to_beat);
   if (btcPrice == null || priceToBeat == null) return [];
   if (Math.abs(btcPrice - priceToBeat) < params.minDistanceAbs) return [];
 
   const model = modelProbUpDetailed(state, tick, params);
+  const effectiveMinEdge = params.minEdge + (runtime.drawdownEdgeBoost || 0);
+  const effectiveMinProb = params.minDirectionalProb + (runtime.drawdownProbBoost || 0);
   const upFields = sideFields(tick, 'UP');
   const downFields = sideFields(tick, 'DOWN');
   const askSum = (upFields.ask ?? 0.5) + (downFields.ask ?? 0.5);
@@ -637,8 +668,8 @@ function scoreDirectionalCandidates(state, tick, params) {
     .filter((candidate) => candidate.ask != null
       && candidate.ask >= params.minAsk
       && candidate.ask <= params.maxAsk
-      && candidate.probability >= params.minDirectionalProb
-      && candidate.edge >= params.minEdge
+      && candidate.probability >= effectiveMinProb
+      && candidate.edge >= effectiveMinEdge
       && candidate.spread <= params.maxSpread)
     .sort((left, right) => (right.edge * right.qualityScore) - (left.edge * left.qualityScore));
 }
@@ -729,6 +760,9 @@ function createBacktestRunner(rawParams = {}) {
   let periodStart = null;
   let periodEnd = null;
   let current = null;
+  let peakPnl = 0;
+  let consecutiveLosses = 0;
+  let directionalPauseEventsRemaining = 0;
 
   const addLog = (ts, msg, type = 'info') => {
     log.push({ ts, msg, type });
@@ -737,6 +771,62 @@ function createBacktestRunner(rawParams = {}) {
   const equityNow = () => Math.max(0, params.walletSize + totalPnl);
 
   const riskLimit = () => Math.min(params.maxWorstLossAbs, equityNow() * params.riskBudgetPct);
+
+  const updatePeakPnl = () => {
+    if (totalPnl > peakPnl) peakPnl = totalPnl;
+  };
+
+  const drawdownThrottleFactor = () => {
+    if (!params.drawdownKellyThrottle) return 1;
+    updatePeakPnl();
+    const drawdown = Math.max(0, peakPnl - totalPnl);
+    const throttleStart = Math.max(1, equityNow() * params.equityPeakThrottlePct);
+    if (drawdown <= throttleStart) return 1;
+    const maxThrottleDrawdown = Math.max(throttleStart, riskLimit());
+    const ratio = 1 - ((drawdown - throttleStart) / maxThrottleDrawdown);
+    return clamp(ratio, params.drawdownKellyFloor, 1);
+  };
+
+  const drawdownEntryRuntime = () => {
+    const throttle = drawdownThrottleFactor();
+    if (throttle >= 0.999) return {};
+    const stress = 1 - throttle;
+    return {
+      drawdownEdgeBoost: stress * 0.04,
+      drawdownProbBoost: stress * 0.03,
+    };
+  };
+
+  const directionalEntriesPaused = () => directionalPauseEventsRemaining > 0;
+
+  const lockedBoxProfit = () => {
+    if (!current) return 0;
+    return current.boxes.reduce((sum, box) => sum + Math.max(0, box.lockedProfit || 0), 0);
+  };
+
+  const directionalEntryAllowed = () => {
+    if (directionalEntriesPaused()) return false;
+    if (params.boxPriorityMode && lockedBoxProfit() < params.minBoxProfitBeforeDirectional) return false;
+    return true;
+  };
+
+  const registerEventOutcome = (finalPnl) => {
+    updatePeakPnl();
+    if (finalPnl < 0) {
+      consecutiveLosses++;
+      if (params.lossStreakPause > 0
+        && consecutiveLosses >= params.lossStreakPause
+        && params.lossStreakCooldownEvents > 0) {
+        directionalPauseEventsRemaining = Math.max(
+          directionalPauseEventsRemaining,
+          params.lossStreakCooldownEvents,
+        );
+      }
+    } else {
+      consecutiveLosses = 0;
+    }
+    if (directionalPauseEventsRemaining > 0) directionalPauseEventsRemaining--;
+  };
 
   const canAddTrade = (side, qty, cost) => {
     if (!current) return false;
@@ -818,6 +908,7 @@ function createBacktestRunner(rawParams = {}) {
 
     const finalPnl = current.realizedPnl;
     totalPnl += finalPnl;
+    registerEventOutcome(finalPnl);
     if (finalPnl > 0) totalWins++;
     else if (finalPnl < 0) totalLosses++;
 
@@ -990,17 +1081,20 @@ function createBacktestRunner(rawParams = {}) {
     const winPayoff = Math.max(0.001, (1 - candidate.ask) / candidate.ask);
     const lossProbability = 1 - candidate.probability;
     const kelly = Math.max(0, ((candidate.probability * winPayoff) - lossProbability) / winPayoff);
-    const kellyValue = equityNow() * Math.min(params.maxKellyPct, kelly * params.kellyFraction);
-    const qualityValue = params.maxEntryValue * candidate.qualityScore;
+    const throttle = drawdownThrottleFactor();
+    const kellyValue = equityNow() * Math.min(params.maxKellyPct, kelly * params.kellyFraction) * throttle;
+    const qualityValue = params.maxEntryValue * candidate.qualityScore * throttle;
     return Math.min(params.maxEntryValue, qualityValue, kellyValue, params.maxEventExposure - openCost(current));
   };
 
   const attemptFluxSniper = (tick) => {
+    if (!directionalEntryAllowed()) return false;
+    if (current.directionalEntries >= params.maxDirectionalPerEvent) return false;
     if (current.directionalEntries + current.boxEntries + current.trapEntries >= params.maxEntriesPerEvent) return false;
     const timeMs = new Date(tick.ts).getTime();
     if (current.lastEntryMs && timeMs - current.lastEntryMs < params.cooldownSec * 1000) return false;
 
-    const candidates = scoreDirectionalCandidates(current, tick, params);
+    const candidates = scoreDirectionalCandidates(current, tick, params, drawdownEntryRuntime());
     const candidate = candidates[0] || null;
     current.lastDiagnostics = candidate ? {
       side: candidate.side,
@@ -1015,6 +1109,8 @@ function createBacktestRunner(rawParams = {}) {
       timeRemainingSec: secondsRemaining(current, tick),
     } : current.lastDiagnostics;
     if (!candidate) return false;
+    if (params.directionalMinQualityScore > 0 && candidate.qualityScore < params.directionalMinQualityScore) return false;
+    if (params.maxVolForDirectional > 0 && candidate.model.sigma > params.maxVolForDirectional) return false;
 
     const maxFillPrice = Math.min(params.maxAsk, candidate.ask + params.entrySlippageMax);
     const targetValue = directionalSize(candidate);
@@ -1262,10 +1358,33 @@ function createBacktestRunner(rawParams = {}) {
     return true;
   };
 
+  const liquidateAllPositions = (tick, reason, type = 'stop') => {
+    let soldAny = false;
+    for (const side of ['UP', 'DOWN']) {
+      const sideInventory = current.inventory[side];
+      if (sideInventory.remainingQty <= 0) continue;
+      const fields = sideFields(tick, side);
+      const bid = fields.bid;
+      if (bid == null || bid <= 0) continue;
+      const avgOpen = averageOpenPrice(sideInventory);
+      const soldQty = sellSide(tick, side, sideInventory.remainingQty, bid, reason, bid >= avgOpen ? 'profit' : type);
+      if (soldQty > 0) soldAny = true;
+    }
+    return soldAny;
+  };
+
   const maybeProcessPositions = (tick) => {
     let closedByStop = false;
     const model = modelProbUpDetailed(current, tick, params);
     const protectedPayoff = payoffSnapshot(current);
+
+    if (params.eventWorstCaseStop > 0 && protectedPayoff.worstPnl <= -params.eventWorstCaseStop) {
+      if (liquidateAllPositions(tick, 'event worst-case stop cofre', 'stop')) {
+        finalizeCurrentEvent('event_worst_case_stop', tick.ts);
+        return true;
+      }
+    }
+
     for (const side of ['UP', 'DOWN']) {
       const sideInventory = current.inventory[side];
       if (sideInventory.remainingQty <= 0) continue;
@@ -1280,6 +1399,14 @@ function createBacktestRunner(rawParams = {}) {
       const hasOppositeInventory = current.inventory[oppositeSide(side)].remainingQty >= params.minShares;
 
       if (hasOppositeInventory && protectedPayoff.worstPnl >= params.protectedExitSkipProfit) {
+        continue;
+      }
+
+      if (params.autoDeriskEnabled
+        && !hasOppositeInventory
+        && protectedPayoff.worstPnl <= params.autoDeriskWorstPnl) {
+        if (attemptHedgeAlchemist(tick, side)) continue;
+        sellSide(tick, side, sideInventory.remainingQty, bid, 'auto derisk cofre', bid >= avgOpen ? 'profit' : 'stop');
         continue;
       }
 

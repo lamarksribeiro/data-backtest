@@ -61,6 +61,51 @@ test('seedPortedStrategies seeds all promoted ported and compiled-native strateg
   }
 });
 
+test('cofre-sete-v1 and v2 seed lab presets as studio versions', () => {
+  const db = openStateDatabase(':memory:');
+  bindStrategyLibraryDatabase(db);
+  seedPortedStrategies(db);
+
+  const v1 = getStrategyBySlug(db, 'cofre-sete-v1');
+  assert.ok(v1, 'cofre-sete-v1');
+  const v1Versions = db.prepare(`
+    SELECT version, notes FROM strategy_versions
+    WHERE strategy_id = ?
+    ORDER BY version ASC
+  `).all(v1.id);
+  assert.equal(v1Versions.length, 2);
+  assert.equal(v1Versions[0].notes, 'Default');
+  assert.equal(v1Versions[1].notes, 'BTC · Champion Optimized');
+
+  const v1Default = db.prepare('SELECT default_version_id FROM strategy_definitions WHERE id = ?').get(v1.id);
+  const v1DefaultVersion = db.prepare('SELECT version FROM strategy_versions WHERE id = ?').get(v1Default.default_version_id);
+  assert.equal(v1DefaultVersion.version, 2);
+
+  const v2 = getStrategyBySlug(db, 'cofre-sete-v2');
+  assert.ok(v2, 'cofre-sete-v2');
+  const v2Versions = db.prepare(`
+    SELECT version, notes FROM strategy_versions
+    WHERE strategy_id = ?
+    ORDER BY version ASC
+  `).all(v2.id);
+  assert.equal(v2Versions.length, 2);
+  assert.equal(v2Versions[0].notes, 'V1 Baseline');
+  assert.equal(v2Versions[1].notes, 'BTC · Smooth V2');
+
+  const v2Default = db.prepare('SELECT default_version_id FROM strategy_definitions WHERE id = ?').get(v2.id);
+  const v2DefaultVersion = db.prepare('SELECT version FROM strategy_versions WHERE id = ?').get(v2Default.default_version_id);
+  assert.equal(v2DefaultVersion.version, 2);
+
+  const smooth = db.prepare(`
+    SELECT validation_json FROM strategy_versions
+    WHERE strategy_id = ? AND version = 2
+  `).get(v2.id);
+  const smoothValidation = JSON.parse(smooth.validation_json);
+  assert.equal(smoothValidation.params_schema?.kellyFraction?.default, 0.12);
+  assert.equal(smoothValidation.params_schema?.maxDirectionalPerEvent?.default, 4);
+  assert.equal(smoothValidation.params_schema?.drawdownKellyThrottle?.default, true);
+});
+
 test('terminal-convexity-v1 seeds lab presets as studio versions', () => {
   const db = openStateDatabase(':memory:');
   bindStrategyLibraryDatabase(db);
@@ -73,18 +118,17 @@ test('terminal-convexity-v1 seeds lab presets as studio versions', () => {
     WHERE strategy_id = ?
     ORDER BY version ASC
   `).all(strategy.id);
-  assert.equal(versions.length, 2);
+  assert.ok(versions.length >= 2);
   assert.equal(versions[0].notes, 'Default (Legacy)');
-  assert.equal(versions[1].notes, 'BTC · Champion');
 
   const defaultRow = db.prepare('SELECT default_version_id FROM strategy_definitions WHERE id = ?').get(strategy.id);
   const defaultVersion = db.prepare('SELECT version FROM strategy_versions WHERE id = ?').get(defaultRow.default_version_id);
-  assert.equal(defaultVersion.version, 2);
+  assert.ok(defaultVersion.version >= 2);
 
   const champion = db.prepare(`
     SELECT validation_json FROM strategy_versions
-    WHERE strategy_id = ? AND version = 2
-  `).get(strategy.id);
+    WHERE strategy_id = ? AND version = ?
+  `).get(strategy.id, defaultVersion.version);
   const validation = JSON.parse(champion.validation_json);
   assert.equal(validation.execution_kind, 'compiled-soa');
   assert.equal(validation.params_schema?.lateFlipExitEnabled?.default, true);

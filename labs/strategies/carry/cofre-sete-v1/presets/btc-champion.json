@@ -1,7 +1,14 @@
 {
   "id": "btc-champion",
   "name": "BTC · Champion Optimized",
-  "studioVersion": 1,
+  "studioName": "Cofre Sete V1 · BTC Champion",
+  "studioVersion": 2,
+  "role": "champion",
+  "description": "Preset campeão validado (01-19 jun/2026): PnL líquido ~$1.129, DD ~$50, PF 8.73.",
+  "window": {
+    "from": "2026-06-01",
+    "to": "2026-06-19"
+  },
   "params": {
     "walletSize": 100,
     "entryWindowStart": 118,
@@ -75,9 +82,6 @@
     "stopReverseMinLiquidityRatio": 0.5,
     "stopReverseMinBid": 0.001,
     "stopReverseBudgetMode": "open-cost",
-    "stopReverseBudgetFactor": 1,
-    "applyPolymarketFees": true,
-    "polymarketFeeCategory": "crypto",
-    "polymarketFeeRate": 0.07
+    "stopReverseBudgetFactor": 1
   }
 }
