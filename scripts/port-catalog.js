@@ -4,10 +4,10 @@ export const POLYMARKET_TEST_ROOT = 'D:/Projetos/projeto-goldenlens/polymarket-t
 
 export const ALREADY_PORTED = [
   { id: 'edge-sniper-v3', portStatus: 'ported', notes: 'Substitui edge-sniper-v2', sourceDoc: 'docs/estrategias/implementadas/edge-sniper-v3.md' },
-  { id: 'gamma-ladder-v1', portStatus: 'ported', notes: 'embedded-runner', sourceDoc: 'docs/estrategias/implementadas/gamma-ladder-v1.md' },
+  { id: 'gamma-ladder', portStatus: 'ported', notes: 'Gamma Ladder unificada (V1 + V2 engines)', sourceDoc: 'docs/estrategias/implementadas/gamma-ladder-v1.md' },
   { id: 'vsmr', portStatus: 'ported', notes: 'Volatility Spike Mean Reversion', sourceDoc: 'docs/estrategias/implementadas/vsmr-v1.md' },
   { id: 'quantum-entropic-manifold', portStatus: 'ported', notes: 'Quantum Entropic Manifold V2 (GLS nativo)', sourceDoc: 'labs/strategies/edge/quantum-entropic-manifold/strategy.json' },
-  { id: 'cofre-sete-v2', portStatus: 'ported', notes: 'Evolução otimizada da Cofre Sete V1 (parâmetros campeão jun/2026)', sourceDoc: 'labs/strategies/carry/cofre-sete-v2/strategy.json' },
+  { id: 'cofre-sete', portStatus: 'ported', notes: 'Cofre Sete unificada (V1 clássica + V2 linear)', sourceDoc: 'docs/estrategias/implementadas/cofre-sete-v1.md' },
 ];
 
 export const INDIVIDUAL_RUNNERS = [

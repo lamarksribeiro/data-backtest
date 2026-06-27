@@ -1,0 +1,22 @@
+{
+  "id": "btc-v2",
+  "underlying": "BTC",
+  "studioVersion": 2,
+  "glsSource": "engine-v1",
+  "name": "BTC · V2 (High Prob)",
+  "studioName": "Gamma Ladder · BTC · V2",
+  "role": "candidate",
+  "description": "Preset otimizado focado em alta probabilidade direcional e convicção do modelo (Otimizado em 18/06/2026).",
+  "params": {
+    "minEdge": 0.095,
+    "minDirectionalProb": 0.68,
+    "minDistanceAbs": 55,
+    "maxAsk": 0.62,
+    "cooldownSec": 12,
+    "maxEntriesPerEvent": 4,
+    "maxEntryValue": 8,
+    "maxEventExposure": 28,
+    "modelWeight": 0.76,
+    "kellyFraction": 0.16
+  }
+}

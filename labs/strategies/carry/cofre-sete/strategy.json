@@ -1,0 +1,32 @@
+{
+  "id": "cofre-sete",
+  "name": "Cofre Sete",
+  "family": "carry",
+  "status": "candidate",
+  "kind": "library-runner",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "library-runner",
+    "runnerSlug": "cofre-sete-runner",
+    "runnerVersion": 1
+  },
+  "portStatus": "ported",
+  "sourceRepo": "data-backtest",
+  "sourceService": "labs/strategies/carry/cofre-sete",
+  "promotedToStudio": true,
+  "studioSlug": "cofre-sete",
+  "studio": {
+    "description": "Cofre Sete — motor multi-perna (box, direcional, hedge). Versões V1 clássica e V2 linear anti-drawdown.",
+    "tags": ["cofre-sete", "ported", "btc"],
+    "defaultVersion": 4,
+    "defaultJsSource": "engine-v2",
+    "jsSources": {
+      "engine-v1": "engine-v1.js",
+      "engine-v2": "engine-v2.js"
+    }
+  },
+  "notes": "Estratégia unificada; versões de lab em presets/ com jsSource engine-v1 ou engine-v2."
+}

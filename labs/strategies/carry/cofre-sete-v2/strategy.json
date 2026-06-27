@@ -17,10 +17,10 @@
     "runnerSlug": "cofre-sete-runner",
     "runnerVersion": 1
   },
-  "portStatus": "ported",
+  "portStatus": "legacy",
   "sourceRepo": "data-backtest",
   "sourceService": "labs/strategies/carry/cofre-sete-v2",
-  "promotedToStudio": true,
+  "promotedToStudio": false,
   "studioSlug": "cofre-sete-v2",
   "studio": {
     "description": "Cofre Sete V2 com perfil linear anti-drawdown (smooth-v2, jun/2026). Sizing Kelly reduzido, cap de entradas direcionais, throttle por equity e filtros dinâmicos de edge em drawdown.",

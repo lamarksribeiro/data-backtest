@@ -253,6 +253,16 @@ function resolveManifestSourceCode(manifest) {
   return readFileSync(path.join(manifest.strategyRoot, 'strategy.js'), 'utf8');
 }
 
+function resolvePresetJsSource(manifest, preset) {
+  const studio = manifest.studio || {};
+  const jsSources = studio.jsSources || {};
+  const variant = preset.jsSource || studio.defaultJsSource;
+  if (variant && jsSources[variant]) {
+    return readFileSync(path.join(manifest.strategyRoot, jsSources[variant]), 'utf8');
+  }
+  return readFileSync(path.join(manifest.strategyRoot, 'strategy.js'), 'utf8');
+}
+
 function seedLibraryRunnerFromLabPresets(db, manifest, strategy, slug) {
   const presets = listPresets({
     strategyFamily: manifest.family,
@@ -261,13 +271,13 @@ function seedLibraryRunnerFromLabPresets(db, manifest, strategy, slug) {
   }).sort((left, right) => resolvePresetVersion(left) - resolvePresetVersion(right));
   if (!presets.length) return null;
 
-  const baseSource = readFileSync(path.join(manifest.strategyRoot, 'strategy.js'), 'utf8');
   const versions = [];
 
   for (const preset of presets) {
     const versionNum = resolvePresetVersion(preset);
     const params = resolvePresetParams(preset, manifest.strategyRoot);
     const displayName = preset.studioName || `${manifest.name} · ${preset.name || preset.id}`;
+    const baseSource = resolvePresetJsSource(manifest, preset);
     const sourceCode = renderPresetStrategyJs(baseSource, params, displayName);
     const validation = validateStrategySource({ language: 'strategy-js-v1', source_code: sourceCode, db });
     if (!validation.ok) {

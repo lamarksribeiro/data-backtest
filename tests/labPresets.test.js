@@ -18,8 +18,8 @@ import { openStateDatabase, closeStateDatabase } from '../src/state/sqlite.js';
 test('listPromotedGlsStrategies discovers GLS lab strategies', () => {
   const promoted = listPromotedGlsStrategies();
   const ids = promoted.map((item) => item.id).sort();
-  assert.deepEqual(ids, ['edge-sniper-v3', 'gamma-ladder-v1', 'quantum-entropic-manifold', 'vsmr']);
-  assert.equal(promoted.find((item) => item.id === 'gamma-ladder-v1').studioSlug, 'gamma-ladder-v1');
+  assert.deepEqual(ids, ['edge-sniper-v3', 'gamma-ladder', 'quantum-entropic-manifold', 'vsmr']);
+  assert.equal(promoted.find((item) => item.id === 'gamma-ladder').studioSlug, 'gamma-ladder');
 });
 
 test('listPromotedLibraryStrategies discovers ported library runners', () => {
@@ -49,7 +49,7 @@ test('seedPromotedStrategies seeds versions from lab manifests', () => {
     const results = seedPromotedStrategies(db);
     assert.equal(results.length, 4);
     const slugs = results.map((row) => row.slug).sort();
-    assert.deepEqual(slugs, ['edge-sniper-v3', 'gamma-ladder-v1', 'quantum-entropic-manifold', 'vsmr']);
+    assert.deepEqual(slugs, ['edge-sniper-v3', 'gamma-ladder', 'quantum-entropic-manifold', 'vsmr']);
 
     const edge = results.find((row) => row.slug === 'edge-sniper-v3');
     const edgeVersions = db.prepare(`
@@ -61,14 +61,15 @@ test('seedPromotedStrategies seeds versions from lab manifests', () => {
     assert.equal(edgeVersions[0].notes, 'BTC · Classic');
     assert.equal(edgeVersions[2].notes, 'ETH · OBI');
 
-    const gamma = results.find((row) => row.slug === 'gamma-ladder-v1');
+    const gamma = results.find((row) => row.slug === 'gamma-ladder');
     const gammaVersions = db.prepare(`
       SELECT version, notes FROM strategy_versions
       WHERE strategy_id = ?
       ORDER BY version ASC
     `).all(gamma.strategy.id);
-    assert.ok(gammaVersions.length >= 1);
+    assert.equal(gammaVersions.length, 3);
     assert.equal(gammaVersions[0].notes, 'BTC · V1');
+    assert.equal(gammaVersions[2].notes, 'BTC · Quantum Entropic Hybrid Champion');
 
     const qem = results.find((row) => row.slug === 'quantum-entropic-manifold');
     const qemVersions = db.prepare(`

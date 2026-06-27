@@ -7,9 +7,9 @@
       "sourceDoc": "docs/estrategias/implementadas/edge-sniper-v3.md"
     },
     {
-      "id": "gamma-ladder-v1",
+      "id": "gamma-ladder",
       "portStatus": "ported",
-      "notes": "embedded-runner",
+      "notes": "Gamma Ladder unificada (V1 + V2 engines)",
       "sourceDoc": "docs/estrategias/implementadas/gamma-ladder-v1.md"
     },
     {
@@ -25,10 +25,10 @@
       "sourceDoc": "labs/strategies/edge/quantum-entropic-manifold/strategy.json"
     },
     {
-      "id": "cofre-sete-v2",
+      "id": "cofre-sete",
       "portStatus": "ported",
-      "notes": "Evolução otimizada da Cofre Sete V1 (parâmetros campeão jun/2026)",
-      "sourceDoc": "labs/strategies/carry/cofre-sete-v2/strategy.json"
+      "notes": "Cofre Sete unificada (V1 clássica + V2 linear)",
+      "sourceDoc": "docs/estrategias/implementadas/cofre-sete-v1.md"
     }
   ],
   "runners": [

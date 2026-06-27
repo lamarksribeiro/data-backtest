@@ -12,7 +12,7 @@
     "type": "file",
     "path": "src/backtestStudio/gls/strategies/gammaLadderV2.gls"
   },
-  "promotedToStudio": true,
+  "promotedToStudio": false,
   "studioSlug": "gamma-ladder-v2",
   "studio": {
     "description": "Gamma Ladder V2 com motor otimizado físico-quântico (Filtro de Entropia de Shannon, Quantum OBI Sizing, e Stops Termo-Adaptativos).",

@@ -21,7 +21,7 @@ test('rehydrateBacktestRequest restores library runner from stripped async paylo
   bindStrategyLibraryDatabase(db);
   seedPortedStrategies(db);
 
-  const strategy = getStrategyBySlug(db, 'cofre-sete-v1');
+  const strategy = getStrategyBySlug(db, 'cofre-sete');
   const versionRow = db.prepare(`
     SELECT id FROM strategy_versions WHERE strategy_id = ? ORDER BY version ASC LIMIT 1
   `).get(strategy.id);
@@ -35,7 +35,7 @@ test('rehydrateBacktestRequest restores library runner from stripped async paylo
       bookDepth: 25,
       batchSize: 1000,
       fastRun: true,
-      strategy: 'gls:cofre-sete-v1',
+      strategy: 'gls:cofre-sete',
       glsAst: { type: 'Strategy' },
       db: {},
       runnerLibrary: { slug: 'stale-runner', version: 1, kind: 'runner' },
@@ -43,13 +43,13 @@ test('rehydrateBacktestRequest restores library runner from stripped async paylo
       strategyMeta: {
         strategy_id: strategy.id,
         strategy_version_id: versionRow.id,
-        slug: 'cofre-sete-v1',
+        slug: 'cofre-sete',
       },
     }),
     strategyMeta: {
       strategy_id: strategy.id,
       strategy_version_id: versionRow.id,
-      slug: 'cofre-sete-v1',
+      slug: 'cofre-sete',
     },
   }));
 
@@ -66,7 +66,7 @@ test('rehydrateBacktestRequest backfills dataset fields from queued run row', ()
   bindStrategyLibraryDatabase(db);
   seedPortedStrategies(db);
 
-  const strategy = getStrategyBySlug(db, 'cofre-sete-v1');
+  const strategy = getStrategyBySlug(db, 'cofre-sete');
   const versionRow = db.prepare(`
     SELECT id FROM strategy_versions WHERE strategy_id = ? ORDER BY version ASC LIMIT 1
   `).get(strategy.id);
@@ -80,18 +80,18 @@ test('rehydrateBacktestRequest backfills dataset fields from queued run row', ()
       bookDepth: 25,
       batchSize: 1000,
       fastRun: true,
-      strategy: 'gls:cofre-sete-v1',
+      strategy: 'gls:cofre-sete',
       params: {},
       strategyMeta: {
         strategy_id: strategy.id,
         strategy_version_id: versionRow.id,
-        slug: 'cofre-sete-v1',
+        slug: 'cofre-sete',
       },
     },
     strategyMeta: {
       strategy_id: strategy.id,
       strategy_version_id: versionRow.id,
-      slug: 'cofre-sete-v1',
+      slug: 'cofre-sete',
     },
     totalTicks: 1,
   });

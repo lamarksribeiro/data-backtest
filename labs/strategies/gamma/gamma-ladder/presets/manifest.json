@@ -1,0 +1,9 @@
+{
+  "strategyId": "gamma-ladder",
+  "updatedAt": "2026-06-27",
+  "presets": [
+    { "id": "btc-v1", "underlying": "BTC", "studioVersion": 1, "glsSource": "engine-v1", "role": "baseline" },
+    { "id": "btc-v2", "underlying": "BTC", "studioVersion": 2, "glsSource": "engine-v1", "role": "candidate" },
+    { "id": "btc-qem-hybrid-champion", "underlying": "BTC", "studioVersion": 3, "glsSource": "engine-v2", "role": "champion" }
+  ]
+}

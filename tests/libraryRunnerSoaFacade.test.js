@@ -247,7 +247,7 @@ test('library-runner-soa backtest meets level-2 performance target', async () =>
     `impulse processMs ${impulseResult.timings.processMs} expected < 5000`);
   assert.ok(impulseWall < 7000, `impulse wall ${Math.round(impulseWall)}ms expected < 7000`);
 
-  for (const slug of ['cofre-sete-v1', 'fusion-five-v1']) {
+  for (const slug of ['cofre-sete', 'fusion-five-v1']) {
     const strategy = getStrategyBySlug(db, slug);
     const version = db.prepare(`
       SELECT * FROM strategy_versions WHERE strategy_id = ? ORDER BY version DESC LIMIT 1

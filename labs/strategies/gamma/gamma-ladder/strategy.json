@@ -1,0 +1,28 @@
+{
+  "id": "gamma-ladder",
+  "name": "Gamma Ladder",
+  "family": "gamma",
+  "status": "candidate",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "src/backtestStudio/gls/strategies/gammaLadderV2.gls"
+  },
+  "promotedToStudio": true,
+  "studioSlug": "gamma-ladder",
+  "studio": {
+    "description": "Gamma Ladder — box arb + ladder direcional. Versões V1 (motor clássico) e V2 (motor físico-quântico).",
+    "tags": ["gamma-ladder", "btc", "lab-strategy"],
+    "defaultVersion": 3,
+    "defaultGlsSource": "engine-v2",
+    "glsSources": {
+      "engine-v1": "src/backtestStudio/gls/strategies/gammaLadderV1.gls",
+      "engine-v2": "src/backtestStudio/gls/strategies/gammaLadderV2.gls"
+    }
+  },
+  "notes": "Estratégia unificada; versões de lab em presets/ com glsSource engine-v1 ou engine-v2."
+}

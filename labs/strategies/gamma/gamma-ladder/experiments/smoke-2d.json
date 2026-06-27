@@ -1,0 +1,19 @@
+{
+  "name": "smoke-2d",
+  "strategyId": "gamma-ladder",
+  "strategyFamily": "gamma",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-29",
+  "to": "2026-05-30",
+  "engine": "soa",
+  "fastRun": true,
+  "variantWorkers": 1,
+  "searchSpace": {
+    "variants": [
+      { "id": "default", "params": {} }
+    ]
+  }
+}

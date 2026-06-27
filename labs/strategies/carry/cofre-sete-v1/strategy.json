@@ -17,10 +17,10 @@
     "runnerSlug": "cofre-sete-runner",
     "runnerVersion": 1
   },
-  "portStatus": "ported",
+  "portStatus": "legacy",
   "sourceRepo": "polymarket-test",
   "sourceService": "cofreSeteBacktest.js",
-  "promotedToStudio": true,
+  "promotedToStudio": false,
   "studioSlug": "cofre-sete-v1",
   "studio": {
     "description": "Cofre Sete V1 portado do polymarket-test via library-runner.",

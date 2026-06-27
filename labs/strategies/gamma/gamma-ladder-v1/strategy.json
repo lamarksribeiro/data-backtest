@@ -12,7 +12,7 @@
     "type": "file",
     "path": "src/backtestStudio/gls/strategies/gammaLadderV1.gls"
   },
-  "promotedToStudio": true,
+  "promotedToStudio": false,
   "studioSlug": "gamma-ladder-v1",
   "studio": {
     "description": "Gamma Ladder V1 com motor dedicado (box, hedge e Kelly). Lógica de execução em src/backtestStudio/gls/gammaLadder/.",
