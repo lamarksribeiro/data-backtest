@@ -140,7 +140,7 @@ test('createStrategyVersion persists compiled_json for Strategy JS', () => {
     });
     assert.equal(version.validation.ok, true);
     assert.ok(version.compiled);
-    assert.equal(version.compiled.compiler_version, 'compiler-soa-v2');
+    assert.equal(version.compiled.compiler_version, 'compiler-soa-v3');
     assert.ok(version.compiled.ir_json);
     assert.ok(version.compiled.generated_source?.onTick);
     assert.equal(version.language, 'strategy-js-v1');

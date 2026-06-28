@@ -1,7 +1,7 @@
 export const LANGUAGE = 'strategy-js-v1';
 export const LANGUAGE_VERSION = 'strategy-js-v1';
 export const STDLIB_VERSION = 'stdlib-v3';
-export const COMPILER_VERSION = 'compiler-soa-v2';
+export const COMPILER_VERSION = 'compiler-soa-v3';
 
 export const MAX_SOURCE_BYTES = 256_000;
 export const MAX_AST_DEPTH = 64;

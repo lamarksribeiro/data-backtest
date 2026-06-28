@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
@@ -25,8 +25,9 @@ export function partitionMetaPath(dir, dt) {
 
 export function writeColumnSetPartition({ binPath, metaPath, columnSet, meta }) {
 	mkdirSync(path.dirname(binPath), { recursive: true });
-	const tmpBin = `${binPath}.tmp`;
-	const tmpMeta = `${metaPath}.tmp`;
+	const tmpSuffix = `${process.pid}-${randomBytes(6).toString('hex')}`;
+	const tmpBin = `${binPath}.${tmpSuffix}.tmp`;
+	const tmpMeta = `${metaPath}.${tmpSuffix}.tmp`;
 	const bin = serializeColumnSet(columnSet);
 	writeFileSync(tmpBin, bin);
 	writeFileSync(tmpMeta, `${JSON.stringify({

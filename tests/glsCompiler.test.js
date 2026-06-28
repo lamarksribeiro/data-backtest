@@ -158,9 +158,23 @@ test('compiled and interpreter paths match on simple strategy', () => {
   assert.equal(compiled.events[0]?.finalPnl, interpreted.events[0]?.finalPnl);
 });
 
-test('analyzeStrategyColumns detects book usage', () => {
+test('analyzeStrategyColumns keeps best bid/ask on scalar columns', () => {
   const ast = parse(SIMPLE);
   const analysis = analyzeStrategyColumns(ast, 10);
-  assert.equal(analysis.needsBookLevels, true);
+  assert.equal(analysis.needsBookLevels, false);
+  assert.equal(analysis.bookDepth, 0);
   assert.ok(analysis.scalarColumns.includes('underlying_price'));
+  assert.ok(analysis.scalarColumns.includes('up_best_ask'));
+  assert.ok(analysis.scalarColumns.includes('down_best_bid'));
+});
+
+test('analyzeStrategyColumns detects depth-only book usage', () => {
+  const ast = parse(`strategy "Book Depth" {
+    onTick(tick, event) {
+      let qty = book.availableQty("UP", 0.6, tick)
+    }
+  }`);
+  const analysis = analyzeStrategyColumns(ast, 25);
+  assert.equal(analysis.needsBookLevels, true);
+  assert.equal(analysis.bookDepth, 10);
 });

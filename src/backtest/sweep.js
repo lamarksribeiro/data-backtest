@@ -190,8 +190,10 @@ async function loadOrGetColumnSet(db, request, ctx) {
     to: request.to,
     underlying: request.underlying,
     interval: request.interval,
-    bookDepth: ctx.effectiveBookDepth,
+    bookDepth: request.bookDepth ?? ctx.effectiveBookDepth,
+    selectBookDepth: ctx.effectiveBookDepth,
     selectColumns: ctx.columnAnalysis?.scalarColumns,
+    includeBook: ctx.columnAnalysis ? ctx.columnAnalysis.needsBookLevels === true : true,
     dataset: ctx.dataset,
     validBacktestRows: true,
   });

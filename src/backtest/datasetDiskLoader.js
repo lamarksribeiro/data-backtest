@@ -22,8 +22,9 @@ export async function loadBacktestColumnSetWithDiskCache(db, request, { onProgre
 
 	const dataset = request.dataset || 'backtest_ticks';
 	const bookDepth = request.bookDepth ?? 25;
+	const selectBookDepth = request.selectBookDepth ?? bookDepth;
 	const selectCols = request.select
-		?? backtestColumnSetSelectColumns(bookDepth, {
+		?? backtestColumnSetSelectColumns(selectBookDepth, {
 			scalarColumns: request.selectColumns,
 			includeBook: request.includeBook !== false,
 		});
@@ -39,7 +40,7 @@ export async function loadBacktestColumnSetWithDiskCache(db, request, { onProgre
 	const fromMs = new Date(request.from).getTime();
 	const toMs = new Date(request.to).getTime();
 	const dates = partitionDatesForRange(request.from, request.to);
-	let merged = null;
+	const parts = [];
 	let loadedRows = 0;
 
 	const reportProgress = (extra = {}) => {
@@ -103,7 +104,7 @@ export async function loadBacktestColumnSetWithDiskCache(db, request, { onProgre
 			const sliced = sliceColumnSet(columnSet, sliceFrom, sliceTo);
 			columnSet = null;
 			if (sliced.length > 0) {
-				merged = merged ? concatColumnSets([merged, sliced]) : sliced;
+				parts.push(sliced);
 				loadedRows += sliced.length;
 			}
 		}
@@ -111,13 +112,13 @@ export async function loadBacktestColumnSetWithDiskCache(db, request, { onProgre
 		await new Promise((resolve) => setImmediate(resolve));
 	}
 
-	if (!merged) {
+	if (!parts.length) {
 		return sliceColumnSet(concatColumnSets([]), fromMs, toMs);
 	}
 
 	reportProgress({ loadingStep: 'merge' });
 	await new Promise((resolve) => setImmediate(resolve));
-	return merged;
+	return concatColumnSets(parts);
 }
 
 export async function warmupDatasetDiskCache(db, request, { onProgress, config = loadConfig() } = {}) {

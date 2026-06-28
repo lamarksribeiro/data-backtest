@@ -52,8 +52,9 @@ export async function loadBacktestColumnSetFromDuckdb(db, request, { onProgress 
   const dataset = request.dataset || 'backtest_ticks';
   const availability = requireDatasetAvailability(db, { ...request, dataset });
   const bookDepth = request.bookDepth ?? 25;
+  const selectBookDepth = request.selectBookDepth ?? bookDepth;
   const selectCols = request.select
-    ?? backtestColumnSetSelectColumns(bookDepth, {
+    ?? backtestColumnSetSelectColumns(selectBookDepth, {
       scalarColumns: request.selectColumns,
       includeBook: request.includeBook !== false,
     });

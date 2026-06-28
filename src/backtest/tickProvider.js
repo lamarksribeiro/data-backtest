@@ -17,7 +17,9 @@ export class DuckDbTickProvider {
       ...request,
       dataset: request.dataset ?? this.defaults.dataset ?? 'backtest_ticks',
       bookDepth: this.defaults.bookDepth ?? request.bookDepth ?? 25,
+      selectBookDepth: request.selectBookDepth ?? this.defaults.selectBookDepth,
       selectColumns: request.selectColumns ?? this.defaults.selectColumns,
+      includeBook: request.includeBook ?? this.defaults.includeBook,
       validBacktestRows: true,
       jsonSafe: legacy,
     });

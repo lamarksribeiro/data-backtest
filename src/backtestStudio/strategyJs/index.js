@@ -7,7 +7,7 @@ export { lowerToGlsAst } from './lowerToGlsAst.js';
 import { parse as parseGls } from '../gls/parser.js';
 import { validate as validateGls } from '../gls/validator.js';
 import { compileStrategyJs } from './compile.js';
-import { LANGUAGE } from './constants.js';
+import { COMPILER_VERSION, LANGUAGE, STDLIB_VERSION } from './constants.js';
 import { listBlockSignatures } from '../gls/blocks.js';
 import { resolveCompiledStrategy } from './resolveVersion.js';
 
@@ -93,8 +93,8 @@ export function getRuntimeCapabilities() {
   return {
     languages: [LANGUAGE],
     default_language: LANGUAGE,
-    stdlib_version: 'stdlib-v3',
-    compiler_version: 'compiler-soa-v2',
+    stdlib_version: STDLIB_VERSION,
+    compiler_version: COMPILER_VERSION,
     blocks: listBlockSignatures(),
     syntax: {
       forbidden: ['import', 'require', 'eval', 'async', 'Date.now', 'Math.random'],

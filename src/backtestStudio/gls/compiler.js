@@ -184,10 +184,10 @@ export function analyzeStrategyColumns(ast, defaultBookDepth = 25) {
     if (node.type === 'Call') {
       const path = callPath(node.callee);
       if (path.startsWith('book.')) {
-        needsBookLevels = true;
         const fn = path.slice(5);
-        if (['ask', 'bid', 'spread', 'availableQty', 'liquidityRatio'].includes(fn)) {
-          bookDepth = Math.max(bookDepth, defaultBookDepth);
+        if (['availableQty', 'liquidityRatio'].includes(fn)) {
+          needsBookLevels = true;
+          bookDepth = Math.max(bookDepth, Math.min(defaultBookDepth, 10));
         }
       }
       for (const arg of node.args || []) walk(arg);

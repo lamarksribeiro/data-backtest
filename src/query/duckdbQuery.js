@@ -107,9 +107,10 @@ export async function openBacktestTickSession(db, request) {
     dataset,
   });
   const bookDepth = request.bookDepth ?? 25;
+  const selectBookDepth = request.selectBookDepth ?? bookDepth;
   const jsonSafe = request.jsonSafe !== false;
   const selectCols = request.select
-    ?? backtestTickSelectColumns(bookDepth, {
+    ?? backtestTickSelectColumns(selectBookDepth, {
       scalarColumns: request.selectColumns,
       includeBook: request.includeBook !== false,
     });

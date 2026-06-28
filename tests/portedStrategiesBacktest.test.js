@@ -146,9 +146,10 @@ test('every seeded ported strategy resolves book dataset and runs synthetic tick
       assert.equal(resolved.embeddedModels, true, `${slug} should use embedded models`);
     } else {
       assert.ok(resolved.runnerLibrary, `${slug} missing runnerLibrary`);
-    }
-    assert.equal(resolved.columnAnalysis.needsBookLevels, true, `${slug} should require book levels`);
-    assert.equal(resolved.columnAnalysis.bookDepth, 25, `${slug} bookDepth`);
+		}
+		assert.equal(resolved.columnAnalysis.needsBookLevels, true, `${slug} should require book levels`);
+		assert.ok(resolved.columnAnalysis.bookDepth > 0, `${slug} bookDepth`);
+		assert.ok(resolved.columnAnalysis.bookDepth <= 25, `${slug} bookDepth`);
 
     const loaded = await loadStrategy({
       glsAst: resolved.glsAst,

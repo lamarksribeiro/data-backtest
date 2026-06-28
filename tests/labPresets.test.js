@@ -16,10 +16,10 @@ import { seedPromotedStrategies } from '../src/backtestStudio/gls/seedPromotedSt
 import { openStateDatabase, closeStateDatabase } from '../src/state/sqlite.js';
 
 test('listPromotedGlsStrategies discovers GLS lab strategies', () => {
-  const promoted = listPromotedGlsStrategies();
-  const ids = promoted.map((item) => item.id).sort();
-  assert.deepEqual(ids, ['edge-sniper-v3', 'gamma-ladder', 'quantum-entropic-manifold', 'vsmr']);
-  assert.equal(promoted.find((item) => item.id === 'gamma-ladder').studioSlug, 'gamma-ladder');
+	const promoted = listPromotedGlsStrategies();
+	const ids = promoted.map((item) => item.id).sort();
+	assert.deepEqual(ids, ['book-frontrunner', 'edge-sniper-v3', 'gamma-ladder', 'quantum-entropic-manifold', 'vsmr']);
+	assert.equal(promoted.find((item) => item.id === 'gamma-ladder').studioSlug, 'gamma-ladder');
 });
 
 test('listPromotedLibraryStrategies discovers ported library runners', () => {
@@ -45,11 +45,11 @@ test('seedPromotedStrategies seeds versions from lab manifests', () => {
   const dir = path.join(os.tmpdir(), `data-backtest-seed-promoted-${Date.now()}`);
   const dbPath = path.join(dir, 'state.db');
   const db = openStateDatabase(dbPath);
-  try {
-    const results = seedPromotedStrategies(db);
-    assert.equal(results.length, 4);
-    const slugs = results.map((row) => row.slug).sort();
-    assert.deepEqual(slugs, ['edge-sniper-v3', 'gamma-ladder', 'quantum-entropic-manifold', 'vsmr']);
+	try {
+		const results = seedPromotedStrategies(db);
+		assert.equal(results.length, 5);
+		const slugs = results.map((row) => row.slug).sort();
+		assert.deepEqual(slugs, ['book-frontrunner', 'edge-sniper-v3', 'gamma-ladder', 'quantum-entropic-manifold', 'vsmr']);
 
     const edge = results.find((row) => row.slug === 'edge-sniper-v3');
     const edgeVersions = db.prepare(`

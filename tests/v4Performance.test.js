@@ -242,6 +242,7 @@ test('sweep reuses column set and returns per-variant summaries', async () => {
 
       const ast = parse(SIMPLE);
       const baseRequest = {
+        dataset: 'backtest_ticks',
         from: '2026-05-31T00:00:00.000Z',
         to: '2026-05-31T00:00:08.000Z',
         underlying: 'BTC',
