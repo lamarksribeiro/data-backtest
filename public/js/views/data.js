@@ -5,6 +5,8 @@ import { fetchContextOptionsCached } from '../utils/contextOptionsCache.js';
 import { connectSse, disconnectSse } from '../utils/sse.js';
 import { confirmDialog } from '../utils/confirm.js';
 
+const DATA_CONTEXT_SCOPE = 'data';
+
 const UI_LABELS = { ready: 'Pronto', processing: 'Processando', attention: 'Atenção' };
 const UI_CLASS = { ready: 'ok', processing: 'warn', attention: 'err' };
 
@@ -1042,6 +1044,18 @@ let eventPreviewAbort = null;
 let dayDrawerPayload = null;
 let activeCoverageDayDt = null;
 
+function loadDataContext() {
+  return loadContext(DATA_CONTEXT_SCOPE);
+}
+
+function saveDataContext(patch) {
+  return saveContext(patch, DATA_CONTEXT_SCOPE);
+}
+
+function applyDataContextOptions(current, options) {
+  return applyContextOptions(current, options, DATA_CONTEXT_SCOPE);
+}
+
 function setActiveCoverageDay(dt) {
   activeCoverageDayDt = dt || null;
   document.querySelectorAll('.coverage-day.is-active-day').forEach((el) => {
@@ -1119,7 +1133,7 @@ export async function renderData(ctx) {
   if (overlay) overlay.remove();
   document.getElementById('data-coverage-section')?.classList.remove('is-refreshing');
 
-  const fallbackCtx = loadContext();
+  const fallbackCtx = saveDataContext(loadDataContext());
   mount(ctx.contentEl, [
     // Grid de duas colunas
     el('div', { class: 'data-dashboard-grid', style: { marginTop: '12px' } }, [
@@ -1148,14 +1162,14 @@ export async function renderData(ctx) {
 
   const apiOptions = await fetchContextOptionsCached(ctx.api);
   const fieldOptions = contextBarOptions(apiOptions);
-  const formCtx = applyContextOptions(fallbackCtx, fieldOptions);
+  const formCtx = applyDataContextOptions(fallbackCtx, fieldOptions);
   renderActions(ctx, formCtx, fieldOptions);
   await refreshCoverage(ctx, formCtx);
 }
 
 function dataFormFromDom() {
   const form = document.getElementById('data-prepare-form');
-  if (!form) return loadContext();
+  if (!form) return loadDataContext();
   const fd = new FormData(form);
   return {
     from: fd.get('from'),
@@ -1189,7 +1203,7 @@ async function submitDataFix(ctx, request, { rebuild = false, fieldOptions = nul
     book_depth: Number(request.book_depth),
     ...(rebuild ? { rebuild: true } : {}),
   };
-  saveContext(payload);
+  saveDataContext(payload);
   const preview = await ctx.api.post('/api/data/fix', { request: payload, dry_run: true });
   if (!preview.ok) {
     ctx.toast.err(preview.error?.message || 'Falha no plano');
@@ -1218,7 +1232,7 @@ async function submitDataFix(ctx, request, { rebuild = false, fieldOptions = nul
   }
   ctx.toast.ok(fix.data.ready ? 'Dados prontos' : `Job #${fix.data.job?.id} criado`);
   const options = fieldOptions || contextBarOptions(await fetchContextOptionsCached(ctx.api));
-  await refreshCoverage(ctx, applyContextOptions(loadContext(), options));
+  await refreshCoverage(ctx, applyDataContextOptions(loadDataContext(), options));
   await refreshJobs(ctx);
   return true;
 }
@@ -1266,7 +1280,7 @@ function renderActions(ctx, formCtx, fieldOptions) {
   form?.querySelectorAll('input, select').forEach((input) => {
     input.addEventListener('change', () => {
       const current = dataFormFromDom();
-      saveContext(current);
+      saveDataContext(current);
       refreshCoverage(ctx, current);
     });
   });
@@ -1413,7 +1427,7 @@ function renderPendingItem(ctx, day, tone, formCtx) {
         class: canAccept ? 'btn btn--ghost btn--sm' : 'btn btn--primary btn--sm',
         onclick: async () => {
           const ok = await reprocessDay(ctx, day, formCtx);
-          if (ok) await refreshCoverage(ctx, loadContext());
+          if (ok) await refreshCoverage(ctx, loadDataContext());
         },
       }, tone === 'attention' ? 'Reprocessar' : 'Reprocessar órfão') : null,
     ]),
@@ -1743,7 +1757,7 @@ async function loadEventPreview(ctx, day, ctxSaved, conditionId, eventMeta = nul
 }
 
 async function setEventExclusion(ctx, day, eventData, marketId, excluded) {
-  const ctxSaved = loadContext();
+  const ctxSaved = loadDataContext();
   const endpoint = excluded ? '/api/quality/restore' : '/api/quality/exclude';
   const body = {
     dt: day.dt,
@@ -2029,7 +2043,7 @@ async function openPartitionDrawer(ctx, day, fieldOptions = null) {
   // Destacar só o dia aberto nos detalhes (intervalo do formulário não muda)
   setActiveCoverageDay(day.dt);
 
-  const ctxSaved = loadContext();
+  const ctxSaved = loadDataContext();
   mount(container, buildPartitionDrawerLoading(day));
 
   // Focar suavemente a tela no painel de detalhes integrado
@@ -2266,7 +2280,7 @@ function bindJobsSse(ctx) {
 
     if (event.type === 'job:completed' && event.jobId && event.status !== 'cancelled') {
       displayedProgress[event.jobId] = 100;
-      void refreshJobs(ctx).then(() => refreshCoverage(ctx, loadContext()));
+      void refreshJobs(ctx).then(() => refreshCoverage(ctx, loadDataContext()));
       ctx.toast.ok('Job concluído — cobertura atualizada');
       return;
     }
@@ -2274,7 +2288,7 @@ function bindJobsSse(ctx) {
     if ((event.status === 'cancelled' || event.type === 'job:failed') && event.jobId) {
       delete displayedProgress[event.jobId];
       scheduleRefreshJobs(ctx);
-      refreshCoverage(ctx, loadContext());
+      refreshCoverage(ctx, loadDataContext());
       ctx.toast.warn(event.status === 'cancelled' ? 'Job cancelado' : 'Job falhou');
     }
   };

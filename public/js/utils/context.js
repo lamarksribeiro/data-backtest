@@ -11,18 +11,19 @@ const DEFAULTS = {
   batch_size: '5000',
 };
 
-export function loadContext() {
+export function loadContext(scope = null) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(contextStorageKey(scope))
+      || (scope ? localStorage.getItem(STORAGE_KEY) : null);
     return normalizeContext({ ...DEFAULTS, ...(raw ? JSON.parse(raw) : {}) });
   } catch {
     return { ...DEFAULTS };
   }
 }
 
-export function saveContext(patch) {
-  const next = normalizeContext({ ...loadContext(), ...patch });
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+export function saveContext(patch, scope = null) {
+  const next = normalizeContext({ ...loadContext(scope), ...patch });
+  localStorage.setItem(contextStorageKey(scope), JSON.stringify(next));
   return next;
 }
 
@@ -103,7 +104,7 @@ function optionValues(values, selected) {
   return selected ? [String(selected)] : [];
 }
 
-export function applyContextOptions(current, options = {}) {
+export function applyContextOptions(current, options = {}, scope = null) {
   const next = { ...normalizeContext(current) };
   const underlyings = uniqueOptionList(options.underlyings);
   const intervals = uniqueOptionList(options.intervals);
@@ -122,7 +123,12 @@ export function applyContextOptions(current, options = {}) {
   const saved = normalizeContext(next);
   const previous = normalizeContext(current);
   const changed = Object.keys(DEFAULTS).some((key) => String(saved[key]) !== String(previous[key]));
-  return changed ? saveContext(saved) : saved;
+  return changed ? saveContext(saved, scope) : saved;
+}
+
+function contextStorageKey(scope) {
+  const suffix = String(scope || '').trim();
+  return suffix ? `${STORAGE_KEY}:${suffix}` : STORAGE_KEY;
 }
 
 export function selectField(name, values, selected, { className = 'field__input', format = formatRaw } = {}) {

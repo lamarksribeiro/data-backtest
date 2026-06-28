@@ -748,11 +748,11 @@ function renderConfigPanel(ctx, { formCtx, fieldOptions }) {
               el('span', { class: 'field__label' }, 'De'),
               el('span', { id: 'studio-coverage-indicator', class: 'studio-coverage-slot' }),
             ]),
-            el('input', { type: 'date', name: 'from', value: formCtx.from, class: 'field__input', onchange: () => refreshCoverageIndicator(ctx, formFromDom()) }),
+            el('input', { type: 'date', name: 'from', value: formCtx.from, class: 'field__input' }),
           ]),
           el('label', { class: 'field' }, [
             el('span', { class: 'field__label' }, 'Até'),
-            el('input', { type: 'date', name: 'to', value: formCtx.to, class: 'field__input', onchange: () => refreshCoverageIndicator(ctx, formFromDom()) }),
+            el('input', { type: 'date', name: 'to', value: formCtx.to, class: 'field__input' }),
           ]),
         ]),
         el('div', { class: 'studio-form__grid' }, [
@@ -776,7 +776,12 @@ function renderConfigPanel(ctx, { formCtx, fieldOptions }) {
 
   mountStudioStrategyPicker(ctx);
 
-  document.getElementById('studio-form')?.addEventListener('submit', (ev) => {
+  const form = document.getElementById('studio-form');
+  form?.querySelectorAll('[name="from"], [name="to"], [name="underlying"], [name="interval"], [name="book_depth"]').forEach((input) => {
+    input.addEventListener('change', () => refreshCoverageIndicator(ctx, formFromDom()));
+  });
+
+  form?.addEventListener('submit', (ev) => {
     ev.preventDefault();
     runBacktest(ctx, ev.target);
   });
