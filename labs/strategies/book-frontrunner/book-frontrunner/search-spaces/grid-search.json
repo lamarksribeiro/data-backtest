@@ -1,0 +1,8 @@
+{
+  "grid": {
+    "minSpotDrop": [15.0, 20.0],
+    "minUpDelta": [0.03, 0.04],
+    "maxStrikeDistance": [75],
+    "maxEntryPrice": [0.55, 0.60]
+  }
+}

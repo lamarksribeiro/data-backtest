@@ -67,6 +67,8 @@
     "lab:cofre:smooth-v2": "node labs/cli/run-preset.js --preset btc-smooth-v2 --strategy cofre-sete --strategy-family carry",
     "lab:cofre:validate-champion": "node labs/cli/run-preset.js --preset btc-champion --strategy cofre-sete --strategy-family carry --from 2026-06-01 --to 2026-06-19",
     "lab:cofre:validate-smooth-v2": "node labs/cli/run-preset.js --preset btc-smooth-v2 --strategy cofre-sete --strategy-family carry --from 2026-06-01 --to 2026-06-19",
+    "lab:book-frontrunner:sweep": "node labs/cli/run.js --experiment labs/strategies/book-frontrunner/book-frontrunner/experiments/sweep-champion.json --variant-workers 4",
+    "lab:book-frontrunner:champion": "node labs/cli/run-preset.js --preset btc-champion --strategy book-frontrunner --strategy-family book-frontrunner",
     "db:migrate-consolidate-strategies": "node scripts/migrate-consolidate-strategies.js",
     "embed:strategy-libraries": "node scripts/embed-strategy-libraries.js",
     "port:polymarket": "node scripts/port-from-polymarket.js",

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "walletSize": { "type": "number", "minimum": 1 },
+    "maxStrikeDistance": { "type": "number", "minimum": 1 },
+    "lookbackSecs": { "type": "number", "minimum": 1 },
+    "minUpDelta": { "type": "number", "minimum": 0, "maximum": 1 },
+    "minSpotDrop": { "type": "number", "minimum": 0 },
+    "entryBudget": { "type": "number", "minimum": 1 },
+    "minSecondsLeft": { "type": "number", "minimum": 0 },
+    "maxSecondsLeft": { "type": "number", "minimum": 0 },
+    "maxSpread": { "type": "number", "minimum": 0, "maximum": 1 },
+    "maxEntryPrice": { "type": "number", "minimum": 0, "maximum": 1 }
+  }
+}

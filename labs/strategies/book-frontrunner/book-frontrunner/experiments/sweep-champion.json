@@ -1,0 +1,17 @@
+{
+  "name": "book-frontrunner-sweep",
+  "strategyId": "book-frontrunner",
+  "strategyFamily": "book-frontrunner",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-06-24",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "defaults": "../defaults.json",
+  "searchSpace": "../search-spaces/grid-search.json"
+}

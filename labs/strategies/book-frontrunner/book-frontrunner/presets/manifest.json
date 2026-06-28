@@ -1,0 +1,7 @@
+{
+  "strategyId": "book-frontrunner",
+  "updatedAt": "2026-06-28",
+  "presets": [
+    { "id": "btc-champion", "role": "champion" }
+  ]
+}

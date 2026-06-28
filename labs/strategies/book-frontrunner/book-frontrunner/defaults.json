@@ -1,0 +1,12 @@
+{
+  "walletSize": 100,
+  "maxStrikeDistance": 75,
+  "lookbackSecs": 15,
+  "minUpDelta": 0.04,
+  "minSpotDrop": 20.0,
+  "entryBudget": 10,
+  "minSecondsLeft": 30,
+  "maxSecondsLeft": 150,
+  "maxSpread": 0.04,
+  "maxEntryPrice": 0.60
+}

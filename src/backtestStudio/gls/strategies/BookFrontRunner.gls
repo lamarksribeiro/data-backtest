@@ -1,0 +1,86 @@
+strategy "Book Front Runner" {
+  param walletSize = 100
+  param maxStrikeDistance = 75
+  param lookbackSecs = 15
+  param minUpDelta = 0.03
+  param minSpotDrop = 10.0
+  param entryBudget = 10
+  param minSecondsLeft = 30
+  param maxSecondsLeft = 150
+  param maxSpread = 0.04
+  param maxEntryPrice = 0.65
+
+  onEventStart(event) {
+    state.entered = false
+  }
+
+  onTick(tick, event) {
+    if (!state.entered) {
+      let secsLeft = time.secondsUntil(event.end, tick.ts)
+      if (secsLeft >= params.minSecondsLeft && secsLeft <= params.maxSecondsLeft) {
+        let btc = tick.underlyingPrice
+        let ptb = event.priceToBeat
+        let dist = math.abs(btc - ptb)
+        
+        if (dist <= params.maxStrikeDistance) {
+          let oldSpot = signals.underlyingAgo(samples, params.lookbackSecs)
+          
+          if (oldSpot) {
+            let deltaSpot = btc - oldSpot
+            
+            // Caso 1: BTC acima do PTB (Aposta em UP se não estiver caro demais)
+            if (btc > ptb) {
+              let oldUpAsk = signals.upAskAgo(samples, params.lookbackSecs)
+              if (oldUpAsk) {
+                let currentUpAsk = book.ask("UP", tick)
+                let deltaUp = currentUpAsk - oldUpAsk
+                
+                // Divergência ODR Bullish Seletiva: Spot caindo, odds de UP subindo forte, preço UP aceitável
+                let thresholdSpot = 0.0 - params.minSpotDrop
+                if (deltaSpot <= thresholdSpot && deltaUp >= params.minUpDelta && currentUpAsk <= params.maxEntryPrice) {
+                  let bidPrice = book.bid("UP", tick)
+                  let spread = currentUpAsk - bidPrice
+                  
+                  if (spread <= params.maxSpread) {
+                    let bought = enter("UP", { price: currentUpAsk, budget: params.entryBudget, reason: "ODR_UP_LEAD" })
+                    if (bought) {
+                      state.entered = true
+                      mark("entry_up", { ask: currentUpAsk, deltaSpot: deltaSpot, deltaUp: deltaUp })
+                    }
+                  }
+                }
+              }
+            }
+            
+            // Caso 2: BTC abaixo do PTB (Aposta em DOWN se não estiver caro demais)
+            if (btc < ptb) {
+              let oldDownAsk = signals.downAskAgo(samples, params.lookbackSecs)
+              if (oldDownAsk) {
+                let currentDownAsk = book.ask("DOWN", tick)
+                let deltaDown = currentDownAsk - oldDownAsk
+                
+                // Divergência ODR Bearish Seletiva: Spot subindo, odds de DOWN subindo forte, preço DOWN aceitável
+                let thresholdSpot = params.minSpotDrop
+                if (deltaSpot >= thresholdSpot && deltaDown >= params.minUpDelta && currentDownAsk <= params.maxEntryPrice) {
+                  let bidPrice = book.bid("DOWN", tick)
+                  let spread = currentDownAsk - bidPrice
+                  
+                  if (spread <= params.maxSpread) {
+                    let bought = enter("DOWN", { price: currentDownAsk, budget: params.entryBudget, reason: "ODR_DOWN_LEAD" })
+                    if (bought) {
+                      state.entered = true
+                      mark("entry_down", { ask: currentDownAsk, deltaSpot: deltaSpot, deltaDown: deltaDown })
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  onEventEnd(event) {
+  }
+}

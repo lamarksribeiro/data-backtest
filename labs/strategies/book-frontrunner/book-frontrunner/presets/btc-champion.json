@@ -1,0 +1,31 @@
+{
+  "id": "btc-champion",
+  "studioVersion": 1,
+  "name": "BTC Champion ODR Seletivo",
+  "studioSlug": "book-frontrunner-btc-champion",
+  "studioName": "Book Front Runner · BTC Champion",
+  "role": "champion",
+  "description": "Estratégia ODR com filtros de seletividade agressivos de spot e limite de preço máximo de odds em 0.60 para otimização de risco/retorno. Campeão após fee taker de 0.07 e profundidade do book de 25.",
+  "tags": ["champion", "depth25", "selective"],
+  "labVariantId": "v0008",
+  "labSummary": {
+    "totalPnl": 34.63,
+    "profitFactor": 1.10,
+    "positiveDays": 19,
+    "totalDays": 52,
+    "entries": 79,
+    "source": "book-frontrunner-sweep 2026-06-28"
+  },
+  "params": {
+    "walletSize": 100,
+    "maxStrikeDistance": 75,
+    "lookbackSecs": 15,
+    "minUpDelta": 0.04,
+    "minSpotDrop": 20.0,
+    "entryBudget": 10,
+    "minSecondsLeft": 30,
+    "maxSecondsLeft": 150,
+    "maxSpread": 0.04,
+    "maxEntryPrice": 0.60
+  }
+}

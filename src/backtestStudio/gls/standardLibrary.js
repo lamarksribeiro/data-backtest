@@ -141,6 +141,14 @@ export function createStandardLibrary({ nativeLibraries = [] } = {}) {
         const sample = sampleAgo(samples, seconds);
         return sample ? sampleUnderlyingValue(sample) : null;
       },
+      upAskAgo(samples, seconds) {
+        const sample = sampleAgo(samples, seconds);
+        return sample ? Number(sample?.up_best_ask ?? sample?.upBestAsk ?? sample?.up_price ?? sample?.upPrice) : null;
+      },
+      downAskAgo(samples, seconds) {
+        const sample = sampleAgo(samples, seconds);
+        return sample ? Number(sample?.down_best_ask ?? sample?.downBestAsk ?? sample?.down_price ?? sample?.downPrice) : null;
+      },
     },
     math: {
       abs: Math.abs,
