@@ -18,7 +18,7 @@ import { openStateDatabase, closeStateDatabase } from '../src/state/sqlite.js';
 test('listPromotedGlsStrategies discovers GLS lab strategies', () => {
 	const promoted = listPromotedGlsStrategies();
 	const ids = promoted.map((item) => item.id).sort();
-	assert.deepEqual(ids, ['book-frontrunner', 'edge-sniper-v3', 'gamma-ladder', 'quantum-entropic-manifold', 'vsmr']);
+	assert.deepEqual(ids, ['book-frontrunner', 'edge-sniper-v3', 'gamma-ladder', 'quantum-entropic-manifold', 'vsmr', 'whipsaw-lock']);
 	assert.equal(promoted.find((item) => item.id === 'gamma-ladder').studioSlug, 'gamma-ladder');
 });
 
@@ -47,9 +47,9 @@ test('seedPromotedStrategies seeds versions from lab manifests', () => {
   const db = openStateDatabase(dbPath);
 	try {
 		const results = seedPromotedStrategies(db);
-		assert.equal(results.length, 5);
+		assert.equal(results.length, 6);
 		const slugs = results.map((row) => row.slug).sort();
-		assert.deepEqual(slugs, ['book-frontrunner', 'edge-sniper-v3', 'gamma-ladder', 'quantum-entropic-manifold', 'vsmr']);
+		assert.deepEqual(slugs, ['book-frontrunner', 'edge-sniper-v3', 'gamma-ladder', 'quantum-entropic-manifold', 'vsmr', 'whipsaw-lock']);
 
     const edge = results.find((row) => row.slug === 'edge-sniper-v3');
     const edgeVersions = db.prepare(`
@@ -105,6 +105,14 @@ test('loadPreset merges defaults with overrides', () => {
 test('loadPreset resolves legacy preset ids', () => {
   const { preset } = loadPreset('v2', { strategyId: 'edge-sniper-v3' });
   assert.equal(preset.id, 'btc-obi');
+});
+
+test('loadPreset resolves whipsaw-lock champion params', () => {
+  const { preset, params } = loadPreset('btc-champion', { strategyId: 'whipsaw-lock', strategyFamily: 'microstructure' });
+  assert.equal(preset.studioSlug, 'whipsaw-lock-btc-champion');
+  assert.equal(params.minFlips, 3);
+  assert.equal(params.maxSpread, 0.025);
+  assert.equal(params.flipWindowSecs, 60);
 });
 
 test('loadPreset resolves quantum-entropic-manifold champion params', () => {

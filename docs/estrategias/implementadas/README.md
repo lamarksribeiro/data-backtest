@@ -11,6 +11,7 @@ Teorias portadas ao `data-backtest` (runners no Studio ou biblioteca). Origem pr
 | [gamma-ladder-v1.md](gamma-ladder-v1.md) | `gamma-ladder-v1` | Box + ladder direcional |
 | [gamma-ladder-v1-explicacao.md](gamma-ladder-v1-explicacao.md) | — | Guia didático |
 | [vsmr-v1.md](vsmr-v1.md) | `vsmr` | Volatility Spike Mean Reversion (nativa data-backtest) |
+| [whipsaw-lock-v1.md](whipsaw-lock-v1.md) | `whipsaw-lock` | Whipsaw Lock ANOM-22/33 (nativa data-backtest) |
 
 ## Library runners (tier A)
 

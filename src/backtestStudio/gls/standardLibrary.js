@@ -149,6 +149,26 @@ export function createStandardLibrary({ nativeLibraries = [] } = {}) {
         const sample = sampleAgo(samples, seconds);
         return sample ? Number(sample?.down_best_ask ?? sample?.downBestAsk ?? sample?.down_price ?? sample?.downPrice) : null;
       },
+      ptbFlipCount(samples, windowSeconds) {
+        if (!samples?.length) return 0;
+        const latest = samples[samples.length - 1];
+        const latestTs = latest._tsMs ?? timestampMs(latest.ts);
+        const cutoff = latestTs - Number(windowSeconds) * 1000;
+        let flips = 0;
+        let prev = 0;
+        for (let index = 0; index < samples.length; index += 1) {
+          const row = samples[index];
+          const rowTs = row._tsMs ?? timestampMs(row.ts);
+          if (rowTs < cutoff) continue;
+          const btc = sampleUnderlyingValue(row);
+          const ptb = Number(row?.priceToBeat ?? row?.price_to_beat);
+          if (!Number.isFinite(btc) || !Number.isFinite(ptb)) continue;
+          const sign = Math.sign(btc - ptb);
+          if (sign && prev && sign !== prev) flips += 1;
+          if (sign) prev = sign;
+        }
+        return flips;
+      },
     },
     math: {
       abs: Math.abs,

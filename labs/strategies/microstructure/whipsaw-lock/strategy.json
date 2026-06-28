@@ -1,0 +1,27 @@
+{
+  "id": "whipsaw-lock",
+  "name": "Whipsaw Lock",
+  "family": "microstructure",
+  "status": "champion",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "src/backtestStudio/gls/strategies/WhipsawLock.gls"
+  },
+  "promotedToStudio": true,
+  "studioSlug": "whipsaw-lock",
+  "studio": {
+    "description": "ANOM-22/33 — após múltiplos cruzamentos do PTB em 60s, compra o favorito quando o spot estabiliza com ask ainda barato (spread apertado).",
+    "tags": ["microstructure", "whipsaw", "anom-22", "btc", "champion"],
+    "defaultVersion": 1,
+    "defaultGlsSource": "classic",
+    "glsSources": {
+      "classic": "src/backtestStudio/gls/strategies/WhipsawLock.gls"
+    }
+  },
+  "notes": "Descoberta via loop de anomalias (catalogo ANOM-22). GLS usa signals.ptbFlipCount. Janela de validação: 2026-05-04 a 2026-06-14."
+}

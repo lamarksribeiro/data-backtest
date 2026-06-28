@@ -1,0 +1,38 @@
+{
+  "id": "btc-champion",
+  "studioVersion": 1,
+  "name": "BTC Whipsaw Lock Champion",
+  "studioSlug": "whipsaw-lock-btc-champion",
+  "studioName": "Whipsaw Lock · BTC Champion",
+  "role": "champion",
+  "description": "ANOM-22/33 ws-spread25 — pós-ziguezague no PTB, favorito estável com ask barato e spread ≤ 0.025. Hold to settlement.",
+  "tags": ["champion", "depth25", "anom-22", "anom-33"],
+  "window": {
+    "from": "2026-05-04",
+    "to": "2026-06-14"
+  },
+  "labSummary": {
+    "totalPnl": 432.13,
+    "entries": 44,
+    "winRate": 63.6,
+    "avgPnl": 9.82,
+    "holdoutPnl": 368.04,
+    "holdoutEntries": 32,
+    "holdoutAvgPnl": 11.5,
+    "minerHoldoutExp": 16.48,
+    "source": "GLS lab + minerador ciclo 9 · 2026-06-28"
+  },
+  "params": {
+    "walletSize": 100,
+    "entryBudget": 10,
+    "minDistAbs": 22,
+    "minFlips": 3,
+    "flipWindowSecs": 60,
+    "maxEntryPrice": 0.57,
+    "maxSpread": 0.025,
+    "minSecondsLeft": 35,
+    "maxSecondsLeft": 160,
+    "stableLookbackSecs": 20,
+    "stableMaxMove": 5.0
+  }
+}

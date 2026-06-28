@@ -1,0 +1,60 @@
+strategy "Whipsaw Lock" {
+  param walletSize = 100
+  param entryBudget = 10
+  param minShares = 1
+  param minSecondsLeft = 35
+  param maxSecondsLeft = 160
+  param minDistAbs = 22
+  param minFlips = 3
+  param flipWindowSecs = 60
+  param stableLookbackSecs = 20
+  param stableMaxMove = 5.0
+  param maxEntryPrice = 0.57
+  param maxSpread = 0.025
+  param entrySlippageMax = 0.02
+  param minLiquidityRatio = 0.60
+
+  onEventStart(event) {
+    state.entered = false
+  }
+
+  onTick(tick, event) {
+    if (!state.entered) {
+      let secsLeft = time.secondsUntil(event.end, tick.ts)
+      if (secsLeft >= params.minSecondsLeft && secsLeft <= params.maxSecondsLeft) {
+        let btc = tick.underlyingPrice
+        let ptb = event.priceToBeat
+        let dist = math.abs(btc - ptb)
+        if (dist >= params.minDistAbs) {
+          let flips = signals.ptbFlipCount(samples, params.flipWindowSecs)
+          if (flips >= params.minFlips) {
+            let btcStable = signals.underlyingAgo(samples, params.stableLookbackSecs)
+            if (btcStable) {
+              let move = math.abs(btc - btcStable)
+              if (move <= params.stableMaxMove) {
+                let fav = market.sideFromPrice(btc, ptb)
+                let ask = book.ask(fav, tick)
+                let bid = book.bid(fav, tick)
+                let spread = ask - bid
+                if (ask <= params.maxEntryPrice) {
+                  if (spread <= params.maxSpread) {
+                    let maxPrice = ask + params.entrySlippageMax
+                    let budget = math.min(params.entryBudget, params.walletSize + runState.totalPnl)
+                    let bought = enter(fav, { price: ask, maxPrice: maxPrice, budget: budget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "whipsaw_lock" })
+                    if (bought) {
+                      state.entered = true
+                      mark("whipsaw_entry", { side: fav })
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  onEventEnd(event) {
+  }
+}

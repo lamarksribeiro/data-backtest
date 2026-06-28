@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "walletSize": { "type": "number", "minimum": 1 },
+    "entryBudget": { "type": "number", "minimum": 1 },
+    "minShares": { "type": "number", "minimum": 0.000001 },
+    "minDistAbs": { "type": "number", "minimum": 0 },
+    "minFlips": { "type": "integer", "minimum": 1 },
+    "flipWindowSecs": { "type": "number", "minimum": 1 },
+    "stableLookbackSecs": { "type": "number", "minimum": 1 },
+    "stableMaxMove": { "type": "number", "minimum": 0 },
+    "minSecondsLeft": { "type": "number", "minimum": 0 },
+    "maxSecondsLeft": { "type": "number", "minimum": 0 },
+    "maxEntryPrice": { "type": "number", "minimum": 0, "maximum": 1 },
+    "maxSpread": { "type": "number", "minimum": 0, "maximum": 1 },
+    "entrySlippageMax": { "type": "number", "minimum": 0, "maximum": 1 },
+    "minLiquidityRatio": { "type": "number", "minimum": 0, "maximum": 1 }
+  }
+}

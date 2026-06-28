@@ -1,0 +1,13 @@
+{
+  "walletSize": 100,
+  "entryBudget": 10,
+  "minDistAbs": 22,
+  "minFlips": 3,
+  "maxEntryPrice": 0.57,
+  "maxSpread": 0.025,
+  "flipWindowSecs": 60,
+  "minSecondsLeft": 35,
+  "maxSecondsLeft": 160,
+  "stableLookbackSecs": 20,
+  "stableMaxMove": 5.0
+}

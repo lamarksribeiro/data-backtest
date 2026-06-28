@@ -68,3 +68,7 @@ Toda anomalia testada e descoberta deve ser inserida no arquivo [catalogo-anomal
    * **NUNCA** analise o edge baseado nas odds teóricas do topo do livro. Sempre use a fórmula de varredura de book (simulando a liquidez real de depth 25) e deduza a taxa taker de 0.07 na entrada da operação.
 3. **Iteração Sistemática**:
    * Se o padrão analisado der prejuízo líquido ou expectativa negativa nas taxas, **não insista**. Registre a anomalia no catálogo com o status `Rejeitado`, documente os dados numéricos e avance para a próxima hipótese para evitar perda de tempo e retrabalho.
+   * **Não re-minerar estratégias existentes:** antes de formular uma hipótese, consulte `labs/strategies/`, `src/backtestStudio/gls/strategies/` e `labs/strategies/_catalog/port-catalog.json` (implementadas + backlog). Se o mecanismo já existir, marque `Descartado — duplicata` e pule para outro padrão.
+4. **Execute em loop até encontrar uma anomalia que seja lucrativa e que tenha potencial de escalabilidade**:
+* Se encontrar uma anomalia promissora, teste-a com parâmetros variados (distância do strike, tempo restante, sensibilidade do ask) e documente os resultados no catálogo com o status `Promovido`.
+* Se a anomalia for lucrativa e com potencial de escalabilidade, **PARE** de buscar e avance para as próximas etapas de validação.
