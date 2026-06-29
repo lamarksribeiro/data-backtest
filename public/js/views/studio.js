@@ -80,15 +80,15 @@ function resolveEventResult(ev) {
 
 function renderEventResultBadge(ev) {
   const { tone, label } = resolveEventResult(ev);
-  return el('span', { class: 'col-result' }, [
+  return el('span', { class: 'col-result', 'data-label': 'Resultado' }, [
     el('span', { class: `event-result-badge badge badge--compact badge--${tone}` }, label),
   ]);
 }
 
 function renderSideCell(side) {
-  if (!side) return el('span', { class: 'col-side muted' }, '—');
+  if (!side) return el('span', { class: 'col-side muted', 'data-label': 'Posição' }, '—');
   const tone = side === 'UP' ? 'up' : side === 'DOWN' ? 'down' : 'idle';
-  return el('span', { class: 'col-side' }, [
+  return el('span', { class: 'col-side', 'data-label': 'Posição' }, [
     el('span', { class: `event-side-pill event-side-pill--${tone}` }, side),
   ]);
 }
@@ -237,6 +237,14 @@ const EVENT_SORT_COLUMNS = [
   { key: 'trest', label: 'T.Rest', className: 'col-trest', defaultDir: 'desc' },
   { key: 'result', label: 'Resultado', className: 'col-result', defaultDir: 'desc' },
 ];
+
+const STUDIO_EVENTS_MOBILE_MQ = typeof window !== 'undefined'
+  ? window.matchMedia('(max-width: 640px)')
+  : { matches: false };
+
+function isStudioEventsMobileLayout() {
+  return STUDIO_EVENTS_MOBILE_MQ.matches;
+}
 
 function parseEventSort(sort) {
   const raw = String(sort || 'default').trim();
@@ -1667,12 +1675,12 @@ async function loadRunDetail(ctx, runId, { routeToken = ctx.getRouteToken?.() ??
       el('div', { class: 'card__header' }, [
         el('h2', { class: 'card__title' }, 'Eventos executados'),
       ]),
-      el('div', { style: { padding: '0 20px 20px 20px' } }, [
-        el('div', { class: 'studio-tabs', style: { marginTop: '0', marginBottom: '12px' } }, [
+      el('div', { class: 'studio-events-card__body' }, [
+        el('div', { class: 'studio-tabs studio-events-card__tabs' }, [
           el('button', { class: 'btn btn--ghost', type: 'button', onclick: () => showAnalysisTab(ctx, runId, run, summary) }, 'Análise'),
           el('button', { class: 'btn btn--ghost is-active', type: 'button' }, 'Eventos'),
         ]),
-        el('div', { class: 'studio-events-filter-bar', style: { marginTop: '0', marginBottom: '16px' } }, buildEventFilters(ctx, runId)),
+        el('div', { class: 'studio-events-filter-bar studio-events-card__filters' }, buildEventFilters(ctx, runId)),
         el('div', { id: 'studio-events-table-container' }),
       ]),
     ]),
@@ -1886,8 +1894,9 @@ function renderSortableColumnHeader(ctx, runId, { key, label, className }) {
 }
 
 function renderVirtualEventTable(events, ctx, runId) {
+  const mobile = isStudioEventsMobileLayout();
   const rowH = 40;
-  const wrap = el('div', { class: 'studio-events-wrap' }, [
+  const wrap = el('div', { class: `studio-events-wrap${mobile ? ' is-mobile' : ''}` }, [
     el('div', { class: 'studio-table-header-row' }, [
       el('button', {
         type: 'button',
@@ -1903,6 +1912,14 @@ function renderVirtualEventTable(events, ctx, runId) {
       ...EVENT_SORT_COLUMNS.map((col) => renderSortableColumnHeader(ctx, runId, col)),
     ]),
   ]);
+
+  if (mobile) {
+    const viewport = el('div', { class: 'studio-events-viewport studio-events-viewport--mobile' });
+    mount(viewport, events.map((ev, i) => eventRow(ev, ctx, runId, i)));
+    wrap.appendChild(viewport);
+    return wrap;
+  }
+
   const viewport = el('div', { class: 'studio-events-viewport', style: { maxHeight: '360px', overflow: 'auto' } });
   const spacer = el('div', { style: { height: `${events.length * rowH}px`, position: 'relative' } });
   const body = el('div', { class: 'studio-events-body', style: { position: 'absolute', top: '0', left: '0', right: '0' } });
@@ -1938,14 +1955,14 @@ function eventRow(ev, ctx, runId, index) {
     title: `${formatEventTime(ev.event_start)} · ${ev.condition_id || ''}`,
     onclick: () => selectEventAndRenderInline(ctx, runId, ev.id, index),
   }, [
-    el('span', { class: 'col-index muted' }, String(index + 1)),
-    el('span', { class: 'col-time' }, formatEventTime(ev.event_start)),
+    el('span', { class: 'col-index muted', 'data-label': '#' }, String(index + 1)),
+    el('span', { class: 'col-time', 'data-label': 'Hora Evento' }, formatEventTime(ev.event_start)),
     renderSideCell(ev.side),
-    el('span', { class: 'col-qty' }, quantity != null ? String(quantity) : '—'),
-    el('span', { class: 'col-cost' }, cost != null ? formatPnl(cost) : '—'),
-    el('span', { class: `col-pnl pnl-${pnlTone}` }, formatPnl(pnlVal)),
-    el('span', { class: 'col-dist muted' }, formatDistPtb(ev.entry_distance_ptb)),
-    el('span', { class: 'col-trest muted' }, formatTimeRemaining(ev.entry_time_remaining)),
+    el('span', { class: 'col-qty', 'data-label': 'Contratos' }, quantity != null ? String(quantity) : '—'),
+    el('span', { class: 'col-cost', 'data-label': 'Custo' }, cost != null ? formatPnl(cost) : '—'),
+    el('span', { class: `col-pnl pnl-${pnlTone}`, 'data-label': 'P&L (Líquido)' }, formatPnl(pnlVal)),
+    el('span', { class: 'col-dist muted', 'data-label': 'Dist PTB' }, formatDistPtb(ev.entry_distance_ptb)),
+    el('span', { class: 'col-trest muted', 'data-label': 'T.Rest' }, formatTimeRemaining(ev.entry_time_remaining)),
     renderEventResultBadge(ev),
   ]);
 }
