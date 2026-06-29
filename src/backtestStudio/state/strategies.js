@@ -231,6 +231,12 @@ export function deleteStrategyVersion(db, strategyId, versionId, { deleteRuns = 
       }
       db.prepare('DELETE FROM backtest_runs WHERE strategy_version_id = ?').run(versionId);
     }
+    db.prepare('DELETE FROM strategy_presets WHERE strategy_version_id = ?').run(versionId);
+    db.prepare(`
+      UPDATE strategy_definitions
+      SET default_version_id = NULL
+      WHERE id = ? AND default_version_id = ?
+    `).run(strategyId, versionId);
     db.prepare('DELETE FROM strategy_versions WHERE strategy_id = ? AND id = ?').run(strategyId, versionId);
     db.prepare(`
       UPDATE strategy_definitions

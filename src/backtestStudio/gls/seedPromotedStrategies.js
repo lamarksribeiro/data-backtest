@@ -7,6 +7,7 @@ import { listPresets, resolvePresetParams } from '../../../labs/shared/presets.j
 import { renderPresetGls } from '../../../labs/shared/renderPresetGls.js';
 import {
   createStrategy,
+  deleteStrategyVersion,
   getStrategy,
   getStrategyBySlug,
   validateStrategySource,
@@ -147,7 +148,12 @@ function upsertStrategyVersion(db, {
 
 function ensureDefaultVersion(db, strategyRowId, manifest) {
   const currentDefault = db.prepare('SELECT default_version_id FROM strategy_definitions WHERE id = ?').get(strategyRowId);
-  if (currentDefault?.default_version_id != null) return;
+  if (currentDefault?.default_version_id != null) {
+    const stillExists = db.prepare(`
+      SELECT id FROM strategy_versions WHERE id = ? AND strategy_id = ?
+    `).get(currentDefault.default_version_id, strategyRowId);
+    if (stillExists) return;
+  }
 
   const defaultVersion = Number(manifest.studio?.defaultVersion);
   if (!Number.isInteger(defaultVersion) || defaultVersion < 1) return;
@@ -265,12 +271,10 @@ export function seedPromotedStrategy(db, manifest, { jsOnly = true } = {}) {
   for (const row of versionRows) {
     if (activeVersions.has(row.version)) continue;
     const refs = db.prepare('SELECT COUNT(*) AS n FROM backtest_runs WHERE strategy_version_id = ?').get(row.id);
-    if (Number(refs?.n || 0) > 0) {
-      console.warn(`[seed] ${slug} v${row.version} obsoleta mantida (${refs.n} runs vinculados).`);
-      continue;
-    }
-    db.prepare('DELETE FROM strategy_versions WHERE id = ?').run(row.id);
-    console.log(`[seed] ${slug} v${row.version} obsoleta removida.`);
+    const runsCount = Number(refs?.n || 0);
+    deleteStrategyVersion(db, strategy.id, row.id, { deleteRuns: true });
+    const runsNote = runsCount > 0 ? ` (${runsCount} runs apagados)` : '';
+    console.log(`[seed] ${slug} v${row.version} obsoleta removida${runsNote}.`);
   }
 
   db.prepare(`
