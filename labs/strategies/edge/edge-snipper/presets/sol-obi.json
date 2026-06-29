@@ -1,9 +1,9 @@
 {
   "id": "sol-obi",
-  "legacyPresetId": "v4",
+  "legacyPresetId": "v3",
   "underlying": "SOL",
   "glsSource": "obi",
-  "studioVersion": 4,
+  "studioVersion": 3,
   "name": "SOL · OBI",
   "studioSlug": "es-sol-obi",
   "studioName": "Edge Snipper · SOL · OBI",

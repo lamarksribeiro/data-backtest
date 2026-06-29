@@ -298,9 +298,9 @@ test('seed edge-snipper strategy and run via lakehouse engine', async () => {
     try {
       const strategy = seedEdgeSnipperPresets(db);
       const versions = listStrategyVersions(db, strategy.id);
-      const version = versions.find((item) => item.version === 2) || versions[0];
+      const version = versions.find((item) => item.version === 1) || versions[0];
       assert.equal(strategy.slug, 'edge-snipper');
-      assert.equal(versions.length, 4);
+      assert.equal(versions.length, 3);
       assert.equal(version.language, 'strategy-js-v1');
 
       const parquetPath = path.join(dir, 'lake', 'backtest_ticks', 'part-test.parquet');
@@ -487,21 +487,21 @@ test('edge-sniper-v2-gls lakehouse fast-run matches full-run', async () => {
   }
 });
 
-test('seed edge-snipper keeps four asset profiles on reseed', async () => {
+test('seed edge-snipper keeps three asset profiles on reseed', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-gls-seed-update-'));
   try {
     const db = openStateDatabase(path.join(dir, 'state.db'));
     try {
       const strategy = seedEdgeSnipperPresets(db);
       const versions = listStrategyVersions(db, strategy.id);
-      assert.equal(versions.length, 4);
+      assert.equal(versions.length, 3);
 
       seedEdgeSnipperPresets(db);
       const afterReseed = listStrategyVersions(db, strategy.id);
-      assert.equal(afterReseed.length, 4);
+      assert.equal(afterReseed.length, 3);
       assert.equal(afterReseed.find((item) => item.version === 1).validation.ok, true);
-      assert.equal(afterReseed.find((item) => item.version === 3).notes, 'ETH · OBI');
-      assert.equal(afterReseed.find((item) => item.version === 4).notes, 'SOL · OBI');
+      assert.equal(afterReseed.find((item) => item.version === 2).notes, 'ETH · OBI');
+      assert.equal(afterReseed.find((item) => item.version === 3).notes, 'SOL · OBI');
     } finally {
       closeStateDatabase(db);
     }

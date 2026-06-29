@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 
-import { getEdgeSniperV3V1GlsSource } from '../src/backtestStudio/gls/loadStrategySource.js';
+import { getEdgeSnipperV2GlsSource } from '../src/backtestStudio/gls/loadStrategySource.js';
 import { loadPreset, listPresets } from '../labs/shared/presets.js';
 import {
   listPromotedStrategies,
@@ -57,10 +57,10 @@ test('seedPromotedStrategies seeds versions from lab manifests', () => {
       WHERE strategy_id = ?
       ORDER BY version ASC
     `).all(edge.strategy.id);
-    assert.equal(edgeVersions.length, 4);
-    assert.equal(edgeVersions[0].notes, 'BTC · Classic');
-    assert.equal(edgeVersions[2].notes, 'ETH · OBI');
-    assert.equal(edgeVersions[3].notes, 'SOL · OBI');
+    assert.equal(edgeVersions.length, 3);
+    assert.equal(edgeVersions[0].notes, 'BTC · OBI');
+    assert.equal(edgeVersions[1].notes, 'ETH · OBI');
+    assert.equal(edgeVersions[2].notes, 'SOL · OBI');
 
     const gamma = results.find((row) => row.slug === 'gamma-ladder');
     const gammaVersions = db.prepare(`
@@ -90,23 +90,23 @@ test('seedPromotedStrategies seeds versions from lab manifests', () => {
 
 test('listPresets loads edge-snipper asset profiles', () => {
   const presets = listPresets({ strategyId: 'edge-snipper', includeAliases: false });
-  assert.equal(presets.length, 4);
-  assert.deepEqual(presets.map((item) => item.id), ['btc-classic', 'btc-obi', 'eth-obi', 'sol-obi']);
-  assert.equal(presets[2].underlying, 'ETH');
-  assert.equal(presets[3].underlying, 'SOL');
+  assert.equal(presets.length, 3);
+  assert.deepEqual(presets.map((item) => item.id), ['btc-obi', 'eth-obi', 'sol-obi']);
+  assert.equal(presets[1].underlying, 'ETH');
+  assert.equal(presets[2].underlying, 'SOL');
 });
 
 test('loadPreset merges defaults with overrides', () => {
-  const { preset, params } = loadPreset('btc-classic', { strategyId: 'edge-snipper' });
-  assert.equal(preset.studioSlug, 'es-btc-classic');
+  const { preset, params } = loadPreset('btc-obi', { strategyId: 'edge-snipper' });
+  assert.equal(preset.studioSlug, 'es-btc-obi');
   assert.equal(params.entryWindowStart, 105);
   assert.equal(params.walletSize, 100);
-  assert.equal(params.minDistanceAbs, 50);
+  assert.equal(params.minDistanceAbs, 60);
 });
 
 test('loadPreset resolves legacy preset ids', () => {
   const { preset } = loadPreset('v2', { strategyId: 'edge-snipper' });
-  assert.equal(preset.id, 'btc-obi');
+  assert.equal(preset.id, 'eth-obi');
 });
 
 test('loadPreset resolves whipsaw-lock champion params', () => {
@@ -126,7 +126,7 @@ test('loadPreset resolves quantum-entropic-manifold champion params', () => {
 });
 
 test('renderPresetGls patches param defaults in source', () => {
-  const source = getEdgeSniperV3V1GlsSource();
+  const source = getEdgeSnipperV2GlsSource();
   const rendered = renderPresetGls(source, {
     entryWindowStart: 180,
     minDistanceAbs: 40,

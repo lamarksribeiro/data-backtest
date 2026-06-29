@@ -1,9 +1,9 @@
 {
   "id": "eth-obi",
-  "legacyPresetId": "v3",
+  "legacyPresetId": "v2",
   "underlying": "ETH",
   "glsSource": "obi",
-  "studioVersion": 3,
+  "studioVersion": 2,
   "name": "ETH · OBI",
   "studioSlug": "es-eth-obi",
   "studioName": "Edge Snipper · ETH · OBI",

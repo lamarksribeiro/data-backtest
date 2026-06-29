@@ -13,10 +13,9 @@
 
 | Studio v | Preset | Ativo | GLS | Notas |
 |---|---|---|---|---|
-| 1 | `btc-classic` | BTC | `edgeSnipper_v1.gls` | Sem OBI no score |
-| 2 | `btc-obi` | BTC | `edgeSnipper_v2.gls` | OBI no score (champion BTC) |
-| 3 | `eth-obi` | ETH | `edgeSnipper_v2.gls` | Escalas ETH (minDistanceAbs 2.0, minSigma 0.25) |
-| 4 | `sol-obi` | SOL | `edgeSnipper_v2.gls` | Escala ETH (minDistanceAbs 0.15, minSigma 0.10, stopBid 0.10) |
+| 1 | `btc-obi` | BTC | `edgeSnipper_v2.gls` | OBI no score; minEdge 0.09, minDistanceAbs 60 |
+| 2 | `eth-obi` | ETH | `edgeSnipper_v2.gls` | Escalas ETH (minDistanceAbs 2.0, minSigma 0.25) |
+| 3 | `sol-obi` | SOL | `edgeSnipper_v2.gls` | Escala ETH (minDistanceAbs 0.15, minSigma 0.10) |
 
 O ativo (BTC/ETH/SOL) é escolhido no backtest; cada versão carrega apenas params/toggles.
 
@@ -33,7 +32,7 @@ Detalhamento completo: [`edge-sniper-v2.md`](edge-sniper-v2.md).
 ## 3. Onde está no código
 
 - Manifest: `labs/strategies/edge/edge-snipper/strategy.json`
-- GLS: `src/backtestStudio/gls/strategies/edgeSnipper_v1.gls`, `edgeSnipper_v2.gls`
+- GLS: `src/backtestStudio/gls/strategies/edgeSnipper_v2.gls`
 - Presets: `labs/strategies/edge/edge-snipper/presets/`
 - Modelos compilados: seeds em `src/backtestStudio/gls/` e versões Strategy JS no SQLite
 

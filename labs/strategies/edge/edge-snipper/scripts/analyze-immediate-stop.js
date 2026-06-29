@@ -161,7 +161,7 @@ function findEventsByDate(rows, dateStr) {
 
 async function main() {
 	const flags = parseArgs(process.argv.slice(2));
-	const presetId = flags.preset || 'btc-classic';
+	const presetId = flags.preset || 'btc-obi';
 	const from = flags.from || '2026-04-23';
 	const to = flags.to || '2026-06-05';
 

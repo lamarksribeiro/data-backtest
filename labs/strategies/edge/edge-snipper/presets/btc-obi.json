@@ -1,9 +1,9 @@
 {
   "id": "btc-obi",
-  "legacyPresetId": "v2",
+  "legacyPresetId": "v1",
   "underlying": "BTC",
   "glsSource": "obi",
-  "studioVersion": 2,
+  "studioVersion": 1,
   "name": "BTC · OBI",
   "studioSlug": "es-btc-obi",
   "studioName": "Edge Snipper · BTC · OBI",

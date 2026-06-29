@@ -258,6 +258,21 @@ export function seedPromotedStrategy(db, manifest, { jsOnly = true } = {}) {
     console.log(`[seed] ${slug} v${versionNum} (${preset.id}) ${lang} ${action === 'seeded' ? 'semeada' : 'sincronizada'}.`);
   }
 
+  const activeVersions = new Set(presets.map((preset) => resolvePresetVersion(preset)));
+  const versionRows = db.prepare(`
+    SELECT id, version FROM strategy_versions WHERE strategy_id = ?
+  `).all(strategy.id);
+  for (const row of versionRows) {
+    if (activeVersions.has(row.version)) continue;
+    const refs = db.prepare('SELECT COUNT(*) AS n FROM backtest_runs WHERE strategy_version_id = ?').get(row.id);
+    if (Number(refs?.n || 0) > 0) {
+      console.warn(`[seed] ${slug} v${row.version} obsoleta mantida (${refs.n} runs vinculados).`);
+      continue;
+    }
+    db.prepare('DELETE FROM strategy_versions WHERE id = ?').run(row.id);
+    console.log(`[seed] ${slug} v${row.version} obsoleta removida.`);
+  }
+
   db.prepare(`
     UPDATE strategy_definitions
     SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')

@@ -17,12 +17,11 @@
   "studio": {
     "description": "Edge Snipper com perfis versionados para BTC, ETH e SOL (params e toggles; o ativo é escolhido no backtest).",
     "tags": ["edge-snipper", "btc", "eth", "sol", "lab-strategy"],
-    "defaultVersion": 2,
+    "defaultVersion": 1,
     "defaultGlsSource": "obi",
     "glsSources": {
-      "classic": "src/backtestStudio/gls/strategies/edgeSnipper_v1.gls",
       "obi": "src/backtestStudio/gls/strategies/edgeSnipper_v2.gls"
     }
   },
-  "notes": "Perfis no Studio: btc-classic (v1.gls), btc-obi, eth-obi e sol-obi (v2.gls). O ativo é escolhido no backtest; versões carregam apenas params/toggles."
+  "notes": "Perfis no Studio: btc-obi (v1), eth-obi (v2), sol-obi (v3). O ativo é escolhido no backtest; versões carregam apenas params/toggles."
 }

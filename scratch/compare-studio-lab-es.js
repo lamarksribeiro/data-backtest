@@ -14,7 +14,6 @@ import { analyzeStrategyColumns } from '../src/backtestStudio/gls/compiler.js';
 import { loadPreset } from '../labs/shared/presets.js';
 import { renderPresetGls } from '../labs/shared/renderPresetGls.js';
 import {
-	getEdgeSnipperV1GlsSource,
 	getEdgeSnipperV2GlsSource,
 } from '../src/backtestStudio/gls/loadStrategySource.js';
 
@@ -71,23 +70,13 @@ async function main() {
 
 	const scenarios = [
 		{
-			label: 'studio_v1 (v1.gls renderizado, params no fonte)',
-			source: renderPresetGls(getEdgeSnipperV1GlsSource(), params, `Edge Snipper · ${preset.name}`),
-			params: {},
-		},
-		{
-			label: 'studio_v2 (v2.gls renderizado, params no fonte)',
+			label: 'studio (v2.gls renderizado, params no fonte)',
 			source: renderPresetGls(getEdgeSnipperV2GlsSource(), params, `Edge Snipper · ${preset.name}`),
 			params: {},
 		},
 		{
-			label: 'lab_atual (strategy.json → v2.gls + defaults runtime)',
+			label: 'lab_atual (strategy.json → v2.gls + runtime params)',
 			source: labGlsSource,
-			params,
-		},
-		{
-			label: 'lab_v1_file (v1.gls + runtime params)',
-			source: getEdgeSnipperV1GlsSource(),
 			params,
 		},
 	];
