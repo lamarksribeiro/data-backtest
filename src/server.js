@@ -31,7 +31,7 @@ if (recoveredAssetUpdateRuns > 0) {
 if (recoveredTelegramBackupRuns > 0) {
   console.log(JSON.stringify({ ok: true, recoveredTelegramBackupRuns }));
 }
-// Lab GLS strategies (edge-sniper-v3, qem, vsmr, etc.) sync from repo on every boot.
+// Lab GLS strategies (edge-snipper, qem, vsmr, etc.) sync from repo on every boot.
 // Opt out only for isolated test/debug: SEED_PROMOTED_STRATEGIES=0
 if (String(process.env.SEED_PROMOTED_STRATEGIES || '').trim() !== '0') {
   seedPromotedStrategies(db);

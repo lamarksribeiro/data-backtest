@@ -17,7 +17,7 @@ const strategy = db.prepare(`
   JOIN strategy_versions sv ON sv.strategy_id = sd.id
   WHERE sd.slug = ?
   ORDER BY sv.version ASC
-`).all('edge-sniper-v3-gls');
+`).all('edge-snipper');
 
 const btc = db.prepare(`
   SELECT COUNT(*) AS n, MIN(dt) AS from_dt, MAX(dt) AS to_dt

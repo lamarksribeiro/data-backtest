@@ -1,23 +1,23 @@
 {
-  "id": "btc-obi",
-  "legacyPresetId": "v2",
+  "id": "btc-classic",
+  "legacyPresetId": "v1",
   "underlying": "BTC",
-  "glsSource": "obi",
-  "studioVersion": 2,
-  "name": "BTC · OBI",
-  "studioSlug": "esv3-btc-obi",
-  "studioName": "Edge Sniper V3 · BTC · OBI",
+  "glsSource": "classic",
+  "studioVersion": 1,
+  "name": "BTC · Classic",
+  "studioSlug": "es-btc-classic",
+  "studioName": "Edge Snipper · BTC · Classic",
   "role": "champion",
-  "description": "Perfil BTC com OBI no score (minEdge 0.07). Champion de profit factor na janela de validação.",
-  "tags": ["btc", "obi", "high-pf", "champion"],
-  "labVariantId": "obi-d50-strict",
+  "description": "Perfil BTC sem OBI no score. Baixo drawdown e boa consistência.",
+  "tags": ["btc", "classic", "low-drawdown", "stable"],
+  "labVariantId": "classic-d50-strict",
   "labSummary": {
-    "totalPnl": 112.01,
-    "profitFactor": 2.15,
-    "positiveDays": 30,
+    "totalPnl": 87.59,
+    "profitFactor": 1.86,
+    "positiveDays": 29,
     "totalDays": 40,
-    "entries": 48,
-    "source": "v10-obi-opt-import 2026-06-14"
+    "entries": 47,
+    "source": "v7-stable-import 2026-06-14"
   },
   "params": {
     "walletSize": 100,
@@ -66,13 +66,6 @@
     "stopReverseSlippageMax": 0.02,
     "stopReverseMinLiquidityRatio": 0.75,
     "stopReverseBudgetMode": "same-cost",
-    "stopReverseBudgetFactor": 1.25,
-    "useBlackScholesProb": false,
-    "useObiDrift": false,
-    "obiLevels": 5,
-    "obiDriftFactor": 0.5,
-    "driftHorizonSec": 20,
-    "useObiInScore": true,
-    "obiScoreWeight": 0.35
+    "stopReverseBudgetFactor": 1.25
   }
 }

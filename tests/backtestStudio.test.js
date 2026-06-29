@@ -453,7 +453,7 @@ test('trash restores strategy history and seed skips trashed slug', async () => 
   const dbPath = path.join(dir, 'state.db');
   const db = openStateDatabase(dbPath);
   try {
-    const edgeManifest = listPromotedGlsStrategies().find((item) => item.id === 'edge-sniper-v3');
+    const edgeManifest = listPromotedGlsStrategies().find((item) => item.id === 'edge-snipper');
     const { strategy } = seedPromotedStrategy(db, edgeManifest);
     assert.ok(strategy);
     const versionRow = db.prepare(`

@@ -18,7 +18,7 @@ import { openStateDatabase, closeStateDatabase } from '../src/state/sqlite.js';
 test('listPromotedGlsStrategies discovers GLS lab strategies', () => {
 	const promoted = listPromotedGlsStrategies();
 	const ids = promoted.map((item) => item.id).sort();
-	assert.deepEqual(ids, ['book-frontrunner', 'edge-sniper-v3', 'gamma-ladder', 'quantum-entropic-manifold', 'vsmr', 'whipsaw-lock']);
+	assert.deepEqual(ids, ['book-frontrunner', 'edge-snipper', 'gamma-ladder', 'quantum-entropic-manifold', 'vsmr', 'whipsaw-lock']);
 	assert.equal(promoted.find((item) => item.id === 'gamma-ladder').studioSlug, 'gamma-ladder');
 });
 
@@ -49,17 +49,18 @@ test('seedPromotedStrategies seeds versions from lab manifests', () => {
 		const results = seedPromotedStrategies(db);
 		assert.equal(results.length, 6);
 		const slugs = results.map((row) => row.slug).sort();
-		assert.deepEqual(slugs, ['book-frontrunner', 'edge-sniper-v3', 'gamma-ladder', 'quantum-entropic-manifold', 'vsmr', 'whipsaw-lock']);
+		assert.deepEqual(slugs, ['book-frontrunner', 'edge-snipper', 'gamma-ladder', 'quantum-entropic-manifold', 'vsmr', 'whipsaw-lock']);
 
-    const edge = results.find((row) => row.slug === 'edge-sniper-v3');
+    const edge = results.find((row) => row.slug === 'edge-snipper');
     const edgeVersions = db.prepare(`
       SELECT version, notes FROM strategy_versions
       WHERE strategy_id = ?
       ORDER BY version ASC
     `).all(edge.strategy.id);
-    assert.equal(edgeVersions.length, 3);
+    assert.equal(edgeVersions.length, 4);
     assert.equal(edgeVersions[0].notes, 'BTC · Classic');
     assert.equal(edgeVersions[2].notes, 'ETH · OBI');
+    assert.equal(edgeVersions[3].notes, 'SOL · OBI');
 
     const gamma = results.find((row) => row.slug === 'gamma-ladder');
     const gammaVersions = db.prepare(`
@@ -87,23 +88,24 @@ test('seedPromotedStrategies seeds versions from lab manifests', () => {
   }
 });
 
-test('listPresets loads edge-sniper-v3 asset profiles', () => {
-  const presets = listPresets({ strategyId: 'edge-sniper-v3', includeAliases: false });
-  assert.equal(presets.length, 3);
-  assert.deepEqual(presets.map((item) => item.id), ['btc-classic', 'btc-obi', 'eth-obi']);
+test('listPresets loads edge-snipper asset profiles', () => {
+  const presets = listPresets({ strategyId: 'edge-snipper', includeAliases: false });
+  assert.equal(presets.length, 4);
+  assert.deepEqual(presets.map((item) => item.id), ['btc-classic', 'btc-obi', 'eth-obi', 'sol-obi']);
   assert.equal(presets[2].underlying, 'ETH');
+  assert.equal(presets[3].underlying, 'SOL');
 });
 
 test('loadPreset merges defaults with overrides', () => {
-  const { preset, params } = loadPreset('btc-classic', { strategyId: 'edge-sniper-v3' });
-  assert.equal(preset.studioSlug, 'esv3-btc-classic');
+  const { preset, params } = loadPreset('btc-classic', { strategyId: 'edge-snipper' });
+  assert.equal(preset.studioSlug, 'es-btc-classic');
   assert.equal(params.entryWindowStart, 105);
   assert.equal(params.walletSize, 100);
   assert.equal(params.minDistanceAbs, 50);
 });
 
 test('loadPreset resolves legacy preset ids', () => {
-  const { preset } = loadPreset('v2', { strategyId: 'edge-sniper-v3' });
+  const { preset } = loadPreset('v2', { strategyId: 'edge-snipper' });
   assert.equal(preset.id, 'btc-obi');
 });
 
@@ -129,8 +131,8 @@ test('renderPresetGls patches param defaults in source', () => {
     entryWindowStart: 180,
     minDistanceAbs: 40,
     minEdge: 0,
-  }, 'Edge Sniper V3 · Test');
-  assert.match(rendered, /strategy "Edge Sniper V3 · Test"/);
+  }, 'Edge Snipper · Test');
+  assert.match(rendered, /strategy "Edge Snipper · Test"/);
   assert.match(rendered, /param entryWindowStart = 180/);
   assert.match(rendered, /param minDistanceAbs = 40/);
   assert.match(rendered, /param minEdge = 0/);

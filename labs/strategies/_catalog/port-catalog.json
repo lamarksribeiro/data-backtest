@@ -1,10 +1,10 @@
 {
   "alreadyPorted": [
     {
-      "id": "edge-sniper-v3",
+      "id": "edge-snipper",
       "portStatus": "ported",
-      "notes": "Substitui edge-sniper-v2",
-      "sourceDoc": "docs/estrategias/implementadas/edge-sniper-v3.md"
+      "notes": "Substitui edge-sniper-v2 e edge-sniper-v3",
+      "sourceDoc": "docs/estrategias/implementadas/edge-snipper.md"
     },
     {
       "id": "gamma-ladder",

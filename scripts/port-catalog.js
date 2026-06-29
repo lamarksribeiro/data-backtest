@@ -3,7 +3,7 @@
 export const POLYMARKET_TEST_ROOT = 'D:/Projetos/projeto-goldenlens/polymarket-test';
 
 export const ALREADY_PORTED = [
-  { id: 'edge-sniper-v3', portStatus: 'ported', notes: 'Substitui edge-sniper-v2', sourceDoc: 'docs/estrategias/implementadas/edge-sniper-v3.md' },
+  { id: 'edge-snipper', portStatus: 'ported', notes: 'Substitui edge-sniper-v2 e edge-sniper-v3', sourceDoc: 'docs/estrategias/implementadas/edge-snipper.md' },
   { id: 'gamma-ladder', portStatus: 'ported', notes: 'Gamma Ladder unificada (V1 + V2 engines)', sourceDoc: 'docs/estrategias/implementadas/gamma-ladder-v1.md' },
   { id: 'vsmr', portStatus: 'ported', notes: 'Volatility Spike Mean Reversion', sourceDoc: 'docs/estrategias/implementadas/vsmr-v1.md' },
   { id: 'quantum-entropic-manifold', portStatus: 'ported', notes: 'Quantum Entropic Manifold V2 (GLS nativo)', sourceDoc: 'labs/strategies/edge/quantum-entropic-manifold/strategy.json' },

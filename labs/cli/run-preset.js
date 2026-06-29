@@ -6,7 +6,7 @@ import { discoverLabStrategies } from '../shared/discoverStrategies.js';
 import { listPresets } from '../shared/presets.js';
 
 function resolveStrategyContext(flags) {
-  const strategyId = flags.strategy || flags['strategy-id'] || 'edge-sniper-v3';
+  const strategyId = flags.strategy || flags['strategy-id'] || 'edge-snipper';
   const explicitFamily = flags['strategy-family'] || flags.family;
   if (explicitFamily) return { strategyId, strategyFamily: explicitFamily };
   const manifest = discoverLabStrategies().find((item) => item.id === strategyId);

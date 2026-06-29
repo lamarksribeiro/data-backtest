@@ -6,7 +6,7 @@ SCRIPT_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
 # shellcheck source=common.env.sh
 . "$SCRIPT_DIR/common.env.sh"
 
-EXPERIMENT="${LAB_EXPERIMENT:-labs/strategies/edge/edge-sniper-v3/experiments/2026-06-17-btc-treasure-phase1-obi-entry.json}"
+EXPERIMENT="${LAB_EXPERIMENT:-labs/strategies/edge/edge-snipper/experiments/2026-06-17-btc-treasure-phase1-obi-entry.json}"
 HOST_CPUS="${HOST_CPUS:-$(nproc 2>/dev/null || echo 32)}"
 RESERVE_CPUS="${RESERVE_CPUS:-4}"
 MAX_MODE="${LAB_MAX_MODE:-0}"

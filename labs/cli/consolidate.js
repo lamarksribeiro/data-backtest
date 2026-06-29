@@ -28,7 +28,7 @@ function parseArgs(argv) {
 
 async function main() {
   const flags = parseArgs(process.argv.slice(2));
-  const root = flags.root || flags.r || 'reports/labs/edge-sniper-v3';
+  const root = flags.root || flags.r || 'reports/labs/edge-snipper';
   const output = flags.output || flags.o || path.join(root, '_consolidated');
   const top = Number(flags.top || 50);
 

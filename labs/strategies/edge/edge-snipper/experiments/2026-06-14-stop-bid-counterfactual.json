@@ -1,6 +1,6 @@
 {
   "name": "stop-bid-counterfactual",
-  "strategyId": "edge-sniper-v3",
+  "strategyId": "edge-snipper",
   "strategyFamily": "edge",
   "dataset": "backtest_ticks",
   "underlying": "BTC",

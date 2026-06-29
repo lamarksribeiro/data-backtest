@@ -6,7 +6,7 @@ Teorias portadas ao `data-backtest` (runners no Studio ou biblioteca). Origem pr
 
 | Documento | Studio slug | Notas |
 |---|---|---|
-| [edge-sniper-v3.md](edge-sniper-v3.md) | `edge-sniper-v3` | Evolução compilada; teoria em [edge-sniper-v2.md](edge-sniper-v2.md) |
+| [edge-snipper.md](edge-snipper.md) | `edge-snipper` | Evolução compilada; teoria em [edge-sniper-v2.md](edge-sniper-v2.md) |
 | [edge-sniper-v2.md](edge-sniper-v2.md) | — | Especificação teórica base (legado polymarket-test) |
 | [gamma-ladder-v1.md](gamma-ladder-v1.md) | `gamma-ladder-v1` | Box + ladder direcional |
 | [gamma-ladder-v1-explicacao.md](gamma-ladder-v1-explicacao.md) | — | Guia didático |

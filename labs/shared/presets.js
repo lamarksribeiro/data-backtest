@@ -29,7 +29,7 @@ export function resolvePresetParams(preset, strategyRoot) {
   return { ...defaults, ...(preset.params || {}) };
 }
 
-export function listPresets({ strategyFamily = 'edge', strategyId = 'edge-sniper-v3', includeAliases = true } = {}) {
+export function listPresets({ strategyFamily = 'edge', strategyId = 'edge-snipper', includeAliases = true } = {}) {
   const strategyRoot = resolveStrategyRoot(strategyFamily, strategyId);
   const presets = listPresetFiles(strategyRoot).map((file) => loadPresetFile(file));
   const ordered = presets.sort((a, b) => {
@@ -41,7 +41,7 @@ export function listPresets({ strategyFamily = 'edge', strategyId = 'edge-sniper
   return includeAliases ? withLabVariantAliases(ordered) : ordered;
 }
 
-export function loadPreset(presetId, { strategyFamily = 'edge', strategyId = 'edge-sniper-v3' } = {}) {
+export function loadPreset(presetId, { strategyFamily = 'edge', strategyId = 'edge-snipper' } = {}) {
   const presets = listPresets({ strategyFamily, strategyId });
   const preset = presets.find((item) => item.id === presetId)
     || presets.find((item) => item.legacyPresetId === presetId);

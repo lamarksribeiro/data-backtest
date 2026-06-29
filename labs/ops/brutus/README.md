@@ -66,6 +66,6 @@ Recomendação:
 ```bash
 # Capacidade máxima (um experimento)
 ssh Brutus "nohup env LAB_MAX_MODE=1 RESERVE_CPUS=4 BACKTEST_WORKERS=1 \
-  LAB_EXPERIMENT=labs/strategies/edge/edge-sniper-v3/experiments/meu-sweep.json \
+  LAB_EXPERIMENT=labs/strategies/edge/edge-snipper/experiments/meu-sweep.json \
   LAB_LOG=/tmp/lab-benchmark.log /tmp/labs-brutus/run-benchmark-ab.sh >> /tmp/lab.nohup 2>&1 &"
 ```

@@ -1,17 +1,18 @@
 {
-  "name": "btc-treasure-phase1-obi-entry",
-  "strategyId": "edge-sniper-v3",
+  "name": "sol-optimization",
+  "strategyId": "edge-snipper",
   "strategyFamily": "edge",
   "dataset": "backtest_ticks",
-  "underlying": "BTC",
+  "underlying": "SOL",
   "interval": "5m",
   "bookDepth": 25,
-  "from": "2026-05-01",
-  "to": "2026-05-24",
+  "from": "2026-05-24",
+  "to": "2026-06-14",
   "engine": "soa",
   "glsExecution": "compiled-soa",
   "fastRun": true,
   "variantWorkers": 8,
+  "maxVariants": 48,
   "defaults": "../defaults.json",
-  "searchSpace": "../search-spaces/btc-treasure-phase1-obi-entry.json"
+  "searchSpace": "../search-spaces/sol-optimization-fast.json"
 }

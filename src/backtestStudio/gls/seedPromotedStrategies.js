@@ -170,8 +170,12 @@ function ensureDefaultVersion(db, strategyRowId, manifest) {
 function findStrategyByLegacySlug(db, slug, manifest) {
   const direct = getStrategyBySlug(db, slug);
   if (direct) return direct;
-  const legacySlug = `${manifest.strategyId}-gls`;
-  if (legacySlug !== slug) {
+  const legacyCandidates = [
+    `${manifest.strategyId}-gls`,
+    manifest.strategyId === 'edge-snipper' ? 'edge-sniper-v3' : null,
+    manifest.strategyId === 'edge-snipper' ? 'edge-sniper-v3-gls' : null,
+  ].filter((value) => value && value !== slug);
+  for (const legacySlug of legacyCandidates) {
     const legacy = getStrategyBySlug(db, legacySlug);
     if (legacy) {
       db.prepare('UPDATE strategy_definitions SET slug = ? WHERE id = ?').run(slug, legacy.id);
@@ -196,6 +200,19 @@ export function seedPromotedStrategy(db, manifest, { jsOnly = true } = {}) {
       description: resolveStudioDescription(manifest),
       tags: resolveStudioTags(manifest),
     });
+  } else {
+    db.prepare(`
+      UPDATE strategy_definitions
+      SET slug = ?, name = ?, description = ?, tags_json = ?
+      WHERE id = ?
+    `).run(
+      slug,
+      manifest.name,
+      resolveStudioDescription(manifest),
+      JSON.stringify(resolveStudioTags(manifest)),
+      strategy.id,
+    );
+    strategy = getStrategy(db, strategy.id);
   }
 
   const presets = listPresets({
@@ -257,8 +274,13 @@ export function seedPromotedStrategies(db, { manifests = null, jsOnly = true } =
   return promoted.map((manifest) => seedPromotedStrategy(db, manifest, { jsOnly }));
 }
 
-/** Compat: retorna a estratégia Edge Sniper V3 após seed genérico. */
-export function seedEdgeSniperV3Presets(db) {
+/** Retorna a estratégia Edge Snipper após seed genérico. */
+export function seedEdgeSnipperPresets(db) {
   const results = seedPromotedStrategies(db);
-  return results.find((row) => row.slug === 'edge-sniper-v3')?.strategy ?? null;
+  return results.find((row) => row.slug === 'edge-snipper')?.strategy ?? null;
+}
+
+/** @deprecated use seedEdgeSnipperPresets */
+export function seedEdgeSniperV3Presets(db) {
+  return seedEdgeSnipperPresets(db);
 }

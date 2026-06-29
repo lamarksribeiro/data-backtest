@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * Analisa eventos Edge Sniper V3 com stop_bid disparado no mesmo tick da entrada.
+ * Analisa eventos Edge Snipper com stop_bid disparado no mesmo tick da entrada.
  *
  * Uso:
- *   node labs/strategies/edge/edge-sniper-v3/scripts/analyze-immediate-stop.js
- *   node labs/strategies/edge/edge-sniper-v3/scripts/analyze-immediate-stop.js --preset v1 --from 2026-04-23 --to 2026-06-05
- *   node labs/strategies/edge/edge-sniper-v3/scripts/analyze-immediate-stop.js --preset v2 --event-date 2026-06-05
+ *   node labs/strategies/edge/edge-snipper/scripts/analyze-immediate-stop.js
+ *   node labs/strategies/edge/edge-snipper/scripts/analyze-immediate-stop.js --preset v1 --from 2026-04-23 --to 2026-06-05
+ *   node labs/strategies/edge/edge-snipper/scripts/analyze-immediate-stop.js --preset v2 --event-date 2026-06-05
  */
 import 'dotenv/config';
 import { readFileSync } from 'node:fs';
@@ -18,7 +18,7 @@ import { parse } from '../../../../../src/backtestStudio/gls/parser.js';
 import { analyzeStrategyColumns } from '../../../../../src/backtestStudio/gls/compiler.js';
 import { loadPreset } from '../../../../shared/presets.js';
 
-const STRATEGY_ID = 'edge-sniper-v3';
+const STRATEGY_ID = 'edge-snipper';
 const STRATEGY_FAMILY = 'edge';
 
 function parseArgs(argv) {

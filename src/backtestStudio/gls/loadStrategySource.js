@@ -13,13 +13,20 @@ export function getEdgeSniperV2GlsSource() {
   return loadGlsStrategySource('edgeSniperV2');
 }
 
+export function getEdgeSnipperV1GlsSource() {
+  return loadGlsStrategySource('edgeSnipper_v1');
+}
+
+export function getEdgeSnipperV2GlsSource() {
+  return loadGlsStrategySource('edgeSnipper_v2');
+}
+
+/** @deprecated use getEdgeSnipperV1GlsSource */
 export function getEdgeSniperV3V1GlsSource() {
-  return loadGlsStrategySource('edgeSniperV3_v1');
+  return getEdgeSnipperV1GlsSource();
 }
 
+/** @deprecated use getEdgeSnipperV2GlsSource */
 export function getEdgeSniperV3V2GlsSource() {
-  return loadGlsStrategySource('edgeSniperV3_v2');
+  return getEdgeSnipperV2GlsSource();
 }
-
-
-

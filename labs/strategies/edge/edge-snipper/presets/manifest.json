@@ -1,0 +1,10 @@
+{
+  "strategyId": "edge-snipper",
+  "updatedAt": "2026-06-29",
+  "presets": [
+    { "id": "btc-classic", "underlying": "BTC", "glsSource": "classic", "studioVersion": 1, "role": "champion" },
+    { "id": "btc-obi", "underlying": "BTC", "glsSource": "obi", "studioVersion": 2, "role": "champion" },
+    { "id": "eth-obi", "underlying": "ETH", "glsSource": "obi", "studioVersion": 3, "role": "champion" },
+    { "id": "sol-obi", "underlying": "SOL", "glsSource": "obi", "studioVersion": 4, "role": "champion" }
+  ]
+}

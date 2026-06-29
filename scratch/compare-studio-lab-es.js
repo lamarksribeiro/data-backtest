@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Compara PnL Studio (GLS renderizado por versão) vs Lab (strategy.json → v2.gls).
- * Uso: node scratch/compare-studio-lab-esv3.js
+ * Uso: node scratch/compare-studio-lab-es.js
  */
 import 'dotenv/config';
 import { readFileSync } from 'node:fs';
@@ -14,8 +14,8 @@ import { analyzeStrategyColumns } from '../src/backtestStudio/gls/compiler.js';
 import { loadPreset } from '../labs/shared/presets.js';
 import { renderPresetGls } from '../labs/shared/renderPresetGls.js';
 import {
-	getEdgeSniperV3V1GlsSource,
-	getEdgeSniperV3V2GlsSource,
+	getEdgeSnipperV1GlsSource,
+	getEdgeSnipperV2GlsSource,
 } from '../src/backtestStudio/gls/loadStrategySource.js';
 
 const FROM = process.argv[2] || '2026-04-23';
@@ -40,7 +40,7 @@ async function runScenario(db, label, sourceCode, params) {
 		underlying: 'BTC',
 		interval: '5m',
 		bookDepth: 25,
-		strategy: 'gls:edge-sniper-v3',
+		strategy: 'gls:edge-snipper',
 		glsAst,
 		columnAnalysis,
 		params,
@@ -61,10 +61,10 @@ async function runScenario(db, label, sourceCode, params) {
 async function main() {
 	const { params, preset } = loadPreset(PRESET, {
 		strategyFamily: 'edge',
-		strategyId: 'edge-sniper-v3',
+		strategyId: 'edge-snipper',
 	});
 	const labStrategyJson = JSON.parse(
-		readFileSync('labs/strategies/edge/edge-sniper-v3/strategy.json', 'utf8'),
+		readFileSync('labs/strategies/edge/edge-snipper/strategy.json', 'utf8'),
 	);
 	const labGlsPath = labStrategyJson.source.path;
 	const labGlsSource = readFileSync(labGlsPath, 'utf8');
@@ -72,12 +72,12 @@ async function main() {
 	const scenarios = [
 		{
 			label: 'studio_v1 (v1.gls renderizado, params no fonte)',
-			source: renderPresetGls(getEdgeSniperV3V1GlsSource(), params, `Edge Sniper V3 · ${preset.name}`),
+			source: renderPresetGls(getEdgeSnipperV1GlsSource(), params, `Edge Snipper · ${preset.name}`),
 			params: {},
 		},
 		{
 			label: 'studio_v2 (v2.gls renderizado, params no fonte)',
-			source: renderPresetGls(getEdgeSniperV3V2GlsSource(), params, `Edge Sniper V3 · ${preset.name}`),
+			source: renderPresetGls(getEdgeSnipperV2GlsSource(), params, `Edge Snipper · ${preset.name}`),
 			params: {},
 		},
 		{
@@ -87,7 +87,7 @@ async function main() {
 		},
 		{
 			label: 'lab_v1_file (v1.gls + runtime params)',
-			source: getEdgeSniperV3V1GlsSource(),
+			source: getEdgeSnipperV1GlsSource(),
 			params,
 		},
 	];
@@ -102,7 +102,7 @@ async function main() {
 			FROM backtest_runs r
 			LEFT JOIN strategy_versions sv ON sv.id = r.strategy_version_id
 			LEFT JOIN strategy_definitions s ON s.id = r.strategy_id
-			WHERE s.slug LIKE '%edge-sniper-v3%'
+			WHERE s.slug LIKE '%edge-snipper%' OR s.slug LIKE '%edge-sniper-v3%'
 			ORDER BY r.id DESC
 			LIMIT 6
 		`).all();

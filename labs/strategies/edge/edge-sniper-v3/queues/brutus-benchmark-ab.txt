@@ -1,2 +1,0 @@
-# A/B benchmark: mesmo sweep do run local 2026-06-17 (375 variantes, 8 workers)
-labs/strategies/edge/edge-sniper-v3/experiments/2026-06-17-btc-treasure-phase1-obi-entry.json

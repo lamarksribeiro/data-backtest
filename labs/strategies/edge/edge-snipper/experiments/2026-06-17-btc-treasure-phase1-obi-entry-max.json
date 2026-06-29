@@ -1,6 +1,6 @@
 {
   "name": "btc-treasure-phase1-obi-entry-max",
-  "strategyId": "edge-sniper-v3",
+  "strategyId": "edge-snipper",
   "strategyFamily": "edge",
   "dataset": "backtest_ticks",
   "underlying": "BTC",

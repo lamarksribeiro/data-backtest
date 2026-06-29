@@ -16,7 +16,7 @@ import { performance } from 'node:perf_hooks';
 import { clearAllDatasetCaches } from '../../src/backtest/datasetCache.js';
 import { runLabExperiment } from '../shared/labRunner.js';
 
-const DEFAULT_EXPERIMENT = 'labs/strategies/edge/edge-sniper-v3/experiments/2026-06-16-eth-optimization.json';
+const DEFAULT_EXPERIMENT = 'labs/strategies/edge/edge-snipper/experiments/2026-06-16-eth-optimization.json';
 
 function parseArgs(argv) {
   const flags = {};

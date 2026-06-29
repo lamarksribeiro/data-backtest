@@ -17,7 +17,7 @@ Os laboratórios originais (`scripts/lab-*.js`, `npm run lab:*`) permanecem no *
 Índice completo com 19 documentos: [`implementadas/README.md`](implementadas/README.md).
 
 Inclui as 16 teorias transferidas do polymarket-test, mais:
-- [`implementadas/edge-sniper-v3.md`](implementadas/edge-sniper-v3.md) — evolução compilada no Studio
+- [`implementadas/edge-snipper.md`](implementadas/edge-snipper.md) — evolução compilada no Studio
 - [`implementadas/vsmr-v1.md`](implementadas/vsmr-v1.md) — VSMR (nativa data-backtest)
 - [`implementadas/bs-lead-v1.md`](implementadas/bs-lead-v1.md) — BS-Lead (runner portado, Studio pendente)
 
