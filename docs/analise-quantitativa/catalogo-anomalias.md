@@ -439,5 +439,39 @@ Este arquivo é o registro central do loop contínuo de formulação, mineraçã
 
 **Conclusão do loop:** melhor anomalia inédita e robusta = **ANOM-22/33 Whipsaw Lock (`ws-spread25`)**. Para escala de frequência, **ANOM-26 Late Drift** permanece runner-up.
 
+---
 
+## Ciclo 10 — Mineração direta em cubo de features (Parquets locais)
+
+Fonte: `backtest_ticks` local BTC 5m depth 25, `2026-05-04` → `2026-06-14`, 7.815.299 ticks, 11.697 eventos. Minerador: `scratch/mine-anomaly-cube.js`, com uma entrada por evento/regra, cadência de 5s, hold-to-settlement, orçamento $10.0 e fee taker $0.07 adicionada ao preço varrido do book.
+
+### ANOM-34: Terminal Pin Favorite Lock
+* **Status**: Sob Análise — candidato campeão do ciclo 10 (pendente GLS)
+* **Fórmula do Sinal**:
+  - Compra taker no favorito atual (`fav = UP` se `BTC > PTB`, senão `DOWN`).
+  - Janela terminal: `tau < 20s`.
+  - Spot praticamente pinado no strike: `dist = |BTC - PTB| < 8 USD`.
+  - Preço efetivo médio de entrada após varredura depth 25 e fee: `0.50 <= avgFillWithFee < 0.62`.
+  - Spread do favorito ultra-tight: `Ask_fav - Bid_fav < 0.015`.
+  - Micro-whipsaw moderado: `1 <= flips_60s <= 2` (cruzamentos do PTB nos últimos 60s), explicitamente fora de Whipsaw Lock (`>=3 flips`, `35 <= tau <= 160s`, `dist >= 22`).
+  - Odds sum normal: `1.00 <= Ask_UP + Ask_DOWN < 1.04` na variante equivalente filtrada.
+* **Espaço-Temporal**: últimos segundos do evento, preço colado no PTB, mas com favorito definido e book ainda líquido/tight.
+* **Estatísticas de Backtest**:
+  - **FULL (41d)**: 125 sinais | WR 65.60% (82 W / 43 L) | PnL **+196.64 USDC** | exp **+1.5731/trade** | turnover **2.98/dia**.
+  - **Train (< 2026-05-25)**: 55 sinais | WR 65.45% | PnL **+86.08** | exp **+1.5651/trade**.
+  - **Holdout (>= 2026-05-25)**: 70 sinais | WR 65.71% | PnL **+110.56** | exp **+1.5795/trade**.
+* **Análise Microestrutural**:
+  O mercado terminal perto do PTB costuma ser evitado por estratégias anteriores por parecer coin flip. O cubo mostra uma subclasse distinta: após apenas 1-2 cruzamentos recentes, o favorito fica definido por poucos dólares, mas o book permanece tight e precificado perto de 50/50. A assimetria vem da combinação entre preço efetivo ainda moderado (`0.50-0.62`) e probabilidade empírica de settlement ~65%, suficiente para superar a fee. Não é Terminal Convexity, que exige distância terminal maior (`25-55 USD`) e ask mais barato (`<=0.45`), nem Whipsaw Lock, que exige ziguezague mais intenso e janela anterior.
+
+### ANOM-35: Early Bid-Wall Favorite Discount
+* **Status**: Sob Análise (amostra menor; não promovido)
+* **Fórmula do Sinal**: favorito, `160 <= tau < 230s`, `8 <= dist < 16`, `0.38 <= avgFillWithFee < 0.50`, `spread < 0.015`, profundidade bid relativa do favorito `>= 2.5x` a do lado oposto.
+* **Estatísticas de Backtest**: 56 sinais | WR 60.71% | PnL **+198.34** | exp **+3.5418/trade**; train 35 sinais exp **+1.7828**, holdout 21 sinais exp **+6.4734**.
+* **Análise**: cluster forte, mas ainda com n baixo no holdout. Mecanismo de suporte por bid wall é diferente da ANOM-14 (ask-depth imbalance rejeitado), porém precisa de validação GLS e refinamento de liquidez antes de promoção.
+
+### ANOM-36: Mid-Event Ladder Favorite
+* **Status**: Rejeitado — holdout fraco
+* **Fórmula do Sinal**: favorito, `160 <= tau < 230s`, `28 <= dist < 45`, `0.50 <= avgFillWithFee < 0.62`, `spread < 0.015`, ladder de ask íngreme (`Ask_px5 - Ask_px1` entre 0.035 e 0.07).
+* **Estatísticas de Backtest**: 201 sinais | WR 65.17% | PnL **+249.17** | exp **+1.2397/trade**; train 91 sinais exp **+2.2668**, holdout 110 sinais exp apenas **+0.3900**.
+* **Análise**: padrão parece uma versão genérica de favorito intermediário com book organizado, mas a degradação no holdout indica edge instável e potencial sobreposição com mecanismos já documentados de carry/repricing.
 
