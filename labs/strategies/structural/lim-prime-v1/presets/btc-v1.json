@@ -1,0 +1,39 @@
+{
+  "id": "btc-v1",
+  "studioVersion": 1,
+  "name": "LIM Prime V1 BTC",
+  "studioSlug": "lim-prime-v1-btc",
+  "studioName": "LIM Prime — BTC",
+  "role": "candidate",
+  "description": "ANOM-39 ciclo 11 — início do evento (τ 150–295s), dist $60–100, edge browniano >= 0.15 (σ via 3 incrementos de 30s), ask 0.50–0.65, spread <= 0.011. Hold to settlement. Perna complementar de baixa frequência.",
+  "tags": ["candidate", "depth25", "anom-39", "ciclo-11"],
+  "window": {
+    "from": "2026-04-27",
+    "to": "2026-06-27"
+  },
+  "labSummary": {
+    "totalPnl": 266.48,
+    "entries": 474,
+    "winRate": 64.6,
+    "profitFactor": 1.17,
+    "maxDrawdown": 107.55,
+    "trainAvgPnl": 0.87,
+    "holdoutAvgPnl": 0.34,
+    "freshAvgPnl": 0.48,
+    "minerFullExp": 3.23,
+    "source": "GLS lab compiled-soa + minerador ciclo 11 — 2026-07-02"
+  },
+  "params": {
+    "walletSize": 100,
+    "entryBudget": 10,
+    "minSecondsLeft": 150,
+    "maxSecondsLeft": 295,
+    "minDistAbs": 60,
+    "maxDistAbs": 100,
+    "minEdge": 0.15,
+    "minAsk": 0.50,
+    "maxAsk": 0.65,
+    "maxSpread": 0.011,
+    "volStepSecs": 30
+  }
+}

@@ -1,0 +1,55 @@
+strategy "Terminal Favorite Carry" {
+  param walletSize = 100
+  param entryBudget = 10
+  param minShares = 1
+  param minSecondsLeft = 5
+  param maxSecondsLeft = 30
+  param maxDistAbs = 20
+  param minAsk = 0.53
+  param maxAsk = 0.79
+  param maxSpread = 0.03
+  param minOddsSum = 0.98
+  param maxOddsSum = 1.06
+  param entrySlippageMax = 0.02
+  param minLiquidityRatio = 0.60
+
+  onEventStart(event) {
+    state.entered = false
+  }
+
+  onTick(tick, event) {
+    if (!state.entered) {
+      let secsLeft = time.secondsUntil(event.end, tick.ts)
+      if (secsLeft >= params.minSecondsLeft && secsLeft < params.maxSecondsLeft) {
+        let btc = tick.underlyingPrice
+        let ptb = event.priceToBeat
+        let dist = math.abs(btc - ptb)
+        if (dist < params.maxDistAbs) {
+          let fav = market.sideFromPrice(btc, ptb)
+          let ask = book.ask(fav, tick)
+          let bid = book.bid(fav, tick)
+          if (ask >= params.minAsk && ask <= params.maxAsk) {
+            let spread = ask - bid
+            if (spread <= params.maxSpread) {
+              let upAsk = book.ask("UP", tick)
+              let downAsk = book.ask("DOWN", tick)
+              let oddsSum = upAsk + downAsk
+              if (oddsSum >= params.minOddsSum && oddsSum <= params.maxOddsSum) {
+                let maxPrice = ask + params.entrySlippageMax
+                let budget = math.min(params.entryBudget, params.walletSize + runState.totalPnl)
+                let bought = enter(fav, { price: ask, maxPrice: maxPrice, budget: budget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "tfc_entry" })
+                if (bought) {
+                  state.entered = true
+                  mark("tfc_entry", { side: fav, ask: ask, dist: dist, secsLeft: secsLeft })
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  onEventEnd(event) {
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "btc-champion-holdout",
+  "strategyId": "tfc-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-06-01",
+  "to": "2026-06-27",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "variantWorkers": 1,
+  "dailyMetrics": true,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "champion",
+        "params": { "maxSecondsLeft": 24, "minAsk": 0.50, "maxAsk": 0.83, "maxDistAbs": 20 }
+      }
+    ]
+  }
+}

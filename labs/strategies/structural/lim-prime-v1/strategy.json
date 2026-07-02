@@ -1,0 +1,27 @@
+{
+  "id": "lim-prime-v1",
+  "name": "LIM Prime V1",
+  "family": "structural",
+  "status": "candidate",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "src/backtestStudio/gls/strategies/LimPrime.gls"
+  },
+  "promotedToStudio": true,
+  "studioSlug": "lim-prime-v1",
+  "studio": {
+    "description": "ANOM-39 ciclo 11 — LIM Prime: início do evento (τ 150–295s), dist $60–100, edge browniano >= 0.15, ask 0.50–0.65, spread <= 0.011; hold to settlement.",
+    "tags": ["structural", "anom-39", "ciclo-11", "btc"],
+    "defaultVersion": 1,
+    "defaultGlsSource": "classic",
+    "glsSources": {
+      "classic": "src/backtestStudio/gls/strategies/LimPrime.gls"
+    }
+  },
+  "notes": "ANOM-39 (catalogo ciclo 11). Refinamento seletivo do LIM: inicio do evento, dist $60-100, edge browniano >= 0.15, ask 0.50-0.65, spread <= 0.011; hold to settlement. Minerador: 87 trades, exp +$3.23, holdout +$2.41, fresh +$3.02 (62d)."
+}

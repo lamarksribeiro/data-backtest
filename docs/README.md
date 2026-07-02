@@ -20,6 +20,8 @@ documentação por finalidade: **arquitetura** (decisões e planos), **implement
 | Operar o lakehouse (sync, validação, rebuild, backup) | [operacao/operacao-lakehouse.md](operacao/operacao-lakehouse.md) |
 | Consultar endpoints e schemas | [referencia/contratos-api-schemas.md](referencia/contratos-api-schemas.md) |
 | Ler teoria e resultados das estratégias (implementadas, backlog, rejeitadas) | [estrategias/README.md](estrategias/README.md) |
+| Entender como os dados são armazenados (schemas Parquet, semântica, leitura) | [analise-quantitativa/dicionario-dados-lakehouse.md](analise-quantitativa/dicionario-dados-lakehouse.md) |
+| Construir/operar o sistema de descoberta de padrões e anomalias BTC 5m | [analise-quantitativa/guia-sistema-descoberta-padroes.md](analise-quantitativa/guia-sistema-descoberta-padroes.md) |
 
 ## Estratégias — teorias e resultados
 
@@ -27,6 +29,9 @@ documentação por finalidade: **arquitetura** (decisões e planos), **implement
 |-----------|----------|
 | [estrategias/README.md](estrategias/README.md) | Índice por estágio: implementadas no Studio, backlog de port, rejeitadas |
 | [estrategias/analise-comparativa-estrategias.md](estrategias/analise-comparativa-estrategias.md) | Comparativo de janelas, gatilhos e sinergia entre teorias |
+| [analise-quantitativa/dicionario-dados-lakehouse.md](analise-quantitativa/dicionario-dados-lakehouse.md) | Dicionário de dados do lakehouse: schemas, semântica BTC 5m, qualidade, como consultar |
+| [analise-quantitativa/guia-sistema-descoberta-padroes.md](analise-quantitativa/guia-sistema-descoberta-padroes.md) | Blueprint do sistema de descoberta de padrões/anomalias: cubo de features, mineração, validação, anti-overfitting |
+| [analise-quantitativa/catalogo-anomalias.md](analise-quantitativa/catalogo-anomalias.md) | Registro central das anomalias mineradas (promovidas, rejeitadas, sob análise) |
 | [estrategias/implementadas/README.md](estrategias/implementadas/README.md) | Índice das 19 docs de estratégias portadas |
 | [analise-quantitativa/estudo-correlacao-binance-polymarket.md](analise-quantitativa/estudo-correlacao-binance-polymarket.md) | Estudo lead-lag Binance (origem BS-Lead) |
 | [estrategias/nao-implementadas/](estrategias/nao-implementadas/) | Teorias com lab no polymarket-test, pendentes de port |

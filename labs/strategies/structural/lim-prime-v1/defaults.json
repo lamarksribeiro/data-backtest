@@ -1,0 +1,13 @@
+{
+  "walletSize": 100,
+  "entryBudget": 10,
+  "minSecondsLeft": 150,
+  "maxSecondsLeft": 295,
+  "minDistAbs": 60,
+  "maxDistAbs": 100,
+  "minEdge": 0.15,
+  "minAsk": 0.50,
+  "maxAsk": 0.65,
+  "maxSpread": 0.011,
+  "volStepSecs": 30
+}

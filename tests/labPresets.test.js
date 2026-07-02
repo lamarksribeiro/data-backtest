@@ -18,7 +18,7 @@ import { openStateDatabase, closeStateDatabase } from '../src/state/sqlite.js';
 test('listPromotedGlsStrategies discovers GLS lab strategies', () => {
 	const promoted = listPromotedGlsStrategies();
 	const ids = promoted.map((item) => item.id).sort();
-	assert.deepEqual(ids, ['book-frontrunner', 'edge-snipper', 'gamma-ladder', 'quantum-entropic-manifold', 'vsmr', 'whipsaw-lock']);
+	assert.deepEqual(ids, ['book-frontrunner', 'edge-snipper', 'gamma-ladder', 'lim-prime-v1', 'quantum-entropic-manifold', 'tfc-v1', 'vsmr', 'whipsaw-lock']);
 	assert.equal(promoted.find((item) => item.id === 'gamma-ladder').studioSlug, 'gamma-ladder');
 });
 
@@ -47,9 +47,9 @@ test('seedPromotedStrategies seeds versions from lab manifests', () => {
   const db = openStateDatabase(dbPath);
 	try {
 		const results = seedPromotedStrategies(db);
-		assert.equal(results.length, 6);
+		assert.equal(results.length, 8);
 		const slugs = results.map((row) => row.slug).sort();
-		assert.deepEqual(slugs, ['book-frontrunner', 'edge-snipper', 'gamma-ladder', 'quantum-entropic-manifold', 'vsmr', 'whipsaw-lock']);
+		assert.deepEqual(slugs, ['book-frontrunner', 'edge-snipper', 'gamma-ladder', 'lim-prime-v1', 'quantum-entropic-manifold', 'tfc-v1', 'vsmr', 'whipsaw-lock']);
 
     const edge = results.find((row) => row.slug === 'edge-snipper');
     const edgeVersions = db.prepare(`

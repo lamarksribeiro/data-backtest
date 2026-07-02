@@ -404,6 +404,7 @@ async function main() {
             underlying: row.underlying,
             interval: row.interval,
             bookDepth: row.book_depth,
+            marketId: row.market_id,
             dt: row.dt,
           },
           dryRun: optionalBoolFlag(flags, 'dry-run'),

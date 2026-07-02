@@ -1,0 +1,79 @@
+strategy "Repricing Lag Strong" {
+  param walletSize = 100
+  param entryBudget = 10
+  param minShares = 1
+  param minSecondsLeft = 40
+  param maxSecondsLeft = 240
+  param minDistAbs = 12
+  param spotLookbackSecs = 20
+  param minSpotMove = 40
+  param askLookbackSecs = 15
+  param maxAskChangeAbs = 0.02
+  param minAsk = 0.62
+  param maxAsk = 0.74
+  param entrySlippageMax = 0.02
+  param minLiquidityRatio = 0.60
+
+  onEventStart(event) {
+    state.entered = false
+  }
+
+  onTick(tick, event) {
+    if (!state.entered) {
+      let secsLeft = time.secondsUntil(event.end, tick.ts)
+      if (secsLeft >= params.minSecondsLeft && secsLeft <= params.maxSecondsLeft) {
+        let btc = tick.underlyingPrice
+        let ptb = event.priceToBeat
+        let dist = math.abs(btc - ptb)
+        if (dist >= params.minDistAbs) {
+          let oldSpot = signals.underlyingAgo(samples, params.spotLookbackSecs)
+          if (oldSpot) {
+            let deltaSpot = btc - oldSpot
+
+            // Favorito UP: spot subiu forte, ask de UP parado
+            if (btc > ptb && deltaSpot >= params.minSpotMove) {
+              let oldAsk = signals.upAskAgo(samples, params.askLookbackSecs)
+              if (oldAsk) {
+                let ask = book.ask("UP", tick)
+                let askChange = math.abs(ask - oldAsk)
+                if (askChange < params.maxAskChangeAbs && ask >= params.minAsk && ask <= params.maxAsk) {
+                  let maxPrice = ask + params.entrySlippageMax
+                  let budget = math.min(params.entryBudget, params.walletSize + runState.totalPnl)
+                  let bought = enter("UP", { price: ask, maxPrice: maxPrice, budget: budget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "lag_up" })
+                  if (bought) {
+                    state.entered = true
+                    mark("lag_entry", { side: "UP", ask: ask, deltaSpot: deltaSpot })
+                  }
+                }
+              }
+            }
+
+            // Favorito DOWN: spot caiu forte, ask de DOWN parado
+            if (btc < ptb) {
+              let negMove = 0.0 - params.minSpotMove
+              if (deltaSpot <= negMove) {
+                let oldAsk = signals.downAskAgo(samples, params.askLookbackSecs)
+                if (oldAsk) {
+                  let ask = book.ask("DOWN", tick)
+                  let askChange = math.abs(ask - oldAsk)
+                  if (askChange < params.maxAskChangeAbs && ask >= params.minAsk && ask <= params.maxAsk) {
+                    let maxPrice = ask + params.entrySlippageMax
+                    let budget = math.min(params.entryBudget, params.walletSize + runState.totalPnl)
+                    let bought = enter("DOWN", { price: ask, maxPrice: maxPrice, budget: budget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "lag_down" })
+                    if (bought) {
+                      state.entered = true
+                      mark("lag_entry", { side: "DOWN", ask: ask, deltaSpot: deltaSpot })
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  onEventEnd(event) {
+  }
+}

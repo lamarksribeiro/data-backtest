@@ -1,0 +1,69 @@
+strategy "LIM Prime" {
+  param walletSize = 100
+  param entryBudget = 10
+  param minShares = 1
+  param minSecondsLeft = 150
+  param maxSecondsLeft = 295
+  param minDistAbs = 60
+  param maxDistAbs = 100
+  param minEdge = 0.15
+  param minAsk = 0.50
+  param maxAsk = 0.65
+  param maxSpread = 0.011
+  param volStepSecs = 30
+  param entrySlippageMax = 0.02
+  param minLiquidityRatio = 0.60
+
+  onEventStart(event) {
+    state.entered = false
+  }
+
+  onTick(tick, event) {
+    if (!state.entered) {
+      let secsLeft = time.secondsUntil(event.end, tick.ts)
+      if (secsLeft >= params.minSecondsLeft && secsLeft <= params.maxSecondsLeft) {
+        let btc = tick.underlyingPrice
+        let ptb = event.priceToBeat
+        let dist = math.abs(btc - ptb)
+        if (dist >= params.minDistAbs && dist < params.maxDistAbs) {
+          let fav = market.sideFromPrice(btc, ptb)
+          let ask = book.ask(fav, tick)
+          let bid = book.bid(fav, tick)
+          if (ask >= params.minAsk && ask <= params.maxAsk) {
+            let spread = ask - bid
+            if (spread <= params.maxSpread) {
+              // sigma realizada por sqrt(segundo) via 3 incrementos de volStepSecs
+              let u1 = signals.underlyingAgo(samples, params.volStepSecs)
+              let u2 = signals.underlyingAgo(samples, params.volStepSecs * 2)
+              let u3 = signals.underlyingAgo(samples, params.volStepSecs * 3)
+              if (u1 && u2 && u3) {
+                let d1 = btc - u1
+                let d2 = u1 - u2
+                let d3 = u2 - u3
+                let meanSq = (d1 * d1 + d2 * d2 + d3 * d3) / (3 * params.volStepSecs)
+                let sigmaPs = math.sqrt(meanSq)
+                if (sigmaPs > 0) {
+                  let z = dist / (sigmaPs * math.sqrt(secsLeft))
+                  let pPhys = math.normalCdf(z)
+                  let edge = pPhys - ask
+                  if (edge >= params.minEdge) {
+                    let maxPrice = ask + params.entrySlippageMax
+                    let budget = math.min(params.entryBudget, params.walletSize + runState.totalPnl)
+                    let bought = enter(fav, { price: ask, maxPrice: maxPrice, budget: budget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "lim_prime" })
+                    if (bought) {
+                      state.entered = true
+                      mark("lim_entry", { side: fav, ask: ask, edge: edge, dist: dist })
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  onEventEnd(event) {
+  }
+}

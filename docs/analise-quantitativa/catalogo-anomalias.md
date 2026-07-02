@@ -475,3 +475,112 @@ Fonte: `backtest_ticks` local BTC 5m depth 25, `2026-05-04` → `2026-06-14`, 7.
 * **Estatísticas de Backtest**: 201 sinais | WR 65.17% | PnL **+249.17** | exp **+1.2397/trade**; train 91 sinais exp **+2.2668**, holdout 110 sinais exp apenas **+0.3900**.
 * **Análise**: padrão parece uma versão genérica de favorito intermediário com book organizado, mas a degradação no holdout indica edge instável e potencial sobreposição com mecanismos já documentados de carry/repricing.
 
+---
+
+## Ciclo 11 — Cubo versionado (`labs/mining/`) com labels validados
+
+Fonte: cubo de features `labs/mining/cube/` (builder `labs/mining/build-cube.js`), BTC 5m depth 25,
+`2026-04-27` → `2026-06-27` (62 dias úteis, 860.531 pontos de decisão a 5s, 16.172 eventos).
+Novidades metodológicas deste ciclo:
+
+- **Labels validados contra o consenso do mercado** (`mkt_agree`): o vencedor inferido por
+  `spot > PTB` no último tick com book válido precisa concordar com o mid do book no fim do
+  evento (mid do vencedor > 0.5). ~6% dos eventos foram descartados por discordância —
+  auditados casos de **feed de spot stale intercalado** (ex.: 2026-05-29 12:52, spot congelado
+  em tick sem book gerando flips fictícios) que inflavam sinais de whipsaw.
+- Ticks sem book não alimentam janelas de features (momentum/flips/vol).
+- Splits: train `< 2026-06-01`, holdout `>= 2026-06-01`, fresh `>= 2026-06-15` (janela nunca
+  minerada por nenhum ciclo anterior).
+- Custos: varredura depth 25 + fee `0.07·p·(1−p)` por share, $10/trade, hold-to-settlement,
+  1 entrada por evento.
+
+### Revalidação dos campeões no cubo limpo (destaques)
+
+| Padrão | FULL | Holdout | Fresh | Veredicto |
+|:---|:---|:---|:---|:---|
+| Whipsaw Lock ws-spread25 | 18 trades, +$56 | +$19 | −$3 (n=2) | Sinal raro após limpeza de flips fictícios; edge menor que o catalogado |
+| SBRI tight | 29 trades, +$335, exp +$11.5 | exp +$12.7 | +$36 (n=2) | Confirma, mas frequência baixíssima (0.5/dia) |
+| TAT | 1521 trades, +$416 | exp −$0.02 | exp −$0.22 | **Degradou** fora do train — não usar sozinho |
+| ANOM-34 terminal-pin | 181 trades | exp +$0.07 | exp −$1.22 | Recorte estreito não generaliza (ver ANOM-37) |
+| ANOM-26 late-drift | 930 trades | exp −$0.22 | exp −$0.25 | **Rejeitado** no cubo limpo |
+| LIM (amplo) | 1317 trades, exp +$0.23 | +$0.17 | +$0.28 | Positivo mas diluído (ver ANOM-39) |
+| ANOM-15 stale-quote | 55 trades, exp +$3.06 | +$6.18 | +$4.76 | Confirma; mecanismo = ANOM-38 |
+
+### ANOM-37: Terminal Favorite Carry (TFC) — **CAMPEÃO do ciclo 11**
+* **Status**: **Promovido — validado no lab GLS** (`tfc-v1`, preset `btc-champion`)
+* **Fórmula do Sinal (variante `core`)**:
+  - Janela terminal: $5 \le \tau < 30$ s.
+  - Spot perto do strike: $|dist| < 20$ USD.
+  - Preço efetivo de entrada (varredura depth 25 + fee, $10): $0.55 \le fill < 0.80$ no favorito.
+  - Book saudável: $Spread_{fav} \le 0.03$, $0.98 \le Ask_{UP}+Ask_{DOWN} \le 1.06$.
+  - Compra taker no favorito, hold-to-settlement.
+* **Estatísticas de Backtest** (62 dias):
+  - **FULL**: 2.643 sinais | WR 72,4% | PnL **+$1.417,67** | exp **+$0,536/trade** | 42,6 trades/dia
+  - **Train (<06-01)**: 1.403 | WR 72,3% | exp +$0,493
+  - **Holdout (>=06-01)**: 1.240 | WR 72,6% | exp **+$0,586**
+  - **Fresh (>=06-15)**: 615 | WR 71,1% | exp **+$0,346**
+  - maxDD $210 | 73% dias positivos | 9 de 11 semanas positivas | Sharpe diário anualizado ≈ 9,2
+* **Sensibilidade**: exp positiva em todas as 12 perturbações de ±20% dos cortes; `tauMax 24`
+  melhora (exp train 0.90 / hold 0.80) — plateau, não pico.
+* **Validação GLS** (lab `labs/strategies/terminal/tfc-v1`, motor `compiled-soa`, fills e fees
+  oficiais, 62 dias): **4.062 entradas | WR 72,0% | PnL +$1.874,12 | exp +$0,46/trade |
+  PF 1,17 | maxDD $122** | train exp +$0,50 | holdout exp +$0,41 | fresh exp **+$0,56** |
+  45/62 dias positivos. Sweep 54 variantes no train: melhores variantes (`tauMax 24`,
+  `maxAsk 0.83`) não superaram os defaults no holdout — defaults mantidos como campeão.
+* **Studio**: semeada como `tfc-v1` v1 (preset `btc-champion`). Smoke via `backtest:run`
+  na janela fresh (06-15→06-27) reproduziu o lab **ao centavo**: 917 entradas, +$511,68.
+* **Análise Microestrutural**:
+  Generalização robusta da ANOM-34: nos últimos 30 segundos com o spot a menos de $20 do
+  strike, o mercado precifica o favorito como se o evento ainda fosse ~50/65% quando a
+  probabilidade empírica de o líder segurar é ~72%. O recorte estreito da ANOM-34 (dist<8,
+  fill 0.50–0.62, flips 1–2) era uma célula sobreajustada dentro deste platô; o platô inteiro
+  (fill 0.55–0.80, sem condição de flips) sobrevive holdout e fresh. O risco por trade é
+  limitado (perde o custo), o payoff médio por vitória (~$4.4) cobre as perdas na cadência.
+
+### ANOM-38: Repricing Lag Strong (LAG)
+* **Status**: **Rejeitado no lab GLS** — edge do minerador não sobreviveu ao motor oficial
+* **Fórmula do Sinal**: $40 \le \tau \le 240$s, $|dist| \ge 12$, spot moveu $\ge 40$ USD em 20s
+  **a favor** do favorito, ask do favorito ficou parado ($|\Delta Ask_{fav,15s}| < 0.02$),
+  $0.62 \le Ask_{fav} < 0.74$. Compra taker no favorito, hold.
+* **Estatísticas**: FULL 120 sinais | WR 82,5% | PnL **+$230,97** | exp **+$1,92/trade** |
+  1,9/dia | train +$1,19 | holdout **+$2,19** | fresh **+$4,45** (17/17 wins) | maxDD $41.
+* **Análise**: mesma família de inércia de repricing da ANOM-15/IRI/KPLT, mas com gatilho de
+  movimento físico forte (≥$40) e ask médio-caro — o book não acompanha um deslocamento grande
+  e recente do spot; a probabilidade real já é ~0.85+ e o ask ainda oferece 0.62–0.74.
+* **Validação GLS** (lab `labs/strategies/microstructure/lag-strong-v1`): 598 entradas
+  (5× mais que o minerador — avaliação por tick captura gatilhos transientes que a cadência
+  de 5s filtrava), PnL +$89, PF 1,05, **holdout −$16 e fresh −$36**. O edge era artefato da
+  cadência de amostragem do minerador, não do mecanismo. Lab mantido como registro.
+
+### ANOM-39: LIM Prime (refinamento validado do LIM)
+* **Status**: **Promovido (minerador)** — perna de início de evento
+* **Fórmula do Sinal**: $150 \le \tau \le 295$s, $60 \le |dist| < 100$, edge browniano
+  $P_{phys} - Ask_{fav} \ge 0.15$, $0.50 \le Ask_{fav} < 0.65$, $Spread \le 0.011$. Compra
+  taker no favorito, hold.
+* **Estatísticas**: FULL 87 sinais | WR 78,2% | PnL **+$281,44** | exp **+$3,23/trade** |
+  1,4/dia | train +$3,94 | holdout +$2,41 | fresh +$3,02 | maxDD $30 | 88% dias positivos.
+* **Análise**: recorte de alta seletividade do LIM: exige mispricing grande (≥15 p.p.) com ask
+  em zona média (0.50–0.65) e spread mínimo. Elimina as células caras (ask>0.75) do LIM amplo,
+  que degradam no holdout.
+* **Validação GLS** (lab `labs/strategies/structural/lim-prime-v1`, σ via 3 incrementos de
+  30s): 474 entradas | WR 64,6% | PnL **+$266,48** | PF 1,17 | maxDD $108 | train exp +$0,87 |
+  holdout exp +$0,34 | fresh exp +$0,48. Positivo em todos os splits, mas diluído vs
+  minerador (mais entradas por avaliação por tick). **Confirmado como perna complementar**;
+  status `candidate`.
+* **Studio**: semeada como `lim-prime-v1` v1 (preset `btc-v1`). Smoke via `backtest:run`
+  na janela fresh reproduziu o lab ao centavo: 70 entradas, +$33,37.
+
+### Portfólio Ciclo 11 (TFC-core + LAG + LIM-prime, janelas de τ disjuntas)
+* **FULL (minerador)**: 2.850 trades | WR 73,0% | PnL **+$1.930** | exp +$0,68/trade | ~46 trades/dia
+* **Train** +$914 | **Holdout** +$1.016 (exp +$0,74) | **Fresh** +$312 (exp +$0,49)
+* **Risco**: maxDD trade-a-trade $199 | maxDD diário $114 | pior dia −$94 | 74% dias positivos
+  | média +$31/dia | Sharpe diário anualizado ≈ 11,6
+* **Correlação diária entre pernas**: ≈ 0 (TFC × LAG −0,00; TFC × LIM +0,03; LAG × LIM +0,30)
+* **Pós-validação GLS (2026-07-02)**: a perna LAG foi **rejeitada** no motor oficial; o
+  portfólio vigente é **TFC (`tfc-v1`) + LIM Prime (`lim-prime-v1`)**: GLS combinado
+  ≈ +$2.140 em 62 dias, com o TFC como motor principal e o LIM Prime como perna
+  descorrelacionada de início de evento.
+* **Observações de execução**: $10/trade taker; escalar orçamento exige re-simular sweep
+  (labels do cubo assumem $10). TFC entra a segundos do settlement — medir latência de
+  execução real do robô na janela τ < 15s antes de produção.
+

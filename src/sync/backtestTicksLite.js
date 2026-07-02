@@ -2,7 +2,7 @@ import { quotedString } from '@duckdb/node-api';
 
 import { partitionDatesForRange } from '../query/availability.js';
 import { getManifestPartition, upsertManifestPartition } from '../state/manifest.js';
-import { buildFinalParquetPath, buildTempParquetPath, toPortablePath } from '../lake/paths.js';
+import { buildFinalParquetPath, buildTempParquetPath, resolveLakeActivePath, toPortablePath } from '../lake/paths.js';
 import { writeParquetFromSelect } from './duckdbParquet.js';
 import { BASE_SCALAR_COLUMNS } from '../query/duckdbQuery.js';
 
@@ -40,6 +40,7 @@ export async function exportBacktestTicksLitePartition({
     underlying: partition.underlying,
     interval: partition.interval,
     bookDepth: partition.bookDepth,
+    marketId: partition.marketId ?? null,
     dt: partition.dt,
   });
   if (!existing?.active_path || !['valid', 'accepted'].includes(existing.status)) {
@@ -58,7 +59,7 @@ export async function exportBacktestTicksLitePartition({
   }
 
   const select = BASE_SCALAR_COLUMNS.join(', ');
-  const sourcePath = existing.active_path.replace(/\\/g, '/');
+  const sourcePath = resolveLakeActivePath(config.lakeRoot, existing.active_path).replace(/\\/g, '/');
   const runId = `lite-${Date.now()}`;
   const litePartition = {
     dataset: 'backtest_ticks_lite',

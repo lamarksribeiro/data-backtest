@@ -50,7 +50,9 @@ export async function loadBacktestColumnSet(db, request, options = {}) {
 
 export async function loadBacktestColumnSetFromDuckdb(db, request, { onProgress } = {}) {
   const dataset = request.dataset || 'backtest_ticks';
-  const availability = requireDatasetAvailability(db, { ...request, dataset });
+  // Partições lite não têm book_depth no manifest; a disponibilidade deve ignorar o depth pedido.
+  const manifestBookDepth = dataset === 'backtest_ticks_lite' ? null : request.bookDepth;
+  const availability = requireDatasetAvailability(db, { ...request, dataset, bookDepth: manifestBookDepth });
   const bookDepth = request.bookDepth ?? 25;
   const selectBookDepth = request.selectBookDepth ?? bookDepth;
   const selectCols = request.select

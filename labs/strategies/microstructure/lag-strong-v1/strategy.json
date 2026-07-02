@@ -1,0 +1,17 @@
+{
+  "id": "lag-strong-v1",
+  "name": "Repricing Lag Strong V1",
+  "family": "microstructure",
+  "status": "archived",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "src/backtestStudio/gls/strategies/RepricingLagStrong.gls"
+  },
+  "promotedToStudio": false,
+  "notes": "ANOM-38 (catalogo ciclo 11). REJEITADO no lab GLS: 598 entradas (5x mais que o minerador por avaliacao por tick), holdout -$16, fresh -$36. Edge era artefato da cadencia de 5s do minerador. Mantido como registro."
+}
