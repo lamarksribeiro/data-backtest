@@ -343,6 +343,7 @@ function formatProgressPhase(phase, progress = null) {
       if (!progress?.ticks && (progress?.processing_elapsed_ms ?? 0) > 4000) return 'Iniciando motor';
       return 'Processando';
     case 'finalizing': return 'Finalizando';
+    case 'saving': return 'Salvando';
     case 'queued': return 'Na fila';
     default: return phase || 'Aguardando';
   }
@@ -352,6 +353,12 @@ function resolveProgressElapsedMs(progress) {
   if (!progress) return null;
   if (progress.phase === 'queued') return null;
 
+  const startedAt = progress.started_at ?? progress.startedAt;
+  if (startedAt) {
+    const started = new Date(startedAt).getTime();
+    if (Number.isFinite(started)) return Math.max(0, Date.now() - started);
+  }
+
   const base = progress.elapsed_ms ?? progress.elapsedMs;
   const updated = progress.updated_at ?? progress.updatedAt;
   if (base != null && Number.isFinite(Number(base)) && updated) {
@@ -360,12 +367,6 @@ function resolveProgressElapsedMs(progress) {
       const drift = lastProgressReceivedAt > 0 ? Math.max(0, Date.now() - lastProgressReceivedAt) : 0;
       return Math.max(0, Number(base) + drift);
     }
-  }
-
-  const startedAt = progress.started_at ?? progress.startedAt;
-  if (startedAt) {
-    const started = new Date(startedAt).getTime();
-    if (Number.isFinite(started)) return Math.max(0, Date.now() - started);
   }
   return null;
 }
@@ -400,6 +401,8 @@ function formatProgressRemaining(progress) {
     if (elapsed > 4000) return 'Primeiro evento…';
     return 'Calculando...';
   }
+  if (progress?.phase === 'finalizing') return 'Consolidando…';
+  if (progress?.phase === 'saving') return 'Gravando…';
   return 'Calculando...';
 }
 

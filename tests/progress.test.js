@@ -67,3 +67,25 @@ test('buildProgress maps processing ticks into weighted percent', () => {
   assert.ok(half.eta_ms != null);
   assert.ok(half.processing_elapsed_ms != null);
 });
+
+test('buildProgress exposes late phases near completion', () => {
+  const startedAt = Date.now() - 12_000;
+  const finalizing = buildProgress({
+    phase: 'finalizing',
+    ticks: 1_000_000,
+    batches: 1,
+    totalTicks: 1_000_000,
+    startedAt,
+  });
+  assert.equal(finalizing.percent, 99);
+  assert.ok(finalizing.elapsed_ms >= 12_000);
+
+  const saving = buildProgress({
+    phase: 'saving',
+    ticks: 1_000_000,
+    batches: 1,
+    totalTicks: 1_000_000,
+    startedAt,
+  });
+  assert.equal(saving.percent, 99.5);
+});

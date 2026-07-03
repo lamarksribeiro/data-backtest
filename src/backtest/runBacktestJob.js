@@ -1,4 +1,4 @@
-import { runBacktest } from './engine.js';
+import { buildProgress, runBacktest } from './engine.js';
 import {
 	appendChartSidecarLine,
 	buildEventChartSeries,
@@ -61,6 +61,16 @@ export async function runBacktestJob({
 
 		const result = await runBacktest(db, backtestRequest, { onProgress });
 		flushTraces();
+
+		if (typeof onProgress === 'function') {
+			onProgress(buildProgress({
+				phase: 'saving',
+				ticks: result.ticks,
+				batches: result.batches,
+				totalTicks: result.ticks || null,
+				startedAt: result.timings?.runStartedAt ?? startedAt,
+			}));
+		}
 
 		const run = completeBacktestRun(db, runId, {
 			request: hydrated,

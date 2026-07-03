@@ -10,10 +10,10 @@ import { createTestAuthService, testServerConfig } from './testAuth.js';
 import { upsertManifestPartition } from '../src/state/manifest.js';
 import { toPortablePath } from '../src/lake/paths.js';
 import { writeBacktestTicksParquet } from '../src/sync/duckdbParquet.js';
-import { createBacktestRun } from '../src/state/backtestRuns.js';
+import { createBacktestRun, createRunningBacktestRun, syncEventTracesForRun } from '../src/state/backtestRuns.js';
 import { runBacktest } from '../src/backtest/engine.js';
 import { edgeSniperV3GlsAst, NATIVE_EDGE_SNIPER_PATH, NATIVE_EDGE_SNIPER_TICK_CONTEXT } from './testBacktestHelpers.js';
-import { listEventTraces } from '../src/backtestStudio/state/eventTraces.js';
+import { listEventTraces, appendEventTraceBatch } from '../src/backtestStudio/state/eventTraces.js';
 import {
   createStrategy,
   createStrategyVersion,
@@ -30,6 +30,109 @@ import {
 import { seedEdgeSniperV3Presets, seedPromotedStrategy } from '../src/backtestStudio/gls/seedPromotedStrategies.js';
 import { listPromotedGlsStrategies } from '../labs/shared/discoverStrategies.js';
 import { getStrategyStats } from '../src/backtestStudio/state/strategyStats.js';
+
+test('syncEventTracesForRun skips redundant merge when streaming already persisted all events', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-sync-traces-'));
+  try {
+    const db = openStateDatabase(path.join(dir, 'state.db'));
+    try {
+      const run = createRunningBacktestRun(db, {
+        request: {
+          strategy: 'TEST',
+          batchSize: 5,
+          params: {},
+          underlying: 'BTC',
+          interval: '5m',
+          from: '2026-05-31T00:00:00.000Z',
+          to: '2026-05-31T00:10:00.000Z',
+        },
+      });
+      const runId = run.id;
+      const events = [{
+        eventId: 'condition-1',
+        eventStart: '2026-05-31T00:00:00.000Z',
+        eventEnd: '2026-05-31T00:05:00.000Z',
+        positionType: 'UP',
+        finalPnl: 1.5,
+        reason: 'take_profit',
+        closedAt: '2026-05-31T00:04:30.000Z',
+        orders: [{ type: 'entry', ts: '2026-05-31T00:01:00.000Z' }],
+        exits: [{ type: 'exit', ts: '2026-05-31T00:04:30.000Z' }],
+      }];
+      appendEventTraceBatch(db, runId, { events });
+      const before = listEventTraces(db, runId);
+      assert.equal(before.length, 1);
+      assert.equal(before[0].final_pnl, 1.5);
+
+      const merged = syncEventTracesForRun(db, runId, {
+        events: [{
+          ...events[0],
+          finalPnl: 9.99,
+        }],
+      });
+      assert.equal(merged, 1);
+      const after = listEventTraces(db, runId);
+      assert.equal(after.length, 1);
+      assert.equal(after[0].final_pnl, 1.5, 'should not rewrite traces already streamed');
+    } finally {
+      closeStateDatabase(db);
+    }
+  } finally {
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
+  }
+});
+
+test('syncEventTracesForRun merges when streamed traces are incomplete', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-sync-traces-'));
+  try {
+    const db = openStateDatabase(path.join(dir, 'state.db'));
+    try {
+      const run = createRunningBacktestRun(db, {
+        request: {
+          strategy: 'TEST',
+          batchSize: 5,
+          params: {},
+          underlying: 'BTC',
+          interval: '5m',
+          from: '2026-05-31T00:00:00.000Z',
+          to: '2026-05-31T00:10:00.000Z',
+        },
+      });
+      const runId = run.id;
+      const events = [{
+        eventId: 'condition-1',
+        eventStart: '2026-05-31T00:00:00.000Z',
+        eventEnd: '2026-05-31T00:05:00.000Z',
+        positionType: 'UP',
+        finalPnl: 1.5,
+        reason: 'take_profit',
+        closedAt: '2026-05-31T00:04:30.000Z',
+        orders: [{ type: 'entry', ts: '2026-05-31T00:01:00.000Z' }],
+        exits: [{ type: 'exit', ts: '2026-05-31T00:04:30.000Z' }],
+      }, {
+        eventId: 'condition-2',
+        eventStart: '2026-05-31T00:05:00.000Z',
+        eventEnd: '2026-05-31T00:10:00.000Z',
+        positionType: 'DOWN',
+        finalPnl: -0.5,
+        reason: 'stop',
+        closedAt: '2026-05-31T00:08:00.000Z',
+        orders: [{ type: 'entry', ts: '2026-05-31T00:06:00.000Z' }],
+        exits: [{ type: 'exit', ts: '2026-05-31T00:08:00.000Z' }],
+      }];
+      appendEventTraceBatch(db, runId, { events: [events[0]] });
+      syncEventTracesForRun(db, runId, { events });
+      const after = listEventTraces(db, runId);
+      assert.equal(after.length, 2);
+      assert.equal(after.find((row) => row.condition_id === 'condition-1')?.final_pnl, 1.5);
+      assert.equal(after.find((row) => row.condition_id === 'condition-2')?.final_pnl, -0.5);
+    } finally {
+      closeStateDatabase(db);
+    }
+  } finally {
+    await rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
+  }
+});
 
 test('persistEventTraces normalizes native runner events', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-traces-'));

@@ -77,13 +77,13 @@ export async function runBacktest(db, request, { onProgress, progressStartedAt: 
     }));
   }
 
+  emitProgress({ phase: 'finalizing', ticks, batches, totalTicks, force: true });
   const finishStartedAt = Date.now();
   const result = runner.finish();
   applyPolymarketFeesToBacktestResult(result, request.feeOptions);
   finalizeEquityMetrics(result);
   timings.finishMs = Date.now() - finishStartedAt;
   timings.completedAt = Date.now();
-  emitProgress({ phase: 'finalizing', ticks, batches, totalTicks, force: true });
 
   if (request.strategyMeta) {
     result.summary = result.summary || {};
@@ -430,6 +430,8 @@ export function buildProgress({
     percent = (LOADING_PHASE_WEIGHT + processRatio * PROCESSING_PHASE_WEIGHT) * 100;
   } else if (phase === 'finalizing') {
     percent = 99;
+  } else if (phase === 'saving') {
+    percent = 99.5;
   } else if (safeTotal) {
     percent = Math.min(99, (safeTicks / safeTotal) * 100);
   }
@@ -452,7 +454,7 @@ export function buildProgress({
     loading_step: loadingStep || null,
     batches,
     total_ticks: safeTotal,
-    percent: percent != null ? Math.min(99, Math.max(0, percent)) : null,
+    percent: percent != null ? Math.min(phase === 'saving' ? 99.9 : 99, Math.max(0, percent)) : null,
     elapsed_ms: elapsedMs,
     processing_elapsed_ms: processingElapsedMs,
     eta_ms: processEtaMs,

@@ -1,5 +1,5 @@
 import { removeChartSidecarRun } from '../backtest/chartSidecar.js';
-import { persistEventTraces, mergeResultIntoEventTraces } from '../backtestStudio/state/eventTraces.js';
+import { persistEventTraces, mergeResultIntoEventTraces, appendEventTraceBatch } from '../backtestStudio/state/eventTraces.js';
 import { invalidateStrategyStatsCache } from '../backtestStudio/state/strategyStats.js';
 import { downsamplePoints } from '../utils/downsample.js';
 
@@ -258,12 +258,7 @@ function finishExistingBacktestRun(db, id, { request, result, strategyMeta = nul
   };
   db.exec('BEGIN IMMEDIATE');
   try {
-    const existingTraces = db.prepare('SELECT COUNT(*) AS c FROM backtest_event_traces WHERE run_id = ?').get(id);
-    if (!existingTraces?.c) {
-      persistEventTraces(db, id, result, { transaction: false });
-    } else {
-      mergeResultIntoEventTraces(db, id, result, { transaction: false });
-    }
+    syncEventTracesForRun(db, id, result, { transaction: false });
     result.summary.timings.sqliteWriteMs = Date.now() - storageStartedAt;
     const durationMs = startedAt ? Date.now() - startedAt : null;
     db.prepare(`
@@ -458,6 +453,28 @@ export function minimalResultForRequest(request, { summary = {} } = {}) {
     log: [],
     strategyMeta: request.strategyMeta ?? null,
   };
+}
+
+/** Persiste traces ao concluir run; evita merge completo quando o streaming já gravou tudo. */
+export function syncEventTracesForRun(db, runId, result, { transaction = true } = {}) {
+  const events = Array.isArray(result?.events) ? result.events : [];
+  const eventCount = events.length;
+  const traceCount = Number(db.prepare('SELECT COUNT(*) AS c FROM backtest_event_traces WHERE run_id = ?').get(runId)?.c || 0);
+  if (eventCount === 0) return traceCount;
+  if (traceCount >= eventCount) return traceCount;
+  if (traceCount === 0) {
+    const rows = persistEventTraces(db, runId, result, { transaction });
+    return Array.isArray(rows) ? rows.length : 0;
+  }
+
+  mergeResultIntoEventTraces(db, runId, result, { transaction });
+  const existingIds = new Set(
+    db.prepare('SELECT condition_id FROM backtest_event_traces WHERE run_id = ?').all(runId).map((row) => row.condition_id),
+  );
+  const missingEvents = events.filter((event) => !existingIds.has(String(event.eventId)));
+  if (!missingEvents.length) return traceCount;
+  appendEventTraceBatch(db, runId, { events: missingEvents });
+  return Number(db.prepare('SELECT COUNT(*) AS c FROM backtest_event_traces WHERE run_id = ?').get(runId)?.c || 0);
 }
 
 function slimResultForStorage(result) {
