@@ -18,6 +18,7 @@ documentação por finalidade: **arquitetura** (decisões e planos), **implement
 | Criar e testar novos laboratórios de estratégias | [referencia/guia-criacao-e-teste-de-laboratorios.md](referencia/guia-criacao-e-teste-de-laboratorios.md) |
 | Seguir boas práticas de performance no laboratório (sweeps) | [referencia/guia-performance-laboratorio.md](referencia/guia-performance-laboratorio.md) |
 | Operar o lakehouse (sync, validação, rebuild, backup) | [operacao/operacao-lakehouse.md](operacao/operacao-lakehouse.md) |
+| Baixar Parquet do Brutus para o PC local | [operacao/lake-pull-brutus.md](operacao/lake-pull-brutus.md) |
 | Consultar endpoints e schemas | [referencia/contratos-api-schemas.md](referencia/contratos-api-schemas.md) |
 | Ler teoria e resultados das estratégias (implementadas, backlog, rejeitadas) | [estrategias/README.md](estrategias/README.md) |
 | Entender como os dados são armazenados (schemas Parquet, semântica, leitura) | [analise-quantitativa/dicionario-dados-lakehouse.md](analise-quantitativa/dicionario-dados-lakehouse.md) |
@@ -65,6 +66,7 @@ Catálogo de port (status, prioridade, `sourceDoc`): `labs/strategies/_catalog/p
 | Documento | Conteúdo |
 |-----------|----------|
 | [operacao-lakehouse.md](operacao/operacao-lakehouse.md) | Rotinas: sync incremental, reconciliação, marcação de stale, rebuild, backup/restore, `ops:check` |
+| [lake-pull-brutus.md](operacao/lake-pull-brutus.md) | `npm run lake:pull`: BTC 5m do Brutus, container após redeploy, dry-run, verificação |
 | [deploy-coolify.md](operacao/deploy-coolify.md) | Deploy em produção via Coolify: volumes `/lake` e `/state`, envs, healthcheck |
 
 ## Referência — manuais e contratos

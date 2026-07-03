@@ -8,5 +8,7 @@
   "maxAsk": 0.79,
   "maxSpread": 0.03,
   "minOddsSum": 0.98,
-  "maxOddsSum": 1.06
+  "maxOddsSum": 1.06,
+  "minFlips": 0,
+  "flipWindowSecs": 60
 }

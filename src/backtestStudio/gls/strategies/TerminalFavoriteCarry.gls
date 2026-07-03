@@ -12,35 +12,102 @@ strategy "Terminal Favorite Carry" {
   param maxOddsSum = 1.06
   param entrySlippageMax = 0.02
   param minLiquidityRatio = 0.60
+  param minFlips = 0
+  param maxFlips = 9999
+  param flipWindowSecs = 60
+
+  // Parâmetros de Stop (desativados por padrão para retrocompatibilidade)
+  param stopIfCrossed = false
+  param stopCrossDist = 0
+  param stopMinBid = 0.05
+  param lateFlipExitEnabled = false
+  param lateFlipExitSec = 6
+  param lateFlipExitCrossDist = 0
+
+  // Parâmetros de Momento / Spot Velocity Guard (desativados por padrão para retrocompatibilidade)
+  param velocityLookbackSecs = 5
+  param maxAdverseSpotChange = 99999.0
 
   onEventStart(event) {
     state.entered = false
+    state.closed = false
+    state.signedDistance = 0
+    state.isAdverseMove = false
   }
 
   onTick(tick, event) {
-    if (!state.entered) {
-      let secsLeft = time.secondsUntil(event.end, tick.ts)
-      if (secsLeft >= params.minSecondsLeft && secsLeft < params.maxSecondsLeft) {
-        let btc = tick.underlyingPrice
-        let ptb = event.priceToBeat
-        let dist = math.abs(btc - ptb)
-        if (dist < params.maxDistAbs) {
-          let fav = market.sideFromPrice(btc, ptb)
-          let ask = book.ask(fav, tick)
-          let bid = book.bid(fav, tick)
-          if (ask >= params.minAsk && ask <= params.maxAsk) {
-            let spread = ask - bid
-            if (spread <= params.maxSpread) {
-              let upAsk = book.ask("UP", tick)
-              let downAsk = book.ask("DOWN", tick)
-              let oddsSum = upAsk + downAsk
-              if (oddsSum >= params.minOddsSum && oddsSum <= params.maxOddsSum) {
-                let maxPrice = ask + params.entrySlippageMax
-                let budget = math.min(params.entryBudget, params.walletSize + runState.totalPnl)
-                let bought = enter(fav, { price: ask, maxPrice: maxPrice, budget: budget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "tfc_entry" })
-                if (bought) {
-                  state.entered = true
-                  mark("tfc_entry", { side: fav, ask: ask, dist: dist, secsLeft: secsLeft })
+    let secsLeft = time.secondsUntil(event.end, tick.ts)
+
+    if (position.open) {
+      let side = position.side
+      let bid = book.bid(side, tick)
+
+      // Cálculo da distância sinalizada
+      state.signedDistance = tick.underlyingPrice - event.priceToBeat
+      if (side == "DOWN") {
+        state.signedDistance = event.priceToBeat - tick.underlyingPrice
+      }
+
+      let lateFlipExitOn = params.lateFlipExitEnabled == true || params.lateFlipExitEnabled == 1
+      if (lateFlipExitOn && secsLeft <= params.lateFlipExitSec && state.signedDistance <= params.lateFlipExitCrossDist && bid >= params.stopMinBid) {
+        let lateFlipped = exit({ price: bid, reason: "late_flip_exit" })
+        if (lateFlipped) {
+          state.closed = lateFlipped.closed
+          mark("exit", { reason: "late_flip_exit", price: bid })
+        }
+      } else {
+        if (params.stopIfCrossed) {
+          if (state.signedDistance <= params.stopCrossDist && bid >= params.stopMinBid) {
+            let stopped = exit({ price: bid, reason: "cross_stop" })
+            if (stopped) {
+              state.closed = stopped.closed
+              mark("exit", { reason: "cross_stop", price: bid })
+            }
+          }
+        }
+      }
+    } else {
+      if (!state.entered && !state.closed) {
+        if (secsLeft >= params.minSecondsLeft && secsLeft < params.maxSecondsLeft) {
+          let btc = tick.underlyingPrice
+          let ptb = event.priceToBeat
+          let dist = math.abs(btc - ptb)
+          if (dist < params.maxDistAbs) {
+            let flips = signals.ptbFlipCount(samples, params.flipWindowSecs)
+            
+            // Verificação de dinâmica do Spot (Spot Velocity Guard)
+            state.isAdverseMove = false
+            let btcPast = signals.underlyingAgo(samples, params.velocityLookbackSecs)
+            if (btcPast) {
+              let spotChange = btc - btcPast
+              let favSide = market.sideFromPrice(btc, ptb)
+              if (favSide == "UP" && spotChange < 0.0 - params.maxAdverseSpotChange) {
+                state.isAdverseMove = true
+              }
+              if (favSide == "DOWN" && spotChange > params.maxAdverseSpotChange) {
+                state.isAdverseMove = true
+              }
+            }
+
+            if (!state.isAdverseMove && flips >= params.minFlips && flips <= params.maxFlips) {
+              let fav = market.sideFromPrice(btc, ptb)
+              let ask = book.ask(fav, tick)
+              let bid = book.bid(fav, tick)
+              if (ask >= params.minAsk && ask <= params.maxAsk) {
+                let spread = ask - bid
+                if (spread <= params.maxSpread) {
+                  let upAsk = book.ask("UP", tick)
+                  let downAsk = book.ask("DOWN", tick)
+                  let oddsSum = upAsk + downAsk
+                  if (oddsSum >= params.minOddsSum && oddsSum <= params.maxOddsSum) {
+                    let maxPrice = ask + params.entrySlippageMax
+                    let budget = math.min(params.entryBudget, params.walletSize + runState.totalPnl)
+                    let bought = enter(fav, { price: ask, maxPrice: maxPrice, budget: budget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "tfc_entry" })
+                    if (bought) {
+                      state.entered = true
+                      mark("tfc_entry", { side: fav, ask: ask, dist: dist, secsLeft: secsLeft, flips: flips })
+                    }
+                  }
                 }
               }
             }

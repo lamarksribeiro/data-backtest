@@ -1,0 +1,27 @@
+{
+  "id": "tfc",
+  "name": "Terminal Favorite Carry",
+  "family": "terminal",
+  "status": "champion",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "src/backtestStudio/gls/strategies/TerminalFavoriteCarry.gls"
+  },
+  "promotedToStudio": true,
+  "studioSlug": "tfc",
+  "studio": {
+    "description": "Terminal Favorite Carry com perfis versionados: v1 (btc-champion original) e v2 (btc-champion-v2 otimizada). Ambos carregam params/toggles baseados no mesmo código GLS.",
+    "tags": ["terminal", "anom-37", "btc", "champion"],
+    "defaultVersion": 2,
+    "defaultGlsSource": "classic",
+    "glsSources": {
+      "classic": "src/backtestStudio/gls/strategies/TerminalFavoriteCarry.gls"
+    }
+  },
+  "notes": "Estratégia Terminal unificada. Versão 1: btc-champion original (tau<30s, dist<20 USD). Versão 2: btc-champion-v2 otimizada (tau<24s, dist<15 USD)."
+}

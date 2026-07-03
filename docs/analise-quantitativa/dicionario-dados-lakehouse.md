@@ -82,7 +82,7 @@ válidos vem de `lake_manifest` (status `valid` ou `accepted`), resolvida por
 
 Ordem de grandeza BTC 5m: ~180k ticks/dia, ~11–14 mil eventos e ~8–9,5 M ticks em
 janelas de 40–53 dias (ver `validacao-payout-divergencia.md`). Para atualizar o lake
-local a partir do Brutus: `npm run lake:pull`.
+local a partir do Brutus: ver [lake-pull-brutus.md](../operacao/lake-pull-brutus.md) (`npm run lake:pull` com `--from`/`--to` e `--remote-container` após redeploy).
 
 ---
 

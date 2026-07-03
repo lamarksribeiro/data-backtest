@@ -1,0 +1,46 @@
+{
+  "id": "btc-champion-v2",
+  "studioVersion": 2,
+  "name": "TFC V2",
+  "studioSlug": "tfc-btc-champion-v2",
+  "studioName": "Terminal Favorite Carry V2",
+  "role": "champion",
+  "description": "TFC V2 otimizada — Compra o favorito nos últimos 30s com spot < $15 do strike, ask 0.55-0.78, spread <= 0.02. Mantém tempo amplo para escudo de entrada e reduz drawdown de cauda. Hold to settlement.",
+  "tags": ["candidate", "depth25", "anom-37", "optimized", "v2"],
+  "window": {
+    "from": "2026-04-27",
+    "to": "2026-06-27"
+  },
+  "labSummary": {
+    "totalPnl": 1746.58,
+    "entries": 3381,
+    "winRate": 72.2,
+    "avgPnl": 0.52,
+    "profitFactor": 1.19,
+    "maxDrawdown": 83.58,
+    "trainAvgPnl": 0.50,
+    "holdoutPnl": 929.85,
+    "holdoutEntries": 1570,
+    "holdoutAvgPnl": 0.59,
+    "freshPnl": 531.20,
+    "freshEntries": 890,
+    "freshAvgPnl": 0.60,
+    "profitableDays": "44/62",
+    "minerFullExp": 0.96,
+    "source": "GLS lab compiled-soa + minerador cubo tau<30 dist<15 spread<=0.02 — 2026-07-03"
+  },
+  "params": {
+    "walletSize": 100,
+    "entryBudget": 10,
+    "minSecondsLeft": 5,
+    "maxSecondsLeft": 30,
+    "maxDistAbs": 15,
+    "minAsk": 0.55,
+    "maxAsk": 0.78,
+    "maxSpread": 0.02,
+    "minOddsSum": 0.98,
+    "maxOddsSum": 1.06,
+    "minFlips": 0,
+    "flipWindowSecs": 60
+  }
+}

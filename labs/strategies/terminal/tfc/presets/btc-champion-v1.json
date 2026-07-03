@@ -1,12 +1,12 @@
 {
-  "id": "btc-champion",
+  "id": "btc-champion-v1",
   "studioVersion": 1,
-  "name": "TFC V1 BTC Champion",
-  "studioSlug": "tfc-v1-btc-champion",
-  "studioName": "Terminal Favorite Carry — BTC Champion",
+  "name": "TFC V1",
+  "studioSlug": "tfc-btc-champion-v1",
+  "studioName": "Terminal Favorite Carry V1",
   "role": "champion",
-  "description": "ANOM-37 ciclo 11 — compra o favorito nos últimos 30s com spot < $20 do strike, ask 0.53–0.79, spread <= 0.03, odds sum 0.98–1.06. Hold to settlement. Defaults mantidos após sweep (variantes tunadas no train não superaram no holdout).",
-  "tags": ["candidate", "depth25", "anom-37", "ciclo-11"],
+  "description": "TFC V1 original — Compra o favorito nos últimos 30s com spot < $20 do strike, ask 0.53-0.79, spread <= 0.03. Hold to settlement.",
+  "tags": ["candidate", "depth25", "anom-37", "v1"],
   "window": {
     "from": "2026-04-27",
     "to": "2026-06-27"
@@ -14,11 +14,11 @@
   "labSummary": {
     "totalPnl": 1874.12,
     "entries": 4062,
-    "winRate": 72.0,
+    "winRate": 72.03,
     "avgPnl": 0.46,
     "profitFactor": 1.17,
     "maxDrawdown": 121.96,
-    "trainAvgPnl": 0.5,
+    "trainAvgPnl": 0.50,
     "holdoutPnl": 730.04,
     "holdoutEntries": 1781,
     "holdoutAvgPnl": 0.41,
@@ -27,7 +27,7 @@
     "freshAvgPnl": 0.56,
     "profitableDays": "45/62",
     "minerFullExp": 0.54,
-    "source": "GLS lab compiled-soa + minerador ciclo 11 — 2026-07-02"
+    "source": "GLS lab compiled-soa + minerador cubo — 2026-07-02"
   },
   "params": {
     "walletSize": 100,
@@ -39,6 +39,8 @@
     "maxAsk": 0.79,
     "maxSpread": 0.03,
     "minOddsSum": 0.98,
-    "maxOddsSum": 1.06
+    "maxOddsSum": 1.06,
+    "minFlips": 0,
+    "flipWindowSecs": 60
   }
 }

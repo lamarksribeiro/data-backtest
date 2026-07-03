@@ -1,0 +1,52 @@
+{
+  "id": "btc-champion-v3",
+  "studioVersion": 3,
+  "name": "TFC V3",
+  "studioSlug": "tfc-btc-champion-v3",
+  "studioName": "Terminal Favorite Carry V3",
+  "role": "champion",
+  "description": "TFC V3 otimizada com Stop Loss — Compra o favorito nos últimos 30s com spot < $15 do strike e liquidez do book ativa. Executa saída rápida (Late Flip Exit) nos últimos 6s se o spot cruzar contra a posição. Hold to settlement/exit.",
+  "tags": ["candidate", "depth25", "anom-37", "optimized", "v3", "stop-loss"],
+  "window": {
+    "from": "2026-04-27",
+    "to": "2026-06-27"
+  },
+  "labSummary": {
+    "totalPnl": 3148.54,
+    "entries": 3381,
+    "winRate": 68.7,
+    "avgPnl": 0.93,
+    "profitFactor": 1.35,
+    "maxDrawdown": 48.58,
+    "trainAvgPnl": 1.02,
+    "holdoutPnl": 1306.40,
+    "holdoutEntries": 1570,
+    "holdoutAvgPnl": 0.83,
+    "freshPnl": 705.46,
+    "freshEntries": 890,
+    "freshAvgPnl": 0.79,
+    "profitableDays": "56/62",
+    "minerFullExp": 0.96,
+    "source": "GLS lab compiled-soa + Late Flip Exit (6s) — 2026-07-03"
+  },
+  "params": {
+    "walletSize": 100,
+    "entryBudget": 10,
+    "minSecondsLeft": 5,
+    "maxSecondsLeft": 30,
+    "maxDistAbs": 15,
+    "minAsk": 0.55,
+    "maxAsk": 0.78,
+    "maxSpread": 0.02,
+    "minOddsSum": 0.98,
+    "maxOddsSum": 1.06,
+    "minFlips": 0,
+    "flipWindowSecs": 60,
+    "stopIfCrossed": false,
+    "stopCrossDist": 0,
+    "stopMinBid": 0.05,
+    "lateFlipExitEnabled": true,
+    "lateFlipExitSec": 6,
+    "lateFlipExitCrossDist": 0
+  }
+}
