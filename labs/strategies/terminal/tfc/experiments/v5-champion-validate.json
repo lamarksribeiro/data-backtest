@@ -1,0 +1,45 @@
+{
+  "name": "v5-champion-validate",
+  "strategyId": "tfc",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-07-01",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "variantWorkers": 3,
+  "dailyMetrics": true,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "v5-champion-sec2",
+        "params": {
+          "maxSecondsLeft": 30, "maxDistAbs": 20, "minAsk": 0.55, "maxAsk": 0.82, "maxSpread": 0.03,
+          "velocityLookbackSecs": 5, "maxAdverseSpotChange": 8.0, "minObi": 0.0,
+          "lateFlipExitEnabled": true, "lateFlipExitSec": 2, "lateFlipReverseEnabled": true, "lateFlipReverseMaxAsk": 0.95
+        }
+      },
+      {
+        "id": "v5-champion-sec3",
+        "params": {
+          "maxSecondsLeft": 30, "maxDistAbs": 20, "minAsk": 0.55, "maxAsk": 0.82, "maxSpread": 0.03,
+          "velocityLookbackSecs": 5, "maxAdverseSpotChange": 8.0, "minObi": 0.0,
+          "lateFlipExitEnabled": true, "lateFlipExitSec": 3, "lateFlipReverseEnabled": true, "lateFlipReverseMaxAsk": 0.95
+        }
+      },
+      {
+        "id": "v4-reference",
+        "params": {
+          "maxSecondsLeft": 30, "maxDistAbs": 15, "minAsk": 0.55, "maxAsk": 0.78, "maxSpread": 0.02,
+          "velocityLookbackSecs": 5, "maxAdverseSpotChange": 8.0,
+          "lateFlipExitEnabled": true, "lateFlipExitSec": 6
+        }
+      }
+    ]
+  }
+}

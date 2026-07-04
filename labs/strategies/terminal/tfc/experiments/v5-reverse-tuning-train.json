@@ -1,0 +1,31 @@
+{
+  "name": "v5-reverse-tuning-train",
+  "strategyId": "tfc",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-05-31",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "variantWorkers": 6,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "grid": {
+      "maxDistAbs": [15],
+      "minAsk": [0.55],
+      "maxAsk": [0.78],
+      "maxSpread": [0.02],
+      "velocityLookbackSecs": [5],
+      "maxAdverseSpotChange": [8.0],
+      "lateFlipExitEnabled": [true],
+      "lateFlipReverseEnabled": [true],
+      "minObi": [-0.15, 0.0, 0.15],
+      "lateFlipExitSec": [4, 6, 8, 10],
+      "lateFlipReverseMaxAsk": [0.80, 0.85, 0.90, 0.95]
+    }
+  }
+}

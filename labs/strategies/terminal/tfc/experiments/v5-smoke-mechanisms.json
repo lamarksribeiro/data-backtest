@@ -1,0 +1,48 @@
+{
+  "name": "v5-smoke-mechanisms",
+  "strategyId": "tfc",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-06-20",
+  "to": "2026-06-27",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "variantWorkers": 6,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "v4-baseline",
+        "params": { "maxDistAbs": 15, "minAsk": 0.55, "maxAsk": 0.78, "maxSpread": 0.02, "lateFlipExitEnabled": true, "lateFlipExitSec": 6, "velocityLookbackSecs": 5, "maxAdverseSpotChange": 8.0 }
+      },
+      {
+        "id": "ask-momentum",
+        "params": { "maxDistAbs": 15, "minAsk": 0.55, "maxAsk": 0.78, "maxSpread": 0.02, "lateFlipExitEnabled": true, "lateFlipExitSec": 6, "velocityLookbackSecs": 5, "maxAdverseSpotChange": 8.0, "askMomentumLookbackSecs": 15, "maxAskRise": 0.02 }
+      },
+      {
+        "id": "vol-gate",
+        "params": { "maxDistAbs": 15, "minAsk": 0.55, "maxAsk": 0.78, "maxSpread": 0.02, "lateFlipExitEnabled": true, "lateFlipExitSec": 6, "velocityLookbackSecs": 5, "maxAdverseSpotChange": 8.0, "volLookbackSecs": 30, "maxTerminalVol": 12.0 }
+      },
+      {
+        "id": "obi-gate",
+        "params": { "maxDistAbs": 15, "minAsk": 0.55, "maxAsk": 0.78, "maxSpread": 0.02, "lateFlipExitEnabled": true, "lateFlipExitSec": 6, "velocityLookbackSecs": 5, "maxAdverseSpotChange": 8.0, "minObi": -0.3 }
+      },
+      {
+        "id": "profit-exit",
+        "params": { "maxDistAbs": 15, "minAsk": 0.55, "maxAsk": 0.78, "maxSpread": 0.02, "lateFlipExitEnabled": true, "lateFlipExitSec": 6, "velocityLookbackSecs": 5, "maxAdverseSpotChange": 8.0, "profitExitEnabled": true, "profitExitBid": 0.95 }
+      },
+      {
+        "id": "size-price-aware",
+        "params": { "maxDistAbs": 15, "minAsk": 0.55, "maxAsk": 0.78, "maxSpread": 0.02, "lateFlipExitEnabled": true, "lateFlipExitSec": 6, "velocityLookbackSecs": 5, "maxAdverseSpotChange": 8.0, "sizePriceAwareEnabled": true, "sizePriceThreshold": 0.70, "sizePriceFactor": 0.6 }
+      },
+      {
+        "id": "late-flip-reverse",
+        "params": { "maxDistAbs": 15, "minAsk": 0.55, "maxAsk": 0.78, "maxSpread": 0.02, "lateFlipExitEnabled": true, "lateFlipExitSec": 6, "velocityLookbackSecs": 5, "maxAdverseSpotChange": 8.0, "lateFlipReverseEnabled": true, "lateFlipReverseMaxAsk": 0.85 }
+      }
+    ]
+  }
+}

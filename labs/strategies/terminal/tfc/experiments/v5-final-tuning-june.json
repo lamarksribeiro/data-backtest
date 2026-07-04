@@ -1,0 +1,34 @@
+{
+  "name": "v5-final-tuning-june",
+  "strategyId": "tfc",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-06-01",
+  "to": "2026-07-01",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "variantWorkers": 6,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "grid": {
+      "maxSecondsLeft": [30],
+      "maxDistAbs": [20],
+      "minAsk": [0.55],
+      "maxAsk": [0.82],
+      "maxSpread": [0.03],
+      "velocityLookbackSecs": [5],
+      "maxAdverseSpotChange": [8.0],
+      "minObi": [0.0],
+      "lateFlipExitEnabled": [true],
+      "lateFlipReverseEnabled": [true],
+      "lateFlipExitSec": [2, 3, 4],
+      "lateFlipReverseMaxAsk": [0.95],
+      "minOddsSum": [0.98],
+      "maxOddsSum": [1.03, 1.06, 1.10]
+    }
+  }
+}

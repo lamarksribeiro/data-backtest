@@ -1,0 +1,37 @@
+{
+  "name": "v51-confirm-june",
+  "strategyId": "tfc",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-06-01",
+  "to": "2026-07-01",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "variantWorkers": 6,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "grid": {
+      "maxSecondsLeft": [30],
+      "maxDistAbs": [20],
+      "minAsk": [0.55],
+      "maxAsk": [0.82],
+      "maxSpread": [0.03],
+      "velocityLookbackSecs": [5],
+      "maxAdverseSpotChange": [8.0],
+      "minObi": [0.0],
+      "lateFlipExitEnabled": [true],
+      "lateFlipReverseEnabled": [true],
+      "lateFlipReverseMaxAsk": [0.95],
+      "lateFlipExitSec": [5, 6, 8],
+      "lateFlipExitCrossDist": [0],
+      "lateFlipConfirmEnabled": [true],
+      "lateFlipVelLookbackSecs": [5, 10],
+      "lateFlipMinAdverseMove": [0.0, 2.0, 4.0],
+      "lateFlipReverseMinAsk": [0.0, 0.55, 0.65]
+    }
+  }
+}

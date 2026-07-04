@@ -1,0 +1,32 @@
+{
+  "name": "v5-gates-refine-train",
+  "strategyId": "tfc",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-05-31",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "variantWorkers": 6,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "grid": {
+      "maxSecondsLeft": [30],
+      "maxDistAbs": [20],
+      "minAsk": [0.55],
+      "maxAsk": [0.82],
+      "lateFlipExitEnabled": [true],
+      "lateFlipReverseEnabled": [true],
+      "lateFlipExitSec": [3],
+      "lateFlipReverseMaxAsk": [0.95],
+      "velocityLookbackSecs": [5, 10],
+      "maxAdverseSpotChange": [5.0, 8.0, 12.0, 99999.0],
+      "minObi": [-1.0, -0.3, -0.15, 0.0],
+      "maxSpread": [0.02, 0.03]
+    }
+  }
+}
