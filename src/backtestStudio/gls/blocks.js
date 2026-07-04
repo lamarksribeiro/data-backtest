@@ -1,7 +1,7 @@
 /** Catalogo canonico de blocos GLS v1 (MVP). */
 export const HOOKS = new Set(['onEventStart', 'onTick', 'onEventEnd']);
 
-export const ORDER_FUNCTIONS = new Set(['enter', 'exit', 'reverse', 'closeOpenPosition']);
+export const ORDER_FUNCTIONS = new Set(['enter', 'exit', 'reverse', 'closeOpenPosition', 'placeLimitBuy', 'placeBuyStop', 'cancelLimit']);
 
 export const DEBUG_FUNCTIONS = new Set(['log', 'mark', 'metric']);
 

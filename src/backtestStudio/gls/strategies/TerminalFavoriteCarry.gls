@@ -28,11 +28,74 @@ strategy "Terminal Favorite Carry" {
   param velocityLookbackSecs = 5
   param maxAdverseSpotChange = 99999.0
 
+  // V5: Ask Momentum Filter (desativado por padrão: maxAskRise alto)
+  param askMomentumLookbackSecs = 15
+  param maxAskRise = 99.0
+
+  // V5: Terminal Vol Gate (desativado por padrão: teto alto)
+  param volLookbackSecs = 30
+  param maxTerminalVol = 99999.0
+
+  // V5: Order Book Imbalance Gate (desativado por padrão: -1 aceita tudo)
+  param minObi = -1.0
+  param obiLevels = 5
+
+  // V5: Profit Exit — trava lucro se bid do favorito atingir alvo (desativado por padrão)
+  param profitExitEnabled = false
+  param profitExitBid = 0.99
+
+  // V5: Size Price Aware — reduz budget quando o ask é caro (desativado por padrão)
+  param sizePriceAwareEnabled = false
+  param sizePriceThreshold = 0.70
+  param sizePriceFactor = 1.0
+
+  // V5: Stop-Reverse no late flip — em vez de só sair, vira para o lado oposto (desativado)
+  param lateFlipReverseEnabled = false
+  param lateFlipReverseMaxAsk = 0.95
+
+  // V5.1: Confirmação de velocidade no late flip — só age se a distância sinalizada
+  // estiver piorando na janela recente (filtra whipsaws sem esperar o último segundo)
+  param lateFlipConfirmEnabled = false
+  param lateFlipVelLookbackSecs = 5
+  param lateFlipMinAdverseMove = 0.0
+
+  // V5.1: Confirmação de mercado no reverse — só vira se o ask do lado oposto já
+  // repricou acima deste piso (mercado concorda que o flip é real)
+  param lateFlipReverseMinAsk = 0.0
+
+  // V5.1: Piso de execução — não age com menos de N segundos restantes (latência real).
+  // Flips que acontecem depois do piso são perdidos (hold até settlement).
+  param lateFlipMinSec = 0
+
+  // V6: Hedge stop-buy no lado oposto — armado nos últimos N segundos, dispara se o
+  // ask do oposto sobe através do gatilho durante repricing do flip (sem depender de 2s).
+  param hedgeStopEnabled = false
+  param hedgeStopPrice = 0.55
+  param hedgeStopPlaceSec = 8
+  param hedgeStopLift = 0.10
+  param hedgeStopBudget = 10
+  param hedgeCancelOnLateExit = true
+
+  // Legado (desativado): limit passiva abaixo do mercado — não protege flip; manter off.
+  param hedgeLimitEnabled = false
+  param hedgeLimitPrice = 0.35
+  param hedgeLimitBudget = 10
+  param hedgeLimitMinSecondsLeft = 5
+  param hedgeLimitPassiveGap = 0.05
+
   onEventStart(event) {
     state.entered = false
     state.closed = false
+    state.reversed = false
     state.signedDistance = 0
     state.isAdverseMove = false
+    state.askBlocked = false
+    state.obiBlocked = false
+    state.budgetFactor = 1.0
+    state.lateFlipConfirmed = true
+    state.lateFlipFavChange = 0
+    state.hedgeStopArmed = false
+    state.hedgeStopPrice = 0
   }
 
   onTick(tick, event) {
@@ -48,15 +111,93 @@ strategy "Terminal Favorite Carry" {
         state.signedDistance = event.priceToBeat - tick.underlyingPrice
       }
 
+      let profitExitOn = params.profitExitEnabled == true || params.profitExitEnabled == 1
+      if (profitExitOn && bid >= params.profitExitBid) {
+        let locked = exit({ price: bid, reason: "profit_exit" })
+        if (locked) {
+          state.closed = locked.closed
+          mark("exit", { reason: "profit_exit", price: bid })
+        }
+      }
+
+      // V5.1: confirmação de velocidade — spot precisa estar se movendo contra a posição
+      state.lateFlipConfirmed = true
+      let confirmOn = params.lateFlipConfirmEnabled == true || params.lateFlipConfirmEnabled == 1
+      if (confirmOn) {
+        state.lateFlipConfirmed = false
+        let spotPast = signals.underlyingAgo(samples, params.lateFlipVelLookbackSecs)
+        if (spotPast) {
+          state.lateFlipFavChange = tick.underlyingPrice - spotPast
+          if (side == "DOWN") {
+            state.lateFlipFavChange = spotPast - tick.underlyingPrice
+          }
+          if (state.lateFlipFavChange <= (0.0 - params.lateFlipMinAdverseMove)) {
+            state.lateFlipConfirmed = true
+          }
+        }
+      }
+
+      // V6: arma stop-buy no oposto quando o sinal de late flip já está confirmado
+      // (mesma lógica do taker 8→4), dando tempo de preencher via repricing antes do piso.
+      let hedgeStopOn = params.hedgeStopEnabled == true || params.hedgeStopEnabled == 1
+      let hedgeFilled = position.hedge != null
+      let flipSignalReady = state.lateFlipConfirmed
+        && state.signedDistance <= params.lateFlipExitCrossDist
+        && bid >= params.stopMinBid
+      if (hedgeStopOn && !state.hedgeStopArmed && !hedgeFilled && flipSignalReady && secsLeft <= params.hedgeStopPlaceSec && secsLeft >= params.lateFlipMinSec) {
+        let oppSide = prices.oppositeSide(side)
+        let oppAsk = book.ask(oppSide, tick)
+        state.hedgeStopPrice = params.hedgeStopPrice
+        let liftedStop = oppAsk + params.hedgeStopLift
+        if (liftedStop < state.hedgeStopPrice) {
+          state.hedgeStopPrice = liftedStop
+        }
+        if (state.hedgeStopPrice > oppAsk && state.hedgeStopPrice < 0.95) {
+          let armed = placeBuyStop(oppSide, { stopPrice: state.hedgeStopPrice, budget: params.hedgeStopBudget, tick: tick, reason: "hedge_stop" })
+          if (armed) {
+            state.hedgeStopArmed = true
+            mark("hedge_stop_arm", { side: oppSide, stop: state.hedgeStopPrice, oppAsk: oppAsk, secsLeft: secsLeft })
+          }
+        }
+      }
+
       let lateFlipExitOn = params.lateFlipExitEnabled == true || params.lateFlipExitEnabled == 1
-      if (lateFlipExitOn && secsLeft <= params.lateFlipExitSec && state.signedDistance <= params.lateFlipExitCrossDist && bid >= params.stopMinBid) {
-        let lateFlipped = exit({ price: bid, reason: "late_flip_exit" })
-        if (lateFlipped) {
-          state.closed = lateFlipped.closed
-          mark("exit", { reason: "late_flip_exit", price: bid })
+      let stopPending = hedgeStopOn && state.hedgeStopArmed && !hedgeFilled
+      let atExecutionFloor = secsLeft <= params.lateFlipMinSec
+      if (!state.closed && !hedgeFilled && lateFlipExitOn && state.lateFlipConfirmed && secsLeft <= params.lateFlipExitSec && secsLeft >= params.lateFlipMinSec && state.signedDistance <= params.lateFlipExitCrossDist && bid >= params.stopMinBid) {
+        if (stopPending && !atExecutionFloor) {
+          // Stop armado e ainda dentro da janela — aguarda repricing antes do fallback taker.
+        } else {
+          if (stopPending && atExecutionFloor) {
+            cancelLimit(null)
+            state.hedgeStopArmed = false
+          }
+        let lateFlipReverseOn = params.lateFlipReverseEnabled == true || params.lateFlipReverseEnabled == 1
+        if (lateFlipReverseOn && !state.reversed) {
+          let oppSide = prices.oppositeSide(side)
+          let oppAsk = book.ask(oppSide, tick)
+          if (oppAsk >= params.lateFlipReverseMinAsk && oppAsk > 0 && oppAsk <= params.lateFlipReverseMaxAsk) {
+            let flipped = reverse(oppSide, { price: oppAsk, exitPrice: bid, budget: params.entryBudget, tick: tick, ignoreConsumed: true, reason: "late_flip_reverse" })
+            if (flipped) {
+              state.reversed = true
+              mark("reverse", { reason: "late_flip_reverse", from: side, to: oppSide, ask: oppAsk })
+            }
+          }
+        }
+        if (!state.reversed) {
+          let hedgeCancelOn = params.hedgeCancelOnLateExit == true || params.hedgeCancelOnLateExit == 1
+          if (hedgeCancelOn) {
+            cancelLimit(null)
+          }
+          let lateFlipped = exit({ price: bid, reason: "late_flip_exit" })
+          if (lateFlipped) {
+            state.closed = lateFlipped.closed
+            mark("exit", { reason: "late_flip_exit", price: bid })
+          }
+        }
         }
       } else {
-        if (params.stopIfCrossed) {
+        if (!state.closed && params.stopIfCrossed) {
           if (state.signedDistance <= params.stopCrossDist && bid >= params.stopMinBid) {
             let stopped = exit({ price: bid, reason: "cross_stop" })
             if (stopped) {
@@ -100,12 +241,62 @@ strategy "Terminal Favorite Carry" {
                   let downAsk = book.ask("DOWN", tick)
                   let oddsSum = upAsk + downAsk
                   if (oddsSum >= params.minOddsSum && oddsSum <= params.maxOddsSum) {
-                    let maxPrice = ask + params.entrySlippageMax
-                    let budget = math.min(params.entryBudget, params.walletSize + runState.totalPnl)
-                    let bought = enter(fav, { price: ask, maxPrice: maxPrice, budget: budget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "tfc_entry" })
-                    if (bought) {
-                      state.entered = true
-                      mark("tfc_entry", { side: fav, ask: ask, dist: dist, secsLeft: secsLeft, flips: flips })
+                    // V5: Ask Momentum Filter — bloqueia se o ask do favorito subiu demais
+                    // (mercado perdendo confiança) na janela recente
+                    state.askBlocked = false
+                    if (fav == "UP") {
+                      let askPastUp = signals.upAskAgo(samples, params.askMomentumLookbackSecs)
+                      if (askPastUp && askPastUp > 0 && (ask - askPastUp) > params.maxAskRise) {
+                        state.askBlocked = true
+                      }
+                    } else {
+                      let askPastDown = signals.downAskAgo(samples, params.askMomentumLookbackSecs)
+                      if (askPastDown && askPastDown > 0 && (ask - askPastDown) > params.maxAskRise) {
+                        state.askBlocked = true
+                      }
+                    }
+
+                    // V5: Terminal Vol Gate — bloqueia entradas em regime caótico
+                    let termVol = signals.volatility(samples, params.volLookbackSecs)
+
+                    // V5: OBI Gate — exige desbalanceamento mínimo do book a favor do favorito
+                    state.obiBlocked = false
+                    if (params.minObi > (0.0 - 1.0)) {
+                      let obi = model.orderBookImbalance(fav, tick, params.obiLevels)
+                      if (obi < params.minObi) {
+                        state.obiBlocked = true
+                      }
+                    }
+
+                    if (!state.askBlocked && !state.obiBlocked && termVol <= params.maxTerminalVol) {
+                      let maxPrice = ask + params.entrySlippageMax
+
+                      // V5: Size Price Aware — reduz exposição quando o fill é caro
+                      state.budgetFactor = 1.0
+                      let spaOn = params.sizePriceAwareEnabled == true || params.sizePriceAwareEnabled == 1
+                      if (spaOn && ask > params.sizePriceThreshold) {
+                        state.budgetFactor = params.sizePriceFactor
+                      }
+
+                      let budget = math.min(params.entryBudget, params.walletSize + runState.totalPnl) * state.budgetFactor
+                      let bought = enter(fav, { price: ask, maxPrice: maxPrice, budget: budget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "tfc_entry" })
+                      if (bought) {
+                        state.entered = true
+                        mark("tfc_entry", { side: fav, ask: ask, dist: dist, secsLeft: secsLeft, flips: flips })
+                        let hedgeLimitOn = params.hedgeLimitEnabled == true || params.hedgeLimitEnabled == 1
+                        if (hedgeLimitOn && secsLeft >= params.hedgeLimitMinSecondsLeft) {
+                          let hedgeSide = prices.oppositeSide(fav)
+                          let oppAsk = book.ask(hedgeSide, tick)
+                          let passiveCap = oppAsk - params.hedgeLimitPassiveGap
+                          state.hedgeLimitPrice = params.hedgeLimitPrice
+                          if (passiveCap < state.hedgeLimitPrice) {
+                            state.hedgeLimitPrice = passiveCap
+                          }
+                          if (state.hedgeLimitPrice > 0.05 && state.hedgeLimitPrice < oppAsk) {
+                            placeLimitBuy(hedgeSide, { price: state.hedgeLimitPrice, budget: params.hedgeLimitBudget, tick: tick, reason: "hedge_limit" })
+                          }
+                        }
+                      }
                     }
                   }
                 }

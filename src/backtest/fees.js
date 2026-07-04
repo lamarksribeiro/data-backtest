@@ -55,6 +55,9 @@ export function applyPolymarketFeesToBacktestResult(result, options = {}) {
     tradesCharged: 0,
     entryTradesCharged: 0,
     exitTradesCharged: 0,
+    makerTradesFree: 0,
+    makerNotional: 0,
+    makerShares: 0,
   };
 
   for (const event of events) {
@@ -82,6 +85,9 @@ export function applyPolymarketFeesToBacktestResult(result, options = {}) {
       exitNotional: exitSummary.notional,
       entryShares: entrySummary.shares,
       exitShares: exitSummary.shares,
+      makerTradesFree: entrySummary.makerTrades + exitSummary.makerTrades,
+      makerNotional: roundFee(entrySummary.makerNotional + exitSummary.makerNotional),
+      makerShares: entrySummary.makerShares + exitSummary.makerShares,
       entries: entrySummary.details,
       exits: exitSummary.details,
     };
@@ -95,6 +101,9 @@ export function applyPolymarketFeesToBacktestResult(result, options = {}) {
     feeTotals.tradesCharged += entrySummary.trades + exitSummary.trades;
     feeTotals.entryTradesCharged += entrySummary.trades;
     feeTotals.exitTradesCharged += exitSummary.trades;
+    feeTotals.makerTradesFree += entrySummary.makerTrades + exitSummary.makerTrades;
+    feeTotals.makerNotional = roundFee(feeTotals.makerNotional + entrySummary.makerNotional + exitSummary.makerNotional);
+    feeTotals.makerShares += entrySummary.makerShares + exitSummary.makerShares;
   }
 
   result.params = {
@@ -219,6 +228,7 @@ function addOrderTrade(trades, order, defaults = {}) {
       side: order.side,
       source: defaults.source,
       time: order.createdAt ?? order.ts,
+      liquidity: order.liquidity,
     });
     return;
   }
@@ -230,12 +240,13 @@ function addOrderTrade(trades, order, defaults = {}) {
     side: order?.side,
     source: defaults.source,
     time: order?.createdAt ?? order?.ts,
+    liquidity: order?.liquidity,
   });
 }
 
 function addTradesFromFills(trades, fills, defaults = {}) {
   if (!Array.isArray(fills)) return;
-  for (const fill of fills) addTrade(trades, fill, defaults);
+  for (const fill of fills) addTrade(trades, { ...fill, liquidity: fill?.liquidity ?? defaults.liquidity }, defaults);
 }
 
 function addTrade(trades, rawTrade, defaults = {}) {
@@ -254,6 +265,7 @@ function addTrade(trades, rawTrade, defaults = {}) {
     source: rawTrade?.source ?? defaults.source ?? null,
     reason: rawTrade?.reason ?? defaults.reason ?? null,
     time: rawTrade?.time ?? rawTrade?.createdAt ?? rawTrade?.ts ?? defaults.time ?? null,
+    liquidity: rawTrade?.liquidity ?? defaults.liquidity ?? null,
   });
 }
 
@@ -262,15 +274,34 @@ function summarizeTrades(trades, feeRate) {
   let fee = 0;
   let notional = 0;
   let shares = 0;
+  let makerTrades = 0;
+  let makerNotional = 0;
+  let makerShares = 0;
   for (const trade of trades) {
+    const tradeNotional = trade.qty * trade.price;
+    if (trade.liquidity === 'maker') {
+      makerTrades += 1;
+      makerNotional += tradeNotional;
+      makerShares += trade.qty;
+      continue;
+    }
     const tradeFee = calculatePolymarketTakerFee({ shares: trade.qty, price: trade.price, feeRate });
     if (tradeFee <= 0) continue;
     fee += tradeFee;
-    notional += trade.qty * trade.price;
+    notional += tradeNotional;
     shares += trade.qty;
     details.push({ ...trade, fee: tradeFee });
   }
-  return { fee: roundFee(fee), notional, shares, trades: details.length, details };
+  return {
+    fee: roundFee(fee),
+    notional,
+    shares,
+    trades: details.length,
+    details,
+    makerTrades,
+    makerNotional: roundFee(makerNotional),
+    makerShares,
+  };
 }
 
 function recomputeSummary(result, fees) {

@@ -9,6 +9,7 @@ documentação por finalidade: **arquitetura** (decisões e planos), **implement
 
 | Quero… | Documento |
 |--------|-----------|
+| Simular ordens resting (maker LIMIT + stop-buy) e preset TFC V6 Hybrid | [arquitetura/extensao-order-simulator-maker-limit.md](arquitetura/extensao-order-simulator-maker-limit.md) |
 | Corrigir a lentidão da UI durante jobs Parquet e backtests (isolamento de jobs) | [arquitetura/arquitetura-v5-isolamento-jobs.md](arquitetura/arquitetura-v5-isolamento-jobs.md) |
 | Entender a correção definitiva de performance do backtest (hot path colunar) | [arquitetura/arquitetura-v4-hot-path-colunar.md](arquitetura/arquitetura-v4-hot-path-colunar.md) |
 | Desacoplar estratégias do deploy usando Strategy JS no editor | [arquitetura/arquitetura-v6-strategy-js-editor.md](arquitetura/arquitetura-v6-strategy-js-editor.md) |
@@ -44,6 +45,7 @@ Catálogo de port (status, prioridade, `sourceDoc`): `labs/strategies/_catalog/p
 
 | Documento | Conteúdo |
 |-----------|----------|
+| [extensao-order-simulator-maker-limit.md](arquitetura/extensao-order-simulator-maker-limit.md) | **Proposta de execução maker**: estender o orderSimulator com LIMIT buy pré-posicionada (resting orders, fill por atravessamento do book, posição em dois lotes/hedge, maker fee zero) para comparar TFC taker 8→4 vs LIMIT com números; fases F1–F5 |
 | [arquitetura-v5-isolamento-jobs.md](arquitetura/arquitetura-v5-isolamento-jobs.md) | **Proposta de responsividade**: por que jobs de preparação (Parquet) e backtests travam o dashboard (event loop bloqueado, SQLite síncrono, amplificação no frontend) e como corrigir — prepare jobs em worker_thread, progress/jobs slim, frontend orientado a SSE, coverage limitada, fases I0–I6 |
 | [arquitetura-v6-strategy-js-editor.md](arquitetura/arquitetura-v6-strategy-js-editor.md) | **Proposta de desacoplamento de estratégias**: trocar GLS como linguagem principal por Strategy JS (subconjunto seguro de JavaScript no editor), manter compilação para `compiled-soa`, remover seeds como fonte primária, migrar modelos específicos para código versionado no banco e preservar performance |
 | [arquitetura-v4-hot-path-colunar.md](arquitetura/arquitetura-v4-hot-path-colunar.md) | **Plano de performance atual (prioridade máxima)**: correção definitiva — fronteira colunar DuckDB→TypedArrays (Parquet permanece o único formato em disco), hot loop Struct-of-Arrays sem objetos por tick, codegen GLS v2, paralelismo por evento com SharedArrayBuffer, fases F0–F5 |

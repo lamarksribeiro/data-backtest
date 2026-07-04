@@ -1,0 +1,75 @@
+{
+  "name": "v6-stop-hedge-smoke",
+  "strategyId": "tfc",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-06-20",
+  "to": "2026-06-27",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "variantWorkers": 6,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "taker-8-4",
+        "params": {
+          "minAsk": 0.55,
+          "maxAsk": 0.82,
+          "lateFlipExitEnabled": true,
+          "lateFlipExitSec": 8,
+          "lateFlipMinSec": 4,
+          "lateFlipReverseEnabled": true,
+          "velocityLookbackSecs": 5,
+          "maxAdverseSpotChange": 8.0,
+          "minObi": 0.0,
+          "hedgeStopEnabled": false,
+          "hedgeLimitEnabled": false
+        }
+      },
+      {
+        "id": "stop-p55",
+        "params": {
+          "minAsk": 0.55,
+          "maxAsk": 0.82,
+          "lateFlipExitEnabled": false,
+          "lateFlipReverseEnabled": false,
+          "velocityLookbackSecs": 5,
+          "maxAdverseSpotChange": 8.0,
+          "minObi": 0.0,
+          "hedgeStopEnabled": true,
+          "hedgeStopPrice": 0.55,
+          "hedgeStopPlaceSec": 8,
+          "hedgeStopLift": 0.10,
+          "hedgeStopBudget": 10,
+          "lateFlipMinSec": 4
+        }
+      },
+      {
+        "id": "hybrid-stop-taker",
+        "params": {
+          "minAsk": 0.55,
+          "maxAsk": 0.82,
+          "lateFlipExitEnabled": true,
+          "lateFlipExitSec": 8,
+          "lateFlipMinSec": 4,
+          "lateFlipReverseEnabled": true,
+          "velocityLookbackSecs": 5,
+          "maxAdverseSpotChange": 8.0,
+          "minObi": 0.0,
+          "hedgeStopEnabled": true,
+          "hedgeStopPrice": 0.55,
+          "hedgeStopPlaceSec": 8,
+          "hedgeStopLift": 0.10,
+          "hedgeStopBudget": 10,
+          "hedgeCancelOnLateExit": true,
+          "hedgeLimitEnabled": false
+        }
+      }
+    ]
+  }
+}

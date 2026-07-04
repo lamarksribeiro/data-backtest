@@ -1,0 +1,81 @@
+{
+  "name": "v6-epsilon-sensitivity",
+  "strategyId": "tfc",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-06-01",
+  "to": "2026-07-01",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "variantWorkers": 6,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "limit-p40-eps005",
+        "params": {
+          "minAsk": 0.55,
+          "maxAsk": 0.82,
+          "lateFlipExitEnabled": false,
+          "velocityLookbackSecs": 5,
+          "maxAdverseSpotChange": 8.0,
+          "minObi": 0.0,
+          "hedgeLimitEnabled": true,
+          "hedgeLimitPrice": 0.40,
+          "hedgeLimitBudget": 10,
+          "makerFillEpsilon": 0.005
+        }
+      },
+      {
+        "id": "limit-p40-eps010",
+        "params": {
+          "minAsk": 0.55,
+          "maxAsk": 0.82,
+          "lateFlipExitEnabled": false,
+          "velocityLookbackSecs": 5,
+          "maxAdverseSpotChange": 8.0,
+          "minObi": 0.0,
+          "hedgeLimitEnabled": true,
+          "hedgeLimitPrice": 0.40,
+          "hedgeLimitBudget": 10,
+          "makerFillEpsilon": 0.01
+        }
+      },
+      {
+        "id": "limit-p40-eps020",
+        "params": {
+          "minAsk": 0.55,
+          "maxAsk": 0.82,
+          "lateFlipExitEnabled": false,
+          "velocityLookbackSecs": 5,
+          "maxAdverseSpotChange": 8.0,
+          "minObi": 0.0,
+          "hedgeLimitEnabled": true,
+          "hedgeLimitPrice": 0.40,
+          "hedgeLimitBudget": 10,
+          "makerFillEpsilon": 0.02
+        }
+      },
+      {
+        "id": "limit-p40-level-capped",
+        "params": {
+          "minAsk": 0.55,
+          "maxAsk": 0.82,
+          "lateFlipExitEnabled": false,
+          "velocityLookbackSecs": 5,
+          "maxAdverseSpotChange": 8.0,
+          "minObi": 0.0,
+          "hedgeLimitEnabled": true,
+          "hedgeLimitPrice": 0.40,
+          "hedgeLimitBudget": 10,
+          "makerFillEpsilon": 0.01,
+          "makerFillPolicy": "level-capped"
+        }
+      }
+    ]
+  }
+}

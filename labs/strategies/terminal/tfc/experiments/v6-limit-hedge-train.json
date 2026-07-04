@@ -1,0 +1,142 @@
+{
+  "name": "v6-limit-hedge-train",
+  "strategyId": "tfc",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-05-31",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "variantWorkers": 6,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "taker-8-4",
+        "params": {
+          "minAsk": 0.55,
+          "maxAsk": 0.82,
+          "lateFlipExitEnabled": true,
+          "lateFlipExitSec": 8,
+          "lateFlipMinSec": 4,
+          "lateFlipReverseEnabled": true,
+          "velocityLookbackSecs": 5,
+          "maxAdverseSpotChange": 8.0,
+          "minObi": 0.0,
+          "hedgeLimitEnabled": false
+        }
+      },
+      {
+        "id": "limit-p30",
+        "params": {
+          "minAsk": 0.55,
+          "maxAsk": 0.82,
+          "lateFlipExitEnabled": false,
+          "velocityLookbackSecs": 5,
+          "maxAdverseSpotChange": 8.0,
+          "minObi": 0.0,
+          "hedgeLimitEnabled": true,
+          "hedgeLimitPrice": 0.30,
+          "hedgeLimitBudget": 10
+        }
+      },
+      {
+        "id": "limit-p40",
+        "params": {
+          "minAsk": 0.55,
+          "maxAsk": 0.82,
+          "lateFlipExitEnabled": false,
+          "velocityLookbackSecs": 5,
+          "maxAdverseSpotChange": 8.0,
+          "minObi": 0.0,
+          "hedgeLimitEnabled": true,
+          "hedgeLimitPrice": 0.40,
+          "hedgeLimitBudget": 10
+        }
+      },
+      {
+        "id": "limit-p50",
+        "params": {
+          "minAsk": 0.55,
+          "maxAsk": 0.82,
+          "lateFlipExitEnabled": false,
+          "velocityLookbackSecs": 5,
+          "maxAdverseSpotChange": 8.0,
+          "minObi": 0.0,
+          "hedgeLimitEnabled": true,
+          "hedgeLimitPrice": 0.50,
+          "hedgeLimitBudget": 10
+        }
+      },
+      {
+        "id": "limit-p60",
+        "params": {
+          "minAsk": 0.55,
+          "maxAsk": 0.82,
+          "lateFlipExitEnabled": false,
+          "velocityLookbackSecs": 5,
+          "maxAdverseSpotChange": 8.0,
+          "minObi": 0.0,
+          "hedgeLimitEnabled": true,
+          "hedgeLimitPrice": 0.60,
+          "hedgeLimitBudget": 10
+        }
+      },
+      {
+        "id": "hybrid-p40",
+        "params": {
+          "minAsk": 0.55,
+          "maxAsk": 0.82,
+          "lateFlipExitEnabled": true,
+          "lateFlipExitSec": 8,
+          "lateFlipMinSec": 4,
+          "lateFlipReverseEnabled": true,
+          "velocityLookbackSecs": 5,
+          "maxAdverseSpotChange": 8.0,
+          "minObi": 0.0,
+          "hedgeLimitEnabled": true,
+          "hedgeLimitPrice": 0.40,
+          "hedgeLimitBudget": 10,
+          "hedgeCancelOnLateExit": true
+        }
+      },
+      {
+        "id": "hybrid-p50-nocancel",
+        "params": {
+          "minAsk": 0.55,
+          "maxAsk": 0.82,
+          "lateFlipExitEnabled": true,
+          "lateFlipExitSec": 8,
+          "lateFlipMinSec": 4,
+          "lateFlipReverseEnabled": true,
+          "velocityLookbackSecs": 5,
+          "maxAdverseSpotChange": 8.0,
+          "minObi": 0.0,
+          "hedgeLimitEnabled": true,
+          "hedgeLimitPrice": 0.50,
+          "hedgeLimitBudget": 10,
+          "hedgeCancelOnLateExit": false
+        }
+      },
+      {
+        "id": "v5-teto-sec2",
+        "params": {
+          "minAsk": 0.55,
+          "maxAsk": 0.82,
+          "lateFlipExitEnabled": true,
+          "lateFlipExitSec": 2,
+          "lateFlipMinSec": 0,
+          "lateFlipReverseEnabled": true,
+          "velocityLookbackSecs": 5,
+          "maxAdverseSpotChange": 8.0,
+          "minObi": 0.0,
+          "hedgeLimitEnabled": false
+        }
+      }
+    ]
+  }
+}

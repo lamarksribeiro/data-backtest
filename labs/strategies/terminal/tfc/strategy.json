@@ -15,13 +15,13 @@
   "promotedToStudio": true,
   "studioSlug": "tfc",
   "studio": {
-    "description": "Terminal Favorite Carry com perfis versionados: v1 (btc-champion original) e v2 (btc-champion-v2 otimizada). Ambos carregam params/toggles baseados no mesmo código GLS.",
+    "description": "Terminal Favorite Carry com perfis versionados v1-v6 sobre o mesmo código GLS. V5 Practical (v6): late flip taker 8s→4s. V6 Hybrid (v7): stop-buy no oposto + fallback taker no piso.",
     "tags": ["terminal", "anom-37", "btc", "champion"],
-    "defaultVersion": 2,
+    "defaultVersion": 7,
     "defaultGlsSource": "classic",
     "glsSources": {
       "classic": "src/backtestStudio/gls/strategies/TerminalFavoriteCarry.gls"
     }
   },
-  "notes": "Estratégia Terminal unificada. Versão 1: btc-champion original (tau<30s, dist<20 USD). Versão 2: btc-champion-v2 otimizada (tau<24s, dist<15 USD)."
+  "notes": "Estratégia Terminal unificada. V1-V4: evolução incremental (dist, spread, late flip, velocity). V5: envelope reaberto + OBI + Late Flip Reverse 2s. V5 Practical (v6): janela executável 8s→4s. V6 Hybrid (v7, campeã): stop-buy hedge alinhado ao sinal de flip + fallback taker no piso 4s — preset btc-champion-v6-hybrid."
 }

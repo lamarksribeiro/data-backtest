@@ -18,7 +18,7 @@ import { openStateDatabase, closeStateDatabase } from '../src/state/sqlite.js';
 test('listPromotedGlsStrategies discovers GLS lab strategies', () => {
 	const promoted = listPromotedGlsStrategies();
 	const ids = promoted.map((item) => item.id).sort();
-	assert.deepEqual(ids, ['book-frontrunner', 'edge-snipper', 'gamma-ladder', 'lim-prime-v1', 'quantum-entropic-manifold', 'tfc-v1', 'vsmr', 'whipsaw-lock']);
+	assert.deepEqual(ids, ['book-frontrunner', 'edge-snipper', 'gamma-ladder', 'lim-prime-v1', 'quantum-entropic-manifold', 'tfc', 'vsmr', 'whipsaw-lock']);
 	assert.equal(promoted.find((item) => item.id === 'gamma-ladder').studioSlug, 'gamma-ladder');
 });
 
@@ -49,7 +49,7 @@ test('seedPromotedStrategies seeds versions from lab manifests', () => {
 		const results = seedPromotedStrategies(db);
 		assert.equal(results.length, 8);
 		const slugs = results.map((row) => row.slug).sort();
-		assert.deepEqual(slugs, ['book-frontrunner', 'edge-snipper', 'gamma-ladder', 'lim-prime-v1', 'quantum-entropic-manifold', 'tfc-v1', 'vsmr', 'whipsaw-lock']);
+		assert.deepEqual(slugs, ['book-frontrunner', 'edge-snipper', 'gamma-ladder', 'lim-prime-v1', 'quantum-entropic-manifold', 'tfc', 'vsmr', 'whipsaw-lock']);
 
     const edge = results.find((row) => row.slug === 'edge-snipper');
     const edgeVersions = db.prepare(`
@@ -123,6 +123,17 @@ test('loadPreset resolves quantum-entropic-manifold champion params', () => {
   assert.equal(params.minEdge, 0.06);
   assert.equal(params.quantumSizingHighFactor, 1.65);
   assert.equal(params.entropyCompressionCap, 0.94);
+});
+
+test('loadPreset resolves tfc v6 hybrid stop params', () => {
+  const { preset, params } = loadPreset('btc-champion-v6-hybrid', { strategyId: 'tfc', strategyFamily: 'terminal' });
+  assert.equal(preset.studioSlug, 'tfc-btc-champion-v6-hybrid');
+  assert.equal(preset.studioVersion, 7);
+  assert.equal(params.hedgeStopEnabled, true);
+  assert.equal(params.hedgeStopPrice, 0.55);
+  assert.equal(params.hedgeStopPlaceSec, 8);
+  assert.equal(params.lateFlipMinSec, 4);
+  assert.equal(params.hedgeLimitEnabled, false);
 });
 
 test('renderPresetGls patches param defaults in source', () => {

@@ -36,6 +36,9 @@ function __call(path, args) {
   if (path === 'exit') return orders.exit(__objectArg(args[0]));
   if (path === 'reverse') return orders.reverse(args[0], __objectArg(args[1]));
   if (path === 'closeOpenPosition') return orders.closeOpenPosition(__objectArg(args[0]));
+  if (path === 'placeLimitBuy') return orders.placeLimitBuy(args[0], __objectArg(args[1]));
+  if (path === 'placeBuyStop') return orders.placeBuyStop(args[0], __objectArg(args[1]));
+  if (path === 'cancelLimit') return orders.cancelLimit(args[0] ?? null);
   if (path === 'log') return debug.log(args[0], args[1]);
   if (path === 'mark') return args.length > 1 ? debug.mark(args[0], args[1]) : debug.mark(args[0], {});
   if (path === 'metric') return debug.metric(args[0], args[1]);
@@ -189,6 +192,10 @@ export function analyzeStrategyColumns(ast, defaultBookDepth = 25) {
           needsBookLevels = true;
           bookDepth = Math.max(bookDepth, Math.min(defaultBookDepth, 10));
         }
+      }
+      if (path === 'model.orderBookImbalance') {
+        needsBookLevels = true;
+        bookDepth = Math.max(bookDepth, Math.min(defaultBookDepth, 10));
       }
       for (const arg of node.args || []) walk(arg);
       walk(node.callee);

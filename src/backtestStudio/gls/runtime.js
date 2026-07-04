@@ -110,15 +110,24 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
   function resetEventContext() {
     state = {};
     samples = [];
-    orderSim = createOrderSimulator({ limits });
+    orderSim = createOrderSimulator({
+      limits: {
+        ...limits,
+        ...(Number.isFinite(Number(params.makerFillEpsilon)) ? { makerFillEpsilon: Number(params.makerFillEpsilon) } : {}),
+        ...(params.makerFillPolicy ? { makerFillPolicy: String(params.makerFillPolicy) } : {}),
+      },
+    });
     trace = fastRun ? NOOP_TRACE : createTraceCollector({ limits });
     currentLastTick = null;
     normalizedHolder = { tick: null };
     ordersApi = {
-      enter: (side, opts = {}) => orderSim.enter(side, { ...opts, ts: tickTimestamp(normalizedHolder.tick) }),
+      enter: (side, opts = {}) => orderSim.enter(side, { ...opts, tick: normalizedHolder.tick, ts: tickTimestamp(normalizedHolder.tick) }),
       exit: (opts = {}) => orderSim.exit({ ...opts, tick: normalizedHolder.tick, ts: tickTimestamp(normalizedHolder.tick) }),
-      reverse: (side, opts = {}) => orderSim.reverse(side, { ...opts, ts: tickTimestamp(normalizedHolder.tick) }),
+      reverse: (side, opts = {}) => orderSim.reverse(side, { ...opts, tick: normalizedHolder.tick, ts: tickTimestamp(normalizedHolder.tick) }),
       closeOpenPosition: (opts = {}) => orderSim.closeOpenPosition({ ...opts, tick: normalizedHolder.tick, ts: tickTimestamp(normalizedHolder.tick) }),
+      placeLimitBuy: (side, opts = {}) => orderSim.placeLimitBuy(side, { ...opts, tick: normalizedHolder.tick, ts: tickTimestamp(normalizedHolder.tick) }),
+      placeBuyStop: (side, opts = {}) => orderSim.placeBuyStop(side, { ...opts, tick: normalizedHolder.tick, ts: tickTimestamp(normalizedHolder.tick) }),
+      cancelLimit: (id) => orderSim.cancelLimit(id ?? null),
     };
     debugApi = fastRun
       ? { log() {}, mark() {}, metric() {} }
@@ -141,8 +150,18 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
     };
   }
 
+  function shouldEarlyFinalizeEvent() {
+    if (!currentEvent) return false;
+    const snap = orderSim.snapshot();
+    const hadEntry = snap.orders.some((o) => o.type === 'entry');
+    if (!hadEntry || orderSim.positionView.open) return false;
+    if (orderSim.hasOpenRestingOrders()) return false;
+    return true;
+  }
+
   function finalizeEvent(lastTick) {
     if (!currentEvent) return;
+    orderSim.expireRestingOrders();
     const snap = orderSim.snapshot();
     const settlement = settleEventPnl(orderSim, lastTick, currentEvent);
     const pnl = settlement.finalPnl;
@@ -178,6 +197,11 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
       expiryPnl: settlement.expiryPnl ?? 0,
       finalPnl: pnl,
       reason: snap.orders.length ? settlement.reason : 'no_entry',
+      restingOrders: snap.restingOrders,
+      hedgeFill: settlement.hedgeFill ?? null,
+      hedgePnl: settlement.hedgePnl ?? null,
+      primaryLotPnl: settlement.primaryLotPnl ?? null,
+      lotPnls: settlement.lotPnls ?? null,
       closedAt,
       ...(fastRun ? {} : {
         marketId: lastTick?.market_id ?? null,
@@ -201,6 +225,7 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
   function buildRuntimeContext(tick, event) {
     const normalized = tick?.underlyingPrice != null && tick?.priceToBeat != null ? tick : normalizeTick(tick);
     orderSim.updatePeakBid(normalized, lib);
+    orderSim.checkRestingOrders(normalized);
     normalizedHolder.tick = normalized;
     sharedCtx.tick = normalized;
     sharedCtx.event = event;
@@ -265,7 +290,7 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
     runHook('onTick', ctx);
     currentLastTick = tickCursor;
 
-    if (currentEvent && orderSim.snapshot().orders.some((o) => o.type === 'entry') && !orderSim.positionView.open) {
+    if (shouldEarlyFinalizeEvent()) {
       runHook('onEventEnd', ctx);
       finalizeEvent(tickCursor);
     }
@@ -306,7 +331,7 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
     runHook('onTick', ctx);
     currentLastTick = tick;
 
-    if (currentEvent && orderSim.snapshot().orders.some((o) => o.type === 'entry') && !orderSim.positionView.open) {
+    if (shouldEarlyFinalizeEvent()) {
       runHook('onEventEnd', ctx);
       finalizeEvent(tick);
     }
@@ -616,6 +641,9 @@ function createInterpreter() {
       if (path === 'exit') return ctx.orders.exit(objectArg(args[0]));
       if (path === 'reverse') return ctx.orders.reverse(args[0], objectArg(args[1]));
       if (path === 'closeOpenPosition') return ctx.orders.closeOpenPosition(objectArg(args[0]));
+      if (path === 'placeLimitBuy') return ctx.orders.placeLimitBuy(args[0], objectArg(args[1]));
+      if (path === 'placeBuyStop') return ctx.orders.placeBuyStop(args[0], objectArg(args[1]));
+      if (path === 'cancelLimit') return ctx.orders.cancelLimit(args[0] ?? null);
     }
     if (DEBUG_FUNCTIONS.has(path)) {
       if (path === 'log') return ctx.debug.log(args[0], args[1]);
