@@ -1,0 +1,26 @@
+---
+description: data-backtest — lakehouse OLAP, Estúdio V3, API porta 3100
+globs: "**/*"
+alwaysApply: false
+---
+
+# data-backtest
+
+Node 22+ ESM. API/dashboard: `src/server.js` (:3100). CLI: `src/cli.js`. `npm test` para regressões.
+
+## Arquitetura V3 (não regredir)
+
+Estúdio é a **única** tela de backtest. Sidebar: Estúdio · Estratégias · Dados · Visão Geral.
+
+- **Não recriar** views legadas `backtests.js`, `run-detail.js`, `event-detail.js` — features migram para o Estúdio.
+- Tela Dados unificada em `data.js` (não reexpor máquina de estados de partição no fluxo principal).
+- Docs: `docs/arquitetura/arquitetura-v3-consolidacao-ux.md` (UX), `arquitetura-v2-performance-ux.md` (motor).
+
+## Motor e dados
+
+- Lakehouse Parquet/DuckDB; estado SQLite em `state/`.
+- Sync/backfill via CLI (`sync:*`, `query:*`) — não duplicar leitura de ticks que já está em `src/query/` e `src/sync/`.
+
+## Labs / sweeps grandes
+
+Ver rule `labs-brutus-performance.mdc` (pasta `labs/`). Smoke local; offload Brutus para 50+ variantes.

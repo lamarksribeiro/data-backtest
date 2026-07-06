@@ -1,6 +1,6 @@
 ---
 description: Executar laboratórios data-backtest no Brutus com máxima performance
-globs: data-backtest/labs/**/*
+globs: labs/**/*
 alwaysApply: false
 ---
 
