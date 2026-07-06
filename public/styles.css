@@ -799,6 +799,8 @@ input[type="datetime-local"] {
   min-width: 0;
   min-inline-size: 0;
   max-inline-size: 100%;
+  min-height: 40px;
+  line-height: 1.25;
   box-sizing: border-box;
   -webkit-min-logical-width: 0;
 }
@@ -2659,6 +2661,9 @@ details.advanced[open] { padding-bottom: 16px; }
   max-width: 100%;
   inline-size: 100%;
   max-inline-size: 100%;
+  min-height: 40px;
+  padding: 10px 14px;
+  line-height: 1.25;
   -webkit-appearance: none;
   appearance: none;
 }
@@ -7346,6 +7351,11 @@ html, body {
     max-inline-size: 100% !important;
     min-width: 0 !important;
     min-inline-size: 0 !important;
+    min-height: 40px;
+    height: auto;
+    padding: 10px 12px;
+    font-size: 16px;
+    line-height: 1.25;
     box-sizing: border-box;
     overflow: hidden;
     text-align: left;
@@ -7367,7 +7377,9 @@ html, body {
     width: 100%;
     max-width: 100%;
     min-width: 0;
+    min-height: 1.25em;
     margin: 0;
+    padding: 0;
     overflow: hidden;
     text-align: left;
     text-overflow: ellipsis;
