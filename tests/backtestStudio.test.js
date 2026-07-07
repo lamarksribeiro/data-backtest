@@ -13,7 +13,7 @@ import { writeBacktestTicksParquet } from '../src/sync/duckdbParquet.js';
 import { createBacktestRun, createRunningBacktestRun, syncEventTracesForRun } from '../src/state/backtestRuns.js';
 import { runBacktest } from '../src/backtest/engine.js';
 import { edgeSniperV3GlsAst, NATIVE_EDGE_SNIPER_PATH, NATIVE_EDGE_SNIPER_TICK_CONTEXT } from './testBacktestHelpers.js';
-import { listEventTraces, appendEventTraceBatch } from '../src/backtestStudio/state/eventTraces.js';
+import { listEventTraces, appendEventTraceBatch, getEventTrace } from '../src/backtestStudio/state/eventTraces.js';
 import {
   createStrategy,
   createStrategyVersion,
@@ -31,7 +31,7 @@ import { seedEdgeSniperV3Presets, seedPromotedStrategy } from '../src/backtestSt
 import { listPromotedGlsStrategies } from '../labs/shared/discoverStrategies.js';
 import { getStrategyStats } from '../src/backtestStudio/state/strategyStats.js';
 
-test('syncEventTracesForRun skips redundant merge when streaming already persisted all events', async () => {
+test('syncEventTracesForRun refreshes streamed traces with final fee-adjusted events', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'data-backtest-sync-traces-'));
   try {
     const db = openStateDatabase(path.join(dir, 'state.db'));
@@ -68,12 +68,28 @@ test('syncEventTracesForRun skips redundant merge when streaming already persist
         events: [{
           ...events[0],
           finalPnl: 9.99,
+          finalPnlBeforeFees: 10.5,
+          fees: {
+            applied: true,
+            totalFee: 0.51,
+            entryFee: 0.21,
+            exitFee: 0.3,
+            tradesCharged: 2,
+            entries: [{ qty: 10, price: 0.3, fee: 0.21, time: '2026-05-31T00:01:00.000Z' }],
+            exits: [{ qty: 10, price: 0.7, fee: 0.3, time: '2026-05-31T00:04:30.000Z' }],
+          },
         }],
       });
       assert.equal(merged, 1);
       const after = listEventTraces(db, runId);
       assert.equal(after.length, 1);
-      assert.equal(after[0].final_pnl, 1.5, 'should not rewrite traces already streamed');
+      assert.equal(after[0].final_pnl, 9.99);
+      assert.equal(after[0].fees_total, 0.51);
+      const detail = getEventTrace(db, runId, after[0].id);
+      assert.equal(detail.summary.finalPnlBeforeFees, 10.5);
+      assert.equal(detail.summary.fees.entryFee, 0.21);
+      assert.equal(detail.summary.fees.exitFee, 0.3);
+      assert.equal(detail.summary.fees.tradesCharged, 2);
     } finally {
       closeStateDatabase(db);
     }

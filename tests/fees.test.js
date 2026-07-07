@@ -48,6 +48,14 @@ test('applyPolymarketFeesToBacktestResult adjusts pnl and summary metrics', () =
 
   assert.equal(result.events[0].finalPnlBeforeFees, 4);
   assert.equal(result.events[0].fees.totalFee, 0.294);
+  assert.equal(result.events[0].fees.entryFee, 0.147);
+  assert.equal(result.events[0].fees.exitFee, 0.147);
+  assert.equal(result.events[0].fees.entryTradesCharged, 1);
+  assert.equal(result.events[0].fees.exitTradesCharged, 1);
+  assert.equal(result.events[0].fees.entries[0].time, '2026-06-01T00:01:00.000Z');
+  assert.equal(result.events[0].fees.entries[0].fee, 0.147);
+  assert.equal(result.events[0].fees.exits[0].time, '2026-06-01T00:04:00.000Z');
+  assert.equal(result.events[0].fees.exits[0].fee, 0.147);
   assert.equal(result.events[0].finalPnl, 3.706);
   assert.equal(result.events[1].fees.totalFee, 0.28);
   assert.equal(result.summary.fees.totalFee, 0.574);

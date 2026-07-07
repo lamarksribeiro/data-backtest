@@ -455,13 +455,16 @@ export function minimalResultForRequest(request, { summary = {} } = {}) {
   };
 }
 
-/** Persiste traces ao concluir run; evita merge completo quando o streaming já gravou tudo. */
+/** Persiste traces ao concluir run e sincroniza campos calculados no finish, como taxas. */
 export function syncEventTracesForRun(db, runId, result, { transaction = true } = {}) {
   const events = Array.isArray(result?.events) ? result.events : [];
   const eventCount = events.length;
   const traceCount = Number(db.prepare('SELECT COUNT(*) AS c FROM backtest_event_traces WHERE run_id = ?').get(runId)?.c || 0);
   if (eventCount === 0) return traceCount;
-  if (traceCount >= eventCount) return traceCount;
+  if (traceCount >= eventCount) {
+    mergeResultIntoEventTraces(db, runId, result, { transaction });
+    return Number(db.prepare('SELECT COUNT(*) AS c FROM backtest_event_traces WHERE run_id = ?').get(runId)?.c || 0);
+  }
   if (traceCount === 0) {
     const rows = persistEventTraces(db, runId, result, { transaction });
     return Array.isArray(rows) ? rows.length : 0;

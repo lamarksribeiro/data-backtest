@@ -5,9 +5,11 @@ export function buildExecutionItems(event) {
   const summary = event.summary || {};
   const items = [];
   const orders = event.orders || [];
+  const feeCursor = createFeeCursor(summary.fees || {});
   const hasExitOrders = orders.some((order) => order?.type === 'exit');
   for (const order of orders) {
-    let kind = order.type === 'exit' ? 'exit' : 'entry';
+    const isExit = order.type === 'exit';
+    let kind = isExit ? 'exit' : 'entry';
     const reasonText = (order.reason || order.source || '').toLowerCase();
     if (kind === 'exit') {
       if (reasonText.includes('stop loss') || reasonText.includes('stop_loss')) {
@@ -18,17 +20,26 @@ export function buildExecutionItems(event) {
         kind = 'take_profit';
       }
     }
+    const feeInfo = isExit ? feeCursor.nextExit(order) : feeCursor.nextEntry(order);
+    const meta = [
+      ['Preço', formatPrice(order.avgPrice ?? order.price)],
+      ['Qtd', formatQty(order.shares ?? order.filledQty ?? order.qty)],
+      ['Notional', formatPnl(order.notional ?? order.cost ?? 0)],
+      ['Motivo', order.reason || order.source || '-'],
+    ];
+    appendFeeMeta(meta, feeInfo, isExit ? 'Taxa saída' : 'Taxa entrada');
     items.push({
       kind,
       ts: order.createdAt || order.ts || order.time,
       title: kind === 'entry' ? `Entrada ${order.side || event.side || ''}` : `Saída ${order.side || event.side || ''}`,
-      meta: [
-        ['Preço', formatPrice(order.avgPrice ?? order.price)],
-        ['Qtd', formatQty(order.shares ?? order.filledQty ?? order.qty)],
-        ['Notional', formatPnl(order.notional ?? order.cost ?? 0)],
-        ['Motivo', order.reason || order.source || '-'],
-      ],
+      side: order.side || event.side || summary.positionType || '',
+      shares: order.shares ?? order.filledQty ?? order.qty,
+      price: order.avgPrice ?? order.price,
+      notional: order.notional ?? order.cost ?? 0,
+      type: order.type || kind,
+      meta,
       fills: order.fills,
+      feeInfo,
     });
   }
   for (const exit of hasExitOrders ? [] : (summary.exits || [])) {
@@ -41,33 +52,91 @@ export function buildExecutionItems(event) {
     } else if (reasonText.includes('take profit') || reasonText.includes('take_profit') || reasonText.includes('profit') || reasonText.includes('limit')) {
       kind = 'take_profit';
     }
+    const feeInfo = feeCursor.nextExit(exit);
+    const meta = [
+      ['Preço', formatPrice(exit.avgPrice ?? exit.price)],
+      ['Qtd', formatQty(exit.shares ?? exit.qty)],
+      ['PnL', formatPnl(exit.pnl ?? 0)],
+      ['Restante', formatQty(exit.remainingShares ?? '-')],
+    ];
+    appendFeeMeta(meta, feeInfo, 'Taxa saída');
     items.push({
       kind,
       ts: exit.ts || exit.time,
       title: `Saída ${exit.reason || ''}`,
-      meta: [
-        ['Preço', formatPrice(exit.avgPrice ?? exit.price)],
-        ['Qtd', formatQty(exit.shares ?? exit.qty)],
-        ['PnL', formatPnl(exit.pnl ?? 0)],
-        ['Restante', formatQty(exit.remainingShares ?? '-')],
-      ],
+      side: exit.side || event.side || summary.positionType || '',
+      shares: exit.shares ?? exit.qty,
+      price: exit.avgPrice ?? exit.price,
+      notional: exit.notional ?? exit.proceeds ?? 0,
+      type: 'exit',
+      meta,
       fills: exit.fills,
+      feeInfo,
     });
   }
   for (const order of summary.profitOrders || []) {
+    const feeInfo = feeCursor.nextExit({
+      ...order,
+      side: order.side || event.side || summary.positionType,
+      time: order.fillTime || order.time,
+      source: order.source || order.reason || 'profit_order',
+    });
+    const meta = [
+      ['Preço', formatPrice(order.price)],
+      ['Qtd', formatQty(order.qty ?? order.filledQty)],
+      ['Status', order.filled ? 'filled' : '-'],
+    ];
+    appendFeeMeta(meta, feeInfo, 'Taxa saída');
     items.push({
       kind: 'take_profit',
       ts: order.fillTime || order.time,
       title: 'Parcial / Take Profit',
-      meta: [['Preço', formatPrice(order.price)], ['Qtd', formatQty(order.qty ?? order.filledQty)], ['Status', order.filled ? 'filled' : '-']],
+      side: order.side || event.side || summary.positionType || '',
+      shares: order.qty ?? order.filledQty,
+      price: order.price,
+      notional: order.notional ?? ((Number(order.qty ?? order.filledQty) || 0) * (Number(order.price) || 0)),
+      type: 'exit',
+      meta,
+      feeInfo,
     });
   }
   for (const reversal of summary.reversals || []) {
+    const exitFeeInfo = feeCursor.nextExit({
+      ...reversal,
+      side: reversal.fromSide,
+      time: reversal.time,
+      source: 'stop_reverse_exit',
+      price: reversal.exitPrice,
+      qty: reversal.soldQty,
+    });
+    const entryFeeInfo = feeCursor.nextEntry({
+      ...reversal,
+      side: reversal.toSide,
+      time: reversal.time,
+      source: 'stop_reverse',
+      price: reversal.avgEntryPrice,
+      qty: reversal.entryQty,
+      fills: reversal.entryFills,
+    });
+    const meta = [
+      ['Exit', formatPrice(reversal.exitPrice)],
+      ['Entrada', formatPrice(reversal.avgEntryPrice)],
+      ['Budget', formatPnl(reversal.budget ?? 0)],
+      ['Qtd', formatQty(reversal.entryQty)],
+    ];
+    appendFeeMeta(meta, exitFeeInfo, 'Taxa saída');
+    appendFeeMeta(meta, entryFeeInfo, 'Taxa entrada');
     items.push({
       kind: 'reverse',
       ts: reversal.time,
       title: `Reversão ${reversal.fromSide || ''} → ${reversal.toSide || ''}`,
-      meta: [['Exit', formatPrice(reversal.exitPrice)], ['Entrada', formatPrice(reversal.avgEntryPrice)], ['Budget', formatPnl(reversal.budget ?? 0)], ['Qtd', formatQty(reversal.entryQty)]],
+      side: `${reversal.fromSide || ''}→${reversal.toSide || ''}`,
+      shares: reversal.entryQty,
+      price: reversal.avgEntryPrice,
+      notional: reversal.budget ?? 0,
+      type: 'reverse',
+      meta,
+      feeInfo: combineFeeInfo(exitFeeInfo, entryFeeInfo),
     });
   }
   for (const mark of event.marks || []) {
@@ -83,16 +152,20 @@ export function buildExecutionItems(event) {
 
 export function renderExecutionTimeline(event, { tableMode = false } = {}) {
   const items = buildExecutionItems(event);
-  if (tableMode && event.orders?.length) {
+  const tableRows = items.filter((item) => item.kind !== 'mark');
+  if (tableMode && tableRows.length) {
     return el('table', { class: 'studio-drawer__orders-table' }, [
-      el('thead', {}, el('tr', {}, ['Lado', 'Shares', 'Preço', 'Valor', 'Tipo', 'Timestamp'].map((h) => el('th', {}, h)))),
-      el('tbody', {}, event.orders.map((o) => el('tr', {}, [
-        el('td', {}, o.side || ''),
-        el('td', {}, String(o.shares || '')),
-        el('td', {}, formatPnl(o.price)),
-        el('td', {}, formatPnl(o.notional)),
-        el('td', {}, o.type || ''),
-        el('td', {}, o.ts ? new Date(o.ts).toLocaleTimeString() : '-'),
+      el('thead', {}, el('tr', {}, ['Operação', 'Lado', 'Shares', 'Preço', 'Valor', 'Tipo', 'Taxa', 'Trades taxados', 'Timestamp'].map((h) => el('th', {}, h)))),
+      el('tbody', {}, tableRows.map((item) => el('tr', {}, [
+        el('td', {}, item.title || ''),
+        el('td', {}, item.side || ''),
+        el('td', {}, formatQty(item.shares)),
+        el('td', {}, formatPrice(item.price)),
+        el('td', {}, formatPnl(item.notional ?? 0)),
+        el('td', {}, item.type || item.kind || ''),
+        el('td', {}, item.feeInfo?.hasFeeData ? formatFee(item.feeInfo.fee ?? 0) : '-'),
+        el('td', {}, item.feeInfo?.hasFeeData ? String(item.feeInfo.tradesCharged ?? 0) : '-'),
+        el('td', {}, item.ts ? new Date(item.ts).toLocaleTimeString() : '-'),
       ]))),
     ]);
   }
@@ -120,9 +193,9 @@ export function renderEventFeeSummary(event) {
     detailMetric('PTB inicial', formatUsd(summary.priceToBeat)),
     detailMetric('Dist. PTB entrada', summary.entryDistanceToPtb == null ? '—' : formatUsd(summary.entryDistanceToPtb)),
     detailMetric('Tempo restante', summary.entryTimeRemaining == null ? '—' : `${Math.round(summary.entryTimeRemaining)}s`),
-    detailMetric('Taxas', formatPnl(fees.totalFee ?? 0), fees.totalFee > 0 ? 'warn' : ''),
-    detailMetric('Taxa entrada', formatPnl(fees.entryFee ?? 0)),
-    detailMetric('Taxa saída', formatPnl(fees.exitFee ?? 0)),
+    detailMetric('Taxas', formatFee(fees.totalFee ?? 0), fees.totalFee > 0 ? 'warn' : ''),
+    detailMetric('Taxa entrada', formatFee(fees.entryFee ?? 0)),
+    detailMetric('Taxa saída', formatFee(fees.exitFee ?? 0)),
     detailMetric('Trades taxados', String(fees.tradesCharged ?? 0)),
     detailMetric('Lado', event.side || summary.positionType || '—'),
     detailMetric('Motivo final', event.reason || '—'),
@@ -139,8 +212,8 @@ export function renderDiagnosticsPanel(event) {
     ['Resultado expiração', summary.expirationResult || '-'],
     ['Winner side', summary.winnerSide || '-'],
     ['PnL expiração', formatPnl(summary.expiryPnl ?? 0)],
-    ['Taxa entrada', formatPnl(fees.entryFee ?? 0)],
-    ['Taxa saída', formatPnl(fees.exitFee ?? 0)],
+    ['Taxa entrada', formatFee(fees.entryFee ?? 0)],
+    ['Taxa saída', formatFee(fees.exitFee ?? 0)],
     ['Trades taxados', String(fees.tradesCharged ?? 0)],
   ];
   for (const [key, value] of Object.entries(diagnostics || {})) {
@@ -152,6 +225,7 @@ export function renderDiagnosticsPanel(event) {
 
 export function generateNarratedLogs(event) {
   const logs = [];
+  const feeCursor = createFeeCursor(event.summary?.fees || {});
   
   if (event.event_start) {
     logs.push({
@@ -164,10 +238,11 @@ export function generateNarratedLogs(event) {
   const orders = event.orders || [];
   for (const order of orders) {
     const isExit = order.type === 'exit';
+    const feeInfo = isExit ? feeCursor.nextExit(order) : feeCursor.nextEntry(order);
     logs.push({
       ts: order.createdAt || order.ts || order.time,
       type: isExit ? 'warn' : 'success',
-      msg: `Ordem de ${isExit ? 'Saída' : 'Entrada'} (${order.side || ''}): Enviada e preenchida a ${formatPrice(order.price ?? order.avgPrice)} para ${formatQty(order.shares ?? order.qty)} contratos. Valor total (Notional): ${formatPnl(order.notional ?? 0)}.${order.reason ? ` Motivo: ${order.reason}` : ''}`,
+      msg: `Ordem de ${isExit ? 'Saída' : 'Entrada'} (${order.side || ''}): Enviada e preenchida a ${formatPrice(order.price ?? order.avgPrice)} para ${formatQty(order.shares ?? order.qty)} contratos. Valor total (Notional): ${formatPnl(order.notional ?? 0)}.${feeLogSuffix(feeInfo, isExit ? 'Taxa saída' : 'Taxa entrada')}${order.reason ? ` Motivo: ${order.reason}` : ''}`,
     });
   }
 
@@ -175,29 +250,53 @@ export function generateNarratedLogs(event) {
   const hasExitOrders = orders.some((o) => o?.type === 'exit');
   if (!hasExitOrders) {
     for (const exit of exits) {
+      const feeInfo = feeCursor.nextExit(exit);
       logs.push({
         ts: exit.ts || exit.time,
         type: 'warn',
-        msg: `Saída executada a ${formatPrice(exit.price ?? exit.avgPrice)} para ${formatQty(exit.shares ?? exit.qty)} contratos. PnL da saída: ${formatPnl(exit.pnl ?? 0)}.${exit.reason ? ` Motivo: ${exit.reason}` : ''}`,
+        msg: `Saída executada a ${formatPrice(exit.price ?? exit.avgPrice)} para ${formatQty(exit.shares ?? exit.qty)} contratos. PnL da saída: ${formatPnl(exit.pnl ?? 0)}.${feeLogSuffix(feeInfo, 'Taxa saída')}${exit.reason ? ` Motivo: ${exit.reason}` : ''}`,
       });
     }
   }
 
   const profitOrders = event.summary?.profitOrders || [];
   for (const profit of profitOrders) {
+    const feeInfo = feeCursor.nextExit({
+      ...profit,
+      side: profit.side || event.side || event.summary?.positionType,
+      time: profit.fillTime || profit.time,
+      source: profit.source || profit.reason || 'profit_order',
+    });
     logs.push({
       ts: profit.fillTime || profit.time,
       type: 'success',
-      msg: `Take Profit Parcial atingido a ${formatPrice(profit.price)}. Qtd preenchida: ${formatQty(profit.qty ?? profit.filledQty)}.`,
+      msg: `Take Profit Parcial atingido a ${formatPrice(profit.price)}. Qtd preenchida: ${formatQty(profit.qty ?? profit.filledQty)}.${feeLogSuffix(feeInfo, 'Taxa saída')}`,
     });
   }
 
   const reversals = event.summary?.reversals || [];
   for (const rev of reversals) {
+    const exitFeeInfo = feeCursor.nextExit({
+      ...rev,
+      side: rev.fromSide,
+      time: rev.time,
+      source: 'stop_reverse_exit',
+      price: rev.exitPrice,
+      qty: rev.soldQty,
+    });
+    const entryFeeInfo = feeCursor.nextEntry({
+      ...rev,
+      side: rev.toSide,
+      time: rev.time,
+      source: 'stop_reverse',
+      price: rev.avgEntryPrice,
+      qty: rev.entryQty,
+      fills: rev.entryFills,
+    });
     logs.push({
       ts: rev.time,
       type: 'info',
-      msg: `Reversão de posição executada de ${rev.fromSide || ''} para ${rev.toSide || ''}. Preço de saída: ${formatPrice(rev.exitPrice)}. Novo preço médio de entrada: ${formatPrice(rev.avgEntryPrice)}. Qtd revertida: ${formatQty(rev.entryQty)}.`,
+      msg: `Reversão de posição executada de ${rev.fromSide || ''} para ${rev.toSide || ''}. Preço de saída: ${formatPrice(rev.exitPrice)}. Novo preço médio de entrada: ${formatPrice(rev.avgEntryPrice)}. Qtd revertida: ${formatQty(rev.entryQty)}.${feeLogSuffix(exitFeeInfo, 'Taxa saída')}${feeLogSuffix(entryFeeInfo, 'Taxa entrada')}`,
     });
   }
 
@@ -233,7 +332,7 @@ export function generateNarratedLogs(event) {
   logs.push({
     ts: event.summary?.closedAt || event.event_end,
     type: finalPnlVal > 0 ? 'success' : finalPnlVal < 0 ? 'error' : 'info',
-    msg: `Fim do Evento por '${event.reason || 'Concluído'}'. PnL Líquido Final: ${formatPnl(finalPnlVal)}. Taxas Totais: ${formatPnl(totalFeesVal)}. Lado vencedor: ${event.summary?.winnerSide || '-'}.`,
+    msg: `Fim do Evento por '${event.reason || 'Concluído'}'. PnL Líquido Final: ${formatPnl(finalPnlVal)}. Taxas Totais: ${formatFee(totalFeesVal)}. Lado vencedor: ${event.summary?.winnerSide || '-'}.`,
   });
 
   return logs;
@@ -247,6 +346,206 @@ export function renderLogList(logs, event = null) {
     el('span', { class: `log-type log-type--${entry.type || 'info'}` }, entry.type || 'info'),
     el('span', { class: 'log-msg' }, entry.msg || entry.message || ''),
   ])));
+}
+
+function createFeeCursor(fees = {}) {
+  const hasFeeData = Boolean(
+    fees?.applied
+    || fees?.model
+    || fees?.totalFee != null
+    || fees?.entryFee != null
+    || fees?.exitFee != null,
+  );
+  const entries = normalizeFeeDetails(fees.entries);
+  const exits = normalizeFeeDetails(fees.exits);
+  const usedEntries = new Set();
+  const usedExits = new Set();
+
+  return {
+    nextEntry(operation) {
+      return feeInfoForOperation(operation, entries, usedEntries, fees, hasFeeData);
+    },
+    nextExit(operation) {
+      return feeInfoForOperation(operation, exits, usedExits, fees, hasFeeData);
+    },
+  };
+}
+
+function feeInfoForOperation(operation, details, used, fees, hasFeeData) {
+  const matched = takeMatchingFeeDetails(operation, details, used);
+  if (matched.length) return summarizeFeeDetails(matched, hasFeeData);
+  if (!hasFeeData) return null;
+  return estimateOperationFee(operation, fees?.feeRate, hasFeeData);
+}
+
+function takeMatchingFeeDetails(operation, details, used) {
+  if (!operation || !details.length) return [];
+  const matchedIndexes = [];
+  for (let index = 0; index < details.length; index += 1) {
+    if (used.has(index)) continue;
+    if (feeDetailMatchesOperation(details[index], operation)) matchedIndexes.push(index);
+  }
+
+  if (!matchedIndexes.length) {
+    const unusedIndexes = details.map((_, index) => index).filter((index) => !used.has(index));
+    if (unusedIndexes.length === 1 && operationLiquidity(operation) !== 'maker') matchedIndexes.push(unusedIndexes[0]);
+  }
+
+  for (const index of matchedIndexes) used.add(index);
+  return matchedIndexes.map((index) => details[index]);
+}
+
+function feeDetailMatchesOperation(detail, operation) {
+  const detailSide = detail?.side;
+  const operationSideValue = operationSide(operation);
+  if (detailSide && operationSideValue && String(detailSide) !== String(operationSideValue)) return false;
+
+  const detailTime = timestampMs(detail?.time);
+  const opTime = timestampMs(operationTimestamp(operation));
+  if (detailTime != null && opTime != null && Math.abs(detailTime - opTime) <= 1000) return true;
+
+  const sourceMatches = textMatches(detail?.source || detail?.reason, operation?.source || operation?.reason || operation?.orderRole);
+  if (sourceMatches && operationPriceQtyMatches(detail, operation)) return true;
+  return operationPriceQtyMatches(detail, operation);
+}
+
+function operationPriceQtyMatches(detail, operation) {
+  const detailPrice = finiteNumber(detail?.price);
+  const detailQty = finiteNumber(detail?.qty ?? detail?.shares);
+  if (Array.isArray(operation?.fills) && operation.fills.length) {
+    return operation.fills.some((fill) => {
+      const fillPrice = finiteNumber(fill?.price);
+      const fillQty = finiteNumber(fill?.qty ?? fill?.shares);
+      return numbersClose(detailPrice, fillPrice) && numbersClose(detailQty, fillQty);
+    });
+  }
+
+  const opPrice = finiteNumber(operation?.avgPrice ?? operation?.price ?? operation?.exitPrice ?? operation?.avgEntryPrice);
+  const opQty = finiteNumber(operation?.shares ?? operation?.qty ?? operation?.filledQty ?? operation?.soldQty ?? operation?.entryQty);
+  const canComparePrice = detailPrice != null && opPrice != null;
+  const canCompareQty = detailQty != null && opQty != null;
+  if (!canComparePrice && !canCompareQty) return false;
+  const priceMatches = !canComparePrice || numbersClose(detailPrice, opPrice);
+  const qtyMatches = !canCompareQty || numbersClose(detailQty, opQty);
+  return priceMatches && qtyMatches;
+}
+
+function summarizeFeeDetails(details, hasFeeData) {
+  const fee = details.reduce((sum, detail) => sum + (finiteNumber(detail.fee) ?? 0), 0);
+  const notional = details.reduce((sum, detail) => sum + ((finiteNumber(detail.qty) ?? 0) * (finiteNumber(detail.price) ?? 0)), 0);
+  return {
+    hasFeeData,
+    fee: roundFee(fee),
+    tradesCharged: details.length,
+    notional,
+    makerTradesFree: 0,
+  };
+}
+
+function estimateOperationFee(operation, feeRate, hasFeeData) {
+  const rate = finiteNumber(feeRate);
+  const liquidity = operationLiquidity(operation);
+  const fills = Array.isArray(operation?.fills) && operation.fills.length
+    ? operation.fills
+    : [{ price: operation?.avgPrice ?? operation?.price ?? operation?.exitPrice, qty: operation?.shares ?? operation?.qty ?? operation?.filledQty ?? operation?.soldQty ?? operation?.entryQty, liquidity }];
+  let fee = 0;
+  let tradesCharged = 0;
+  let makerTradesFree = 0;
+
+  for (const fill of fills) {
+    const fillLiquidity = fill?.liquidity ?? liquidity;
+    const qty = finiteNumber(fill?.qty ?? fill?.shares);
+    const price = finiteNumber(fill?.price ?? operation?.avgPrice ?? operation?.price);
+    if (qty == null || qty <= 0 || price == null || price <= 0 || price >= 1) continue;
+    if (fillLiquidity === 'maker') {
+      makerTradesFree += 1;
+      continue;
+    }
+    if (rate == null || rate <= 0) continue;
+    const fillFee = qty * rate * price * (1 - price);
+    if (fillFee > 0) {
+      fee += fillFee;
+      tradesCharged += 1;
+    }
+  }
+
+  return {
+    hasFeeData,
+    fee: roundFee(fee),
+    tradesCharged,
+    makerTradesFree,
+  };
+}
+
+function normalizeFeeDetails(details) {
+  return Array.isArray(details)
+    ? details.filter((detail) => detail && typeof detail === 'object')
+    : [];
+}
+
+function appendFeeMeta(meta, feeInfo, feeLabel) {
+  if (!feeInfo?.hasFeeData) return;
+  meta.push([feeLabel, formatFee(feeInfo.fee ?? 0)]);
+  meta.push(['Trades taxados', String(feeInfo.tradesCharged ?? 0)]);
+  if ((feeInfo.makerTradesFree ?? 0) > 0) meta.push(['Maker sem taxa', String(feeInfo.makerTradesFree)]);
+}
+
+function feeLogSuffix(feeInfo, feeLabel) {
+  if (!feeInfo?.hasFeeData) return '';
+  return ` ${feeLabel}: ${formatFee(feeInfo.fee ?? 0)}. Trades taxados: ${feeInfo.tradesCharged ?? 0}.`;
+}
+
+function combineFeeInfo(...items) {
+  const active = items.filter((item) => item?.hasFeeData);
+  if (!active.length) return null;
+  return {
+    hasFeeData: true,
+    fee: roundFee(active.reduce((sum, item) => sum + (finiteNumber(item.fee) ?? 0), 0)),
+    tradesCharged: active.reduce((sum, item) => sum + (Number(item.tradesCharged) || 0), 0),
+    makerTradesFree: active.reduce((sum, item) => sum + (Number(item.makerTradesFree) || 0), 0),
+  };
+}
+
+function operationTimestamp(operation) {
+  return operation?.createdAt ?? operation?.ts ?? operation?.time ?? operation?.fillTime ?? null;
+}
+
+function operationSide(operation) {
+  return operation?.side ?? operation?.fromSide ?? operation?.toSide ?? null;
+}
+
+function operationLiquidity(operation) {
+  return operation?.liquidity ?? (Array.isArray(operation?.fills) ? operation.fills.find((fill) => fill?.liquidity)?.liquidity : null);
+}
+
+function textMatches(left, right) {
+  if (!left || !right) return false;
+  const a = String(left).toLowerCase();
+  const b = String(right).toLowerCase();
+  return a.includes(b) || b.includes(a);
+}
+
+function numbersClose(left, right) {
+  if (left == null || right == null) return false;
+  return Math.abs(Number(left) - Number(right)) <= 1e-8;
+}
+
+function timestampMs(value) {
+  if (value == null) return null;
+  const ms = new Date(value).getTime();
+  return Number.isFinite(ms) ? ms : null;
+}
+
+function finiteNumber(value) {
+  if (value == null || value === '') return null;
+  const num = Number(value);
+  return Number.isFinite(num) ? num : null;
+}
+
+function roundFee(value) {
+  const num = Number(value);
+  if (!Number.isFinite(num) || num <= 0) return 0;
+  return Math.round((num + Number.EPSILON) * 100000) / 100000;
 }
 
 function timelineItem(item) {
@@ -310,6 +609,11 @@ function formatContractPrice(value) {
 
 function formatPrice(value) {
   return formatContractPrice(value);
+}
+
+function formatFee(value) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num.toFixed(5) : String(value ?? '-');
 }
 
 function formatQty(value) {
