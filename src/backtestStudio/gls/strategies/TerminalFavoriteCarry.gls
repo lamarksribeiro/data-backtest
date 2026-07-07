@@ -74,6 +74,9 @@ strategy "Terminal Favorite Carry" {
   param hedgeStopPlaceSec = 8
   param hedgeStopLift = 0.10
   param hedgeStopBudget = 10
+  param hedgeStopCapAsk = 0.95
+  param hedgeStopArmOnDanger = false
+  param hedgeStopArmK = 0.3
   param hedgeCancelOnLateExit = true
 
   // Legado (desativado): limit passiva abaixo do mercado — não protege flip; manter off.
@@ -82,6 +85,18 @@ strategy "Terminal Favorite Carry" {
   param hedgeLimitBudget = 10
   param hedgeLimitMinSecondsLeft = 5
   param hedgeLimitPassiveGap = 0.05
+
+  // V7: entrada maker com fallback taker (desativado por padrão)
+  param entryMakerEnabled = false
+  param entryMakerDelta = 0.01
+  param entryMakerDeadlineSec = 10
+  param entryMakerChase = 0.02
+  param entryMakerFallbackTaker = true
+
+  // V7: danger-zone exit vol-relativo no piso (desativado por padrão)
+  param dangerExitEnabled = false
+  param dangerExitK = 0.5
+  param dangerExitFloorSec = 4
 
   onEventStart(event) {
     state.entered = false
@@ -96,12 +111,28 @@ strategy "Terminal Favorite Carry" {
     state.lateFlipFavChange = 0
     state.hedgeStopArmed = false
     state.hedgeStopPrice = 0
+    state.entryGatesOk = false
+    state.entryMakerStarted = false
+    state.entryMakerPending = false
+    state.entryMakerOrderId = ""
+    state.entryMakerSide = ""
+    state.entryMakerPostedAsk = 0.0
+    state.entryLimitPrice = 0.0
+    state.entryBudget = 0.0
+    state.entryMakerPostedSecLeft = 0.0
+    state.entryMakerFallbackActive = false
   }
 
   onTick(tick, event) {
     let secsLeft = time.secondsUntil(event.end, tick.ts)
 
     if (position.open) {
+      if (!state.entered) {
+        state.entered = true
+        state.entryMakerPending = false
+        mark("tfc_entry", { side: position.side, reason: "entry_maker_fill", secsLeft: secsLeft })
+      }
+
       let side = position.side
       let bid = book.bid(side, tick)
 
@@ -109,6 +140,18 @@ strategy "Terminal Favorite Carry" {
       state.signedDistance = tick.underlyingPrice - event.priceToBeat
       if (side == "DOWN") {
         state.signedDistance = event.priceToBeat - tick.underlyingPrice
+      }
+
+      let dangerExitOn = params.dangerExitEnabled == true || params.dangerExitEnabled == 1
+      if (dangerExitOn && !state.closed && !state.reversed && secsLeft >= params.dangerExitFloorSec && secsLeft < (params.dangerExitFloorSec + 1)) {
+        let sigma = signals.volatility(samples, 5)
+        if (math.abs(state.signedDistance) < (params.dangerExitK * sigma)) {
+          let dangerOut = exit({ price: bid, reason: "danger_exit" })
+          if (dangerOut) {
+            state.closed = dangerOut.closed
+            mark("exit", { reason: "danger_exit", price: bid, sigma: sigma })
+          }
+        }
       }
 
       let profitExitOn = params.profitExitEnabled == true || params.profitExitEnabled == 1
@@ -144,7 +187,9 @@ strategy "Terminal Favorite Carry" {
       let flipSignalReady = state.lateFlipConfirmed
         && state.signedDistance <= params.lateFlipExitCrossDist
         && bid >= params.stopMinBid
-      if (hedgeStopOn && !state.hedgeStopArmed && !hedgeFilled && flipSignalReady && secsLeft <= params.hedgeStopPlaceSec && secsLeft >= params.lateFlipMinSec) {
+      let armOnDanger = params.hedgeStopArmOnDanger == true || params.hedgeStopArmOnDanger == 1
+      let armSignalReady = flipSignalReady || (armOnDanger && math.abs(state.signedDistance) < (params.hedgeStopArmK * signals.volatility(samples, 5)))
+      if (hedgeStopOn && !state.hedgeStopArmed && !hedgeFilled && armSignalReady && secsLeft <= params.hedgeStopPlaceSec && secsLeft >= params.lateFlipMinSec) {
         let oppSide = prices.oppositeSide(side)
         let oppAsk = book.ask(oppSide, tick)
         state.hedgeStopPrice = params.hedgeStopPrice
@@ -152,8 +197,8 @@ strategy "Terminal Favorite Carry" {
         if (liftedStop < state.hedgeStopPrice) {
           state.hedgeStopPrice = liftedStop
         }
-        if (state.hedgeStopPrice > oppAsk && state.hedgeStopPrice < 0.95) {
-          let armed = placeBuyStop(oppSide, { stopPrice: state.hedgeStopPrice, budget: params.hedgeStopBudget, tick: tick, reason: "hedge_stop" })
+        if (state.hedgeStopPrice > oppAsk && state.hedgeStopPrice < params.hedgeStopCapAsk) {
+          let armed = placeBuyStop(oppSide, { stopPrice: state.hedgeStopPrice, capPrice: params.hedgeStopCapAsk, budget: params.hedgeStopBudget, tick: tick, reason: "hedge_stop" })
           if (armed) {
             state.hedgeStopArmed = true
             mark("hedge_stop_arm", { side: oppSide, stop: state.hedgeStopPrice, oppAsk: oppAsk, secsLeft: secsLeft })
@@ -268,7 +313,8 @@ strategy "Terminal Favorite Carry" {
                       }
                     }
 
-                    if (!state.askBlocked && !state.obiBlocked && termVol <= params.maxTerminalVol) {
+                    state.entryGatesOk = !state.askBlocked && !state.obiBlocked && termVol <= params.maxTerminalVol
+                    if (state.entryGatesOk) {
                       let maxPrice = ask + params.entrySlippageMax
 
                       // V5: Size Price Aware — reduz exposição quando o fill é caro
@@ -279,21 +325,50 @@ strategy "Terminal Favorite Carry" {
                       }
 
                       let budget = math.min(params.entryBudget, params.walletSize + runState.totalPnl) * state.budgetFactor
-                      let bought = enter(fav, { price: ask, maxPrice: maxPrice, budget: budget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "tfc_entry" })
-                      if (bought) {
-                        state.entered = true
-                        mark("tfc_entry", { side: fav, ask: ask, dist: dist, secsLeft: secsLeft, flips: flips })
-                        let hedgeLimitOn = params.hedgeLimitEnabled == true || params.hedgeLimitEnabled == 1
-                        if (hedgeLimitOn && secsLeft >= params.hedgeLimitMinSecondsLeft) {
-                          let hedgeSide = prices.oppositeSide(fav)
-                          let oppAsk = book.ask(hedgeSide, tick)
-                          let passiveCap = oppAsk - params.hedgeLimitPassiveGap
-                          state.hedgeLimitPrice = params.hedgeLimitPrice
-                          if (passiveCap < state.hedgeLimitPrice) {
-                            state.hedgeLimitPrice = passiveCap
+                      state.entryBudget = budget
+                      let makerOn = params.entryMakerEnabled == true || params.entryMakerEnabled == 1
+
+                      if (makerOn) {
+                        if (!state.entryMakerStarted) {
+                          state.entryMakerStarted = true
+                          let fallbackOnEarly = params.entryMakerFallbackTaker == true || params.entryMakerFallbackTaker == 1
+                          if (secsLeft <= params.entryMakerDeadlineSec && fallbackOnEarly) {
+                            state.entryMakerFallbackActive = true
+                          } else {
+                            state.entryLimitPrice = ask - params.entryMakerDelta
+                            if (state.entryLimitPrice <= bid) {
+                              state.entryLimitPrice = bid
+                            }
+                            if (state.entryLimitPrice > 0.0 && state.entryLimitPrice < ask) {
+                              let posted = placeLimitBuy(fav, { price: state.entryLimitPrice, budget: budget, minShares: params.minShares, tick: tick, reason: "entry_maker", role: "entry" })
+                              if (posted) {
+                                state.entryMakerPending = true
+                                state.entryMakerOrderId = posted.id
+                                state.entryMakerSide = fav
+                                state.entryMakerPostedAsk = ask
+                                state.entryMakerPostedSecLeft = secsLeft
+                                mark("entry_maker_post", { side: fav, price: state.entryLimitPrice, ask: ask, secsLeft: secsLeft })
+                              }
+                            }
                           }
-                          if (state.hedgeLimitPrice > 0.05 && state.hedgeLimitPrice < oppAsk) {
-                            placeLimitBuy(hedgeSide, { price: state.hedgeLimitPrice, budget: params.hedgeLimitBudget, tick: tick, reason: "hedge_limit" })
+                        }
+                      } else {
+                        let bought = enter(fav, { price: ask, maxPrice: maxPrice, budget: budget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "tfc_entry" })
+                        if (bought) {
+                          state.entered = true
+                          mark("tfc_entry", { side: fav, ask: ask, dist: dist, secsLeft: secsLeft, flips: flips })
+                          let hedgeLimitOn = params.hedgeLimitEnabled == true || params.hedgeLimitEnabled == 1
+                          if (hedgeLimitOn && secsLeft >= params.hedgeLimitMinSecondsLeft) {
+                            let hedgeSide = prices.oppositeSide(fav)
+                            let oppAsk = book.ask(hedgeSide, tick)
+                            let passiveCap = oppAsk - params.hedgeLimitPassiveGap
+                            state.hedgeLimitPrice = params.hedgeLimitPrice
+                            if (passiveCap < state.hedgeLimitPrice) {
+                              state.hedgeLimitPrice = passiveCap
+                            }
+                            if (state.hedgeLimitPrice > 0.05 && state.hedgeLimitPrice < oppAsk) {
+                              placeLimitBuy(hedgeSide, { price: state.hedgeLimitPrice, budget: params.hedgeLimitBudget, tick: tick, reason: "hedge_limit" })
+                            }
                           }
                         }
                       }
@@ -301,6 +376,113 @@ strategy "Terminal Favorite Carry" {
                   }
                 }
               }
+            }
+          }
+        }
+      }
+
+      let makerOnPending = params.entryMakerEnabled == true || params.entryMakerEnabled == 1
+      if (makerOnPending && !position.open) {
+        let btcPending = tick.underlyingPrice
+        let ptbPending = event.priceToBeat
+        let favPending = market.sideFromPrice(btcPending, ptbPending)
+        let askPending = book.ask(favPending, tick)
+        let bidPending = book.bid(favPending, tick)
+        let spreadPending = askPending - bidPending
+
+        state.entryFallbackBookOk = askPending > 0.0 && askPending < 1.0 && bidPending > 0.0 && bidPending < 1.0 && askPending >= params.minAsk && askPending <= params.maxAsk && spreadPending <= params.maxSpread
+
+        if (state.entryMakerPending) {
+          if (favPending != state.entryMakerSide) {
+            cancelLimit(state.entryMakerOrderId)
+            state.entryMakerPending = false
+          }
+          if (state.entryMakerPending && favPending == state.entryMakerSide && (askPending - state.entryMakerPostedAsk) > params.entryMakerChase) {
+            if (askPending <= params.maxAsk) {
+              cancelLimit(state.entryMakerOrderId)
+              state.entryLimitPrice = askPending - params.entryMakerDelta
+              if (state.entryLimitPrice <= bidPending) {
+                state.entryLimitPrice = bidPending
+              }
+              if (state.entryLimitPrice > 0.0 && state.entryLimitPrice < askPending) {
+                let reposted = placeLimitBuy(favPending, { price: state.entryLimitPrice, budget: state.entryBudget, minShares: params.minShares, tick: tick, reason: "entry_maker", role: "entry" })
+                if (reposted) {
+                  state.entryMakerOrderId = reposted.id
+                  state.entryMakerPostedAsk = askPending
+                  state.entryMakerPostedSecLeft = secsLeft
+                  mark("entry_maker_repost", { side: favPending, price: state.entryLimitPrice, ask: askPending, secsLeft: secsLeft })
+                }
+              }
+            }
+          }
+
+          if (state.entryMakerPending && secsLeft < state.entryMakerPostedSecLeft) {
+            cancelLimit(state.entryMakerOrderId)
+            state.entryMakerPending = false
+            let fallbackOn = params.entryMakerFallbackTaker == true || params.entryMakerFallbackTaker == 1
+            if (fallbackOn) {
+              state.entryMakerFallbackActive = true
+            }
+          }
+        }
+
+        if (state.entryMakerFallbackActive && !state.entered && secsLeft >= params.minSecondsLeft) {
+          state.entryGatesOk = false
+          if (secsLeft < params.maxSecondsLeft) {
+            let distFb = math.abs(btcPending - ptbPending)
+            if (distFb < params.maxDistAbs) {
+              let flipsFb = signals.ptbFlipCount(samples, params.flipWindowSecs)
+              state.isAdverseMove = false
+              let btcPastFb = signals.underlyingAgo(samples, params.velocityLookbackSecs)
+              if (btcPastFb) {
+                let spotChangeFb = btcPending - btcPastFb
+                if (favPending == "UP" && spotChangeFb < 0.0 - params.maxAdverseSpotChange) {
+                  state.isAdverseMove = true
+                }
+                if (favPending == "DOWN" && spotChangeFb > params.maxAdverseSpotChange) {
+                  state.isAdverseMove = true
+                }
+              }
+              if (!state.isAdverseMove && flipsFb >= params.minFlips && flipsFb <= params.maxFlips && state.entryFallbackBookOk) {
+                let upAskFb = book.ask("UP", tick)
+                let downAskFb = book.ask("DOWN", tick)
+                let oddsSumFb = upAskFb + downAskFb
+                if (oddsSumFb >= params.minOddsSum && oddsSumFb <= params.maxOddsSum) {
+                  state.askBlocked = false
+                  if (favPending == "UP") {
+                    let askPastUpFb = signals.upAskAgo(samples, params.askMomentumLookbackSecs)
+                    if (askPastUpFb && askPastUpFb > 0 && (askPending - askPastUpFb) > params.maxAskRise) {
+                      state.askBlocked = true
+                    }
+                  } else {
+                    let askPastDownFb = signals.downAskAgo(samples, params.askMomentumLookbackSecs)
+                    if (askPastDownFb && askPastDownFb > 0 && (askPending - askPastDownFb) > params.maxAskRise) {
+                      state.askBlocked = true
+                    }
+                  }
+                  let termVolFb = signals.volatility(samples, params.volLookbackSecs)
+                  state.obiBlocked = false
+                  if (params.minObi > (0.0 - 1.0)) {
+                    let obiFb = model.orderBookImbalance(favPending, tick, params.obiLevels)
+                    if (obiFb < params.minObi) {
+                      state.obiBlocked = true
+                    }
+                  }
+                  if (!state.askBlocked && !state.obiBlocked && termVolFb <= params.maxTerminalVol) {
+                    state.entryGatesOk = true
+                  }
+                }
+              }
+            }
+          }
+
+          if (state.entryGatesOk && state.entryFallbackBookOk) {
+            let maxPriceFb = askPending + params.entrySlippageMax
+            let boughtFb = enter(favPending, { price: askPending, maxPrice: maxPriceFb, budget: state.entryBudget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "tfc_entry_fallback" })
+            if (boughtFb) {
+              state.entered = true
+              state.entryMakerFallbackActive = false
+              mark("tfc_entry", { side: favPending, ask: askPending, secsLeft: secsLeft, reason: "fallback_taker" })
             }
           }
         }

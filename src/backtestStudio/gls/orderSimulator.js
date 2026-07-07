@@ -14,7 +14,8 @@ export function createOrderSimulator({ limits = {} } = {}) {
   let restingOrders = [];
   let lots = { UP: null, DOWN: null };
   let limitSeq = 0;
-  let lastTick = null;
+  let lastBestAsks = { UP: null, DOWN: null };
+  let lastTickSnapshot = null;
   const consumedAsksBySide = { UP: new Map(), DOWN: new Map() };
   const consumedBidsBySide = { UP: new Map(), DOWN: new Map() };
 
@@ -132,6 +133,13 @@ export function createOrderSimulator({ limits = {} } = {}) {
     };
   }
 
+  function snapshotBestAsks(tick) {
+    if (!tick) return;
+    lastBestAsks.UP = bestAskPrice('UP', tick);
+    lastBestAsks.DOWN = bestAskPrice('DOWN', tick);
+    lastTickSnapshot = tick;
+  }
+
   const api = {
     get positionView() {
       return positionView;
@@ -146,7 +154,7 @@ export function createOrderSimulator({ limits = {} } = {}) {
       position = planned.position;
       syncPrimaryLotFromPosition();
       syncPositionView();
-      const order = planned.order;
+      const order = { ...planned.order, orderRole: 'entry' };
       orders.push(order);
       return order;
     },
@@ -212,7 +220,7 @@ export function createOrderSimulator({ limits = {} } = {}) {
       position = committed.position;
       syncPrimaryLotFromPosition();
       syncPositionView();
-      orders.push(committed.order);
+      orders.push({ ...committed.order, orderRole: 'entry' });
       return committed.order;
     },
     closeOpenPosition(options = {}) {
@@ -226,6 +234,8 @@ export function createOrderSimulator({ limits = {} } = {}) {
     },
     placeLimitBuy(side, options = {}) {
       if (side !== 'UP' && side !== 'DOWN') return false;
+      const role = options.role === 'entry' ? 'entry' : 'hedge';
+      if (role === 'entry' && position) return false;
       const price = Number(options.price);
       const budget = Number(options.budget ?? options.maxOrderValue ?? 10);
       if (!Number.isFinite(price) || price <= 0 || price >= 1) return false;
@@ -250,6 +260,7 @@ export function createOrderSimulator({ limits = {} } = {}) {
       const resting = {
         id: `lim-${limitSeq}`,
         kind: 'limit_buy',
+        role,
         side,
         price,
         budget,
@@ -268,8 +279,10 @@ export function createOrderSimulator({ limits = {} } = {}) {
       if (side !== 'UP' && side !== 'DOWN') return false;
       const stopPrice = Number(options.stopPrice ?? options.price);
       const budget = Number(options.budget ?? options.maxOrderValue ?? 10);
+      const capPrice = Number(options.capPrice);
       if (!Number.isFinite(stopPrice) || stopPrice <= 0 || stopPrice >= 1) return false;
       if (!Number.isFinite(budget) || budget <= 0) return false;
+      if (!Number.isFinite(capPrice) || capPrice <= stopPrice || capPrice >= 1) return false;
 
       const bestAsk = bestAskPrice(side, options.tick);
       // Stop-buy repousa acima do mercado: dispara quando o ask sobe através do gatilho (flip/repricing).
@@ -290,6 +303,7 @@ export function createOrderSimulator({ limits = {} } = {}) {
         kind: 'stop_buy',
         side,
         price: stopPrice,
+        capPrice,
         budget,
         shares,
         placedTs: options.ts ?? null,
@@ -300,7 +314,7 @@ export function createOrderSimulator({ limits = {} } = {}) {
       };
       restingOrders.push(resting);
       syncRestingView();
-      return { id: resting.id, side, price: stopPrice, shares, budget, status: resting.status };
+      return { id: resting.id, side, price: stopPrice, capPrice, shares, budget, status: resting.status };
     },
     cancelLimit(idOrNull = null) {
       let cancelled = 0;
@@ -316,7 +330,7 @@ export function createOrderSimulator({ limits = {} } = {}) {
     },
     checkRestingOrders(tick) {
       if (!tick || restingOrders.length === 0) {
-        lastTick = tick ?? lastTick;
+        if (tick) snapshotBestAsks(tick);
         return 0;
       }
       let filled = 0;
@@ -325,16 +339,16 @@ export function createOrderSimulator({ limits = {} } = {}) {
         const currAsk = bestAskPrice(resting.side, tick);
         if (currAsk == null) continue;
 
-        const prevAsk = lastTick
-          ? bestAskPrice(resting.side, lastTick)
-          : resting.placedRefAsk;
+        const prevAsk = lastBestAsks[resting.side] ?? resting.placedRefAsk;
 
         let shouldFill = false;
         if (resting.kind === 'stop_buy') {
           // Repricing do flip: ask sobe através do stop (ex.: 0.38 → 0.55 → 0.80).
-          shouldFill = prevAsk != null
+          const crossed = prevAsk != null
             && prevAsk < resting.price
             && currAsk >= resting.price - makerFillEpsilon;
+          if (crossed) resting.stopTriggered = true;
+          shouldFill = Boolean(resting.stopTriggered);
         } else {
           // Limit passivo: ask cai através do bid (compra mais barata).
           shouldFill = prevAsk != null
@@ -343,23 +357,81 @@ export function createOrderSimulator({ limits = {} } = {}) {
         }
         if (!shouldFill) continue;
 
-        let fillShares = resting.shares;
-        if (makerFillPolicy === 'level-capped') {
-          const visible = visibleSizeAtOrAbove(resting.side, lastTick ?? tick, resting.price);
-          fillShares = Math.min(fillShares, Math.floor(visible));
-        }
-        if (fillShares <= 0) continue;
+        const isEntryRole = resting.role === 'entry';
+        if (isEntryRole && position) continue;
 
-        const notional = fillShares * resting.price;
+        let fillShares;
+        let notional;
+        let avgFillPrice;
+        let fillRecords;
+        const liquidity = resting.kind === 'stop_buy' ? 'taker' : 'maker';
+
+        if (resting.kind === 'stop_buy') {
+          const capPrice = resting.capPrice ?? 0.99;
+          if (currAsk > capPrice + 1e-9) continue;
+          if (currAsk < resting.price - makerFillEpsilon) continue;
+
+          const consumedByPrice = consumedAsksBySide[resting.side];
+          let targetShares = resting.shares;
+          let fills = fillAsks(resting.side, tick, capPrice, targetShares, consumedByPrice, currAsk, true);
+          fillShares = fills.reduce((sum, fill) => sum + fill.qty, 0);
+          if (fillShares <= 0) continue;
+
+          trimFills(fills, fillShares);
+          notional = fills.reduce((sum, fill) => sum + (fill.qty * fill.price), 0);
+          if (notional > resting.budget + 0.000001) {
+            const affordableShares = Math.floor(resting.budget / (notional / fillShares));
+            if (affordableShares <= 0) continue;
+            targetShares = Math.min(targetShares, affordableShares);
+            fills = fillAsks(resting.side, tick, capPrice, targetShares, consumedByPrice, currAsk, true);
+            fillShares = fills.reduce((sum, fill) => sum + fill.qty, 0);
+            if (fillShares <= 0) continue;
+            trimFills(fills, fillShares);
+            notional = fills.reduce((sum, fill) => sum + (fill.qty * fill.price), 0);
+            if (notional > resting.budget + 0.000001) continue;
+          }
+
+          avgFillPrice = notional / fillShares;
+          fillRecords = fills.map((fill) => ({ price: fill.price, qty: fill.qty, liquidity: 'taker' }));
+        } else {
+          fillShares = resting.shares;
+          if (makerFillPolicy === 'level-capped') {
+            const visible = visibleSizeAtOrAbove(resting.side, lastTickSnapshot ?? tick, resting.price);
+            fillShares = Math.min(fillShares, Math.floor(visible));
+          }
+          if (fillShares <= 0) continue;
+
+          notional = fillShares * resting.price;
+          avgFillPrice = resting.price;
+          fillRecords = [{ price: resting.price, qty: fillShares, liquidity: 'maker' }];
+        }
+
         resting.status = 'filled';
         resting.fill = {
           ts: tick.ts ?? tick._tsMs ?? null,
-          price: resting.price,
+          price: avgFillPrice,
           qty: fillShares,
           notional,
-          liquidity: resting.kind === 'stop_buy' ? 'taker' : 'maker',
+          liquidity,
+          fills: fillRecords.map((fill) => ({ ...fill })),
         };
-        creditLot(resting.side, fillShares, notional);
+        const orderRole = isEntryRole ? 'entry' : 'hedge';
+
+        if (isEntryRole) {
+          position = {
+            side: resting.side,
+            totalShares: fillShares,
+            remainingShares: fillShares,
+            totalCost: notional,
+            openCost: notional,
+            avgEntryPrice: avgFillPrice,
+            peakBid: avgFillPrice,
+          };
+          syncPrimaryLotFromPosition();
+        } else {
+          creditLot(resting.side, fillShares, notional);
+        }
+
         orders.push({
           type: 'entry',
           side: resting.side,
@@ -367,17 +439,18 @@ export function createOrderSimulator({ limits = {} } = {}) {
           price: resting.price,
           shares: fillShares,
           notional,
-          avgPrice: resting.price,
-          fills: [{ price: resting.price, qty: fillShares }],
+          avgPrice: avgFillPrice,
+          fills: fillRecords.map((fill) => ({ ...fill })),
           reason: resting.reason,
-          liquidity: resting.kind === 'stop_buy' ? 'taker' : 'maker',
+          liquidity,
+          orderRole,
           restingOrderId: resting.id,
         });
         filled += 1;
       }
       if (filled > 0) syncPositionView();
       syncRestingView();
-      lastTick = tick;
+      snapshotBestAsks(tick);
       return filled;
     },
     expireRestingOrders() {
@@ -397,7 +470,8 @@ export function createOrderSimulator({ limits = {} } = {}) {
       restingOrders = [];
       lots = { UP: null, DOWN: null };
       limitSeq = 0;
-      lastTick = null;
+      lastBestAsks = { UP: null, DOWN: null };
+      lastTickSnapshot = null;
       syncRestingView();
       syncPositionView();
       consumedAsksBySide.UP.clear();
@@ -431,13 +505,19 @@ export function createOrderSimulator({ limits = {} } = {}) {
   return api;
 }
 
+function resolveOrderRole(order) {
+  if (order?.orderRole === 'entry' || order?.orderRole === 'hedge') return order.orderRole;
+  if (order?.liquidity === 'maker') return 'hedge';
+  return 'entry';
+}
+
 export function settleEventPnl(simulator, tick, event) {
   const snap = simulator.snapshot();
-  const hasTakerEntry = snap.orders.some((o) => o.type === 'entry');
+  const hasAnyEntry = snap.orders.some((o) => o.type === 'entry');
   const lotData = snap.lots ?? { UP: null, DOWN: null };
   const hasLotShares = (lotData.UP?.shares ?? 0) > 0 || (lotData.DOWN?.shares ?? 0) > 0;
 
-  if (!hasTakerEntry && !hasLotShares) {
+  if (!hasAnyEntry && !hasLotShares) {
     return { finalPnl: snap.realizedPnl, reason: snap.orders.length ? 'closed' : 'no_entry', expirationResult: null };
   }
 
@@ -470,8 +550,8 @@ export function settleEventPnl(simulator, tick, event) {
   }
 
   const finalPnl = snap.realizedPnl + expiryPnl;
-  const primaryEntry = snap.orders.find((o) => o.type === 'entry' && o.liquidity !== 'maker');
-  const hedgeFill = snap.orders.find((o) => o.type === 'entry' && o.liquidity === 'maker') ?? null;
+  const primaryEntry = snap.orders.find((o) => o.type === 'entry' && resolveOrderRole(o) === 'entry');
+  const hedgeFill = snap.orders.find((o) => o.type === 'entry' && resolveOrderRole(o) === 'hedge') ?? null;
   const primarySide = snap.position?.side ?? primaryEntry?.side ?? null;
   const hedgeSide = primarySide === 'UP' ? 'DOWN' : (primarySide === 'DOWN' ? 'UP' : null);
   const hedgePnl = hedgeSide && lotPnls[hedgeSide] != null ? lotPnls[hedgeSide] : null;

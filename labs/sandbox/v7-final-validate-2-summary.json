@@ -1,0 +1,126 @@
+{
+  "v6HybridBeforeFix": {
+    "full": 4128.8,
+    "note": "optimistic stop fill @ trigger price"
+  },
+  "full": {
+    "reportDir": "D:\\Projetos\\projeto-goldenlens\\data-backtest\\reports\\labs\\tfc\\2026-07-07T06-17-41-915Z-v7-final-validate-2-full",
+    "results": {
+      "v5-practical-reference": {
+        "pnl": 4059.76,
+        "entries": 3580,
+        "winRate": 74.9,
+        "profitFactor": 1.56,
+        "maxDrawdown": 80.76
+      },
+      "v6-hybrid-reference": {
+        "pnl": 3882.01,
+        "entries": 3580,
+        "winRate": 75.4,
+        "profitFactor": 1.57,
+        "maxDrawdown": 71.64
+      },
+      "v6-plus-danger": {
+        "pnl": 3949.87,
+        "entries": 3580,
+        "winRate": 75.2,
+        "profitFactor": 1.59,
+        "maxDrawdown": 71.64
+      },
+      "v6-danger-armed": {
+        "pnl": 3711.19,
+        "entries": 3580,
+        "winRate": 74.4,
+        "profitFactor": 1.55,
+        "maxDrawdown": 71.64
+      },
+      "v7-danger-reference": {
+        "pnl": 4086.27,
+        "entries": 3580,
+        "winRate": 74.8,
+        "profitFactor": 1.58,
+        "maxDrawdown": 79.99
+      }
+    }
+  },
+  "june": {
+    "reportDir": "D:\\Projetos\\projeto-goldenlens\\data-backtest\\reports\\labs\\tfc\\2026-07-07T06-19-49-621Z-v7-final-validate-2-june",
+    "results": {
+      "v5-practical-reference": {
+        "pnl": 2303.63,
+        "entries": 1938,
+        "winRate": 74.8,
+        "profitFactor": 1.59,
+        "maxDrawdown": 79.99
+      },
+      "v6-hybrid-reference": {
+        "pnl": 2245.87,
+        "entries": 1938,
+        "winRate": 75.6,
+        "profitFactor": 1.62,
+        "maxDrawdown": 71.64
+      },
+      "v6-plus-danger": {
+        "pnl": 2263.55,
+        "entries": 1938,
+        "winRate": 75.3,
+        "profitFactor": 1.63,
+        "maxDrawdown": 71.64
+      },
+      "v6-danger-armed": {
+        "pnl": 2184.02,
+        "entries": 1938,
+        "winRate": 74.7,
+        "profitFactor": 1.6,
+        "maxDrawdown": 71.64
+      },
+      "v7-danger-reference": {
+        "pnl": 2321.1,
+        "entries": 1938,
+        "winRate": 74.6,
+        "profitFactor": 1.6,
+        "maxDrawdown": 79.99
+      }
+    }
+  },
+  "holdout": {
+    "reportDir": "D:\\Projetos\\projeto-goldenlens\\data-backtest\\reports\\labs\\tfc\\2026-07-07T06-20-11-171Z-v7-final-validate-2-holdout",
+    "results": {
+      "v5-practical-reference": {
+        "pnl": 254.54,
+        "entries": 348,
+        "winRate": 74.7,
+        "profitFactor": 1.33,
+        "maxDrawdown": 59.72
+      },
+      "v6-hybrid-reference": {
+        "pnl": 355.61,
+        "entries": 348,
+        "winRate": 77,
+        "profitFactor": 1.52,
+        "maxDrawdown": 51.67
+      },
+      "v6-plus-danger": {
+        "pnl": 352.38,
+        "entries": 348,
+        "winRate": 76.7,
+        "profitFactor": 1.52,
+        "maxDrawdown": 51.67
+      },
+      "v6-danger-armed": {
+        "pnl": 298.44,
+        "entries": 348,
+        "winRate": 75.9,
+        "profitFactor": 1.42,
+        "maxDrawdown": 51.67
+      },
+      "v7-danger-reference": {
+        "pnl": 239.38,
+        "entries": 348,
+        "winRate": 74.1,
+        "profitFactor": 1.31,
+        "maxDrawdown": 59.72
+      }
+    }
+  }
+}

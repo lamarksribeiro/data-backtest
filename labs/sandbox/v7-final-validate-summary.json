@@ -1,0 +1,40 @@
+{
+  "generatedAt": "2026-07-07T05:22:00.000Z",
+  "note": "Holdout rodado 2026-07-01→2026-07-05 (partição 2026-07-06 ausente no lake local). Critério v7 ≥ v5−5% no holdout FALHOU.",
+  "reports": {
+    "full": "reports/labs/tfc/2026-07-07T05-18-01-962Z-v7-final-validate-full",
+    "june": "reports/labs/tfc/2026-07-07T05-20-07-731Z-v7-final-validate-june",
+    "holdout": "reports/labs/tfc/2026-07-07T05-21-29-927Z-v7-final-validate-holdout"
+  },
+  "criteria": {
+    "fullV7gteV5": true,
+    "juneV7gteV5": true,
+    "holdoutV7Positive": true,
+    "holdoutV7gteV5minus5pct": false,
+    "kSensitivityStable": true,
+    "ddV7lteV5Full": true
+  },
+  "full": {
+    "v7-champion": { "pnl": 4086.27, "entries": 3580, "winRate": 74.8, "profitFactor": 1.58, "maxDrawdown": 79.99 },
+    "v7-k025": { "pnl": 4077.74, "entries": 3580, "winRate": 74.8, "profitFactor": 1.57, "maxDrawdown": 79.99 },
+    "v7-k035": { "pnl": 4086.94, "entries": 3580, "winRate": 74.8, "profitFactor": 1.58, "maxDrawdown": 79.99 },
+    "v5-practical-reference": { "pnl": 4059.76, "entries": 3580, "winRate": 74.9, "profitFactor": 1.56, "maxDrawdown": 80.76 },
+    "v6-hybrid-reference": { "pnl": 4128.8, "entries": 3580, "winRate": 75.7, "profitFactor": 1.59, "maxDrawdown": 71.64 }
+  },
+  "june": {
+    "v7-champion": { "pnl": 2321.1, "entries": 1938, "winRate": 74.6, "profitFactor": 1.6, "maxDrawdown": 79.99 },
+    "v7-k025": { "pnl": 2326.1, "entries": 1938, "winRate": 74.7, "profitFactor": 1.6, "maxDrawdown": 79.99 },
+    "v7-k035": { "pnl": 2322.06, "entries": 1938, "winRate": 74.6, "profitFactor": 1.6, "maxDrawdown": 79.99 },
+    "v5-practical-reference": { "pnl": 2303.63, "entries": 1938, "winRate": 74.8, "profitFactor": 1.59, "maxDrawdown": 79.99 },
+    "v6-hybrid-reference": { "pnl": 2362.96, "entries": 1938, "winRate": 75.9, "profitFactor": 1.62, "maxDrawdown": 71.64 }
+  },
+  "holdout": {
+    "window": "2026-07-01→2026-07-05",
+    "v7-champion": { "pnl": 239.38, "entries": 348, "winRate": 74.1, "profitFactor": 1.31, "maxDrawdown": 59.72 },
+    "v7-k025": { "pnl": 243.07, "entries": 348, "winRate": 74.1, "profitFactor": 1.31, "maxDrawdown": 59.72 },
+    "v7-k035": { "pnl": 239.38, "entries": 348, "winRate": 74.1, "profitFactor": 1.31, "maxDrawdown": 59.72 },
+    "v5-practical-reference": { "pnl": 254.54, "entries": 348, "winRate": 74.7, "profitFactor": 1.33, "maxDrawdown": 59.72 },
+    "v6-hybrid-reference": { "pnl": 390.21, "entries": 348, "winRate": 77.6, "profitFactor": 1.6, "maxDrawdown": 49.5 },
+    "v5minus5pctThreshold": 241.81
+  }
+}

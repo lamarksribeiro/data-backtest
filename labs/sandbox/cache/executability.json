@@ -1,0 +1,86 @@
+{
+  "window": {
+    "from": "2026-05-04",
+    "to": "2026-07-01"
+  },
+  "cadence": {
+    "last30s": {
+      "n": 50000,
+      "p50": 0.5,
+      "p90": 0.502,
+      "p99": 0.502,
+      "pctGt2s": 0
+    },
+    "last10s": {
+      "n": 50000,
+      "p50": 0.5,
+      "p90": 0.501,
+      "p99": 0.502,
+      "pctGt2s": 0
+    },
+    "eventsWithGapGt2s_last30s": {
+      "total": 16399,
+      "holes": 0
+    },
+    "eventsWithGapGt2s_last10s": {
+      "total": 16399,
+      "holes": 0
+    }
+  },
+  "bookPresence": {
+    "actionWindow_tau_4_8": {
+      "tickCount": 141924,
+      "pctValidBook": 0.38061215862010656,
+      "pctSpreadLe003": 0.9297299963360672,
+      "pctDepthGe10": 0.3188960288605169,
+      "pctDepthGe50": 0.239346410755052
+    },
+    "entryWindow_tau_5_30": {
+      "tickCount": 886982,
+      "pctValidBook": 0.5385532062657415,
+      "pctSpreadLe003": 0.9577995945802733,
+      "pctDepthGe10": 0.4710129405106304,
+      "pctDepthGe50": 0.3583883325704468
+    },
+    "forbiddenZone_tau_0_4": {
+      "tickCount": 141859,
+      "pctValidBook": 0.21022282689149085,
+      "pctSpreadLe003": 0.9481456939637245,
+      "pctDepthGe10": 0.17826151319267725,
+      "pctDepthGe50": 0.13801732706419756
+    }
+  },
+  "entryExecution": {
+    "nEntriesSimulated": 4133,
+    "avgTopDepthUsd": 132.26762648197436,
+    "avgLevelsConsumed": 1.196467457052988,
+    "avgSlippageVsBestAsk": 0.017296151231770307,
+    "pctSingleLevel": 0.8301475925477861
+  },
+  "latencyDegradation": {
+    "0": {
+      "n": 600,
+      "avgSimPnl": -4.157523933333332,
+      "avgProxyPnl": -3.939258348157933,
+      "avgDelta": 0.21826558517539785
+    },
+    "0.5": {
+      "n": 600,
+      "avgSimPnl": -4.157523933333332,
+      "avgProxyPnl": -4.31302333344229,
+      "avgDelta": -0.15549940010895408
+    },
+    "1.0": {
+      "n": 600,
+      "avgSimPnl": -4.157523933333332,
+      "avgProxyPnl": -4.32462273846061,
+      "avgDelta": -0.16709880512726905
+    }
+  },
+  "limitations": [
+    "Latência: primeiro snapshot ≥ t+latência após cruzamento na janela 4-8s; sem fila de ordens.",
+    "Proxy PnL sob latência: exit no bid + reverse taker; não replica hedge stop V6.",
+    "Entradas: primeiro tick com gates V5 no evento (pode divergir 1 tick do motor).",
+    "eventTicks para latência mantidos só para eventos com ação tardia (memória)."
+  ]
+}

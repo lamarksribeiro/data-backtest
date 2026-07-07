@@ -1,0 +1,466 @@
+[
+  {
+    "name": "v7-m1-maker-train",
+    "ok": true,
+    "elapsedMs": 483673,
+    "reportDir": "D:\\Projetos\\projeto-goldenlens\\data-backtest\\reports\\labs\\tfc\\2026-07-07T04-15-49-248Z-v7-m1-maker-train",
+    "results": [
+      {
+        "id": "v5-practical-baseline",
+        "pnl": 1756.1292899999996,
+        "entries": 1642,
+        "winRate": 75.03045066991474,
+        "profitFactor": 1.5353343069034626,
+        "maxDrawdown": 80.75914000000002
+      },
+      {
+        "id": "m1-d0.01-dl12-fb1",
+        "pnl": 1466.6677099999997,
+        "entries": 1438,
+        "winRate": 74.96522948539638,
+        "profitFactor": 1.509269653078965,
+        "maxDrawdown": 65.36256999999999
+      },
+      {
+        "id": "m1-d0.01-dl10-fb1",
+        "pnl": 1448.9805799999997,
+        "entries": 1427,
+        "winRate": 74.9124036440084,
+        "profitFactor": 1.5058664696342143,
+        "maxDrawdown": 65.36256999999999
+      },
+      {
+        "id": "m1-d0.02-dl12-fb1",
+        "pnl": 1449.1835999999996,
+        "entries": 1443,
+        "winRate": 74.84407484407485,
+        "profitFactor": 1.4996580534244561,
+        "maxDrawdown": 68.95009999999999
+      },
+      {
+        "id": "m1-d0.01-dl8-fb1",
+        "pnl": 1433.6485399999997,
+        "entries": 1420,
+        "winRate": 74.71830985915493,
+        "profitFactor": 1.5015610927799543,
+        "maxDrawdown": 64.42143
+      }
+    ]
+  },
+  {
+    "name": "v7-m1-maker-june",
+    "ok": true,
+    "elapsedMs": 434371,
+    "reportDir": "D:\\Projetos\\projeto-goldenlens\\data-backtest\\reports\\labs\\tfc\\2026-07-07T04-23-03-656Z-v7-m1-maker-june",
+    "results": [
+      {
+        "id": "v5-practical-baseline",
+        "pnl": 2303.62976,
+        "entries": 1938,
+        "winRate": 74.76780185758514,
+        "profitFactor": 1.5886679359814762,
+        "maxDrawdown": 79.99015
+      },
+      {
+        "id": "m1-d0.02-dl12-fb1",
+        "pnl": 1999.6458799999996,
+        "entries": 1731,
+        "winRate": 74.46562680531484,
+        "profitFactor": 1.5686025469078948,
+        "maxDrawdown": 82.4896
+      },
+      {
+        "id": "m1-d0.01-dl12-fb1",
+        "pnl": 1981.7269199999996,
+        "entries": 1731,
+        "winRate": 74.40785673021375,
+        "profitFactor": 1.5615146943979583,
+        "maxDrawdown": 82.6096
+      },
+      {
+        "id": "m1-d0.02-dl10-fb1",
+        "pnl": 1904.90706,
+        "entries": 1712,
+        "winRate": 74.41588785046729,
+        "profitFactor": 1.5452645234019449,
+        "maxDrawdown": 86.43648999999999
+      },
+      {
+        "id": "m1-d0.01-dl10-fb1",
+        "pnl": 1886.9881,
+        "entries": 1712,
+        "winRate": 74.35747663551402,
+        "profitFactor": 1.5382127869702646,
+        "maxDrawdown": 86.43648999999999
+      }
+    ]
+  },
+  {
+    "name": "v7-m1b-late-entry-train",
+    "ok": true,
+    "elapsedMs": 219242,
+    "reportDir": "D:\\Projetos\\projeto-goldenlens\\data-backtest\\reports\\labs\\tfc\\2026-07-07T04-26-42-921Z-v7-m1b-late-entry-train",
+    "results": [
+      {
+        "id": "v5-practical-baseline",
+        "pnl": 1756.1292899999996,
+        "entries": 1642,
+        "winRate": 75.03045066991474,
+        "profitFactor": 1.5353343069034626,
+        "maxDrawdown": 80.75914000000002
+      },
+      {
+        "id": "m1b-maxsec-30",
+        "pnl": 1756.1292899999996,
+        "entries": 1642,
+        "winRate": 75.03045066991474,
+        "profitFactor": 1.5353343069034626,
+        "maxDrawdown": 80.75914000000002
+      },
+      {
+        "id": "m1b-maxsec-20",
+        "pnl": 1669.74912,
+        "entries": 1105,
+        "winRate": 78.3710407239819,
+        "profitFactor": 1.8765619807263252,
+        "maxDrawdown": 60.91306
+      },
+      {
+        "id": "m1b-maxsec-15",
+        "pnl": 1344.10344,
+        "entries": 775,
+        "winRate": 80.90322580645162,
+        "profitFactor": 2.104723745881213,
+        "maxDrawdown": 64.32607000000002
+      },
+      {
+        "id": "m1b-maxsec-12",
+        "pnl": 1037.01205,
+        "entries": 582,
+        "winRate": 81.61512027491409,
+        "profitFactor": 2.1581698288114213,
+        "maxDrawdown": 59.23917
+      }
+    ]
+  },
+  {
+    "name": "v7-m1b-late-entry-june",
+    "ok": true,
+    "elapsedMs": 202408,
+    "reportDir": "D:\\Projetos\\projeto-goldenlens\\data-backtest\\reports\\labs\\tfc\\2026-07-07T04-30-05-328Z-v7-m1b-late-entry-june",
+    "results": [
+      {
+        "id": "v5-practical-baseline",
+        "pnl": 2303.62976,
+        "entries": 1938,
+        "winRate": 74.76780185758514,
+        "profitFactor": 1.5886679359814762,
+        "maxDrawdown": 79.99015
+      },
+      {
+        "id": "m1b-maxsec-30",
+        "pnl": 2303.62976,
+        "entries": 1938,
+        "winRate": 74.76780185758514,
+        "profitFactor": 1.5886679359814762,
+        "maxDrawdown": 79.99015
+      },
+      {
+        "id": "m1b-maxsec-20",
+        "pnl": 1607.8991699999997,
+        "entries": 1392,
+        "winRate": 75.79022988505747,
+        "profitFactor": 1.5976479472793284,
+        "maxDrawdown": 70.9189
+      },
+      {
+        "id": "m1b-maxsec-12",
+        "pnl": 1383.5262599999999,
+        "entries": 841,
+        "winRate": 80.49940546967895,
+        "profitFactor": 2.047583536424515,
+        "maxDrawdown": 35.102470000000004
+      },
+      {
+        "id": "m1b-maxsec-15",
+        "pnl": 1377.0112399999998,
+        "entries": 1072,
+        "winRate": 77.51865671641791,
+        "profitFactor": 1.6983505434596144,
+        "maxDrawdown": 50.3891
+      }
+    ]
+  },
+  {
+    "name": "v7-m2-reverse-train",
+    "ok": true,
+    "elapsedMs": 571688,
+    "reportDir": "D:\\Projetos\\projeto-goldenlens\\data-backtest\\reports\\labs\\tfc\\2026-07-07T04-39-36-993Z-v7-m2-reverse-train",
+    "results": [
+      {
+        "id": "v5-practical-baseline",
+        "pnl": 1756.1292899999996,
+        "entries": 1642,
+        "winRate": 75.03045066991474,
+        "profitFactor": 1.5353343069034626,
+        "maxDrawdown": 80.75914000000002
+      },
+      {
+        "id": "m2-rev-0.95-c0-m0",
+        "pnl": 1756.1292899999996,
+        "entries": 1642,
+        "winRate": 75.03045066991474,
+        "profitFactor": 1.5353343069034626,
+        "maxDrawdown": 80.75914000000002
+      },
+      {
+        "id": "m2-rev-0.85-c0-m0",
+        "pnl": 1709.12162,
+        "entries": 1642,
+        "winRate": 75.03045066991474,
+        "profitFactor": 1.5136442283854121,
+        "maxDrawdown": 83.58711
+      },
+      {
+        "id": "m2-rev-0.88-c0-m0",
+        "pnl": 1704.68447,
+        "entries": 1642,
+        "winRate": 75.03045066991474,
+        "profitFactor": 1.5116284693382767,
+        "maxDrawdown": 82.13982
+      },
+      {
+        "id": "m2-rev-0.8-c0-m0",
+        "pnl": 1703.19356,
+        "entries": 1642,
+        "winRate": 75.03045066991474,
+        "profitFactor": 1.5109523662825446,
+        "maxDrawdown": 85.73782999999999
+      }
+    ]
+  },
+  {
+    "name": "v7-m2-reverse-june",
+    "ok": true,
+    "elapsedMs": 535693,
+    "reportDir": "D:\\Projetos\\projeto-goldenlens\\data-backtest\\reports\\labs\\tfc\\2026-07-07T04-48-32-686Z-v7-m2-reverse-june",
+    "results": [
+      {
+        "id": "v5-practical-baseline",
+        "pnl": 2303.62976,
+        "entries": 1938,
+        "winRate": 74.76780185758514,
+        "profitFactor": 1.5886679359814762,
+        "maxDrawdown": 79.99015
+      },
+      {
+        "id": "m2-rev-0.95-c0-m0",
+        "pnl": 2303.62976,
+        "entries": 1938,
+        "winRate": 74.76780185758514,
+        "profitFactor": 1.5886679359814762,
+        "maxDrawdown": 79.99015
+      },
+      {
+        "id": "m2-rev-0.88-c0-m0",
+        "pnl": 2277.5749199999996,
+        "entries": 1938,
+        "winRate": 74.76780185758514,
+        "profitFactor": 1.5781604873197208,
+        "maxDrawdown": 81.20509999999999
+      },
+      {
+        "id": "m2-rev-0.85-c0-m0",
+        "pnl": 2261.170039999999,
+        "entries": 1938,
+        "winRate": 74.76780185758514,
+        "profitFactor": 1.571615705788966,
+        "maxDrawdown": 81.20509999999999
+      },
+      {
+        "id": "m2-rev-0.95-c1-m0",
+        "pnl": 2252.01412,
+        "entries": 1938,
+        "winRate": 75.9545923632611,
+        "profitFactor": 1.5836159646099153,
+        "maxDrawdown": 77.54796999999999
+      }
+    ]
+  },
+  {
+    "name": "v7-m3-danger-train",
+    "ok": true,
+    "elapsedMs": 130469,
+    "reportDir": "D:\\Projetos\\projeto-goldenlens\\data-backtest\\reports\\labs\\tfc\\2026-07-07T04-50-43-173Z-v7-m3-danger-train",
+    "results": [
+      {
+        "id": "m3-danger-k03",
+        "pnl": 1765.16953,
+        "entries": 1642,
+        "winRate": 74.96954933008526,
+        "profitFactor": 1.5455621051336474,
+        "maxDrawdown": 68.5089
+      },
+      {
+        "id": "v5-practical-baseline",
+        "pnl": 1756.1292899999996,
+        "entries": 1642,
+        "winRate": 75.03045066991474,
+        "profitFactor": 1.5353343069034626,
+        "maxDrawdown": 80.75914000000002
+      },
+      {
+        "id": "m3-danger-k05",
+        "pnl": 1747.8329699999997,
+        "entries": 1642,
+        "winRate": 74.78684531059683,
+        "profitFactor": 1.540671172226334,
+        "maxDrawdown": 68.5089
+      },
+      {
+        "id": "m3-danger-k08",
+        "pnl": 1721.0583799999995,
+        "entries": 1642,
+        "winRate": 74.54323995127893,
+        "profitFactor": 1.531559487967134,
+        "maxDrawdown": 74.55892000000003
+      }
+    ]
+  },
+  {
+    "name": "v7-m3-danger-june",
+    "ok": true,
+    "elapsedMs": 119209,
+    "reportDir": "D:\\Projetos\\projeto-goldenlens\\data-backtest\\reports\\labs\\tfc\\2026-07-07T04-52-42-387Z-v7-m3-danger-june",
+    "results": [
+      {
+        "id": "m3-danger-k03",
+        "pnl": 2321.10343,
+        "entries": 1938,
+        "winRate": 74.61300309597523,
+        "profitFactor": 1.5997468984493233,
+        "maxDrawdown": 79.99015
+      },
+      {
+        "id": "m3-danger-k05",
+        "pnl": 2312.59126,
+        "entries": 1938,
+        "winRate": 74.50980392156863,
+        "profitFactor": 1.5993601569001543,
+        "maxDrawdown": 79.99015
+      },
+      {
+        "id": "v5-practical-baseline",
+        "pnl": 2303.62976,
+        "entries": 1938,
+        "winRate": 74.76780185758514,
+        "profitFactor": 1.5886679359814762,
+        "maxDrawdown": 79.99015
+      },
+      {
+        "id": "m3-danger-k08",
+        "pnl": 2279.1826800000003,
+        "entries": 1938,
+        "winRate": 74.20020639834881,
+        "profitFactor": 1.5912452494696725,
+        "maxDrawdown": 79.86916
+      }
+    ]
+  },
+  {
+    "name": "v7-m4-sizing-train",
+    "ok": true,
+    "elapsedMs": 215227,
+    "reportDir": "D:\\Projetos\\projeto-goldenlens\\data-backtest\\reports\\labs\\tfc\\2026-07-07T04-56-17-613Z-v7-m4-sizing-train",
+    "results": [
+      {
+        "id": "m4-budget-25",
+        "pnl": 3629.21614,
+        "entries": 1603,
+        "winRate": 74.67248908296943,
+        "profitFactor": 1.4443672716388993,
+        "maxDrawdown": 232.38773
+      },
+      {
+        "id": "m4-budget-20",
+        "pnl": 3163.8224100000007,
+        "entries": 1617,
+        "winRate": 74.82993197278913,
+        "profitFactor": 1.488524026842882,
+        "maxDrawdown": 188.66823
+      },
+      {
+        "id": "m4-budget-15",
+        "pnl": 2558.083860000001,
+        "entries": 1631,
+        "winRate": 74.92335990190068,
+        "profitFactor": 1.522878815137724,
+        "maxDrawdown": 151.77987000000002
+      },
+      {
+        "id": "v5-practical-baseline",
+        "pnl": 1756.1292899999996,
+        "entries": 1642,
+        "winRate": 75.03045066991474,
+        "profitFactor": 1.5353343069034626,
+        "maxDrawdown": 80.75914000000002
+      },
+      {
+        "id": "m4-budget-10",
+        "pnl": 1756.1292899999996,
+        "entries": 1642,
+        "winRate": 75.03045066991474,
+        "profitFactor": 1.5353343069034626,
+        "maxDrawdown": 80.75914000000002
+      }
+    ]
+  },
+  {
+    "name": "v7-m4-sizing-june",
+    "ok": true,
+    "elapsedMs": 210381,
+    "reportDir": "D:\\Projetos\\projeto-goldenlens\\data-backtest\\reports\\labs\\tfc\\2026-07-07T04-59-47-984Z-v7-m4-sizing-june",
+    "results": [
+      {
+        "id": "m4-budget-25",
+        "pnl": 5322.305669999999,
+        "entries": 1910,
+        "winRate": 74.76439790575917,
+        "profitFactor": 1.5628843432133768,
+        "maxDrawdown": 185.04955999999999
+      },
+      {
+        "id": "m4-budget-20",
+        "pnl": 4313.87684,
+        "entries": 1925,
+        "winRate": 74.64935064935065,
+        "profitFactor": 1.5649727478518523,
+        "maxDrawdown": 147.11794
+      },
+      {
+        "id": "m4-budget-15",
+        "pnl": 3323.7304799999997,
+        "entries": 1933,
+        "winRate": 74.65080186239007,
+        "profitFactor": 1.5641975764007483,
+        "maxDrawdown": 107.86439000000001
+      },
+      {
+        "id": "v5-practical-baseline",
+        "pnl": 2303.62976,
+        "entries": 1938,
+        "winRate": 74.76780185758514,
+        "profitFactor": 1.5886679359814762,
+        "maxDrawdown": 79.99015
+      },
+      {
+        "id": "m4-budget-10",
+        "pnl": 2303.62976,
+        "entries": 1938,
+        "winRate": 74.76780185758514,
+        "profitFactor": 1.5886679359814762,
+        "maxDrawdown": 79.99015
+      }
+    ]
+  }
+]

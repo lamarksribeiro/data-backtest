@@ -1,0 +1,904 @@
+{
+  "v5": {
+    "variant": "v5-practical",
+    "window": {
+      "from": "2026-05-04",
+      "to": "2026-07-01"
+    },
+    "summary": {
+      "totalEvents": 16399,
+      "totalNoEntry": 12819,
+      "noEntryReasons": {
+        "unknown": 12819
+      },
+      "eventsWithEntries": 3580,
+      "totalEntries": 3580,
+      "entries": 3580,
+      "wins": 2681,
+      "losses": 899,
+      "totalWins": 2681,
+      "totalLosses": 899,
+      "winRate": 74.88826815642457,
+      "totalPnl": 4059.759049999978,
+      "avgPnl": 1.1340109078212228,
+      "avgWin": 4.19749580380459,
+      "avgLoss": 8.001921245828703,
+      "maxWin": 93.95827000000001,
+      "maxLoss": -18.36202,
+      "profitFactor": 1.5643470953416332,
+      "winLossRatio": 0.5686791992706833,
+      "maxDrawdown": 84.34514000000036,
+      "volume": 42039.56497999982,
+      "ticksProcessed": 10631692,
+      "pnl": 4059.759049999978,
+      "grossProfit": 11253.486250000105,
+      "grossLoss": 7193.727200000003,
+      "sharpe": 0.18011499828683408,
+      "sharpeRatio": 0.18011499828683408,
+      "sortino": 0.34395983717296585,
+      "sortinoRatio": 0.34395983717296585,
+      "finalWallet": 4059.759049999978,
+      "recoveryFactor": 48.1326967979419,
+      "fees": {
+        "applied": true,
+        "model": "polymarket_taker",
+        "category": "crypto",
+        "currency": "USDC",
+        "feeRate": 0.07,
+        "totalFee": 945.48577,
+        "entryFee": 833.43002,
+        "exitFee": 112.05575,
+        "entryNotional": 38937.94007999982,
+        "exitNotional": 3101.6249000000003,
+        "volume": 42039.56497999982,
+        "tradesCharged": 5905,
+        "entryTradesCharged": 5028,
+        "exitTradesCharged": 877,
+        "makerTradesFree": 0,
+        "makerNotional": 0,
+        "makerShares": 0
+      },
+      "totalFees": 945.48577,
+      "feesPaid": 945.48577,
+      "feeDrag": 0.18889900574334026,
+      "timings": {
+        "loadMs": 16630,
+        "duckdbReadMs": 16611,
+        "processMs": 21108,
+        "finishMs": 38,
+        "overheadMs": 19,
+        "totalMs": 37776,
+        "runStartedAt": 1783392091086,
+        "strategyMeta": {
+          "workerCount": 1,
+          "preset_id": null
+        }
+      }
+    },
+    "splitStats": {
+      "train": {
+        "overall": {
+          "n": 1642,
+          "winrate": 0.7503045066991474,
+          "exp": 1.0695062667478654,
+          "sum": 1756.129289999995,
+          "wins": 1232,
+          "losses": 410
+        },
+        "missedFlipAfterFloor": {
+          "n": 96,
+          "winrate": 0.052083333333333336,
+          "exp": -8.685165729166668,
+          "sum": -833.7759100000002,
+          "wins": 5,
+          "losses": 91,
+          "pct": 0.058465286236297195
+        },
+        "byOutcome": {
+          "hold_win": {
+            "n": 1171,
+            "winrate": 0.9974380871050385,
+            "exp": 3.827744602903505,
+            "sum": 4482.288930000004,
+            "wins": 1168,
+            "losses": 3,
+            "pct": 0.7131546894031668
+          },
+          "hold_loss": {
+            "n": 193,
+            "winrate": 0.0051813471502590676,
+            "exp": -8.612372642487049,
+            "sum": -1662.1879200000005,
+            "wins": 1,
+            "losses": 192,
+            "pct": 0.11753958587088915
+          },
+          "late_flip_reverse": {
+            "n": 278,
+            "winrate": 0.22661870503597123,
+            "exp": -3.8272364028776944,
+            "sum": -1063.971719999999,
+            "wins": 63,
+            "losses": 215,
+            "pct": 0.16930572472594396
+          }
+        }
+      },
+      "june": {
+        "overall": {
+          "n": 1938,
+          "winrate": 0.7476780185758514,
+          "exp": 1.1886634468524182,
+          "sum": 2303.6297599999866,
+          "wins": 1449,
+          "losses": 489
+        },
+        "missedFlipAfterFloor": {
+          "n": 119,
+          "winrate": 0.05042016806722689,
+          "exp": -8.770791680672271,
+          "sum": -1043.7242100000003,
+          "wins": 6,
+          "losses": 113,
+          "pct": 0.06140350877192982
+        },
+        "byOutcome": {
+          "hold_win": {
+            "n": 1404,
+            "winrate": 0.9943019943019943,
+            "exp": 3.989126858974358,
+            "sum": 5600.7341099999985,
+            "wins": 1396,
+            "losses": 8,
+            "pct": 0.7244582043343654
+          },
+          "hold_loss": {
+            "n": 212,
+            "winrate": 0.0047169811320754715,
+            "exp": -8.804536367924534,
+            "sum": -1866.561710000001,
+            "wins": 1,
+            "losses": 211,
+            "pct": 0.10939112487100103
+          },
+          "late_flip_reverse": {
+            "n": 322,
+            "winrate": 0.16149068322981366,
+            "exp": -4.442679006211179,
+            "sum": -1430.5426399999997,
+            "wins": 52,
+            "losses": 270,
+            "pct": 0.16615067079463364
+          }
+        }
+      },
+      "all": {
+        "overall": {
+          "n": 3580,
+          "winrate": 0.7488826815642458,
+          "exp": 1.1340109078212228,
+          "sum": 4059.759049999978,
+          "wins": 2681,
+          "losses": 899
+        },
+        "missedFlipAfterFloor": {
+          "n": 215,
+          "winrate": 0.05116279069767442,
+          "exp": -8.732558697674426,
+          "sum": -1877.5001200000017,
+          "wins": 11,
+          "losses": 204,
+          "pct": 0.06005586592178771
+        },
+        "byOutcome": {
+          "hold_win": {
+            "n": 2575,
+            "winrate": 0.9957281553398059,
+            "exp": 3.9157371029126473,
+            "sum": 10083.023040000067,
+            "wins": 2564,
+            "losses": 11,
+            "pct": 0.7192737430167597
+          },
+          "hold_loss": {
+            "n": 405,
+            "winrate": 0.0049382716049382715,
+            "exp": -8.712962049382728,
+            "sum": -3528.7496300000053,
+            "wins": 2,
+            "losses": 403,
+            "pct": 0.11312849162011174
+          },
+          "late_flip_reverse": {
+            "n": 600,
+            "winrate": 0.19166666666666668,
+            "exp": -4.157523933333332,
+            "sum": -2494.514359999999,
+            "wins": 115,
+            "losses": 485,
+            "pct": 0.16759776536312848
+          }
+        }
+      }
+    },
+    "byOutcome": {
+      "hold_win": {
+        "n": 2575,
+        "winrate": 0.9957281553398059,
+        "exp": 3.9157371029126473,
+        "sum": 10083.023040000067,
+        "wins": 2564,
+        "losses": 11
+      },
+      "hold_loss": {
+        "n": 405,
+        "winrate": 0.0049382716049382715,
+        "exp": -8.712962049382728,
+        "sum": -3528.7496300000053,
+        "wins": 2,
+        "losses": 403
+      },
+      "late_flip_reverse": {
+        "n": 600,
+        "winrate": 0.19166666666666668,
+        "exp": -4.157523933333332,
+        "sum": -2494.514359999999,
+        "wins": 115,
+        "losses": 485
+      }
+    }
+  },
+  "hold": {
+    "variant": "v5-hold-contrafactual",
+    "window": {
+      "from": "2026-05-04",
+      "to": "2026-07-01"
+    },
+    "summary": {
+      "totalEvents": 16399,
+      "totalNoEntry": 12819,
+      "noEntryReasons": {
+        "unknown": 12819
+      },
+      "eventsWithEntries": 3580,
+      "totalEntries": 3580,
+      "entries": 3580,
+      "wins": 2718,
+      "losses": 862,
+      "totalWins": 2718,
+      "totalLosses": 862,
+      "winRate": 75.9217877094972,
+      "totalPnl": 2616.1679199999753,
+      "avgPnl": 0.7307731620111663,
+      "avgWin": 3.9866698307579433,
+      "avgLoss": 9.535499628770307,
+      "maxWin": 7.972599999999999,
+      "maxLoss": -10.08541,
+      "profitFactor": 1.3182840653519539,
+      "winLossRatio": 0.44862980539632863,
+      "maxDrawdown": 117.18650000000116,
+      "volume": 33385.89727999983,
+      "ticksProcessed": 10631692,
+      "pnl": 2616.1679199999753,
+      "grossProfit": 10835.76860000009,
+      "grossLoss": 8219.600680000005,
+      "sharpe": 0.12254295577906452,
+      "sharpeRatio": 0.12254295577906452,
+      "sortino": 1.6639280315821114,
+      "sortinoRatio": 1.6639280315821114,
+      "finalWallet": 2616.1679199999753,
+      "recoveryFactor": 22.324823422492774,
+      "fees": {
+        "applied": true,
+        "model": "polymarket_taker",
+        "category": "crypto",
+        "currency": "USDC",
+        "feeRate": 0.07,
+        "totalFee": 715.0248,
+        "entryFee": 715.0248,
+        "exitFee": 0,
+        "entryNotional": 33385.89727999983,
+        "exitNotional": 0,
+        "volume": 33385.89727999983,
+        "tradesCharged": 4418,
+        "entryTradesCharged": 4418,
+        "exitTradesCharged": 0,
+        "makerTradesFree": 0,
+        "makerNotional": 0,
+        "makerShares": 0
+      },
+      "totalFees": 715.0248,
+      "feesPaid": 715.0248,
+      "feeDrag": 0.21464528176562697,
+      "timings": {
+        "loadMs": 10535,
+        "duckdbReadMs": 10531,
+        "processMs": 20668,
+        "finishMs": 48,
+        "overheadMs": 4,
+        "totalMs": 31251,
+        "runStartedAt": 1783392128917,
+        "strategyMeta": {
+          "workerCount": 1,
+          "preset_id": null
+        }
+      }
+    },
+    "splitStats": {
+      "train": {
+        "overall": {
+          "n": 1642,
+          "winrate": 0.7509135200974422,
+          "exp": 0.5582504567600457,
+          "sum": 916.647249999995,
+          "wins": 1233,
+          "losses": 409
+        },
+        "missedFlipAfterFloor": {
+          "n": 96,
+          "winrate": 0.052083333333333336,
+          "exp": -8.685165729166668,
+          "sum": -833.7759100000002,
+          "wins": 5,
+          "losses": 91,
+          "pct": 0.058465286236297195
+        },
+        "byOutcome": {
+          "hold_win": {
+            "n": 1233,
+            "winrate": 1,
+            "exp": 3.8983996350364976,
+            "sum": 4806.726750000002,
+            "wins": 1233,
+            "losses": 0,
+            "pct": 0.7509135200974422
+          },
+          "hold_loss": {
+            "n": 409,
+            "winrate": 0,
+            "exp": -9.511196821515906,
+            "sum": -3890.0795000000057,
+            "wins": 0,
+            "losses": 409,
+            "pct": 0.24908647990255786
+          }
+        }
+      },
+      "june": {
+        "overall": {
+          "n": 1938,
+          "winrate": 0.7662538699690402,
+          "exp": 0.876945650154792,
+          "sum": 1699.520669999987,
+          "wins": 1485,
+          "losses": 453
+        },
+        "missedFlipAfterFloor": {
+          "n": 119,
+          "winrate": 0.05042016806722689,
+          "exp": -8.770791680672271,
+          "sum": -1043.7242100000003,
+          "wins": 6,
+          "losses": 113,
+          "pct": 0.06140350877192982
+        },
+        "byOutcome": {
+          "hold_win": {
+            "n": 1485,
+            "winrate": 1,
+            "exp": 4.059960841750843,
+            "sum": 6029.041850000001,
+            "wins": 1485,
+            "losses": 0,
+            "pct": 0.7662538699690402
+          },
+          "hold_loss": {
+            "n": 453,
+            "winrate": 0,
+            "exp": -9.557441898454764,
+            "sum": -4329.521180000008,
+            "wins": 0,
+            "losses": 453,
+            "pct": 0.23374613003095976
+          }
+        }
+      },
+      "all": {
+        "overall": {
+          "n": 3580,
+          "winrate": 0.759217877094972,
+          "exp": 0.7307731620111663,
+          "sum": 2616.1679199999753,
+          "wins": 2718,
+          "losses": 862
+        },
+        "missedFlipAfterFloor": {
+          "n": 215,
+          "winrate": 0.05116279069767442,
+          "exp": -8.732558697674426,
+          "sum": -1877.5001200000017,
+          "wins": 11,
+          "losses": 204,
+          "pct": 0.06005586592178771
+        },
+        "byOutcome": {
+          "hold_win": {
+            "n": 2718,
+            "winrate": 1,
+            "exp": 3.9866698307579433,
+            "sum": 10835.76860000009,
+            "wins": 2718,
+            "losses": 0,
+            "pct": 0.759217877094972
+          },
+          "hold_loss": {
+            "n": 862,
+            "winrate": 0,
+            "exp": -9.535499628770307,
+            "sum": -8219.600680000005,
+            "wins": 0,
+            "losses": 862,
+            "pct": 0.24078212290502793
+          }
+        }
+      }
+    },
+    "byOutcome": {
+      "hold_win": {
+        "n": 2718,
+        "winrate": 1,
+        "exp": 3.9866698307579433,
+        "sum": 10835.76860000009,
+        "wins": 2718,
+        "losses": 0
+      },
+      "hold_loss": {
+        "n": 862,
+        "winrate": 0,
+        "exp": -9.535499628770307,
+        "sum": -8219.600680000005,
+        "wins": 0,
+        "losses": 862
+      }
+    }
+  },
+  "contrafactual": {
+    "train": {
+      "v5Pnl": 1756.129289999995,
+      "holdPnl": 916.647249999995,
+      "lateMechanismValue": 839.4820400000001,
+      "v5Entries": 1642,
+      "holdEntries": 1642,
+      "pctOfV5Pnl": 0.47802974688725935
+    },
+    "june": {
+      "v5Pnl": 2303.6297599999866,
+      "holdPnl": 1699.520669999987,
+      "lateMechanismValue": 604.1090899999997,
+      "v5Entries": 1938,
+      "holdEntries": 1938,
+      "pctOfV5Pnl": 0.26224226674342116
+    },
+    "all": {
+      "v5Pnl": 4059.759049999978,
+      "holdPnl": 2616.1679199999753,
+      "lateMechanismValue": 1443.5911300000025,
+      "v5Entries": 3580,
+      "holdEntries": 3580,
+      "pctOfV5Pnl": 0.35558542076530636
+    }
+  },
+  "v6": {
+    "variant": "v6-hybrid",
+    "window": {
+      "from": "2026-05-04",
+      "to": "2026-07-01"
+    },
+    "summary": {
+      "totalEvents": 16399,
+      "totalNoEntry": 12819,
+      "noEntryReasons": {
+        "unknown": 12819
+      },
+      "eventsWithEntries": 3580,
+      "totalEntries": 3580,
+      "entries": 3580,
+      "wins": 2705,
+      "losses": 875,
+      "totalWins": 2705,
+      "totalLosses": 875,
+      "winRate": 75.5586592178771,
+      "totalPnl": 3607.3506499999817,
+      "avgPnl": 1.00763984636871,
+      "avgWin": 3.9394670609981834,
+      "avgLoss": 8.055894571428576,
+      "maxWin": 25.28624,
+      "maxLoss": -18.36202,
+      "profitFactor": 1.5117602298029904,
+      "winLossRatio": 0.5293430266696926,
+      "maxDrawdown": 78.35277000000019,
+      "volume": 39278.04237999983,
+      "ticksProcessed": 10631692,
+      "pnl": 3607.3506499999817,
+      "grossProfit": 10656.258400000086,
+      "grossLoss": 7048.907750000004,
+      "sharpe": 0.18057209693777204,
+      "sharpeRatio": 0.18057209693777204,
+      "sortino": 0.32810843843413345,
+      "sortinoRatio": 0.32810843843413345,
+      "finalWallet": 3607.3506499999817,
+      "recoveryFactor": 46.0398611306272,
+      "fees": {
+        "applied": true,
+        "model": "polymarket_taker",
+        "category": "crypto",
+        "currency": "USDC",
+        "feeRate": 0.07,
+        "totalFee": 857.25737,
+        "entryFee": 783.20713,
+        "exitFee": 74.05024,
+        "entryNotional": 37835.44217999983,
+        "exitNotional": 1442.6001999999992,
+        "volume": 39278.04237999983,
+        "tradesCharged": 5529,
+        "entryTradesCharged": 4892,
+        "exitTradesCharged": 637,
+        "makerTradesFree": 0,
+        "makerNotional": 0,
+        "makerShares": 0
+      },
+      "totalFees": 857.25737,
+      "feesPaid": 857.25737,
+      "feeDrag": 0.1920117883047667,
+      "timings": {
+        "loadMs": 10120,
+        "duckdbReadMs": 10118,
+        "processMs": 20376,
+        "finishMs": 32,
+        "overheadMs": 2,
+        "totalMs": 30528,
+        "runStartedAt": 1783392160200,
+        "strategyMeta": {
+          "workerCount": 1,
+          "preset_id": null
+        }
+      }
+    },
+    "splitStats": {
+      "train": {
+        "overall": {
+          "n": 1642,
+          "winrate": 0.7503045066991474,
+          "exp": 0.8630720341047471,
+          "sum": 1417.1642799999947,
+          "wins": 1232,
+          "losses": 410
+        },
+        "missedFlipAfterFloor": {
+          "n": 96,
+          "winrate": 0.052083333333333336,
+          "exp": -8.685165729166668,
+          "sum": -833.7759100000002,
+          "wins": 5,
+          "losses": 91,
+          "pct": 0.058465286236297195
+        },
+        "byOutcome": {
+          "hold_win": {
+            "n": 1212,
+            "winrate": 0.9933993399339934,
+            "exp": 3.7977360066006622,
+            "sum": 4602.856040000002,
+            "wins": 1204,
+            "losses": 8,
+            "pct": 0.7381242387332522
+          },
+          "hold_loss": {
+            "n": 231,
+            "winrate": 0.012987012987012988,
+            "exp": -8.66972116883117,
+            "sum": -2002.7055900000005,
+            "wins": 3,
+            "losses": 228,
+            "pct": 0.14068209500609014
+          },
+          "late_flip_reverse": {
+            "n": 199,
+            "winrate": 0.12562814070351758,
+            "exp": -5.944654120603017,
+            "sum": -1182.9861700000004,
+            "wins": 25,
+            "losses": 174,
+            "pct": 0.12119366626065774
+          }
+        }
+      },
+      "june": {
+        "overall": {
+          "n": 1938,
+          "winrate": 0.760061919504644,
+          "exp": 1.1301271259029877,
+          "sum": 2190.1863699999903,
+          "wins": 1473,
+          "losses": 465
+        },
+        "missedFlipAfterFloor": {
+          "n": 119,
+          "winrate": 0.05042016806722689,
+          "exp": -8.770791680672271,
+          "sum": -1043.7242100000003,
+          "wins": 6,
+          "losses": 113,
+          "pct": 0.06140350877192982
+        },
+        "byOutcome": {
+          "hold_win": {
+            "n": 1454,
+            "winrate": 0.9951856946354883,
+            "exp": 3.993487455295737,
+            "sum": 5806.5307600000015,
+            "wins": 1447,
+            "losses": 7,
+            "pct": 0.7502579979360166
+          },
+          "hold_loss": {
+            "n": 242,
+            "winrate": 0.012396694214876033,
+            "exp": -8.804226033057855,
+            "sum": -2130.622700000001,
+            "wins": 3,
+            "losses": 239,
+            "pct": 0.12487100103199174
+          },
+          "late_flip_reverse": {
+            "n": 242,
+            "winrate": 0.09504132231404959,
+            "exp": -6.1393458264462835,
+            "sum": -1485.7216900000005,
+            "wins": 23,
+            "losses": 219,
+            "pct": 0.12487100103199174
+          }
+        }
+      },
+      "all": {
+        "overall": {
+          "n": 3580,
+          "winrate": 0.755586592178771,
+          "exp": 1.00763984636871,
+          "sum": 3607.3506499999817,
+          "wins": 2705,
+          "losses": 875
+        },
+        "missedFlipAfterFloor": {
+          "n": 215,
+          "winrate": 0.05116279069767442,
+          "exp": -8.732558697674426,
+          "sum": -1877.5001200000017,
+          "wins": 11,
+          "losses": 204,
+          "pct": 0.06005586592178771
+        },
+        "byOutcome": {
+          "hold_win": {
+            "n": 2666,
+            "winrate": 0.9943735933983496,
+            "exp": 3.904496174043539,
+            "sum": 10409.386800000075,
+            "wins": 2651,
+            "losses": 15,
+            "pct": 0.7446927374301676
+          },
+          "hold_loss": {
+            "n": 473,
+            "winrate": 0.012684989429175475,
+            "exp": -8.738537610993669,
+            "sum": -4133.328290000006,
+            "wins": 6,
+            "losses": 467,
+            "pct": 0.13212290502793297
+          },
+          "late_flip_reverse": {
+            "n": 441,
+            "winrate": 0.10884353741496598,
+            "exp": -6.051491746031747,
+            "sum": -2668.7078600000004,
+            "wins": 48,
+            "losses": 393,
+            "pct": 0.12318435754189944
+          }
+        }
+      }
+    },
+    "byOutcome": {
+      "hold_win": {
+        "n": 2666,
+        "winrate": 0.9943735933983496,
+        "exp": 3.904496174043539,
+        "sum": 10409.386800000075,
+        "wins": 2651,
+        "losses": 15
+      },
+      "hold_loss": {
+        "n": 473,
+        "winrate": 0.012684989429175475,
+        "exp": -8.738537610993669,
+        "sum": -4133.328290000006,
+        "wins": 6,
+        "losses": 467
+      },
+      "late_flip_reverse": {
+        "n": 441,
+        "winrate": 0.10884353741496598,
+        "exp": -6.051491746031747,
+        "sum": -2668.7078600000004,
+        "wins": 48,
+        "losses": 393
+      }
+    },
+    "hedgeAnalysis": {
+      "train": {
+        "n": 1642,
+        "pctHedgeFilled": 0.010962241169305725,
+        "hedgePnlWhenFavLost": {
+          "n": 11,
+          "winrate": 1,
+          "exp": 9.869090909090907,
+          "sum": 108.55999999999997,
+          "wins": 11,
+          "losses": 0
+        },
+        "hedgePnlWhipsaw": {
+          "n": 7,
+          "winrate": 0.14285714285714285,
+          "exp": -7.322857142857143,
+          "sum": -51.26,
+          "wins": 1,
+          "losses": 6
+        },
+        "hedgeEventPnlFavLost": {
+          "n": 11,
+          "winrate": 0.2727272727272727,
+          "exp": 0.3353372727272724,
+          "sum": 3.688709999999996,
+          "wins": 3,
+          "losses": 8
+        },
+        "hedgeEventPnlWhipsaw": {
+          "n": 7,
+          "winrate": 0,
+          "exp": -7.248238571428573,
+          "sum": -50.73767000000001,
+          "wins": 0,
+          "losses": 7
+        },
+        "fallbackTaker": {
+          "n": 198,
+          "winrate": 0.12626262626262627,
+          "exp": -5.944583636363637,
+          "sum": -1177.0275600000002,
+          "wins": 25,
+          "losses": 173
+        },
+        "lateFlipActions": {
+          "n": 199,
+          "winrate": 0.12562814070351758,
+          "exp": -5.944654120603017,
+          "sum": -1182.9861700000004,
+          "wins": 25,
+          "losses": 174
+        },
+        "hedgeFilledCount": 18,
+        "fallbackCount": 198
+      },
+      "june": {
+        "n": 1938,
+        "pctHedgeFilled": 0.005159958720330237,
+        "hedgePnlWhenFavLost": {
+          "n": 6,
+          "winrate": 0.8333333333333334,
+          "exp": 11.813333333333334,
+          "sum": 70.88000000000001,
+          "wins": 5,
+          "losses": 1
+        },
+        "hedgePnlWhipsaw": {
+          "n": 4,
+          "winrate": 0,
+          "exp": -9.9175,
+          "sum": -39.67,
+          "wins": 0,
+          "losses": 4
+        },
+        "hedgeEventPnlFavLost": {
+          "n": 6,
+          "winrate": 0.5,
+          "exp": 2.7183333333333333,
+          "sum": 16.31,
+          "wins": 3,
+          "losses": 3
+        },
+        "hedgeEventPnlWhipsaw": {
+          "n": 4,
+          "winrate": 0,
+          "exp": -6.8462700000000005,
+          "sum": -27.385080000000002,
+          "wins": 0,
+          "losses": 4
+        },
+        "fallbackTaker": {
+          "n": 241,
+          "winrate": 0.0954356846473029,
+          "exp": -6.10576236514523,
+          "sum": -1471.4887300000005,
+          "wins": 23,
+          "losses": 218
+        },
+        "lateFlipActions": {
+          "n": 242,
+          "winrate": 0.09504132231404959,
+          "exp": -6.1393458264462835,
+          "sum": -1485.7216900000005,
+          "wins": 23,
+          "losses": 219
+        },
+        "hedgeFilledCount": 10,
+        "fallbackCount": 241
+      },
+      "all": {
+        "n": 3580,
+        "pctHedgeFilled": 0.00782122905027933,
+        "hedgePnlWhenFavLost": {
+          "n": 17,
+          "winrate": 0.9411764705882353,
+          "exp": 10.555294117647056,
+          "sum": 179.43999999999997,
+          "wins": 16,
+          "losses": 1
+        },
+        "hedgePnlWhipsaw": {
+          "n": 11,
+          "winrate": 0.09090909090909091,
+          "exp": -8.266363636363637,
+          "sum": -90.93,
+          "wins": 1,
+          "losses": 10
+        },
+        "hedgeEventPnlFavLost": {
+          "n": 17,
+          "winrate": 0.35294117647058826,
+          "exp": 1.1763947058823527,
+          "sum": 19.998709999999996,
+          "wins": 6,
+          "losses": 11
+        },
+        "hedgeEventPnlWhipsaw": {
+          "n": 11,
+          "winrate": 0,
+          "exp": -7.102068181818182,
+          "sum": -78.12275,
+          "wins": 0,
+          "losses": 11
+        },
+        "fallbackTaker": {
+          "n": 439,
+          "winrate": 0.10933940774487472,
+          "exp": -6.033066719817769,
+          "sum": -2648.5162900000005,
+          "wins": 48,
+          "losses": 391
+        },
+        "lateFlipActions": {
+          "n": 441,
+          "winrate": 0.10884353741496598,
+          "exp": -6.051491746031747,
+          "sum": -2668.7078600000004,
+          "wins": 48,
+          "losses": 393
+        },
+        "hedgeFilledCount": 28,
+        "fallbackCount": 439
+      }
+    }
+  }
+}

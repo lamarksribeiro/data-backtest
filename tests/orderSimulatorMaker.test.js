@@ -153,16 +153,17 @@ test('hasOpenRestingOrders blocks early finalize semantics', () => {
 test('placeBuyStop validates args and rejects stop at or below market', () => {
   const simulator = createOrderSimulator();
   const lowAsk = tickWithAsks('DOWN', [{ price: 0.35, size: 100 }]);
-  assert.equal(simulator.placeBuyStop('INVALID', { stopPrice: 0.55, budget: 10, tick: lowAsk }), false);
-  assert.equal(simulator.placeBuyStop('DOWN', { stopPrice: 0.30, budget: 10, tick: lowAsk }), false);
-  assert.equal(simulator.placeBuyStop('DOWN', { stopPrice: 0.35, budget: 10, tick: lowAsk }), false);
-  assert.ok(simulator.placeBuyStop('DOWN', { stopPrice: 0.55, budget: 10, tick: lowAsk }));
+  assert.equal(simulator.placeBuyStop('INVALID', { stopPrice: 0.55, capPrice: 0.95, budget: 10, tick: lowAsk }), false);
+  assert.equal(simulator.placeBuyStop('DOWN', { stopPrice: 0.30, capPrice: 0.95, budget: 10, tick: lowAsk }), false);
+  assert.equal(simulator.placeBuyStop('DOWN', { stopPrice: 0.35, capPrice: 0.95, budget: 10, tick: lowAsk }), false);
+  assert.equal(simulator.placeBuyStop('DOWN', { stopPrice: 0.55, capPrice: 0.50, budget: 10, tick: lowAsk }), false);
+  assert.ok(simulator.placeBuyStop('DOWN', { stopPrice: 0.55, capPrice: 0.95, budget: 10, tick: lowAsk }));
 });
 
 test('stop buy fill triggers when ask rises through trigger minus epsilon', () => {
   const simulator = createOrderSimulator({ limits: { makerFillEpsilon: 0.01 } });
   const armTick = tickWithAsks('DOWN', [{ price: 0.38, size: 100 }]);
-  simulator.placeBuyStop('DOWN', { stopPrice: 0.55, budget: 10, ts: '2026-06-01T00:00:10.000Z', tick: armTick });
+  simulator.placeBuyStop('DOWN', { stopPrice: 0.55, capPrice: 0.95, budget: 10, ts: '2026-06-01T00:00:10.000Z', tick: armTick });
 
   assert.equal(simulator.checkRestingOrders(tickWithAsks('DOWN', [{ price: 0.40, size: 100 }])), 0);
   assert.equal(simulator.checkRestingOrders(tickWithAsks('DOWN', [{ price: 0.52, size: 100 }])), 0);
@@ -170,6 +171,51 @@ test('stop buy fill triggers when ask rises through trigger minus epsilon', () =
   assert.equal(simulator.restingView[0].status, 'filled');
   const stopFill = simulator.snapshot().orders.find((o) => o.restingOrderId?.startsWith('stp-'));
   assert.equal(stopFill.liquidity, 'taker');
+  assert.equal(stopFill.avgPrice, 0.55);
+});
+
+test('stop buy fill pays current ask when gap jumps above trigger', () => {
+  const simulator = createOrderSimulator({ limits: { makerFillEpsilon: 0.01 } });
+  const armTick = tickWithAsks('DOWN', [{ price: 0.38, size: 100 }]);
+  simulator.placeBuyStop('DOWN', { stopPrice: 0.55, capPrice: 0.95, budget: 10, tick: armTick });
+
+  simulator.checkRestingOrders(tickWithAsks('DOWN', [{ price: 0.52, size: 100 }]));
+  assert.equal(simulator.checkRestingOrders(tickWithAsks('DOWN', [{ price: 0.72, size: 200 }])), 1);
+
+  const stopFill = simulator.snapshot().orders.find((o) => o.restingOrderId?.startsWith('stp-'));
+  assert.equal(stopFill.avgPrice, 0.72);
+  assert.equal(stopFill.shares, 13);
+  assert.ok(stopFill.notional <= 10.01);
+});
+
+test('stop buy stays armed when ask gaps above cap and can fill later', () => {
+  const simulator = createOrderSimulator({ limits: { makerFillEpsilon: 0.01 } });
+  const armTick = tickWithAsks('DOWN', [{ price: 0.38, size: 100 }]);
+  simulator.placeBuyStop('DOWN', { stopPrice: 0.55, capPrice: 0.80, budget: 10, tick: armTick });
+
+  simulator.checkRestingOrders(tickWithAsks('DOWN', [{ price: 0.52, size: 100 }]));
+  assert.equal(simulator.checkRestingOrders(tickWithAsks('DOWN', [{ price: 0.85, size: 200 }])), 0);
+  assert.equal(simulator.restingView[0].status, 'open');
+
+  assert.equal(simulator.checkRestingOrders(tickWithAsks('DOWN', [{ price: 0.78, size: 200 }])), 1);
+  const stopFill = simulator.snapshot().orders.find((o) => o.restingOrderId?.startsWith('stp-'));
+  assert.ok(Math.abs(stopFill.avgPrice - 0.78) < 0.0001);
+});
+
+test('stop buy fill applies taker fee semantics via liquidity', () => {
+  const simulator = createOrderSimulator({ limits: { makerFillEpsilon: 0.01 } });
+  simulator.placeBuyStop('DOWN', { stopPrice: 0.55, capPrice: 0.95, budget: 10, tick: tickWithAsks('DOWN', [{ price: 0.38, size: 100 }]) });
+  simulator.checkRestingOrders(tickWithAsks('DOWN', [{ price: 0.38, size: 100 }]));
+  simulator.checkRestingOrders(tickWithAsks('DOWN', [{ price: 0.56, size: 200 }]));
+
+  const stopFill = simulator.snapshot().orders.find((o) => o.restingOrderId?.startsWith('stp-'));
+  const fees = applyPolymarketFeesToBacktestResult({
+    params: {},
+    events: [{ eventId: 'a', orders: [stopFill], exits: [], finalPnl: 0 }],
+    summary: {},
+  });
+  assert.ok(fees.events[0].fees.entryFee > 0);
+  assert.equal(fees.events[0].fees.makerTradesFree, 0);
 });
 
 test('stop buy fill credits hedge lot on flip repricing', () => {
@@ -182,12 +228,14 @@ test('stop buy fill credits hedge lot on flip repricing', () => {
     minShares: 1,
     tick: tickWithAsks('UP', [{ price: 0.6, size: 20 }]),
   });
-  simulator.placeBuyStop('DOWN', { stopPrice: 0.55, budget: 10, tick: tickWithAsks('DOWN', [{ price: 0.38, size: 100 }]) });
+  simulator.placeBuyStop('DOWN', { stopPrice: 0.55, capPrice: 0.95, budget: 10, tick: tickWithAsks('DOWN', [{ price: 0.38, size: 100 }]) });
+  simulator.checkRestingOrders(tickWithAsks('DOWN', [{ price: 0.38, size: 100 }]));
   simulator.checkRestingOrders(tickWithAsks('DOWN', [{ price: 0.56, size: 200 }]));
 
   assert.equal(simulator.positionView.open, true);
   assert.equal(simulator.positionView.side, 'UP');
-  assert.deepEqual(simulator.positionView.hedge, { side: 'DOWN', shares: 18, cost: 9.9 });
+  assert.equal(simulator.positionView.hedge.shares, 17);
+  assert.ok(Math.abs(simulator.positionView.hedge.cost - 9.52) < 0.01);
 
   const flipLoss = settleEventPnl(simulator, { underlyingPrice: 99000, price_to_beat: 100000 }, { priceToBeat: 100000 });
   assert.equal(flipLoss.winnerSide, 'DOWN');

@@ -1,27 +1,27 @@
-{
-  "id": "tfc",
-  "name": "Terminal Favorite Carry",
-  "family": "terminal",
-  "status": "champion",
-  "kind": "gls",
-  "assets": ["BTC"],
-  "intervals": ["5m"],
-  "requiresBook": true,
-  "defaultBookDepth": 25,
-  "source": {
-    "type": "file",
-    "path": "src/backtestStudio/gls/strategies/TerminalFavoriteCarry.gls"
-  },
-  "promotedToStudio": true,
-  "studioSlug": "tfc",
-  "studio": {
-    "description": "Terminal Favorite Carry com perfis versionados v1-v6 sobre o mesmo código GLS. V5 Practical (v6): late flip taker 8s→4s. V6 Hybrid (v7): stop-buy no oposto + fallback taker no piso.",
-    "tags": ["terminal", "anom-37", "btc", "champion"],
-    "defaultVersion": 7,
-    "defaultGlsSource": "classic",
-    "glsSources": {
-      "classic": "src/backtestStudio/gls/strategies/TerminalFavoriteCarry.gls"
-    }
-  },
-  "notes": "Estratégia Terminal unificada. V1-V4: evolução incremental (dist, spread, late flip, velocity). V5: envelope reaberto + OBI + Late Flip Reverse 2s. V5 Practical (v6): janela executável 8s→4s. V6 Hybrid (v7, campeã): stop-buy hedge alinhado ao sinal de flip + fallback taker no piso 4s — preset btc-champion-v6-hybrid."
-}
+{
+  "id": "tfc",
+  "name": "Terminal Favorite Carry",
+  "family": "terminal",
+  "status": "champion",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "src/backtestStudio/gls/strategies/TerminalFavoriteCarry.gls"
+  },
+  "promotedToStudio": true,
+  "studioSlug": "tfc",
+  "studio": {
+    "description": "Terminal Favorite Carry com perfis versionados v1-v8 sobre o mesmo código GLS. V5 Practical (v6): late flip taker 8s→4s. V6 Hybrid (v7): stop-buy hedge (legado). V7 Danger Floor (v8, campeã): danger exit vol-relativo no piso 4s, sem hedge stop.",
+    "tags": ["terminal", "anom-37", "btc", "champion"],
+    "defaultVersion": 8,
+    "defaultGlsSource": "classic",
+    "glsSources": {
+      "classic": "src/backtestStudio/gls/strategies/TerminalFavoriteCarry.gls"
+    }
+  },
+  "notes": "Estratégia Terminal unificada. V1-V4: evolução incremental. V5 Practical: janela executável 8s→4s. V6 Hybrid: stop-buy hedge + fallback taker (fill conservador reduz PnL vs baseline). V7 Danger Floor (campeã): V5 Practical + danger exit k=0.3 no piso 4s, hedge stop off — preset btc-champion-v7."
+}

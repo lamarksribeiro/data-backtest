@@ -72,6 +72,7 @@
     "lab:book-frontrunner:sweep": "node labs/cli/run.js --experiment labs/strategies/book-frontrunner/book-frontrunner/experiments/sweep-champion.json --variant-workers 4",
     "lab:book-frontrunner:champion": "node labs/cli/run-preset.js --preset btc-champion --strategy book-frontrunner --strategy-family book-frontrunner",
     "lab:tfc:v6-hybrid": "node labs/cli/run-preset.js --preset btc-champion-v6-hybrid --strategy tfc --strategy-family terminal",
+    "lab:tfc:v7": "node labs/cli/run-preset.js --preset btc-champion-v7 --strategy tfc --strategy-family terminal",
     "lab:tfc:v5-practical": "node labs/cli/run-preset.js --preset btc-champion-v5-practical --strategy tfc --strategy-family terminal",
     "db:migrate-consolidate-strategies": "node scripts/migrate-consolidate-strategies.js",
     "embed:strategy-libraries": "node scripts/embed-strategy-libraries.js",

@@ -1,0 +1,74 @@
+{
+  "name": "v7-smoke-maker",
+  "strategyId": "tfc",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-06-25",
+  "to": "2026-06-27",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 3,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "v5-practical-baseline",
+        "params": {
+          "minAsk": 0.55,
+          "maxAsk": 0.82,
+          "lateFlipExitEnabled": true,
+          "lateFlipExitSec": 8,
+          "lateFlipMinSec": 4,
+          "lateFlipReverseEnabled": true,
+          "velocityLookbackSecs": 5,
+          "maxAdverseSpotChange": 8.0,
+          "minObi": 0.0,
+          "entryMakerEnabled": false
+        }
+      },
+      {
+        "id": "v7-maker-fallback",
+        "params": {
+          "minAsk": 0.55,
+          "maxAsk": 0.82,
+          "lateFlipExitEnabled": true,
+          "lateFlipExitSec": 8,
+          "lateFlipMinSec": 4,
+          "lateFlipReverseEnabled": true,
+          "velocityLookbackSecs": 5,
+          "maxAdverseSpotChange": 8.0,
+          "minObi": 0.0,
+          "entryMakerEnabled": true,
+          "entryMakerDelta": 0.01,
+          "entryMakerDeadlineSec": 10,
+          "entryMakerChase": 0.02,
+          "entryMakerFallbackTaker": true
+        }
+      },
+      {
+        "id": "v7-maker-no-fallback",
+        "params": {
+          "minAsk": 0.55,
+          "maxAsk": 0.82,
+          "lateFlipExitEnabled": true,
+          "lateFlipExitSec": 8,
+          "lateFlipMinSec": 4,
+          "lateFlipReverseEnabled": true,
+          "velocityLookbackSecs": 5,
+          "maxAdverseSpotChange": 8.0,
+          "minObi": 0.0,
+          "entryMakerEnabled": true,
+          "entryMakerDelta": 0.01,
+          "entryMakerDeadlineSec": 10,
+          "entryMakerChase": 0.02,
+          "entryMakerFallbackTaker": false
+        }
+      }
+    ]
+  }
+}
