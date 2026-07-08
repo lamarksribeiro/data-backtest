@@ -109,6 +109,47 @@ export function mergeResultIntoEventTraces(db, runId, result, { transaction = tr
   }
 }
 
+export function refreshEventTraceSummariesFromResult(db, runId, result, { transaction = true } = {}) {
+  const events = Array.isArray(result?.events) ? result.events : [];
+  if (!events.length) return 0;
+  const update = db.prepare(`
+    UPDATE backtest_event_traces SET
+      side = ?, entries_count = ?, exits_count = ?, final_pnl = ?, result = ?, reason = ?,
+      summary_json = ?
+    WHERE run_id = ? AND condition_id = ?
+  `);
+  const apply = () => {
+    let updated = 0;
+    for (const event of events) {
+      const orders = Array.isArray(event.orders) ? event.orders : [];
+      const exits = Array.isArray(event.exits) ? event.exits : [];
+      const info = update.run(
+        event.positionType ?? null,
+        orders.filter((order) => !order?.type || order.type === 'entry').length,
+        exits.length,
+        Number(event.finalPnl || 0),
+        deriveEventResult(event),
+        event.reason ?? null,
+        JSON.stringify(buildEventTraceSummary(event)),
+        runId,
+        String(event.eventId),
+      );
+      updated += info.changes;
+    }
+    return updated;
+  };
+  if (!transaction) return apply();
+  db.exec('BEGIN IMMEDIATE');
+  try {
+    const updated = apply();
+    db.exec('COMMIT');
+    return updated;
+  } catch (err) {
+    db.exec('ROLLBACK');
+    throw err;
+  }
+}
+
 export function persistEventTraces(db, runId, result, { transaction = true } = {}) {
   if (transaction) {
     db.exec('BEGIN IMMEDIATE');
@@ -132,12 +173,11 @@ const INSERT_TRACE_SQL = `
   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `;
 
-export function appendEventTraceBatch(db, runId, result, { chartSeriesPath = null } = {}) {
+export function appendEventTraceBatch(db, runId, result, { chartSeriesPath = null, transaction = true } = {}) {
   const rows = normalizeEventsFromResult(runId, result);
   if (!rows.length) return 0;
   const insert = db.prepare(INSERT_TRACE_SQL);
-  db.exec('BEGIN IMMEDIATE');
-  try {
+  const apply = () => {
     for (const row of rows) {
       const seriesPath = row.chart_series_path ?? chartSeriesPath;
       insert.run(
@@ -161,8 +201,14 @@ export function appendEventTraceBatch(db, runId, result, { chartSeriesPath = nul
         seriesPath,
       );
     }
-    db.exec('COMMIT');
     return rows.length;
+  };
+  if (!transaction) return apply();
+  db.exec('BEGIN IMMEDIATE');
+  try {
+    const inserted = apply();
+    db.exec('COMMIT');
+    return inserted;
   } catch (err) {
     db.exec('ROLLBACK');
     throw err;
@@ -400,27 +446,7 @@ function normalizeEventsFromResult(runId, result) {
       const ts = new Date(entry.ts).getTime();
       return ts >= new Date(eventStart).getTime() && ts <= new Date(closedAt).getTime();
     });
-    const summary = {
-      eventId: event.eventId,
-      positionType: event.positionType ?? null,
-      entryTime: event.entryTime ?? null,
-      entryDistanceToPtb: event.entryDistanceToPtb ?? null,
-      entryTimeRemaining: event.entryTimeRemaining ?? null,
-      quantity: event.quantity ?? 0,
-      cost: event.cost ?? 0,
-      avgEntryPrice: event.avgEntryPrice ?? null,
-      priceToBeat: event.priceToBeat ?? event.price_to_beat ?? null,
-      expirationResult: event.expirationResult ?? null,
-      winnerSide: event.winnerSide ?? null,
-      expiryPnl: event.expiryPnl ?? 0,
-      finalPnlBeforeFees: event.finalPnlBeforeFees ?? null,
-      fees: event.fees ?? null,
-      closedAt,
-      exits: event.exits ?? [],
-      profitOrders: event.profitOrders ?? [],
-      reversals: event.reversals ?? [],
-      diagnostics: event.diagnostics ?? null,
-    };
+    const summary = buildEventTraceSummary(event, closedAt);
     return {
       run_id: runId,
       condition_id: String(event.eventId),
@@ -442,6 +468,31 @@ function normalizeEventsFromResult(runId, result) {
       chart_series_path: event.chart_series_path ?? null,
     };
   });
+}
+
+function buildEventTraceSummary(event, closedAt = null) {
+  const eventEnd = event?.eventEnd ? new Date(event.eventEnd).toISOString() : null;
+  return {
+    eventId: event.eventId,
+    positionType: event.positionType ?? null,
+    entryTime: event.entryTime ?? null,
+    entryDistanceToPtb: event.entryDistanceToPtb ?? null,
+    entryTimeRemaining: event.entryTimeRemaining ?? null,
+    quantity: event.quantity ?? 0,
+    cost: event.cost ?? 0,
+    avgEntryPrice: event.avgEntryPrice ?? null,
+    priceToBeat: event.priceToBeat ?? event.price_to_beat ?? null,
+    expirationResult: event.expirationResult ?? null,
+    winnerSide: event.winnerSide ?? null,
+    expiryPnl: event.expiryPnl ?? 0,
+    finalPnlBeforeFees: event.finalPnlBeforeFees ?? null,
+    fees: event.fees ?? null,
+    closedAt: closedAt ?? (event.closedAt ? new Date(event.closedAt).toISOString() : eventEnd),
+    exits: event.exits ?? [],
+    profitOrders: event.profitOrders ?? [],
+    reversals: event.reversals ?? [],
+    diagnostics: event.diagnostics ?? null,
+  };
 }
 
 function deriveEventResult(event) {

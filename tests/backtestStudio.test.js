@@ -10,7 +10,7 @@ import { createTestAuthService, testServerConfig } from './testAuth.js';
 import { upsertManifestPartition } from '../src/state/manifest.js';
 import { toPortablePath } from '../src/lake/paths.js';
 import { writeBacktestTicksParquet } from '../src/sync/duckdbParquet.js';
-import { createBacktestRun, createRunningBacktestRun, syncEventTracesForRun } from '../src/state/backtestRuns.js';
+import { createBacktestRun, createRunningBacktestRun, completeBacktestRun, syncEventTracesForRun } from '../src/state/backtestRuns.js';
 import { runBacktest } from '../src/backtest/engine.js';
 import { edgeSniperV3GlsAst, NATIVE_EDGE_SNIPER_PATH, NATIVE_EDGE_SNIPER_TICK_CONTEXT } from './testBacktestHelpers.js';
 import { listEventTraces, appendEventTraceBatch, getEventTrace } from '../src/backtestStudio/state/eventTraces.js';
@@ -36,17 +36,16 @@ test('syncEventTracesForRun refreshes streamed traces with final fee-adjusted ev
   try {
     const db = openStateDatabase(path.join(dir, 'state.db'));
     try {
-      const run = createRunningBacktestRun(db, {
-        request: {
-          strategy: 'TEST',
-          batchSize: 5,
-          params: {},
-          underlying: 'BTC',
-          interval: '5m',
-          from: '2026-05-31T00:00:00.000Z',
-          to: '2026-05-31T00:10:00.000Z',
-        },
-      });
+      const request = {
+        strategy: 'TEST',
+        batchSize: 5,
+        params: {},
+        underlying: 'BTC',
+        interval: '5m',
+        from: '2026-05-31T00:00:00.000Z',
+        to: '2026-05-31T00:10:00.000Z',
+      };
+      const run = createRunningBacktestRun(db, { request });
       const runId = run.id;
       const events = [{
         eventId: 'condition-1',
@@ -58,6 +57,7 @@ test('syncEventTracesForRun refreshes streamed traces with final fee-adjusted ev
         closedAt: '2026-05-31T00:04:30.000Z',
         orders: [{ type: 'entry', ts: '2026-05-31T00:01:00.000Z' }],
         exits: [{ type: 'exit', ts: '2026-05-31T00:04:30.000Z' }],
+        logs: [{ ts: '2026-05-31T00:02:00.000Z', type: 'info', msg: 'streamed trace log' }],
       }];
       appendEventTraceBatch(db, runId, { events });
       const before = listEventTraces(db, runId);
@@ -79,6 +79,11 @@ test('syncEventTracesForRun refreshes streamed traces with final fee-adjusted ev
             exits: [{ qty: 10, price: 0.7, fee: 0.3, time: '2026-05-31T00:04:30.000Z' }],
           },
         }],
+        log: Array.from({ length: 1000 }, (_, index) => ({
+          ts: new Date(Date.parse('2026-05-31T00:00:00.000Z') + index).toISOString(),
+          type: 'debug',
+          msg: `global log ${index}`,
+        })),
       });
       assert.equal(merged, 1);
       const after = listEventTraces(db, runId);
@@ -90,6 +95,8 @@ test('syncEventTracesForRun refreshes streamed traces with final fee-adjusted ev
       assert.equal(detail.summary.fees.entryFee, 0.21);
       assert.equal(detail.summary.fees.exitFee, 0.3);
       assert.equal(detail.summary.fees.tradesCharged, 2);
+      assert.deepEqual(detail.orders, events[0].orders);
+      assert.deepEqual(detail.logs, events[0].logs);
     } finally {
       closeStateDatabase(db);
     }
@@ -103,17 +110,16 @@ test('syncEventTracesForRun merges when streamed traces are incomplete', async (
   try {
     const db = openStateDatabase(path.join(dir, 'state.db'));
     try {
-      const run = createRunningBacktestRun(db, {
-        request: {
-          strategy: 'TEST',
-          batchSize: 5,
-          params: {},
-          underlying: 'BTC',
-          interval: '5m',
-          from: '2026-05-31T00:00:00.000Z',
-          to: '2026-05-31T00:10:00.000Z',
-        },
-      });
+      const request = {
+        strategy: 'TEST',
+        batchSize: 5,
+        params: {},
+        underlying: 'BTC',
+        interval: '5m',
+        from: '2026-05-31T00:00:00.000Z',
+        to: '2026-05-31T00:10:00.000Z',
+      };
+      const run = createRunningBacktestRun(db, { request });
       const runId = run.id;
       const events = [{
         eventId: 'condition-1',
@@ -137,7 +143,24 @@ test('syncEventTracesForRun merges when streamed traces are incomplete', async (
         exits: [{ type: 'exit', ts: '2026-05-31T00:08:00.000Z' }],
       }];
       appendEventTraceBatch(db, runId, { events: [events[0]] });
-      syncEventTracesForRun(db, runId, { events });
+      completeBacktestRun(db, runId, {
+        request,
+        result: {
+          strategy: 'TEST',
+          source: 'lakehouse',
+          underlying: 'BTC',
+          interval: '5m',
+          bookDepth: null,
+          from: '2026-05-31T00:00:00.000Z',
+          to: '2026-05-31T00:10:00.000Z',
+          ticks: 10,
+          batches: 2,
+          summary: {},
+          events,
+          equity: [],
+          log: [],
+        },
+      });
       const after = listEventTraces(db, runId);
       assert.equal(after.length, 2);
       assert.equal(after.find((row) => row.condition_id === 'condition-1')?.final_pnl, 1.5);

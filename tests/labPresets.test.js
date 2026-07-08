@@ -81,6 +81,28 @@ test('seedPromotedStrategies seeds versions from lab manifests', () => {
     assert.equal(qemVersions.length, 1);
     assert.equal(qemVersions[0].notes, 'BTC · Quantum Entropic Champion');
     assert.equal(JSON.parse(qemVersions[0].validation_json).ok, true);
+
+    const tfc = results.find((row) => row.slug === 'tfc');
+    const tfcVersions = db.prepare(`
+      SELECT id, version, notes FROM strategy_versions
+      WHERE strategy_id = ?
+      ORDER BY version ASC
+    `).all(tfc.strategy.id);
+    assert.equal(tfcVersions.length, 8);
+    assert.equal(tfcVersions.at(-1).version, 8);
+    assert.equal(tfcVersions.at(-1).notes, 'TFC V7 Danger Floor');
+
+    const staleDefault = tfcVersions.find((row) => row.version === 2);
+    db.prepare('UPDATE strategy_definitions SET default_version_id = ? WHERE id = ?').run(staleDefault.id, tfc.strategy.id);
+    seedPromotedStrategies(db);
+    const defaultRow = db.prepare(`
+      SELECT sv.version
+      FROM strategy_definitions sd
+      JOIN strategy_versions sv ON sv.id = sd.default_version_id
+      WHERE sd.id = ?
+    `).get(tfc.strategy.id);
+    assert.equal(defaultRow.version, 8);
+
     const languages = db.prepare('SELECT DISTINCT language FROM strategy_versions').all().map((r) => r.language);
     assert.deepEqual(languages, ['strategy-js-v1']);
   } finally {

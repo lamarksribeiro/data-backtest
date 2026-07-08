@@ -1,5 +1,9 @@
 import { removeChartSidecarRun } from '../backtest/chartSidecar.js';
-import { persistEventTraces, mergeResultIntoEventTraces, appendEventTraceBatch } from '../backtestStudio/state/eventTraces.js';
+import {
+  appendEventTraceBatch,
+  persistEventTraces,
+  refreshEventTraceSummariesFromResult,
+} from '../backtestStudio/state/eventTraces.js';
 import { invalidateStrategyStatsCache } from '../backtestStudio/state/strategyStats.js';
 import { downsamplePoints } from '../utils/downsample.js';
 
@@ -462,7 +466,7 @@ export function syncEventTracesForRun(db, runId, result, { transaction = true } 
   const traceCount = Number(db.prepare('SELECT COUNT(*) AS c FROM backtest_event_traces WHERE run_id = ?').get(runId)?.c || 0);
   if (eventCount === 0) return traceCount;
   if (traceCount >= eventCount) {
-    mergeResultIntoEventTraces(db, runId, result, { transaction });
+    refreshEventTraceSummariesFromResult(db, runId, result, { transaction });
     return Number(db.prepare('SELECT COUNT(*) AS c FROM backtest_event_traces WHERE run_id = ?').get(runId)?.c || 0);
   }
   if (traceCount === 0) {
@@ -470,13 +474,13 @@ export function syncEventTracesForRun(db, runId, result, { transaction = true } 
     return Array.isArray(rows) ? rows.length : 0;
   }
 
-  mergeResultIntoEventTraces(db, runId, result, { transaction });
+  refreshEventTraceSummariesFromResult(db, runId, result, { transaction });
   const existingIds = new Set(
     db.prepare('SELECT condition_id FROM backtest_event_traces WHERE run_id = ?').all(runId).map((row) => row.condition_id),
   );
   const missingEvents = events.filter((event) => !existingIds.has(String(event.eventId)));
   if (!missingEvents.length) return traceCount;
-  appendEventTraceBatch(db, runId, { events: missingEvents });
+  appendEventTraceBatch(db, runId, { events: missingEvents }, { transaction });
   return Number(db.prepare('SELECT COUNT(*) AS c FROM backtest_event_traces WHERE run_id = ?').get(runId)?.c || 0);
 }
 

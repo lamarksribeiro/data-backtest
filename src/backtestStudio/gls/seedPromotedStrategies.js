@@ -147,16 +147,22 @@ function upsertStrategyVersion(db, {
 }
 
 function ensureDefaultVersion(db, strategyRowId, manifest) {
-  const currentDefault = db.prepare('SELECT default_version_id FROM strategy_definitions WHERE id = ?').get(strategyRowId);
-  if (currentDefault?.default_version_id != null) {
+  const defaultVersion = Number(manifest.studio?.defaultVersion);
+  if (!Number.isInteger(defaultVersion) || defaultVersion < 1) {
+    const currentDefault = db.prepare('SELECT default_version_id FROM strategy_definitions WHERE id = ?').get(strategyRowId);
+    if (currentDefault?.default_version_id == null) return;
     const stillExists = db.prepare(`
       SELECT id FROM strategy_versions WHERE id = ? AND strategy_id = ?
     `).get(currentDefault.default_version_id, strategyRowId);
     if (stillExists) return;
-  }
 
-  const defaultVersion = Number(manifest.studio?.defaultVersion);
-  if (!Number.isInteger(defaultVersion) || defaultVersion < 1) return;
+    db.prepare(`
+      UPDATE strategy_definitions
+      SET default_version_id = NULL
+      WHERE id = ?
+    `).run(strategyRowId);
+    return;
+  }
 
   const versionRow = db.prepare(`
     SELECT id FROM strategy_versions
