@@ -155,6 +155,19 @@ export const INDIVIDUAL_RUNNERS = [
     promotedToStudio: false,
     sourceDoc: 'docs/estrategias/implementadas/bs-lead-v1.md',
   },
+  {
+    id: 'hopper-3-v1',
+    family: 'carry',
+    name: 'Hopper 3 V1',
+    sourceFile: 'Hopper3_0.py',
+    createFn: 'createHopper3BacktestRunner',
+    runnerSlug: 'hopper-3-runner',
+    strategyLabel: 'HOPPER_3_V1',
+    usesStopReverse: false,
+    tier: 'A',
+    promotedToStudio: true,
+    sourceDoc: 'polymarket-fm/hopper-3-explicacao.md',
+  },
 ];
 
 export const PORTFOLIO_RUNNERS = [

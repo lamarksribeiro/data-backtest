@@ -6,6 +6,9 @@ import { wrapSharedColumnSet } from '../../src/backtest/columnStore.js';
 import { createGlsBacktestRunner } from '../../src/backtestStudio/gls/runtime.js';
 import { createLibraryRunnerAdapter } from '../../src/backtestStudio/strategyLibrary/runnerAdapter.js';
 import { createEmbeddedRunnerAdapter } from '../../src/backtestStudio/strategyJs/embeddedRunnerAdapter.js';
+import { openStateDatabase } from '../../src/state/sqlite.js';
+import { bindStrategyLibraryDatabase } from '../../src/backtestStudio/nativeLibrary/registry.js';
+import { loadConfig } from '../../src/config.js';
 
 (async () => {
 try {
@@ -13,10 +16,17 @@ try {
   const request = workerData.request;
   const variants = workerData.variants || [];
   const isEmbeddedRunner = Boolean(request.embeddedRunner && request.strategySourceCode);
-  const isLibraryRunner = Boolean(request.runnerLibrary && request.db);
+  const isLibraryRunner = Boolean(request.runnerLibrary);
   const useCustomSoa = isEmbeddedRunner || isLibraryRunner;
   const bookDepth = request.effectiveBookDepth ?? request.bookDepth;
   const results = [];
+
+  let db = null;
+  if (isLibraryRunner) {
+    const config = loadConfig();
+    db = openStateDatabase(config.stateDbPath, { readOnly: true });
+    bindStrategyLibraryDatabase(db);
+  }
 
   for (let index = 0; index < variants.length; index += 1) {
     const variant = variants[index];
@@ -25,7 +35,7 @@ try {
     const runner = isEmbeddedRunner
       ? createEmbeddedRunnerAdapter(request.strategySourceCode, params, { fastRun: true, bookDepth })
       : (isLibraryRunner
-        ? createLibraryRunnerAdapter(request.db, request.runnerLibrary, params, { fastRun: true, bookDepth })
+        ? createLibraryRunnerAdapter(db, request.runnerLibrary, params, { fastRun: true, bookDepth })
         : createGlsBacktestRunner(request.glsAst, params, {
           executionMode: 'compiled-soa',
           fastRun: true,
@@ -55,6 +65,12 @@ try {
       total: variants.length,
       variantId: variant.id,
     });
+  }
+
+  if (db) {
+    try {
+      db.close();
+    } catch (_) {}
   }
 
   parentPort?.postMessage({ type: 'done', workerIndex: workerData.workerIndex, results });

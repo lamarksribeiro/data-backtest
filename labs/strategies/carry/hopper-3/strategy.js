@@ -1,0 +1,50 @@
+export default strategy({
+  name: "Hopper 3 V1",
+
+  dependencies: {
+    runner: strategyLibrary("hopper-3-runner", 1),
+  },
+
+  params: {
+    walletSize: 100,
+    pctWallet: 0.06,
+    minShares: 10,
+    walletMinLimit: 100,
+    walletMaxCap: 1000,
+    monitoringWindowSec: 290,
+    minTimeForNewCycleSec: 35,
+    triggerExpensiveCents: 70,
+    triggerCheapBaseCents: 20,
+    flipIncrementCents: 3,
+    distMinPtb: 20,
+    cooldownBuySec: 3,
+    cooldownFlipSec: 30,
+    cooldownHaltEndSec: 60,
+    earlyCloseEnabled: true,
+    earlyCloseMarginInitial: 0.05,
+    earlyCloseMarginLate: 0.01,
+    finalProtectionEnabled: true,
+    finalProtectionSec: 10,
+    fallbackBookSize: 0,
+    multReversao: 3,
+    multRevCaro: 9,
+    multRevBarato: 0.1,
+    multRev2Barato: 36,
+    multRev2Caro: 0.1,
+    multRev3Caro: 20,
+    multRev4Barato: 30,
+    entrySlippageMax: 0.02,
+    exitSlippageMax: 0.02,
+    minLiquidityRatio: 0.55,
+    dynamicSizingEnabled: true,
+    simulateMaker: true,
+    maxFlipsAllowed: 1,
+    stopLossCentsFromAvg: 15,
+  },
+
+  onEventStart() {},
+
+  onTick() {},
+
+  onEventEnd() {},
+});

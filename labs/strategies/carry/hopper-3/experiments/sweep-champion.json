@@ -1,0 +1,26 @@
+{
+  "name": "hopper-3-sweep-champion",
+  "strategyId": "hopper-3",
+  "strategyFamily": "carry",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-06-01",
+  "to": "2026-06-03",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "grid": {
+      "simulateMaker": [true],
+      "dynamicSizingEnabled": [true],
+      "maxFlipsAllowed": [0, 1, 2],
+      "triggerExpensiveCents": [60, 65, 70],
+      "distMinPtb": [10, 20, 30],
+      "stopLossCentsFromAvg": [15]
+    }
+  }
+}

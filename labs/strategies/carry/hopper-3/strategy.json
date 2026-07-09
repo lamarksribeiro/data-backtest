@@ -1,0 +1,37 @@
+{
+  "id": "hopper-3",
+  "name": "Hopper 3 V1",
+  "family": "carry",
+  "status": "candidate",
+  "kind": "library-runner",
+  "assets": [
+    "BTC"
+  ],
+  "intervals": [
+    "5m"
+  ],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "library-runner",
+    "runnerSlug": "hopper-3-runner",
+    "runnerVersion": 1
+  },
+  "portStatus": "ported",
+  "sourceRepo": "polymarket-fm",
+  "sourceService": "Hopper3_0.py",
+  "promotedToStudio": true,
+  "studioSlug": "hopper-3",
+  "studio": {
+    "description": "Hopper 3 (FATHER) portado do simulador ao vivo com escada de reversões e equalização.",
+    "tags": [
+      "hopper-3",
+      "father",
+      "carry",
+      "arbitragem-medias",
+      "btc"
+    ],
+    "defaultVersion": 1
+  },
+  "notes": "Runner: hopper-3-runner@1. Origem: polymarket-fm/Hopper3_0.py"
+}
