@@ -1,0 +1,40 @@
+{
+  "name": "apex-triad-final-full-single-pass",
+  "strategyId": "apex-triad-v1",
+  "strategyFamily": "portfolio",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-07-05",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": false,
+  "variantWorkers": 2,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "terminal-reference",
+        "params": {
+          "edgeEnabled": false,
+          "profitLockEnabled": false
+        }
+      },
+      {
+        "id": "apex-triad-frozen-075",
+        "params": {
+          "edgeEnabled": true,
+          "edgeMinDistanceAbs": 40,
+          "edgeMinEdge": 0.04,
+          "edgeMinDirectionalProb": 0.54,
+          "edgeMaxAsk": 0.65,
+          "edgeBudgetFactor": 0.75,
+          "profitLockEnabled": false
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,329 @@
+strategy "Apex Triad V1" {
+  param walletSize = 100
+  param baseBudget = 10
+  param minShares = 1
+  param entrySlippageMax = 0.02
+  param minLiquidityRatio = 0.60
+
+  // Execucao Maker conservadora: exige travessia posterior de um tick e limita
+  // o fill pela liquidez visivel. O runtime le estes dois parametros.
+  param makerFillEpsilon = 0.01
+  param makerFillPolicy = "level-capped"
+
+  // Regime Terminal Favorite Carry.
+  param terminalEnabled = true
+  param terminalMinSecondsLeft = 5
+  param terminalMaxSecondsLeft = 30
+  param terminalMaxDistAbs = 20
+  param terminalMinAsk = 0.55
+  param terminalMaxAsk = 0.82
+  param terminalMaxSpread = 0.03
+  param terminalMinOddsSum = 0.98
+  param terminalMaxOddsSum = 1.06
+  param terminalVelocityLookbackSecs = 5
+  param terminalMaxAdverseSpotChange = 8.0
+  param terminalMinObi = 0.0
+  param terminalMaxVol = 99999.0
+  param terminalVolLookbackSecs = 30
+  param terminalMinFlips = 0
+  param terminalMaxFlips = 9999
+  param terminalFlipWindowSecs = 60
+
+  // Regime Edge Sniper, executado antes da janela terminal.
+  param edgeEnabled = true
+  param edgeWindowStart = 105
+  param edgeWindowEnd = 31
+  param edgeMinDistanceAbs = 40
+  param edgeMinAsk = 0.08
+  param edgeMaxAsk = 0.65
+  param edgeMinEdge = 0.04
+  param edgeMinDirectionalProb = 0.54
+  param edgeMaxSpread = 0.06
+  param edgeMinLiquidityRatio = 0.70
+  param edgeBudgetFactor = 0.75
+  param edgePriceAwareThreshold = 0.52
+  param edgePriceAwareFactor = 0.50
+  param minSigma = 10
+  param sigmaMultiplier = 1
+  param distanceWeight = 2.0
+  param momentumWeight = 0.65
+  param momentumSec = 6
+  param slowMomentumSec = 18
+  param slowMomentumWeight = 0.35
+  param lagWeight = 0.45
+  param volLookbackSec = 45
+  param useBlackScholesProb = false
+  param useObiDrift = false
+  param useObiInScore = true
+  param obiLevels = 5
+  param obiScoreWeight = 0.35
+
+  // Equalizacao sem martingale: compra o lado oposto somente quando o movimento
+  // favoravel barateia esse lado o suficiente para travar lucro no par.
+  param profitLockEnabled = false
+  param profitLockPairCost = 0.96
+  param profitLockMinPrice = 0.05
+  param profitLockMinSecondsLeft = 4
+
+  // Gestao Edge.
+  param edgeStopBid = 0.18
+  param edgeStopMinSecondsLeft = 16
+  param edgeLateExitSec = 16
+  param edgeLateExitMinBid = 0.64
+  param edgeTrailAfterBid = 0.78
+  param edgeTrailDrop = 0.10
+
+  // Uma reversao no maximo; protecao urgente e taker por construcao.
+  param reverseEnabled = true
+  param reverseMaxAttempts = 1
+  param edgeReverseMaxSecondsLeft = 60
+  param edgeReverseMinSecondsLeft = 4
+  param edgeReverseMinDistanceAbs = 10
+  param terminalReverseMaxSecondsLeft = 8
+  param terminalReverseMinSecondsLeft = 4
+  param terminalReverseCrossDist = 0
+  param reverseMaxAsk = 0.95
+  param reverseMinLiquidityRatio = 0.60
+  param reverseBudgetFactor = 1.0
+
+  param dangerExitEnabled = true
+  param dangerExitK = 0.3
+  param dangerExitFloorSec = 4
+
+  onEventStart(event) {
+    state.entered = false
+    state.closed = false
+    state.entryMode = ""
+    state.reversed = false
+    state.reverseCount = 0
+    state.reversedThisTick = false
+    state.maxBid = 0.0
+    state.signedDistance = 0.0
+    state.profitLockPlaced = false
+    state.profitLockOrderId = ""
+    state.profitLockPrice = 0.0
+    state.profitLocked = false
+    state.lastNoEntryReason = "outside_entry_window"
+  }
+
+  onTick(tick, event) {
+    let secsLeft = time.secondsUntil(event.end, tick.ts)
+    let elapsed = time.secondsSince(event.start, tick.ts)
+
+    if (position.open) {
+      if (!state.entered) {
+        state.entered = true
+      }
+
+      let side = position.side
+      let bid = book.bid(side, tick)
+      if (bid > state.maxBid) {
+        state.maxBid = bid
+      }
+
+      state.signedDistance = tick.underlyingPrice - event.priceToBeat
+      if (side == "DOWN") {
+        state.signedDistance = event.priceToBeat - tick.underlyingPrice
+      }
+
+      if (position.hedge != null) {
+        state.profitLocked = true
+        cancelLimit(null)
+      }
+
+      // Maker profit-lock: quantidade igual a posicao primaria e custo total do
+      // par abaixo de 1. A ordem so preenche depois de movimento favoravel.
+      let lockOn = params.profitLockEnabled == true || params.profitLockEnabled == 1
+      if (lockOn && !state.profitLocked && !state.profitLockPlaced && !state.reversed && secsLeft >= params.profitLockMinSecondsLeft) {
+        let oppositeSide = prices.oppositeSide(side)
+        let oppositeAsk = book.ask(oppositeSide, tick)
+        state.profitLockPrice = params.profitLockPairCost - position.avgPrice
+        if (state.profitLockPrice >= params.profitLockMinPrice && state.profitLockPrice < oppositeAsk) {
+          let lockBudget = state.profitLockPrice * position.shares
+          let lockOrder = placeLimitBuy(oppositeSide, { price: state.profitLockPrice, qty: position.shares, budget: lockBudget, tick: tick, reason: "apex_profit_lock", role: "hedge" })
+          if (lockOrder) {
+            state.profitLockPlaced = true
+            state.profitLockOrderId = lockOrder.id
+            mark("profit_lock_post", { side: oppositeSide, price: state.profitLockPrice, qty: position.shares })
+          }
+        }
+      }
+
+      if (!state.profitLocked) {
+        state.reversedThisTick = false
+        let reverseOn = params.reverseEnabled == true || params.reverseEnabled == 1
+        let edgeReverseSignal = state.entryMode == "edge" && secsLeft <= params.edgeReverseMaxSecondsLeft && secsLeft >= params.edgeReverseMinSecondsLeft && state.signedDistance <= (0.0 - params.edgeReverseMinDistanceAbs)
+        let terminalReverseSignal = state.entryMode == "terminal" && secsLeft <= params.terminalReverseMaxSecondsLeft && secsLeft >= params.terminalReverseMinSecondsLeft && state.signedDistance <= params.terminalReverseCrossDist
+        let reverseSignal = reverseOn && state.reverseCount < params.reverseMaxAttempts && (edgeReverseSignal || terminalReverseSignal)
+
+        if (reverseSignal) {
+          cancelLimit(state.profitLockOrderId)
+          state.profitLockPlaced = false
+          let reverseSide = prices.oppositeSide(side)
+          let reverseAsk = book.ask(reverseSide, tick)
+          let reverseMaxPrice = math.min(params.reverseMaxAsk, reverseAsk + params.entrySlippageMax)
+          let reverseBudget = position.totalCost * params.reverseBudgetFactor
+          let reverseLiq = book.liquidityRatio(reverseSide, tick, reverseBudget, reverseMaxPrice)
+          if (reverseAsk > 0.0 && reverseAsk <= params.reverseMaxAsk && reverseLiq >= params.reverseMinLiquidityRatio) {
+            let flipped = reverse(reverseSide, { exitPrice: bid, price: reverseAsk, maxPrice: reverseMaxPrice, budget: reverseBudget, minShares: params.minShares, minLiquidityRatio: params.reverseMinLiquidityRatio, tick: tick, ignoreConsumed: true, reason: "apex_reverse", exitReason: "apex_reverse_exit" })
+            if (flipped) {
+              state.reversed = true
+              state.reverseCount = state.reverseCount + 1
+              state.reversedThisTick = true
+              state.maxBid = book.bid(reverseSide, tick)
+              mark("reverse", { from: side, to: reverseSide, ask: reverseAsk, mode: state.entryMode })
+            }
+          }
+        }
+
+        if (!state.reversedThisTick) {
+          // Saidas especificas do regime Edge.
+          if (state.entryMode == "edge") {
+            if (bid <= params.edgeStopBid && secsLeft > params.edgeStopMinSecondsLeft) {
+              cancelLimit(state.profitLockOrderId)
+              let stopped = exit({ price: bid, reason: "apex_edge_stop" })
+              if (stopped) {
+                state.closed = stopped.closed
+              }
+            } else {
+              if (state.maxBid >= params.edgeTrailAfterBid && state.maxBid - bid >= params.edgeTrailDrop) {
+                cancelLimit(state.profitLockOrderId)
+                let trailed = exit({ price: bid, reason: "apex_edge_trail" })
+                if (trailed) {
+                  state.closed = trailed.closed
+                }
+              } else {
+                if (secsLeft <= params.edgeLateExitSec && bid >= params.edgeLateExitMinBid) {
+                  cancelLimit(state.profitLockOrderId)
+                  let lateOut = exit({ price: bid, reason: "apex_edge_late_exit" })
+                  if (lateOut) {
+                    state.closed = lateOut.closed
+                  }
+                }
+              }
+            }
+          }
+
+          // Piso de risco comum, herdado da TFC V7.
+          let dangerOn = params.dangerExitEnabled == true || params.dangerExitEnabled == 1
+          if (!state.closed && dangerOn && secsLeft >= params.dangerExitFloorSec && secsLeft < (params.dangerExitFloorSec + 1)) {
+            let terminalSigma = signals.volatility(samples, 5)
+            if (math.abs(state.signedDistance) < (params.dangerExitK * terminalSigma)) {
+              cancelLimit(state.profitLockOrderId)
+              let dangerOut = exit({ price: bid, reason: "apex_danger_exit" })
+              if (dangerOut) {
+                state.closed = dangerOut.closed
+              }
+            }
+          }
+        }
+      }
+    } else {
+      if (!state.entered && !state.closed) {
+        state.lastNoEntryReason = "outside_entry_window"
+
+        // Regime 1: Edge Sniper antecipado. Ele adiciona oportunidades sem
+        // competir com a janela terminal posterior.
+        let edgeOn = params.edgeEnabled == true || params.edgeEnabled == 1
+        if (edgeOn && time.inWindow(secsLeft, params.edgeWindowStart, params.edgeWindowEnd) && elapsed >= math.max(4, params.momentumSec)) {
+          state.lastNoEntryReason = "edge_distance"
+          let distance = market.distanceFromPtb(tick.underlyingPrice, event.priceToBeat)
+          if (distance >= params.edgeMinDistanceAbs) {
+            let scored = model.scoreSides(samples, tick, event, {
+              minAsk: params.edgeMinAsk,
+              maxAsk: params.edgeMaxAsk,
+              minEdge: params.edgeMinEdge,
+              minDirectionalProb: params.edgeMinDirectionalProb,
+              maxSpread: params.edgeMaxSpread,
+              minSigma: params.minSigma,
+              sigmaMultiplier: params.sigmaMultiplier,
+              distanceWeight: params.distanceWeight,
+              momentumWeight: params.momentumWeight,
+              momentumSec: params.momentumSec,
+              slowMomentumSec: params.slowMomentumSec,
+              slowMomentumWeight: params.slowMomentumWeight,
+              lagWeight: params.lagWeight,
+              volLookbackSec: params.volLookbackSec,
+              useBlackScholesProb: params.useBlackScholesProb,
+              useObiDrift: params.useObiDrift,
+              useObiInScore: params.useObiInScore,
+              obiLevels: params.obiLevels,
+              obiScoreWeight: params.obiScoreWeight
+            })
+            let best = scored.best
+            if (best) {
+              state.lastNoEntryReason = "edge_liquidity"
+              state.edgeBudget = params.baseBudget * params.edgeBudgetFactor
+              if (best.ask > params.edgePriceAwareThreshold) {
+                state.edgeBudget = params.baseBudget * params.edgeBudgetFactor * params.edgePriceAwareFactor
+              }
+              let edgeMaxPrice = math.min(params.edgeMaxAsk, best.ask + params.entrySlippageMax)
+              let edgeLiq = book.liquidityRatio(best.side, tick, state.edgeBudget, edgeMaxPrice)
+              if (edgeLiq >= params.edgeMinLiquidityRatio) {
+                let edgeEntry = enter(best.side, { price: best.ask, maxPrice: edgeMaxPrice, budget: state.edgeBudget, minShares: params.minShares, minLiquidityRatio: params.edgeMinLiquidityRatio, tick: tick, reason: "apex_edge_entry" })
+                if (edgeEntry) {
+                  state.entered = true
+                  state.entryMode = "edge"
+                  state.maxBid = book.bid(best.side, tick)
+                  state.lastNoEntryReason = "entered_edge"
+                  mark("entry", { mode: "edge", side: best.side, ask: best.ask, edge: best.edge })
+                }
+              }
+            }
+          }
+        }
+
+        // Regime 2: nucleo TFC. Executa apenas se o Edge nao entrou antes.
+        let terminalOn = params.terminalEnabled == true || params.terminalEnabled == 1
+        if (!state.entered && terminalOn && secsLeft >= params.terminalMinSecondsLeft && secsLeft < params.terminalMaxSecondsLeft) {
+          let spot = tick.underlyingPrice
+          let ptb = event.priceToBeat
+          let terminalDistance = math.abs(spot - ptb)
+          state.lastNoEntryReason = "terminal_distance"
+          if (terminalDistance < params.terminalMaxDistAbs) {
+            let favorite = market.sideFromPrice(spot, ptb)
+            state.adverseMove = false
+            let spotPast = signals.underlyingAgo(samples, params.terminalVelocityLookbackSecs)
+            if (spotPast) {
+              let spotChange = spot - spotPast
+              if (favorite == "UP" && spotChange < (0.0 - params.terminalMaxAdverseSpotChange)) {
+                state.adverseMove = true
+              }
+              if (favorite == "DOWN" && spotChange > params.terminalMaxAdverseSpotChange) {
+                state.adverseMove = true
+              }
+            }
+
+            let flips = signals.ptbFlipCount(samples, params.terminalFlipWindowSecs)
+            if (!state.adverseMove && flips >= params.terminalMinFlips && flips <= params.terminalMaxFlips) {
+              let terminalAsk = book.ask(favorite, tick)
+              let terminalBid = book.bid(favorite, tick)
+              let terminalSpread = terminalAsk - terminalBid
+              let oddsSum = book.ask("UP", tick) + book.ask("DOWN", tick)
+              let terminalObi = model.orderBookImbalance(favorite, tick, params.obiLevels)
+              let terminalVol = signals.volatility(samples, params.terminalVolLookbackSecs)
+              state.lastNoEntryReason = "terminal_gates"
+              if (terminalAsk >= params.terminalMinAsk && terminalAsk <= params.terminalMaxAsk && terminalSpread <= params.terminalMaxSpread && oddsSum >= params.terminalMinOddsSum && oddsSum <= params.terminalMaxOddsSum && terminalObi >= params.terminalMinObi && terminalVol <= params.terminalMaxVol) {
+                let terminalMaxPrice = terminalAsk + params.entrySlippageMax
+                let terminalLiq = book.liquidityRatio(favorite, tick, params.baseBudget, terminalMaxPrice)
+                if (terminalLiq >= params.minLiquidityRatio) {
+                  let terminalEntry = enter(favorite, { price: terminalAsk, maxPrice: terminalMaxPrice, budget: params.baseBudget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "apex_terminal_entry" })
+                  if (terminalEntry) {
+                    state.entered = true
+                    state.entryMode = "terminal"
+                    state.maxBid = terminalBid
+                    state.lastNoEntryReason = "entered_terminal"
+                    mark("entry", { mode: "terminal", side: favorite, ask: terminalAsk, dist: terminalDistance })
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  onEventEnd(event) {
+  }
+}

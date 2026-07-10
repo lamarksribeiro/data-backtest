@@ -1,0 +1,33 @@
+{
+  "name": "apex-triad-phase2-risk-train",
+  "strategyId": "apex-triad-v1",
+  "strategyFamily": "portfolio",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-05-31",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 2,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "hybrid-balanced-risk-075",
+        "params": {
+          "edgeBudgetFactor": 0.75
+        }
+      },
+      {
+        "id": "hybrid-balanced-risk-050",
+        "params": {
+          "edgeBudgetFactor": 0.5
+        }
+      }
+    ]
+  }
+}

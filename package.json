@@ -74,6 +74,8 @@
     "lab:tfc:v6-hybrid": "node labs/cli/run-preset.js --preset btc-champion-v6-hybrid --strategy tfc --strategy-family terminal",
     "lab:tfc:v7": "node labs/cli/run-preset.js --preset btc-champion-v7 --strategy tfc --strategy-family terminal",
     "lab:tfc:v5-practical": "node labs/cli/run-preset.js --preset btc-champion-v5-practical --strategy tfc --strategy-family terminal",
+    "lab:apex:analyze": "node scripts/analyze-apex-triad.js",
+    "lab:apex:candidate": "node labs/cli/run-preset.js --preset btc-candidate-v1 --strategy apex-triad-v1 --strategy-family portfolio",
     "db:migrate-consolidate-strategies": "node scripts/migrate-consolidate-strategies.js",
     "embed:strategy-libraries": "node scripts/embed-strategy-libraries.js",
     "port:polymarket": "node scripts/port-from-polymarket.js",

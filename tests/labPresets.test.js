@@ -18,8 +18,9 @@ import { openStateDatabase, closeStateDatabase } from '../src/state/sqlite.js';
 test('listPromotedGlsStrategies discovers GLS lab strategies', () => {
 	const promoted = listPromotedGlsStrategies();
 	const ids = promoted.map((item) => item.id).sort();
-	assert.deepEqual(ids, ['book-frontrunner', 'edge-snipper', 'gamma-ladder', 'lim-prime-v1', 'quantum-entropic-manifold', 'tfc', 'vsmr', 'whipsaw-lock']);
+	assert.deepEqual(ids, ['apex-triad-v1', 'book-frontrunner', 'edge-snipper', 'gamma-ladder', 'lim-prime-v1', 'quantum-entropic-manifold', 'tfc', 'vsmr', 'whipsaw-lock']);
 	assert.equal(promoted.find((item) => item.id === 'gamma-ladder').studioSlug, 'gamma-ladder');
+	assert.equal(promoted.find((item) => item.id === 'apex-triad-v1').status, 'candidate');
 });
 
 test('listPromotedLibraryStrategies discovers ported library runners', () => {
@@ -47,9 +48,19 @@ test('seedPromotedStrategies seeds versions from lab manifests', () => {
   const db = openStateDatabase(dbPath);
 	try {
 		const results = seedPromotedStrategies(db);
-		assert.equal(results.length, 8);
+		assert.equal(results.length, 9);
 		const slugs = results.map((row) => row.slug).sort();
-		assert.deepEqual(slugs, ['book-frontrunner', 'edge-snipper', 'gamma-ladder', 'lim-prime-v1', 'quantum-entropic-manifold', 'tfc', 'vsmr', 'whipsaw-lock']);
+		assert.deepEqual(slugs, ['apex-triad-v1', 'book-frontrunner', 'edge-snipper', 'gamma-ladder', 'lim-prime-v1', 'quantum-entropic-manifold', 'tfc', 'vsmr', 'whipsaw-lock']);
+
+    const apex = results.find((row) => row.slug === 'apex-triad-v1');
+    const apexVersions = db.prepare(`
+      SELECT version, notes, validation_json FROM strategy_versions
+      WHERE strategy_id = ?
+      ORDER BY version ASC
+    `).all(apex.strategy.id);
+    assert.equal(apexVersions.length, 1);
+    assert.equal(apexVersions[0].notes, 'BTC Candidate V1');
+    assert.equal(JSON.parse(apexVersions[0].validation_json).ok, true);
 
     const edge = results.find((row) => row.slug === 'edge-snipper');
     const edgeVersions = db.prepare(`

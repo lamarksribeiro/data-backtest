@@ -1,0 +1,96 @@
+{
+  "name": "apex-triad-phase1-train",
+  "strategyId": "apex-triad-v1",
+  "strategyFamily": "portfolio",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-05-31",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "terminal-reference",
+        "params": {
+          "edgeEnabled": false,
+          "profitLockEnabled": false
+        }
+      },
+      {
+        "id": "terminal-lock-095",
+        "params": {
+          "edgeEnabled": false,
+          "profitLockEnabled": true,
+          "profitLockPairCost": 0.95
+        }
+      },
+      {
+        "id": "terminal-lock-096",
+        "params": {
+          "edgeEnabled": false,
+          "profitLockEnabled": true,
+          "profitLockPairCost": 0.96
+        }
+      },
+      {
+        "id": "terminal-lock-097",
+        "params": {
+          "edgeEnabled": false,
+          "profitLockEnabled": true,
+          "profitLockPairCost": 0.97
+        }
+      },
+      {
+        "id": "hybrid-strict-lock-096",
+        "params": {
+          "edgeEnabled": true,
+          "edgeMinDistanceAbs": 50,
+          "edgeMinEdge": 0.07,
+          "edgeMinDirectionalProb": 0.56,
+          "edgeMaxAsk": 0.58,
+          "profitLockPairCost": 0.96
+        }
+      },
+      {
+        "id": "hybrid-balanced-lock-096",
+        "params": {
+          "edgeEnabled": true,
+          "edgeMinDistanceAbs": 40,
+          "edgeMinEdge": 0.04,
+          "edgeMinDirectionalProb": 0.54,
+          "edgeMaxAsk": 0.65,
+          "profitLockPairCost": 0.96
+        }
+      },
+      {
+        "id": "hybrid-active-lock-096",
+        "params": {
+          "edgeEnabled": true,
+          "edgeMinDistanceAbs": 30,
+          "edgeMinEdge": 0.02,
+          "edgeMinDirectionalProb": 0.52,
+          "edgeMaxAsk": 0.7,
+          "profitLockPairCost": 0.96
+        }
+      },
+      {
+        "id": "hybrid-balanced-no-lock",
+        "params": {
+          "edgeEnabled": true,
+          "edgeMinDistanceAbs": 40,
+          "edgeMinEdge": 0.04,
+          "edgeMinDirectionalProb": 0.54,
+          "edgeMaxAsk": 0.65,
+          "profitLockEnabled": false
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "id": "apex-triad-v1",
+  "name": "Apex Triad V1",
+  "family": "portfolio",
+  "status": "candidate",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "labs/strategies/portfolio/apex-triad-v1/strategy.gls"
+  },
+  "promotedToStudio": true,
+  "studioSlug": "apex-triad-v1",
+  "studio": {
+    "description": "Candidata Edge+TFC com duas janelas, sizing Edge de 0,75x, uma reversao limitada e Maker profit-lock experimental desativado.",
+    "tags": ["apex-triad", "btc", "edge", "terminal", "candidate", "honest-execution"],
+    "defaultVersion": 1
+  },
+  "notes": "Candidata, nao campea. Melhora PnL/frequencia/PF no agregado de 63 dias, mas o drawdown continuo ficou 4,8% acima da TFC. Nao usa o simulateMaker otimista da Hopper 3."
+}
