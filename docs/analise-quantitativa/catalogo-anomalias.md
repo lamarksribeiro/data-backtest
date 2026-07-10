@@ -584,3 +584,9 @@ Novidades metodológicas deste ciclo:
   (labels do cubo assumem $10). TFC entra a segundos do settlement — medir latência de
   execução real do robô na janela τ < 15s antes de produção.
 
+### Father Terminal (Hopper × TFC, 2026-07-09)
+* **GLS campeã** (`father-terminal-v1` / `btc-champion-v1`): perna terminal TFC V7 com `earlyEnabled=false` — paridade +$4.086 / 59d com `tfc-v7`.
+* **Stack paper** (`npm run lab:father:stack`): Hopper maker + TFC V7 = **+$8.949** / 59d, corr diária −0,09, maxDD $38.
+* **Early taker no GLS**: sweep 12 variantes — melhor híbrido +$196 (`e075-d25-b6`) vs baseline terminal +$4.086; Hopper taker-honest −$4.962.
+* **Produção**: stack real = duas pernas independentes (Hopper maker + TFC); ver `docs/arquitetura/father-terminal-design.md`.
+
