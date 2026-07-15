@@ -168,6 +168,19 @@ export const INDIVIDUAL_RUNNERS = [
     promotedToStudio: true,
     sourceDoc: 'polymarket-fm/hopper-3-explicacao.md',
   },
+  {
+    id: 'hopper-4-v1',
+    family: 'carry',
+    name: 'Hopper 4 V1',
+    sourceFile: 'Hopper4.py',
+    createFn: 'createBacktestRunner',
+    runnerSlug: 'hopper-4-runner',
+    strategyLabel: 'HOPPER_4_V1',
+    usesStopReverse: true,
+    tier: 'A',
+    promotedToStudio: true,
+    sourceDoc: 'polymarket-fm/Hopper4.py',
+  },
 ];
 
 export const PORTFOLIO_RUNNERS = [

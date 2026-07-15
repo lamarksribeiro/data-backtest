@@ -31,6 +31,9 @@
   "minLiquidityRatio": 0.55,
   "dynamicSizingEnabled": true,
   "simulateMaker": true,
+  "executionMode": "resting_maker",
+  "makerFillEpsilon": 0.01,
+  "makerTimeoutSec": 15,
   "maxFlipsAllowed": 1,
   "stopLossCentsFromAvg": 15
 }

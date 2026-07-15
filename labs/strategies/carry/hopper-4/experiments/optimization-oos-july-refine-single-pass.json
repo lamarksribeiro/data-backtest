@@ -1,0 +1,30 @@
+{
+  "name": "hopper-4-optimization-oos-july-refine-single-pass",
+  "strategyId": "hopper-4",
+  "strategyFamily": "carry",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-13",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": false,
+  "variantWorkers": 6,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      { "id": "fixed-cap-current", "params": { "walletMaxCap": 100 } },
+      { "id": "fixed-cap-max2", "params": { "walletMaxCap": 100, "maxViradas": 2 } },
+      { "id": "fixed-cap-max1", "params": { "walletMaxCap": 100, "maxViradas": 1 } },
+      { "id": "fixed-cap-max2-ladder24", "params": { "walletMaxCap": 100, "maxViradas": 2, "multVirada": "2,4" } },
+      { "id": "fixed-cap-fok-first", "params": { "walletMaxCap": 100, "fokEnabled": true, "fokPriceCap": 0.75, "fokAteVirada": 1 } },
+      { "id": "fixed-cap-fok-all", "params": { "walletMaxCap": 100, "fokEnabled": true, "fokPriceCap": 0.75, "fokAteVirada": 3 } },
+      { "id": "fixed-cap-cooldown55", "params": { "walletMaxCap": 100, "cooldownFlipSec": 55 } },
+      { "id": "fixed-cap-trigger60", "params": { "walletMaxCap": 100, "triggerCents": 60 } },
+      { "id": "fixed-cap-late180", "params": { "walletMaxCap": 100, "monitoringWindowSec": 180 } }
+    ]
+  }
+}

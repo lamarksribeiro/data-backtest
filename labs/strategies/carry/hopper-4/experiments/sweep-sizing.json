@@ -1,0 +1,28 @@
+{
+  "name": "hopper-4-sweep-sizing",
+  "strategyId": "hopper-4",
+  "strategyFamily": "carry",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-06-01",
+  "to": "2026-06-14",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 6,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "grid": {
+      "triggerCents": [55],
+      "maxViradas": [3],
+      "distMinPtb": [10],
+      "fokEnabled": [false],
+      "pctWallet": [0.04, 0.06, 0.08],
+      "multVirada": ["2,4,8,16,32", "2,3,5,10,20", "3,6,12,24,36"],
+      "cooldownFlipSec": [15, 25, 35]
+    }
+  }
+}

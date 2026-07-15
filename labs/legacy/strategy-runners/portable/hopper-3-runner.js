@@ -55,7 +55,26 @@ const DEFAULT_PARAMS = {
   stopLossCentsFromAvg: 0,
   dynamicSizingEnabled: true,
   simulateMaker: true,
+  // optimistic_maker | resting_maker | taker — se omitido, deriva de simulateMaker
+  executionMode: null,
+  makerFillEpsilon: 0.01,
+  makerTimeoutSec: 15,
 };
+
+function resolveExecutionMode(raw = {}, simulateMaker = true) {
+  const mode = String(raw.executionMode ?? '').trim().toLowerCase();
+  if (mode === 'optimistic_maker' || mode === 'optimistic') return 'optimistic_maker';
+  if (mode === 'resting_maker' || mode === 'resting') return 'resting_maker';
+  if (mode === 'taker') return 'taker';
+  return simulateMaker ? 'optimistic_maker' : 'taker';
+}
+
+/** Fill maker quando o ask atravessa o limite (mesma regra do orderSimulator GLS). */
+function shouldFillRestingBuy(prevAsk, currAsk, limitPrice, epsilon = 0.01) {
+  if (prevAsk == null || currAsk == null || limitPrice == null) return false;
+  if (!Number.isFinite(prevAsk) || !Number.isFinite(currAsk) || !Number.isFinite(limitPrice)) return false;
+  return prevAsk >= limitPrice && currAsk <= limitPrice - epsilon;
+}
 
 function mergeHopperParams(raw = {}) {
   const params = { ...DEFAULT_PARAMS };
@@ -93,6 +112,8 @@ function mergeHopperParams(raw = {}) {
     'minEntryAskCents',
     'maxEntryAskCents',
     'stopLossCentsFromAvg',
+    'makerFillEpsilon',
+    'makerTimeoutSec',
   ];
 
   for (const key of numericKeys) {
@@ -105,6 +126,9 @@ function mergeHopperParams(raw = {}) {
   params.finalProtectionEnabled = toBool(raw.finalProtectionEnabled ?? raw.finalProtection, params.finalProtectionEnabled);
   params.dynamicSizingEnabled = toBool(raw.dynamicSizingEnabled ?? raw.dynamicSizing, params.dynamicSizingEnabled);
   params.simulateMaker = toBool(raw.simulateMaker ?? raw.simulateMaker, params.simulateMaker);
+  params.executionMode = resolveExecutionMode(raw, params.simulateMaker);
+  // Compat: simulateMaker espelha se o modo é maker (otimista ou resting)
+  params.simulateMaker = params.executionMode !== 'taker';
 
   return params;
 }
@@ -275,6 +299,13 @@ function createEventState(tick) {
     exits: { UP: [], DOWN: [] },
     lastBuyTimeMs: 0,
     lastFlipTimeMs: 0,
+    restingBuy: null,
+    restingStats: {
+      placed: 0,
+      filled: 0,
+      cancelled: 0,
+      rejected: 0,
+    },
     state: {
       entradaFeita: false,
       ladoCaro: null,
@@ -397,9 +428,15 @@ function createBacktestRunner(rawParams = {}) {
 
   const finalizeCurrentEvent = (reason, closeTs = null) => {
     if (!current) return;
+    cancelRestingBuy('event_end');
     completedEvents.add(eventKey(current));
     const tick = current.lastTick;
     const closedAt = closeTs || new Date(current.eventEndMs).toISOString();
+    const restingPlaced = current.restingStats.placed;
+    const restingFilled = current.restingStats.filled;
+    const restingCancelled = current.restingStats.cancelled;
+    const restingRejected = current.restingStats.rejected;
+    const makerFillRate = restingPlaced > 0 ? restingFilled / restingPlaced : null;
 
     const totalFillsCount = current.fills.UP.length + current.fills.DOWN.length;
     if (totalFillsCount === 0) {
@@ -424,6 +461,12 @@ function createBacktestRunner(rawParams = {}) {
         reason: 'no_entry',
         closedAt,
         diagnostics: current.lastDiagnostics,
+        restingPlaced,
+        restingFilled,
+        restingCancelled,
+        restingRejected,
+        makerFillRate,
+        executionMode: params.executionMode,
       });
       equity.push({ ts: closedAt, pnl: totalPnl });
       current = null;
@@ -485,6 +528,12 @@ function createBacktestRunner(rawParams = {}) {
       reason: current.state.fechadoAntecipado ? 'profit_exit' : (current.state.protegidoFinal ? 'stop_bid' : reason),
       closedAt,
       diagnostics: { ...current.state },
+      restingPlaced,
+      restingFilled,
+      restingCancelled,
+      restingRejected,
+      makerFillRate,
+      executionMode: params.executionMode,
     });
     equity.push({ ts: closedAt, pnl: totalPnl });
     addLog(
@@ -495,43 +544,161 @@ function createBacktestRunner(rawParams = {}) {
     current = null;
   };
 
-  const buyShares = (lado, qty, askPrice, type, ts) => {
+  const cancelRestingBuy = (reason = 'cancelled') => {
+    if (!current?.restingBuy || current.restingBuy.status !== 'open') return false;
+    current.restingBuy.status = 'cancelled';
+    current.restingBuy.cancelReason = reason;
+    current.restingStats.cancelled += 1;
+    addLog(
+      current.lastTick?.ts || new Date().toISOString(),
+      `RESTING CANCEL | ${current.restingBuy.side} ${current.restingBuy.qty}sh @ ${current.restingBuy.price} | ${reason}`,
+      'info',
+    );
+    current.restingBuy = null;
+    return true;
+  };
+
+  const applyImmediateBuy = (lado, qty, askPrice, type, ts, onFill) => {
     const fields = sideFields(current.lastTick, lado);
-    const execPrice = params.simulateMaker ? (fields.bid || fields.price || askPrice) : askPrice;
-
-    const { avgPrice, subiu } = walkBook(fields.rawAsks, qty, execPrice, params.fallbackBookSize);
-
-    const finalPrice = params.simulateMaker ? execPrice : avgPrice;
+    const optimistic = params.executionMode === 'optimistic_maker';
+    const execPrice = optimistic ? (fields.bid || fields.price || askPrice) : askPrice;
+    const { avgPrice } = walkBook(fields.rawAsks, qty, execPrice, params.fallbackBookSize);
+    const finalPrice = optimistic ? execPrice : avgPrice;
     const cost = qty * finalPrice;
     current.shares[lado] += qty;
     current.cost[lado] += cost;
 
-    const fill = { 
-      price: finalPrice, 
-      qty, 
-      time: ts, 
+    const fill = {
+      price: finalPrice,
+      qty,
+      time: ts,
       type,
-      liquidity: params.simulateMaker ? 'maker' : 'taker'
+      liquidity: optimistic ? 'maker' : 'taker',
     };
     current.fills[lado].push(fill);
-
     current.lastBuyTimeMs = new Date(ts).getTime();
-
     addLog(
       ts,
       `COMPRA Hopper 3 | ${lado} ${qty.toFixed(0)}sh @ $${finalPrice.toFixed(4)} | Tipo: ${type} | Liq: ${fill.liquidity}`,
       'entry',
     );
+    if (typeof onFill === 'function') onFill();
     return qty;
+  };
+
+  const placeRestingBuy = (lado, qty, askPrice, type, ts, onFill) => {
+    const fields = sideFields(current.lastTick, lado);
+    const bid = fields.bid || fields.price;
+    const ask = fields.ask || askPrice;
+
+    if (current.restingBuy?.status === 'open'
+      && current.restingBuy.side === lado
+      && current.restingBuy.type === type) {
+      return 0;
+    }
+
+    if (current.restingBuy?.status === 'open') {
+      cancelRestingBuy('replaced');
+    }
+
+    if (bid == null || ask == null || !Number.isFinite(bid) || !Number.isFinite(ask) || bid <= 0 || bid >= 1) {
+      current.restingStats.rejected += 1;
+      addLog(ts, `RESTING REJECT | ${lado} bid inválido`, 'info');
+      return 0;
+    }
+    // Marketable: preço >= ask executaria como taker — não repousa
+    if (bid >= ask) {
+      current.restingStats.rejected += 1;
+      addLog(ts, `RESTING REJECT | ${lado} bid=${bid} >= ask=${ask} (marketable)`, 'info');
+      return 0;
+    }
+
+    current.restingBuy = {
+      side: lado,
+      price: bid,
+      qty,
+      type,
+      placedTs: ts,
+      placedMs: new Date(ts).getTime(),
+      placedRefAsk: ask,
+      lastAsk: ask,
+      onFill: typeof onFill === 'function' ? onFill : null,
+      status: 'open',
+    };
+    current.restingStats.placed += 1;
+    current.lastBuyTimeMs = new Date(ts).getTime();
+    addLog(
+      ts,
+      `RESTING PLACE | ${lado} ${qty.toFixed(0)}sh @ $${bid.toFixed(4)} | Tipo: ${type} | refAsk=${ask.toFixed(4)}`,
+      'info',
+    );
+    return 0;
+  };
+
+  const checkRestingBuys = (tick) => {
+    const resting = current?.restingBuy;
+    if (!resting || resting.status !== 'open') return 0;
+
+    const tickMs = new Date(tick.ts).getTime();
+    const timeoutMs = (params.makerTimeoutSec || 15) * 1000;
+    if (tickMs - resting.placedMs >= timeoutMs) {
+      cancelRestingBuy('timeout');
+      return 0;
+    }
+
+    const fields = sideFields(tick, resting.side);
+    const currAsk = fields.ask;
+    if (currAsk == null) return 0;
+
+    const prevAsk = resting.lastAsk ?? resting.placedRefAsk;
+    const epsilon = params.makerFillEpsilon ?? 0.01;
+    const crossed = shouldFillRestingBuy(prevAsk, currAsk, resting.price, epsilon);
+    resting.lastAsk = currAsk;
+    if (!crossed) return 0;
+
+    const qty = resting.qty;
+    const lado = resting.side;
+    const type = resting.type;
+    const onFill = resting.onFill;
+    const fillPrice = resting.price;
+
+    current.shares[lado] += qty;
+    current.cost[lado] += qty * fillPrice;
+    current.fills[lado].push({
+      price: fillPrice,
+      qty,
+      time: tick.ts,
+      type,
+      liquidity: 'maker',
+    });
+    current.restingStats.filled += 1;
+    resting.status = 'filled';
+    current.restingBuy = null;
+    current.lastBuyTimeMs = tickMs;
+
+    addLog(
+      tick.ts,
+      `RESTING FILL | ${lado} ${qty.toFixed(0)}sh @ $${fillPrice.toFixed(4)} | Tipo: ${type} | Liq: maker`,
+      'entry',
+    );
+    if (typeof onFill === 'function') onFill();
+    return qty;
+  };
+
+  const buyShares = (lado, qty, askPrice, type, ts, onFill = null) => {
+    if (params.executionMode === 'resting_maker') {
+      return placeRestingBuy(lado, qty, askPrice, type, ts, onFill);
+    }
+    return applyImmediateBuy(lado, qty, askPrice, type, ts, onFill);
   };
 
   const sellShares = (lado, qty, bidPrice, type, ts) => {
     const fields = sideFields(current.lastTick, lado);
-    const execPrice = params.simulateMaker ? (fields.ask || fields.price || bidPrice) : bidPrice;
-
-    const { avgPrice, subiu } = walkBookBids(fields.rawBids, qty, execPrice);
-
-    const finalPrice = params.simulateMaker ? execPrice : avgPrice;
+    // resting_maker: saídas sempre taker; optimistic_maker: ask; taker: bid walk
+    const optimistic = params.executionMode === 'optimistic_maker';
+    const execPrice = optimistic ? (fields.ask || fields.price || bidPrice) : bidPrice;
+    const { avgPrice } = walkBookBids(fields.rawBids, qty, execPrice);
+    const finalPrice = optimistic ? execPrice : avgPrice;
     const revenue = qty * finalPrice;
     const avgCostPrice = current.shares[lado] > 0 ? current.cost[lado] / current.shares[lado] : 0;
     const consumedCost = avgCostPrice * qty;
@@ -542,13 +709,13 @@ function createBacktestRunner(rawParams = {}) {
     current.shares[lado] -= qty;
     current.cost[lado] = Math.max(0, current.cost[lado] - consumedCost);
 
-    const exit = { 
-      price: finalPrice, 
-      qty, 
-      time: ts, 
-      type, 
+    const exit = {
+      price: finalPrice,
+      qty,
+      time: ts,
+      type,
       pnl: tradePnl,
-      liquidity: params.simulateMaker ? 'maker' : 'taker'
+      liquidity: optimistic ? 'maker' : 'taker',
     };
     current.exits[lado].push(exit);
 
@@ -561,6 +728,8 @@ function createBacktestRunner(rawParams = {}) {
   };
 
   const maybeEvaluateHopper = (tick) => {
+    checkRestingBuys(tick);
+
     const tickTimeMs = new Date(tick.ts).getTime();
     const timeRemainingSec = secondsRemaining(current, tick);
 
@@ -638,9 +807,10 @@ function createBacktestRunner(rawParams = {}) {
           const shO = ladoO === 'UP' ? current.shares.UP : current.shares.DOWN;
           const falta = shO - shB;
           if (falta > 0) {
-            buyShares(ladoB, falta, askB, 'EQUALIZA', tick.ts);
-            current.state.equalizado = true;
-            current.state.nivelEq = nivelEq;
+            buyShares(ladoB, falta, askB, 'EQUALIZA', tick.ts, () => {
+              current.state.equalizado = true;
+              current.state.nivelEq = nivelEq;
+            });
             return;
           }
         }
@@ -711,10 +881,10 @@ function createBacktestRunner(rawParams = {}) {
         const shEntradaCaro = calcEntrada(equityNow(), params);
         current.state.shEntradaCaro = shEntradaCaro;
 
-        buyShares(current.state.ladoCaro, shEntradaCaro, askCaro, 'INICIO', tick.ts);
-
-        current.state.entradaFeita = true;
-        current.lastFlipTimeMs = agora;
+        buyShares(current.state.ladoCaro, shEntradaCaro, askCaro, 'INICIO', tick.ts, () => {
+          current.state.entradaFeita = true;
+          current.lastFlipTimeMs = agora;
+        });
       }
     } else if (!current.state.equalizado && !current.state.fechadoAntecipado) {
       // 5. Cascata de Viradas
@@ -739,53 +909,60 @@ function createBacktestRunner(rawParams = {}) {
       // (a) 1a VIRADA
       if (params.maxFlipsAllowed >= 1 && !current.state.reversaoFeita && podeComprar && askBaratoC >= pReversao && distOkLado(ladoBarato) && viradaLiberada) {
         const qty = calcDynamicFlipShares(askBarato, params) ?? shEvento.REVERSAO;
-        buyShares(ladoBarato, qty, askBarato, '1a VIRADA', tick.ts);
-        current.state.reversaoFeita = true;
-        current.lastFlipTimeMs = agora;
-        current.state.revCaroPend = true;
-        current.state.revBaratoPend = true;
+        buyShares(ladoBarato, qty, askBarato, '1a VIRADA', tick.ts, () => {
+          current.state.reversaoFeita = true;
+          current.lastFlipTimeMs = agora;
+          current.state.revCaroPend = true;
+          current.state.revBaratoPend = true;
+        });
       }
       // (b) 2a VIRADA
       else if (params.maxFlipsAllowed >= 2 && current.state.revCaroPend && !current.state.revCaroFeito && podeComprar && askCaroC >= pRevCaro && distOkLado(ladoCaro) && viradaLiberada) {
         const qty = calcDynamicFlipShares(askCaro, params) ?? shEvento.REV_CARO;
-        buyShares(ladoCaro, qty, askCaro, '2a VIRADA', tick.ts);
-        current.state.revCaroFeito = true;
-        current.lastFlipTimeMs = agora;
-        current.state.rev2BaratoPend = true;
-        current.state.rev2CaroPend = true;
+        buyShares(ladoCaro, qty, askCaro, '2a VIRADA', tick.ts, () => {
+          current.state.revCaroFeito = true;
+          current.lastFlipTimeMs = agora;
+          current.state.rev2BaratoPend = true;
+          current.state.rev2CaroPend = true;
+        });
       }
       // (c) REV-BARATO
       else if (current.state.revBaratoPend && !current.state.revBaratoFeito && podeComprar && askBaratoC <= pRevBarato) {
-        buyShares(ladoBarato, shEvento.REV_BARATO, askBarato, 'REV-BARATO', tick.ts);
-        current.state.revBaratoFeito = true;
+        buyShares(ladoBarato, shEvento.REV_BARATO, askBarato, 'REV-BARATO', tick.ts, () => {
+          current.state.revBaratoFeito = true;
+        });
       }
       // (d) 3a VIRADA
       else if (params.maxFlipsAllowed >= 3 && current.state.rev2BaratoPend && !current.state.rev2BaratoFeito && podeComprar && askBaratoC >= pRev2Barato && distOkLado(ladoBarato) && viradaLiberada) {
         const qty = calcDynamicFlipShares(askBarato, params) ?? shEvento.REV2_BARATO;
-        buyShares(ladoBarato, qty, askBarato, '3a VIRADA', tick.ts);
-        current.state.rev2BaratoFeito = true;
-        current.lastFlipTimeMs = agora;
-        current.state.rev3CaroPend = true;
+        buyShares(ladoBarato, qty, askBarato, '3a VIRADA', tick.ts, () => {
+          current.state.rev2BaratoFeito = true;
+          current.lastFlipTimeMs = agora;
+          current.state.rev3CaroPend = true;
+        });
       }
       // (e) REV2-CARO
       else if (current.state.rev2CaroPend && !current.state.rev2CaroFeito && podeComprar && askCaroC <= pRev2Caro) {
-        buyShares(ladoCaro, shEvento.REV2_CARO, askCaro, 'REV2-CARO', tick.ts);
-        current.state.rev2CaroFeito = true;
+        buyShares(ladoCaro, shEvento.REV2_CARO, askCaro, 'REV2-CARO', tick.ts, () => {
+          current.state.rev2CaroFeito = true;
+        });
       }
       // (f) 4a VIRADA
       else if (params.maxFlipsAllowed >= 4 && current.state.rev3CaroPend && !current.state.rev3CaroFeito && podeComprar && askCaroC >= pRev3Caro && distOkLado(ladoCaro) && viradaLiberada) {
         const qty = calcDynamicFlipShares(askCaro, params) ?? shEvento.REV3_CARO;
-        buyShares(ladoCaro, qty, askCaro, '4a VIRADA', tick.ts);
-        current.state.rev3CaroFeito = true;
-        current.lastFlipTimeMs = agora;
-        current.state.rev4BaratoPend = true;
+        buyShares(ladoCaro, qty, askCaro, '4a VIRADA', tick.ts, () => {
+          current.state.rev3CaroFeito = true;
+          current.lastFlipTimeMs = agora;
+          current.state.rev4BaratoPend = true;
+        });
       }
       // (g) 5a VIRADA
       else if (params.maxFlipsAllowed >= 5 && current.state.rev4BaratoPend && !current.state.rev4BaratoFeito && podeComprar && askBaratoC >= pRev4Barato && distOkLado(ladoBarato) && viradaLiberada) {
         const qty = calcDynamicFlipShares(askBarato, params) ?? shEvento.REV4_BARATO;
-        buyShares(ladoBarato, qty, askBarato, '5a VIRADA', tick.ts);
-        current.state.rev4BaratoFeito = true;
-        current.lastFlipTimeMs = agora;
+        buyShares(ladoBarato, qty, askBarato, '5a VIRADA', tick.ts, () => {
+          current.state.rev4BaratoFeito = true;
+          current.lastFlipTimeMs = agora;
+        });
       }
     }
   };
@@ -837,6 +1014,9 @@ function createBacktestRunner(rawParams = {}) {
     }
 
     const advanced = computeAdvancedMetrics(events, params, totalPnl, totalEntries, totalWins, totalLosses);
+    const restingPlaced = events.reduce((s, e) => s + (e.restingPlaced || 0), 0);
+    const restingFilled = events.reduce((s, e) => s + (e.restingFilled || 0), 0);
+    const restingCancelled = events.reduce((s, e) => s + (e.restingCancelled || 0), 0);
     return {
       params,
       strategy: 'HOPPER_3_V1',
@@ -853,6 +1033,11 @@ function createBacktestRunner(rawParams = {}) {
         maxLoss,
         maxDrawdown,
         finalWallet: params.walletSize + totalPnl,
+        executionMode: params.executionMode,
+        restingPlaced,
+        restingFilled,
+        restingCancelled,
+        makerFillRate: restingPlaced > 0 ? restingFilled / restingPlaced : null,
         ...advanced,
       },
       equity,
@@ -880,3 +1065,13 @@ async function runHopper3BacktestInBatches(rawParams, tickBatches) {
   }
   return runner.finish();
 }
+
+// Surface for unit tests (library loader only calls createBacktestRunner)
+var __hopperExports = {
+  createBacktestRunner,
+  mergeHopperParams,
+  resolveExecutionMode,
+  shouldFillRestingBuy,
+  runHopper3Backtest,
+  runHopper3BacktestInBatches,
+};

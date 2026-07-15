@@ -1,0 +1,27 @@
+{
+  "name": "hopper-4-validation-pre-july-window",
+  "strategyId": "hopper-4",
+  "strategyFamily": "carry",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-04-23",
+  "to": "2026-06-30",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 6,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      { "id": "fixed-cap-window120", "params": { "walletMaxCap": 100, "monitoringWindowSec": 120 } },
+      { "id": "fixed-cap-window150", "params": { "walletMaxCap": 100, "monitoringWindowSec": 150 } },
+      { "id": "fixed-cap-window180", "params": { "walletMaxCap": 100, "monitoringWindowSec": 180 } },
+      { "id": "fixed-cap-window210", "params": { "walletMaxCap": 100, "monitoringWindowSec": 210 } },
+      { "id": "fixed-cap-window240", "params": { "walletMaxCap": 100, "monitoringWindowSec": 240 } },
+      { "id": "fixed-cap-window290", "params": { "walletMaxCap": 100, "monitoringWindowSec": 290 } }
+    ]
+  }
+}

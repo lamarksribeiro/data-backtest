@@ -1,0 +1,36 @@
+{
+  "id": "hopper-4",
+  "name": "Hopper 4 V1",
+  "family": "carry",
+  "status": "candidate",
+  "kind": "library-runner",
+  "assets": [
+    "BTC"
+  ],
+  "intervals": [
+    "5m"
+  ],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "library-runner",
+    "runnerSlug": "hopper-4-runner",
+    "runnerVersion": 1
+  },
+  "portStatus": "ported",
+  "sourceRepo": "polymarket-fm",
+  "sourceService": "Hopper4.py",
+  "promotedToStudio": true,
+  "studioSlug": "hopper-4",
+  "studio": {
+    "description": "Hopper 4 stop-and-reverse one-sided: vende tudo e recompra o oposto com escada de multiplicadores + FOK.",
+    "tags": [
+      "hopper-4",
+      "stop-and-reverse",
+      "btc",
+      "fok"
+    ],
+    "defaultVersion": 2
+  },
+  "notes": "Runner: hopper-4-runner@1. Origem: polymarket-fm/Hopper4.py (lógica viva). Champion: sweep-core+sizing 2026-06-01..14."
+}

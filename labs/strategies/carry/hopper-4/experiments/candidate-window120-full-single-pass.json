@@ -1,0 +1,22 @@
+{
+  "name": "hopper-4-candidate-window120-full-single-pass",
+  "strategyId": "hopper-4",
+  "strategyFamily": "carry",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-04-23",
+  "to": "2026-07-13",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": false,
+  "variantWorkers": 1,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      { "id": "fixed-cap-window120", "params": { "walletMaxCap": 100, "monitoringWindowSec": 120 } }
+    ]
+  }
+}

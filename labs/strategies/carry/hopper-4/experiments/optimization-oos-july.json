@@ -1,0 +1,46 @@
+{
+  "name": "hopper-4-optimization-oos-july",
+  "strategyId": "hopper-4",
+  "strategyFamily": "carry",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-13",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 6,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      { "id": "baseline", "params": {} },
+      { "id": "fixed-cap-current", "params": { "walletMaxCap": 100 } },
+      { "id": "fixed-cap-ladder-248", "params": { "walletMaxCap": 100, "multVirada": "2,4,8" } },
+
+      { "id": "noflip-t55", "params": { "walletMaxCap": 100, "maxViradas": 0, "triggerCents": 55 } },
+      { "id": "noflip-t60", "params": { "walletMaxCap": 100, "maxViradas": 0, "triggerCents": 60 } },
+      { "id": "noflip-t65", "params": { "walletMaxCap": 100, "maxViradas": 0, "triggerCents": 65 } },
+      { "id": "noflip-t70", "params": { "walletMaxCap": 100, "maxViradas": 0, "triggerCents": 70 } },
+      { "id": "noflip-t60-late180", "params": { "walletMaxCap": 100, "maxViradas": 0, "triggerCents": 60, "monitoringWindowSec": 180 } },
+      { "id": "noflip-t65-late180", "params": { "walletMaxCap": 100, "maxViradas": 0, "triggerCents": 65, "monitoringWindowSec": 180 } },
+
+      { "id": "oneflip-t55-m1", "params": { "walletMaxCap": 100, "maxViradas": 1, "triggerCents": 55, "multVirada": "1" } },
+      { "id": "oneflip-t60-m1", "params": { "walletMaxCap": 100, "maxViradas": 1, "triggerCents": 60, "multVirada": "1" } },
+      { "id": "oneflip-t60-m15", "params": { "walletMaxCap": 100, "maxViradas": 1, "triggerCents": 60, "multVirada": "1.5" } },
+      { "id": "oneflip-t65-m1", "params": { "walletMaxCap": 100, "maxViradas": 1, "triggerCents": 65, "multVirada": "1" } },
+      { "id": "oneflip-t65-m15", "params": { "walletMaxCap": 100, "maxViradas": 1, "triggerCents": 65, "multVirada": "1.5" } },
+      { "id": "oneflip-t65-m2", "params": { "walletMaxCap": 100, "maxViradas": 1, "triggerCents": 65, "multVirada": "2" } },
+      { "id": "oneflip-t70-m15", "params": { "walletMaxCap": 100, "maxViradas": 1, "triggerCents": 70, "multVirada": "1.5" } },
+      { "id": "oneflip-t60-m15-fok", "params": { "walletMaxCap": 100, "maxViradas": 1, "triggerCents": 60, "multVirada": "1.5", "fokEnabled": true, "fokPriceCap": 0.75, "fokAteVirada": 1 } },
+
+      { "id": "twoflip-t60-125-15", "params": { "walletMaxCap": 100, "maxViradas": 2, "triggerCents": 60, "multVirada": "1.25,1.5" } },
+      { "id": "twoflip-t65-125-15", "params": { "walletMaxCap": 100, "maxViradas": 2, "triggerCents": 65, "multVirada": "1.25,1.5" } },
+      { "id": "twoflip-t65-15-2", "params": { "walletMaxCap": 100, "maxViradas": 2, "triggerCents": 65, "multVirada": "1.5,2" } },
+      { "id": "twoflip-t65-125-15-late180", "params": { "walletMaxCap": 100, "maxViradas": 2, "triggerCents": 65, "multVirada": "1.25,1.5", "monitoringWindowSec": 180 } },
+      { "id": "threeflip-t65-125-15-2", "params": { "walletMaxCap": 100, "maxViradas": 3, "triggerCents": 65, "multVirada": "1.25,1.5,2" } }
+    ]
+  }
+}

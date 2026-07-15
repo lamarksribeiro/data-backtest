@@ -23,6 +23,8 @@ Inclui as 16 teorias transferidas do polymarket-test, mais:
 
 Estudo de suporte: [`../analise-quantitativa/estudo-correlacao-binance-polymarket.md`](../analise-quantitativa/estudo-correlacao-binance-polymarket.md).
 
+Maker realista Hopper 3: [`hopper-3-maker-realista.md`](hopper-3-maker-realista.md) (`executionMode` optimistic / resting / taker + A/B).
+
 ## Não implementadas (backlog de port)
 
 Prioridade e `sourceDoc` no catálogo de port:

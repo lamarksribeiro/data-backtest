@@ -1,6 +1,6 @@
 {
-  "id": "btc-champion",
-  "name": "BTC Champion (Dynamic Maker)",
+  "id": "btc-champion-resting",
+  "name": "BTC Champion (Resting Maker)",
   "studioVersion": 1,
   "params": {
     "walletSize": 100,
@@ -35,7 +35,7 @@
     "minLiquidityRatio": 0.55,
     "dynamicSizingEnabled": true,
     "simulateMaker": true,
-    "executionMode": "optimistic_maker",
+    "executionMode": "resting_maker",
     "makerFillEpsilon": 0.01,
     "makerTimeoutSec": 15,
     "maxFlipsAllowed": 1,

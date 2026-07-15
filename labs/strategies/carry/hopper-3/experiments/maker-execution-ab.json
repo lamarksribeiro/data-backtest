@@ -1,0 +1,30 @@
+{
+  "name": "hopper-3-maker-execution-ab",
+  "strategyId": "hopper-3",
+  "description": "Compara executionMode optimistic_maker vs resting_maker vs taker na mesma janela de ticks.",
+  "modes": [
+    "optimistic_maker",
+    "resting_maker",
+    "taker"
+  ],
+  "baseParams": {
+    "walletSize": 100,
+    "pctWallet": 0.06,
+    "minShares": 10,
+    "triggerExpensiveCents": 70,
+    "triggerCheapBaseCents": 20,
+    "flipIncrementCents": 3,
+    "distMinPtb": 0,
+    "minTimeForNewCycleSec": 35,
+    "maxEntryAskCents": 85,
+    "minEntryAskCents": 55,
+    "maxSpreadCents": 10,
+    "maxFlipsAllowed": 1,
+    "dynamicSizingEnabled": false,
+    "earlyCloseEnabled": false,
+    "finalProtectionEnabled": false,
+    "stopLossCentsFromAvg": 0,
+    "makerFillEpsilon": 0.01,
+    "makerTimeoutSec": 15
+  }
+}
