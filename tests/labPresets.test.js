@@ -18,7 +18,7 @@ import { openStateDatabase, closeStateDatabase } from '../src/state/sqlite.js';
 test('listPromotedGlsStrategies discovers GLS lab strategies', () => {
 	const promoted = listPromotedGlsStrategies();
 	const ids = promoted.map((item) => item.id).sort();
-	assert.deepEqual(ids, ['apex-triad-v1', 'book-frontrunner', 'edge-snipper', 'gamma-ladder', 'lim-prime-v1', 'quantum-entropic-manifold', 'tfc', 'vsmr', 'whipsaw-lock']);
+	assert.deepEqual(ids, ['apex-triad-v1', 'apex-triad-v2', 'book-frontrunner', 'edge-snipper', 'gamma-ladder', 'lim-prime-v1', 'quantum-entropic-manifold', 'tfc', 'vsmr', 'whipsaw-lock']);
 	assert.equal(promoted.find((item) => item.id === 'gamma-ladder').studioSlug, 'gamma-ladder');
 	assert.equal(promoted.find((item) => item.id === 'apex-triad-v1').status, 'candidate');
 });
@@ -48,9 +48,9 @@ test('seedPromotedStrategies seeds versions from lab manifests', () => {
   const db = openStateDatabase(dbPath);
 	try {
 		const results = seedPromotedStrategies(db);
-		assert.equal(results.length, 9);
+		assert.equal(results.length, 10);
 		const slugs = results.map((row) => row.slug).sort();
-		assert.deepEqual(slugs, ['apex-triad-v1', 'book-frontrunner', 'edge-snipper', 'gamma-ladder', 'lim-prime-v1', 'quantum-entropic-manifold', 'tfc', 'vsmr', 'whipsaw-lock']);
+		assert.deepEqual(slugs, ['apex-triad-v1', 'apex-triad-v2', 'book-frontrunner', 'edge-snipper', 'gamma-ladder', 'lim-prime-v1', 'quantum-entropic-manifold', 'tfc', 'vsmr', 'whipsaw-lock']);
 
     const apex = results.find((row) => row.slug === 'apex-triad-v1');
     const apexVersions = db.prepare(`

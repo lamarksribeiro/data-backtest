@@ -1,0 +1,25 @@
+{
+  "name": "apex-triad-v2-sweep-optimization",
+  "strategyId": "apex-triad-v2",
+  "strategyFamily": "portfolio",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-06-01",
+  "to": "2026-07-01",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": false,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "grid": {
+      "edgeMinDirectionalProb": [0.55, 0.57],
+      "edgeMinEdge": [0.05, 0.07],
+      "edgeMaxSpread": [0.03, 0.04],
+      "edgeStopDelta": [0.10, 0.12, 0.15]
+    }
+  }
+}

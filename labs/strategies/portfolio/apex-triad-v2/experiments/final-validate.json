@@ -1,0 +1,52 @@
+{
+  "name": "apex-triad-v2-final-validate",
+  "strategyId": "apex-triad-v2",
+  "strategyFamily": "portfolio",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-07-05",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "terminal-reference",
+        "params": {
+          "edgeEnabled": false,
+          "profitLockEnabled": false
+        }
+      },
+      {
+        "id": "apex-triad-v1-frozen",
+        "params": {
+          "edgeEnabled": true,
+          "edgeMinDirectionalProb": 0.54,
+          "edgeMinEdge": 0.04,
+          "edgeMaxSpread": 0.06,
+          "edgeStopRelative": false,
+          "edgeStopBid": 0.18,
+          "profitLockEnabled": false
+        }
+      },
+      {
+        "id": "apex-triad-v2-champion",
+        "params": {
+          "edgeEnabled": true,
+          "edgeMinDirectionalProb": 0.57,
+          "edgeMinEdge": 0.05,
+          "edgeMaxSpread": 0.04,
+          "edgeStopRelative": true,
+          "edgeStopDelta": 0.15,
+          "profitLockEnabled": false
+        }
+      }
+    ]
+  }
+}
