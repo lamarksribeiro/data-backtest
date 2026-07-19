@@ -1,0 +1,191 @@
+strategy "TFC Reversal Pro V1" {
+  param walletSize = 100
+  param entryBudget = 10
+  param minShares = 1
+  param minSecondsLeft = 5
+  param maxSecondsLeft = 30
+  param maxDistAbs = 20
+  param minAsk = 0.55
+  param maxAsk = 0.82
+  param maxSpread = 0.03
+  param minOddsSum = 0.98
+  param maxOddsSum = 1.06
+  param minFlips = 0
+  param flipWindowSecs = 60
+  param velocityLookbackSecs = 5
+  param maxAdverseSpotChange = 8.0
+  param minObi = 0.0
+  param obiLevels = 5
+
+  param lateFlipExitEnabled = true
+  param lateFlipExitSec = 8
+  param lateFlipExitCrossDist = 0
+  param lateFlipMinSec = 4
+  param lateFlipReverseEnabled = true
+  param lateFlipReverseMaxAsk = 0.95
+
+  param dangerExitEnabled = true
+  param dangerExitK = 0.3
+  param dangerExitFloorSec = 4
+
+  param reversalMomentumEnabled = true
+  param reversalMomentumSec = 3
+  param reversalMinMomentum = 1.5
+
+  param reversalVolFilterEnabled = true
+  param reversalVolLookback = 15
+  param reversalMaxVol = 25.0
+
+  onEventStart(event) {
+    state.entered = false
+    state.closed = false
+    state.reversed = false
+    state.signedDistance = 0
+    state.entryBlocked = false
+    state.canReverse = false
+    state.revMomOk = true
+    state.revVolOk = true
+  }
+
+  onTick(tick, event) {
+    let secsLeft = time.secondsUntil(event.end, tick.ts)
+
+    if (position.open) {
+      if (!state.entered) {
+        state.entered = true
+        mark("tfc_entry", { side: position.side, reason: "tfc", secsLeft: secsLeft })
+      }
+
+      let side = position.side
+      let bid = book.bid(side, tick)
+
+      state.signedDistance = tick.underlyingPrice - event.priceToBeat
+      if (side == "DOWN") {
+        state.signedDistance = event.priceToBeat - tick.underlyingPrice
+      }
+
+      if (params.dangerExitEnabled && !state.closed && !state.reversed && secsLeft >= params.dangerExitFloorSec && secsLeft < (params.dangerExitFloorSec + 1)) {
+        let sigma = signals.volatility(samples, 5)
+        if (math.abs(state.signedDistance) < (params.dangerExitK * sigma)) {
+          let dangerOut = exit({ price: bid, reason: "danger_exit" })
+          if (dangerOut) {
+            state.closed = dangerOut.closed
+            mark("exit", { reason: "danger_exit", price: bid })
+          }
+        }
+      }
+
+      if (!state.closed && params.lateFlipExitEnabled && secsLeft <= params.lateFlipExitSec && secsLeft >= params.lateFlipMinSec && state.signedDistance <= params.lateFlipExitCrossDist) {
+        state.canReverse = false
+        if (params.lateFlipReverseEnabled && !state.reversed) {
+          state.canReverse = true
+          let revMomEnabled = params.reversalMomentumEnabled == true || params.reversalMomentumEnabled == 1
+          let revVolEnabled = params.reversalVolFilterEnabled == true || params.reversalVolFilterEnabled == 1
+
+          state.revMomOk = true
+          if (revMomEnabled) {
+            let oppSide = prices.oppositeSide(side)
+            let revMom = signals.momentum(samples, params.reversalMomentumSec)
+            if (oppSide == "UP" && revMom < params.reversalMinMomentum) {
+              state.revMomOk = false
+            }
+            let negMin = 0.0 - params.reversalMinMomentum
+            if (oppSide == "DOWN" && revMom > negMin) {
+              state.revMomOk = false
+            }
+          }
+
+          state.revVolOk = true
+          if (revVolEnabled) {
+            let revVol = signals.volatility(samples, params.reversalVolLookback)
+            if (revVol > params.reversalMaxVol) {
+              state.revVolOk = false
+            }
+          }
+
+          if (state.revMomOk && state.revVolOk) {
+            let oppSide = prices.oppositeSide(side)
+            let oppAsk = book.ask(oppSide, tick)
+            if (oppAsk > 0 && oppAsk <= params.lateFlipReverseMaxAsk) {
+              let flipped = reverse(oppSide, { price: oppAsk, exitPrice: bid, budget: params.entryBudget, tick: tick, ignoreConsumed: true, reason: "late_flip_reverse" })
+              if (flipped) {
+                state.reversed = true
+                mark("reverse", { reason: "late_flip_reverse", from: side, to: oppSide, ask: oppAsk })
+              }
+            }
+          } else {
+            state.canReverse = false
+          }
+        }
+        if (!state.reversed && !state.canReverse) {
+          let lateFlipped = exit({ price: bid, reason: "late_flip_exit" })
+          if (lateFlipped) {
+            state.closed = lateFlipped.closed
+            mark("exit", { reason: "late_flip_exit", price: bid })
+          }
+        }
+      }
+    } else {
+      if (!state.entered && !state.closed && secsLeft >= params.minSecondsLeft && secsLeft < params.maxSecondsLeft) {
+        let btc = tick.underlyingPrice
+        let ptb = event.priceToBeat
+        let dist = math.abs(btc - ptb)
+
+        if (dist < params.maxDistAbs) {
+          let flips = signals.ptbFlipCount(samples, params.flipWindowSecs)
+          if (flips >= params.minFlips) {
+            let fav = market.sideFromPrice(btc, ptb)
+            let ask = book.ask(fav, tick)
+            let bid = book.bid(fav, tick)
+            if (ask >= params.minAsk && ask <= params.maxAsk) {
+              let spread = ask - bid
+              if (spread <= params.maxSpread) {
+                let upAsk = book.ask("UP", tick)
+                let downAsk = book.ask("DOWN", tick)
+                let oddsSum = upAsk + downAsk
+                if (oddsSum >= params.minOddsSum && oddsSum <= params.maxOddsSum) {
+                  state.entryBlocked = false
+                  let btcPast = signals.underlyingAgo(samples, params.velocityLookbackSecs)
+                  if (btcPast) {
+                    let spotChange = btc - btcPast
+                    let negMax = 0.0 - params.maxAdverseSpotChange
+                    if (fav == "UP" && spotChange < negMax) {
+                      state.entryBlocked = true
+                    }
+                    if (fav == "DOWN" && spotChange > params.maxAdverseSpotChange) {
+                      state.entryBlocked = true
+                    }
+                  }
+                  if (!state.entryBlocked) {
+                    let negOne = 0.0 - 1.0
+                    if (params.minObi > negOne) {
+                      let obi = model.orderBookImbalance(fav, tick, params.obiLevels)
+                      if (obi < params.minObi) {
+                        state.entryBlocked = true
+                      }
+                    }
+                  }
+                  if (!state.entryBlocked) {
+                    let budget = math.min(params.entryBudget, params.walletSize + runState.totalPnl)
+                    let maxPrice = ask + 0.02
+                    let liq = book.liquidityRatio(fav, tick, budget, maxPrice)
+                    if (liq > 0.5) {
+                      let bought = enter(fav, { price: ask, maxPrice: maxPrice, budget: budget, minShares: params.minShares, minLiquidityRatio: 0.5, tick: tick, reason: "tfc_entry" })
+                      if (bought) {
+                        state.entered = true
+                        mark("tfc_entry", { side: fav, ask: ask, dist: dist, secsLeft: secsLeft })
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  onEventEnd(event) {
+  }
+}

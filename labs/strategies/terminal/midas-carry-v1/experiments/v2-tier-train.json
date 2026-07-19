@@ -1,0 +1,37 @@
+{
+  "name": "v2-tier-train",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-07-01",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "ask-094-dist-40",
+        "params": { "maxAsk": 0.94, "maxDistAbs": 40 }
+      },
+      {
+        "id": "ask-094-dist-40-tier-15",
+        "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 1.5 }
+      },
+      {
+        "id": "ask-094-dist-40-tier-20",
+        "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0 }
+      },
+      {
+        "id": "ask-097-dist-40",
+        "params": { "maxAsk": 0.97, "maxDistAbs": 40 }
+      }
+    ]
+  }
+}

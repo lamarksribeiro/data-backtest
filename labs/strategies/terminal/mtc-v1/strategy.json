@@ -1,0 +1,17 @@
+{
+  "id": "mtc-v1",
+  "name": "Momentum Terminal Carry V1",
+  "family": "terminal",
+  "status": "draft",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "labs/strategies/terminal/mtc-v1/strategy.gls"
+  },
+  "promotedToStudio": false,
+  "notes": "TFC carry + momentum confirmation. Enter on favorite only when fast AND slow momentum align. Momentum-based dynamic sizing and early exit on momentum reversal."
+}

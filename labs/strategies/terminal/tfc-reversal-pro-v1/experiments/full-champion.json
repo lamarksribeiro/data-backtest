@@ -1,0 +1,85 @@
+{
+  "name": "full-champion",
+  "strategyId": "tfc-reversal-pro-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-07-01",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "champion",
+        "params": {
+          "lateFlipExitEnabled": true,
+          "lateFlipExitSec": 8,
+          "lateFlipExitCrossDist": 0,
+          "lateFlipMinSec": 4,
+          "lateFlipReverseEnabled": true,
+          "lateFlipReverseMaxAsk": 0.95,
+          "dangerExitEnabled": true,
+          "dangerExitK": 0.3,
+          "dangerExitFloorSec": 4,
+          "reversalMomentumEnabled": false,
+          "reversalVolFilterEnabled": false
+        }
+      },
+      {
+        "id": "wider-maxask",
+        "params": {
+          "lateFlipExitEnabled": true,
+          "lateFlipExitSec": 8,
+          "lateFlipExitCrossDist": 0,
+          "lateFlipMinSec": 4,
+          "lateFlipReverseEnabled": true,
+          "lateFlipReverseMaxAsk": 0.98,
+          "dangerExitEnabled": true,
+          "dangerExitK": 0.3,
+          "dangerExitFloorSec": 4,
+          "reversalMomentumEnabled": false,
+          "reversalVolFilterEnabled": false,
+          "maxAsk": 0.85
+        }
+      },
+      {
+        "id": "danger-k02",
+        "params": {
+          "lateFlipExitEnabled": true,
+          "lateFlipExitSec": 8,
+          "lateFlipExitCrossDist": 0,
+          "lateFlipMinSec": 4,
+          "lateFlipReverseEnabled": true,
+          "lateFlipReverseMaxAsk": 0.95,
+          "dangerExitEnabled": true,
+          "dangerExitK": 0.2,
+          "dangerExitFloorSec": 4,
+          "reversalMomentumEnabled": false,
+          "reversalVolFilterEnabled": false
+        }
+      },
+      {
+        "id": "late10-2",
+        "params": {
+          "lateFlipExitEnabled": true,
+          "lateFlipExitSec": 10,
+          "lateFlipExitCrossDist": 0,
+          "lateFlipMinSec": 2,
+          "lateFlipReverseEnabled": true,
+          "lateFlipReverseMaxAsk": 0.95,
+          "dangerExitEnabled": true,
+          "dangerExitK": 0.3,
+          "dangerExitFloorSec": 4,
+          "reversalMomentumEnabled": false,
+          "reversalVolFilterEnabled": false
+        }
+      }
+    ]
+  }
+}

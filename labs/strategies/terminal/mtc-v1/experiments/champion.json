@@ -1,0 +1,113 @@
+{
+  "name": "champion",
+  "strategyId": "mtc-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-07-01",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 5,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "mtc-light",
+        "params": {
+          "momentumConfirmEnabled": true,
+          "fastMomentumSec": 3,
+          "slowMomentumSec": 10,
+          "minFastMomentum": 1.0,
+          "minSlowMomentum": 0.0,
+          "momentumSizingEnabled": true,
+          "momentumExitEnabled": true
+        }
+      },
+      {
+        "id": "mtc-base",
+        "params": {
+          "momentumConfirmEnabled": true,
+          "fastMomentumSec": 3,
+          "slowMomentumSec": 10,
+          "minFastMomentum": 2.0,
+          "minSlowMomentum": 0.0,
+          "momentumSizingEnabled": true,
+          "momentumExitEnabled": true
+        }
+      },
+      {
+        "id": "mtc-strong",
+        "params": {
+          "momentumConfirmEnabled": true,
+          "fastMomentumSec": 3,
+          "slowMomentumSec": 10,
+          "minFastMomentum": 4.0,
+          "minSlowMomentum": 2.0,
+          "momentumSizingEnabled": true,
+          "momentumExitEnabled": true
+        }
+      },
+      {
+        "id": "mtc-no-exit",
+        "params": {
+          "momentumConfirmEnabled": true,
+          "fastMomentumSec": 3,
+          "slowMomentumSec": 10,
+          "minFastMomentum": 1.0,
+          "minSlowMomentum": 0.0,
+          "momentumSizingEnabled": true,
+          "momentumExitEnabled": false
+        }
+      },
+      {
+        "id": "mtc-no-size",
+        "params": {
+          "momentumConfirmEnabled": true,
+          "fastMomentumSec": 3,
+          "slowMomentumSec": 10,
+          "minFastMomentum": 1.0,
+          "minSlowMomentum": 0.0,
+          "momentumSizingEnabled": false,
+          "momentumExitEnabled": true
+        }
+      },
+      {
+        "id": "tfc-v7-ref",
+        "params": {
+          "momentumConfirmEnabled": false,
+          "momentumSizingEnabled": false,
+          "momentumExitEnabled": false
+        }
+      },
+      {
+        "id": "mtc-f5s15",
+        "params": {
+          "momentumConfirmEnabled": true,
+          "fastMomentumSec": 5,
+          "slowMomentumSec": 15,
+          "minFastMomentum": 2.0,
+          "minSlowMomentum": 0.0,
+          "momentumSizingEnabled": true,
+          "momentumExitEnabled": true
+        }
+      },
+      {
+        "id": "mtc-f2s6",
+        "params": {
+          "momentumConfirmEnabled": true,
+          "fastMomentumSec": 2,
+          "slowMomentumSec": 6,
+          "minFastMomentum": 1.5,
+          "minSlowMomentum": 0.0,
+          "momentumSizingEnabled": true,
+          "momentumExitEnabled": true
+        }
+      }
+    ]
+  }
+}

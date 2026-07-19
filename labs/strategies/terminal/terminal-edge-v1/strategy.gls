@@ -1,0 +1,128 @@
+strategy "Terminal Edge V1" {
+  param walletSize = 100
+  param maxOrderValue = 15
+  param minShares = 5
+  param entryWindowStart = 30
+  param entryWindowEnd = 5
+  param minAsk = 0.20
+  param maxAsk = 0.82
+  param maxSpread = 0.05
+  param minOddsSum = 0.96
+  param maxOddsSum = 1.08
+  param minModelProb = 0.45
+  param minModelEdge = 0.05
+  param minSigma = 8
+  param sigmaMultiplier = 1.0
+  param fastMomentumSec = 3
+  param slowMomentumSec = 10
+  param driftWeight = 0.35
+  param slowDriftWeight = 0.2
+  param driftClampSigma = 0.65
+  param volLookbackSec = 25
+  param entrySlippageMax = 0.02
+  param minLiquidityRatio = 0.55
+  param minMarketLag = 0.0
+  param minTheta = 0
+  param minDrift = 0
+  param minDistanceVelocity = 0
+  param minProjectedDistance = 0
+  param maxTerminalVol = 80.0
+  param minBidVelocity = 0.0
+  param requireBidMomentum = false
+  param lateFlipExitEnabled = true
+  param lateFlipExitSec = 8
+  param lateFlipExitCrossDist = 0
+  param lateFlipMinSec = 4
+  param lateFlipReverseEnabled = true
+  param lateFlipReverseMaxAsk = 0.95
+  param dangerExitEnabled = true
+  param dangerExitK = 0.3
+  param dangerExitFloorSec = 4
+
+  onEventStart(event) {
+    state.entered = false
+    state.closed = false
+    state.reversed = false
+    state.signedDistance = 0
+    state.bestSide = ""
+    state.bestAsk = 0
+    state.bestEdge = 0
+  }
+
+  onTick(tick, event) {
+    let secsLeft = time.secondsUntil(event.end, tick.ts)
+    let elapsed = time.secondsSince(event.start, tick.ts)
+
+    if (position.open) {
+      if (!state.entered) {
+        state.entered = true
+        mark("te_entry", { side: position.side, edge: state.bestEdge, secsLeft: secsLeft })
+      }
+
+      let side = position.side
+      let bid = book.bid(side, tick)
+
+      state.signedDistance = tick.underlyingPrice - event.priceToBeat
+      if (side == "DOWN") {
+        state.signedDistance = event.priceToBeat - tick.underlyingPrice
+      }
+
+      if (params.dangerExitEnabled && !state.closed && !state.reversed && secsLeft >= params.dangerExitFloorSec && secsLeft < (params.dangerExitFloorSec + 1)) {
+        let sigma = signals.volatility(samples, 5)
+        if (math.abs(state.signedDistance) < (params.dangerExitK * sigma)) {
+          let dangerOut = exit({ price: bid, reason: "danger_exit" })
+          if (dangerOut) {
+            state.closed = dangerOut.closed
+            mark("exit", { reason: "danger_exit", price: bid })
+          }
+        }
+      }
+
+      if (!state.closed && params.lateFlipExitEnabled && secsLeft <= params.lateFlipExitSec && secsLeft >= params.lateFlipMinSec) {
+        if (params.lateFlipReverseEnabled && !state.reversed && state.signedDistance <= params.lateFlipExitCrossDist) {
+          let oppSide = prices.oppositeSide(side)
+          let oppAsk = book.ask(oppSide, tick)
+          if (oppAsk > 0 && oppAsk <= params.lateFlipReverseMaxAsk) {
+            let flipped = reverse(oppSide, { price: oppAsk, exitPrice: bid, budget: params.maxOrderValue, tick: tick, ignoreConsumed: true, reason: "late_flip_reverse" })
+            if (flipped) {
+              state.reversed = true
+              mark("reverse", { reason: "late_flip_reverse", from: side, to: oppSide })
+            }
+          }
+        }
+        if (!state.reversed) {
+          let lateFlipped = exit({ price: bid, reason: "late_flip_exit" })
+          if (lateFlipped) {
+            state.closed = lateFlipped.closed
+            mark("exit", { reason: "late_flip_exit", price: bid })
+          }
+        }
+      }
+    } else {
+      if (!state.entered && !state.closed) {
+        if (time.inWindow(secsLeft, params.entryWindowStart, params.entryWindowEnd)) {
+          let scored = model.scoreTerminalSides(samples, tick, event, params)
+          let best = scored.best
+          if (best) {
+            state.bestSide = best.side
+            state.bestAsk = best.ask
+            state.bestEdge = best.edge
+            let maxPrice = best.ask + params.entrySlippageMax
+            let budget = math.min(params.maxOrderValue, params.walletSize + runState.totalPnl)
+            let liq = book.liquidityRatio(best.side, tick, budget, maxPrice)
+            if (liq >= params.minLiquidityRatio) {
+              let bought = enter(best.side, { price: best.ask, maxPrice: maxPrice, budget: budget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "te_entry" })
+              if (bought) {
+                state.entered = true
+                mark("te_signal", { side: best.side, ask: best.ask, edge: best.edge, prob: best.probability })
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  onEventEnd(event) {
+  }
+}

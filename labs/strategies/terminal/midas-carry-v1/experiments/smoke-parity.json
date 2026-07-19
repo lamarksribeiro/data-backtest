@@ -1,0 +1,40 @@
+{
+  "name": "smoke-parity",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-05-07",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 3,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "parity-tfc-v7",
+        "params": {
+          "sigmaSizingEnabled": false,
+          "scoopEnabled": false,
+          "dangerContinuousEnabled": false
+        }
+      },
+      {
+        "id": "midas-full",
+        "params": {}
+      },
+      {
+        "id": "midas-sizing-only",
+        "params": {
+          "scoopEnabled": false,
+          "dangerContinuousEnabled": false
+        }
+      }
+    ]
+  }
+}

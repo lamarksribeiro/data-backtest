@@ -1,0 +1,50 @@
+{
+  "name": "smoke",
+  "strategyId": "quick-flip-v1",
+  "strategyFamily": "scalping",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-05-06",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "variantWorkers": 3,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "qf-base",
+        "params": {}
+      },
+      {
+        "id": "qf-looser",
+        "params": {
+          "minDistanceAbs": 10,
+          "profitTarget": 0.04,
+          "maxEntriesPerEvent": 10
+        }
+      },
+      {
+        "id": "qf-tight",
+        "params": {
+          "minDistanceAbs": 20,
+          "profitTarget": 0.08,
+          "maxSpread": 0.03,
+          "maxEntriesPerEvent": 3
+        }
+      },
+      {
+        "id": "qf-aggressive",
+        "params": {
+          "minDistanceAbs": 10,
+          "maxAsk": 0.55,
+          "profitTarget": 0.03,
+          "maxEntriesPerEvent": 8
+        }
+      }
+    ]
+  }
+}

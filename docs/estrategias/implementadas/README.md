@@ -12,6 +12,7 @@ Teorias portadas ao `data-backtest` (runners no Studio ou biblioteca). Origem pr
 | [gamma-ladder-v1-explicacao.md](gamma-ladder-v1-explicacao.md) | — | Guia didático |
 | [vsmr-v1.md](vsmr-v1.md) | `vsmr` | Volatility Spike Mean Reversion (nativa data-backtest) |
 | [whipsaw-lock-v1.md](whipsaw-lock-v1.md) | `whipsaw-lock` | Whipsaw Lock ANOM-22/33 (nativa data-backtest) |
+| [midas-carry-v1.md](midas-carry-v1.md) | `midas-carry-v1` | TFC V7 + envelope high-ask em tier; supera TFC em treino e holdout |
 
 ## Library runners (tier A)
 

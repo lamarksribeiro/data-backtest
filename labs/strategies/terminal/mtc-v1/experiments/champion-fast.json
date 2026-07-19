@@ -1,0 +1,56 @@
+{
+  "name": "champion-fast",
+  "strategyId": "mtc-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-07-01",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": false,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "mtc-light",
+        "params": {
+          "momentumConfirmEnabled": true,
+          "minFastMomentum": 1.0,
+          "momentumSizingEnabled": true,
+          "momentumExitEnabled": true
+        }
+      },
+      {
+        "id": "mtc-base",
+        "params": {
+          "momentumConfirmEnabled": true,
+          "minFastMomentum": 2.0,
+          "momentumSizingEnabled": true,
+          "momentumExitEnabled": true
+        }
+      },
+      {
+        "id": "tfc-v7-ref",
+        "params": {
+          "momentumConfirmEnabled": false,
+          "momentumSizingEnabled": false,
+          "momentumExitEnabled": false
+        }
+      },
+      {
+        "id": "mtc-lite",
+        "params": {
+          "momentumConfirmEnabled": true,
+          "minFastMomentum": 0.5,
+          "momentumSizingEnabled": false,
+          "momentumExitEnabled": false
+        }
+      }
+    ]
+  }
+}

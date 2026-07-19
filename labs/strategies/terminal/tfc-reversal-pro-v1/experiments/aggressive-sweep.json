@@ -1,0 +1,75 @@
+{
+  "name": "aggressive-sweep",
+  "strategyId": "tfc-reversal-pro-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-07-01",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "ultra-wide",
+        "params": {
+          "maxAsk": 0.88,
+          "lateFlipReverseMaxAsk": 0.98,
+          "maxDistAbs": 25,
+          "lateFlipExitSec": 8,
+          "lateFlipMinSec": 4,
+          "dangerExitK": 0.3,
+          "reversalMomentumEnabled": false,
+          "reversalVolFilterEnabled": false
+        }
+      },
+      {
+        "id": "tight-flip",
+        "params": {
+          "maxAsk": 0.85,
+          "lateFlipReverseMaxAsk": 0.98,
+          "maxDistAbs": 20,
+          "lateFlipExitSec": 6,
+          "lateFlipMinSec": 2,
+          "dangerExitK": 0.3,
+          "reversalMomentumEnabled": false,
+          "reversalVolFilterEnabled": false
+        }
+      },
+      {
+        "id": "early-danger",
+        "params": {
+          "maxAsk": 0.85,
+          "lateFlipReverseMaxAsk": 0.98,
+          "maxDistAbs": 20,
+          "lateFlipExitSec": 8,
+          "lateFlipMinSec": 4,
+          "dangerExitK": 0.25,
+          "dangerExitFloorSec": 5,
+          "reversalMomentumEnabled": false,
+          "reversalVolFilterEnabled": false
+        }
+      },
+      {
+        "id": "combo-extreme",
+        "params": {
+          "maxAsk": 0.88,
+          "lateFlipReverseMaxAsk": 0.99,
+          "maxDistAbs": 25,
+          "lateFlipExitSec": 6,
+          "lateFlipMinSec": 2,
+          "dangerExitK": 0.25,
+          "dangerExitFloorSec": 5,
+          "minAsk": 0.50,
+          "reversalMomentumEnabled": false,
+          "reversalVolFilterEnabled": false
+        }
+      }
+    ]
+  }
+}

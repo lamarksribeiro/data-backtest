@@ -1,0 +1,17 @@
+{
+  "id": "quick-flip-v1",
+  "name": "Quick Flip Scalper V1",
+  "family": "scalping",
+  "status": "draft",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "labs/strategies/scalping/quick-flip-v1/strategy.gls"
+  },
+  "promotedToStudio": false,
+  "notes": "Scalping strategy: enter on distance extremes, quick profit exit, multi-entry per event. GLS version of convergence-undershoot principles."
+}

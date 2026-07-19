@@ -1,0 +1,304 @@
+strategy "MIDAS Carry V1" {
+  // Núcleo Terminal Favorite Carry (envelope V7 campeão) com três mecanismos novos:
+  // 1) Sigma sizing — orçamento por entrada escalado pelo z-score físico
+  //    z = |spot-PTB| / (sigma_ps * sqrt(tau)), onde sigma_ps é a vol realizada
+  //    por sqrt(segundo) aproximada do desvio-padrão de níveis (divisor ~ sqrt(T/3)).
+  // 2) Scoop — entrada complementar no favorito quando ask < minAsk (bolsão convexo:
+  //    vencedor quase certo precificado barato) com z mínimo alto.
+  // 3) Danger exit contínuo — saída defensiva de 8s até o piso quando o colchão
+  //    normalizado z cai abaixo de um limiar (substitui o gatilho de 1s da V7).
+
+  param walletSize = 100
+  param entryBudget = 10
+  param minShares = 1
+  param entrySlippageMax = 0.02
+  param minLiquidityRatio = 0.60
+
+  // Envelope terminal (idêntico à TFC V7 campeã)
+  param minSecondsLeft = 5
+  param maxSecondsLeft = 30
+  param maxDistAbs = 20
+  param minAsk = 0.55
+  param maxAsk = 0.82
+  param maxSpread = 0.03
+  param minOddsSum = 0.98
+  param maxOddsSum = 1.06
+
+  // Spot velocity guard
+  param velocityLookbackSecs = 5
+  param maxAdverseSpotChange = 8.0
+
+  // OBI gate
+  param minObi = 0.0
+  param obiLevels = 5
+
+  // Sigma sizing
+  param sigmaSizingEnabled = true
+  param sigmaLookbackSecs = 90
+  param sigmaDivisor = 5.48
+  param zT1 = 0.5
+  param zT2 = 1.0
+  param zT3 = 2.5
+  param zT4 = 4.0
+  param wZ0 = 0.4
+  param wZ1 = 0.7
+  param wZ2 = 1.0
+  param wZ3 = 1.4
+  param wZ4 = 1.8
+
+  // Scoop — favorito barato com z alto (fora do envelope TFC)
+  param scoopEnabled = true
+  param scoopMinZ = 1.5
+  param scoopMinAsk = 0.10
+  param scoopMaxAsk = 0.55
+  param scoopMaxSpread = 0.05
+  param scoopMaxDistAbs = 80
+  param scoopMinSecondsLeft = 5
+  param scoopMaxSecondsLeft = 30
+  param scoopBudgetFactor = 1.0
+  param scoopMinOddsSum = 0.90
+  param scoopMaxOddsSum = 1.10
+
+  // Late flip exit/reverse (V7)
+  param stopMinBid = 0.05
+  param lateFlipExitEnabled = true
+  param lateFlipExitSec = 8
+  param lateFlipExitCrossDist = 0
+  param lateFlipMinSec = 4
+  param lateFlipReverseEnabled = true
+  param lateFlipReverseMaxAsk = 0.95
+  param lateFlipReverseMinAsk = 0.0
+
+  // Danger exit: modo V7 (piso) e modo contínuo z-based
+  param dangerExitEnabled = true
+  param dangerExitK = 0.3
+  param dangerExitFloorSec = 4
+  param dangerContinuousEnabled = false
+  param dangerContinuousStartSec = 8
+  param dangerContinuousMinZ = 0.25
+
+  // Early-warning exit: sai antes da janela de late flip quando o ask do lado
+  // oposto reprecifica acima do gatilho (mercado confirmando a virada).
+  param earlyWarnEnabled = false
+  param earlyWarnOppAsk = 0.45
+  param earlyWarnStartSec = 20
+  param earlyWarnEndSec = 8
+  param earlyWarnOnlyIfLosing = true
+
+  // Gate de z mínimo na entrada core (0 = desativado)
+  param minEntryZ = 0.0
+
+  // Tier de orçamento para favorito caro (carry de alta certeza, fee baixa)
+  param tierAskThreshold = 0.82
+  param tierAskBudgetFactor = 1.0
+
+  onEventStart(event) {
+    state.entered = false
+    state.closed = false
+    state.reversed = false
+    state.signedDistance = 0
+    state.entryZ = 0
+    state.entryMode = ""
+    state.entryBudgetUsed = 0
+    state.z = 0
+    state.isAdverseMove = false
+    state.obiOk = true
+    state.budgetFactor = 1.0
+    state.reverseBudget = 0
+  }
+
+  onTick(tick, event) {
+    let secsLeft = time.secondsUntil(event.end, tick.ts)
+
+    if (position.open) {
+      if (!state.entered) {
+        state.entered = true
+      }
+
+      let side = position.side
+      let bid = book.bid(side, tick)
+
+      state.signedDistance = tick.underlyingPrice - event.priceToBeat
+      if (side == "DOWN") {
+        state.signedDistance = event.priceToBeat - tick.underlyingPrice
+      }
+
+      // Danger exit contínuo: colchão normalizado z = dist / (sigma_ps * sqrt(tau))
+      let dangerContOn = params.dangerContinuousEnabled == true || params.dangerContinuousEnabled == 1
+      if (dangerContOn && !state.closed && !state.reversed && secsLeft >= params.dangerExitFloorSec && secsLeft <= params.dangerContinuousStartSec) {
+        let sigmaLevelD = signals.volatility(samples, params.sigmaLookbackSecs)
+        let sigmaPsD = sigmaLevelD / params.sigmaDivisor
+        if (sigmaPsD > 0 && state.signedDistance > 0 && bid >= params.stopMinBid) {
+          let zNow = state.signedDistance / (sigmaPsD * math.sqrt(secsLeft))
+          if (zNow < params.dangerContinuousMinZ) {
+            let dangerContOut = exit({ price: bid, reason: "danger_exit_continuous" })
+            if (dangerContOut) {
+              state.closed = dangerContOut.closed
+              mark("exit", { reason: "danger_exit_continuous", price: bid, z: zNow })
+            }
+          }
+        }
+      }
+
+      // Early-warning exit: ask do oposto reprecificando contra a posição
+      let earlyWarnOn = params.earlyWarnEnabled == true || params.earlyWarnEnabled == 1
+      if (earlyWarnOn && !state.closed && !state.reversed && secsLeft <= params.earlyWarnStartSec && secsLeft > params.earlyWarnEndSec && bid >= params.stopMinBid) {
+        let ewOppSide = prices.oppositeSide(side)
+        let ewOppAsk = book.ask(ewOppSide, tick)
+        let ewOnlyLosing = params.earlyWarnOnlyIfLosing == true || params.earlyWarnOnlyIfLosing == 1
+        let ewLosingOk = !ewOnlyLosing || state.signedDistance <= 0
+        if (ewLosingOk && ewOppAsk > 0 && ewOppAsk >= params.earlyWarnOppAsk) {
+          let ewOut = exit({ price: bid, reason: "early_warn_exit" })
+          if (ewOut) {
+            state.closed = ewOut.closed
+            mark("exit", { reason: "early_warn_exit", price: bid, oppAsk: ewOppAsk, secsLeft: secsLeft })
+          }
+        }
+      }
+
+      // Danger exit V7: gatilho vol-relativo no piso
+      let dangerExitOn = params.dangerExitEnabled == true || params.dangerExitEnabled == 1
+      if (dangerExitOn && !state.closed && !state.reversed && secsLeft >= params.dangerExitFloorSec && secsLeft < (params.dangerExitFloorSec + 1)) {
+        let sigma = signals.volatility(samples, 5)
+        if (math.abs(state.signedDistance) < (params.dangerExitK * sigma)) {
+          let dangerOut = exit({ price: bid, reason: "danger_exit" })
+          if (dangerOut) {
+            state.closed = dangerOut.closed
+            mark("exit", { reason: "danger_exit", price: bid, sigma: sigma })
+          }
+        }
+      }
+
+      // Late flip exit/reverse 8s -> piso 4s
+      let lateFlipExitOn = params.lateFlipExitEnabled == true || params.lateFlipExitEnabled == 1
+      if (!state.closed && lateFlipExitOn && secsLeft <= params.lateFlipExitSec && secsLeft >= params.lateFlipMinSec && state.signedDistance <= params.lateFlipExitCrossDist && bid >= params.stopMinBid) {
+        let lateFlipReverseOn = params.lateFlipReverseEnabled == true || params.lateFlipReverseEnabled == 1
+        if (lateFlipReverseOn && !state.reversed) {
+          let oppSide = prices.oppositeSide(side)
+          let oppAsk = book.ask(oppSide, tick)
+          if (oppAsk >= params.lateFlipReverseMinAsk && oppAsk > 0 && oppAsk <= params.lateFlipReverseMaxAsk) {
+            state.reverseBudget = params.entryBudget
+            if (state.entryBudgetUsed > 0) {
+              state.reverseBudget = state.entryBudgetUsed
+            }
+            let flipped = reverse(oppSide, { price: oppAsk, exitPrice: bid, budget: state.reverseBudget, tick: tick, ignoreConsumed: true, reason: "late_flip_reverse" })
+            if (flipped) {
+              state.reversed = true
+              mark("reverse", { reason: "late_flip_reverse", from: side, to: oppSide, ask: oppAsk })
+            }
+          }
+        }
+        if (!state.reversed) {
+          let lateFlipped = exit({ price: bid, reason: "late_flip_exit" })
+          if (lateFlipped) {
+            state.closed = lateFlipped.closed
+            mark("exit", { reason: "late_flip_exit", price: bid })
+          }
+        }
+      }
+    } else {
+      if (!state.entered && !state.closed) {
+        let btc = tick.underlyingPrice
+        let ptb = event.priceToBeat
+        let dist = math.abs(btc - ptb)
+        let fav = market.sideFromPrice(btc, ptb)
+        let ask = book.ask(fav, tick)
+        let bid = book.bid(fav, tick)
+        let spread = ask - bid
+
+        // z-score físico compartilhado pelos dois modos de entrada
+        let sigmaLevel = signals.volatility(samples, params.sigmaLookbackSecs)
+        let sigmaPs = sigmaLevel / params.sigmaDivisor
+        state.z = 0.0
+        if (sigmaPs > 0 && secsLeft > 0) {
+          state.z = dist / (sigmaPs * math.sqrt(secsLeft))
+        }
+
+        // Velocity guard compartilhado
+        state.isAdverseMove = false
+        let btcPast = signals.underlyingAgo(samples, params.velocityLookbackSecs)
+        if (btcPast) {
+          let spotChange = btc - btcPast
+          if (fav == "UP" && spotChange < 0.0 - params.maxAdverseSpotChange) {
+            state.isAdverseMove = true
+          }
+          if (fav == "DOWN" && spotChange > params.maxAdverseSpotChange) {
+            state.isAdverseMove = true
+          }
+        }
+
+        // ===== Modo 1: núcleo TFC (envelope V7) =====
+        if (!state.isAdverseMove && state.z >= params.minEntryZ && secsLeft >= params.minSecondsLeft && secsLeft < params.maxSecondsLeft && dist < params.maxDistAbs && ask >= params.minAsk && ask <= params.maxAsk && spread <= params.maxSpread) {
+          let upAsk = book.ask("UP", tick)
+          let downAsk = book.ask("DOWN", tick)
+          let oddsSum = upAsk + downAsk
+          if (oddsSum >= params.minOddsSum && oddsSum <= params.maxOddsSum) {
+            state.obiOk = true
+            if (params.minObi > (0.0 - 1.0)) {
+              let obi = model.orderBookImbalance(fav, tick, params.obiLevels)
+              if (obi < params.minObi) {
+                state.obiOk = false
+              }
+            }
+            if (state.obiOk) {
+              // Sigma sizing
+              state.budgetFactor = 1.0
+              let sizingOn = params.sigmaSizingEnabled == true || params.sigmaSizingEnabled == 1
+              if (sizingOn) {
+                state.budgetFactor = params.wZ2
+                if (state.z < params.zT1) {
+                  state.budgetFactor = params.wZ0
+                }
+                if (state.z >= params.zT1 && state.z < params.zT2) {
+                  state.budgetFactor = params.wZ1
+                }
+                if (state.z >= params.zT3 && state.z < params.zT4) {
+                  state.budgetFactor = params.wZ3
+                }
+                if (state.z >= params.zT4) {
+                  state.budgetFactor = params.wZ4
+                }
+              }
+              if (ask >= params.tierAskThreshold) {
+                state.budgetFactor = state.budgetFactor * params.tierAskBudgetFactor
+              }
+              let budget = math.min(params.entryBudget * state.budgetFactor, params.walletSize + runState.totalPnl)
+              let maxPrice = ask + params.entrySlippageMax
+              let bought = enter(fav, { price: ask, maxPrice: maxPrice, budget: budget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "midas_core_entry" })
+              if (bought) {
+                state.entered = true
+                state.entryZ = state.z
+                state.entryMode = "core"
+                state.entryBudgetUsed = budget
+                mark("midas_entry", { mode: "core", side: fav, ask: ask, dist: dist, z: state.z, budgetFactor: state.budgetFactor, secsLeft: secsLeft })
+              }
+            }
+          }
+        }
+
+        // ===== Modo 2: scoop — favorito barato com z alto =====
+        let scoopOn = params.scoopEnabled == true || params.scoopEnabled == 1
+        if (scoopOn && !state.entered && !state.isAdverseMove && secsLeft >= params.scoopMinSecondsLeft && secsLeft < params.scoopMaxSecondsLeft && dist < params.scoopMaxDistAbs && ask >= params.scoopMinAsk && ask < params.scoopMaxAsk && spread <= params.scoopMaxSpread && state.z >= params.scoopMinZ) {
+          let scoopUpAsk = book.ask("UP", tick)
+          let scoopDownAsk = book.ask("DOWN", tick)
+          let scoopOddsSum = scoopUpAsk + scoopDownAsk
+          if (scoopOddsSum >= params.scoopMinOddsSum && scoopOddsSum <= params.scoopMaxOddsSum) {
+          let scoopBudget = math.min(params.entryBudget * params.scoopBudgetFactor, params.walletSize + runState.totalPnl)
+          let scoopMaxPrice = ask + params.entrySlippageMax
+          let scooped = enter(fav, { price: ask, maxPrice: scoopMaxPrice, budget: scoopBudget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "midas_scoop_entry" })
+          if (scooped) {
+            state.entered = true
+            state.entryZ = state.z
+            state.entryMode = "scoop"
+            state.entryBudgetUsed = scoopBudget
+            mark("midas_entry", { mode: "scoop", side: fav, ask: ask, dist: dist, z: state.z, secsLeft: secsLeft })
+          }
+          }
+        }
+      }
+    }
+  }
+
+  onEventEnd(event) {
+  }
+}

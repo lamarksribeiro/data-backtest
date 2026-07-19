@@ -1,0 +1,61 @@
+{
+  "name": "v2-mechanisms",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-07-01",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 5,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "parity-tfc-v7",
+        "params": {}
+      },
+      {
+        "id": "ew-040",
+        "params": { "earlyWarnEnabled": true, "earlyWarnOppAsk": 0.40 }
+      },
+      {
+        "id": "ew-045",
+        "params": { "earlyWarnEnabled": true, "earlyWarnOppAsk": 0.45 }
+      },
+      {
+        "id": "ew-050",
+        "params": { "earlyWarnEnabled": true, "earlyWarnOppAsk": 0.50 }
+      },
+      {
+        "id": "ew-055",
+        "params": { "earlyWarnEnabled": true, "earlyWarnOppAsk": 0.55 }
+      },
+      {
+        "id": "ask-086",
+        "params": { "maxAsk": 0.86 }
+      },
+      {
+        "id": "ask-090",
+        "params": { "maxAsk": 0.90 }
+      },
+      {
+        "id": "ask-094",
+        "params": { "maxAsk": 0.94 }
+      },
+      {
+        "id": "minz-025",
+        "params": { "minEntryZ": 0.25 }
+      },
+      {
+        "id": "minz-040",
+        "params": { "minEntryZ": 0.40 }
+      }
+    ]
+  }
+}

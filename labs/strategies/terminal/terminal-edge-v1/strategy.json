@@ -1,0 +1,17 @@
+{
+  "id": "terminal-edge-v1",
+  "name": "Terminal Edge V1",
+  "family": "terminal",
+  "status": "draft",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "labs/strategies/terminal/terminal-edge-v1/strategy.gls"
+  },
+  "promotedToStudio": false,
+  "notes": "Uses model.scoreTerminalSides for directional selection (terminal convexity scoring) combined with TFC-style late flip and danger exit."
+}

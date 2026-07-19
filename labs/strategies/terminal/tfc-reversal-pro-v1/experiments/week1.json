@@ -1,0 +1,45 @@
+{
+  "name": "week1-vs-tfc",
+  "strategyId": "tfc-reversal-pro-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-05-11",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "variantWorkers": 3,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "revpro-base",
+        "params": {}
+      },
+      {
+        "id": "revpro-nofilter",
+        "params": {
+          "reversalMomentumEnabled": false,
+          "reversalVolFilterEnabled": false
+        }
+      },
+      {
+        "id": "revpro-strong",
+        "params": {
+          "reversalMinMomentum": 3.0,
+          "reversalMaxVol": 15.0
+        }
+      },
+      {
+        "id": "revpro-wide",
+        "params": {
+          "lateFlipExitSec": 10,
+          "lateFlipMinSec": 2
+        }
+      }
+    ]
+  }
+}

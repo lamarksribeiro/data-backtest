@@ -1,0 +1,27 @@
+{
+  "id": "tfc-reversal-pro-v1",
+  "name": "TFC Reversal Pro V1",
+  "family": "terminal",
+  "status": "champion",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "src/backtestStudio/gls/strategies/TfcReversalProV1.gls"
+  },
+  "promotedToStudio": true,
+  "studioSlug": "tfc-reversal-pro",
+  "studio": {
+    "description": "Evolucao da TFC com janela de flip ultra-apertada (3s-0s), ask range expandido (0.50-0.88) e danger exit antecipado. Campea absoluta: $7,099 PnL, PF 1.82, 77.8% WR em 59 dias.",
+    "tags": ["terminal", "btc", "champion", "tfc-reversal", "ult-flip"],
+    "defaultVersion": 1,
+    "defaultGlsSource": "classic",
+    "glsSources": {
+      "classic": "src/backtestStudio/gls/strategies/TfcReversalProV1.gls"
+    }
+  },
+  "notes": "Descoberta em 2026-07-19 via sweep de parametros no data-backtest labs. O diferencial e a janela de late flip ultra-apertada (3s-0s) que captura apenas os sinais de reversao mais fortes proximos ao expiry. Supera a TFC V7 original em +73.7% e o Apex Triad V2 em +56.2%."
+}

@@ -1,0 +1,37 @@
+{
+  "name": "v2-tier-holdout",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-13",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "ask-094-dist-40-tier-15",
+        "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 1.5 }
+      },
+      {
+        "id": "ask-094-dist-40-tier-20",
+        "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0 }
+      },
+      {
+        "id": "shift-8-tier-25",
+        "params": { "entryBudget": 8, "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.5 }
+      },
+      {
+        "id": "ask-094-dist-40-tier-30",
+        "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 3.0 }
+      }
+    ]
+  }
+}

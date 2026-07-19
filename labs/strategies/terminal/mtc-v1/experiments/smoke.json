@@ -1,0 +1,57 @@
+{
+  "name": "smoke",
+  "strategyId": "mtc-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-05-05",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "mtc-base",
+        "params": {}
+      },
+      {
+        "id": "mtc-no-confirm",
+        "params": {
+          "momentumConfirmEnabled": false,
+          "momentumSizingEnabled": false,
+          "momentumExitEnabled": false
+        }
+      },
+      {
+        "id": "mtc-strong-momentum",
+        "params": {
+          "minFastMomentum": 4.0,
+          "minSlowMomentum": 2.0
+        }
+      },
+      {
+        "id": "mtc-light-momentum",
+        "params": {
+          "minFastMomentum": 1.0
+        }
+      },
+      {
+        "id": "mtc-sizing-off",
+        "params": {
+          "momentumSizingEnabled": false
+        }
+      },
+      {
+        "id": "mtc-fast5-slow15",
+        "params": {
+          "fastMomentumSec": 5,
+          "slowMomentumSec": 15
+        }
+      }
+    ]
+  }
+}

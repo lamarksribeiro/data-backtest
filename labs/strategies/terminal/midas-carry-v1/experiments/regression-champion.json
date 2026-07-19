@@ -1,0 +1,39 @@
+{
+  "name": "regression-champion",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-05-08",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 2,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "champion-15",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskThreshold": 0.82,
+          "tierAskBudgetFactor": 1.5
+        }
+      },
+      {
+        "id": "aggressive-20",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskThreshold": 0.82,
+          "tierAskBudgetFactor": 2.0
+        }
+      }
+    ]
+  }
+}

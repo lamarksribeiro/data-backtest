@@ -1,0 +1,37 @@
+{
+  "name": "week1",
+  "strategyId": "mtc-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-05-11",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "mtc-light",
+        "params": {
+          "momentumConfirmEnabled": true,
+          "minFastMomentum": 1.0,
+          "momentumSizingEnabled": true,
+          "momentumExitEnabled": true
+        }
+      },
+      {
+        "id": "tfc-v7-ref",
+        "params": {
+          "momentumConfirmEnabled": false,
+          "momentumSizingEnabled": false,
+          "momentumExitEnabled": false
+        }
+      }
+    ]
+  }
+}

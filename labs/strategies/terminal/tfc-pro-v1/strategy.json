@@ -1,0 +1,17 @@
+{
+  "id": "tfc-pro-v1",
+  "name": "TFC Pro V1",
+  "family": "terminal",
+  "status": "draft",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "labs/strategies/terminal/tfc-pro-v1/strategy.gls"
+  },
+  "promotedToStudio": false,
+  "notes": "TFC enhanced: progressive profit taking (L1: 40% at 0.85, L2: 30% at 0.92), sigma-based entry sizing, same core late-flip and danger exit. Evolution beyond champion V7."
+}

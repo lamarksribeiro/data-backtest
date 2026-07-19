@@ -1,0 +1,55 @@
+{
+  "name": "full-ablation",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-07-01",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 5,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "parity-tfc-v7",
+        "params": {
+          "sigmaSizingEnabled": false,
+          "scoopEnabled": false,
+          "dangerContinuousEnabled": false
+        }
+      },
+      {
+        "id": "sizing-only",
+        "params": {
+          "scoopEnabled": false,
+          "dangerContinuousEnabled": false
+        }
+      },
+      {
+        "id": "scoop-only",
+        "params": {
+          "sigmaSizingEnabled": false,
+          "dangerContinuousEnabled": false
+        }
+      },
+      {
+        "id": "midas-full",
+        "params": {
+          "dangerContinuousEnabled": false
+        }
+      },
+      {
+        "id": "midas-full-danger-cont",
+        "params": {
+          "dangerContinuousEnabled": true
+        }
+      }
+    ]
+  }
+}

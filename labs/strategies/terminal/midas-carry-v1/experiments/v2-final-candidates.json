@@ -1,0 +1,37 @@
+{
+  "name": "v2-final-candidates",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-07-01",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "tier20-minz025",
+        "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "minEntryZ": 0.25 }
+      },
+      {
+        "id": "shift8-tier25",
+        "params": { "entryBudget": 8, "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.5 }
+      },
+      {
+        "id": "shift8-tier25-minz025",
+        "params": { "entryBudget": 8, "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.5, "minEntryZ": 0.25 }
+      },
+      {
+        "id": "shift9-tier20",
+        "params": { "entryBudget": 9, "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0 }
+      }
+    ]
+  }
+}

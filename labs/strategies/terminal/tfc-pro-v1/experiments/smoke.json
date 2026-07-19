@@ -1,0 +1,43 @@
+{
+  "name": "smoke",
+  "strategyId": "tfc-pro-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-05-06",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "variantWorkers": 3,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "pro-base",
+        "params": {}
+      },
+      {
+        "id": "pro-noprofit",
+        "params": {
+          "profitLevel1Enabled": false,
+          "profitLevel2Enabled": false
+        }
+      },
+      {
+        "id": "pro-nosize",
+        "params": {
+          "sigmaSizingEnabled": false
+        }
+      },
+      {
+        "id": "pro-full",
+        "params": {
+          "sigmaSizingFactor": 2.0
+        }
+      }
+    ]
+  }
+}

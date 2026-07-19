@@ -1,0 +1,22 @@
+{
+  "name": "smoke",
+  "strategyId": "terminal-edge-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-05-06",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "variantWorkers": 2,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      { "id": "te-base", "params": {} },
+      { "id": "te-wide", "params": { "entryWindowStart": 60, "entryWindowEnd": 4 } }
+    ]
+  }
+}

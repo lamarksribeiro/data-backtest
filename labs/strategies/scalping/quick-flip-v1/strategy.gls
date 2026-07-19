@@ -1,0 +1,148 @@
+strategy "Quick Flip Scalper V1" {
+  param walletSize = 100
+  param maxOrderValue = 10
+  param minShares = 1
+  param minDistanceAbs = 15
+  param maxDistanceAbs = 60
+  param minAsk = 0.30
+  param maxAsk = 0.82
+  param maxSpread = 0.04
+  param minOddsSum = 0.98
+  param maxOddsSum = 1.06
+  param minSecondsLeft = 15
+  param maxSecondsLeft = 120
+  param profitTarget = 0.06
+  param maxEntriesPerEvent = 5
+  param momentumLookback = 5
+  param minMomentumDir = 2.0
+  param volLookback = 30
+  param maxVol = 30.0
+  param minObi = 0.0
+  param obiLevels = 5
+  param stopLossDelta = 0.15
+  param lateExitSec = 5
+  param lateExitMinBid = 0.20
+
+  onEventStart(event) {
+    state.entered = false
+    state.entryCount = 0
+    state.avgEntryPrice = 0
+    state.maxBid = 0
+    state.momOk = true
+    state.volOk = true
+    state.obiOk = true
+  }
+
+  onTick(tick, event) {
+    let secsLeft = time.secondsUntil(event.end, tick.ts)
+
+    if (position.open) {
+      if (!state.entered) {
+        state.entered = true
+        state.entryCount = state.entryCount + 1
+        mark("qf_entry", { side: position.side, count: state.entryCount, secsLeft: secsLeft })
+      }
+
+      let side = position.side
+      let bid = book.bid(side, tick)
+      if (bid > state.maxBid) {
+        state.maxBid = bid
+      }
+
+      let targetPrice = position.avgPrice + params.profitTarget
+      if (bid >= targetPrice) {
+        let sold = exit({ price: bid, reason: "profit_target" })
+        if (sold) {
+          state.entered = false
+          mark("exit", { reason: "profit_target", price: bid, target: targetPrice })
+        }
+      }
+
+      if (position.open) {
+        let stopPrice = position.avgPrice - params.stopLossDelta
+        if (bid <= stopPrice && bid > 0.05) {
+          let stopped = exit({ price: bid, reason: "stop_loss" })
+          if (stopped) {
+            state.entered = false
+            mark("exit", { reason: "stop_loss", price: bid })
+          }
+        }
+      }
+
+      if (position.open && secsLeft <= params.lateExitSec && bid >= params.lateExitMinBid) {
+        let closed = exit({ price: bid, reason: "late_exit" })
+        if (closed) {
+          state.entered = false
+          mark("exit", { reason: "late_exit", price: bid })
+        }
+      }
+    } else {
+      if (state.entryCount < params.maxEntriesPerEvent && secsLeft >= params.minSecondsLeft && secsLeft <= params.maxSecondsLeft) {
+        let btc = tick.underlyingPrice
+        let ptb = event.priceToBeat
+        let dist = math.abs(btc - ptb)
+
+        if (dist >= params.minDistanceAbs && dist <= params.maxDistanceAbs) {
+          let fav = market.sideFromPrice(btc, ptb)
+          let ask = book.ask(fav, tick)
+          let bid = book.bid(fav, tick)
+
+          if (ask >= params.minAsk && ask <= params.maxAsk) {
+            let spread = ask - bid
+            if (spread <= params.maxSpread) {
+              let upAsk = book.ask("UP", tick)
+              let downAsk = book.ask("DOWN", tick)
+              let oddsSum = upAsk + downAsk
+              if (oddsSum >= params.minOddsSum && oddsSum <= params.maxOddsSum) {
+                let mom = signals.momentum(samples, params.momentumLookback)
+                state.momOk = true
+                if (fav == "UP" && mom < params.minMomentumDir) {
+                  state.momOk = false
+                }
+                let negMomDir = 0.0 - params.minMomentumDir
+                if (fav == "DOWN" && mom > negMomDir) {
+                  state.momOk = false
+                }
+
+                if (state.momOk) {
+                  let vol = signals.volatility(samples, params.volLookback)
+                  state.volOk = false
+                  if (vol <= params.maxVol) {
+                    state.volOk = true
+                  }
+
+                  if (state.volOk) {
+                    state.obiOk = true
+                    let negOne = 0.0 - 1.0
+                    if (params.minObi > negOne) {
+                      let obi = model.orderBookImbalance(fav, tick, params.obiLevels)
+                      if (obi < params.minObi) {
+                        state.obiOk = false
+                      }
+                    }
+
+                    if (state.obiOk) {
+                      let budget = math.min(params.maxOrderValue, params.walletSize + runState.totalPnl)
+                      let maxPrice = ask + 0.02
+                      let liq = book.liquidityRatio(fav, tick, budget, maxPrice)
+                      if (liq > 0.5) {
+                        let bought = enter(fav, { price: ask, maxPrice: maxPrice, budget: budget, minShares: params.minShares, minLiquidityRatio: 0.5, tick: tick, reason: "qf_entry" })
+                        if (bought) {
+                          state.entered = false
+                          mark("qf_signal", { side: fav, ask: ask, dist: dist, secsLeft: secsLeft, cnt: state.entryCount + 1 })
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  onEventEnd(event) {
+  }
+}

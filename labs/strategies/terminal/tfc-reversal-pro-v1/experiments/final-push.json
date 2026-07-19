@@ -1,0 +1,81 @@
+{
+  "name": "final-push",
+  "strategyId": "tfc-reversal-pro-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-07-01",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "push-budget15",
+        "params": {
+          "maxAsk": 0.88,
+          "minAsk": 0.50,
+          "lateFlipReverseMaxAsk": 0.99,
+          "maxDistAbs": 25,
+          "lateFlipExitSec": 6,
+          "lateFlipMinSec": 2,
+          "dangerExitK": 0.25,
+          "dangerExitFloorSec": 5,
+          "entryBudget": 15,
+          "reversalMomentumEnabled": false,
+          "reversalVolFilterEnabled": false
+        }
+      },
+      {
+        "id": "push-wide99",
+        "params": {
+          "maxAsk": 0.92,
+          "minAsk": 0.48,
+          "lateFlipReverseMaxAsk": 0.99,
+          "maxDistAbs": 30,
+          "lateFlipExitSec": 6,
+          "lateFlipMinSec": 2,
+          "dangerExitK": 0.25,
+          "dangerExitFloorSec": 5,
+          "reversalMomentumEnabled": false,
+          "reversalVolFilterEnabled": false
+        }
+      },
+      {
+        "id": "push-flip4-1",
+        "params": {
+          "maxAsk": 0.88,
+          "minAsk": 0.50,
+          "lateFlipReverseMaxAsk": 0.99,
+          "maxDistAbs": 25,
+          "lateFlipExitSec": 4,
+          "lateFlipMinSec": 1,
+          "dangerExitK": 0.25,
+          "dangerExitFloorSec": 5,
+          "reversalMomentumEnabled": false,
+          "reversalVolFilterEnabled": false
+        }
+      },
+      {
+        "id": "push-danger-k015",
+        "params": {
+          "maxAsk": 0.88,
+          "minAsk": 0.50,
+          "lateFlipReverseMaxAsk": 0.99,
+          "maxDistAbs": 25,
+          "lateFlipExitSec": 6,
+          "lateFlipMinSec": 2,
+          "dangerExitK": 0.15,
+          "dangerExitFloorSec": 6,
+          "reversalMomentumEnabled": false,
+          "reversalVolFilterEnabled": false
+        }
+      }
+    ]
+  }
+}
