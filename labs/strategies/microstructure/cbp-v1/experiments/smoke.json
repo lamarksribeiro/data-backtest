@@ -1,0 +1,24 @@
+{
+  "name": "smoke",
+  "strategyId": "cbp-v1",
+  "strategyFamily": "microstructure",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-05-06",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "variantWorkers": 3,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      { "id": "cbp-base", "params": {} },
+      { "id": "cbp-tight", "params": { "upObiThreshold": 0.25, "downObiThreshold": 0.25 } },
+      { "id": "cbp-loose", "params": { "upObiThreshold": 0.10, "downObiThreshold": 0.10 } },
+      { "id": "cbp-noflip", "params": { "lateFlipReverseEnabled": false } }
+    ]
+  }
+}

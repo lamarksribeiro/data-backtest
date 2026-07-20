@@ -1,0 +1,17 @@
+{
+  "id": "cbp-v1",
+  "name": "Cross-Book Pressure V1",
+  "family": "microstructure",
+  "status": "draft",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "labs/strategies/microstructure/cbp-v1/strategy.gls"
+  },
+  "promotedToStudio": false,
+  "notes": "Order book microstructure strategy based on cross-side OBI divergence. When UP has bid pressure AND DOWN has ask pressure (or inverse), enter in the signaled direction. Uses model.orderBookImbalance for both sides independently."
+}

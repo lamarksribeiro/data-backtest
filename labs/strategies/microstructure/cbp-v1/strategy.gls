@@ -1,0 +1,170 @@
+strategy "Cross-Book Pressure V1" {
+  param walletSize = 100
+  param entryBudget = 10
+  param minShares = 1
+  param minSecondsLeft = 10
+  param maxSecondsLeft = 120
+  param minAsk = 0.25
+  param maxAsk = 0.82
+  param maxSpread = 0.04
+  param minOddsSum = 0.96
+  param maxOddsSum = 1.08
+  param upObiThreshold = 0.15
+  param downObiThreshold = 0.15
+  param obiLevels = 3
+  param profitTargetBid = 0.06
+  param stopLossDelta = 0.12
+  param lateExitSec = 5
+  param lateExitMinBid = 0.15
+  param dangerExitEnabled = true
+  param dangerExitK = 0.25
+  param dangerExitFloorSec = 4
+  param lateFlipReverseEnabled = true
+  param lateFlipReverseMaxAsk = 0.95
+  param reversalCheckSec = 6
+  param reversalMinSec = 2
+
+  onEventStart(event) {
+    state.entered = false
+    state.closed = false
+    state.reversed = false
+    state.signedDistance = 0
+    state.upObi = 0
+    state.downObi = 0
+    state.entrySide = ""
+    state.maxBid = 0
+    state.obiReversed = false
+  }
+
+  onTick(tick, event) {
+    let secsLeft = time.secondsUntil(event.end, tick.ts)
+
+    state.upObi = model.orderBookImbalance("UP", tick, params.obiLevels)
+    state.downObi = model.orderBookImbalance("DOWN", tick, params.obiLevels)
+
+    if (position.open) {
+      if (!state.entered) {
+        state.entered = true
+        mark("cbp_entry", { side: position.side, upObi: state.upObi, downObi: state.downObi, secsLeft: secsLeft })
+      }
+
+      let side = position.side
+      let bid = book.bid(side, tick)
+      if (bid > state.maxBid) {
+        state.maxBid = bid
+      }
+
+      state.signedDistance = tick.underlyingPrice - event.priceToBeat
+      if (side == "DOWN") {
+        state.signedDistance = event.priceToBeat - tick.underlyingPrice
+      }
+
+      if (params.dangerExitEnabled && !state.closed && !state.reversed && secsLeft >= params.dangerExitFloorSec && secsLeft < (params.dangerExitFloorSec + 1)) {
+        let sigma = signals.volatility(samples, 5)
+        if (math.abs(state.signedDistance) < (params.dangerExitK * sigma)) {
+          let dangerOut = exit({ price: bid, reason: "danger_exit" })
+          if (dangerOut) {
+            state.closed = dangerOut.closed
+            mark("exit", { reason: "danger_exit", price: bid })
+          }
+        }
+      }
+
+      if (!state.closed && !state.reversed) {
+        let targetPrice = position.avgPrice + params.profitTargetBid
+        if (bid >= targetPrice) {
+          let profitOut = exit({ price: bid, reason: "profit_target" })
+          if (profitOut) {
+            state.closed = profitOut.closed
+            mark("exit", { reason: "profit_target", price: bid })
+          }
+        }
+      }
+
+      if (!state.closed && !state.reversed && position.open) {
+        let stopPrice = position.avgPrice - params.stopLossDelta
+        if (bid <= stopPrice && bid > 0.05) {
+          let stopped = exit({ price: bid, reason: "stop_loss" })
+          if (stopped) {
+            state.closed = stopped.closed
+            mark("exit", { reason: "stop_loss", price: bid })
+          }
+        }
+      }
+
+      if (!state.closed && !state.reversed && position.open) {
+        let revWindow = secsLeft <= params.reversalCheckSec && secsLeft >= params.reversalMinSec
+        if (revWindow) {
+          state.obiReversed = false
+          if (side == "UP" && state.downObi > params.downObiThreshold && state.upObi < (0.0 - params.upObiThreshold)) {
+            state.obiReversed = true
+          }
+          if (side == "DOWN" && state.upObi > params.upObiThreshold && state.downObi < (0.0 - params.downObiThreshold)) {
+            state.obiReversed = true
+          }
+          if (state.obiReversed && params.lateFlipReverseEnabled) {
+            let oppSide = prices.oppositeSide(side)
+            let oppAsk = book.ask(oppSide, tick)
+            if (oppAsk > 0 && oppAsk <= params.lateFlipReverseMaxAsk) {
+              let flipped = reverse(oppSide, { price: oppAsk, exitPrice: bid, budget: params.entryBudget, tick: tick, ignoreConsumed: true, reason: "obi_reversal" })
+              if (flipped) {
+                state.reversed = true
+                mark("reverse", { reason: "obi_reversal", from: side, to: oppSide })
+              }
+            }
+          }
+        }
+      }
+
+      if (position.open && !state.reversed && secsLeft <= params.lateExitSec && bid >= params.lateExitMinBid) {
+        let lateExited = exit({ price: bid, reason: "late_exit" })
+        if (lateExited) {
+          state.closed = lateExited.closed
+          mark("exit", { reason: "late_exit", price: bid })
+        }
+      }
+    } else {
+      if (!state.entered && !state.closed && secsLeft >= params.minSecondsLeft && secsLeft <= params.maxSecondsLeft) {
+        let upPressure = state.upObi > params.upObiThreshold && state.downObi < (0.0 - params.downObiThreshold)
+        let downPressure = state.downObi > params.downObiThreshold && state.upObi < (0.0 - params.upObiThreshold)
+
+        state.entrySide = ""
+        if (upPressure) {
+          state.entrySide = "UP"
+        }
+        if (downPressure) {
+          state.entrySide = "DOWN"
+        }
+
+        if (state.entrySide != "") {
+          let ask = book.ask(state.entrySide, tick)
+          let bid = book.bid(state.entrySide, tick)
+
+          if (ask >= params.minAsk && ask <= params.maxAsk) {
+            let spread = ask - bid
+            if (spread <= params.maxSpread) {
+              let upAsk = book.ask("UP", tick)
+              let downAsk = book.ask("DOWN", tick)
+              let oddsSum = upAsk + downAsk
+              if (oddsSum >= params.minOddsSum && oddsSum <= params.maxOddsSum) {
+                let budget = math.min(params.entryBudget, params.walletSize + runState.totalPnl)
+                let maxPrice = ask + 0.02
+                let liq = book.liquidityRatio(state.entrySide, tick, budget, maxPrice)
+                if (liq > 0.5) {
+                  let bought = enter(state.entrySide, { price: ask, maxPrice: maxPrice, budget: budget, minShares: params.minShares, minLiquidityRatio: 0.5, tick: tick, reason: "cbp_entry" })
+                  if (bought) {
+                    state.entered = true
+                    mark("cbp_signal", { side: state.entrySide, ask: ask, upObi: state.upObi, downObi: state.downObi, secsLeft: secsLeft })
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  onEventEnd(event) {
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "name": "holdout-validate",
+  "strategyId": "tfc-reversal-pro-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-02",
+  "to": "2026-07-13",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "holdout-ult-flip3",
+        "params": {
+          "maxAsk": 0.88,
+          "minAsk": 0.50,
+          "lateFlipReverseMaxAsk": 0.99,
+          "maxDistAbs": 30,
+          "lateFlipExitSec": 3,
+          "lateFlipMinSec": 0,
+          "dangerExitK": 0.25,
+          "dangerExitFloorSec": 5,
+          "reversalMomentumEnabled": false,
+          "reversalVolFilterEnabled": false
+        }
+      },
+      {
+        "id": "holdout-wide4-1",
+        "params": {
+          "maxAsk": 0.88,
+          "minAsk": 0.50,
+          "lateFlipReverseMaxAsk": 0.99,
+          "maxDistAbs": 30,
+          "lateFlipExitSec": 4,
+          "lateFlipMinSec": 1,
+          "dangerExitK": 0.25,
+          "dangerExitFloorSec": 5,
+          "reversalMomentumEnabled": false,
+          "reversalVolFilterEnabled": false
+        }
+      },
+      {
+        "id": "holdout-wide6-2",
+        "params": {
+          "maxAsk": 0.85,
+          "minAsk": 0.50,
+          "lateFlipReverseMaxAsk": 0.98,
+          "maxDistAbs": 30,
+          "lateFlipExitSec": 6,
+          "lateFlipMinSec": 2,
+          "dangerExitK": 0.3,
+          "dangerExitFloorSec": 4,
+          "reversalMomentumEnabled": false,
+          "reversalVolFilterEnabled": false
+        }
+      }
+    ]
+  }
+}

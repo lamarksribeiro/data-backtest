@@ -1,0 +1,14 @@
+{
+  "id": "cf-v1",
+  "name": "Convergence Fade V1",
+  "family": "terminal",
+  "status": "draft",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": { "type": "file", "path": "labs/strategies/terminal/cf-v1/strategy.gls" },
+  "promotedToStudio": false,
+  "notes": "Fade the convergence: when spot races toward PTB, bet on crossover (opposite of carry). Data shows 66.3% DOWN wins when convergence >$50/30t."
+}
