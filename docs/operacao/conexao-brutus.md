@@ -1,6 +1,6 @@
 # Conexão ao servidor Brutus (outra máquina / outra IDE)
 
-Guia para configurar SSH e (opcionalmente) Coolify MCP em um PC ou IDE novo. O Brutus é o host de produção do **Coolify Hulw** (`openclaw`, rede privada `10.40.2.77`), onde rodam `data-colector`, `data-backtest`, `data-index`, `data-robot` e Postgres.
+Guia para configurar SSH e (opcionalmente) Coolify MCP em um PC ou IDE novo. O Brutus é o host de produção do **Coolify Hulw** (`openclaw`, rede privada `10.40.2.77`), onde rodam `data-colector`, `data-backtest`, `data-index` e Postgres. O **`data-robot`** roda no **Coolify Giovanna** (URL oficial https://robot.fracta.online), não no Brutus/Hulw.
 
 ## Pré-requisitos
 
