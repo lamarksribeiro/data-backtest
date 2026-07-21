@@ -1,0 +1,479 @@
+{
+  "strategies": [
+    {
+      "id": 56,
+      "slug": "apex-triad-v2",
+      "name": "Apex Triad V2",
+      "status": "draft",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-07-17T04:54:21.324Z",
+      "updated_at": "2026-07-20T05:14:57.332Z"
+    },
+    {
+      "id": 23,
+      "slug": "boundary-coherence-entropy-deviation-v1",
+      "name": "BCED V1",
+      "status": "draft",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-06-20T23:02:21.853Z",
+      "updated_at": "2026-06-20T23:02:21.853Z"
+    },
+    {
+      "id": 43,
+      "slug": "cofre-sete",
+      "name": "Cofre Sete",
+      "status": "draft",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-06-27T21:52:59.858Z",
+      "updated_at": "2026-06-27T21:55:50.991Z"
+    },
+    {
+      "id": 25,
+      "slug": "convergence-undershoot-v1",
+      "name": "Convergence Undershoot V1",
+      "status": "draft",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-06-20T23:02:21.867Z",
+      "updated_at": "2026-06-20T23:02:21.867Z"
+    },
+    {
+      "id": 26,
+      "slug": "empirical-residual-manifold-v1",
+      "name": "ERM V1",
+      "status": "draft",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-06-20T23:02:21.870Z",
+      "updated_at": "2026-06-20T23:02:21.870Z"
+    },
+    {
+      "id": 18,
+      "slug": "edge-snipper",
+      "name": "Edge Snipper",
+      "status": "draft",
+      "origin": "ui",
+      "lab_package_id": "edge/edge-sniper-v3",
+      "created_at": "2026-06-14T17:12:49.111Z",
+      "updated_at": "2026-07-20T05:14:57.397Z"
+    },
+    {
+      "id": 53,
+      "slug": "father-terminal-v1",
+      "name": "Father Terminal V1",
+      "status": "draft",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-07-09T06:53:29.884Z",
+      "updated_at": "2026-07-09T21:01:30.514Z"
+    },
+    {
+      "id": 27,
+      "slug": "fusion-five-v1",
+      "name": "Fusion Five V1",
+      "status": "draft",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-06-20T23:02:21.870Z",
+      "updated_at": "2026-06-20T23:02:21.870Z"
+    },
+    {
+      "id": 42,
+      "slug": "gamma-ladder",
+      "name": "Gamma Ladder",
+      "status": "draft",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-06-27T21:52:59.683Z",
+      "updated_at": "2026-07-20T05:14:57.463Z"
+    },
+    {
+      "id": 46,
+      "slug": "geodesic-tension-engine",
+      "name": "Geodesic Tension Engine",
+      "status": "draft",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-06-29T04:05:12.420Z",
+      "updated_at": "2026-06-29T04:05:12.420Z"
+    },
+    {
+      "id": 47,
+      "slug": "lim-prime-v1",
+      "name": "LIM Prime V1",
+      "status": "draft",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-07-02T06:31:10.710Z",
+      "updated_at": "2026-07-20T05:14:57.471Z"
+    },
+    {
+      "id": 39,
+      "slug": "quantum-entropic-manifold",
+      "name": "Quantum Entropic Manifold",
+      "status": "draft",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-06-24T20:36:03.064Z",
+      "updated_at": "2026-07-20T05:14:57.528Z"
+    },
+    {
+      "id": 31,
+      "slug": "stable-carry-compression-v1",
+      "name": "Stable Carry Compression V1",
+      "status": "draft",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-06-20T23:02:21.890Z",
+      "updated_at": "2026-06-20T23:02:21.890Z"
+    },
+    {
+      "id": 22,
+      "slug": "super",
+      "name": "Template Padrão",
+      "status": "draft",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-06-20T00:59:29.623Z",
+      "updated_at": "2026-06-20T23:10:38.070Z"
+    },
+    {
+      "id": 32,
+      "slug": "terminal-convexity-v1",
+      "name": "Terminal Convexity V1",
+      "status": "draft",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-06-20T23:02:21.893Z",
+      "updated_at": "2026-06-21T01:36:33.678Z"
+    },
+    {
+      "id": 19,
+      "slug": "vsmr",
+      "name": "Volatility Spike Mean Reversion",
+      "status": "draft",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-06-18T00:06:49.322Z",
+      "updated_at": "2026-07-20T05:14:57.731Z"
+    },
+    {
+      "id": 45,
+      "slug": "whipsaw-lock",
+      "name": "Whipsaw Lock",
+      "status": "draft",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-06-28T19:58:01.105Z",
+      "updated_at": "2026-07-20T05:14:57.737Z"
+    },
+    {
+      "id": 44,
+      "slug": "book-frontrunner",
+      "name": "Book Front Runner",
+      "status": "failed",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-06-28T02:49:21.313Z",
+      "updated_at": "2026-07-20T05:14:57.340Z"
+    },
+    {
+      "id": 52,
+      "slug": "hopper-3",
+      "name": "Hopper 3 V1",
+      "status": "failed",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-07-09T00:57:06.359Z",
+      "updated_at": "2026-07-17T04:54:59.115Z"
+    },
+    {
+      "id": 55,
+      "slug": "hopper-4",
+      "name": "Hopper 4 V1",
+      "status": "failed",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-07-15T00:43:15.925Z",
+      "updated_at": "2026-07-17T04:54:47.789Z"
+    },
+    {
+      "id": 17,
+      "slug": "impulse-elasticity",
+      "name": "Impulse Elasticity GLS",
+      "status": "failed",
+      "origin": "ui",
+      "lab_package_id": "impulse/impulse-elasticity",
+      "created_at": "2026-06-14T02:25:35.501Z",
+      "updated_at": "2026-07-04T03:00:57.483Z"
+    },
+    {
+      "id": 28,
+      "slug": "lead-inertia-v1",
+      "name": "Lead Inertia V1",
+      "status": "failed",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-06-20T23:02:21.879Z",
+      "updated_at": "2026-07-04T03:00:52.177Z"
+    },
+    {
+      "id": 29,
+      "slug": "momentum-edge-v1",
+      "name": "Momentum Edge V1",
+      "status": "failed",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-06-20T23:02:21.882Z",
+      "updated_at": "2026-06-21T01:37:54.743Z"
+    },
+    {
+      "id": 30,
+      "slug": "omni-edge-v1",
+      "name": "Omni Edge V1",
+      "status": "failed",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-06-20T23:02:21.887Z",
+      "updated_at": "2026-07-04T03:00:47.564Z"
+    },
+    {
+      "id": 33,
+      "slug": "volatility-compression-lock-v1",
+      "name": "Volatility Compression Lock V1",
+      "status": "failed",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-06-20T23:02:21.898Z",
+      "updated_at": "2026-07-04T03:00:37.707Z"
+    },
+    {
+      "id": 54,
+      "slug": "apex-triad-v1",
+      "name": "Apex Triad V1",
+      "status": "validated",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-07-10T02:51:50.793Z",
+      "updated_at": "2026-07-20T05:14:57.302Z"
+    },
+    {
+      "id": 57,
+      "slug": "midas-carry-v1",
+      "name": "MIDAS Carry V1",
+      "status": "validated",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-07-19T11:11:23.647Z",
+      "updated_at": "2026-07-20T05:14:57.510Z"
+    },
+    {
+      "id": 58,
+      "slug": "tfc-reversal-pro",
+      "name": "TFC Reversal Pro V1",
+      "status": "validated",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-07-19T11:17:05.084Z",
+      "updated_at": "2026-07-20T05:14:57.724Z"
+    },
+    {
+      "id": 50,
+      "slug": "tfc",
+      "name": "Terminal Favorite Carry",
+      "status": "validated",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-07-03T01:24:52.217Z",
+      "updated_at": "2026-07-20T05:14:57.703Z"
+    }
+  ],
+  "validated": [
+    {
+      "id": 54,
+      "slug": "apex-triad-v1",
+      "name": "Apex Triad V1",
+      "status": "validated",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-07-10T02:51:50.793Z",
+      "updated_at": "2026-07-20T05:14:57.302Z"
+    },
+    {
+      "id": 57,
+      "slug": "midas-carry-v1",
+      "name": "MIDAS Carry V1",
+      "status": "validated",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-07-19T11:11:23.647Z",
+      "updated_at": "2026-07-20T05:14:57.510Z"
+    },
+    {
+      "id": 58,
+      "slug": "tfc-reversal-pro",
+      "name": "TFC Reversal Pro V1",
+      "status": "validated",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-07-19T11:17:05.084Z",
+      "updated_at": "2026-07-20T05:14:57.724Z"
+    },
+    {
+      "id": 50,
+      "slug": "tfc",
+      "name": "Terminal Favorite Carry",
+      "status": "validated",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-07-03T01:24:52.217Z",
+      "updated_at": "2026-07-20T05:14:57.703Z"
+    }
+  ],
+  "midasLike": [
+    {
+      "id": 56,
+      "slug": "apex-triad-v2",
+      "name": "Apex Triad V2",
+      "status": "draft",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-07-17T04:54:21.324Z",
+      "updated_at": "2026-07-20T05:14:57.332Z"
+    },
+    {
+      "id": 18,
+      "slug": "edge-snipper",
+      "name": "Edge Snipper",
+      "status": "draft",
+      "origin": "ui",
+      "lab_package_id": "edge/edge-sniper-v3",
+      "created_at": "2026-06-14T17:12:49.111Z",
+      "updated_at": "2026-07-20T05:14:57.397Z"
+    },
+    {
+      "id": 53,
+      "slug": "father-terminal-v1",
+      "name": "Father Terminal V1",
+      "status": "draft",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-07-09T06:53:29.884Z",
+      "updated_at": "2026-07-09T21:01:30.514Z"
+    },
+    {
+      "id": 31,
+      "slug": "stable-carry-compression-v1",
+      "name": "Stable Carry Compression V1",
+      "status": "draft",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-06-20T23:02:21.890Z",
+      "updated_at": "2026-06-20T23:02:21.890Z"
+    },
+    {
+      "id": 32,
+      "slug": "terminal-convexity-v1",
+      "name": "Terminal Convexity V1",
+      "status": "draft",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-06-20T23:02:21.893Z",
+      "updated_at": "2026-06-21T01:36:33.678Z"
+    },
+    {
+      "id": 45,
+      "slug": "whipsaw-lock",
+      "name": "Whipsaw Lock",
+      "status": "draft",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-06-28T19:58:01.105Z",
+      "updated_at": "2026-07-20T05:14:57.737Z"
+    },
+    {
+      "id": 52,
+      "slug": "hopper-3",
+      "name": "Hopper 3 V1",
+      "status": "failed",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-07-09T00:57:06.359Z",
+      "updated_at": "2026-07-17T04:54:59.115Z"
+    },
+    {
+      "id": 55,
+      "slug": "hopper-4",
+      "name": "Hopper 4 V1",
+      "status": "failed",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-07-15T00:43:15.925Z",
+      "updated_at": "2026-07-17T04:54:47.789Z"
+    },
+    {
+      "id": 29,
+      "slug": "momentum-edge-v1",
+      "name": "Momentum Edge V1",
+      "status": "failed",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-06-20T23:02:21.882Z",
+      "updated_at": "2026-06-21T01:37:54.743Z"
+    },
+    {
+      "id": 30,
+      "slug": "omni-edge-v1",
+      "name": "Omni Edge V1",
+      "status": "failed",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-06-20T23:02:21.887Z",
+      "updated_at": "2026-07-04T03:00:47.564Z"
+    },
+    {
+      "id": 54,
+      "slug": "apex-triad-v1",
+      "name": "Apex Triad V1",
+      "status": "validated",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-07-10T02:51:50.793Z",
+      "updated_at": "2026-07-20T05:14:57.302Z"
+    },
+    {
+      "id": 57,
+      "slug": "midas-carry-v1",
+      "name": "MIDAS Carry V1",
+      "status": "validated",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-07-19T11:11:23.647Z",
+      "updated_at": "2026-07-20T05:14:57.510Z"
+    },
+    {
+      "id": 58,
+      "slug": "tfc-reversal-pro",
+      "name": "TFC Reversal Pro V1",
+      "status": "validated",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-07-19T11:17:05.084Z",
+      "updated_at": "2026-07-20T05:14:57.724Z"
+    },
+    {
+      "id": 50,
+      "slug": "tfc",
+      "name": "Terminal Favorite Carry",
+      "status": "validated",
+      "origin": "ui",
+      "lab_package_id": null,
+      "created_at": "2026-07-03T01:24:52.217Z",
+      "updated_at": "2026-07-20T05:14:57.703Z"
+    }
+  ],
+  "runCount": 80
+}

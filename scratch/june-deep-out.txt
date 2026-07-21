@@ -1,0 +1,133 @@
+
+======== MIDAS LOSS ANATOMY ========
+losses=100 with_reversal=0 with_exit=73 highAskOrTierQty=21
+distBins { '0-20': 65, '20-30': 17, '30-40': 18, '40+': 0 }
+askBins { '<0.7': 41, '0.7-0.82': 38, '0.82-0.94': 20, '>=0.94': 1 }
+tauBins { '5-10': 2, '10-20': 13, '20-30': 85 }
+bucket sizes {
+  pure_expiry_loss: 52,
+  expiry_win_with_fees_or_reverse: 40,
+  closed_loss: 8,
+  other: 0
+}
+sample expiry_win negatives:
+  2026-06-01T05:20:00.000Z pos=DOWN win=DOWN ask=0.74 dist=10.28 tau=23 rev=0 exits=1 pnl=-5.08 beforeFees=-4.620000000000001 fees={"applied":true,"model":"polymarket_taker","category":"crypto","currency":"USDC","feeRate":0.07,"totalFee":0.45508,"entryFee":0.30948,"exitFee":0.1456,"tradesCharged":3,"entryTradesCharged":2,"exitTradesCharged":1,"entryNotional":19.22,"exitNotional":2.6,"entryShares":25,"exitShares":13,"makerTradesFree":0,"makerNotional":0,"makerShares":0,"entries":[{"qty":13,"price":0.74,"side":"UP","source":"midas_core_entry","reason":null,"time":1780291476705,"liquidity":"taker","fee":0.17508},{"qty":12,"price":0.8,"side":"DOWN","source":"late_flip_reverse","reason":null,"time":1780291494704,"liquidity":"taker","fee":0.1344}],"exits":[{"qty":13,"price":0.2,"side":"UP","source":"reverse_exit","reason":null,"time":1780291494704,"liquidity":null,"fee":0.1456}]}
+  2026-06-01T10:25:00.000Z pos=UP win=UP ask=0.7 dist=15.91 tau=30 rev=0 exits=1 pnl=-0.91 beforeFees=-0.3030000000000017 fees={"applied":true,"model":"polymarket_taker","category":"crypto","currency":"USDC","feeRate":0.07,"totalFee":0.60566,"entryFee":0.40446,"exitFee":0.2012,"tradesCharged":4,"entryTradesCharged":3,"exitTradesCharged":1,"entryNotional":18.593000000000004,"exitNotional":4.29,"entryShares":27,"exitShares":13,"makerTradesFree":0,"makerNotional":0,"makerShares":0,"entries":[{"qty":7.35,"price":0.7,"side":"DOWN","source":"midas_core_entry","reason":null,"time":1780309770212,"liquidity":"taker","fee":0.10805},{"qty":5.65,"price":0.72,"side":"DOWN","source":"midas_core_entry","reason":null,"time":1780309770212,"liquidity":"taker","fee":0.07973},{"qty":14,"price":0.67,"side":"UP","source":"late_flip_reverse","reason":null,"time":1780309792212,"liquidity":"taker","fee":0.21668}],"exits":[{"qty":13,"price":0.33,"side":"DOWN","source":"reverse_exit","reason":null,"time":1780309792212,"liquidity":null,"fee":0.2012}]}
+  2026-06-01T16:10:00.000Z pos=UP win=UP ask=0.75 dist=35.62 tau=12 rev=0 exits=1 pnl=-5.91 beforeFees=-5.55 fees={"applied":true,"model":"polymarket_taker","category":"crypto","currency":"USDC","feeRate":0.07,"totalFee":0.36278,"entryFee":0.25568,"exitFee":0.1071,"tradesCharged":3,"entryTradesCharged":2,"exitTradesCharged":1,"entryNotional":18.35,"exitNotional":1.7999999999999998,"entryShares":23,"exitShares":12,"makerTradesFree":0,"makerNotional":0,"makerShares":0,"entries":[{"qty":12,"price":0.75,"side":"DOWN","source":"midas_core_entry","reason":null,"time":1780330487721,"liquidity":"taker","fee":0.1575},{"qty":11,"price":0.85,"side":"UP","source":"late_flip_reverse","reason":null,"time":1780330493722,"liquidity":"taker","fee":0.09818}],"exits":[{"qty":12,"price":0.15,"side":"DOWN","source":"reverse_exit","reason":null,"time":1780330493722,"liquidity":null,"fee":0.1071}]}
+  2026-06-01T23:05:00.000Z pos=DOWN win=DOWN ask=0.76 dist=4.55 tau=30 rev=0 exits=1 pnl=-7.42 beforeFees=-7.140000000000001 fees={"applied":true,"model":"polymarket_taker","category":"crypto","currency":"USDC","feeRate":0.07,"totalFee":0.27935,"entryFee":0.21055,"exitFee":0.0688,"tradesCharged":3,"entryTradesCharged":2,"exitTradesCharged":1,"entryNotional":18.22,"exitNotional":1.08,"entryShares":22,"exitShares":12,"makerTradesFree":0,"makerNotional":0,"makerShares":0,"entries":[{"qty":12,"price":0.76,"side":"UP","source":"midas_core_entry","reason":null,"time":1780355370205,"liquidity":"taker","fee":0.15322},{"qty":10,"price":0.91,"side":"DOWN","source":"late_flip_reverse","reason":null,"time":1780355392203,"liquidity":"taker","fee":0.05733}],"exits":[{"qty":12,"price":0.09,"side":"UP","source":"reverse_exit","reason":null,"time":1780355392203,"liquidity":null,"fee":0.0688}]}
+  2026-06-02T00:30:00.000Z pos=UP win=UP ask=0.75 dist=15.09 tau=30 rev=0 exits=1 pnl=-2.75 beforeFees=-2.25 fees={"applied":true,"model":"polymarket_taker","category":"crypto","currency":"USDC","feeRate":0.07,"totalFee":0.50242,"entryFee":0.33686,"exitFee":0.16556,"tradesCharged":3,"entryTradesCharged":2,"exitTradesCharged":1,"entryNotional":18.490000000000002,"exitNotional":3.24,"entryShares":25,"exitShares":12,"makerTradesFree":0,"makerNotional":0,"makerShares":0,"entries":[{"qty":12,"price":0.75,"side":"DOWN","source":"midas_core_entry","reason":null,"time":1780360470206,"liquidity":"taker","fee":0.1575},{"qty":13,"price":0.73,"side":"UP","source":"late_flip_reverse","reason":null,"time":1780360492206,"liquidity":"taker","fee":0.17936}],"exits":[{"qty":12,"price":0.27,"side":"DOWN","source":"reverse_exit","reason":null,"time":1780360492206,"liquidity":null,"fee":0.16556}]}
+win: n=372 avgDist=18.80 avgAsk=0.771 avgTau=25.3 avgQty=17.0
+loss: n=100 avgDist=15.01 avgAsk=0.727 avgTau=25.3 avgQty=15.4
+
+======== APEX LOSS ANATOMY ========
+losses=103 with_reversal=0 with_exit=87 highAskOrTierQty=4
+distBins { '0-20': 71, '20-30': 0, '30-40': 0, '40+': 32 }
+askBins { '<0.7': 67, '0.7-0.82': 35, '0.82-0.94': 1, '>=0.94': 0 }
+tauBins { '5-10': 3, '10-20': 10, '20-30': 90 }
+bucket sizes {
+  pure_expiry_loss: 34,
+  expiry_win_with_fees_or_reverse: 35,
+  closed_loss: 34,
+  other: 0
+}
+sample expiry_win negatives:
+  2026-06-01T05:20:00.000Z pos=DOWN win=DOWN ask=0.74 dist=10.28 tau=23 rev=0 exits=1 pnl=-5.26 beforeFees=-4.82 fees={"applied":true,"model":"polymarket_taker","category":"crypto","currency":"USDC","feeRate":0.07,"totalFee":0.44388,"entryFee":0.29828,"exitFee":0.1456,"tradesCharged":3,"entryTradesCharged":2,"exitTradesCharged":1,"entryNotional":18.42,"exitNotional":2.6,"entryShares":24,"exitShares":13,"makerTradesFree":0,"makerNotional":0,"makerShares":0,"entries":[{"qty":13,"price":0.74,"side":"UP","source":"apex_terminal_entry","reason":null,"time":1780291476705,"liquidity":"taker","fee":0.17508},{"qty":11,"price":0.8,"side":"DOWN","source":"apex_reverse","reason":null,"time":1780291494704,"liquidity":"taker","fee":0.1232}],"exits":[{"qty":13,"price":0.2,"side":"UP","source":"apex_reverse_exit","reason":null,"time":1780291494704,"liquidity":null,"fee":0.1456}]}
+  2026-06-01T10:25:00.000Z pos=UP win=UP ask=0.7 dist=15.91 tau=30 rev=0 exits=1 pnl=-1.22 beforeFees=-0.6330000000000018 fees={"applied":true,"model":"polymarket_taker","category":"crypto","currency":"USDC","feeRate":0.07,"totalFee":0.59018,"entryFee":0.38898,"exitFee":0.2012,"tradesCharged":4,"entryTradesCharged":3,"exitTradesCharged":1,"entryNotional":17.923000000000002,"exitNotional":4.29,"entryShares":26,"exitShares":13,"makerTradesFree":0,"makerNotional":0,"makerShares":0,"entries":[{"qty":7.35,"price":0.7,"side":"DOWN","source":"apex_terminal_entry","reason":null,"time":1780309770212,"liquidity":"taker","fee":0.10805},{"qty":5.65,"price":0.72,"side":"DOWN","source":"apex_terminal_entry","reason":null,"time":1780309770212,"liquidity":"taker","fee":0.07973},{"qty":13,"price":0.67,"side":"UP","source":"apex_reverse","reason":null,"time":1780309792212,"liquidity":"taker","fee":0.2012}],"exits":[{"qty":13,"price":0.33,"side":"DOWN","source":"apex_reverse_exit","reason":null,"time":1780309792212,"liquidity":null,"fee":0.2012}]}
+  2026-06-01T23:05:00.000Z pos=DOWN win=DOWN ask=0.76 dist=4.55 tau=30 rev=0 exits=1 pnl=-7.50 beforeFees=-7.23 fees={"applied":true,"model":"polymarket_taker","category":"crypto","currency":"USDC","feeRate":0.07,"totalFee":0.27362,"entryFee":0.20482,"exitFee":0.0688,"tradesCharged":3,"entryTradesCharged":2,"exitTradesCharged":1,"entryNotional":17.310000000000002,"exitNotional":1.08,"entryShares":21,"exitShares":12,"makerTradesFree":0,"makerNotional":0,"makerShares":0,"entries":[{"qty":12,"price":0.76,"side":"UP","source":"apex_terminal_entry","reason":null,"time":1780355370205,"liquidity":"taker","fee":0.15322},{"qty":9,"price":0.91,"side":"DOWN","source":"apex_reverse","reason":null,"time":1780355392203,"liquidity":"taker","fee":0.0516}],"exits":[{"qty":12,"price":0.09,"side":"UP","source":"apex_reverse_exit","reason":null,"time":1780355392203,"liquidity":null,"fee":0.0688}]}
+  2026-06-02T00:30:00.000Z pos=UP win=UP ask=0.75 dist=15.09 tau=30 rev=0 exits=1 pnl=-3.01 beforeFees=-2.5199999999999996 fees={"applied":true,"model":"polymarket_taker","category":"crypto","currency":"USDC","feeRate":0.07,"totalFee":0.48862,"entryFee":0.32306,"exitFee":0.16556,"tradesCharged":3,"entryTradesCharged":2,"exitTradesCharged":1,"entryNotional":17.759999999999998,"exitNotional":3.24,"entryShares":24,"exitShares":12,"makerTradesFree":0,"makerNotional":0,"makerShares":0,"entries":[{"qty":12,"price":0.75,"side":"DOWN","source":"apex_terminal_entry","reason":null,"time":1780360470206,"liquidity":"taker","fee":0.1575},{"qty":12,"price":0.73,"side":"UP","source":"apex_reverse","reason":null,"time":1780360492206,"liquidity":"taker","fee":0.16556}],"exits":[{"qty":12,"price":0.27,"side":"DOWN","source":"apex_reverse_exit","reason":null,"time":1780360492206,"liquidity":null,"fee":0.16556}]}
+  2026-06-02T00:55:00.000Z pos=UP win=UP ask=0.63 dist=1.14 tau=29 rev=0 exits=1 pnl=-3.04 beforeFees=-2.429999999999998 fees={"applied":true,"model":"polymarket_taker","category":"crypto","currency":"USDC","feeRate":0.07,"totalFee":0.6084,"entryFee":0.40638,"exitFee":0.20202,"tradesCharged":3,"entryTradesCharged":2,"exitTradesCharged":1,"entryNotional":18.33,"exitNotional":3.9000000000000004,"entryShares":27,"exitShares":15,"makerTradesFree":0,"makerNotional":0,"makerShares":0,"entries":[{"qty":15,"price":0.63,"side":"DOWN","source":"apex_terminal_entry","reason":null,"time":1780361970704,"liquidity":"taker","fee":0.24476},{"qty":12,"price":0.74,"side":"UP","source":"apex_reverse","reason":null,"time":1780361993203,"liquidity":"taker","fee":0.16162}],"exits":[{"qty":15,"price":0.26,"side":"DOWN","source":"apex_reverse_exit","reason":null,"time":1780361993203,"liquidity":null,"fee":0.20202}]}
+win: n=276 avgDist=23.64 avgAsk=0.669 avgTau=40.9 avgQty=11.6
+loss: n=103 avgDist=24.27 avgAsk=0.652 avgTau=41.0 avgQty=12.3
+
+======== TFC LOSS ANATOMY ========
+losses=77 with_reversal=0 with_exit=35 highAskOrTierQty=1
+distBins { '0-20': 77, '20-30': 0, '30-40': 0, '40+': 0 }
+askBins { '<0.7': 42, '0.7-0.82': 34, '0.82-0.94': 1, '>=0.94': 0 }
+tauBins { '5-10': 2, '10-20': 12, '20-30': 63 }
+bucket sizes {
+  pure_expiry_loss: 54,
+  expiry_win_with_fees_or_reverse: 23,
+  closed_loss: 0,
+  other: 0
+}
+sample expiry_win negatives:
+  2026-06-01T01:25:00.000Z pos=DOWN win=DOWN ask=0.56 dist=7.72 tau=20 rev=0 exits=1 pnl=-7.90 beforeFees=null fees=null
+  2026-06-01T23:40:00.000Z pos=DOWN win=DOWN ask=0.57 dist=13.04 tau=29 rev=0 exits=1 pnl=-1.29 beforeFees=null fees=null
+  2026-06-02T18:10:00.000Z pos=DOWN win=DOWN ask=0.75 dist=3.62 tau=28 rev=0 exits=1 pnl=-7.90 beforeFees=null fees=null
+  2026-06-02T20:40:00.000Z pos=UP win=UP ask=0.74 dist=13.88 tau=27 rev=0 exits=1 pnl=-8.47 beforeFees=null fees=null
+  2026-06-02T23:35:00.000Z pos=DOWN win=DOWN ask=0.65 dist=5.51 tau=25 rev=0 exits=1 pnl=-3.38 beforeFees=null fees=null
+win: n=224 avgDist=10.47 avgAsk=0.695 avgTau=24.3 avgQty=13.6
+loss: n=77 avgDist=7.93 avgAsk=0.680 avgTau=24.2 avgQty=13.9
+
+======== MIDAS WIN vs LOSS BY DAY (entry features) ========
+2026-06-01 win: n=88 pnl=285.0 avgDist=15.8 avgAsk=0.782 avgTau=26.6 avgQty=17.4 revRate=0%
+2026-06-01 loss: n=11 pnl=-105.8 avgDist=16.1 avgAsk=0.775 avgTau=27.0 avgQty=14.9 revRate=0%
+2026-06-02 win: n=48 pnl=142.1 avgDist=19.2 avgAsk=0.794 avgTau=25.8 avgQty=16.9 revRate=0%
+2026-06-02 loss: n=22 pnl=-208.3 avgDist=12.0 avgAsk=0.714 avgTau=26.9 avgQty=16.0 revRate=0%
+2026-06-03 win: n=66 pnl=222.3 avgDist=20.6 avgAsk=0.780 avgTau=25.0 avgQty=17.0 revRate=0%
+2026-06-03 loss: n=15 pnl=-131.0 avgDist=11.7 avgAsk=0.697 avgTau=26.1 avgQty=14.9 revRate=0%
+2026-06-04 win: n=55 pnl=219.7 avgDist=19.5 avgAsk=0.733 avgTau=24.1 avgQty=16.4 revRate=0%
+2026-06-04 loss: n=14 pnl=-148.8 avgDist=21.1 avgAsk=0.721 avgTau=25.8 avgQty=15.6 revRate=0%
+2026-06-05 win: n=39 pnl=172.2 avgDist=19.1 avgAsk=0.723 avgTau=24.6 avgQty=15.4 revRate=0%
+2026-06-05 loss: n=16 pnl=-136.8 avgDist=14.0 avgAsk=0.716 avgTau=22.6 avgQty=14.7 revRate=0%
+2026-06-06 win: n=76 pnl=244.2 avgDist=19.9 avgAsk=0.787 avgTau=24.9 avgQty=17.9 revRate=0%
+2026-06-06 loss: n=22 pnl=-208.8 avgDist=16.6 avgAsk=0.747 avgTau=23.8 avgQty=15.9 revRate=0%
+
+======== FLIP RATE (entry side != winner) among entries ========
+midas
+  2026-06-01: entries=99 flipRate=7.1% flipPnl=-86.5
+  2026-06-02: entries=70 flipRate=14.3% flipPnl=-142.4
+  2026-06-03: entries=81 flipRate=9.9% flipPnl=-88.9
+  2026-06-04: entries=69 flipRate=13.0% flipPnl=-102.3
+  2026-06-05: entries=55 flipRate=12.7% flipPnl=-78.2
+  2026-06-06: entries=98 flipRate=13.3% flipPnl=-147.9
+apex
+  2026-06-01: entries=68 flipRate=7.4% flipPnl=-38.7
+  2026-06-02: entries=48 flipRate=16.7% flipPnl=-73.7
+  2026-06-03: entries=57 flipRate=15.8% flipPnl=-72.2
+  2026-06-04: entries=60 flipRate=15.0% flipPnl=-50.2
+  2026-06-05: entries=79 flipRate=22.8% flipPnl=-44.6
+  2026-06-06: entries=67 flipRate=13.4% flipPnl=-67.1
+tfc
+  2026-06-01: entries=65 flipRate=9.2% flipPnl=-52.6
+  2026-06-02: entries=43 flipRate=27.9% flipPnl=-112.4
+  2026-06-03: entries=49 flipRate=20.4% flipPnl=-88.8
+  2026-06-04: entries=47 flipRate=19.1% flipPnl=-87.7
+  2026-06-05: entries=41 flipRate=17.1% flipPnl=-62.5
+  2026-06-06: entries=56 flipRate=17.9% flipPnl=-89.5
+
+======== MARKET REGIME VIA DUCKDB (if available) ========
+duckdb failed/skipped: npm error could not determine executable to run
+npm error A complete log of this run can be found in: C:\Users\lamar\AppData\Local\npm-cache\_logs\2026-07-21T01_39_11_673Z-debug-0.log
+
+no duckdb module: Cannot find package 'duckdb' imported from D:\Projetos\projeto-goldenlens\data-backtest\scratch\analyze-june-deep.mjs
+
+======== SHARED EVENT DETAIL 2026-06-02T08:30:00.000Z ========
+midas: loss/expiry_loss pnl=-16.19 side=DOWNÔåÆwinner=UP ask=0.65 dist=26.73 tau=22 qty=14 rev=[] exits=[{"type":"exit","side":"UP","ts":1780389294489,"price":0.24,"shares":14,"notional":3.36,"avgPrice":0.24,"fills":[{"price
+apex: loss/expiry_loss pnl=-15.09 side=DOWNÔåÆwinner=UP ask=0.72 dist=8.16 tau=16 qty=13 rev=[] exits=[{"type":"exit","side":"UP","ts":1780389294489,"price":0.24,"shares":13,"notional":3.12,"avgPrice":0.24000000000000002,"
+tfc: loss/expiry_loss pnl=-9.92 side=DOWNÔåÆwinner=UP ask=0.72 dist=8.16 tau=16 qty=13 rev=[] exits=[{"type":"exit","side":"UP","ts":1780389298488,"price":0.68,"shares":13,"notional":8.84,"avgPrice":0.6799999999999999,"f
+
+======== MIDAS LOSS ATTRIBUTION (envelope extension) ========
+[Object: null prototype] {
+  dist_gt20: 35,
+  dist_le20: 65,
+  ask_ge82: 21,
+  ask_lt82: 79,
+  pnl_dist_gt20: -455,
+  pnl_dist_le20: -484.48,
+  pnl_ask_ge82: -354.66,
+  pnl_ask_lt82: -584.82
+}
+midas all entries pnl by envelope: [Object: null prototype] {
+  pnl_dist_gt20: 24.62,
+  pnl_dist_le20: 321.28,
+  pnl_ask_ge82: 32.9,
+  pnl_ask_lt82: 313,
+  n_dist_gt20: 209,
+  n_ask_ge82: 178
+}
+
+MIDAS Jun2 endEq=-66.21 maxDD=94.87 at 2026-06-02T23:50:00.000Z
+longest loss streak 3 pnl -39.99 from 2026-06-02T06:30:00.000Z to 2026-06-02T07:50:00.000Z
+(node:9000) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)

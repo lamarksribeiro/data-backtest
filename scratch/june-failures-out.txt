@@ -1,0 +1,534 @@
+=== STRATEGIES BY STATUS ===
+
+[draft] (17)
+  56 | apex-triad-v2 | Apex Triad V2
+  23 | boundary-coherence-entropy-deviation-v1 | BCED V1
+  43 | cofre-sete | Cofre Sete
+  25 | convergence-undershoot-v1 | Convergence Undershoot V1
+  26 | empirical-residual-manifold-v1 | ERM V1
+  18 | edge-snipper | Edge Snipper
+  53 | father-terminal-v1 | Father Terminal V1
+  27 | fusion-five-v1 | Fusion Five V1
+  42 | gamma-ladder | Gamma Ladder
+  46 | geodesic-tension-engine | Geodesic Tension Engine
+  47 | lim-prime-v1 | LIM Prime V1
+  39 | quantum-entropic-manifold | Quantum Entropic Manifold
+  31 | stable-carry-compression-v1 | Stable Carry Compression V1
+  22 | super | Template Padr├úo
+  32 | terminal-convexity-v1 | Terminal Convexity V1
+  19 | vsmr | Volatility Spike Mean Reversion
+  45 | whipsaw-lock | Whipsaw Lock
+
+[failed] (8)
+  44 | book-frontrunner | Book Front Runner
+  52 | hopper-3 | Hopper 3 V1
+  55 | hopper-4 | Hopper 4 V1
+  17 | impulse-elasticity | Impulse Elasticity GLS
+  28 | lead-inertia-v1 | Lead Inertia V1
+  29 | momentum-edge-v1 | Momentum Edge V1
+  30 | omni-edge-v1 | Omni Edge V1
+  33 | volatility-compression-lock-v1 | Volatility Compression Lock V1
+
+[validated] (4)
+  54 | apex-triad-v1 | Apex Triad V1
+  57 | midas-carry-v1 | MIDAS Carry V1
+  58 | tfc-reversal-pro | TFC Reversal Pro V1
+  50 | tfc | Terminal Favorite Carry
+
+=== MIDAS / TERMINAL-LIKE ===
+ draft | 56 | apex-triad-v2 | Apex Triad V2
+ draft | 18 | edge-snipper | Edge Snipper
+ draft | 53 | father-terminal-v1 | Father Terminal V1
+ draft | 31 | stable-carry-compression-v1 | Stable Carry Compression V1
+ draft | 32 | terminal-convexity-v1 | Terminal Convexity V1
+ draft | 45 | whipsaw-lock | Whipsaw Lock
+ failed | 52 | hopper-3 | Hopper 3 V1
+ failed | 55 | hopper-4 | Hopper 4 V1
+ failed | 29 | momentum-edge-v1 | Momentum Edge V1
+ failed | 30 | omni-edge-v1 | Omni Edge V1
+ validated | 54 | apex-triad-v1 | Apex Triad V1
+ validated | 57 | midas-carry-v1 | MIDAS Carry V1
+ validated | 58 | tfc-reversal-pro | TFC Reversal Pro V1
+ validated | 50 | tfc | Terminal Favorite Carry
+
+=== COMPLETED RUNS overlapping Jun1-6: 80 ===
+#176 midas-carry-v1 [validated] 2026-06-01ÔåÆ2026-07-02 pnl=2990.1833999999885 wr=80.20523005627275 entries=3021
+#160 apex-triad-v1 [validated] 2026-04-23ÔåÆ2026-07-06 pnl=5181.153370000004 wr=73.41534612176814 entries=4796
+#159 apex-triad-v1 [validated] 2026-05-04ÔåÆ2026-07-02 pnl=4162.580169999984 wr=73.43553656697662 entries=3979
+#158 apex-triad-v1 [validated] 2026-06-01ÔåÆ2026-07-02 pnl=2272.831659999992 wr=73.21763602251407 entries=2132
+#156 father-terminal-v1 [draft] 2026-06-01ÔåÆ2026-07-06 pnl=2495.9339199999877 wr=74.43438914027149 entries=2210
+#153 hopper-3 [failed] 2026-06-01ÔåÆ2026-07-02 pnl=11288.388069999866 wr=46.1806002833956 entries=?
+#152 hopper-3 [failed] 2026-06-01ÔåÆ2026-06-04 pnl=1018.1879400000024 wr=46.63461538461539 entries=?
+#149 hopper-3 [failed] 2026-06-01ÔåÆ2026-06-04 pnl=2578.6419599999977 wr=46.63461538461539 entries=?
+#146 tfc [validated] 2026-06-01ÔåÆ2026-07-02 pnl=2321.1034299999865 wr=74.61300309597523 entries=1938
+#142 tfc [validated] 2026-05-01ÔåÆ2026-07-02 pnl=3909.121139999979 wr=75.77115739520168 entries=3793
+#141 tfc [validated] 2026-06-01ÔåÆ2026-07-02 pnl=2190.1863699999903 wr=76.0061919504644 entries=1938
+#140 tfc [validated] 2026-06-01ÔåÆ2026-07-02 pnl=2303.6297599999866 wr=74.76780185758514 entries=1938
+#138 tfc [validated] 2026-06-01ÔåÆ2026-07-02 pnl=3199.3385999999923 wr=77.65737874097007 entries=1938
+#136 tfc [validated] 2026-06-01ÔåÆ2026-07-02 pnl=1442.7124699999886 wr=69.15017462165308 entries=1718
+#135 tfc [validated] 2026-06-01ÔåÆ2026-07-02 pnl=1426.284589999988 wr=68.5603971318257 entries=1813
+#133 tfc [validated] 2026-06-01ÔåÆ2026-07-02 pnl=984.2946499999994 wr=71.86982901268615 entries=1813
+#132 tfc [validated] 2026-06-01ÔåÆ2026-07-02 pnl=836.0186999999986 wr=71.48380860318994 entries=2069
+#130 lim-prime-v1 [draft] 2026-06-01ÔåÆ2026-06-28 pnl=94.7288099999999 wr=64.13043478260869 entries=276
+#127 whipsaw-lock [draft] 2026-06-01ÔåÆ2026-06-25 pnl=332.52023 wr=66.66666666666666 entries=24
+#126 whipsaw-lock [draft] 2026-06-01ÔåÆ2026-06-25 pnl=332.52023 wr=66.66666666666666 entries=24
+#125 edge-snipper [draft] 2026-06-01ÔåÆ2026-06-25 pnl=159.22002 wr=67.85714285714286 entries=56
+#124 edge-snipper [draft] 2026-06-01ÔåÆ2026-06-25 pnl=-243.00310999999996 wr=50 entries=224
+#122 book-frontrunner [failed] 2026-06-01ÔåÆ2026-06-25 pnl=30.969650000000016 wr=58.18181818181818 entries=55
+#121 book-frontrunner [failed] 2026-05-04ÔåÆ2026-06-25 pnl=34.63783000000002 wr=58.22784810126582 entries=79
+#120 book-frontrunner [failed] 2026-06-01ÔåÆ2026-06-25 pnl=30.969650000000016 wr=58.18181818181818 entries=55
+#119 cofre-sete [draft] 2026-06-01ÔåÆ2026-06-25 pnl=573.9220000000001 wr=38.63013698630137 entries=?
+#118 cofre-sete [draft] 2026-06-01ÔåÆ2026-06-25 pnl=942.7379000000004 wr=33.81642512077295 entries=?
+#114 cofre-sete [draft] 2026-06-01ÔåÆ2026-06-20 pnl=929.06484 wr=32.808398950131235 entries=?
+#113 cofre-sete [draft] 2026-06-01ÔåÆ2026-06-20 pnl=998.3611999999994 wr=18.58470335954253 entries=?
+#112 quantum-entropic-manifold [draft] 2026-05-04ÔåÆ2026-06-20 pnl=633.3080500000001 wr=69.23076923076923 entries=117
+#111 quantum-entropic-manifold [draft] 2026-06-01ÔåÆ2026-06-20 pnl=235.19309999999996 wr=62 entries=50
+#106 gamma-ladder [draft] 2026-06-01ÔåÆ2026-06-20 pnl=601.7717299999998 wr=24.390243902439025 entries=?
+#103 GAMMA_LADDER_V1 [?] 2026-06-01ÔåÆ2026-06-20 pnl=-9.245900000000002 wr=20 entries=?
+#102 Non-Directional Master ┬À BTC ┬À Winner [?] 2026-06-01ÔåÆ2026-06-20 pnl=0 wr=0 entries=0
+#101 Non-Directional Master ┬À BTC ┬À Winner [?] 2026-06-01ÔåÆ2026-06-20 pnl=0 wr=0 entries=0
+#100 omni-edge-v1 [failed] 2026-06-01ÔåÆ2026-06-20 pnl=-53.21732101535347 wr=82.82208588957054 entries=?
+#96 boundary-coherence-entropy-deviation-v1 [draft] 2026-06-01ÔåÆ2026-06-20 pnl=217.25124 wr=55.55555555555556 entries=?
+#92 terminal-convexity-v1 [draft] 2026-06-01ÔåÆ2026-06-20 pnl=23.98642 wr=30.76923076923077 entries=13
+#91 terminal-convexity-v1 [draft] 2026-05-04ÔåÆ2026-06-20 pnl=604.2565500000001 wr=44.827586206896555 entries=58
+#90 terminal-convexity-v1 [draft] 2026-04-23ÔåÆ2026-06-20 pnl=730.5216800000001 wr=47.540983606557376 entries=61
+
+Focus run ids: 176, 160, 159, 158, 156, 153, 152, 149, 146, 142, 141, 140, 138, 136, 135, 133, 132, 127, 126, 125, 124, 100, 92, 91, 90, 88, 87, 86, 84, 83 (n=56)
+
+=== DAILY PnL Jun1-6 (focus runs) ===
+2026-06-01 run#9 Edge Sniper V2 ┬À Near Default Loose[null] n=288 W/L=6/5 skip=277 pnl=-12.26 avg=-1.115 worst=-9.32
+2026-06-02 run#9 Edge Sniper V2 ┬À Near Default Loose[null] n=288 W/L=18/8 skip=262 pnl=-0.92 avg=-0.0354 worst=-6.49
+2026-06-03 run#9 Edge Sniper V2 ┬À Near Default Loose[null] n=274 W/L=29/16 skip=229 pnl=-4.96 avg=-0.1103 worst=-11.12
+2026-06-04 run#9 Edge Sniper V2 ┬À Near Default Loose[null] n=288 W/L=54/30 skip=204 pnl=-43.29 avg=-0.5154 worst=-11.14
+2026-06-05 run#9 Edge Sniper V2 ┬À Near Default Loose[null] n=283 W/L=87/43 skip=153 pnl=51.95 avg=0.3996 worst=-13.6
+2026-06-06 run#9 Edge Sniper V2 ┬À Near Default Loose[null] n=277 W/L=34/20 skip=223 pnl=-41.28 avg=-0.7644 worst=-20.94
+2026-06-01 run#158 apex-triad-v1[validated] n=288 W/L=59/9 skip=220 pnl=167.69 avg=2.466 worst=-10.55
+2026-06-01 run#159 apex-triad-v1[validated] n=288 W/L=59/9 skip=220 pnl=167.69 avg=2.466 worst=-10.55
+2026-06-01 run#160 apex-triad-v1[validated] n=288 W/L=59/9 skip=220 pnl=167.69 avg=2.466 worst=-10.55
+2026-06-02 run#158 apex-triad-v1[validated] n=288 W/L=26/22 skip=240 pnl=-56.19 avg=-1.1706 worst=-15.09
+2026-06-02 run#159 apex-triad-v1[validated] n=288 W/L=26/22 skip=240 pnl=-56.19 avg=-1.1706 worst=-15.09
+2026-06-02 run#160 apex-triad-v1[validated] n=288 W/L=26/22 skip=240 pnl=-56.19 avg=-1.1706 worst=-15.09
+2026-06-03 run#158 apex-triad-v1[validated] n=274 W/L=43/14 skip=217 pnl=56.83 avg=0.9969 worst=-14.52
+2026-06-03 run#159 apex-triad-v1[validated] n=274 W/L=43/14 skip=217 pnl=56.83 avg=0.9969 worst=-14.52
+2026-06-03 run#160 apex-triad-v1[validated] n=274 W/L=43/14 skip=217 pnl=56.83 avg=0.9969 worst=-14.52
+2026-06-04 run#158 apex-triad-v1[validated] n=288 W/L=43/17 skip=228 pnl=57.86 avg=0.9644 worst=-9.69
+2026-06-04 run#159 apex-triad-v1[validated] n=288 W/L=43/17 skip=228 pnl=57.86 avg=0.9644 worst=-9.69
+2026-06-04 run#160 apex-triad-v1[validated] n=288 W/L=43/17 skip=228 pnl=57.86 avg=0.9644 worst=-9.69
+2026-06-05 run#158 apex-triad-v1[validated] n=283 W/L=55/24 skip=204 pnl=76.28 avg=0.9656 worst=-9.68
+2026-06-05 run#159 apex-triad-v1[validated] n=283 W/L=55/24 skip=204 pnl=76.28 avg=0.9656 worst=-9.68
+2026-06-05 run#160 apex-triad-v1[validated] n=283 W/L=55/24 skip=204 pnl=76.28 avg=0.9656 worst=-9.68
+2026-06-06 run#158 apex-triad-v1[validated] n=277 W/L=50/17 skip=210 pnl=58.15 avg=0.8679 worst=-14.66
+2026-06-06 run#159 apex-triad-v1[validated] n=277 W/L=50/17 skip=210 pnl=58.15 avg=0.8679 worst=-14.66
+2026-06-06 run#160 apex-triad-v1[validated] n=277 W/L=50/17 skip=210 pnl=58.15 avg=0.8679 worst=-14.66
+2026-06-01 run#6 edge-sniper-v2[archived] n=288 W/L=1/1 skip=286 pnl=11.4 avg=5.7001 worst=-8.54
+2026-06-01 run#7 edge-sniper-v2[archived] n=288 W/L=1/1 skip=286 pnl=11.4 avg=5.7001 worst=-8.54
+2026-06-01 run#8 edge-sniper-v2[archived] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-01 run#10 edge-sniper-v2[archived] n=288 W/L=1/1 skip=286 pnl=-1.98 avg=-0.9883 worst=-8.54
+2026-06-01 run#12 edge-sniper-v2[archived] n=288 W/L=1/1 skip=286 pnl=-1.98 avg=-0.9883 worst=-8.54
+2026-06-01 run#15 edge-sniper-v2[archived] n=288 W/L=1/1 skip=286 pnl=-1.98 avg=-0.9883 worst=-8.54
+2026-06-01 run#16 edge-sniper-v2[archived] n=288 W/L=1/1 skip=286 pnl=-1.98 avg=-0.9883 worst=-8.54
+2026-06-02 run#6 edge-sniper-v2[archived] n=288 W/L=0/1 skip=287 pnl=-1.79 avg=-1.7868 worst=-1.79
+2026-06-02 run#7 edge-sniper-v2[archived] n=288 W/L=0/1 skip=287 pnl=-1.79 avg=-1.7868 worst=-1.79
+2026-06-02 run#8 edge-sniper-v2[archived] n=288 W/L=1/0 skip=287 pnl=1.8 avg=1.8022 worst=0
+2026-06-02 run#10 edge-sniper-v2[archived] n=288 W/L=0/1 skip=287 pnl=-0.09 avg=-0.088 worst=-0.09
+2026-06-02 run#12 edge-sniper-v2[archived] n=288 W/L=0/1 skip=287 pnl=-0.09 avg=-0.088 worst=-0.09
+2026-06-02 run#15 edge-sniper-v2[archived] n=288 W/L=0/1 skip=287 pnl=-0.09 avg=-0.088 worst=-0.09
+2026-06-02 run#16 edge-sniper-v2[archived] n=288 W/L=3/3 skip=282 pnl=0.75 avg=0.1249 worst=-5.36
+2026-06-03 run#6 edge-sniper-v2[archived] n=274 W/L=0/0 skip=274 pnl=0 avg=null worst=0
+2026-06-03 run#7 edge-sniper-v2[archived] n=274 W/L=0/0 skip=274 pnl=0 avg=null worst=0
+2026-06-03 run#8 edge-sniper-v2[archived] n=274 W/L=1/0 skip=273 pnl=8.5 avg=8.4952 worst=0
+2026-06-03 run#10 edge-sniper-v2[archived] n=274 W/L=0/1 skip=273 pnl=-11.12 avg=-11.1195 worst=-11.12
+2026-06-03 run#12 edge-sniper-v2[archived] n=274 W/L=0/1 skip=273 pnl=-11.12 avg=-11.1195 worst=-11.12
+2026-06-03 run#15 edge-sniper-v2[archived] n=274 W/L=0/1 skip=273 pnl=-11.12 avg=-11.1195 worst=-11.12
+2026-06-03 run#16 edge-sniper-v2[archived] n=274 W/L=2/1 skip=271 pnl=-9.26 avg=-3.0853 worst=-11.12
+2026-06-04 run#6 edge-sniper-v2[archived] n=288 W/L=1/1 skip=286 pnl=5.45 avg=2.7234 worst=-2.53
+2026-06-04 run#7 edge-sniper-v2[archived] n=288 W/L=1/1 skip=286 pnl=5.45 avg=2.7234 worst=-2.53
+2026-06-04 run#8 edge-sniper-v2[archived] n=288 W/L=2/0 skip=286 pnl=8.75 avg=4.3751 worst=0
+2026-06-04 run#10 edge-sniper-v2[archived] n=288 W/L=3/0 skip=285 pnl=7.89 avg=2.6313 worst=0
+2026-06-04 run#12 edge-sniper-v2[archived] n=288 W/L=3/0 skip=285 pnl=7.89 avg=2.6313 worst=0
+2026-06-04 run#15 edge-sniper-v2[archived] n=288 W/L=3/0 skip=285 pnl=7.89 avg=2.6313 worst=0
+2026-06-04 run#16 edge-sniper-v2[archived] n=288 W/L=8/2 skip=278 pnl=15.27 avg=1.5267 worst=-6.31
+2026-06-05 run#6 edge-sniper-v2[archived] n=283 W/L=6/4 skip=273 pnl=38.72 avg=3.8721 worst=-8.74
+2026-06-05 run#7 edge-sniper-v2[archived] n=283 W/L=6/4 skip=273 pnl=38.72 avg=3.8721 worst=-8.74
+2026-06-05 run#8 edge-sniper-v2[archived] n=283 W/L=14/0 skip=269 pnl=147.97 avg=10.5692 worst=0
+2026-06-05 run#10 edge-sniper-v2[archived] n=283 W/L=13/7 skip=263 pnl=74.41 avg=3.7204 worst=-13.6
+2026-06-05 run#12 edge-sniper-v2[archived] n=283 W/L=13/7 skip=263 pnl=74.41 avg=3.7204 worst=-13.6
+2026-06-05 run#15 edge-sniper-v2[archived] n=283 W/L=13/7 skip=263 pnl=74.41 avg=3.7204 worst=-13.6
+2026-06-05 run#16 edge-sniper-v2[archived] n=283 W/L=32/16 skip=235 pnl=81.45 avg=1.6969 worst=-13.6
+2026-06-06 run#6 edge-sniper-v2[archived] n=277 W/L=1/1 skip=275 pnl=2.34 avg=1.1685 worst=-5.64
+2026-06-06 run#7 edge-sniper-v2[archived] n=277 W/L=1/1 skip=275 pnl=2.34 avg=1.1685 worst=-5.64
+2026-06-06 run#8 edge-sniper-v2[archived] n=277 W/L=1/0 skip=276 pnl=4.84 avg=4.8354 worst=0
+2026-06-06 run#10 edge-sniper-v2[archived] n=277 W/L=2/0 skip=275 pnl=14.34 avg=7.1714 worst=0
+2026-06-06 run#12 edge-sniper-v2[archived] n=277 W/L=2/0 skip=275 pnl=14.34 avg=7.1714 worst=0
+2026-06-06 run#15 edge-sniper-v2[archived] n=277 W/L=2/0 skip=275 pnl=14.34 avg=7.1714 worst=0
+2026-06-06 run#16 edge-sniper-v2[archived] n=277 W/L=5/6 skip=266 pnl=-29.72 avg=-2.7021 worst=-20.94
+2026-06-01 run#17 edge-snipper[draft] n=288 W/L=1/1 skip=286 pnl=-1.98 avg=-0.9883 worst=-8.54
+2026-06-01 run#21 edge-snipper[draft] n=2 W/L=0/0 skip=2 pnl=0 avg=null worst=0
+2026-06-01 run#23 edge-snipper[draft] n=288 W/L=1/1 skip=286 pnl=-1.98 avg=-0.9883 worst=-8.54
+2026-06-01 run#25 edge-snipper[draft] n=288 W/L=1/1 skip=286 pnl=-1.98 avg=-0.9883 worst=-8.54
+2026-06-01 run#26 edge-snipper[draft] n=288 W/L=1/1 skip=286 pnl=-1.98 avg=-0.9883 worst=-8.54
+2026-06-01 run#27 edge-snipper[draft] n=288 W/L=1/1 skip=286 pnl=-1.98 avg=-0.9883 worst=-8.54
+2026-06-01 run#28 edge-snipper[draft] n=288 W/L=1/1 skip=286 pnl=-1.98 avg=-0.9883 worst=-8.54
+2026-06-01 run#31 edge-snipper[draft] n=288 W/L=1/1 skip=286 pnl=-1.98 avg=-0.9883 worst=-8.54
+2026-06-01 run#33 edge-snipper[draft] n=288 W/L=1/1 skip=286 pnl=-1.98 avg=-0.9883 worst=-8.54
+2026-06-01 run#37 edge-snipper[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-01 run#38 edge-snipper[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-01 run#41 edge-snipper[draft] n=288 W/L=1/1 skip=286 pnl=-1.98 avg=-0.9883 worst=-8.54
+2026-06-01 run#45 edge-snipper[draft] n=288 W/L=1/1 skip=286 pnl=-1.98 avg=-0.9883 worst=-8.54
+2026-06-01 run#79 edge-snipper[draft] n=288 W/L=1/1 skip=286 pnl=-1.98 avg=-0.9883 worst=-8.54
+2026-06-01 run#124 edge-snipper[draft] n=288 W/L=57/51 skip=180 pnl=-67.14 avg=-0.6217 worst=-21.19
+2026-06-01 run#125 edge-snipper[draft] n=288 W/L=1/1 skip=286 pnl=-1.98 avg=-0.9883 worst=-8.54
+2026-06-02 run#17 edge-snipper[draft] n=288 W/L=0/1 skip=287 pnl=-0.09 avg=-0.088 worst=-0.09
+2026-06-02 run#21 edge-snipper[draft] n=2 W/L=0/0 skip=2 pnl=0 avg=null worst=0
+2026-06-02 run#23 edge-snipper[draft] n=288 W/L=0/1 skip=287 pnl=-0.09 avg=-0.088 worst=-0.09
+2026-06-02 run#25 edge-snipper[draft] n=288 W/L=0/1 skip=287 pnl=-0.09 avg=-0.088 worst=-0.09
+2026-06-02 run#26 edge-snipper[draft] n=288 W/L=0/1 skip=287 pnl=-0.09 avg=-0.088 worst=-0.09
+2026-06-02 run#27 edge-snipper[draft] n=288 W/L=0/1 skip=287 pnl=-0.09 avg=-0.088 worst=-0.09
+2026-06-02 run#28 edge-snipper[draft] n=288 W/L=0/1 skip=287 pnl=-0.09 avg=-0.088 worst=-0.09
+2026-06-02 run#31 edge-snipper[draft] n=288 W/L=0/1 skip=287 pnl=-0.09 avg=-0.088 worst=-0.09
+2026-06-02 run#33 edge-snipper[draft] n=288 W/L=0/1 skip=287 pnl=-0.09 avg=-0.088 worst=-0.09
+2026-06-02 run#37 edge-snipper[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-02 run#38 edge-snipper[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-02 run#41 edge-snipper[draft] n=288 W/L=0/1 skip=287 pnl=-0.09 avg=-0.088 worst=-0.09
+2026-06-02 run#45 edge-snipper[draft] n=288 W/L=0/1 skip=287 pnl=-0.09 avg=-0.088 worst=-0.09
+2026-06-02 run#79 edge-snipper[draft] n=288 W/L=0/1 skip=287 pnl=-0.09 avg=-0.088 worst=-0.09
+2026-06-02 run#124 edge-snipper[draft] n=288 W/L=42/50 skip=196 pnl=-136.01 avg=-1.4783 worst=-19.55
+2026-06-02 run#125 edge-snipper[draft] n=288 W/L=0/1 skip=287 pnl=-0.09 avg=-0.088 worst=-0.09
+2026-06-03 run#17 edge-snipper[draft] n=274 W/L=0/1 skip=273 pnl=-11.12 avg=-11.1195 worst=-11.12
+2026-06-03 run#21 edge-snipper[draft] n=2 W/L=0/0 skip=2 pnl=0 avg=null worst=0
+2026-06-03 run#23 edge-snipper[draft] n=274 W/L=0/1 skip=273 pnl=-11.12 avg=-11.1195 worst=-11.12
+2026-06-03 run#25 edge-snipper[draft] n=274 W/L=0/1 skip=273 pnl=-11.12 avg=-11.1195 worst=-11.12
+2026-06-03 run#26 edge-snipper[draft] n=274 W/L=0/1 skip=273 pnl=-11.12 avg=-11.1195 worst=-11.12
+2026-06-03 run#27 edge-snipper[draft] n=274 W/L=0/1 skip=273 pnl=-11.12 avg=-11.1195 worst=-11.12
+2026-06-03 run#28 edge-snipper[draft] n=274 W/L=0/1 skip=273 pnl=-11.12 avg=-11.1195 worst=-11.12
+2026-06-03 run#31 edge-snipper[draft] n=274 W/L=0/1 skip=273 pnl=-11.12 avg=-11.1195 worst=-11.12
+2026-06-03 run#33 edge-snipper[draft] n=274 W/L=0/1 skip=273 pnl=-11.12 avg=-11.1195 worst=-11.12
+2026-06-03 run#37 edge-snipper[draft] n=288 W/L=5/0 skip=283 pnl=43.91 avg=8.7818 worst=0
+2026-06-03 run#38 edge-snipper[draft] n=288 W/L=5/0 skip=283 pnl=43.91 avg=8.7818 worst=0
+2026-06-03 run#41 edge-snipper[draft] n=274 W/L=0/1 skip=273 pnl=-11.12 avg=-11.1195 worst=-11.12
+2026-06-03 run#45 edge-snipper[draft] n=274 W/L=0/1 skip=273 pnl=-11.12 avg=-11.1195 worst=-11.12
+2026-06-03 run#79 edge-snipper[draft] n=274 W/L=0/1 skip=273 pnl=-11.12 avg=-11.1195 worst=-11.12
+2026-06-03 run#124 edge-snipper[draft] n=274 W/L=13/11 skip=250 pnl=-39.85 avg=-1.6605 worst=-16.97
+2026-06-03 run#125 edge-snipper[draft] n=274 W/L=0/1 skip=273 pnl=-11.12 avg=-11.1195 worst=-11.12
+2026-06-04 run#17 edge-snipper[draft] n=288 W/L=3/0 skip=285 pnl=7.89 avg=2.6313 worst=0
+2026-06-04 run#21 edge-snipper[draft] n=2 W/L=0/0 skip=2 pnl=0 avg=null worst=0
+2026-06-04 run#23 edge-snipper[draft] n=288 W/L=3/0 skip=285 pnl=7.89 avg=2.6313 worst=0
+2026-06-04 run#25 edge-snipper[draft] n=288 W/L=3/0 skip=285 pnl=7.89 avg=2.6313 worst=0
+2026-06-04 run#26 edge-snipper[draft] n=288 W/L=3/0 skip=285 pnl=7.89 avg=2.6313 worst=0
+2026-06-04 run#27 edge-snipper[draft] n=288 W/L=3/0 skip=285 pnl=7.89 avg=2.6313 worst=0
+2026-06-04 run#28 edge-snipper[draft] n=288 W/L=3/0 skip=285 pnl=7.89 avg=2.6313 worst=0
+2026-06-04 run#31 edge-snipper[draft] n=288 W/L=3/0 skip=285 pnl=7.89 avg=2.6313 worst=0
+2026-06-04 run#33 edge-snipper[draft] n=288 W/L=3/0 skip=285 pnl=7.89 avg=2.6313 worst=0
+2026-06-04 run#37 edge-snipper[draft] n=288 W/L=1/0 skip=287 pnl=0.27 avg=0.2676 worst=0
+2026-06-04 run#38 edge-snipper[draft] n=288 W/L=1/0 skip=287 pnl=0.27 avg=0.2676 worst=0
+2026-06-04 run#41 edge-snipper[draft] n=288 W/L=3/0 skip=285 pnl=7.89 avg=2.6313 worst=0
+2026-06-04 run#45 edge-snipper[draft] n=288 W/L=3/0 skip=285 pnl=7.89 avg=2.6313 worst=0
+2026-06-04 run#79 edge-snipper[draft] n=288 W/L=3/0 skip=285 pnl=7.89 avg=2.6313 worst=0
+2026-06-04 run#124 edge-snipper[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-04 run#125 edge-snipper[draft] n=288 W/L=3/0 skip=285 pnl=7.89 avg=2.6313 worst=0
+2026-06-05 run#17 edge-snipper[draft] n=283 W/L=13/7 skip=263 pnl=74.41 avg=3.7204 worst=-13.6
+2026-06-05 run#21 edge-snipper[draft] n=2 W/L=0/0 skip=2 pnl=0 avg=null worst=0
+2026-06-05 run#23 edge-snipper[draft] n=283 W/L=13/7 skip=263 pnl=74.41 avg=3.7204 worst=-13.6
+2026-06-05 run#24 edge-snipper[draft] n=283 W/L=13/7 skip=263 pnl=74.41 avg=3.7204 worst=-13.6
+2026-06-05 run#25 edge-snipper[draft] n=283 W/L=13/7 skip=263 pnl=74.41 avg=3.7204 worst=-13.6
+2026-06-05 run#26 edge-snipper[draft] n=283 W/L=13/7 skip=263 pnl=74.41 avg=3.7204 worst=-13.6
+2026-06-05 run#27 edge-snipper[draft] n=283 W/L=13/7 skip=263 pnl=74.41 avg=3.7204 worst=-13.6
+2026-06-05 run#28 edge-snipper[draft] n=283 W/L=13/7 skip=263 pnl=74.41 avg=3.7204 worst=-13.6
+2026-06-05 run#31 edge-snipper[draft] n=283 W/L=13/7 skip=263 pnl=74.41 avg=3.7204 worst=-13.6
+2026-06-05 run#32 edge-snipper[draft] n=283 W/L=13/7 skip=263 pnl=74.41 avg=3.7204 worst=-13.6
+2026-06-05 run#33 edge-snipper[draft] n=283 W/L=13/7 skip=263 pnl=74.41 avg=3.7204 worst=-13.6
+2026-06-05 run#37 edge-snipper[draft] n=288 W/L=9/2 skip=277 pnl=110.8 avg=10.0727 worst=-6.17
+2026-06-05 run#38 edge-snipper[draft] n=288 W/L=9/2 skip=277 pnl=110.8 avg=10.0727 worst=-6.17
+2026-06-05 run#41 edge-snipper[draft] n=283 W/L=13/7 skip=263 pnl=74.41 avg=3.7204 worst=-13.6
+2026-06-05 run#45 edge-snipper[draft] n=283 W/L=13/7 skip=263 pnl=74.41 avg=3.7204 worst=-13.6
+2026-06-05 run#79 edge-snipper[draft] n=283 W/L=13/7 skip=263 pnl=74.41 avg=3.7204 worst=-13.6
+2026-06-05 run#124 edge-snipper[draft] n=283 W/L=0/0 skip=283 pnl=0 avg=null worst=0
+2026-06-05 run#125 edge-snipper[draft] n=283 W/L=13/7 skip=263 pnl=74.41 avg=3.7204 worst=-13.6
+2026-06-06 run#17 edge-snipper[draft] n=277 W/L=3/0 skip=274 pnl=17.51 avg=5.8362 worst=0
+2026-06-06 run#21 edge-snipper[draft] n=2 W/L=0/0 skip=2 pnl=0 avg=null worst=0
+2026-06-06 run#23 edge-snipper[draft] n=277 W/L=2/0 skip=275 pnl=14.34 avg=7.1714 worst=0
+2026-06-06 run#24 edge-snipper[draft] n=277 W/L=2/0 skip=275 pnl=14.34 avg=7.1714 worst=0
+2026-06-06 run#25 edge-snipper[draft] n=277 W/L=2/0 skip=275 pnl=14.34 avg=7.1714 worst=0
+2026-06-06 run#26 edge-snipper[draft] n=277 W/L=2/0 skip=275 pnl=14.34 avg=7.1714 worst=0
+2026-06-06 run#27 edge-snipper[draft] n=277 W/L=2/0 skip=275 pnl=14.34 avg=7.1714 worst=0
+2026-06-06 run#28 edge-snipper[draft] n=277 W/L=3/0 skip=274 pnl=17.51 avg=5.8362 worst=0
+2026-06-06 run#31 edge-snipper[draft] n=277 W/L=3/0 skip=274 pnl=17.51 avg=5.8362 worst=0
+2026-06-06 run#32 edge-snipper[draft] n=277 W/L=3/0 skip=274 pnl=17.51 avg=5.8362 worst=0
+2026-06-06 run#33 edge-snipper[draft] n=277 W/L=3/0 skip=274 pnl=17.51 avg=5.8362 worst=0
+2026-06-06 run#37 edge-snipper[draft] n=279 W/L=0/2 skip=277 pnl=-19.29 avg=-9.646 worst=-13.49
+2026-06-06 run#38 edge-snipper[draft] n=279 W/L=0/2 skip=277 pnl=-19.29 avg=-9.646 worst=-13.49
+2026-06-06 run#41 edge-snipper[draft] n=277 W/L=3/0 skip=274 pnl=17.51 avg=5.8362 worst=0
+2026-06-06 run#45 edge-snipper[draft] n=277 W/L=3/0 skip=274 pnl=17.51 avg=5.8362 worst=0
+2026-06-06 run#79 edge-snipper[draft] n=277 W/L=3/0 skip=274 pnl=17.51 avg=5.8362 worst=0
+2026-06-06 run#124 edge-snipper[draft] n=277 W/L=0/0 skip=277 pnl=0 avg=null worst=0
+2026-06-06 run#125 edge-snipper[draft] n=277 W/L=3/0 skip=274 pnl=17.51 avg=5.8362 worst=0
+2026-06-01 run#156 father-terminal-v1[draft] n=288 W/L=56/9 skip=223 pnl=159.45 avg=2.453 worst=-11.47
+2026-06-02 run#156 father-terminal-v1[draft] n=288 W/L=23/20 skip=245 pnl=-61.84 avg=-1.438 worst=-16.64
+2026-06-03 run#156 father-terminal-v1[draft] n=274 W/L=36/13 skip=225 pnl=55.11 avg=1.1247 worst=-15.3
+2026-06-04 run#156 father-terminal-v1[draft] n=288 W/L=36/11 skip=241 pnl=84.5 avg=1.7979 worst=-9.69
+2026-06-05 run#156 father-terminal-v1[draft] n=283 W/L=27/14 skip=242 pnl=5.73 avg=0.1397 worst=-16.44
+2026-06-06 run#156 father-terminal-v1[draft] n=277 W/L=41/15 skip=221 pnl=47.99 avg=0.857 worst=-15.41
+2026-06-01 run#149 hopper-3[failed] n=288 W/L=134/139 skip=15 pnl=185.46 avg=0.6793 worst=-5.6
+2026-06-01 run#152 hopper-3[failed] n=288 W/L=134/139 skip=15 pnl=122.15 avg=0.4474 worst=-4.36
+2026-06-01 run#153 hopper-3[failed] n=288 W/L=134/139 skip=15 pnl=122.15 avg=0.4474 worst=-4.36
+2026-06-02 run#149 hopper-3[failed] n=288 W/L=139/148 skip=1 pnl=698.61 avg=2.4342 worst=-20.18
+2026-06-02 run#152 hopper-3[failed] n=288 W/L=139/148 skip=1 pnl=381.62 avg=1.3297 worst=-14.14
+2026-06-02 run#153 hopper-3[failed] n=288 W/L=139/148 skip=1 pnl=381.62 avg=1.3297 worst=-14.14
+2026-06-03 run#149 hopper-3[failed] n=274 W/L=115/157 skip=2 pnl=1694.58 avg=6.2301 worst=-22.14
+2026-06-03 run#152 hopper-3[failed] n=274 W/L=115/157 skip=2 pnl=514.42 avg=1.8913 worst=-22.14
+2026-06-03 run#153 hopper-3[failed] n=274 W/L=115/157 skip=2 pnl=514.42 avg=1.8913 worst=-22.14
+2026-06-04 run#153 hopper-3[failed] n=288 W/L=134/154 skip=0 pnl=1023.8 avg=3.5549 worst=-21.27
+2026-06-05 run#153 hopper-3[failed] n=283 W/L=125/157 skip=1 pnl=732.86 avg=2.5988 worst=-25.52
+2026-06-06 run#153 hopper-3[failed] n=277 W/L=110/164 skip=3 pnl=-92.24 avg=-0.3366 worst=-26.4
+2026-06-01 run#176 midas-carry-v1[validated] n=288 W/L=88/11 skip=189 pnl=179.17 avg=1.8098 worst=-20.15
+2026-06-02 run#176 midas-carry-v1[validated] n=288 W/L=48/22 skip=218 pnl=-66.21 avg=-0.9459 worst=-25.47
+2026-06-03 run#176 midas-carry-v1[validated] n=274 W/L=66/15 skip=193 pnl=91.3 avg=1.1271 worst=-18.88
+2026-06-04 run#176 midas-carry-v1[validated] n=288 W/L=55/14 skip=219 pnl=70.86 avg=1.027 worst=-19.54
+2026-06-05 run#176 midas-carry-v1[validated] n=283 W/L=39/16 skip=228 pnl=35.4 avg=0.6436 worst=-19.13
+2026-06-06 run#176 midas-carry-v1[validated] n=277 W/L=76/22 skip=179 pnl=35.39 avg=0.3611 worst=-19.56
+2026-06-01 run#72 momentum-edge-v1[failed] n=288 W/L=233/53 skip=2 pnl=-97.86 avg=-0.3422 worst=-95.98
+2026-06-02 run#72 momentum-edge-v1[failed] n=288 W/L=238/50 skip=0 pnl=-124.31 avg=-0.4316 worst=-115.71
+2026-06-03 run#72 momentum-edge-v1[failed] n=274 W/L=225/49 skip=0 pnl=-23.08 avg=-0.0842 worst=-80.08
+2026-06-04 run#72 momentum-edge-v1[failed] n=288 W/L=234/54 skip=0 pnl=-104.3 avg=-0.3622 worst=-57.66
+2026-06-05 run#72 momentum-edge-v1[failed] n=283 W/L=203/80 skip=0 pnl=-3479.99 avg=-12.2968 worst=-946.13
+2026-06-06 run#72 momentum-edge-v1[failed] n=277 W/L=231/45 skip=1 pnl=-59.82 avg=-0.2167 worst=-73.08
+2026-06-01 run#100 omni-edge-v1[failed] n=295 W/L=51/13 skip=231 pnl=41.86 avg=0.654 worst=-15.29
+2026-06-02 run#100 omni-edge-v1[failed] n=291 W/L=66/13 skip=212 pnl=2.52 avg=0.032 worst=-15.31
+2026-06-03 run#100 omni-edge-v1[failed] n=276 W/L=46/12 skip=218 pnl=-47.61 avg=-0.8208 worst=-13.74
+2026-06-04 run#100 omni-edge-v1[failed] n=289 W/L=25/3 skip=261 pnl=-0.03 avg=-0.001 worst=-13.74
+2026-06-05 run#100 omni-edge-v1[failed] n=283 W/L=3/1 skip=279 pnl=20.91 avg=5.2279 worst=-5.04
+2026-06-06 run#100 omni-edge-v1[failed] n=277 W/L=1/1 skip=275 pnl=-13.73 avg=-6.8655 worst=-14.52
+2026-06-01 run#81 terminal-convexity-v1[draft] n=288 W/L=0/1 skip=287 pnl=-14.78 avg=-14.779 worst=-14.78
+2026-06-01 run#83 terminal-convexity-v1[draft] n=288 W/L=0/1 skip=287 pnl=-4.33 avg=-4.334 worst=-4.33
+2026-06-01 run#84 terminal-convexity-v1[draft] n=288 W/L=0/1 skip=287 pnl=-7.46 avg=-7.4613 worst=-7.46
+2026-06-01 run#86 terminal-convexity-v1[draft] n=288 W/L=0/1 skip=287 pnl=-7.46 avg=-7.4613 worst=-7.46
+2026-06-01 run#87 terminal-convexity-v1[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-01 run#88 terminal-convexity-v1[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-01 run#90 terminal-convexity-v1[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-01 run#91 terminal-convexity-v1[draft] n=288 W/L=0/1 skip=287 pnl=-3.73 avg=-3.7306 worst=-3.73
+2026-06-01 run#92 terminal-convexity-v1[draft] n=288 W/L=0/1 skip=287 pnl=-3.73 avg=-3.7306 worst=-3.73
+2026-06-02 run#81 terminal-convexity-v1[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-02 run#83 terminal-convexity-v1[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-02 run#84 terminal-convexity-v1[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-02 run#86 terminal-convexity-v1[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-02 run#87 terminal-convexity-v1[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-02 run#88 terminal-convexity-v1[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-02 run#90 terminal-convexity-v1[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-02 run#91 terminal-convexity-v1[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-02 run#92 terminal-convexity-v1[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-03 run#81 terminal-convexity-v1[draft] n=274 W/L=1/0 skip=273 pnl=17.91 avg=17.9108 worst=0
+2026-06-03 run#83 terminal-convexity-v1[draft] n=274 W/L=1/0 skip=273 pnl=17.91 avg=17.9108 worst=0
+2026-06-03 run#84 terminal-convexity-v1[draft] n=274 W/L=1/0 skip=273 pnl=50.33 avg=50.3272 worst=0
+2026-06-03 run#86 terminal-convexity-v1[draft] n=274 W/L=1/0 skip=273 pnl=50.33 avg=50.3272 worst=0
+2026-06-03 run#87 terminal-convexity-v1[draft] n=274 W/L=0/0 skip=274 pnl=0 avg=null worst=0
+2026-06-03 run#88 terminal-convexity-v1[draft] n=274 W/L=0/0 skip=274 pnl=0 avg=null worst=0
+2026-06-03 run#90 terminal-convexity-v1[draft] n=274 W/L=0/0 skip=274 pnl=0 avg=null worst=0
+2026-06-03 run#91 terminal-convexity-v1[draft] n=274 W/L=0/0 skip=274 pnl=0 avg=null worst=0
+2026-06-03 run#92 terminal-convexity-v1[draft] n=274 W/L=0/0 skip=274 pnl=0 avg=null worst=0
+2026-06-04 run#81 terminal-convexity-v1[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-04 run#83 terminal-convexity-v1[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-04 run#84 terminal-convexity-v1[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-04 run#86 terminal-convexity-v1[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-04 run#87 terminal-convexity-v1[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-04 run#88 terminal-convexity-v1[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-04 run#90 terminal-convexity-v1[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-04 run#91 terminal-convexity-v1[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-04 run#92 terminal-convexity-v1[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-05 run#81 terminal-convexity-v1[draft] n=283 W/L=0/1 skip=282 pnl=-4.69 avg=-4.6905 worst=-4.69
+2026-06-05 run#83 terminal-convexity-v1[draft] n=283 W/L=0/0 skip=283 pnl=0 avg=null worst=0
+2026-06-05 run#84 terminal-convexity-v1[draft] n=283 W/L=0/0 skip=283 pnl=0 avg=null worst=0
+2026-06-05 run#86 terminal-convexity-v1[draft] n=283 W/L=0/0 skip=283 pnl=0 avg=null worst=0
+2026-06-05 run#87 terminal-convexity-v1[draft] n=283 W/L=0/0 skip=283 pnl=0 avg=null worst=0
+2026-06-05 run#88 terminal-convexity-v1[draft] n=283 W/L=0/0 skip=283 pnl=0 avg=null worst=0
+2026-06-05 run#90 terminal-convexity-v1[draft] n=283 W/L=0/0 skip=283 pnl=0 avg=null worst=0
+2026-06-05 run#91 terminal-convexity-v1[draft] n=283 W/L=0/0 skip=283 pnl=0 avg=null worst=0
+2026-06-05 run#92 terminal-convexity-v1[draft] n=283 W/L=0/0 skip=283 pnl=0 avg=null worst=0
+2026-06-06 run#81 terminal-convexity-v1[draft] n=277 W/L=0/1 skip=276 pnl=-14.52 avg=-14.5157 worst=-14.52
+2026-06-06 run#83 terminal-convexity-v1[draft] n=277 W/L=0/1 skip=276 pnl=-12.61 avg=-12.6099 worst=-12.61
+2026-06-06 run#84 terminal-convexity-v1[draft] n=277 W/L=0/1 skip=276 pnl=-12.61 avg=-12.6099 worst=-12.61
+2026-06-06 run#86 terminal-convexity-v1[draft] n=277 W/L=0/1 skip=276 pnl=-12.61 avg=-12.6099 worst=-12.61
+2026-06-06 run#87 terminal-convexity-v1[draft] n=277 W/L=0/0 skip=277 pnl=0 avg=null worst=0
+2026-06-06 run#88 terminal-convexity-v1[draft] n=277 W/L=0/0 skip=277 pnl=0 avg=null worst=0
+2026-06-06 run#90 terminal-convexity-v1[draft] n=277 W/L=0/0 skip=277 pnl=0 avg=null worst=0
+2026-06-06 run#91 terminal-convexity-v1[draft] n=277 W/L=0/0 skip=277 pnl=0 avg=null worst=0
+2026-06-06 run#92 terminal-convexity-v1[draft] n=277 W/L=0/0 skip=277 pnl=0 avg=null worst=0
+2026-06-01 run#132 tfc[validated] n=288 W/L=58/12 skip=218 pnl=131.51 avg=1.8788 worst=-9.84
+2026-06-01 run#133 tfc[validated] n=288 W/L=49/10 skip=229 pnl=124.69 avg=2.1134 worst=-9.84
+2026-06-01 run#135 tfc[validated] n=288 W/L=48/11 skip=229 pnl=140.69 avg=2.3846 worst=-9.84
+2026-06-01 run#136 tfc[validated] n=288 W/L=44/10 skip=234 pnl=130.3 avg=2.413 worst=-9.84
+2026-06-01 run#138 tfc[validated] n=288 W/L=57/8 skip=223 pnl=180.91 avg=2.7833 worst=-9.62
+2026-06-01 run#140 tfc[validated] n=288 W/L=56/9 skip=223 pnl=175.69 avg=2.703 worst=-10.58
+2026-06-01 run#141 tfc[validated] n=288 W/L=58/7 skip=223 pnl=194.79 avg=2.9968 worst=-9.48
+2026-06-01 run#142 tfc[validated] n=288 W/L=58/7 skip=223 pnl=194.79 avg=2.9968 worst=-9.48
+2026-06-01 run#146 tfc[validated] n=288 W/L=56/9 skip=223 pnl=159.45 avg=2.453 worst=-11.47
+2026-06-02 run#132 tfc[validated] n=288 W/L=28/17 skip=243 pnl=-47.65 avg=-1.0589 worst=-9.87
+2026-06-02 run#133 tfc[validated] n=288 W/L=28/15 skip=245 pnl=-20.8 avg=-0.4837 worst=-9.87
+2026-06-02 run#135 tfc[validated] n=288 W/L=26/17 skip=245 pnl=-12.91 avg=-0.3002 worst=-9.69
+2026-06-02 run#136 tfc[validated] n=288 W/L=23/16 skip=249 pnl=-11.55 avg=-0.2962 worst=-9.5
+2026-06-02 run#138 tfc[validated] n=288 W/L=27/16 skip=245 pnl=-19.23 avg=-0.4472 worst=-9.92
+2026-06-02 run#140 tfc[validated] n=288 W/L=23/20 skip=245 pnl=-48.26 avg=-1.1224 worst=-16.12
+2026-06-02 run#141 tfc[validated] n=288 W/L=24/19 skip=245 pnl=-24.72 avg=-0.5749 worst=-16.12
+2026-06-02 run#142 tfc[validated] n=288 W/L=24/19 skip=245 pnl=-24.72 avg=-0.5749 worst=-16.12
+2026-06-02 run#146 tfc[validated] n=288 W/L=23/20 skip=245 pnl=-61.84 avg=-1.438 worst=-16.64
+2026-06-03 run#132 tfc[validated] n=274 W/L=37/16 skip=221 pnl=8.67 avg=0.1635 worst=-9.87
+2026-06-03 run#133 tfc[validated] n=274 W/L=34/16 skip=224 pnl=-2.96 avg=-0.0591 worst=-9.87
+2026-06-03 run#135 tfc[validated] n=274 W/L=32/18 skip=224 pnl=4.82 avg=0.0964 worst=-9.87
+2026-06-03 run#136 tfc[validated] n=274 W/L=28/18 skip=228 pnl=-21.24 avg=-0.4617 worst=-9.87
+2026-06-03 run#138 tfc[validated] n=274 W/L=37/12 skip=225 pnl=54.76 avg=1.1176 worst=-9.52
+2026-06-03 run#140 tfc[validated] n=274 W/L=36/13 skip=225 pnl=60.11 avg=1.2267 worst=-14.68
+2026-06-03 run#141 tfc[validated] n=274 W/L=36/13 skip=225 pnl=50.04 avg=1.0211 worst=-14.68
+2026-06-03 run#142 tfc[validated] n=274 W/L=36/13 skip=225 pnl=50.04 avg=1.0211 worst=-14.68
+2026-06-03 run#146 tfc[validated] n=274 W/L=36/13 skip=225 pnl=55.11 avg=1.1247 worst=-15.3
+2026-06-04 run#132 tfc[validated] n=288 W/L=34/21 skip=233 pnl=-38.27 avg=-0.6958 worst=-9.87
+2026-06-04 run#133 tfc[validated] n=288 W/L=27/18 skip=243 pnl=-18.14 avg=-0.403 worst=-9.87
+2026-06-04 run#135 tfc[validated] n=288 W/L=25/20 skip=243 pnl=-5.86 avg=-0.1301 worst=-9.87
+2026-06-04 run#136 tfc[validated] n=288 W/L=24/17 skip=247 pnl=7.92 avg=0.1933 worst=-9.81
+2026-06-04 run#138 tfc[validated] n=288 W/L=34/13 skip=241 pnl=66.42 avg=1.4131 worst=-13.88
+2026-06-04 run#140 tfc[validated] n=288 W/L=36/11 skip=241 pnl=94.78 avg=2.0166 worst=-9.49
+2026-06-04 run#141 tfc[validated] n=288 W/L=35/12 skip=241 pnl=75.18 avg=1.5996 worst=-9.49
+2026-06-04 run#142 tfc[validated] n=288 W/L=35/12 skip=241 pnl=75.18 avg=1.5996 worst=-9.49
+2026-06-04 run#146 tfc[validated] n=288 W/L=36/11 skip=241 pnl=84.5 avg=1.7979 worst=-9.69
+2026-06-05 run#132 tfc[validated] n=283 W/L=30/15 skip=238 pnl=5.31 avg=0.118 worst=-9.85
+2026-06-05 run#133 tfc[validated] n=283 W/L=24/13 skip=246 pnl=-3.54 avg=-0.0956 worst=-9.87
+2026-06-05 run#135 tfc[validated] n=283 W/L=23/14 skip=246 pnl=8.19 avg=0.2214 worst=-9.71
+2026-06-05 run#136 tfc[validated] n=283 W/L=21/13 skip=249 pnl=14.07 avg=0.4138 worst=-9.32
+2026-06-05 run#138 tfc[validated] n=283 W/L=28/13 skip=242 pnl=21.71 avg=0.5295 worst=-9.72
+2026-06-05 run#140 tfc[validated] n=283 W/L=27/14 skip=242 pnl=14.45 avg=0.3524 worst=-15.92
+2026-06-05 run#141 tfc[validated] n=283 W/L=25/16 skip=242 pnl=-22.96 avg=-0.5599 worst=-15.92
+2026-06-05 run#142 tfc[validated] n=283 W/L=25/16 skip=242 pnl=-22.96 avg=-0.5599 worst=-15.92
+2026-06-05 run#146 tfc[validated] n=283 W/L=27/14 skip=242 pnl=5.73 avg=0.1397 worst=-16.44
+2026-06-06 run#132 tfc[validated] n=277 W/L=45/17 skip=215 pnl=31.22 avg=0.5035 worst=-9.81
+2026-06-06 run#133 tfc[validated] n=277 W/L=40/14 skip=223 pnl=33.4 avg=0.6185 worst=-9.87
+2026-06-06 run#135 tfc[validated] n=277 W/L=37/17 skip=223 pnl=50.51 avg=0.9354 worst=-9.8
+2026-06-06 run#136 tfc[validated] n=277 W/L=35/15 skip=227 pnl=56.82 avg=1.1364 worst=-9.8
+2026-06-06 run#138 tfc[validated] n=277 W/L=41/15 skip=221 pnl=49.27 avg=0.8798 worst=-9.66
+2026-06-06 run#140 tfc[validated] n=277 W/L=41/15 skip=221 pnl=57.08 avg=1.0192 worst=-14.81
+2026-06-06 run#141 tfc[validated] n=277 W/L=43/13 skip=221 pnl=83.9 avg=1.4981 worst=-14.81
+2026-06-06 run#142 tfc[validated] n=277 W/L=43/13 skip=221 pnl=83.9 avg=1.4981 worst=-14.81
+2026-06-06 run#146 tfc[validated] n=277 W/L=41/15 skip=221 pnl=47.99 avg=0.857 worst=-15.41
+2026-06-01 run#126 whipsaw-lock[draft] n=288 W/L=1/0 skip=287 pnl=7.36 avg=7.3555 worst=0
+2026-06-01 run#127 whipsaw-lock[draft] n=288 W/L=1/0 skip=287 pnl=7.36 avg=7.3555 worst=0
+2026-06-02 run#126 whipsaw-lock[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-02 run#127 whipsaw-lock[draft] n=288 W/L=0/0 skip=288 pnl=0 avg=null worst=0
+2026-06-03 run#126 whipsaw-lock[draft] n=274 W/L=0/0 skip=274 pnl=0 avg=null worst=0
+2026-06-03 run#127 whipsaw-lock[draft] n=274 W/L=0/0 skip=274 pnl=0 avg=null worst=0
+2026-06-04 run#126 whipsaw-lock[draft] n=288 W/L=2/1 skip=285 pnl=8.73 avg=2.9112 worst=-9.64
+2026-06-04 run#127 whipsaw-lock[draft] n=288 W/L=2/1 skip=285 pnl=8.73 avg=2.9112 worst=-9.64
+2026-06-05 run#126 whipsaw-lock[draft] n=283 W/L=2/1 skip=280 pnl=6.88 avg=2.2929 worst=-9.48
+2026-06-05 run#127 whipsaw-lock[draft] n=283 W/L=2/1 skip=280 pnl=6.88 avg=2.2929 worst=-9.48
+2026-06-06 run#126 whipsaw-lock[draft] n=277 W/L=1/0 skip=276 pnl=8.51 avg=8.5051 worst=0
+2026-06-06 run#127 whipsaw-lock[draft] n=277 W/L=1/0 skip=276 pnl=8.51 avg=8.5051 worst=0
+
+=== LOSS REASONS Jun1-6 ===
+Edge Sniper V2 ┬À Near Default Loose | closed | n=107 pnl=-502.78 avg=-4.6989
+Edge Sniper V2 ┬À Near Default Loose | expiry_loss | n=10 pnl=-42.12 avg=-4.212
+Edge Sniper V2 ┬À Near Default Loose | expiry_win | n=5 pnl=-19.98 avg=-3.9967
+apex-triad-v1 | expiry_loss | n=102 pnl=-929.79 avg=-9.1156
+apex-triad-v1 | expiry_win | n=105 pnl=-558.89 avg=-5.3228
+apex-triad-v1 | closed | n=102 pnl=-196.5 avg=-1.9264
+edge-sniper-v2 | closed | n=65 pnl=-403.56 avg=-6.2086
+edge-sniper-v2 | expiry_loss | n=6 pnl=-25.92 avg=-4.3192
+edge-sniper-v2 | expiry_win | n=4 pnl=-7.26 avg=-1.8138
+edge-snipper | closed | n=204 pnl=-1285.16 avg=-6.2998
+edge-snipper | expiry_loss | n=43 pnl=-307.61 avg=-7.1537
+edge-snipper | expiry_win | n=7 pnl=-41.28 avg=-5.897
+father-terminal-v1 | expiry_loss | n=40 pnl=-389.35 avg=-9.7337
+father-terminal-v1 | expiry_win | n=36 pnl=-186.99 avg=-5.1941
+father-terminal-v1 | closed | n=6 pnl=-31.41 avg=-5.2344
+hopper-3 | stop_loss | n=1807 pnl=-16850.99 avg=-9.3254
+midas-carry-v1 | expiry_loss | n=52 pnl=-631 avg=-12.1346
+midas-carry-v1 | expiry_win | n=40 pnl=-249.83 avg=-6.2458
+midas-carry-v1 | closed | n=8 pnl=-58.65 avg=-7.3312
+momentum-edge-v1 | cross_inversion | n=232 pnl=-18351.83 avg=-79.1027
+momentum-edge-v1 | deterioration_inversion | n=83 pnl=-3071.93 avg=-37.0112
+momentum-edge-v1 | expired | n=16 pnl=-574.61 avg=-35.9133
+omni-edge-v1 | expired | n=32 pnl=-328.41 avg=-10.2628
+omni-edge-v1 | stop | n=4 pnl=-27.11 avg=-6.7776
+omni-edge-v1 | impulse_reversal_stop | n=5 pnl=-24.63 avg=-4.9256
+omni-edge-v1 | bid_stop | n=2 pnl=-23.11 avg=-11.5548
+terminal-convexity-v1 | closed | n=9 pnl=-69.24 avg=-7.6931
+terminal-convexity-v1 | expiry_loss | n=2 pnl=-29.29 avg=-14.6474
+tfc | expiry_loss | n=433 pnl=-4128.39 avg=-9.5344
+tfc | closed | n=161 pnl=-1030.56 avg=-6.401
+tfc | expiry_win | n=177 pnl=-890.65 avg=-5.0319
+whipsaw-lock | expiry_loss | n=4 pnl=-38.24 avg=-9.559
+
+=== WORST HOUR UTC POCKETS (pnl<0) ===
+momentum-edge-v1 H11 n=72 losses=14 pnl=-1516.41
+momentum-edge-v1 H19 n=72 losses=13 pnl=-1279.67
+momentum-edge-v1 H13 n=72 losses=20 pnl=-1260.44
+momentum-edge-v1 H16 n=72 losses=15 pnl=-942.59
+momentum-edge-v1 H17 n=72 losses=13 pnl=-817.16
+momentum-edge-v1 H14 n=72 losses=15 pnl=-801.61
+momentum-edge-v1 H21 n=72 losses=10 pnl=-728.76
+tfc H19 n=147 losses=73 pnl=-340.41
+edge-snipper H23 n=50 losses=45 pnl=-297.46
+hopper-3 H19 n=140 losses=85 pnl=-263.32
+momentum-edge-v1 H18 n=72 losses=18 pnl=-262.1
+momentum-edge-v1 H09 n=72 losses=12 pnl=-237.09
+momentum-edge-v1 H08 n=71 losses=16 pnl=-234.44
+tfc H07 n=126 losses=61 pnl=-205.07
+edge-snipper H09 n=36 losses=30 pnl=-200.02
+tfc H18 n=81 losses=44 pnl=-152.82
+tfc H23 n=153 losses=65 pnl=-108.89
+momentum-edge-v1 H23 n=72 losses=22 pnl=-103.93
+edge-sniper-v2 H23 n=23 losses=20 pnl=-96.32
+hopper-3 H08 n=137 losses=91 pnl=-94.05
+hopper-3 H03 n=141 losses=89 pnl=-81.05
+momentum-edge-v1 H00 n=68 losses=17 pnl=-80.29
+apex-triad-v1 H19 n=54 losses=21 pnl=-73.19
+edge-sniper-v2 H09 n=12 losses=10 pnl=-68.89
+edge-snipper H13 n=32 losses=16 pnl=-68.23
+terminal-convexity-v1 H23 n=4 losses=4 pnl=-52.35
+Edge Sniper V2 ┬À Near Default Loose H23 n=23 losses=13 pnl=-45.23
+edge-snipper H22 n=38 losses=21 pnl=-41.97
+terminal-convexity-v1 H05 n=6 losses=6 pnl=-41.5
+midas-carry-v1 H06 n=16 losses=5 pnl=-41.43
+father-terminal-v1 H19 n=17 losses=8 pnl=-40.86
+midas-carry-v1 H23 n=24 losses=10 pnl=-40.17
+edge-snipper H16 n=9 losses=5 pnl=-38.83
+apex-triad-v1 H18 n=36 losses=18 pnl=-38.26
+edge-sniper-v2 H13 n=14 losses=8 pnl=-35.57
+edge-snipper H05 n=10 losses=6 pnl=-30.6
+Edge Sniper V2 ┬À Near Default Loose H00 n=17 losses=7 pnl=-30.49
+edge-snipper H00 n=14 losses=5 pnl=-29.78
+edge-snipper H01 n=12 losses=7 pnl=-29.72
+apex-triad-v1 H07 n=51 losses=21 pnl=-28.33
+
+=== WORST TRADES Jun1-6 ===
+2026-06-05T19:00:00.000Z momentum-edge-v1 UP cross_inversion pnl=-946.1305800000002 | {"eventId":"0x6bad2e962abd8843bd19f5e1d2e3fb0496b93b670d1af4763282dbf38f7080a3","positionType":"UP","entryTime":"2026-06-05T19:00:06.377Z","entryDistanceToPtb":17.898380769998766,"entryTimeRemaining":293.623,"quantity":988,"cost":719.5221000000001,"avgEntryPrice":0.7282612348178139,"priceToBeat":nul
+2026-06-05T11:10:00.000Z momentum-edge-v1 UP deterioration_inversion pnl=-812.50418 | {"eventId":"0x73455491c423401757fbcdf8ed53f2d0194730d1fae58ee3abb7e1466f78944b","positionType":"UP","entryTime":"2026-06-05T11:10:10.365Z","entryDistanceToPtb":39.820043069994426,"entryTimeRemaining":289.635,"quantity":1052,"cost":641.7093,"avgEntryPrice":0.6099898288973384,"priceToBeat":null,"expir
+2026-06-05T09:10:00.000Z momentum-edge-v1 DOWN cross_inversion pnl=-633.21644 | {"eventId":"0x0c4f66b1bace32eabad82ebf6b13790f641cbf21f9b24f76eb4a03f68a5601e2","positionType":"DOWN","entryTime":"2026-06-05T09:10:05.861Z","entryDistanceToPtb":14.296696119999979,"entryTimeRemaining":294.139,"quantity":986,"cost":757.9726,"avgEntryPrice":0.768734888438134,"priceToBeat":null,"expir
+2026-06-05T21:05:00.000Z momentum-edge-v1 UP deterioration_inversion pnl=-605.20926 | {"eventId":"0x82291396b335c22ab23c148bd95223bb63cbbb5b15a3ff347c1657a1edba0555","positionType":"UP","entryTime":"2026-06-05T21:05:08.873Z","entryDistanceToPtb":28.331999329995597,"entryTimeRemaining":291.127,"quantity":600,"cost":390.61469999999997,"avgEntryPrice":0.6510245,"priceToBeat":null,"expir
+2026-06-05T11:50:00.000Z momentum-edge-v1 DOWN cross_inversion pnl=-590.4615099999999 | {"eventId":"0x08cbab9cd1f2514c57405b6a02a3432896d3df41f01a795c003c499f39e8b8ca","positionType":"DOWN","entryTime":"2026-06-05T11:50:14.368Z","entryDistanceToPtb":20.99552466000023,"entryTimeRemaining":285.632,"quantity":1114,"cost":748.2249,"avgEntryPrice":0.6716561041292639,"priceToBeat":null,"expi
+2026-06-05T11:55:00.000Z momentum-edge-v1 DOWN deterioration_inversion pnl=-574.67451 | {"eventId":"0x3a642d855643234adb4cfdc50becc477fd84c9c12751af76cf2a7d72a8fca282","positionType":"DOWN","entryTime":"2026-06-05T11:55:16.868Z","entryDistanceToPtb":17.120078459993238,"entryTimeRemaining":283.132,"quantity":912,"cost":692.3098,"avgEntryPrice":0.7591116228070175,"priceToBeat":null,"expi
+2026-06-05T19:50:00.000Z momentum-edge-v1 DOWN cross_inversion pnl=-569.56572 | {"eventId":"0xf1aa7da3ddbfd4256fb8ed5244808099591480c85f3ce11bf1d1e87451eaf879","positionType":"DOWN","entryTime":"2026-06-05T19:50:04.875Z","entryDistanceToPtb":15.862971739996283,"entryTimeRemaining":295.125,"quantity":560,"cost":439.23660000000007,"avgEntryPrice":0.7843510714285715,"priceToBeat":
+2026-06-05T13:00:00.000Z momentum-edge-v1 DOWN cross_inversion pnl=-538.7277099999999 | {"eventId":"0xc23161de5e645d78656f1dd3a4bc255eb57e3b214aa437f07b03daea5ab8a241","positionType":"DOWN","entryTime":"2026-06-05T13:00:05.870Z","entryDistanceToPtb":23.913790319995314,"entryTimeRemaining":294.13,"quantity":912,"cost":592.8624,"avgEntryPrice":0.6500684210526315,"priceToBeat":null,"expir
+2026-06-05T17:20:00.000Z momentum-edge-v1 UP cross_inversion pnl=-530.36108 | {"eventId":"0x27d0b54c9eedf995ee2f3f082ebf0f1b9b919572dc78609549450176fdf62885","positionType":"UP","entryTime":"2026-06-05T17:20:03.875Z","entryDistanceToPtb":14.170648459999938,"entryTimeRemaining":296.125,"quantity":556,"cost":417,"avgEntryPrice":0.75,"priceToBeat":null,"expirationResult":"LOSS",
+2026-06-05T07:55:00.000Z momentum-edge-v1 DOWN cross_inversion pnl=-528.51827 | {"eventId":"0x9a52c32d6f9e9818cda7a30a915f9b2631e1db863f5e372dbfdbe85f39c79834","positionType":"DOWN","entryTime":"2026-06-05T07:55:03.360Z","entryDistanceToPtb":14.403745620002155,"entryTimeRemaining":296.64,"quantity":928.0000000000001,"cost":693.4369,"avgEntryPrice":0.7472380387931034,"priceToBea
+2026-06-05T07:50:00.000Z momentum-edge-v1 DOWN cross_inversion pnl=-526.3000599999999 | {"eventId":"0x40fb015d93e589a5c89eb83a32dd5658c71b400ba1aa73fc7ea541925a9ae320","positionType":"DOWN","entryTime":"2026-06-05T07:50:12.860Z","entryDistanceToPtb":19.421751839996432,"entryTimeRemaining":287.14,"quantity":1260,"cost":775.2751999999999,"avgEntryPrice":0.6152977777777777,"priceToBeat":n
+2026-06-05T16:05:00.000Z momentum-edge-v1 UP cross_inversion pnl=-508.1077600000001 | {"eventId":"0x45de06f1199d4c83073f7fbde128e78cd91573eb15da7fb983b41cd5f17d1bf5","positionType":"UP","entryTime":"2026-06-05T16:05:04.370Z","entryDistanceToPtb":13.246023489999061,"entryTimeRemaining":295.63,"quantity":958.0000000000001,"cost":628.5424,"avgEntryPrice":0.6560985386221294,"priceToBeat"
+2026-06-05T14:50:00.000Z momentum-edge-v1 UP cross_inversion pnl=-507.12811 | {"eventId":"0x955e45efeb704d264c0cc01660ebdbf5420aea07f82162766ebdc37df761b2a2","positionType":"UP","entryTime":"2026-06-05T14:50:03.369Z","entryDistanceToPtb":17.063079359999392,"entryTimeRemaining":296.631,"quantity":758,"cost":577.1427,"avgEntryPrice":0.7614019788918206,"priceToBeat":null,"expira
+2026-06-05T11:20:00.000Z momentum-edge-v1 UP cross_inversion pnl=-492.6797700000001 | {"eventId":"0x55402e472629fea77a4921633b39148aab8ab9b2f94d01b34589f7706a545954","positionType":"UP","entryTime":"2026-06-05T11:20:10.366Z","entryDistanceToPtb":24.673894200001087,"entryTimeRemaining":289.634,"quantity":1088,"cost":685.4254000000001,"avgEntryPrice":0.629986580882353,"priceToBeat":nul
+2026-06-05T17:00:00.000Z momentum-edge-v1 DOWN deterioration_inversion pnl=-485.03232 | {"eventId":"0xe51c1cd1e79e553bdeaa7d7983935dca5407565edfa418a594c982421ca75a1c","positionType":"DOWN","entryTime":"2026-06-05T17:00:04.875Z","entryDistanceToPtb":22.428689979999035,"entryTimeRemaining":295.125,"quantity":688,"cost":550.4,"avgEntryPrice":0.7999999999999999,"priceToBeat":null,"expirat
+2026-06-05T15:45:00.000Z momentum-edge-v1 DOWN cross_inversion pnl=-474.30598 | {"eventId":"0x2f474c2a0a08f0d2e95c95bdb63e77c1dab84db628c54a800bf2190130d7db47","positionType":"DOWN","entryTime":"2026-06-05T15:45:03.372Z","entryDistanceToPtb":18.05049135000445,"entryTimeRemaining":296.628,"quantity":1000,"cost":617.5794,"avgEntryPrice":0.6175794,"priceToBeat":null,"expirationRes
+2026-06-05T09:20:00.000Z momentum-edge-v1 DOWN cross_inversion pnl=-433.17069000000004 | {"eventId":"0x749561a95a55e6ccab72cb3283a4f2af052a3f06352d237a80d5100600f1d9e7","positionType":"DOWN","entryTime":"2026-06-05T09:20:05.860Z","entryDistanceToPtb":14.32459631999518,"entryTimeRemaining":294.14,"quantity":876,"cost":568.1401000000001,"avgEntryPrice":0.6485617579908677,"priceToBeat":nul
+2026-06-05T08:10:00.000Z momentum-edge-v1 DOWN cross_inversion pnl=-406.09036 | {"eventId":"0x91129bf1a20fe66b118d36dd8542e032768c695542fd3af48745ce3e2833f309","positionType":"DOWN","entryTime":"2026-06-05T08:10:08.360Z","entryDistanceToPtb":26.760146339998755,"entryTimeRemaining":291.64,"quantity":750,"cost":424.2989,"avgEntryPrice":0.5657318666666666,"priceToBeat":null,"expir
+2026-06-05T13:10:00.000Z momentum-edge-v1 DOWN cross_inversion pnl=-388.89411000000007 | {"eventId":"0xe8dfc4214346552b1507e7173701b01a61791d903783def38d5b1614ab50129c","positionType":"DOWN","entryTime":"2026-06-05T13:10:10.870Z","entryDistanceToPtb":14.384723859999212,"entryTimeRemaining":289.13,"quantity":836,"cost":520.1646000000001,"avgEntryPrice":0.6222064593301436,"priceToBeat":nu
+2026-06-05T16:10:00.000Z momentum-edge-v1 UP cross_inversion pnl=-376.4783799999999 | {"eventId":"0xe185564af2f8498e89dd3012f28d77e23e8db1afa7240ed8497c9fccb3d1bcd0","positionType":"UP","entryTime":"2026-06-05T16:10:17.872Z","entryDistanceToPtb":18.43384161999711,"entryTimeRemaining":282.128,"quantity":900,"cost":533.6474,"avgEntryPrice":0.5929415555555555,"priceToBeat":null,"expirat
+2026-06-05T13:35:00.000Z momentum-edge-v1 UP cross_inversion pnl=-366.2155399999999 | {"eventId":"0xd52de39016992ef1e555e57d45c1e151bf3862ab4d61c6da34eeaac0b35503e6","positionType":"UP","entryTime":"2026-06-05T13:35:04.872Z","entryDistanceToPtb":18.175944720002008,"entryTimeRemaining":295.128,"quantity":798,"cost":484.60400000000004,"avgEntryPrice":0.6072731829573935,"priceToBeat":nu
+2026-06-05T15:30:00.000Z momentum-edge-v1 UP cross_inversion pnl=-345.36605000000014 | {"eventId":"0xf5d92b62fe6dbaab7694b924d22495456cbfc51a77084b9e64fc20f0e0ce05d7","positionType":"UP","entryTime":"2026-06-05T15:30:03.373Z","entryDistanceToPtb":29.99230258999887,"entryTimeRemaining":296.627,"quantity":800,"cost":440.00000000000006,"avgEntryPrice":0.55,"priceToBeat":null,"expirationR
+2026-06-05T14:00:00.000Z momentum-edge-v1 DOWN cross_inversion pnl=-332.76788999999997 | {"eventId":"0x3ba12e96443e221abbeebe140507f681248a43a3e866081debff218ce67d3563","positionType":"DOWN","entryTime":"2026-06-05T14:00:07.872Z","entryDistanceToPtb":39.937914269998146,"entryTimeRemaining":292.128,"quantity":704,"cost":407.90049999999997,"avgEntryPrice":0.5794041193181818,"priceToBeat":
+2026-06-05T16:15:00.000Z momentum-edge-v1 UP cross_inversion pnl=-330.85883 | {"eventId":"0xba20463d2d5a8d81dc0d23014bd50a43054fd7ea56ac07e2db7e9b393cfe8603","positionType":"UP","entryTime":"2026-06-05T16:15:04.871Z","entryDistanceToPtb":35.815024039999116,"entryTimeRemaining":295.129,"quantity":636,"cost":402.611,"avgEntryPrice":0.6330361635220125,"priceToBeat":null,"expirat
+2026-06-05T08:25:00.000Z momentum-edge-v1 DOWN cross_inversion pnl=-323.15165 | {"eventId":"0x63f0b884afebd9ef0979a7e2ad0f0fb56b4b03a39a4ba613d5e2c27236e2e581","positionType":"DOWN","entryTime":"2026-06-05T08:25:13.361Z","entryDistanceToPtb":14.06562574999407,"entryTimeRemaining":286.639,"quantity":640,"cost":386.4764,"avgEntryPrice":0.603869375,"priceToBeat":null,"expirationRe
+
+=== MIDAS RUNS ===
+#176 midas-carry-v1[validated] 2026-06-01ÔåÆ2026-07-02 pnl=2990.1833999999885
+#175 midas-carry-v1[validated] 2026-07-01ÔåÆ2026-07-19 pnl=1581.0692599999966
+#174 midas-carry-v1[validated] 2026-07-17ÔåÆ2026-07-19 pnl=236.81789999999992
+#173 midas-carry-v1[validated] 2026-07-16ÔåÆ2026-07-18 pnl=229.15526000000008
+#172 midas-carry-v1[validated] 2026-07-16ÔåÆ2026-07-18 pnl=210.78817999999998
+#168 midas-carry-v1[validated] 2026-07-17ÔåÆ2026-07-19 pnl=224.11575
+#167 midas-carry-v1[validated] 2026-07-01ÔåÆ2026-07-19 pnl=1460.0907899999956
+
+Wrote scratch/june-strategies.json

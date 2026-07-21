@@ -1,0 +1,162 @@
+{
+  "name": "robustness-mitigations-train",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-07-01",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 6,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "champion",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5
+        }
+      },
+      {
+        "id": "exit-only",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "lateFlipReverseEnabled": false
+        }
+      },
+      {
+        "id": "reverse-050",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "lateFlipReverseBudgetFactor": 0.5
+        }
+      },
+      {
+        "id": "reverse-ask-080",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "lateFlipReverseMaxAsk": 0.8
+        }
+      },
+      {
+        "id": "reverse-ask-085",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "lateFlipReverseMaxAsk": 0.85
+        }
+      },
+      {
+        "id": "hold-only",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "lateFlipExitEnabled": false,
+          "lateFlipReverseEnabled": false
+        }
+      },
+      {
+        "id": "dist-30",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 30,
+          "tierAskBudgetFactor": 1.5
+        }
+      },
+      {
+        "id": "dist-20",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 20,
+          "tierAskBudgetFactor": 1.5
+        }
+      },
+      {
+        "id": "no-tier",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.0
+        }
+      },
+      {
+        "id": "minask-065",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "minAsk": 0.65
+        }
+      },
+      {
+        "id": "velocity-5",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "maxAdverseSpotChange": 5.0
+        }
+      },
+      {
+        "id": "combo-exit-dist30",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 30,
+          "tierAskBudgetFactor": 1.5,
+          "lateFlipReverseEnabled": false
+        }
+      },
+      {
+        "id": "combo-exit-notier",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.0,
+          "lateFlipReverseEnabled": false
+        }
+      },
+      {
+        "id": "combo-robust",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 30,
+          "tierAskBudgetFactor": 1.0,
+          "lateFlipReverseEnabled": false
+        }
+      },
+      {
+        "id": "combo-r050-dist30",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 30,
+          "tierAskBudgetFactor": 1.5,
+          "lateFlipReverseBudgetFactor": 0.5
+        }
+      },
+      {
+        "id": "combo-ask080-dist30",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 30,
+          "tierAskBudgetFactor": 1.5,
+          "lateFlipReverseMaxAsk": 0.8
+        }
+      }
+    ]
+  }
+}

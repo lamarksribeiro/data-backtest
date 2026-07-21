@@ -1,0 +1,118 @@
+{
+  "name": "robustness-mitigations-june-stress",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-06-01",
+  "to": "2026-06-07",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 6,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "champion",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5
+        }
+      },
+      {
+        "id": "exit-only",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "lateFlipReverseEnabled": false
+        }
+      },
+      {
+        "id": "reverse-050",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "lateFlipReverseBudgetFactor": 0.5
+        }
+      },
+      {
+        "id": "reverse-ask-080",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "lateFlipReverseMaxAsk": 0.8
+        }
+      },
+      {
+        "id": "hold-only",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "lateFlipExitEnabled": false,
+          "lateFlipReverseEnabled": false
+        }
+      },
+      {
+        "id": "dist-30",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 30,
+          "tierAskBudgetFactor": 1.5
+        }
+      },
+      {
+        "id": "no-tier",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.0
+        }
+      },
+      {
+        "id": "combo-exit-dist30",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 30,
+          "tierAskBudgetFactor": 1.5,
+          "lateFlipReverseEnabled": false
+        }
+      },
+      {
+        "id": "combo-robust",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 30,
+          "tierAskBudgetFactor": 1.0,
+          "lateFlipReverseEnabled": false
+        }
+      },
+      {
+        "id": "combo-r050-dist30",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 30,
+          "tierAskBudgetFactor": 1.5,
+          "lateFlipReverseBudgetFactor": 0.5
+        }
+      },
+      {
+        "id": "combo-ask080-dist30",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 30,
+          "tierAskBudgetFactor": 1.5,
+          "lateFlipReverseMaxAsk": 0.8
+        }
+      }
+    ]
+  }
+}

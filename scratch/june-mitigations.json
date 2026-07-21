@@ -1,0 +1,55 @@
+{
+  "withReverse": {
+    "n": 68,
+    "pnl": -356.12768,
+    "wins": 15,
+    "losses": 53
+  },
+  "withoutReverse": {
+    "n": 404,
+    "pnl": 702.0302200000002,
+    "wins": 357,
+    "losses": 47
+  },
+  "reverseThenWrong": {
+    "n": 40,
+    "pnl": -249.83394000000004
+  },
+  "bands": {
+    "marginal_ask_lt70_dist_lt15": {
+      "n": 113,
+      "wins": 83,
+      "losses": 30,
+      "wr": 73.5,
+      "pnl": 216.87
+    },
+    "solid_ask_ge75_dist_ge15": {
+      "n": 206,
+      "wins": 176,
+      "losses": 30,
+      "wr": 85.4,
+      "pnl": 29.53
+    },
+    "midas_extension_dist_gt20": {
+      "n": 209,
+      "wins": 174,
+      "losses": 35,
+      "wr": 83.3,
+      "pnl": 24.62
+    },
+    "midas_tier_ask_ge82": {
+      "n": 178,
+      "wins": 157,
+      "losses": 21,
+      "wr": 88.2,
+      "pnl": 32.9
+    },
+    "core_tfc_like": {
+      "n": 231,
+      "wins": 168,
+      "losses": 63,
+      "wr": 72.7,
+      "pnl": 275.35
+    }
+  }
+}

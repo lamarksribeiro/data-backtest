@@ -68,6 +68,8 @@ strategy "MIDAS Carry V1" {
   param lateFlipReverseEnabled = true
   param lateFlipReverseMaxAsk = 0.95
   param lateFlipReverseMinAsk = 0.0
+  // Fraction of entry budget used when reversing (1.0 = full size; 0.5 = half)
+  param lateFlipReverseBudgetFactor = 1.0
 
   // Danger exit: modo V7 (piso) e modo contínuo z-based
   param dangerExitEnabled = true
@@ -181,6 +183,7 @@ strategy "MIDAS Carry V1" {
             if (state.entryBudgetUsed > 0) {
               state.reverseBudget = state.entryBudgetUsed
             }
+            state.reverseBudget = state.reverseBudget * params.lateFlipReverseBudgetFactor
             let flipped = reverse(oppSide, { price: oppAsk, exitPrice: bid, budget: state.reverseBudget, tick: tick, ignoreConsumed: true, reason: "late_flip_reverse" })
             if (flipped) {
               state.reversed = true

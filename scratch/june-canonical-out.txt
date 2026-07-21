@@ -1,0 +1,280 @@
+tfc-reversal-pro runs: [
+  [Object: null prototype] {
+    id: 179,
+    from_ts: '2026-07-01T00:00:00.000Z',
+    to_ts: '2026-07-19T00:00:00.000Z',
+    status: 'completed',
+    pnl: 1448.254179999997,
+    wr: 77.83050847457628,
+    entries: 1475
+  },
+  [Object: null prototype] {
+    id: 178,
+    from_ts: '2026-07-01T00:00:00.000Z',
+    to_ts: '2026-07-19T00:00:00.000Z',
+    status: 'completed',
+    pnl: 1308.7106899999985,
+    wr: 77.35593220338983,
+    entries: 1475
+  },
+  [Object: null prototype] {
+    id: 177,
+    from_ts: '2026-07-16T00:00:00.000Z',
+    to_ts: '2026-07-19T00:00:00.000Z',
+    status: 'completed',
+    pnl: 267.23556999999994,
+    wr: 79.03225806451613,
+    entries: 248
+  },
+  [Object: null prototype] {
+    id: 170,
+    from_ts: '2026-07-17T00:00:00.000Z',
+    to_ts: '2026-07-19T00:00:00.000Z',
+    status: 'completed',
+    pnl: 247.80351999999996,
+    wr: 79.88505747126436,
+    entries: 174
+  },
+  [Object: null prototype] {
+    id: 169,
+    from_ts: '2026-07-01T00:00:00.000Z',
+    to_ts: '2026-07-19T00:00:00.000Z',
+    status: 'completed',
+    pnl: 1448.254179999997,
+    wr: 77.83050847457628,
+    entries: 1475
+  }
+]
+canon midas-carry-v1 run=176 traces_in_window=1698
+canon apex-triad-v1 run=158 traces_in_window=1698
+canon tfc run=138 traces_in_window=1698
+canon tfc-reversal-pro run=179 traces_in_window=0
+
+=== DAILY CANONICAL ===
+2026-06-01 apex-triad-v1      pnl=  167.69 W/L=59/9 skip=220 wr=86.8% worst=-10.55 gl=-56.97
+2026-06-02 apex-triad-v1      pnl=  -56.19 W/L=26/22 skip=240 wr=54.2% worst=-15.09 gl=-142.64
+2026-06-03 apex-triad-v1      pnl=   56.83 W/L=43/14 skip=217 wr=75.4% worst=-14.52 gl=-93.77
+2026-06-04 apex-triad-v1      pnl=   57.86 W/L=43/17 skip=228 wr=71.7% worst=-9.69 gl=-94.41
+2026-06-05 apex-triad-v1      pnl=   76.28 W/L=55/24 skip=204 wr=69.6% worst=-9.68 gl=-73.1
+2026-06-06 apex-triad-v1      pnl=   58.15 W/L=50/17 skip=210 wr=74.6% worst=-14.66 gl=-100.83
+2026-06-01 midas-carry-v1     pnl=  179.17 W/L=88/11 skip=189 wr=88.9% worst=-20.15 gl=-105.84
+2026-06-02 midas-carry-v1     pnl=  -66.21 W/L=48/22 skip=218 wr=68.6% worst=-25.47 gl=-208.29
+2026-06-03 midas-carry-v1     pnl=    91.3 W/L=66/15 skip=193 wr=81.5% worst=-18.88 gl=-131.03
+2026-06-04 midas-carry-v1     pnl=   70.86 W/L=55/14 skip=219 wr=79.7% worst=-19.54 gl=-148.8
+2026-06-05 midas-carry-v1     pnl=    35.4 W/L=39/16 skip=228 wr=70.9% worst=-19.13 gl=-136.76
+2026-06-06 midas-carry-v1     pnl=   35.39 W/L=76/22 skip=179 wr=77.6% worst=-19.56 gl=-208.77
+2026-06-01 tfc                pnl=  180.91 W/L=57/8 skip=223 wr=87.7% worst=-9.62 gl=-61.79
+2026-06-02 tfc                pnl=  -19.23 W/L=27/16 skip=245 wr=62.8% worst=-9.92 gl=-138.67
+2026-06-03 tfc                pnl=   54.76 W/L=37/12 skip=225 wr=75.5% worst=-9.52 gl=-104.36
+2026-06-04 tfc                pnl=   66.42 W/L=34/13 skip=241 wr=72.3% worst=-13.88 gl=-115.68
+2026-06-05 tfc                pnl=   21.71 W/L=28/13 skip=242 wr=68.3% worst=-9.72 gl=-98.15
+2026-06-06 tfc                pnl=   49.27 W/L=41/15 skip=221 wr=73.2% worst=-9.66 gl=-119.73
+
+=== WINDOW TOTALS ===
+[
+  [Object: null prototype] {
+    slug: 'midas-carry-v1',
+    pnl: 345.9,
+    wins: 372,
+    losses: 100,
+    entries: 472,
+    worst: -25.47
+  },
+  [Object: null prototype] {
+    slug: 'tfc',
+    pnl: 353.84,
+    wins: 224,
+    losses: 77,
+    entries: 301,
+    worst: -13.88
+  },
+  [Object: null prototype] {
+    slug: 'apex-triad-v1',
+    pnl: 360.61,
+    wins: 276,
+    losses: 103,
+    entries: 379,
+    worst: -15.09
+  }
+]
+
+=== LOSS REASONS ===
+apex-triad-v1 | expiry_loss | n=34 pnl=-309.93 avg=-9.116
+apex-triad-v1 | expiry_win | n=35 pnl=-186.3 avg=-5.323
+apex-triad-v1 | closed | n=34 pnl=-65.5 avg=-1.926
+midas-carry-v1 | expiry_loss | n=52 pnl=-631 avg=-12.135
+midas-carry-v1 | expiry_win | n=40 pnl=-249.83 avg=-6.246
+midas-carry-v1 | closed | n=8 pnl=-58.65 avg=-7.331
+tfc | expiry_loss | n=54 pnl=-493.57 avg=-9.14
+tfc | expiry_win | n=23 pnl=-144.81 avg=-6.296
+
+=== WORST HOUR POCKETS (pnl<-15) ===
+2026-06-05 H23 midas-carry-v1 n=4 L=3 pnl=-27.44
+2026-06-02 H06 midas-carry-v1 n=3 L=2 pnl=-26.47
+2026-06-06 H17 midas-carry-v1 n=4 L=3 pnl=-25.18
+2026-06-04 H22 midas-carry-v1 n=6 L=2 pnl=-23.56
+2026-06-02 H18 midas-carry-v1 n=4 L=3 pnl=-23.18
+2026-06-05 H17 midas-carry-v1 n=6 L=3 pnl=-21.17
+2026-06-03 H07 midas-carry-v1 n=4 L=2 pnl=-20.88
+2026-06-06 H19 midas-carry-v1 n=6 L=3 pnl=-19.51
+2026-06-03 H19 tfc n=2 L=2 pnl=-17.44
+2026-06-02 H18 tfc n=2 L=2 pnl=-17.38
+2026-06-02 H07 tfc n=3 L=2 pnl=-16.28
+2026-06-05 H23 tfc n=3 L=2 pnl=-16.22
+2026-06-06 H08 tfc n=2 L=2 pnl=-16.21
+2026-06-06 H17 tfc n=3 L=2 pnl=-15.4
+2026-06-06 H07 tfc n=3 L=2 pnl=-15.21
+
+=== EVENTS LOSING ON 2+ APPROVED STRATS ===
+2026-06-02T08:30:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-41.2
+2026-06-02T06:30:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-39.35
+2026-06-03T19:45:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-37.82
+2026-06-06T19:20:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-37.41
+2026-06-04T19:55:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-36.65
+2026-06-06T13:20:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-34.95
+2026-06-02T10:55:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-32.05
+2026-06-03T11:15:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-31.95
+2026-06-04T08:30:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-29.39
+2026-06-06T14:05:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-29.21
+2026-06-02T22:05:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-28.99
+2026-06-04T06:10:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-28.84
+2026-06-01T02:50:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-28.72
+2026-06-03T23:30:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-28.45
+2026-06-04T15:00:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-28.16
+2026-06-06T19:30:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-28.16
+2026-06-01T22:05:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-26.94
+2026-06-03T10:50:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-26.7
+2026-06-02T23:50:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-26.24
+2026-06-04T03:50:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-25.96
+2026-06-02T06:15:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-25.9
+2026-06-03T07:25:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-25.84
+2026-06-02T03:30:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-25.68
+2026-06-06T17:15:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-25.49
+2026-06-04T15:10:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-25.11
+2026-06-02T07:40:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-25.05
+2026-06-03T15:45:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-24.36
+2026-06-01T23:05:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-24.04
+2026-06-05T13:25:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-23.9
+2026-06-04T00:50:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-23.61
+2026-06-05T18:05:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-23.54
+2026-06-06T07:00:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-23.38
+2026-06-06T20:10:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-23.26
+2026-06-02T07:50:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-22.95
+2026-06-02T23:35:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-22.03
+2026-06-05T01:15:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-21.73
+2026-06-05T17:55:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-21.48
+2026-06-05T11:10:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-20.71
+2026-06-05T23:45:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-20.4
+2026-06-02T20:40:00.000Z n=3 [tfc,apex-triad-v1,midas-carry-v1] pnl=-20.21
+
+=== MIDAS WORST LOSSES DETAIL ===
+2026-06-02T06:30:00.000Z UP expiry_loss pnl=-25.47 {"eventId":"0x0a3144bace9111556855180aa73206cb0b36815a44f20f3202c7992700a3e0e0","positionType":"UP","entryTime":1780382070483,"entryDistanceToPtb":22.363112239996553,"entryTimeRemaining":30,"quantity":22,"cost":19.14,"av
+2026-06-01T06:30:00.000Z DOWN expiry_loss pnl=-20.15 {"eventId":"0x65388ef1cec969a7450f25759e24125d63070c57a21e5babda214b6f88aae364","positionType":"DOWN","entryTime":1780295672211,"entryDistanceToPtb":12.109589799991227,"entryTimeRemaining":28,"quantity":22,"cost":19.0686
+2026-06-06T06:45:00.000Z UP expiry_loss pnl=-19.56 {"eventId":"0xe43e1da64f2ead5f41a5b9e45dca0719662a581dcd1d79aba5fe94fe0045ef0b","positionType":"UP","entryTime":1780728571685,"entryDistanceToPtb":34.26736565000465,"entryTimeRemaining":28,"quantity":23,"cost":19.35,"avg
+2026-06-04T22:05:00.000Z UP expiry_loss pnl=-19.54 {"eventId":"0x7929b5075780e8db4c57d83ac6ba49420eb3bcce0c089e001ddea0e66c417469","positionType":"UP","entryTime":1780610970850,"entryDistanceToPtb":32.389589049998904,"entryTimeRemaining":29,"quantity":23,"cost":19.32,"av
+2026-06-06T10:25:00.000Z UP expiry_loss pnl=-19.44 {"eventId":"0x9fa263c384da1878dec32d0a9f65d9579cdcdda79546961bfa54a46ac932c276","positionType":"UP","entryTime":1780741773699,"entryDistanceToPtb":34.25252149000153,"entryTimeRemaining":26,"quantity":23,"cost":19.22,"avg
+2026-06-01T08:15:00.000Z DOWN expiry_loss pnl=-19.23 {"eventId":"0x976f121d211ff74417575e242b0e85fee5c6da1b390104ff9a47a6fe8fed9369","positionType":"DOWN","entryTime":1780301972710,"entryDistanceToPtb":24.22896822000621,"entryTimeRemaining":27,"quantity":21,"cost":19.11,"a
+2026-06-05T23:55:00.000Z DOWN expiry_loss pnl=-19.13 {"eventId":"0xd3e3e5bc013a41e8b57441abfcbfc437c25eb8b1a69bbc6aa35eae7528454e98","positionType":"DOWN","entryTime":1780703971519,"entryDistanceToPtb":37.79974999999831,"entryTimeRemaining":28,"quantity":22,"cost":19.57559
+2026-06-04T19:55:00.000Z UP expiry_loss pnl=-19.11 {"eventId":"0xceae3ec88a2c3ce768a17eca36b23e5494889a10faa6888f9c62a694f9c6c59f","positionType":"UP","entryTime":1780603171347,"entryDistanceToPtb":35.29499658999703,"entryTimeRemaining":29,"quantity":22,"cost":18.9199999
+2026-06-02T18:30:00.000Z UP expiry_loss pnl=-18.90 {"eventId":"0xd76b0bf96ce088e22829b1fc4ba41dcef93f10df438026d0e4c6d675a26e0803","positionType":"UP","entryTime":1780425271001,"entryDistanceToPtb":31.346312950001447,"entryTimeRemaining":29,"quantity":22,"cost":18.7,"avg
+2026-06-03T07:00:00.000Z DOWN expiry_loss pnl=-18.88 {"eventId":"0x78e888266121e4f8d0b088b8879ee106bc51d55ac26b135711aa1306f8973186","positionType":"DOWN","entryTime":1780470282032,"entryDistanceToPtb":31.952459100008127,"entryTimeRemaining":18,"quantity":20,"cost":18.8064
+2026-06-04T22:10:00.000Z UP expiry_loss pnl=-17.42 {"eventId":"0x3fdcd5075ea2dd7ea857024f7b8d64d627430f4161e39485f3b144b079d1d35c","positionType":"UP","entryTime":1780611272351,"entryDistanceToPtb":30.45228252999368,"entryTimeRemaining":28,"quantity":12,"cost":9.12000000
+2026-06-06T17:00:00.000Z UP expiry_win pnl=-16.88 {"eventId":"0xbd12e02809bfdb771ce6c3a98e97b6076c2c7fcd34ad3d9be68e52f49c545499","positionType":"UP","entryTime":1780765486258,"entryDistanceToPtb":30.517003859997203,"entryTimeRemaining":14,"quantity":21,"cost":19.53,"av
+2026-06-02T10:55:00.000Z UP expiry_loss pnl=-16.24 {"eventId":"0x34159b52ae3cd42f489ee5e03be8f00bb96f14adfefd21b430d7ca4c09cf5cde","positionType":"UP","entryTime":1780397970490,"entryDistanceToPtb":12.553864529996645,"entryTimeRemaining":30,"quantity":23,"cost":19.3326,"
+2026-06-02T08:30:00.000Z DOWN expiry_loss pnl=-16.19 {"eventId":"0xe2e205730562c1d931f7ca36c916e01ad95d1208955596201f7a771f86775ddc","positionType":"DOWN","entryTime":1780389278489,"entryDistanceToPtb":26.734078009991208,"entryTimeRemaining":22,"quantity":14,"cost":9.1,"av
+2026-06-02T17:50:00.000Z DOWN expiry_loss pnl=-15.85 {"eventId":"0xc91e63805a0ac89e170ff0a66ed47364f676e9148aca9127e30ea2ee221d6985","positionType":"DOWN","entryTime":1780422870498,"entryDistanceToPtb":23.479617569988477,"entryTimeRemaining":30,"quantity":21,"cost":19.11,"
+
+=== APEX JUN2 BY HOUR ===
+H07 n=3 L=2 pnl=-12.31 worst=-7.92
+H23 n=6 L=3 pnl=-12.21 worst=-9.87
+H01 n=1 L=1 pnl=-10.58 worst=-10.58
+H08 n=3 L=1 pnl=-10.56 worst=-15.09
+H22 n=1 L=1 pnl=-9.73 worst=-9.73
+H17 n=1 L=1 pnl=-9.72 worst=-9.72
+H18 n=2 L=2 pnl=-7.86 worst=-4.15
+H02 n=1 L=1 pnl=-6.7 worst=-6.7
+H20 n=1 L=1 pnl=-5.95 worst=-5.95
+H06 n=3 L=2 pnl=-5.46 worst=-8.25
+H10 n=3 L=1 pnl=-1.6 worst=-6.58
+H13 n=3 L=1 pnl=-1.07 worst=-3.24
+H15 n=2 L=1 pnl=-1.02 worst=-2.68
+H03 n=4 L=1 pnl=-0.45 worst=-8.19
+H19 n=1 L=0 pnl=4.13 worst=4.13
+H00 n=4 L=2 pnl=4.23 worst=-3.04
+H09 n=2 L=0 pnl=7.04 worst=3.46
+H05 n=1 L=0 pnl=7.14 worst=7.14
+H04 n=4 L=1 pnl=7.77 worst=-3.74
+H21 n=2 L=0 pnl=8.71 worst=2.27
+
+=== MIDAS FEATURE SAMPLE (first loss with marks) ===
+{
+  dt: '2026-06-01',
+  result: 'loss',
+  pnl: -9.61936,
+  reason: 'expiry_loss',
+  ask: null,
+  dist: null,
+  tau: null,
+  markTypes: [],
+  summaryKeys: [
+    'eventId',            'positionType',
+    'entryTime',          'entryDistanceToPtb',
+    'entryTimeRemaining', 'quantity',
+    'cost',               'avgEntryPrice',
+    'priceToBeat',        'expirationResult',
+    'winnerSide',         'expiryPnl',
+    'finalPnlBeforeFees', 'fees',
+    'closedAt',           'exits',
+    'profitOrders',       'reversals',
+    'diagnostics'
+  ]
+}
+markTypes histogram:
+{}
+summaryKeys sample: [
+  'eventId',            'positionType',
+  'entryTime',          'entryDistanceToPtb',
+  'entryTimeRemaining', 'quantity',
+  'cost',               'avgEntryPrice',
+  'priceToBeat',        'expirationResult',
+  'winnerSide',         'expiryPnl',
+  'finalPnlBeforeFees', 'fees',
+  'closedAt',           'exits',
+  'profitOrders',       'reversals',
+  'diagnostics'
+]
+
+=== MIDAS LOSSES BY DAY├ùREASON ===
+2026-06-01 expiry_loss n=7 pnl=-86.53
+2026-06-01 expiry_win n=4 pnl=-19.32
+2026-06-02 expiry_loss n=10 pnl=-142.42
+2026-06-02 expiry_win n=11 pnl=-55.93
+2026-06-02 closed n=1 pnl=-9.95
+2026-06-03 expiry_loss n=8 pnl=-88.94
+2026-06-03 expiry_win n=6 pnl=-40.57
+2026-06-03 closed n=1 pnl=-1.52
+2026-06-04 expiry_loss n=8 pnl=-93.29
+2026-06-04 expiry_win n=4 pnl=-30.86
+2026-06-04 closed n=2 pnl=-24.65
+2026-06-05 expiry_loss n=7 pnl=-78.25
+2026-06-05 expiry_win n=7 pnl=-42.48
+2026-06-05 closed n=2 pnl=-16.03
+2026-06-06 expiry_loss n=12 pnl=-141.58
+2026-06-06 expiry_win n=8 pnl=-60.68
+2026-06-06 closed n=2 pnl=-6.51
+
+=== TFC LOSSES BY DAY├ùREASON ===
+2026-06-01 expiry_loss n=6 pnl=-52.6
+2026-06-01 expiry_win n=2 pnl=-9.19
+2026-06-02 expiry_loss n=12 pnl=-112.42
+2026-06-02 expiry_win n=4 pnl=-26.25
+2026-06-03 expiry_loss n=10 pnl=-88.82
+2026-06-03 expiry_win n=2 pnl=-15.54
+2026-06-04 expiry_loss n=9 pnl=-87.65
+2026-06-04 expiry_win n=4 pnl=-28.03
+2026-06-05 expiry_loss n=7 pnl=-62.53
+2026-06-05 expiry_win n=6 pnl=-35.62
+2026-06-06 expiry_loss n=10 pnl=-89.55
+2026-06-06 expiry_win n=5 pnl=-30.18
+
+Wrote scratch/june1-6-analysis.json

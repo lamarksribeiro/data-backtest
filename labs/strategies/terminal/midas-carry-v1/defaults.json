@@ -47,6 +47,7 @@
   "lateFlipReverseEnabled": true,
   "lateFlipReverseMaxAsk": 0.95,
   "lateFlipReverseMinAsk": 0.0,
+  "lateFlipReverseBudgetFactor": 1.0,
   "dangerExitEnabled": true,
   "dangerExitK": 0.3,
   "dangerExitFloorSec": 4,

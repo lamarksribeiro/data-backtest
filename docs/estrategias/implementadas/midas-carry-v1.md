@@ -13,30 +13,37 @@ O núcleo de execução é idêntico à TFC V7 Danger Floor (late flip reverse 8
 
 ## Parâmetros que mudam vs TFC V7
 
-| Parâmetro | TFC V7 | MIDAS champion | MIDAS aggressive |
-|---|---|---|---|
-| `maxAsk` | 0.82 | **0.94** | 0.94 |
-| `maxDistAbs` | 20 | **40** | 40 |
-| `tierAskThreshold` | — | **0.82** | 0.82 |
-| `tierAskBudgetFactor` | — | **1.5** | 2.0 |
+| Parâmetro | TFC V7 | MIDAS champion (v1) | MIDAS aggressive (v2) | MIDAS robust (v3) |
+|---|---|---|---|---|
+| `maxAsk` | 0.82 | **0.94** | 0.94 | 0.94 |
+| `maxDistAbs` | 20 | **40** | 40 | **30** |
+| `tierAskThreshold` | — | **0.82** | 0.82 | 0.82 |
+| `tierAskBudgetFactor` | — | **1.5** | **2.0** | **1.5** |
 
-Budget base US$ 10; entradas com ask ≥ 0,82 usam 15 (champion) ou 20 (aggressive).
+Budget base US$ 10; entradas com ask ≥ 0,82 usam 15 (champion/robust) ou 20 (aggressive).
 
 ## Resultados (GLS compiled-soa, book depth 25, fees honestas)
 
-Treino 2026-05-04 → 2026-07-01 (58 dias) e holdout 2026-07-01 → 2026-07-13 (13 dias **nunca usados na seleção** de nenhum parâmetro, incluindo os herdados da TFC V7 que foi tunada até 05/jul):
+Treino 2026-05-04 → 2026-07-01 e holdout de referência (champion/aggressive: 01–13/07; robust: 01–18/07 no lab de robustez):
 
-| Métrica | TFC V7 | MIDAS champion (1.5x) | MIDAS aggressive (2x) |
-|---|---|---|---|
-| Treino PnL | US$ 4.086 | **US$ 5.099 (+25%)** | US$ 5.557 (+36%) |
-| Treino entradas / WR | 3.580 / 74,8% | 5.646 / 80,5% | 5.638 / 80,5% |
-| Treino PF / DD | 1,58 / US$ 80 | 1,53 / US$ 98 | 1,54 / US$ 105 |
-| Holdout PnL | US$ 709 | **US$ 919 (+30%)** | US$ 1.010 (+42%) |
-| Holdout WR / PF | 74,1% / 1,42 | 80,3% / 1,41 | 80,4% / 1,41 |
-| Holdout DD | US$ 60 | US$ 75 | US$ 96 |
-| Holdout PnL/DD | 11,9 | **12,3** | 10,5 |
+| Métrica | TFC V7 | Champion (v1) | Aggressive (v2) | Robust (v3) |
+|---|---|---|---|---|
+| Treino PnL | US$ 4.086 | **US$ 5.099** | US$ 5.557 | US$ 4.969 |
+| Treino PF / DD | 1,58 / US$ 80 | 1,53 / US$ 98 | 1,54 / US$ 105 | **1,55 / US$ 81** |
+| Holdout PnL | US$ 709* | US$ 919* | US$ 1.010* | US$ 1.397† |
+| Holdout DD | US$ 60* | US$ 75* | US$ 96* | **US$ 68†** |
 
-Dias positivos no holdout (variante 2x+minZ auditada em detalhe): 12/13. Delta diário do tier bem distribuído (top-3 dias = 17% do delta — sem concentração de regime).
+\* holdout 01–13/07 (doc original). † holdout 01–18/07 do lab `robustness-mitigations` (champion na mesma janela: PnL US$ 1.460 / DD US$ 75).
+
+### Robust (v3) vs Champion — lab de robustez 2026-07-21
+
+| Janela | ΔPnL | ΔDD | Leitura |
+|---|---:|---:|---|
+| Treino 59d | −2,6% | **−17%** | Pouco PnL a menos, DD bem menor |
+| Holdout 18d | −4,3% | **−9%** | Mesmo padrão |
+| Stress 01–07/06 | **+US$ 20** | ≈0 | Única variante acima do champion nessa semana |
+
+Exit-only / desligar reverse foi **rejeitado**: melhora o dia 02/06 mas custa −US$ 829 no treino (−US$ 221 no holdout).
 
 ### Robustez de vizinhança
 
@@ -73,6 +80,7 @@ Relatórios de calibração do cubo: `labs/sandbox/midas-calibration-report.md`,
 
 - Mesmas ressalvas da TFC V7: orçamento fixo por evento, sem modelo de latência de rede (diagnóstico V7 estimou ~−US$ 0,17/trade na janela tardia com 1s de latência), sem fila maker.
 - A banda high-ask depende da **qualidade do label de settlement** (comprar a 0,90 exige WR ≥ ~91%). O cubo com `mkt_agree` confirma WR 92,1% no bolsão; em produção, monitorar divergência Chainlink vs book nos primeiros dias.
-- DD absoluto cresce com o tier (exposição até 1,5–2× por evento). Para banca de US$ 100, preferir o preset champion (1,5x).
+- DD absoluto cresce com o tier (exposição até 1,5–2× por evento). Para banca de US$ 100, preferir champion (v1) ou robust (v3); aggressive (v2) só com banca folgada.
+- Robust (v3, `maxDistAbs=30`) é a melhor candidata risco/retorno do lab de mitigations 2026-07-21 — não desligar late flip reverse.
 - Não autorizada para conta real — seguir gates do dossiê `avaliacao-integrada-conta-real-2026-07-10.md` (paper trading primeiro).
 - Extensão natural: rodar o mesmo preset em ETH/SOL 5m (dados já no lake) para diversificação de DD.

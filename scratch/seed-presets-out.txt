@@ -1,0 +1,145 @@
+
+> data-backtest@0.1.0 lab:seed-presets
+> node labs/cli/seed-presets.js
+
+[seed] apex-triad-v1 v1 (btc-candidate-v1) js sincronizada.
+[seed] apex-triad-v2 v1 (btc-candidate-v2) js sincronizada.
+[seed] book-frontrunner v1 (btc-champion) js sincronizada.
+[seed] edge-snipper v1 (btc-obi) js sincronizada.
+[seed] edge-snipper v2 (eth-obi) js sincronizada.
+[seed] edge-snipper v3 (sol-obi) js sincronizada.
+[seed] gamma-ladder v1 (btc-v1) js sincronizada.
+[seed] gamma-ladder v2 (btc-v2) js sincronizada.
+[seed] gamma-ladder v3 (btc-qem-hybrid-champion) js sincronizada.
+[seed] lim-prime-v1 v1 (btc-v1) js sincronizada.
+[seed] midas-carry-v1 v1 (btc-champion-v1) js sincronizada.
+[seed] midas-carry-v1 v2 (btc-aggressive-v1) js sincronizada.
+[seed] midas-carry-v1 v3 (btc-robust-v1) js semeada.
+[seed] quantum-entropic-manifold v1 (btc-qem-june-champion) js sincronizada.
+[seed] tfc v1 (btc-champion-v1) js sincronizada.
+[seed] tfc v2 (btc-champion-v2) js sincronizada.
+[seed] tfc v3 (btc-champion-v3) js sincronizada.
+[seed] tfc v4 (btc-champion-v4) js sincronizada.
+[seed] tfc v5 (btc-champion-v5) js sincronizada.
+[seed] tfc v6 (btc-champion-v5-practical) js sincronizada.
+[seed] tfc v7 (btc-champion-v6-hybrid) js sincronizada.
+[seed] tfc v8 (btc-champion-v7) js sincronizada.
+[seed] tfc-reversal-pro v1 (btc-ult-flip3-champion) js sincronizada.
+[seed] tfc-reversal-pro v2 (btc-wide4-1-production) js sincronizada.
+[seed] vsmr v1 (v1) js sincronizada.
+[seed] whipsaw-lock v1 (btc-champion) js sincronizada.
+{
+  "ok": true,
+  "promoted": [
+    {
+      "id": "apex-triad-v1",
+      "slug": "apex-triad-v1"
+    },
+    {
+      "id": "apex-triad-v2",
+      "slug": "apex-triad-v2"
+    },
+    {
+      "id": "book-frontrunner",
+      "slug": "book-frontrunner"
+    },
+    {
+      "id": "edge-snipper",
+      "slug": "edge-snipper"
+    },
+    {
+      "id": "gamma-ladder",
+      "slug": "gamma-ladder"
+    },
+    {
+      "id": "lim-prime-v1",
+      "slug": "lim-prime-v1"
+    },
+    {
+      "id": "midas-carry-v1",
+      "slug": "midas-carry-v1"
+    },
+    {
+      "id": "quantum-entropic-manifold",
+      "slug": "quantum-entropic-manifold"
+    },
+    {
+      "id": "tfc",
+      "slug": "tfc"
+    },
+    {
+      "id": "tfc-reversal-pro-v1",
+      "slug": "tfc-reversal-pro"
+    },
+    {
+      "id": "vsmr",
+      "slug": "vsmr"
+    },
+    {
+      "id": "whipsaw-lock",
+      "slug": "whipsaw-lock"
+    }
+  ],
+  "seeded": [
+    {
+      "slug": "apex-triad-v1",
+      "strategyId": 54,
+      "skipped": null
+    },
+    {
+      "slug": "apex-triad-v2",
+      "strategyId": 56,
+      "skipped": null
+    },
+    {
+      "slug": "book-frontrunner",
+      "strategyId": 44,
+      "skipped": null
+    },
+    {
+      "slug": "edge-snipper",
+      "strategyId": 18,
+      "skipped": null
+    },
+    {
+      "slug": "gamma-ladder",
+      "strategyId": 42,
+      "skipped": null
+    },
+    {
+      "slug": "lim-prime-v1",
+      "strategyId": 47,
+      "skipped": null
+    },
+    {
+      "slug": "midas-carry-v1",
+      "strategyId": 57,
+      "skipped": null
+    },
+    {
+      "slug": "quantum-entropic-manifold",
+      "strategyId": 39,
+      "skipped": null
+    },
+    {
+      "slug": "tfc",
+      "strategyId": 50,
+      "skipped": null
+    },
+    {
+      "slug": "tfc-reversal-pro",
+      "strategyId": 58,
+      "skipped": null
+    },
+    {
+      "slug": "vsmr",
+      "strategyId": 19,
+      "skipped": null
+    },
+    {
+      "slug": "whipsaw-lock",
+      "strategyId": 45,
+      "skipped": null
+    }
+  ]
+}

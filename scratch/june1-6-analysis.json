@@ -1,0 +1,2681 @@
+{
+  "canon": {
+    "midas-carry-v1": 176,
+    "apex-triad-v1": 158,
+    "tfc": 138,
+    "tfc-reversal-pro": 179
+  },
+  "daily": [
+    {
+      "slug": "apex-triad-v1",
+      "run_id": 158,
+      "dt": "2026-06-01",
+      "events": 288,
+      "wins": 59,
+      "losses": 9,
+      "skips": 220,
+      "entries": 68,
+      "pnl": 167.69,
+      "avg_pnl": 2.466,
+      "worst": -10.55,
+      "gross_loss": -56.97,
+      "gross_win": 224.65
+    },
+    {
+      "slug": "apex-triad-v1",
+      "run_id": 158,
+      "dt": "2026-06-02",
+      "events": 288,
+      "wins": 26,
+      "losses": 22,
+      "skips": 240,
+      "entries": 48,
+      "pnl": -56.19,
+      "avg_pnl": -1.1706,
+      "worst": -15.09,
+      "gross_loss": -142.64,
+      "gross_win": 86.45
+    },
+    {
+      "slug": "apex-triad-v1",
+      "run_id": 158,
+      "dt": "2026-06-03",
+      "events": 274,
+      "wins": 43,
+      "losses": 14,
+      "skips": 217,
+      "entries": 57,
+      "pnl": 56.83,
+      "avg_pnl": 0.9969,
+      "worst": -14.52,
+      "gross_loss": -93.77,
+      "gross_win": 150.6
+    },
+    {
+      "slug": "apex-triad-v1",
+      "run_id": 158,
+      "dt": "2026-06-04",
+      "events": 288,
+      "wins": 43,
+      "losses": 17,
+      "skips": 228,
+      "entries": 60,
+      "pnl": 57.86,
+      "avg_pnl": 0.9644,
+      "worst": -9.69,
+      "gross_loss": -94.41,
+      "gross_win": 152.28
+    },
+    {
+      "slug": "apex-triad-v1",
+      "run_id": 158,
+      "dt": "2026-06-05",
+      "events": 283,
+      "wins": 55,
+      "losses": 24,
+      "skips": 204,
+      "entries": 79,
+      "pnl": 76.28,
+      "avg_pnl": 0.9656,
+      "worst": -9.68,
+      "gross_loss": -73.1,
+      "gross_win": 149.38
+    },
+    {
+      "slug": "apex-triad-v1",
+      "run_id": 158,
+      "dt": "2026-06-06",
+      "events": 277,
+      "wins": 50,
+      "losses": 17,
+      "skips": 210,
+      "entries": 67,
+      "pnl": 58.15,
+      "avg_pnl": 0.8679,
+      "worst": -14.66,
+      "gross_loss": -100.83,
+      "gross_win": 158.98
+    },
+    {
+      "slug": "midas-carry-v1",
+      "run_id": 176,
+      "dt": "2026-06-01",
+      "events": 288,
+      "wins": 88,
+      "losses": 11,
+      "skips": 189,
+      "entries": 99,
+      "pnl": 179.17,
+      "avg_pnl": 1.8098,
+      "worst": -20.15,
+      "gross_loss": -105.84,
+      "gross_win": 285.01
+    },
+    {
+      "slug": "midas-carry-v1",
+      "run_id": 176,
+      "dt": "2026-06-02",
+      "events": 288,
+      "wins": 48,
+      "losses": 22,
+      "skips": 218,
+      "entries": 70,
+      "pnl": -66.21,
+      "avg_pnl": -0.9459,
+      "worst": -25.47,
+      "gross_loss": -208.29,
+      "gross_win": 142.08
+    },
+    {
+      "slug": "midas-carry-v1",
+      "run_id": 176,
+      "dt": "2026-06-03",
+      "events": 274,
+      "wins": 66,
+      "losses": 15,
+      "skips": 193,
+      "entries": 81,
+      "pnl": 91.3,
+      "avg_pnl": 1.1271,
+      "worst": -18.88,
+      "gross_loss": -131.03,
+      "gross_win": 222.33
+    },
+    {
+      "slug": "midas-carry-v1",
+      "run_id": 176,
+      "dt": "2026-06-04",
+      "events": 288,
+      "wins": 55,
+      "losses": 14,
+      "skips": 219,
+      "entries": 69,
+      "pnl": 70.86,
+      "avg_pnl": 1.027,
+      "worst": -19.54,
+      "gross_loss": -148.8,
+      "gross_win": 219.66
+    },
+    {
+      "slug": "midas-carry-v1",
+      "run_id": 176,
+      "dt": "2026-06-05",
+      "events": 283,
+      "wins": 39,
+      "losses": 16,
+      "skips": 228,
+      "entries": 55,
+      "pnl": 35.4,
+      "avg_pnl": 0.6436,
+      "worst": -19.13,
+      "gross_loss": -136.76,
+      "gross_win": 172.16
+    },
+    {
+      "slug": "midas-carry-v1",
+      "run_id": 176,
+      "dt": "2026-06-06",
+      "events": 277,
+      "wins": 76,
+      "losses": 22,
+      "skips": 179,
+      "entries": 98,
+      "pnl": 35.39,
+      "avg_pnl": 0.3611,
+      "worst": -19.56,
+      "gross_loss": -208.77,
+      "gross_win": 244.15
+    },
+    {
+      "slug": "tfc",
+      "run_id": 138,
+      "dt": "2026-06-01",
+      "events": 288,
+      "wins": 57,
+      "losses": 8,
+      "skips": 223,
+      "entries": 65,
+      "pnl": 180.91,
+      "avg_pnl": 2.7833,
+      "worst": -9.62,
+      "gross_loss": -61.79,
+      "gross_win": 242.7
+    },
+    {
+      "slug": "tfc",
+      "run_id": 138,
+      "dt": "2026-06-02",
+      "events": 288,
+      "wins": 27,
+      "losses": 16,
+      "skips": 245,
+      "entries": 43,
+      "pnl": -19.23,
+      "avg_pnl": -0.4472,
+      "worst": -9.92,
+      "gross_loss": -138.67,
+      "gross_win": 119.44
+    },
+    {
+      "slug": "tfc",
+      "run_id": 138,
+      "dt": "2026-06-03",
+      "events": 274,
+      "wins": 37,
+      "losses": 12,
+      "skips": 225,
+      "entries": 49,
+      "pnl": 54.76,
+      "avg_pnl": 1.1176,
+      "worst": -9.52,
+      "gross_loss": -104.36,
+      "gross_win": 159.12
+    },
+    {
+      "slug": "tfc",
+      "run_id": 138,
+      "dt": "2026-06-04",
+      "events": 288,
+      "wins": 34,
+      "losses": 13,
+      "skips": 241,
+      "entries": 47,
+      "pnl": 66.42,
+      "avg_pnl": 1.4131,
+      "worst": -13.88,
+      "gross_loss": -115.68,
+      "gross_win": 182.1
+    },
+    {
+      "slug": "tfc",
+      "run_id": 138,
+      "dt": "2026-06-05",
+      "events": 283,
+      "wins": 28,
+      "losses": 13,
+      "skips": 242,
+      "entries": 41,
+      "pnl": 21.71,
+      "avg_pnl": 0.5295,
+      "worst": -9.72,
+      "gross_loss": -98.15,
+      "gross_win": 119.86
+    },
+    {
+      "slug": "tfc",
+      "run_id": 138,
+      "dt": "2026-06-06",
+      "events": 277,
+      "wins": 41,
+      "losses": 15,
+      "skips": 221,
+      "entries": 56,
+      "pnl": 49.27,
+      "avg_pnl": 0.8798,
+      "worst": -9.66,
+      "gross_loss": -119.73,
+      "gross_win": 168.99
+    }
+  ],
+  "totals": [
+    {
+      "slug": "midas-carry-v1",
+      "pnl": 345.9,
+      "wins": 372,
+      "losses": 100,
+      "entries": 472,
+      "worst": -25.47
+    },
+    {
+      "slug": "tfc",
+      "pnl": 353.84,
+      "wins": 224,
+      "losses": 77,
+      "entries": 301,
+      "worst": -13.88
+    },
+    {
+      "slug": "apex-triad-v1",
+      "pnl": 360.61,
+      "wins": 276,
+      "losses": 103,
+      "entries": 379,
+      "worst": -15.09
+    }
+  ],
+  "reasons": [
+    {
+      "slug": "apex-triad-v1",
+      "reason": "expiry_loss",
+      "n": 34,
+      "pnl": -309.93,
+      "avg": -9.116
+    },
+    {
+      "slug": "apex-triad-v1",
+      "reason": "expiry_win",
+      "n": 35,
+      "pnl": -186.3,
+      "avg": -5.323
+    },
+    {
+      "slug": "apex-triad-v1",
+      "reason": "closed",
+      "n": 34,
+      "pnl": -65.5,
+      "avg": -1.926
+    },
+    {
+      "slug": "midas-carry-v1",
+      "reason": "expiry_loss",
+      "n": 52,
+      "pnl": -631,
+      "avg": -12.135
+    },
+    {
+      "slug": "midas-carry-v1",
+      "reason": "expiry_win",
+      "n": 40,
+      "pnl": -249.83,
+      "avg": -6.246
+    },
+    {
+      "slug": "midas-carry-v1",
+      "reason": "closed",
+      "n": 8,
+      "pnl": -58.65,
+      "avg": -7.331
+    },
+    {
+      "slug": "tfc",
+      "reason": "expiry_loss",
+      "n": 54,
+      "pnl": -493.57,
+      "avg": -9.14
+    },
+    {
+      "slug": "tfc",
+      "reason": "expiry_win",
+      "n": 23,
+      "pnl": -144.81,
+      "avg": -6.296
+    }
+  ],
+  "hours": [
+    {
+      "slug": "midas-carry-v1",
+      "dt": "2026-06-05",
+      "hour_utc": 23,
+      "n": 4,
+      "losses": 3,
+      "pnl": -27.44
+    },
+    {
+      "slug": "midas-carry-v1",
+      "dt": "2026-06-02",
+      "hour_utc": 6,
+      "n": 3,
+      "losses": 2,
+      "pnl": -26.47
+    },
+    {
+      "slug": "midas-carry-v1",
+      "dt": "2026-06-06",
+      "hour_utc": 17,
+      "n": 4,
+      "losses": 3,
+      "pnl": -25.18
+    },
+    {
+      "slug": "midas-carry-v1",
+      "dt": "2026-06-04",
+      "hour_utc": 22,
+      "n": 6,
+      "losses": 2,
+      "pnl": -23.56
+    },
+    {
+      "slug": "midas-carry-v1",
+      "dt": "2026-06-02",
+      "hour_utc": 18,
+      "n": 4,
+      "losses": 3,
+      "pnl": -23.18
+    },
+    {
+      "slug": "midas-carry-v1",
+      "dt": "2026-06-05",
+      "hour_utc": 17,
+      "n": 6,
+      "losses": 3,
+      "pnl": -21.17
+    },
+    {
+      "slug": "midas-carry-v1",
+      "dt": "2026-06-03",
+      "hour_utc": 7,
+      "n": 4,
+      "losses": 2,
+      "pnl": -20.88
+    },
+    {
+      "slug": "midas-carry-v1",
+      "dt": "2026-06-06",
+      "hour_utc": 19,
+      "n": 6,
+      "losses": 3,
+      "pnl": -19.51
+    },
+    {
+      "slug": "tfc",
+      "dt": "2026-06-03",
+      "hour_utc": 19,
+      "n": 2,
+      "losses": 2,
+      "pnl": -17.44
+    },
+    {
+      "slug": "tfc",
+      "dt": "2026-06-02",
+      "hour_utc": 18,
+      "n": 2,
+      "losses": 2,
+      "pnl": -17.38
+    },
+    {
+      "slug": "tfc",
+      "dt": "2026-06-02",
+      "hour_utc": 7,
+      "n": 3,
+      "losses": 2,
+      "pnl": -16.28
+    },
+    {
+      "slug": "tfc",
+      "dt": "2026-06-05",
+      "hour_utc": 23,
+      "n": 3,
+      "losses": 2,
+      "pnl": -16.22
+    },
+    {
+      "slug": "tfc",
+      "dt": "2026-06-06",
+      "hour_utc": 8,
+      "n": 2,
+      "losses": 2,
+      "pnl": -16.21
+    },
+    {
+      "slug": "tfc",
+      "dt": "2026-06-06",
+      "hour_utc": 17,
+      "n": 3,
+      "losses": 2,
+      "pnl": -15.4
+    },
+    {
+      "slug": "tfc",
+      "dt": "2026-06-06",
+      "hour_utc": 7,
+      "n": 3,
+      "losses": 2,
+      "pnl": -15.21
+    }
+  ],
+  "multiLoss": [
+    {
+      "event_start": "2026-06-02T08:30:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -41.2
+    },
+    {
+      "event_start": "2026-06-02T06:30:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -39.35
+    },
+    {
+      "event_start": "2026-06-03T19:45:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -37.82
+    },
+    {
+      "event_start": "2026-06-06T19:20:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -37.41
+    },
+    {
+      "event_start": "2026-06-04T19:55:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -36.65
+    },
+    {
+      "event_start": "2026-06-06T13:20:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -34.95
+    },
+    {
+      "event_start": "2026-06-02T10:55:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -32.05
+    },
+    {
+      "event_start": "2026-06-03T11:15:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -31.95
+    },
+    {
+      "event_start": "2026-06-04T08:30:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -29.39
+    },
+    {
+      "event_start": "2026-06-06T14:05:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -29.21
+    },
+    {
+      "event_start": "2026-06-02T22:05:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -28.99
+    },
+    {
+      "event_start": "2026-06-04T06:10:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -28.84
+    },
+    {
+      "event_start": "2026-06-01T02:50:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -28.72
+    },
+    {
+      "event_start": "2026-06-03T23:30:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -28.45
+    },
+    {
+      "event_start": "2026-06-04T15:00:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -28.16
+    },
+    {
+      "event_start": "2026-06-06T19:30:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -28.16
+    },
+    {
+      "event_start": "2026-06-01T22:05:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -26.94
+    },
+    {
+      "event_start": "2026-06-03T10:50:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -26.7
+    },
+    {
+      "event_start": "2026-06-02T23:50:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -26.24
+    },
+    {
+      "event_start": "2026-06-04T03:50:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -25.96
+    },
+    {
+      "event_start": "2026-06-02T06:15:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -25.9
+    },
+    {
+      "event_start": "2026-06-03T07:25:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -25.84
+    },
+    {
+      "event_start": "2026-06-02T03:30:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -25.68
+    },
+    {
+      "event_start": "2026-06-06T17:15:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -25.49
+    },
+    {
+      "event_start": "2026-06-04T15:10:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -25.11
+    },
+    {
+      "event_start": "2026-06-02T07:40:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -25.05
+    },
+    {
+      "event_start": "2026-06-03T15:45:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -24.36
+    },
+    {
+      "event_start": "2026-06-01T23:05:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -24.04
+    },
+    {
+      "event_start": "2026-06-05T13:25:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -23.9
+    },
+    {
+      "event_start": "2026-06-04T00:50:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -23.61
+    },
+    {
+      "event_start": "2026-06-05T18:05:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -23.54
+    },
+    {
+      "event_start": "2026-06-06T07:00:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -23.38
+    },
+    {
+      "event_start": "2026-06-06T20:10:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -23.26
+    },
+    {
+      "event_start": "2026-06-02T07:50:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -22.95
+    },
+    {
+      "event_start": "2026-06-02T23:35:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -22.03
+    },
+    {
+      "event_start": "2026-06-05T01:15:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -21.73
+    },
+    {
+      "event_start": "2026-06-05T17:55:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -21.48
+    },
+    {
+      "event_start": "2026-06-05T11:10:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -20.71
+    },
+    {
+      "event_start": "2026-06-05T23:45:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -20.4
+    },
+    {
+      "event_start": "2026-06-02T20:40:00.000Z",
+      "n_strats": 3,
+      "strats": "tfc,apex-triad-v1,midas-carry-v1",
+      "total_pnl": -20.21
+    }
+  ],
+  "midasDetails": [
+    {
+      "event_start": "2026-06-02T06:30:00.000Z",
+      "side": "UP",
+      "reason": "expiry_loss",
+      "pnl": -25.47365,
+      "summary": {
+        "eventId": "0x0a3144bace9111556855180aa73206cb0b36815a44f20f3202c7992700a3e0e0",
+        "positionType": "UP",
+        "entryTime": 1780382070483,
+        "entryDistanceToPtb": 22.363112239996553,
+        "entryTimeRemaining": 30,
+        "quantity": 22,
+        "cost": 19.14,
+        "avgEntryPrice": 0.87,
+        "priceToBeat": 70264.56173126,
+        "expirationResult": "loss",
+        "winnerSide": "DOWN",
+        "expiryPnl": -19.84,
+        "finalPnlBeforeFees": -24.02,
+        "fees": {
+          "applied": true,
+          "model": "polymarket_taker",
+          "category": "crypto",
+          "currency": "USDC",
+          "feeRate": 0.07,
+          "totalFee": 1.45365,
+          "entryFee": 1.11855,
+          "exitFee": 0.3351,
+          "tradesCharged": 3,
+          "entryTradesCharged": 2,
+          "exitTradesCharged": 1,
+          "entryNotional": 38.980000000000004,
+          "exitNotional": 14.96,
+          "entryShares": 84,
+          "exitShares": 22,
+          "makerTradesFree": 0,
+          "makerNotional": 0,
+          "makerShares": 0,
+          "entries": [
+            {
+              "qty": 22,
+              "price": 0.87,
+              "side": "DOWN",
+              "source": "midas_core_entry",
+              "reason": null,
+              "time": 1780382070483,
+              "liquidity": "taker",
+              "fee": 0.17417
+            },
+            {
+              "qty": 62,
+              "price": 0.32,
+              "side": "UP",
+              "source": "late_flip_reverse",
+              "reason": null,
+              "time": 1780382092481,
+              "liquidity": "taker",
+              "fee": 0.94438
+            }
+          ],
+          "exits": [
+            {
+              "qty": 22,
+              "price": 0.68,
+              "side": "DOWN",
+              "source": "reverse_exit",
+              "reason": null,
+              "time": 1780382092481,
+              "liquidity": null,
+              "fee": 0.3351
+            }
+          ]
+        },
+        "closedAt": "2026-06-02T06:34:59.982Z",
+        "exits": [
+          {
+            "type": "exit",
+            "side": "DOWN",
+            "ts": 1780382092481,
+            "price": 0.68,
+            "shares": 22,
+            "notional": 14.96,
+            "avgPrice": 0.68,
+            "fills": [
+              {
+                "price": 0.68,
+                "qty": 22
+              }
+            ],
+            "pnl": -4.18,
+            "remainingShares": 0,
+            "closed": true,
+            "reason": "reverse_exit",
+            "liquidity": "taker"
+          }
+        ],
+        "profitOrders": [],
+        "reversals": [],
+        "diagnostics": null
+      },
+      "marks": [
+        {
+          "ts": "2026-06-02T06:34:30.483Z",
+          "name": "midas_entry",
+          "data": {
+            "mode": "core",
+            "side": "DOWN",
+            "ask": 0.87,
+            "dist": 22.363112239996553,
+            "z": 1.5244742121675308,
+            "budgetFactor": 2,
+            "secsLeft": 29.517
+          }
+        },
+        {
+          "ts": "2026-06-02T06:34:52.481Z",
+          "name": "reverse",
+          "data": {
+            "reason": "late_flip_reverse",
+            "from": "DOWN",
+            "to": "UP",
+            "ask": 0.32
+          }
+        }
+      ],
+      "metrics": {}
+    },
+    {
+      "event_start": "2026-06-01T06:30:00.000Z",
+      "side": "DOWN",
+      "reason": "expiry_loss",
+      "pnl": -20.15144,
+      "summary": {
+        "eventId": "0x65388ef1cec969a7450f25759e24125d63070c57a21e5babda214b6f88aae364",
+        "positionType": "DOWN",
+        "entryTime": 1780295672211,
+        "entryDistanceToPtb": 12.109589799991227,
+        "entryTimeRemaining": 28,
+        "quantity": 22,
+        "cost": 19.0686,
+        "avgEntryPrice": 0.86,
+        "priceToBeat": 73094.3585271,
+        "expirationResult": "loss",
+        "winnerSide": "UP",
+        "expiryPnl": -14.619,
+        "finalPnlBeforeFees": -18.9476,
+        "fees": {
+          "applied": true,
+          "model": "polymarket_taker",
+          "category": "crypto",
+          "currency": "USDC",
+          "feeRate": 0.07,
+          "totalFee": 1.20384,
+          "entryFee": 0.86335,
+          "exitFee": 0.34049,
+          "tradesCharged": 4,
+          "entryTradesCharged": 3,
+          "exitTradesCharged": 1,
+          "entryNotional": 33.6876,
+          "exitNotional": 14.74,
+          "entryShares": 66.3,
+          "exitShares": 22,
+          "makerTradesFree": 0,
+          "makerNotional": 0,
+          "makerShares": 0,
+          "entries": [
+            {
+              "qty": 14.57,
+              "price": 0.86,
+              "side": "UP",
+              "source": "midas_core_entry",
+              "reason": null,
+              "time": 1780295672211,
+              "liquidity": "taker",
+              "fee": 0.1228
+            },
+            {
+              "qty": 7.43,
+              "price": 0.88,
+              "side": "UP",
+              "source": "midas_core_entry",
+              "reason": null,
+              "time": 1780295672211,
+              "liquidity": "taker",
+              "fee": 0.05492
+            },
+            {
+              "qty": 44.3,
+              "price": 0.33,
+              "side": "DOWN",
+              "source": "late_flip_reverse",
+              "reason": null,
+              "time": 1780295692209,
+              "liquidity": "taker",
+              "fee": 0.68563
+            }
+          ],
+          "exits": [
+            {
+              "qty": 22,
+              "price": 0.67,
+              "side": "UP",
+              "source": "reverse_exit",
+              "reason": null,
+              "time": 1780295692209,
+              "liquidity": null,
+              "fee": 0.34049
+            }
+          ]
+        },
+        "closedAt": "2026-06-01T06:34:59.711Z",
+        "exits": [
+          {
+            "type": "exit",
+            "side": "UP",
+            "ts": 1780295692209,
+            "price": 0.67,
+            "shares": 22,
+            "notional": 14.74,
+            "avgPrice": 0.67,
+            "fills": [
+              {
+                "price": 0.67,
+                "qty": 22
+              }
+            ],
+            "pnl": -4.3286,
+            "remainingShares": 0,
+            "closed": true,
+            "reason": "reverse_exit",
+            "liquidity": "taker"
+          }
+        ],
+        "profitOrders": [],
+        "reversals": [],
+        "diagnostics": null
+      },
+      "marks": [
+        {
+          "ts": "2026-06-01T06:34:32.211Z",
+          "name": "midas_entry",
+          "data": {
+            "mode": "core",
+            "side": "UP",
+            "ask": 0.86,
+            "dist": 12.109589799991227,
+            "z": 1.191753535501343,
+            "budgetFactor": 2,
+            "secsLeft": 27.789
+          }
+        },
+        {
+          "ts": "2026-06-01T06:34:52.209Z",
+          "name": "reverse",
+          "data": {
+            "reason": "late_flip_reverse",
+            "from": "UP",
+            "to": "DOWN",
+            "ask": 0.33
+          }
+        }
+      ],
+      "metrics": {}
+    },
+    {
+      "event_start": "2026-06-06T06:45:00.000Z",
+      "side": "UP",
+      "reason": "expiry_loss",
+      "pnl": -19.56494,
+      "summary": {
+        "eventId": "0xe43e1da64f2ead5f41a5b9e45dca0719662a581dcd1d79aba5fe94fe0045ef0b",
+        "positionType": "UP",
+        "entryTime": 1780728571685,
+        "entryDistanceToPtb": 34.26736565000465,
+        "entryTimeRemaining": 28,
+        "quantity": 23,
+        "cost": 19.35,
+        "avgEntryPrice": 0.84,
+        "priceToBeat": 60784.30226,
+        "expirationResult": "loss",
+        "winnerSide": "DOWN",
+        "expiryPnl": -19.35,
+        "finalPnlBeforeFees": -19.35,
+        "fees": {
+          "applied": true,
+          "model": "polymarket_taker",
+          "category": "crypto",
+          "currency": "USDC",
+          "feeRate": 0.07,
+          "totalFee": 0.21494,
+          "entryFee": 0.21494,
+          "exitFee": 0,
+          "tradesCharged": 2,
+          "entryTradesCharged": 2,
+          "exitTradesCharged": 0,
+          "entryNotional": 19.35,
+          "exitNotional": 0,
+          "entryShares": 23,
+          "exitShares": 0,
+          "makerTradesFree": 0,
+          "makerNotional": 0,
+          "makerShares": 0,
+          "entries": [
+            {
+              "qty": 20,
+              "price": 0.84,
+              "side": "UP",
+              "source": "midas_core_entry",
+              "reason": null,
+              "time": 1780728571685,
+              "liquidity": "taker",
+              "fee": 0.18816
+            },
+            {
+              "qty": 3,
+              "price": 0.85,
+              "side": "UP",
+              "source": "midas_core_entry",
+              "reason": null,
+              "time": 1780728571685,
+              "liquidity": "taker",
+              "fee": 0.02678
+            }
+          ],
+          "exits": []
+        },
+        "closedAt": "2026-06-06T06:49:59.686Z",
+        "exits": [],
+        "profitOrders": [],
+        "reversals": [],
+        "diagnostics": null
+      },
+      "marks": [
+        {
+          "ts": "2026-06-06T06:49:31.685Z",
+          "name": "midas_entry",
+          "data": {
+            "mode": "core",
+            "side": "UP",
+            "ask": 0.84,
+            "dist": 34.26736565000465,
+            "z": 1.136744977419564,
+            "budgetFactor": 2,
+            "secsLeft": 28.315
+          }
+        }
+      ],
+      "metrics": {}
+    },
+    {
+      "event_start": "2026-06-04T22:05:00.000Z",
+      "side": "UP",
+      "reason": "expiry_loss",
+      "pnl": -19.53638,
+      "summary": {
+        "eventId": "0x7929b5075780e8db4c57d83ac6ba49420eb3bcce0c089e001ddea0e66c417469",
+        "positionType": "UP",
+        "entryTime": 1780610970850,
+        "entryDistanceToPtb": 32.389589049998904,
+        "entryTimeRemaining": 29,
+        "quantity": 23,
+        "cost": 19.32,
+        "avgEntryPrice": 0.84,
+        "priceToBeat": 63244.63510591,
+        "expirationResult": "loss",
+        "winnerSide": "DOWN",
+        "expiryPnl": -19.32,
+        "finalPnlBeforeFees": -19.32,
+        "fees": {
+          "applied": true,
+          "model": "polymarket_taker",
+          "category": "crypto",
+          "currency": "USDC",
+          "feeRate": 0.07,
+          "totalFee": 0.21638,
+          "entryFee": 0.21638,
+          "exitFee": 0,
+          "tradesCharged": 1,
+          "entryTradesCharged": 1,
+          "exitTradesCharged": 0,
+          "entryNotional": 19.32,
+          "exitNotional": 0,
+          "entryShares": 23,
+          "exitShares": 0,
+          "makerTradesFree": 0,
+          "makerNotional": 0,
+          "makerShares": 0,
+          "entries": [
+            {
+              "qty": 23,
+              "price": 0.84,
+              "side": "UP",
+              "source": "midas_core_entry",
+              "reason": null,
+              "time": 1780610970850,
+              "liquidity": "taker",
+              "fee": 0.21638
+            }
+          ],
+          "exits": []
+        },
+        "closedAt": "2026-06-04T22:09:59.851Z",
+        "exits": [],
+        "profitOrders": [],
+        "reversals": [],
+        "diagnostics": null
+      },
+      "marks": [
+        {
+          "ts": "2026-06-04T22:09:30.850Z",
+          "name": "midas_entry",
+          "data": {
+            "mode": "core",
+            "side": "UP",
+            "ask": 0.84,
+            "dist": 32.389589049998904,
+            "z": 0.7658424505831486,
+            "budgetFactor": 2,
+            "secsLeft": 29.15
+          }
+        }
+      ],
+      "metrics": {}
+    },
+    {
+      "event_start": "2026-06-06T10:25:00.000Z",
+      "side": "UP",
+      "reason": "expiry_loss",
+      "pnl": -19.44098,
+      "summary": {
+        "eventId": "0x9fa263c384da1878dec32d0a9f65d9579cdcdda79546961bfa54a46ac932c276",
+        "positionType": "UP",
+        "entryTime": 1780741773699,
+        "entryDistanceToPtb": 34.25252149000153,
+        "entryTimeRemaining": 26,
+        "quantity": 23,
+        "cost": 19.22,
+        "avgEntryPrice": 0.83,
+        "priceToBeat": 60564.16561869,
+        "expirationResult": "loss",
+        "winnerSide": "DOWN",
+        "expiryPnl": -19.22,
+        "finalPnlBeforeFees": -19.22,
+        "fees": {
+          "applied": true,
+          "model": "polymarket_taker",
+          "category": "crypto",
+          "currency": "USDC",
+          "feeRate": 0.07,
+          "totalFee": 0.22098,
+          "entryFee": 0.22098,
+          "exitFee": 0,
+          "tradesCharged": 2,
+          "entryTradesCharged": 2,
+          "exitTradesCharged": 0,
+          "entryNotional": 19.22,
+          "exitNotional": 0,
+          "entryShares": 23,
+          "exitShares": 0,
+          "makerTradesFree": 0,
+          "makerNotional": 0,
+          "makerShares": 0,
+          "entries": [
+            {
+              "qty": 16.5,
+              "price": 0.83,
+              "side": "UP",
+              "source": "midas_core_entry",
+              "reason": null,
+              "time": 1780741773699,
+              "liquidity": "taker",
+              "fee": 0.16297
+            },
+            {
+              "qty": 6.5,
+              "price": 0.85,
+              "side": "UP",
+              "source": "midas_core_entry",
+              "reason": null,
+              "time": 1780741773699,
+              "liquidity": "taker",
+              "fee": 0.05801
+            }
+          ],
+          "exits": []
+        },
+        "closedAt": "2026-06-06T10:29:59.697Z",
+        "exits": [],
+        "profitOrders": [],
+        "reversals": [],
+        "diagnostics": null
+      },
+      "marks": [
+        {
+          "ts": "2026-06-06T10:29:33.699Z",
+          "name": "midas_entry",
+          "data": {
+            "mode": "core",
+            "side": "UP",
+            "ask": 0.83,
+            "dist": 34.25252149000153,
+            "z": 2.4379663606607678,
+            "budgetFactor": 2,
+            "secsLeft": 26.301
+          }
+        }
+      ],
+      "metrics": {}
+    },
+    {
+      "event_start": "2026-06-01T08:15:00.000Z",
+      "side": "DOWN",
+      "reason": "expiry_loss",
+      "pnl": -19.23039,
+      "summary": {
+        "eventId": "0x976f121d211ff74417575e242b0e85fee5c6da1b390104ff9a47a6fe8fed9369",
+        "positionType": "DOWN",
+        "entryTime": 1780301972710,
+        "entryDistanceToPtb": 24.22896822000621,
+        "entryTimeRemaining": 27,
+        "quantity": 21,
+        "cost": 19.11,
+        "avgEntryPrice": 0.91,
+        "priceToBeat": 72720.24594709,
+        "expirationResult": "loss",
+        "winnerSide": "UP",
+        "expiryPnl": -19.11,
+        "finalPnlBeforeFees": -19.11,
+        "fees": {
+          "applied": true,
+          "model": "polymarket_taker",
+          "category": "crypto",
+          "currency": "USDC",
+          "feeRate": 0.07,
+          "totalFee": 0.12039,
+          "entryFee": 0.12039,
+          "exitFee": 0,
+          "tradesCharged": 1,
+          "entryTradesCharged": 1,
+          "exitTradesCharged": 0,
+          "entryNotional": 19.11,
+          "exitNotional": 0,
+          "entryShares": 21,
+          "exitShares": 0,
+          "makerTradesFree": 0,
+          "makerNotional": 0,
+          "makerShares": 0,
+          "entries": [
+            {
+              "qty": 21,
+              "price": 0.91,
+              "side": "DOWN",
+              "source": "midas_core_entry",
+              "reason": null,
+              "time": 1780301972710,
+              "liquidity": "taker",
+              "fee": 0.12039
+            }
+          ],
+          "exits": []
+        },
+        "closedAt": "2026-06-01T08:19:59.711Z",
+        "exits": [],
+        "profitOrders": [],
+        "reversals": [],
+        "diagnostics": null
+      },
+      "marks": [
+        {
+          "ts": "2026-06-01T08:19:32.710Z",
+          "name": "midas_entry",
+          "data": {
+            "mode": "core",
+            "side": "DOWN",
+            "ask": 0.91,
+            "dist": 24.22896822000621,
+            "z": 1.717054619932234,
+            "budgetFactor": 2,
+            "secsLeft": 27.29
+          }
+        }
+      ],
+      "metrics": {}
+    },
+    {
+      "event_start": "2026-06-05T23:55:00.000Z",
+      "side": "DOWN",
+      "reason": "expiry_loss",
+      "pnl": -19.13009,
+      "summary": {
+        "eventId": "0xd3e3e5bc013a41e8b57441abfcbfc437c25eb8b1a69bbc6aa35eae7528454e98",
+        "positionType": "DOWN",
+        "entryTime": 1780703971519,
+        "entryDistanceToPtb": 37.79974999999831,
+        "entryTimeRemaining": 28,
+        "quantity": 22,
+        "cost": 19.575599999999998,
+        "avgEntryPrice": 0.88,
+        "priceToBeat": 60991.79185,
+        "expirationResult": "loss",
+        "winnerSide": "UP",
+        "expiryPnl": -8.203956,
+        "finalPnlBeforeFees": -18.9366,
+        "fees": {
+          "applied": true,
+          "model": "polymarket_taker",
+          "category": "crypto",
+          "currency": "USDC",
+          "feeRate": 0.07,
+          "totalFee": 0.19349,
+          "entryFee": 0.151,
+          "exitFee": 0.04249,
+          "tradesCharged": 3,
+          "entryTradesCharged": 2,
+          "exitTradesCharged": 1,
+          "entryNotional": 19.575599999999998,
+          "exitNotional": 0.639,
+          "entryShares": 22,
+          "exitShares": 12.78,
+          "makerTradesFree": 0,
+          "makerNotional": 0,
+          "makerShares": 0,
+          "entries": [
+            {
+              "qty": 0.44,
+              "price": 0.88,
+              "side": "DOWN",
+              "source": "midas_core_entry",
+              "reason": null,
+              "time": 1780703971519,
+              "liquidity": "taker",
+              "fee": 0.00325
+            },
+            {
+              "qty": 21.56,
+              "price": 0.89,
+              "side": "DOWN",
+              "source": "midas_core_entry",
+              "reason": null,
+              "time": 1780703971519,
+              "liquidity": "taker",
+              "fee": 0.14775
+            }
+          ],
+          "exits": [
+            {
+              "qty": 12.78,
+              "price": 0.05,
+              "side": "DOWN",
+              "source": "reverse_exit",
+              "reason": null,
+              "time": 1780703992019,
+              "liquidity": null,
+              "fee": 0.04249
+            }
+          ]
+        },
+        "closedAt": "2026-06-05T23:59:59.519Z",
+        "exits": [
+          {
+            "type": "exit",
+            "side": "DOWN",
+            "ts": 1780703992019,
+            "price": 0.05,
+            "shares": 12.78,
+            "notional": 0.639,
+            "avgPrice": 0.05,
+            "fills": [
+              {
+                "price": 0.05,
+                "qty": 12.78
+              }
+            ],
+            "pnl": -10.732643999999999,
+            "remainingShares": 9.22,
+            "closed": false,
+            "reason": "reverse_exit",
+            "liquidity": "taker"
+          }
+        ],
+        "profitOrders": [],
+        "reversals": [],
+        "diagnostics": null
+      },
+      "marks": [
+        {
+          "ts": "2026-06-05T23:59:31.519Z",
+          "name": "midas_entry",
+          "data": {
+            "mode": "core",
+            "side": "DOWN",
+            "ask": 0.88,
+            "dist": 37.79974999999831,
+            "z": 2.8265794856477697,
+            "budgetFactor": 2,
+            "secsLeft": 28.481
+          }
+        }
+      ],
+      "metrics": {}
+    },
+    {
+      "event_start": "2026-06-04T19:55:00.000Z",
+      "side": "UP",
+      "reason": "expiry_loss",
+      "pnl": -19.10542,
+      "summary": {
+        "eventId": "0xceae3ec88a2c3ce768a17eca36b23e5494889a10faa6888f9c62a694f9c6c59f",
+        "positionType": "UP",
+        "entryTime": 1780603171347,
+        "entryDistanceToPtb": 35.29499658999703,
+        "entryTimeRemaining": 29,
+        "quantity": 22,
+        "cost": 18.919999999999998,
+        "avgEntryPrice": 0.86,
+        "priceToBeat": 63565.00420132,
+        "expirationResult": "loss",
+        "winnerSide": "DOWN",
+        "expiryPnl": -18.919999999999998,
+        "finalPnlBeforeFees": -18.919999999999998,
+        "fees": {
+          "applied": true,
+          "model": "polymarket_taker",
+          "category": "crypto",
+          "currency": "USDC",
+          "feeRate": 0.07,
+          "totalFee": 0.18542,
+          "entryFee": 0.18542,
+          "exitFee": 0,
+          "tradesCharged": 1,
+          "entryTradesCharged": 1,
+          "exitTradesCharged": 0,
+          "entryNotional": 18.919999999999998,
+          "exitNotional": 0,
+          "entryShares": 22,
+          "exitShares": 0,
+          "makerTradesFree": 0,
+          "makerNotional": 0,
+          "makerShares": 0,
+          "entries": [
+            {
+              "qty": 22,
+              "price": 0.86,
+              "side": "UP",
+              "source": "midas_core_entry",
+              "reason": null,
+              "time": 1780603171347,
+              "liquidity": "taker",
+              "fee": 0.18542
+            }
+          ],
+          "exits": []
+        },
+        "closedAt": "2026-06-04T19:59:59.846Z",
+        "exits": [],
+        "profitOrders": [],
+        "reversals": [],
+        "diagnostics": null
+      },
+      "marks": [
+        {
+          "ts": "2026-06-04T19:59:31.347Z",
+          "name": "midas_entry",
+          "data": {
+            "mode": "core",
+            "side": "UP",
+            "ask": 0.86,
+            "dist": 35.29499658999703,
+            "z": 1.365913149780583,
+            "budgetFactor": 2,
+            "secsLeft": 28.653
+          }
+        }
+      ],
+      "metrics": {}
+    },
+    {
+      "event_start": "2026-06-02T18:30:00.000Z",
+      "side": "UP",
+      "reason": "expiry_loss",
+      "pnl": -18.896349999999998,
+      "summary": {
+        "eventId": "0xd76b0bf96ce088e22829b1fc4ba41dcef93f10df438026d0e4c6d675a26e0803",
+        "positionType": "UP",
+        "entryTime": 1780425271001,
+        "entryDistanceToPtb": 31.346312950001447,
+        "entryTimeRemaining": 29,
+        "quantity": 22,
+        "cost": 18.7,
+        "avgEntryPrice": 0.85,
+        "priceToBeat": 67194.84010559,
+        "expirationResult": "loss",
+        "winnerSide": "DOWN",
+        "expiryPnl": -18.7,
+        "finalPnlBeforeFees": -18.7,
+        "fees": {
+          "applied": true,
+          "model": "polymarket_taker",
+          "category": "crypto",
+          "currency": "USDC",
+          "feeRate": 0.07,
+          "totalFee": 0.19635,
+          "entryFee": 0.19635,
+          "exitFee": 0,
+          "tradesCharged": 1,
+          "entryTradesCharged": 1,
+          "exitTradesCharged": 0,
+          "entryNotional": 18.7,
+          "exitNotional": 0,
+          "entryShares": 22,
+          "exitShares": 0,
+          "makerTradesFree": 0,
+          "makerNotional": 0,
+          "makerShares": 0,
+          "entries": [
+            {
+              "qty": 22,
+              "price": 0.85,
+              "side": "UP",
+              "source": "midas_core_entry",
+              "reason": null,
+              "time": 1780425271001,
+              "liquidity": "taker",
+              "fee": 0.19635
+            }
+          ],
+          "exits": []
+        },
+        "closedAt": "2026-06-02T18:34:59.500Z",
+        "exits": [],
+        "profitOrders": [],
+        "reversals": [],
+        "diagnostics": null
+      },
+      "marks": [
+        {
+          "ts": "2026-06-02T18:34:31.001Z",
+          "name": "midas_entry",
+          "data": {
+            "mode": "core",
+            "side": "UP",
+            "ask": 0.85,
+            "dist": 31.346312950001447,
+            "z": 1.9125563153284115,
+            "budgetFactor": 2,
+            "secsLeft": 28.999
+          }
+        }
+      ],
+      "metrics": {}
+    },
+    {
+      "event_start": "2026-06-03T07:00:00.000Z",
+      "side": "DOWN",
+      "reason": "expiry_loss",
+      "pnl": -18.88496,
+      "summary": {
+        "eventId": "0x78e888266121e4f8d0b088b8879ee106bc51d55ac26b135711aa1306f8973186",
+        "positionType": "DOWN",
+        "entryTime": 1780470282032,
+        "entryDistanceToPtb": 31.952459100008127,
+        "entryTimeRemaining": 18,
+        "quantity": 20,
+        "cost": 18.8064,
+        "avgEntryPrice": 0.94,
+        "priceToBeat": 66889.32914645,
+        "expirationResult": "loss",
+        "winnerSide": "UP",
+        "expiryPnl": -18.8064,
+        "finalPnlBeforeFees": -18.8064,
+        "fees": {
+          "applied": true,
+          "model": "polymarket_taker",
+          "category": "crypto",
+          "currency": "USDC",
+          "feeRate": 0.07,
+          "totalFee": 0.07856,
+          "entryFee": 0.07856,
+          "exitFee": 0,
+          "tradesCharged": 2,
+          "entryTradesCharged": 2,
+          "exitTradesCharged": 0,
+          "entryNotional": 18.8064,
+          "exitNotional": 0,
+          "entryShares": 20,
+          "exitShares": 0,
+          "makerTradesFree": 0,
+          "makerNotional": 0,
+          "makerShares": 0,
+          "entries": [
+            {
+              "qty": 19.36,
+              "price": 0.94,
+              "side": "DOWN",
+              "source": "midas_core_entry",
+              "reason": null,
+              "time": 1780470282032,
+              "liquidity": "taker",
+              "fee": 0.07643
+            },
+            {
+              "qty": 0.6400000000000006,
+              "price": 0.95,
+              "side": "DOWN",
+              "source": "midas_core_entry",
+              "reason": null,
+              "time": 1780470282032,
+              "liquidity": "taker",
+              "fee": 0.00213
+            }
+          ],
+          "exits": []
+        },
+        "closedAt": "2026-06-03T07:04:59.534Z",
+        "exits": [],
+        "profitOrders": [],
+        "reversals": [],
+        "diagnostics": null
+      },
+      "marks": [
+        {
+          "ts": "2026-06-03T07:04:42.032Z",
+          "name": "midas_entry",
+          "data": {
+            "mode": "core",
+            "side": "DOWN",
+            "ask": 0.94,
+            "dist": 31.952459100008127,
+            "z": 1.8076918810238494,
+            "budgetFactor": 2,
+            "secsLeft": 17.968
+          }
+        }
+      ],
+      "metrics": {}
+    },
+    {
+      "event_start": "2026-06-04T22:10:00.000Z",
+      "side": "UP",
+      "reason": "expiry_loss",
+      "pnl": -17.41935,
+      "summary": {
+        "eventId": "0x3fdcd5075ea2dd7ea857024f7b8d64d627430f4161e39485f3b144b079d1d35c",
+        "positionType": "UP",
+        "entryTime": 1780611272351,
+        "entryDistanceToPtb": 30.45228252999368,
+        "entryTimeRemaining": 28,
+        "quantity": 12,
+        "cost": 9.120000000000001,
+        "avgEntryPrice": 0.76,
+        "priceToBeat": 63232.66340886,
+        "expirationResult": "loss",
+        "winnerSide": "DOWN",
+        "expiryPnl": -9.1,
+        "finalPnlBeforeFees": -17.14,
+        "fees": {
+          "applied": true,
+          "model": "polymarket_taker",
+          "category": "crypto",
+          "currency": "USDC",
+          "feeRate": 0.07,
+          "totalFee": 0.27935,
+          "entryFee": 0.21055,
+          "exitFee": 0.0688,
+          "tradesCharged": 3,
+          "entryTradesCharged": 2,
+          "exitTradesCharged": 1,
+          "entryNotional": 18.22,
+          "exitNotional": 1.08,
+          "entryShares": 22,
+          "exitShares": 12,
+          "makerTradesFree": 0,
+          "makerNotional": 0,
+          "makerShares": 0,
+          "entries": [
+            {
+              "qty": 12,
+              "price": 0.76,
+              "side": "DOWN",
+              "source": "midas_core_entry",
+              "reason": null,
+              "time": 1780611272351,
+              "liquidity": "taker",
+              "fee": 0.15322
+            },
+            {
+              "qty": 10,
+              "price": 0.91,
+              "side": "UP",
+              "source": "late_flip_reverse",
+              "reason": null,
+              "time": 1780611292850,
+              "liquidity": "taker",
+              "fee": 0.05733
+            }
+          ],
+          "exits": [
+            {
+              "qty": 12,
+              "price": 0.09,
+              "side": "DOWN",
+              "source": "reverse_exit",
+              "reason": null,
+              "time": 1780611292850,
+              "liquidity": null,
+              "fee": 0.0688
+            }
+          ]
+        },
+        "closedAt": "2026-06-04T22:14:59.851Z",
+        "exits": [
+          {
+            "type": "exit",
+            "side": "DOWN",
+            "ts": 1780611292850,
+            "price": 0.09,
+            "shares": 12,
+            "notional": 1.08,
+            "avgPrice": 0.09000000000000001,
+            "fills": [
+              {
+                "price": 0.09,
+                "qty": 12
+              }
+            ],
+            "pnl": -8.040000000000001,
+            "remainingShares": 0,
+            "closed": true,
+            "reason": "reverse_exit",
+            "liquidity": "taker"
+          }
+        ],
+        "profitOrders": [],
+        "reversals": [],
+        "diagnostics": null
+      },
+      "marks": [
+        {
+          "ts": "2026-06-04T22:14:32.351Z",
+          "name": "midas_entry",
+          "data": {
+            "mode": "core",
+            "side": "DOWN",
+            "ask": 0.76,
+            "dist": 30.45228252999368,
+            "z": 0.7208621591990652,
+            "budgetFactor": 1,
+            "secsLeft": 27.649
+          }
+        },
+        {
+          "ts": "2026-06-04T22:14:52.850Z",
+          "name": "reverse",
+          "data": {
+            "reason": "late_flip_reverse",
+            "from": "DOWN",
+            "to": "UP",
+            "ask": 0.91
+          }
+        }
+      ],
+      "metrics": {}
+    },
+    {
+      "event_start": "2026-06-06T17:00:00.000Z",
+      "side": "UP",
+      "reason": "expiry_win",
+      "pnl": -16.877100000000002,
+      "summary": {
+        "eventId": "0xbd12e02809bfdb771ce6c3a98e97b6076c2c7fcd34ad3d9be68e52f49c545499",
+        "positionType": "UP",
+        "entryTime": 1780765486258,
+        "entryDistanceToPtb": 30.517003859997203,
+        "entryTimeRemaining": 14,
+        "quantity": 21,
+        "cost": 19.53,
+        "avgEntryPrice": 0.93,
+        "priceToBeat": 60749.20669886,
+        "expirationResult": "win",
+        "winnerSide": "UP",
+        "expiryPnl": 1.4699999999999989,
+        "finalPnlBeforeFees": -16.590000000000003,
+        "fees": {
+          "applied": true,
+          "model": "polymarket_taker",
+          "category": "crypto",
+          "currency": "USDC",
+          "feeRate": 0.07,
+          "totalFee": 0.2871,
+          "entryFee": 0.1914,
+          "exitFee": 0.0957,
+          "tradesCharged": 3,
+          "entryTradesCharged": 2,
+          "exitTradesCharged": 1,
+          "entryNotional": 39.06,
+          "exitNotional": 1.4700000000000002,
+          "entryShares": 42,
+          "exitShares": 21,
+          "makerTradesFree": 0,
+          "makerNotional": 0,
+          "makerShares": 0,
+          "entries": [
+            {
+              "qty": 21,
+              "price": 0.93,
+              "side": "DOWN",
+              "source": "midas_core_entry",
+              "reason": null,
+              "time": 1780765486258,
+              "liquidity": "taker",
+              "fee": 0.0957
+            },
+            {
+              "qty": 21,
+              "price": 0.93,
+              "side": "UP",
+              "source": "late_flip_reverse",
+              "reason": null,
+              "time": 1780765494758,
+              "liquidity": "taker",
+              "fee": 0.0957
+            }
+          ],
+          "exits": [
+            {
+              "qty": 21,
+              "price": 0.07,
+              "side": "DOWN",
+              "source": "reverse_exit",
+              "reason": null,
+              "time": 1780765494758,
+              "liquidity": null,
+              "fee": 0.0957
+            }
+          ]
+        },
+        "closedAt": "2026-06-06T17:04:59.758Z",
+        "exits": [
+          {
+            "type": "exit",
+            "side": "DOWN",
+            "ts": 1780765494758,
+            "price": 0.07,
+            "shares": 21,
+            "notional": 1.4700000000000002,
+            "avgPrice": 0.07,
+            "fills": [
+              {
+                "price": 0.07,
+                "qty": 21
+              }
+            ],
+            "pnl": -18.060000000000002,
+            "remainingShares": 0,
+            "closed": true,
+            "reason": "reverse_exit",
+            "liquidity": "taker"
+          }
+        ],
+        "profitOrders": [],
+        "reversals": [],
+        "diagnostics": null
+      },
+      "marks": [
+        {
+          "ts": "2026-06-06T17:04:46.258Z",
+          "name": "midas_entry",
+          "data": {
+            "mode": "core",
+            "side": "DOWN",
+            "ask": 0.93,
+            "dist": 30.517003859997203,
+            "z": 2.466336415590622,
+            "budgetFactor": 2,
+            "secsLeft": 13.742
+          }
+        },
+        {
+          "ts": "2026-06-06T17:04:54.758Z",
+          "name": "reverse",
+          "data": {
+            "reason": "late_flip_reverse",
+            "from": "DOWN",
+            "to": "UP",
+            "ask": 0.93
+          }
+        }
+      ],
+      "metrics": {}
+    },
+    {
+      "event_start": "2026-06-02T10:55:00.000Z",
+      "side": "UP",
+      "reason": "expiry_loss",
+      "pnl": -16.23603,
+      "summary": {
+        "eventId": "0x34159b52ae3cd42f489ee5e03be8f00bb96f14adfefd21b430d7ca4c09cf5cde",
+        "positionType": "UP",
+        "entryTime": 1780397970490,
+        "entryDistanceToPtb": 12.553864529996645,
+        "entryTimeRemaining": 30,
+        "quantity": 23,
+        "cost": 19.3326,
+        "avgEntryPrice": 0.83,
+        "priceToBeat": 69557.98454684,
+        "expirationResult": "loss",
+        "winnerSide": "DOWN",
+        "expiryPnl": -0.10927121739130485,
+        "finalPnlBeforeFees": -15.8182,
+        "fees": {
+          "applied": true,
+          "model": "polymarket_taker",
+          "category": "crypto",
+          "currency": "USDC",
+          "feeRate": 0.07,
+          "totalFee": 0.41783,
+          "entryFee": 0.2157,
+          "exitFee": 0.20213,
+          "tradesCharged": 6,
+          "entryTradesCharged": 3,
+          "exitTradesCharged": 3,
+          "entryNotional": 19.3326,
+          "exitNotional": 3.5144,
+          "entryShares": 23,
+          "exitShares": 22.869999999999997,
+          "makerTradesFree": 0,
+          "makerNotional": 0,
+          "makerShares": 0,
+          "entries": [
+            {
+              "qty": 5.87,
+              "price": 0.83,
+              "side": "UP",
+              "source": "midas_core_entry",
+              "reason": null,
+              "time": 1780397970490,
+              "liquidity": "taker",
+              "fee": 0.05798
+            },
+            {
+              "qty": 10,
+              "price": 0.84,
+              "side": "UP",
+              "source": "midas_core_entry",
+              "reason": null,
+              "time": 1780397970490,
+              "liquidity": "taker",
+              "fee": 0.09408
+            },
+            {
+              "qty": 7.129999999999999,
+              "price": 0.85,
+              "side": "UP",
+              "source": "midas_core_entry",
+              "reason": null,
+              "time": 1780397970490,
+              "liquidity": "taker",
+              "fee": 0.06364
+            }
+          ],
+          "exits": [
+            {
+              "qty": 5,
+              "price": 0.19,
+              "side": "UP",
+              "source": "reverse_exit",
+              "reason": null,
+              "time": 1780397992490,
+              "liquidity": null,
+              "fee": 0.05387
+            },
+            {
+              "qty": 15.87,
+              "price": 0.12,
+              "side": "UP",
+              "source": "reverse_exit",
+              "reason": null,
+              "time": 1780397992990,
+              "liquidity": null,
+              "fee": 0.11731
+            },
+            {
+              "qty": 2,
+              "price": 0.33,
+              "side": "UP",
+              "source": "reverse_exit",
+              "reason": null,
+              "time": 1780397993490,
+              "liquidity": null,
+              "fee": 0.03095
+            }
+          ]
+        },
+        "closedAt": "2026-06-02T10:59:59.990Z",
+        "exits": [
+          {
+            "type": "exit",
+            "side": "UP",
+            "ts": 1780397992490,
+            "price": 0.19,
+            "shares": 5,
+            "notional": 0.95,
+            "avgPrice": 0.19,
+            "fills": [
+              {
+                "price": 0.19,
+                "qty": 5
+              }
+            ],
+            "pnl": -3.252739130434782,
+            "remainingShares": 18,
+            "closed": false,
+            "reason": "reverse_exit",
+            "liquidity": "taker"
+          },
+          {
+            "type": "exit",
+            "side": "UP",
+            "ts": 1780397992990,
+            "price": 0.12,
+            "shares": 15.87,
+            "notional": 1.9043999999999999,
+            "avgPrice": 0.12,
+            "fills": [
+              {
+                "price": 0.12,
+                "qty": 15.87
+              }
+            ],
+            "pnl": -11.435094,
+            "remainingShares": 2.130000000000001,
+            "closed": false,
+            "reason": "reverse_exit",
+            "liquidity": "taker"
+          },
+          {
+            "type": "exit",
+            "side": "UP",
+            "ts": 1780397993490,
+            "price": 0.33,
+            "shares": 2,
+            "notional": 0.66,
+            "avgPrice": 0.33,
+            "fills": [
+              {
+                "price": 0.33,
+                "qty": 2
+              }
+            ],
+            "pnl": -1.021095652173912,
+            "remainingShares": 0.13000000000000078,
+            "closed": false,
+            "reason": "reverse_exit",
+            "liquidity": "taker"
+          }
+        ],
+        "profitOrders": [],
+        "reversals": [],
+        "diagnostics": null
+      },
+      "marks": [
+        {
+          "ts": "2026-06-02T10:59:30.490Z",
+          "name": "midas_entry",
+          "data": {
+            "mode": "core",
+            "side": "UP",
+            "ask": 0.83,
+            "dist": 12.553864529996645,
+            "z": 4.848347259365907,
+            "budgetFactor": 2,
+            "secsLeft": 29.51
+          }
+        }
+      ],
+      "metrics": {}
+    },
+    {
+      "event_start": "2026-06-02T08:30:00.000Z",
+      "side": "DOWN",
+      "reason": "expiry_loss",
+      "pnl": -16.18768,
+      "summary": {
+        "eventId": "0xe2e205730562c1d931f7ca36c916e01ad95d1208955596201f7a771f86775ddc",
+        "positionType": "DOWN",
+        "entryTime": 1780389278489,
+        "entryDistanceToPtb": 26.734078009991208,
+        "entryTimeRemaining": 22,
+        "quantity": 14,
+        "cost": 9.1,
+        "avgEntryPrice": 0.65,
+        "priceToBeat": 69919.24993965,
+        "expirationResult": "loss",
+        "winnerSide": "UP",
+        "expiryPnl": -9.88,
+        "finalPnlBeforeFees": -15.620000000000001,
+        "fees": {
+          "applied": true,
+          "model": "polymarket_taker",
+          "category": "crypto",
+          "currency": "USDC",
+          "feeRate": 0.07,
+          "totalFee": 0.56768,
+          "entryFee": 0.38893,
+          "exitFee": 0.17875,
+          "tradesCharged": 3,
+          "entryTradesCharged": 2,
+          "exitTradesCharged": 1,
+          "entryNotional": 18.98,
+          "exitNotional": 3.36,
+          "entryShares": 27,
+          "exitShares": 14,
+          "makerTradesFree": 0,
+          "makerNotional": 0,
+          "makerShares": 0,
+          "entries": [
+            {
+              "qty": 14,
+              "price": 0.65,
+              "side": "UP",
+              "source": "midas_core_entry",
+              "reason": null,
+              "time": 1780389278489,
+              "liquidity": "taker",
+              "fee": 0.22295
+            },
+            {
+              "qty": 13,
+              "price": 0.76,
+              "side": "DOWN",
+              "source": "late_flip_reverse",
+              "reason": null,
+              "time": 1780389294489,
+              "liquidity": "taker",
+              "fee": 0.16598
+            }
+          ],
+          "exits": [
+            {
+              "qty": 14,
+              "price": 0.24,
+              "side": "UP",
+              "source": "reverse_exit",
+              "reason": null,
+              "time": 1780389294489,
+              "liquidity": null,
+              "fee": 0.17875
+            }
+          ]
+        },
+        "closedAt": "2026-06-02T08:34:59.988Z",
+        "exits": [
+          {
+            "type": "exit",
+            "side": "UP",
+            "ts": 1780389294489,
+            "price": 0.24,
+            "shares": 14,
+            "notional": 3.36,
+            "avgPrice": 0.24,
+            "fills": [
+              {
+                "price": 0.24,
+                "qty": 14
+              }
+            ],
+            "pnl": -5.74,
+            "remainingShares": 0,
+            "closed": true,
+            "reason": "reverse_exit",
+            "liquidity": "taker"
+          }
+        ],
+        "profitOrders": [],
+        "reversals": [],
+        "diagnostics": null
+      },
+      "marks": [
+        {
+          "ts": "2026-06-02T08:34:38.489Z",
+          "name": "midas_entry",
+          "data": {
+            "mode": "core",
+            "side": "UP",
+            "ask": 0.65,
+            "dist": 26.734078009991208,
+            "z": 2.744049323750274,
+            "budgetFactor": 1,
+            "secsLeft": 21.511
+          }
+        },
+        {
+          "ts": "2026-06-02T08:34:54.489Z",
+          "name": "reverse",
+          "data": {
+            "reason": "late_flip_reverse",
+            "from": "UP",
+            "to": "DOWN",
+            "ask": 0.76
+          }
+        }
+      ],
+      "metrics": {}
+    },
+    {
+      "event_start": "2026-06-02T17:50:00.000Z",
+      "side": "DOWN",
+      "reason": "expiry_loss",
+      "pnl": -15.85359,
+      "summary": {
+        "eventId": "0xc91e63805a0ac89e170ff0a66ed47364f676e9148aca9127e30ea2ee221d6985",
+        "positionType": "DOWN",
+        "entryTime": 1780422870498,
+        "entryDistanceToPtb": 23.479617569988477,
+        "entryTimeRemaining": 30,
+        "quantity": 21,
+        "cost": 19.11,
+        "avgEntryPrice": 0.91,
+        "priceToBeat": 67348.80772824,
+        "expirationResult": "loss",
+        "winnerSide": "UP",
+        "expiryPnl": -10.5,
+        "finalPnlBeforeFees": -14.91,
+        "fees": {
+          "applied": true,
+          "model": "polymarket_taker",
+          "category": "crypto",
+          "currency": "USDC",
+          "feeRate": 0.07,
+          "totalFee": 0.94359,
+          "entryFee": 0.63489,
+          "exitFee": 0.3087,
+          "tradesCharged": 3,
+          "entryTradesCharged": 2,
+          "exitTradesCharged": 1,
+          "entryNotional": 29.61,
+          "exitNotional": 14.7,
+          "entryShares": 56,
+          "exitShares": 21,
+          "makerTradesFree": 0,
+          "makerNotional": 0,
+          "makerShares": 0,
+          "entries": [
+            {
+              "qty": 21,
+              "price": 0.91,
+              "side": "UP",
+              "source": "midas_core_entry",
+              "reason": null,
+              "time": 1780422870498,
+              "liquidity": "taker",
+              "fee": 0.12039
+            },
+            {
+              "qty": 35,
+              "price": 0.3,
+              "side": "DOWN",
+              "source": "late_flip_reverse",
+              "reason": null,
+              "time": 1780422892498,
+              "liquidity": "taker",
+              "fee": 0.5145
+            }
+          ],
+          "exits": [
+            {
+              "qty": 21,
+              "price": 0.7,
+              "side": "UP",
+              "source": "reverse_exit",
+              "reason": null,
+              "time": 1780422892498,
+              "liquidity": null,
+              "fee": 0.3087
+            }
+          ]
+        },
+        "closedAt": "2026-06-02T17:54:59.999Z",
+        "exits": [
+          {
+            "type": "exit",
+            "side": "UP",
+            "ts": 1780422892498,
+            "price": 0.7,
+            "shares": 21,
+            "notional": 14.7,
+            "avgPrice": 0.7,
+            "fills": [
+              {
+                "price": 0.7,
+                "qty": 21
+              }
+            ],
+            "pnl": -4.41,
+            "remainingShares": 0,
+            "closed": true,
+            "reason": "reverse_exit",
+            "liquidity": "taker"
+          }
+        ],
+        "profitOrders": [],
+        "reversals": [],
+        "diagnostics": null
+      },
+      "marks": [
+        {
+          "ts": "2026-06-02T17:54:30.498Z",
+          "name": "midas_entry",
+          "data": {
+            "mode": "core",
+            "side": "UP",
+            "ask": 0.91,
+            "dist": 23.479617569988477,
+            "z": 0.7736257587554817,
+            "budgetFactor": 2,
+            "secsLeft": 29.502
+          }
+        },
+        {
+          "ts": "2026-06-02T17:54:52.498Z",
+          "name": "reverse",
+          "data": {
+            "reason": "late_flip_reverse",
+            "from": "UP",
+            "to": "DOWN",
+            "ask": 0.3
+          }
+        }
+      ],
+      "metrics": {}
+    }
+  ],
+  "apexJun2": [
+    {
+      "hour_utc": 7,
+      "n": 3,
+      "losses": 2,
+      "pnl": -12.31,
+      "worst": -7.92
+    },
+    {
+      "hour_utc": 23,
+      "n": 6,
+      "losses": 3,
+      "pnl": -12.21,
+      "worst": -9.87
+    },
+    {
+      "hour_utc": 1,
+      "n": 1,
+      "losses": 1,
+      "pnl": -10.58,
+      "worst": -10.58
+    },
+    {
+      "hour_utc": 8,
+      "n": 3,
+      "losses": 1,
+      "pnl": -10.56,
+      "worst": -15.09
+    },
+    {
+      "hour_utc": 22,
+      "n": 1,
+      "losses": 1,
+      "pnl": -9.73,
+      "worst": -9.73
+    },
+    {
+      "hour_utc": 17,
+      "n": 1,
+      "losses": 1,
+      "pnl": -9.72,
+      "worst": -9.72
+    },
+    {
+      "hour_utc": 18,
+      "n": 2,
+      "losses": 2,
+      "pnl": -7.86,
+      "worst": -4.15
+    },
+    {
+      "hour_utc": 2,
+      "n": 1,
+      "losses": 1,
+      "pnl": -6.7,
+      "worst": -6.7
+    },
+    {
+      "hour_utc": 20,
+      "n": 1,
+      "losses": 1,
+      "pnl": -5.95,
+      "worst": -5.95
+    },
+    {
+      "hour_utc": 6,
+      "n": 3,
+      "losses": 2,
+      "pnl": -5.46,
+      "worst": -8.25
+    },
+    {
+      "hour_utc": 10,
+      "n": 3,
+      "losses": 1,
+      "pnl": -1.6,
+      "worst": -6.58
+    },
+    {
+      "hour_utc": 13,
+      "n": 3,
+      "losses": 1,
+      "pnl": -1.07,
+      "worst": -3.24
+    },
+    {
+      "hour_utc": 15,
+      "n": 2,
+      "losses": 1,
+      "pnl": -1.02,
+      "worst": -2.68
+    },
+    {
+      "hour_utc": 3,
+      "n": 4,
+      "losses": 1,
+      "pnl": -0.45,
+      "worst": -8.19
+    },
+    {
+      "hour_utc": 19,
+      "n": 1,
+      "losses": 0,
+      "pnl": 4.13,
+      "worst": 4.13
+    },
+    {
+      "hour_utc": 0,
+      "n": 4,
+      "losses": 2,
+      "pnl": 4.23,
+      "worst": -3.04
+    },
+    {
+      "hour_utc": 9,
+      "n": 2,
+      "losses": 0,
+      "pnl": 7.04,
+      "worst": 3.46
+    },
+    {
+      "hour_utc": 5,
+      "n": 1,
+      "losses": 0,
+      "pnl": 7.14,
+      "worst": 7.14
+    },
+    {
+      "hour_utc": 4,
+      "n": 4,
+      "losses": 1,
+      "pnl": 7.77,
+      "worst": -3.74
+    },
+    {
+      "hour_utc": 21,
+      "n": 2,
+      "losses": 0,
+      "pnl": 8.71,
+      "worst": 2.27
+    }
+  ],
+  "midasByDayReason": [
+    {
+      "dt": "2026-06-01",
+      "reason": "expiry_loss",
+      "n": 7,
+      "pnl": -86.53
+    },
+    {
+      "dt": "2026-06-01",
+      "reason": "expiry_win",
+      "n": 4,
+      "pnl": -19.32
+    },
+    {
+      "dt": "2026-06-02",
+      "reason": "expiry_loss",
+      "n": 10,
+      "pnl": -142.42
+    },
+    {
+      "dt": "2026-06-02",
+      "reason": "expiry_win",
+      "n": 11,
+      "pnl": -55.93
+    },
+    {
+      "dt": "2026-06-02",
+      "reason": "closed",
+      "n": 1,
+      "pnl": -9.95
+    },
+    {
+      "dt": "2026-06-03",
+      "reason": "expiry_loss",
+      "n": 8,
+      "pnl": -88.94
+    },
+    {
+      "dt": "2026-06-03",
+      "reason": "expiry_win",
+      "n": 6,
+      "pnl": -40.57
+    },
+    {
+      "dt": "2026-06-03",
+      "reason": "closed",
+      "n": 1,
+      "pnl": -1.52
+    },
+    {
+      "dt": "2026-06-04",
+      "reason": "expiry_loss",
+      "n": 8,
+      "pnl": -93.29
+    },
+    {
+      "dt": "2026-06-04",
+      "reason": "expiry_win",
+      "n": 4,
+      "pnl": -30.86
+    },
+    {
+      "dt": "2026-06-04",
+      "reason": "closed",
+      "n": 2,
+      "pnl": -24.65
+    },
+    {
+      "dt": "2026-06-05",
+      "reason": "expiry_loss",
+      "n": 7,
+      "pnl": -78.25
+    },
+    {
+      "dt": "2026-06-05",
+      "reason": "expiry_win",
+      "n": 7,
+      "pnl": -42.48
+    },
+    {
+      "dt": "2026-06-05",
+      "reason": "closed",
+      "n": 2,
+      "pnl": -16.03
+    },
+    {
+      "dt": "2026-06-06",
+      "reason": "expiry_loss",
+      "n": 12,
+      "pnl": -141.58
+    },
+    {
+      "dt": "2026-06-06",
+      "reason": "expiry_win",
+      "n": 8,
+      "pnl": -60.68
+    },
+    {
+      "dt": "2026-06-06",
+      "reason": "closed",
+      "n": 2,
+      "pnl": -6.51
+    }
+  ],
+  "tfcByDayReason": [
+    {
+      "dt": "2026-06-01",
+      "reason": "expiry_loss",
+      "n": 6,
+      "pnl": -52.6
+    },
+    {
+      "dt": "2026-06-01",
+      "reason": "expiry_win",
+      "n": 2,
+      "pnl": -9.19
+    },
+    {
+      "dt": "2026-06-02",
+      "reason": "expiry_loss",
+      "n": 12,
+      "pnl": -112.42
+    },
+    {
+      "dt": "2026-06-02",
+      "reason": "expiry_win",
+      "n": 4,
+      "pnl": -26.25
+    },
+    {
+      "dt": "2026-06-03",
+      "reason": "expiry_loss",
+      "n": 10,
+      "pnl": -88.82
+    },
+    {
+      "dt": "2026-06-03",
+      "reason": "expiry_win",
+      "n": 2,
+      "pnl": -15.54
+    },
+    {
+      "dt": "2026-06-04",
+      "reason": "expiry_loss",
+      "n": 9,
+      "pnl": -87.65
+    },
+    {
+      "dt": "2026-06-04",
+      "reason": "expiry_win",
+      "n": 4,
+      "pnl": -28.03
+    },
+    {
+      "dt": "2026-06-05",
+      "reason": "expiry_loss",
+      "n": 7,
+      "pnl": -62.53
+    },
+    {
+      "dt": "2026-06-05",
+      "reason": "expiry_win",
+      "n": 6,
+      "pnl": -35.62
+    },
+    {
+      "dt": "2026-06-06",
+      "reason": "expiry_loss",
+      "n": 10,
+      "pnl": -89.55
+    },
+    {
+      "dt": "2026-06-06",
+      "reason": "expiry_win",
+      "n": 5,
+      "pnl": -30.18
+    }
+  ]
+}

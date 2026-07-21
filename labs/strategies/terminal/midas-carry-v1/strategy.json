@@ -15,7 +15,7 @@
   "promotedToStudio": true,
   "studioSlug": "midas-carry-v1",
   "studio": {
-    "description": "MIDAS Carry V1 — núcleo TFC V7 + envelope high-ask (maxAsk 0.94, maxDistAbs 40) com orçamento em tier na banda ask >= 0.82. Campeã equilibrada: btc-champion-v1 (tier 1.5x). Agressiva: btc-aggressive-v1 (tier 2.0x).",
+    "description": "MIDAS Carry V1 — núcleo TFC V7 + envelope high-ask com orçamento em tier (ask >= 0.82). Versões: v1 Champion (dist 40, tier 1.5x) · v2 Aggressive (tier 2.0x) · v3 Robust (dist 30, tier 1.5x).",
     "tags": ["terminal", "midas", "high-ask-tier", "btc", "candidate"],
     "defaultVersion": 1,
     "defaultGlsSource": "classic",
@@ -23,5 +23,5 @@
       "classic": "labs/strategies/terminal/midas-carry-v1/strategy.gls"
     }
   },
-  "notes": "Núcleo TFC V7 + envelope high-ask estendido (maxAsk 0.94, maxDistAbs 40) com orçamento em tier (1.5x/2x quando ask >= 0.82). Preset campeão: btc-champion-v1 (+25% PnL treino, +30% holdout jul vs TFC V7). Mecanismos testados e rejeitados mantidos como params desativados: sigma sizing, scoop, danger contínuo, early-warn, minEntryZ. Doc: docs/estrategias/implementadas/midas-carry-v1.md."
+  "notes": "Núcleo TFC V7 + envelope high-ask (maxAsk 0.94) com orçamento em tier. Presets: btc-champion-v1 (dist 40, tier 1.5x), btc-aggressive-v1 (tier 2.0x), btc-robust-v1 (dist 30, tier 1.5x — melhor PnL/DD no lab de robustez 2026-07-21). Mecanismos rejeitados ficam desativados: sigma sizing, scoop, danger contínuo, early-warn, minEntryZ. Doc: docs/estrategias/implementadas/midas-carry-v1.md."
 }
