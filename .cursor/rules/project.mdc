@@ -35,7 +35,7 @@ Pedido do tipo “atualize o data-backtest local no btc 5min”:
 npm run lake:update-btc-5m
 ```
 
-Não rode `query:availability`, dry-run nem descubra container manualmente antes. Se o cache de container morrer: `--refresh-container`. Doc: `docs/operacao/atualizar-btc-5m-local.md`.
+Usa SSH `Brutus` (Cloudflare Tunnel; sem VPN). Não rode `query:availability`/dry-run antes. Container morto após redeploy é rediscoberto automaticamente. Doc: `docs/operacao/atualizar-btc-5m-local.md`.
 
 ## Labs / sweeps grandes
 

@@ -17,6 +17,18 @@ test('addUtcDays crosses month boundaries in UTC', () => {
   assert.equal(addUtcDays('2026-07-01', -1), '2026-06-30');
 });
 
+test('computeUpdateRange defaults to tip day without lookback', () => {
+  const range = computeUpdateRange({
+    localMaxDt: '2026-07-21',
+    today: '2026-07-22',
+  });
+  assert.deepEqual(range, {
+    from: '2026-07-21',
+    to: '2026-07-22',
+    refreshedFromLocalMax: true,
+  });
+});
+
 test('computeUpdateRange refreshes tip from local max with lookback', () => {
   const range = computeUpdateRange({
     localMaxDt: '2026-07-20',
@@ -64,16 +76,18 @@ test('summarizeUpdateResult keeps a short agent-friendly payload', () => {
       ok: true,
       dryRun: false,
       partitions: 2,
-      filesCopied: 2,
+      filesCopied: 1,
+      filesSkipped: 1,
       files: [
-        { partition: { dt: '2026-07-20' } },
-        { partition: { dt: '2026-07-21' } },
+        { partition: { dt: '2026-07-20' }, action: 'skip' },
+        { partition: { dt: '2026-07-21' }, action: 'copy' },
       ],
     },
   });
 
   assert.equal(summary.ok, true);
-  assert.equal(summary.filesCopied, 2);
-  assert.deepEqual(summary.remoteDts, ['2026-07-20', '2026-07-21']);
+  assert.equal(summary.filesCopied, 1);
+  assert.equal(summary.filesSkipped, 1);
+  assert.deepEqual(summary.remoteDts, ['2026-07-21']);
   assert.match(summary.note || '', /06:00 UTC/);
 });

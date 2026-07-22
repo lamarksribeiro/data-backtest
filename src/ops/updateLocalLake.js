@@ -56,7 +56,7 @@ export function readLocalCoverage(db, {
 export function computeUpdateRange({
   localMaxDt = null,
   today = utcToday(),
-  lookbackDays = 1,
+  lookbackDays = 0,
   emptyLookbackDays = 14,
   fromOverride = null,
   toOverride = null,
@@ -87,10 +87,14 @@ export function summarizeUpdateResult({
   range,
   pullResult,
 }) {
-  const filesCopied = Number(pullResult?.filesCopied || 0);
+  const filesCopied = Number(pullResult?.filesCopied || pullResult?.filesToCopy || 0);
+  const filesSkipped = Number(pullResult?.filesSkipped || pullResult?.filesToSkip || 0);
   const partitions = Number(pullResult?.partitions || pullResult?.files?.length || 0);
   const remoteDts = [...new Set(
-    (pullResult?.files || []).map((f) => f.partition?.dt || f.relativePath?.match(/dt=(\d{4}-\d{2}-\d{2})/)?.[1]).filter(Boolean),
+    (pullResult?.files || [])
+      .filter((f) => !f.action || f.action === 'copy')
+      .map((f) => f.partition?.dt || f.relativePath?.match(/dt=(\d{4}-\d{2}-\d{2})/)?.[1])
+      .filter(Boolean),
   )].sort();
 
   return {
@@ -101,6 +105,7 @@ export function summarizeUpdateResult({
     after: coverageAfter,
     partitions,
     filesCopied,
+    filesSkipped,
     remoteDts,
     note: coverageAfter?.maxDt === utcToday()
       ? null

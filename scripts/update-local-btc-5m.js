@@ -32,7 +32,7 @@ function parseArgs(argv) {
     dryRun: false,
     skipCheck: false,
     refreshContainer: false,
-    lookbackDays: 1,
+    lookbackDays: 0,
     emptyLookbackDays: 14,
     from: null,
     to: null,
@@ -92,12 +92,14 @@ Uso:
 
 Comportamento:
   1. Lê max(dt) local no manifest (BTC / 5m / book_depth do .env)
-  2. Puxa do Brutus: from = max_local - lookback (padrão 1) até hoje UTC
-  3. UPSERT no manifest local + ops:check (a menos de --skip-check)
+  2. Puxa do Brutus: from = max_local (lookback 0) até hoje UTC
+  3. Pula Parquets que já existem localmente; só baixa o que falta
+  4. Se o container em cache morreu (redeploy), rediscobre sozinho
+  5. UPSERT no manifest local + ops:check (a menos de --skip-check)
 
 Flags úteis:
-  --dry-run              Só lista o que seria copiado
-  --lookback-days N      Re-baixa N dias antes do tip local (padrão 1)
+  --dry-run              Só lista o que seria copiado/pulado
+  --lookback-days N      Inclui N dias antes do tip (padrão 0; use 1+ para forçar refresh)
   --empty-lookback-days  Se lake vazio, quantos dias puxar (padrão 14)
   --from / --to          Sobrescreve a janela automática
   --refresh-container    Apaga cache do container e rediscobre

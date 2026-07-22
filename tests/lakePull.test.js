@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 
@@ -6,9 +7,11 @@ import {
   activePathToLakeRelative,
   buildManifestQuery,
   fetchRemoteManifestRows,
+  isDeadContainerError,
   manifestRowToEntry,
   parseRemoteManifestJson,
   planLakePull,
+  shellSingleQuote,
 } from '../src/ops/lakePull.js';
 
 test('activePathToLakeRelative strips /lake prefix', () => {
@@ -107,6 +110,60 @@ test('fetchRemoteManifestRows prefers docker exec node over scp', async () => {
 
   assert.equal(rows.length, 1);
   assert.match(calls[0][1][1], /docker exec -i abc123 node --input-type=module/);
+});
+
+test('fetchRemoteManifestRows rediscovers when cached container is dead', async () => {
+  const calls = [];
+  const cachePath = path.join(os.tmpdir(), `lake-pull-cache-${process.pid}-${Date.now()}.json`);
+  await import('node:fs/promises').then((fs) => fs.writeFile(cachePath, JSON.stringify({
+    containerId: 'deadbeefcafe',
+    statePath: '/state/data-backtest.db',
+  })));
+
+  try {
+    const rows = await fetchRemoteManifestRows({
+      remoteHost: 'Brutus',
+      remoteStatePath: '/data/goldenlens/backtest-state/data-backtest.db',
+      query: "SELECT * FROM lake_manifest WHERE dataset IN ('backtest_ticks')",
+      containerCachePath: cachePath,
+      runCommand: async (command, args) => {
+        calls.push([command, args?.[1] || '']);
+        const remote = String(args?.[1] || '');
+        if (remote.includes('docker exec -i deadbeefcafe')) {
+          throw new Error('Error response from daemon: No such container: deadbeefcafe');
+        }
+        if (remote.includes('docker ps -q')) {
+          return 'alivecontainer1\n';
+        }
+        if (remote.includes('docker exec -i alivecontainer1')) {
+          return '[{"dataset":"backtest_ticks","dt":"2026-06-17","underlying":"BTC","active_path":"/lake/x.parquet","status":"valid"}]';
+        }
+        throw new Error(`unexpected: ${command} ${remote}`);
+      },
+      log: () => {},
+    });
+
+    assert.equal(rows.length, 1);
+    assert.equal(calls.filter(([, remote]) => String(remote).includes('docker exec -i deadbeefcafe')).length, 1);
+    assert.equal(calls.filter(([, remote]) => String(remote).includes('docker ps -q')).length, 1);
+    assert.equal(calls.filter(([, remote]) => String(remote).includes('docker exec -i alivecontainer1')).length, 1);
+    assert.ok(!calls.some(([command]) => command === 'scp'));
+  } finally {
+    await import('node:fs/promises').then((fs) => fs.rm(cachePath, { force: true }));
+  }
+});
+
+test('shellSingleQuote protects sqlite3 SQL with parentheses', () => {
+  assert.equal(shellSingleQuote("a'b"), `'a'\\''b'`);
+  assert.equal(
+    shellSingleQuote('SELECT * FROM t WHERE x IN (1, 2)'),
+    "'SELECT * FROM t WHERE x IN (1, 2)'",
+  );
+});
+
+test('isDeadContainerError detects docker missing container', () => {
+  assert.equal(isDeadContainerError(new Error('No such container: abc')), true);
+  assert.equal(isDeadContainerError(new Error('permission denied')), false);
 });
 
 test('fetchRemoteManifestRows falls back to scp when remote node fails', async () => {

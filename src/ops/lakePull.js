@@ -142,6 +142,24 @@ export function parseRemoteManifestJson(stdout) {
   return parsed;
 }
 
+export function shellSingleQuote(value) {
+  return `'${String(value).replace(/'/g, `'\\''`)}'`;
+}
+
+export function isDeadContainerError(err) {
+  const msg = String(err?.message || err || '');
+  return /No such container/i.test(msg) || /container .* not found/i.test(msg);
+}
+
+export async function localParquetPresent(filePath) {
+  try {
+    const info = await stat(filePath);
+    return info.isFile() && info.size > 0;
+  } catch {
+    return false;
+  }
+}
+
 function buildRemoteNodeManifestScript(dbPath, query) {
   const queryB64 = Buffer.from(query, 'utf8').toString('base64');
   return `
@@ -213,6 +231,24 @@ export async function resolveRemoteContainerTarget({
   return target;
 }
 
+async function execRemoteManifestQuery({
+  remoteHost,
+  containerId,
+  statePath,
+  query,
+  runCommand,
+  log,
+}) {
+  const script = buildRemoteNodeManifestScript(statePath, query);
+  const scriptB64 = Buffer.from(script, 'utf8').toString('base64');
+  log(`[lake:pull] consultando manifest remoto via docker exec (${containerId.slice(0, 12)})...`);
+  const stdout = await runCommand('ssh', [
+    remoteHost,
+    `echo ${scriptB64} | base64 -d | docker exec -i ${containerId} node --input-type=module`,
+  ]);
+  return parseRemoteManifestJson(stdout);
+}
+
 async function fetchRemoteManifestRowsViaRemoteNode({
   remoteHost,
   remoteContainer,
@@ -230,14 +266,41 @@ async function fetchRemoteManifestRowsViaRemoteNode({
     runCommand,
     log,
   });
-  const script = buildRemoteNodeManifestScript(target.statePath, query);
-  const scriptB64 = Buffer.from(script, 'utf8').toString('base64');
-  log(`[lake:pull] consultando manifest remoto via docker exec (${target.containerId.slice(0, 12)})...`);
-  const stdout = await runCommand('ssh', [
-    remoteHost,
-    `echo ${scriptB64} | base64 -d | docker exec -i ${target.containerId} node --input-type=module`,
-  ]);
-  return parseRemoteManifestJson(stdout);
+
+  try {
+    return await execRemoteManifestQuery({
+      remoteHost,
+      containerId: target.containerId,
+      statePath: target.statePath,
+      query,
+      runCommand,
+      log,
+    });
+  } catch (err) {
+    // Explicit --remote-container must not silently rediscover.
+    if (remoteContainer || !containerCachePath || !isDeadContainerError(err)) {
+      throw err;
+    }
+
+    log(`[lake:pull] container em cache morto (${target.containerId.slice(0, 12)}) — rediscobrindo...`);
+    await rm(containerCachePath, { force: true });
+    const rediscovered = await resolveRemoteContainerTarget({
+      remoteHost,
+      remoteContainer: null,
+      remoteStateInContainer,
+      cachePath: containerCachePath,
+      runCommand,
+      log,
+    });
+    return execRemoteManifestQuery({
+      remoteHost,
+      containerId: rediscovered.containerId,
+      statePath: rediscovered.statePath,
+      query,
+      runCommand,
+      log,
+    });
+  }
 }
 
 async function fetchRemoteManifestRowsViaSqlite3({
@@ -246,7 +309,8 @@ async function fetchRemoteManifestRowsViaSqlite3({
   query,
   runCommand,
 }) {
-  const stdout = await runCommand('ssh', [remoteHost, 'sqlite3', '-json', remoteStatePath, query]);
+  const remoteCmd = `sqlite3 -json ${shellSingleQuote(remoteStatePath)} ${shellSingleQuote(query)}`;
+  const stdout = await runCommand('ssh', [remoteHost, remoteCmd]);
   return parseRemoteManifestJson(stdout);
 }
 
@@ -451,23 +515,37 @@ export async function runLakePull({
   log(`[lake:pull] ${plan.partitions} particoes, ${plan.files.length} arquivos parquet`);
 
   if (dryRun) {
+    const files = [];
+    for (const file of plan.files) {
+      const alreadyLocal = await localParquetPresent(file.localAbsolutePath);
+      files.push({
+        relativePath: file.relativePath,
+        remote: `${remoteHost}:${file.remoteAbsolutePath}`,
+        local: file.localAbsolutePath,
+        partition: file.partition,
+        action: alreadyLocal ? 'skip' : 'copy',
+      });
+    }
     return {
       ok: true,
       dryRun: true,
       mode: 'selective',
       partitions: plan.partitions,
-      files: plan.files.map((file) => ({
-        relativePath: file.relativePath,
-        remote: `${remoteHost}:${file.remoteAbsolutePath}`,
-        local: file.localAbsolutePath,
-        partition: file.partition,
-      })),
+      files,
+      filesToCopy: files.filter((f) => f.action === 'copy').length,
+      filesToSkip: files.filter((f) => f.action === 'skip').length,
       manifestRows: rows.length,
     };
   }
 
   let copied = 0;
+  let skipped = 0;
   for (const file of plan.files) {
+    if (await localParquetPresent(file.localAbsolutePath)) {
+      skipped += 1;
+      log(`[lake:pull] ja local, pulando (${skipped} skip): ${file.relativePath}`);
+      continue;
+    }
     await mkdir(path.dirname(file.localAbsolutePath), { recursive: true });
     await runCommand('scp', [`${remoteHost}:${file.remoteAbsolutePath}`, file.localAbsolutePath]);
     copied += 1;
@@ -487,6 +565,7 @@ export async function runLakePull({
     mode: 'selective',
     partitions: plan.partitions,
     filesCopied: copied,
+    filesSkipped: skipped,
     manifestMerged: merged,
     check,
   };
