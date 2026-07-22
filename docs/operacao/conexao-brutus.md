@@ -2,11 +2,60 @@
 
 Guia para configurar SSH e (opcionalmente) Coolify MCP em um PC ou IDE novo. O Brutus é o host de produção do **Coolify Hulw** (`openclaw`, rede privada `10.40.2.77`), onde rodam `data-colector`, `data-backtest`, `data-index` e Postgres. O **`data-robot`** roda no **Coolify Giovanna** (URL oficial https://robot.fracta.online), não no Brutus/Hulw.
 
-## Pré-requisitos
+## Acesso recomendado (sem FortiClient)
 
-1. **Rede** — o SSH usa IP privado `10.40.2.77`. É preciso estar na mesma VPN/rede que o ambiente Hulw (o mesmo acesso que já funciona no PC principal).
-2. **Chave SSH** — par Ed25519 autorizado no servidor. Copie de forma segura do PC já configurado ou peça para alguém com acesso adicionar sua chave pública em `/root/.ssh/authorized_keys`.
-3. **OpenSSH** — cliente `ssh`/`scp` no PATH (Windows: OpenSSH Client nas Features opcionais; macOS/Linux: geralmente já vem instalado).
+SSH via **Cloudflare Tunnel + Access** — igual em espírito ao Giovanna (sem VPN), mas **sem porta 22 pública**:
+
+| Peça | Papel |
+|------|--------|
+| Túnel existente `coolify-data-interno-2026-05-19` no Brutus | Só **saída** para a Cloudflare (já roda com os sites fracta) |
+| Hostname | `ssh-brutus.fracta.online` → `ssh://localhost:22` |
+| Access app **Brutus SSH** | Só `lamarcksribeiro@gmail.com` (login Cloudflare) |
+| Cliente local | `cloudflared` + chave `brutus_ed25519` |
+
+**Não** abre SSH na internet. Quem não passa no Access nem chega no `sshd`.
+
+Modelo de segurança (resumo):
+
+- No Brutus, o `cloudflared` só faz **conexão de saída** para a Cloudflare (já existia para os sites fracta).
+- Não há porta SSH nova aberta no firewall/host para a internet.
+- O hostname `ssh-brutus.fracta.online` passa pela Cloudflare; sem login Access (e-mail liberado) a sessão é recusada.
+- Ainda exige a chave SSH `brutus_ed25519` depois do Access.
+- Tailscale foi descartado (SSL inspection Forti no Brutus) e **removido** do PC e do servidor.
+
+### Setup no PC
+
+1. Instalar [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/) (`winget install Cloudflare.cloudflared`).
+2. Alias SSH (Windows `%USERPROFILE%\.ssh\config`):
+
+```sshconfig
+Host Brutus
+  HostName ssh-brutus.fracta.online
+  User root
+  IdentityFile C:\Users\lamar\.ssh\brutus_ed25519
+  IdentitiesOnly yes
+  ProxyCommand "C:\Program Files (x86)\cloudflared\cloudflared.exe" access ssh --hostname %h
+  ServerAliveInterval 30
+
+Host Brutus-LAN
+  HostName 10.40.2.77
+  User root
+  IdentityFile C:\Users\lamar\.ssh\brutus_ed25519
+  IdentitiesOnly yes
+```
+
+3. Primeira conexão: `ssh Brutus` abre o browser do **Cloudflare Access** (e-mail liberado). JWT fica em cache (~24h). Depois: sem Forti, sem browser a cada comando (até expirar a sessão).
+4. Teste: `ssh Brutus hostname` → `openclaw`.
+
+Fallback com VPN Forti EBSERH: `ssh Brutus-LAN` (rede `10.40.2.77`).
+
+Opcional (agente 100% sem browser): Zero Trust → Access → Service Auth → criar service token e política na app **Brutus SSH**; usar `CF_ACCESS_CLIENT_ID` / `CF_ACCESS_CLIENT_SECRET` com o `cloudflared access ssh`.
+
+## Pré-requisitos (chave SSH)
+
+1. **Chave SSH** — par Ed25519 autorizado no servidor (`brutus_ed25519`).
+2. **OpenSSH** — cliente `ssh`/`scp` no PATH.
+3. **cloudflared** — para o caminho sem VPN (acima).
 
 Não commite chaves privadas nem tokens de API no repositório.
 
@@ -43,28 +92,20 @@ Envie o conteúdo de `brutus_ed25519.pub` para quem administra o Brutus e peça 
 
 ## 2. Alias SSH `Brutus`
 
-Adicione ao arquivo de config do OpenSSH:
+Use o bloco da seção **Acesso recomendado** no topo deste doc (`Brutus` via Cloudflare + `Brutus-LAN` via VPN).
 
-| SO | Arquivo |
-|----|---------|
-| Windows | `%USERPROFILE%\.ssh\config` |
-| macOS / Linux | `~/.ssh/config` |
-
-Exemplo (também em `labs/ops/brutus/ssh-config.example`):
+Exemplo mínimo Cloudflare (Windows):
 
 ```sshconfig
 Host Brutus
-    HostName 10.40.2.77
+    HostName ssh-brutus.fracta.online
     User root
-    IdentityFile ~/.ssh/brutus_ed25519
+    IdentityFile C:\Users\lamar\.ssh\brutus_ed25519
     IdentitiesOnly yes
+    ProxyCommand "C:\Program Files (x86)\cloudflared\cloudflared.exe" access ssh --hostname %h
 ```
 
-No Windows, se `IdentityFile` com `~` falhar, use caminho absoluto:
-
-```sshconfig
-    IdentityFile C:\Users\SEU_USUARIO\.ssh\brutus_ed25519
-```
+Arquivo: Windows `%USERPROFILE%\.ssh\config` · macOS/Linux `~/.ssh/config`.
 
 ### Teste
 
@@ -72,7 +113,7 @@ No Windows, se `IdentityFile` com `~` falhar, use caminho absoluto:
 ssh Brutus "hostname ; uptime"
 ```
 
-Saída esperada: `openclaw` e load average.
+Saída esperada: `openclaw` e load average. Na **primeira** vez, complete o login Cloudflare Access no browser.
 
 Comandos úteis:
 
@@ -90,6 +131,7 @@ Evite `docker ps --format` com templates Go (`{{.Names}}`) dentro de `ssh Brutus
 ssh Brutus "docker ps | grep data-backtest || true"
 ```
 
+Comandos remotos longos com `$`, `<`, `>`: preferir script via `scp` + `bash /tmp/script.sh` (PowerShell interpreta metacaracteres).
 ## 3. Outras IDEs e editores
 
 Qualquer IDE com **terminal integrado** usa os mesmos comandos `ssh`/`scp` após o passo 2.
@@ -158,7 +200,8 @@ Scripts de lab: ver `labs/ops/brutus/README.md`.
 
 | Item | Valor |
 |------|--------|
-| Alias SSH | `Brutus` |
+| Alias SSH | `Brutus` (Cloudflare) · `Brutus-LAN` (VPN) |
+| Hostname público SSH | `ssh-brutus.fracta.online` |
 | Hostname (dentro do servidor) | `openclaw` |
 | IP (rede privada) | `10.40.2.77` |
 | Usuário SSH | `root` |
@@ -172,7 +215,8 @@ Trate como **produção**. Confirme antes de comandos destrutivos no host ou em 
 
 | Sintoma | Causa provável | Ação |
 |---------|----------------|------|
-| `Connection timed out` | Fora da VPN/rede `10.40.x` | Conectar à VPN Hulw |
+| Browser Access / JWT expirado | Sessão Access ~24h | Rodar `ssh Brutus` e completar login de novo |
+| `Connection timed out` em `Brutus-LAN` | Fora da VPN Forti | Usar `ssh Brutus` (Cloudflare) ou ligar Forti |
 | `Permission denied (publickey)` | Chave ausente ou não autorizada | Verificar `IdentityFile` e `authorized_keys` no servidor |
 | `ssh` pede senha | Chave errada ou `IdentitiesOnly` | Conferir alias e permissões da chave |
 | MCP Coolify falha 401 | Token inválido/expirado | Gerar novo token no painel |

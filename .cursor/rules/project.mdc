@@ -21,6 +21,12 @@ Estúdio é a **única** tela de backtest. Sidebar: Estúdio · Estratégias · 
 - Lakehouse Parquet/DuckDB; estado SQLite em `state/`.
 - Sync/backfill via CLI (`sync:*`, `query:*`) — não duplicar leitura de ticks que já está em `src/query/` e `src/sync/`.
 
+## Acesso Brutus (atalho)
+
+- **Sem Forti:** `ssh Brutus` → `ssh-brutus.fracta.online` via Cloudflare Tunnel + Access (`cloudflared access ssh`). Docs: `docs/operacao/conexao-brutus.md`, pull: `docs/operacao/lake-pull-brutus.md`.
+- **Com Forti (fallback):** `ssh Brutus-LAN` → `10.40.2.77`.
+- Não abrir `FortiClient.exe` pelo agente (SSO EBSERH + crash Electron).
+
 ## Labs / sweeps grandes
 
 Ver rule `labs-brutus-performance.mdc` (pasta `labs/`). Smoke local; offload Brutus para 50+ variantes.
