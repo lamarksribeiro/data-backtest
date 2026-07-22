@@ -145,6 +145,7 @@ export function permanentlyDeleteStrategy(db, id, { deleteRuns = false } = {}) {
       }
       db.prepare('DELETE FROM backtest_runs WHERE strategy_id = ?').run(id);
     }
+    db.prepare('DELETE FROM strategy_presets WHERE strategy_id = ?').run(id);
     db.prepare('DELETE FROM strategy_versions WHERE strategy_id = ?').run(id);
     db.prepare('DELETE FROM strategy_definitions WHERE id = ?').run(id);
     db.exec('COMMIT');

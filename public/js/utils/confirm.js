@@ -73,13 +73,14 @@ export function promptDialog({
   title = 'Confirmação',
   message,
   placeholder = '',
+  defaultValue = '',
   confirmLabel = 'Confirmar',
   cancelLabel = 'Cancelar',
 }) {
   return new Promise((resolve) => {
     if (activeClose) activeClose(false);
     const root = getModalRoot();
-    const input = el('input', { class: 'field__input', type: 'text', placeholder });
+    const input = el('input', { class: 'field__input', type: 'text', placeholder, value: defaultValue });
 
     function close(result) {
       if (activeClose !== close) return;

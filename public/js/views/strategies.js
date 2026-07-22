@@ -5,6 +5,7 @@ import { notifyStudioCatalogChanged, notifyRunDataChanged, registerStrategiesRef
 import { promptDialog, confirmDialog } from '../utils/confirm.js';
 import { formatPnl } from '../utils/format.js';
 import { renderUplotSparkline, destroyChartsIn } from '../utils/uplotChart.js';
+import { updateSourceParams } from '../utils/updateSourceParams.js';
 
 const STRATEGY_JS_TEMPLATE_BODY = `export default strategy({
   name: "Nova Estrategia",
@@ -1217,7 +1218,7 @@ async function openStrategyEditor(ctx, strategyId, versionId = null, options = {
       el('div', { class: 'row row--between', style: { marginBottom: '14px', flexWrap: 'wrap', gap: '10px' } }, [
         el('div', {}, [
           el('h3', { class: 'card__title' }, 'Parâmetros e Presets'),
-          el('p', { class: 'muted', style: { fontSize: '12px' } }, 'Ajuste parâmetros sem recriar versão de código — salve como preset.'),
+          el('p', { class: 'muted', style: { fontSize: '12px' } }, 'Teste presets sem versionar; depois salve no código ou promova o preset a uma nova versão.'),
         ]),
         el('div', { class: 'row', style: { gap: '8px', flexWrap: 'wrap' } }, [
           el('button', { class: 'btn btn--ghost btn--sm', type: 'button', disabled: !hasParams, onclick: () => saveParamsAsPreset(ctx, strategy.id) }, 'Salvar preset'),
@@ -1607,6 +1608,12 @@ function renderPresetsPanel(ctx, strategyId, version) {
         disabled: !state.selectedPresetId,
         onclick: () => runBacktestWithPreset(ctx, strategyId),
       }, 'Rodar backtest com preset'),
+      el('button', {
+        class: 'btn btn--primary btn--sm',
+        type: 'button',
+        disabled: !state.selectedPresetId,
+        onclick: () => promotePresetToVersion(ctx, strategyId),
+      }, 'Tornar versão'),
       el('select', {
         class: 'field__input field__input--sm',
         onchange: (e) => { state.presetCompareId = Number(e.target.value) || null; refreshPresetsPanel(ctx, strategyId, version); },
@@ -1647,12 +1654,39 @@ function formatPresetDiff(left, right) {
 function applyPresetToForm(preset) {
   state.selectedPresetId = preset.id;
   const form = document.getElementById('strategy-params-form');
-  if (!form) return;
-  for (const [key, value] of Object.entries(preset.params || {})) {
+  if (form) {
+    for (const [key, value] of Object.entries(preset.params || {})) {
+      const input = form.elements[key];
+      if (!input) continue;
+      input.value = String(value);
+    }
+  }
+  if (state.currentStrategy) {
+    refreshPresetsPanel(strategiesViewCtx, state.currentStrategy.id, state.currentVersion);
+  }
+}
+
+function defaultsFromSchema(schema = {}) {
+  const defaults = {};
+  for (const [key, def] of Object.entries(schema)) {
+    if (def && Object.prototype.hasOwnProperty.call(def, 'default')) {
+      defaults[key] = def.default;
+    }
+  }
+  return defaults;
+}
+
+function readParamsFromForm() {
+  const form = document.getElementById('strategy-params-form');
+  if (!form) return null;
+  const schema = state.validation?.params_schema || state.currentVersion?.params_schema || {};
+  const params = {};
+  for (const [key, def] of Object.entries(schema)) {
     const input = form.elements[key];
     if (!input) continue;
-    input.value = String(value);
+    params[key] = parseParamValue(input.value, typeof def?.default);
   }
+  return params;
 }
 
 function compareSelectedPresets() {
@@ -1668,18 +1702,16 @@ function refreshPresetsPanel(ctx, strategyId, version) {
 }
 
 async function saveParamsAsPreset(ctx, strategyId) {
-  const form = document.getElementById('strategy-params-form');
-  if (!form || !state.selectedVersionId) return;
-  const schema = state.validation?.params_schema || state.currentVersion?.params_schema || {};
-  const params = {};
+  if (!state.selectedVersionId) return;
+  let params;
   try {
-    for (const [key, def] of Object.entries(schema)) {
-      const input = form.elements[key];
-      if (!input) continue;
-      params[key] = parseParamValue(input.value, typeof def?.default);
-    }
+    params = readParamsFromForm();
   } catch (err) {
     ctx.toast.err(err.message || 'Parâmetro inválido');
+    return;
+  }
+  if (!params || !Object.keys(params).length) {
+    ctx.toast.warn('Nenhum parâmetro para salvar');
     return;
   }
   const name = await promptDialog({
@@ -1825,28 +1857,73 @@ function normalizeSource(source) {
 }
 
 async function saveParamsVersion(ctx, strategyId) {
-  const form = document.getElementById('strategy-params-form');
-  if (!form) return;
-  const schema = state.validation?.params_schema || {};
-  const values = {};
+  let values;
   try {
-    for (const [key, def] of Object.entries(schema)) {
-      const input = form.elements[key];
-      if (!input) continue;
-      values[key] = parseParamValue(input.value, typeof def?.default);
-    }
+    values = readParamsFromForm();
   } catch (err) {
     ctx.toast.err(err.message || 'Parâmetro inválido');
     return;
   }
-  const source = updateParamDefaults(state.sourceCode, values);
-  if (source === state.sourceCode) {
+  if (!values || !Object.keys(values).length) {
+    ctx.toast.warn('Nenhum parâmetro para salvar');
+    return;
+  }
+  const language = state.editorLanguage || state.currentVersion?.language || 'strategy-js-v1';
+  const schema = state.validation?.params_schema || state.currentVersion?.params_schema || {};
+  const merged = { ...defaultsFromSchema(schema), ...values };
+  const { source, changed } = updateSourceParams(state.sourceCode, merged, { language });
+  if (!changed) {
     ctx.toast.warn('Nenhum parâmetro foi alterado.');
     return;
   }
   await saveSourceVersion(ctx, strategyId, source);
-  
-  // Go back to parameters tab to see changes
+  switchTab('params');
+}
+
+async function promotePresetToVersion(ctx, strategyId) {
+  if (!state.selectedPresetId) return;
+  const preset = (state.presets || []).find((p) => p.id === state.selectedPresetId);
+  if (!preset) {
+    ctx.toast.warn('Selecione um preset');
+    return;
+  }
+  const language = state.editorLanguage || state.currentVersion?.language || 'strategy-js-v1';
+  const schema = state.validation?.params_schema || state.currentVersion?.params_schema || {};
+  const merged = { ...defaultsFromSchema(schema), ...(preset.params || {}) };
+  const baseSource = state.currentVersion?.source_code || state.sourceCode;
+  const { source, changed } = updateSourceParams(baseSource, merged, { language });
+  if (!changed) {
+    ctx.toast.warn('Os parâmetros do preset já estão no código desta versão.');
+    return;
+  }
+  const notes = await promptDialog({
+    title: 'Promover preset a versão',
+    message: `Criar nova versão com os params do preset "${preset.name}"?`,
+    placeholder: `Preset: ${preset.name}`,
+    defaultValue: `Preset: ${preset.name}`,
+    confirmLabel: 'Criar versão',
+  });
+  if (notes === null) return;
+
+  const validation = await validateStrategySource(ctx, source);
+  if (!validation?.ok) {
+    ctx.toast.warn('Corrija os erros de validação antes de salvar.');
+    return;
+  }
+  const res = await ctx.api.post(`/api/strategies/${strategyId}/versions`, {
+    source_code: source,
+    language: state.editorLanguage || 'auto',
+    notes: notes || `Preset: ${preset.name}`,
+  });
+  if (!res.ok) {
+    ctx.toast.err(res.error?.message || 'Falha ao criar versão a partir do preset');
+    return;
+  }
+  state.selectedVersionId = res.data.version.id;
+  state.sourceCode = res.data.version.source_code;
+  state.validation = res.data.version.validation;
+  ctx.toast.ok(`Versão v${res.data.version.version} criada a partir do preset "${preset.name}"`);
+  await renderStrategies(ctx, { id: strategyId, versionId: state.selectedVersionId });
   switchTab('params');
 }
 
@@ -1858,27 +1935,6 @@ function parseParamValue(value, type) {
   }
   if (type === 'boolean') return String(value) === 'true';
   return String(value);
-}
-
-function updateParamDefaults(source, values) {
-  let next = String(source || '');
-  for (const [name, value] of Object.entries(values)) {
-    const literal = glsLiteral(value);
-    const re = new RegExp(`(^\\s*param\\s+${escapeRegExp(name)}\\s*=\\s*)(?:"(?:\\\\.|[^"])*"|true|false|null|-?\\d+(?:\\.\\d+)?)`, 'm');
-    next = next.replace(re, `$1${literal}`);
-  }
-  return next;
-}
-
-function glsLiteral(value) {
-  if (typeof value === 'number') return String(value);
-  if (typeof value === 'boolean') return value ? 'true' : 'false';
-  if (value == null) return 'null';
-  return JSON.stringify(String(value));
-}
-
-function escapeRegExp(value) {
-  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function showGlsHint(cm, automatic = false) {
