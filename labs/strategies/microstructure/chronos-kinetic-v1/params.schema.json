@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChronosKineticParams",
+  "type": "object",
+  "properties": {
+    "walletSize": { "type": "number", "minimum": 1 },
+    "entryBudget": { "type": "number", "minimum": 1 },
+    "minShares": { "type": "integer", "minimum": 1 },
+    "entrySlippageMax": { "type": "number", "minimum": 0 },
+    "minLiquidityRatio": { "type": "number", "minimum": 0, "maximum": 1 },
+    "minSecondsLeft": { "type": "integer", "minimum": 1 },
+    "maxSecondsLeft": { "type": "integer", "minimum": 2 },
+    "minDistAbs": { "type": "number", "minimum": 0 },
+    "maxDistAbs": { "type": "number", "minimum": 1 },
+    "kineticLookbackSecs": { "type": "integer", "minimum": 1 },
+    "minVelocity": { "type": "number", "minimum": 0 },
+    "minAcceleration": { "type": "number", "minimum": 0 },
+    "obiMin": { "type": "number", "minimum": -1, "maximum": 1 },
+    "obiLevels": { "type": "integer", "minimum": 1 },
+    "minAsk": { "type": "number", "minimum": 0.01, "maximum": 0.99 },
+    "maxAsk": { "type": "number", "minimum": 0.01, "maximum": 0.99 },
+    "maxSpread": { "type": "number", "minimum": 0 },
+    "minOddsSum": { "type": "number", "minimum": 0.5 },
+    "maxOddsSum": { "type": "number", "minimum": 0.5 }
+  },
+  "additionalProperties": true
+}

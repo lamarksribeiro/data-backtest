@@ -1,0 +1,217 @@
+strategy "Aether Edge Pro V1" {
+  param walletSize = 100
+  param entryBudget = 5
+  param minShares = 1
+  param entrySlippageMax = 0.02
+  param minLiquidityRatio = 0.60
+
+  // --- ENVELOPE TERMINAL MIDAS ROBUST V3 (MAX DRAWDOWN STRICT < $100) ---
+  param minSecondsLeft = 5
+  param maxSecondsLeft = 30
+  param maxDistAbs = 30.0
+  param minAsk = 0.55
+  param maxAsk = 0.94
+  param maxSpread = 0.03
+  param minOddsSum = 0.98
+  param maxOddsSum = 1.06
+
+  // High-Ask Tier Envelope (Cap de alocação conservador)
+  param tierAskThreshold = 0.82
+  param tierAskBudgetFactor = 1.25
+
+  // Velocity Guard
+  param velocityLookbackSecs = 5
+  param maxAdverseSpotChange = 8.0
+
+  // Sigma sizing com teto estrito de exposição
+  param sigmaSizingEnabled = true
+  param sigmaLookbackSecs = 90
+  param sigmaDivisor = 5.48
+  param zT1 = 0.5
+  param zT2 = 1.0
+  param zT3 = 2.5
+  param zT4 = 4.0
+  param wZ0 = 0.5
+  param wZ1 = 0.8
+  param wZ2 = 1.0
+  param wZ3 = 1.2
+  param wZ4 = 1.35
+
+  // Scoop (favorito barato com z alto)
+  param scoopEnabled = true
+  param scoopMinZ = 1.8
+  param scoopMinAsk = 0.10
+  param scoopMaxAsk = 0.55
+  param scoopMaxSpread = 0.04
+  param scoopMaxDistAbs = 60.0
+  param scoopMinSecondsLeft = 5
+  param scoopMaxSecondsLeft = 30
+  param scoopBudgetFactor = 1.0
+  param scoopMinOddsSum = 0.92
+  param scoopMaxOddsSum = 1.08
+
+  // Late Flip Exit & Reversal
+  param stopMinBid = 0.05
+  param lateFlipExitEnabled = true
+  param lateFlipExitSec = 8
+  param lateFlipMinSec = 4
+  param lateFlipReverseEnabled = true
+  param lateFlipReverseMaxAsk = 0.95
+  param lateFlipReverseMinAsk = 0.0
+  param lateFlipReverseBudgetFactor = 1.0
+
+  // Danger Exit Floor
+  param dangerExitEnabled = true
+  param dangerExitFloorSec = 4
+
+  onEventStart(event) {
+    state.entered = false
+    state.closed = false
+    state.reversed = false
+    state.signedDistance = 0.0
+    state.entryMode = ""
+    state.isAdverseMove = false
+    state.budgetFactor = 1.0
+  }
+
+  onTick(tick, event) {
+    let secsLeft = time.secondsUntil(event.end, tick.ts)
+
+    if (position.open) {
+      if (!state.entered) {
+        state.entered = true
+      }
+
+      let side = position.side
+      let bid = book.bid(side, tick)
+
+      state.signedDistance = tick.underlyingPrice - event.priceToBeat
+      if (side == "DOWN") {
+        state.signedDistance = event.priceToBeat - tick.underlyingPrice
+      }
+
+      // Danger exit V7: piso
+      if (params.dangerExitEnabled && !state.closed && !state.reversed && secsLeft >= params.dangerExitFloorSec && secsLeft < (params.dangerExitFloorSec + 1)) {
+        let sigma = signals.volatility(samples, 5)
+        if (math.abs(state.signedDistance) < (0.3 * sigma)) {
+          let dangerOut = exit({ price: bid, reason: "danger_exit" })
+          if (dangerOut) {
+            state.closed = dangerOut.closed
+          }
+        }
+      }
+
+      // Late flip exit/reverse 8s -> piso 4s
+      if (!state.closed && params.lateFlipExitEnabled && secsLeft <= params.lateFlipExitSec && secsLeft >= params.lateFlipMinSec && state.signedDistance <= 0.0 && bid >= params.stopMinBid) {
+        if (params.lateFlipReverseEnabled && !state.reversed) {
+          let oppSide = prices.oppositeSide(side)
+          let oppAsk = book.ask(oppSide, tick)
+          if (oppAsk >= params.lateFlipReverseMinAsk && oppAsk > 0.0 && oppAsk <= params.lateFlipReverseMaxAsk) {
+            let revBudget = params.entryBudget * params.lateFlipReverseBudgetFactor
+            let flipped = reverse(oppSide, { price: oppAsk, exitPrice: bid, budget: revBudget, tick: tick, ignoreConsumed: true, reason: "late_flip_reverse" })
+            if (flipped) {
+              state.reversed = true
+            }
+          }
+        }
+        if (!state.reversed) {
+          let lateFlipped = exit({ price: bid, reason: "late_flip_exit" })
+          if (lateFlipped) {
+            state.closed = lateFlipped.closed
+          }
+        }
+      }
+    }
+
+    if (!position.open && !state.entered && !state.closed) {
+      let btc = tick.underlyingPrice
+      let ptb = event.priceToBeat
+      let dist = math.abs(btc - ptb)
+
+      let fav = market.sideFromPrice(btc, ptb)
+      let ask = book.ask(fav, tick)
+      let bid = book.bid(fav, tick)
+      let spread = ask - bid
+
+      if (ask > 0.0 && bid > 0.0) {
+        let upAsk = book.ask("UP", tick)
+        let downAsk = book.ask("DOWN", tick)
+        let oddsSum = upAsk + downAsk
+
+        // z-score físico
+        let sigmaLevel = signals.volatility(samples, params.sigmaLookbackSecs)
+        let sigmaPs = sigmaLevel / params.sigmaDivisor
+        state.z = 0.0
+        if (sigmaPs > 0.0 && secsLeft > 0.0) {
+          state.z = dist / (sigmaPs * math.sqrt(secsLeft))
+        }
+
+        // Velocity guard
+        state.isAdverseMove = false
+        let btcPast = signals.underlyingAgo(samples, params.velocityLookbackSecs)
+        if (btcPast) {
+          let spotChange = btc - btcPast
+          if (fav == "UP" && spotChange < (0.0 - params.maxAdverseSpotChange)) {
+            state.isAdverseMove = true
+          }
+          if (fav == "DOWN" && spotChange > params.maxAdverseSpotChange) {
+            state.isAdverseMove = true
+          }
+        }
+
+        if (!state.isAdverseMove && secsLeft >= params.minSecondsLeft && secsLeft < params.maxSecondsLeft && dist < params.maxDistAbs && ask >= params.minAsk && ask <= params.maxAsk && spread <= params.maxSpread) {
+          if (oddsSum >= params.minOddsSum && oddsSum <= params.maxOddsSum) {
+            state.budgetFactor = 1.0
+            if (params.sigmaSizingEnabled) {
+              state.budgetFactor = params.wZ2
+              if (state.z < params.zT1) {
+                state.budgetFactor = params.wZ0
+              }
+              if (state.z >= params.zT1 && state.z < params.zT2) {
+                state.budgetFactor = params.wZ1
+              }
+              if (state.z >= params.zT3 && state.z < params.zT4) {
+                state.budgetFactor = params.wZ3
+              }
+              if (state.z >= params.zT4) {
+                state.budgetFactor = params.wZ4
+              }
+            }
+            if (ask >= params.tierAskThreshold) {
+              state.budgetFactor = state.budgetFactor * params.tierAskBudgetFactor
+            }
+            let budget = params.entryBudget * state.budgetFactor
+            let maxPrice = ask + params.entrySlippageMax
+            let bought = enter(fav, { price: ask, maxPrice: maxPrice, budget: budget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "aether_midas_entry" })
+            if (bought) {
+              state.entered = true
+              state.entryMode = "TFC_CORE"
+              if (ask >= params.tierAskThreshold) {
+                state.entryMode = "MIDAS_HIGH_ASK"
+              }
+              mark("entry", { mode: state.entryMode, side: fav, ask: ask, budget: budget })
+            }
+          }
+        }
+
+        // Modo 2: Scoop (favorito barato com z alto)
+        if (params.scoopEnabled && !state.entered && !state.isAdverseMove && secsLeft >= params.scoopMinSecondsLeft && secsLeft < params.scoopMaxSecondsLeft && dist < params.scoopMaxDistAbs && ask >= params.scoopMinAsk && ask < params.scoopMaxAsk && spread <= params.scoopMaxSpread && state.z >= params.scoopMinZ) {
+          if (oddsSum >= params.scoopMinOddsSum && oddsSum <= params.scoopMaxOddsSum) {
+            let scoopBudget = params.entryBudget * params.scoopBudgetFactor
+            let scoopMaxPrice = ask + params.entrySlippageMax
+            let scooped = enter(fav, { price: ask, maxPrice: scoopMaxPrice, budget: scoopBudget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "aether_scoop_entry" })
+            if (scooped) {
+              state.entered = true
+              state.entryMode = "scoop"
+              mark("entry", { mode: "scoop", side: fav, ask: ask, budget: scoopBudget, z: state.z })
+            }
+          }
+        }
+      }
+    }
+  }
+
+  onEventEnd(event) {
+    state.closed = true
+  }
+}

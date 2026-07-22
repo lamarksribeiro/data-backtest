@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AetherEdgeProV1Params",
+  "type": "object",
+  "properties": {
+    "walletSize": { "type": "number", "default": 100 },
+    "baseBudget": { "type": "number", "default": 10 },
+    "minNetMargin": { "type": "number", "default": 0.03 },
+    "midWindowStart": { "type": "number", "default": 180 },
+    "midWindowEnd": { "type": "number", "default": 60 },
+    "midMinHbook": { "type": "number", "default": 0.02 },
+    "midMinEdge": { "type": "number", "default": 0.05 },
+    "breakoutMinDistanceAbs": { "type": "number", "default": 10.0 },
+    "breakoutMaxAsk": { "type": "number", "default": 0.55 },
+    "terminalMaxSecondsLeft": { "type": "number", "default": 30 },
+    "terminalMinSecondsLeft": { "type": "number", "default": 5 },
+    "terminalMinAsk": { "type": "number", "default": 0.55 },
+    "terminalMaxAsk": { "type": "number", "default": 0.82 }
+  }
+}

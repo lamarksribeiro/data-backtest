@@ -1,0 +1,177 @@
+strategy "Chronos Kinetic V1" {
+  param walletSize = 100
+  param entryBudget = 6
+  param minShares = 1
+  param entrySlippageMax = 0.02
+  param minLiquidityRatio = 0.60
+
+  // 1. Envelope Terminal de Alta Probabilidade (80%+ WR)
+  param minSecondsLeft = 5
+  param maxSecondsLeft = 30
+  param minAsk = 0.58
+  param maxAsk = 0.94
+  param maxDistAbs = 35.0
+  param maxSpread = 0.03
+  param minOddsSum = 0.98
+  param maxOddsSum = 1.06
+
+  // High-Ask Tier Envelope
+  param tierAskThreshold = 0.82
+  param tierAskBudgetFactor = 1.35
+
+  // 2. Filtro Cinético de Impulso (Veto contra entradas estáticas)
+  param kineticLookbackSecs = 5
+  param minVelocity = 0.0
+  param minAcceleration = 0.0
+
+  // 3. Order Book Imbalance (OBI)
+  param obiMin = 0.05
+  param obiLevels = 5
+
+  // 4. Volatilidade e Sizing
+  param sigmaLookbackSecs = 90
+  param sigmaDivisor = 5.48
+  param sigmaSizingEnabled = true
+
+  // Proteção e Reversão Late Flip
+  param stopMinBid = 0.05
+  param lateFlipExitEnabled = true
+  param lateFlipExitSec = 8
+  param lateFlipMinSec = 4
+  param lateFlipReverseEnabled = true
+  param lateFlipReverseMaxAsk = 0.95
+  param lateFlipReverseBudgetFactor = 1.0
+  param dangerExitEnabled = true
+  param dangerExitFloorSec = 4
+
+  onEventStart(event) {
+    state.entered = false
+    state.closed = false
+    state.reversed = false
+    state.signedDistance = 0.0
+    state.velocity = 0.0
+    state.acceleration = 0.0
+    state.z = 0.0
+    state.budgetFactor = 1.0
+  }
+
+  onTick(tick, event) {
+    let secsLeft = time.secondsUntil(event.end, tick.ts)
+
+    if (position.open) {
+      if (!state.entered) {
+        state.entered = true
+      }
+
+      let side = position.side
+      let bid = book.bid(side, tick)
+
+      state.signedDistance = tick.underlyingPrice - event.priceToBeat
+      if (side == "DOWN") {
+        state.signedDistance = event.priceToBeat - tick.underlyingPrice
+      }
+
+      // Danger Floor exit (piso 4s)
+      if (params.dangerExitEnabled && !state.closed && !state.reversed && secsLeft >= params.dangerExitFloorSec && secsLeft < (params.dangerExitFloorSec + 1)) {
+        let sigmaExit = signals.volatility(samples, 5)
+        if (math.abs(state.signedDistance) < (0.3 * sigmaExit)) {
+          let dangerOut = exit({ price: bid, reason: "danger_exit" })
+          if (dangerOut) {
+            state.closed = dangerOut.closed
+          }
+        }
+      }
+
+      // Reversão Late Flip
+      if (!state.closed && params.lateFlipExitEnabled && secsLeft <= params.lateFlipExitSec && secsLeft >= params.lateFlipMinSec && state.signedDistance <= 0.0 && bid >= params.stopMinBid) {
+        if (params.lateFlipReverseEnabled && !state.reversed) {
+          let oppSide = prices.oppositeSide(side)
+          let oppAsk = book.ask(oppSide, tick)
+          if (oppAsk > 0.0 && oppAsk <= params.lateFlipReverseMaxAsk) {
+            let revBudget = params.entryBudget * params.lateFlipReverseBudgetFactor
+            let flipped = reverse(oppSide, { price: oppAsk, exitPrice: bid, budget: revBudget, tick: tick, ignoreConsumed: true, reason: "late_flip_reverse" })
+            if (flipped) {
+              state.reversed = true
+            }
+          }
+        }
+        if (!state.reversed) {
+          let lateFlipped = exit({ price: bid, reason: "late_flip_exit" })
+          if (lateFlipped) {
+            state.closed = lateFlipped.closed
+          }
+        }
+      }
+    }
+
+    if (!position.open && !state.entered && !state.closed) {
+      let btc = tick.underlyingPrice
+      let ptb = event.priceToBeat
+      let dist = math.abs(btc - ptb)
+
+      let fav = market.sideFromPrice(btc, ptb)
+      let ask = book.ask(fav, tick)
+      let bid = book.bid(fav, tick)
+
+      if (ask > 0.0 && bid > 0.0) {
+        let spread = ask - bid
+        let upAsk = book.ask("UP", tick)
+        let downAsk = book.ask("DOWN", tick)
+        let oddsSum = upAsk + downAsk
+
+        // 1. Velocidade Cinética (v_t)
+        state.velocity = 0.0
+        state.acceleration = 0.0
+        let btcPast1 = signals.underlyingAgo(samples, params.kineticLookbackSecs)
+        let btcPast2 = signals.underlyingAgo(samples, params.kineticLookbackSecs * 2)
+
+        if (btcPast1 && btcPast2) {
+          let v1 = btc - btcPast1
+          let v2 = btcPast1 - btcPast2
+          state.velocity = v1
+          state.acceleration = v1 - v2
+          if (fav == "DOWN") {
+            state.velocity = 0.0 - v1
+            state.acceleration = (0.0 - v1) - (0.0 - v2)
+          }
+        }
+
+        // 2. Order Book Imbalance (OBI)
+        state.obi = model.orderBookImbalance(fav, tick, params.obiLevels)
+
+        // 3. Condições de Entrada Cinética + Terminal Carry
+        if (secsLeft >= params.minSecondsLeft && secsLeft <= params.maxSecondsLeft) {
+          if (dist < params.maxDistAbs && ask >= params.minAsk && ask <= params.maxAsk && spread <= params.maxSpread) {
+            if (oddsSum >= params.minOddsSum && oddsSum <= params.maxOddsSum) {
+
+              // Filtro Cinético: Exige que a velocidade do spot NÃO seja adversa (v_t >= minVelocity) e OBI seja favorável
+              if (state.velocity >= params.minVelocity && state.obi >= params.obiMin) {
+
+                state.budgetFactor = 1.0
+                if (ask >= params.tierAskThreshold) {
+                  state.budgetFactor = params.tierAskBudgetFactor
+                }
+                if (state.velocity >= 2.0 && state.acceleration >= 0.5) {
+                  state.budgetFactor = state.budgetFactor * 1.15
+                }
+
+                let budget = params.entryBudget * state.budgetFactor
+                let maxPrice = ask + params.entrySlippageMax
+                let entry = enter(fav, { price: ask, maxPrice: maxPrice, budget: budget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "chronos_hybrid_entry" })
+                if (entry) {
+                  state.entered = true
+                  state.entryMode = "chronos_hybrid"
+                  mark("entry_chronos", { side: fav, ask: ask, budget: budget, vel: state.velocity, obi: state.obi })
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  onEventEnd(event) {
+    state.closed = true
+  }
+}

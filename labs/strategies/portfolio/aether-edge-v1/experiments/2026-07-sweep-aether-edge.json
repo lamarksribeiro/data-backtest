@@ -1,0 +1,41 @@
+{
+  "name": "2026-07-sweep-aether-edge",
+  "strategyId": "aether-edge-v1",
+  "strategyFamily": "portfolio",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-07-20",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "aether-edge-champion-v1",
+        "params": {
+          "midasTierAskThreshold": 0.82,
+          "midasTierBudgetFactor": 1.5
+        }
+      },
+      {
+        "id": "aether-edge-aggressive-tier",
+        "params": {
+          "midasTierAskThreshold": 0.82,
+          "midasTierBudgetFactor": 2.0
+        }
+      },
+      {
+        "id": "aether-edge-strict-breakout",
+        "params": {
+          "breakoutMinDistanceAbs": 15.0,
+          "midasTierAskThreshold": 0.82,
+          "midasTierBudgetFactor": 1.5
+        }
+      }
+    ]
+  }
+}

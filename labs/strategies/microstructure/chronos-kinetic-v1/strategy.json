@@ -1,0 +1,34 @@
+{
+  "id": "chronos-kinetic-v1",
+  "name": "Chronos Kinetic V1",
+  "family": "microstructure",
+  "status": "candidate",
+  "kind": "gls",
+  "assets": [
+    "BTC"
+  ],
+  "intervals": [
+    "5m"
+  ],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "labs/strategies/microstructure/chronos-kinetic-v1/strategy.gls"
+  },
+  "promotedToStudio": true,
+  "studioSlug": "chronos-kinetic-v1",
+  "studio": {
+    "description": "Estratégia original baseada em Impulso Cinético de Aceleração (v_t * a_t), Arbitragem Entrópica de Odds e Desbalanço de Livro de Ordens (OBI).",
+    "tags": [
+      "chronos-kinetic",
+      "btc",
+      "microstructure",
+      "kinetic-impulse",
+      "entropic-odds",
+      "low-drawdown"
+    ]
+  },
+  "defaultPreset": "btc-champion-v1",
+  "created": "2026-07-22T03:55:00.000Z"
+}

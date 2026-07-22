@@ -1,0 +1,38 @@
+{
+  "id": "aether-edge-v1",
+  "name": "Aether Edge Pro V1",
+  "family": "portfolio",
+  "status": "candidate",
+  "kind": "gls",
+  "assets": [
+    "BTC"
+  ],
+  "intervals": [
+    "5m"
+  ],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "labs/strategies/portfolio/aether-edge-v1/strategy.gls"
+  },
+  "promotedToStudio": true,
+  "studioSlug": "aether-edge-v1",
+  "studio": {
+    "description": "Estratégia sinérgica multi-regime unificando BCED, ERM, SBRI, TFC e Whipsaw Lock com filtro de fee taker da Polymarket e Hold to Settlement primário.",
+    "tags": [
+      "aether-edge",
+      "btc",
+      "multi-regime",
+      "bced",
+      "erm",
+      "sbri",
+      "tfc",
+      "whipsaw-lock",
+      "candidate",
+      "honest-execution"
+    ],
+    "defaultVersion": 1
+  },
+  "notes": "Estratégia unificada de alta performance projetada para superar o Profit Factor e Win Rate das estratégias aprovadas isoladas."
+}

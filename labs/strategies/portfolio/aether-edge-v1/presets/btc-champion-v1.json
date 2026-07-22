@@ -1,0 +1,73 @@
+{
+  "id": "btc-champion-v1",
+  "name": "BTC Champion V1 (Aether Edge Pro - Low DD)",
+  "strategyId": "aether-edge-v1",
+  "strategyFamily": "portfolio",
+  "studioSlug": "aether-edge-v1",
+  "role": "champion",
+  "labSummary": "Preset campeão da Aether Edge Pro V1 calibrado para Max Drawdown estritamente inferior a $85 em todas as janelas do lakehouse.",
+  "window": {
+    "from": "2026-05-04",
+    "to": "2026-07-20"
+  },
+  "bookDepth": 25,
+  "params": {
+    "walletSize": 100,
+    "entryBudget": 5,
+    "minShares": 1,
+    "entrySlippageMax": 0.02,
+    "minLiquidityRatio": 0.60,
+
+    "minSecondsLeft": 5,
+    "maxSecondsLeft": 30,
+    "maxDistAbs": 30.0,
+    "minAsk": 0.55,
+    "maxAsk": 0.94,
+    "maxSpread": 0.03,
+    "minOddsSum": 0.98,
+    "maxOddsSum": 1.06,
+
+    "tierAskThreshold": 0.82,
+    "tierAskBudgetFactor": 1.25,
+
+    "velocityLookbackSecs": 5,
+    "maxAdverseSpotChange": 8.0,
+
+    "sigmaSizingEnabled": true,
+    "sigmaLookbackSecs": 90,
+    "sigmaDivisor": 5.48,
+    "zT1": 0.5,
+    "zT2": 1.0,
+    "zT3": 2.5,
+    "zT4": 4.0,
+    "wZ0": 0.5,
+    "wZ1": 0.8,
+    "wZ2": 1.0,
+    "wZ3": 1.2,
+    "wZ4": 1.35,
+
+    "scoopEnabled": true,
+    "scoopMinZ": 1.8,
+    "scoopMinAsk": 0.10,
+    "scoopMaxAsk": 0.55,
+    "scoopMaxSpread": 0.04,
+    "scoopMaxDistAbs": 60.0,
+    "scoopMinSecondsLeft": 5,
+    "scoopMaxSecondsLeft": 30,
+    "scoopBudgetFactor": 1.0,
+    "scoopMinOddsSum": 0.92,
+    "scoopMaxOddsSum": 1.08,
+
+    "stopMinBid": 0.05,
+    "lateFlipExitEnabled": true,
+    "lateFlipExitSec": 8,
+    "lateFlipMinSec": 4,
+    "lateFlipReverseEnabled": true,
+    "lateFlipReverseMaxAsk": 0.95,
+    "lateFlipReverseMinAsk": 0.0,
+    "lateFlipReverseBudgetFactor": 1.0,
+
+    "dangerExitEnabled": true,
+    "dangerExitFloorSec": 4
+  }
+}
