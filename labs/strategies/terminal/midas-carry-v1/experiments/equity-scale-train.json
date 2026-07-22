@@ -1,0 +1,96 @@
+{
+  "name": "equity-scale-train",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-07-01",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": false,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "champion-fixed",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "equityScaleEnabled": false
+        }
+      },
+      {
+        "id": "scale-pct05-cap20",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "equityScaleEnabled": true,
+          "equityScalePct": 0.05,
+          "maxEntryBudget": 20
+        }
+      },
+      {
+        "id": "scale-pct05-cap30",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "equityScaleEnabled": true,
+          "equityScalePct": 0.05,
+          "maxEntryBudget": 30
+        }
+      },
+      {
+        "id": "scale-pct10-cap20",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "equityScaleEnabled": true,
+          "equityScalePct": 0.10,
+          "maxEntryBudget": 20
+        }
+      },
+      {
+        "id": "scale-pct10-cap30",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "equityScaleEnabled": true,
+          "equityScalePct": 0.10,
+          "maxEntryBudget": 30
+        }
+      },
+      {
+        "id": "scale-pct15-cap20",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "equityScaleEnabled": true,
+          "equityScalePct": 0.15,
+          "maxEntryBudget": 20
+        }
+      },
+      {
+        "id": "scale-pct15-cap30",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "equityScaleEnabled": true,
+          "equityScalePct": 0.15,
+          "maxEntryBudget": 30
+        }
+      }
+    ]
+  }
+}

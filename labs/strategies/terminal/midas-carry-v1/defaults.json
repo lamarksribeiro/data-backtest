@@ -61,5 +61,8 @@
   "earlyWarnOnlyIfLosing": true,
   "minEntryZ": 0.0,
   "tierAskThreshold": 0.82,
-  "tierAskBudgetFactor": 1.0
+  "tierAskBudgetFactor": 1.0,
+  "equityScaleEnabled": false,
+  "equityScalePct": 0.10,
+  "maxEntryBudget": 30
 }

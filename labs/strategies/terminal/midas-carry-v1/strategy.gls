@@ -94,6 +94,11 @@ strategy "MIDAS Carry V1" {
   param tierAskThreshold = 0.82
   param tierAskBudgetFactor = 1.0
 
+  // Equity scale — orçamento proporcional à banca corrente (compound opcional)
+  param equityScaleEnabled = false
+  param equityScalePct = 0.10
+  param maxEntryBudget = 30
+
   onEventStart(event) {
     state.entered = false
     state.closed = false
@@ -230,6 +235,14 @@ strategy "MIDAS Carry V1" {
           }
         }
 
+        // Equity corrente (compartilhada por core e scoop)
+        let equity = math.max(0, params.walletSize + runState.totalPnl)
+        state.equityRawBudget = params.entryBudget
+        let equityScaleOn = params.equityScaleEnabled == true || params.equityScaleEnabled == 1
+        if (equityScaleOn) {
+          state.equityRawBudget = math.max(params.entryBudget, equity * params.equityScalePct)
+        }
+
         // ===== Modo 1: núcleo TFC (envelope V7) =====
         if (!state.isAdverseMove && state.z >= params.minEntryZ && secsLeft >= params.minSecondsLeft && secsLeft < params.maxSecondsLeft && dist < params.maxDistAbs && ask >= params.minAsk && ask <= params.maxAsk && spread <= params.maxSpread) {
           let upAsk = book.ask("UP", tick)
@@ -265,7 +278,7 @@ strategy "MIDAS Carry V1" {
               if (ask >= params.tierAskThreshold) {
                 state.budgetFactor = state.budgetFactor * params.tierAskBudgetFactor
               }
-              let budget = math.min(params.entryBudget * state.budgetFactor, params.walletSize + runState.totalPnl)
+              let budget = math.min(state.equityRawBudget * state.budgetFactor, params.maxEntryBudget, equity)
               let maxPrice = ask + params.entrySlippageMax
               let bought = enter(fav, { price: ask, maxPrice: maxPrice, budget: budget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "midas_core_entry" })
               if (bought) {
@@ -286,7 +299,7 @@ strategy "MIDAS Carry V1" {
           let scoopDownAsk = book.ask("DOWN", tick)
           let scoopOddsSum = scoopUpAsk + scoopDownAsk
           if (scoopOddsSum >= params.scoopMinOddsSum && scoopOddsSum <= params.scoopMaxOddsSum) {
-          let scoopBudget = math.min(params.entryBudget * params.scoopBudgetFactor, params.walletSize + runState.totalPnl)
+          let scoopBudget = math.min(state.equityRawBudget * params.scoopBudgetFactor, params.maxEntryBudget, equity)
           let scoopMaxPrice = ask + params.entrySlippageMax
           let scooped = enter(fav, { price: ask, maxPrice: scoopMaxPrice, budget: scoopBudget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "midas_scoop_entry" })
           if (scooped) {

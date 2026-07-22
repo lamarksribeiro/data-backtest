@@ -60,6 +60,33 @@ Todas as células vizinhas foram positivas em treino E holdout: ask 0,86/0,90/0,
 | Gate z mínimo (`minEntryZ`) | Holdout −US$ 78 a −US$ 100 | Entradas de z baixo ainda têm exp positiva (+US$ 0,84 no cubo); cortar reduz PnL sem ganho de DD proporcional |
 | Janela estendida τ 30–120s | exp 2–3× menor que τ<30s; τ>60s ≈ zero | `labs/sandbox/midas-earlywindow-report.md` |
 
+## Equity scale (experimental, desligado nos presets)
+
+Parâmetros opcionais para **aumentar o orçamento conforme a banca cresce** (compound), com piso em `entryBudget` e teto em `maxEntryBudget`:
+
+| Parâmetro | Default | Papel |
+|---|---|---|
+| `equityScaleEnabled` | `false` | Liga o compound |
+| `equityScalePct` | `0.10` | Fração da equity corrente (10% → US$ 10 em banca US$ 100) |
+| `maxEntryBudget` | `30` | Teto absoluto por entrada |
+
+```text
+equity = max(0, walletSize + totalPnl)
+raw    = equityScaleEnabled ? max(entryBudget, equity × equityScalePct) : entryBudget
+budget = min(raw × budgetFactor, maxEntryBudget, equity)
+```
+
+- **Desligado** (`equityScaleEnabled: false`): comportamento idêntico ao sizing fixo validado.
+- **Ligado**: aposta sobe com lucro acumulado; cai automaticamente quando a equity não cobre.
+- O tier high-ask (`tierAskBudgetFactor`) continua multiplicando depois do `raw`.
+- Late flip reverse herda `entryBudgetUsed` da entrada real.
+
+**Importante:** experimentos com equity scale exigem `dailyMetrics: false` (single-pass contínuo). O modo chunked reinicia a banca por dia e invalida o compound (lição Hopper).
+
+```powershell
+npm run lab:run -- --experiment labs/strategies/terminal/midas-carry-v1/experiments/equity-scale-train.json
+```
+
 ## Reproduzir
 
 ```powershell
@@ -78,7 +105,7 @@ Relatórios de calibração do cubo: `labs/sandbox/midas-calibration-report.md`,
 
 ## Limitações e próximos passos
 
-- Mesmas ressalvas da TFC V7: orçamento fixo por evento, sem modelo de latência de rede (diagnóstico V7 estimou ~−US$ 0,17/trade na janela tardia com 1s de latência), sem fila maker.
+- Presets promovidos usam orçamento fixo por evento (`equityScaleEnabled: false`). O equity scale é mecanismo experimental a validar em single-pass.
 - A banda high-ask depende da **qualidade do label de settlement** (comprar a 0,90 exige WR ≥ ~91%). O cubo com `mkt_agree` confirma WR 92,1% no bolsão; em produção, monitorar divergência Chainlink vs book nos primeiros dias.
 - DD absoluto cresce com o tier (exposição até 1,5–2× por evento). Para banca de US$ 100, preferir champion (v1) ou robust (v3); aggressive (v2) só com banca folgada.
 - Robust (v3, `maxDistAbs=30`) é a melhor candidata risco/retorno do lab de mitigations 2026-07-21 — não desligar late flip reverse.
