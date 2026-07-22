@@ -185,7 +185,7 @@ LAKE_PULL_REMOTE_LAKE=/data/goldenlens/lakehouse
 LAKE_PULL_REMOTE_STATE=/data/goldenlens/backtest-state/data-backtest.db
 ```
 
-**Baixar Parquet para o PC local:** seguir o guia **[lake-pull-brutus.md](lake-pull-brutus.md)** (não usar `npm run lake:pull` sem `--from`/`--to`; após redeploy, atualizar `--remote-container` ou apagar `state/.lake-pull-remote-container.json`).
+**Atualizar BTC 5m local:** `npm run lake:update-btc-5m` — ver **[atualizar-btc-5m-local.md](atualizar-btc-5m-local.md)**. Pull genérico / outros assets: **[lake-pull-brutus.md](lake-pull-brutus.md)**.
 
 Scripts de lab: ver `labs/ops/brutus/README.md`.
 
@@ -221,7 +221,7 @@ Trate como **produção**. Confirme antes de comandos destrutivos no host ou em 
 | `ssh` pede senha | Chave errada ou `IdentitiesOnly` | Conferir alias e permissões da chave |
 | MCP Coolify falha 401 | Token inválido/expirado | Gerar novo token no painel |
 | `scp` com scripts `.sh` quebrados no Linux | CRLF do Windows | `ssh Brutus "sed -i 's/\r$//' /tmp/labs-brutus/*.sh"` |
-| `lake:pull` trava ou `No such container` | Cache de container após redeploy | Ver [lake-pull-brutus.md](lake-pull-brutus.md) — apagar `state/.lake-pull-remote-container.json` e passar `--remote-container` |
+| `lake:update-btc-5m` / `lake:pull` trava ou `No such container` | Cache de container após redeploy | `npm run lake:update-btc-5m -- --refresh-container` (ou ver [atualizar-btc-5m-local.md](atualizar-btc-5m-local.md)) |
 | `ssh` com exit code estranho no PowerShell | Templates `{{.Names}}` no `--format` | Usar `ssh.exe Brutus docker ps` sem `--format` |
 
 ## Ver também

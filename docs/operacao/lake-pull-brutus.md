@@ -6,14 +6,27 @@ Pré-requisitos: VPN Hulw ativa, alias SSH `Brutus` configurado — ver [conexao
 
 ---
 
-## Comando padrão (BTC 5m)
+## Atalho BTC 5m (preferido)
+
+Para só atualizar o tip local (sem inventar `--from`/`--to` nem container):
+
+```powershell
+cd d:\Projetos\projeto-goldenlens\data-backtest
+npm run lake:update-btc-5m
+```
+
+Detalhes: [atualizar-btc-5m-local.md](atualizar-btc-5m-local.md).
+
+---
+
+## Comando seletivo genérico (`lake:pull`)
 
 No diretório `data-backtest`, use o modo **seletivo** (copia só os `active_path` do manifest remoto no intervalo):
 
 ```powershell
 cd d:\Projetos\projeto-goldenlens\data-backtest
 
-# 1) Dry-run — sempre rode antes para ver quantas partições seriam copiadas
+# 1) Dry-run — útil em janelas grandes / outros assets
 npm run lake:pull -- --from 2026-07-01 --to 2026-07-05 --underlying BTC --interval 5m --book-depth 25 --remote-container <ID> --dry-run
 
 # 2) Pull real (remova --dry-run)

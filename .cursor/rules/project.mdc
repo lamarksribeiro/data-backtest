@@ -27,6 +27,16 @@ Estúdio é a **única** tela de backtest. Sidebar: Estúdio · Estratégias · 
 - **Com Forti (fallback):** `ssh Brutus-LAN` → `10.40.2.77`.
 - Não abrir `FortiClient.exe` pelo agente (SSO EBSERH + crash Electron).
 
+## Atualizar lake local (BTC 5m)
+
+Pedido do tipo “atualize o data-backtest local no btc 5min”:
+
+```powershell
+npm run lake:update-btc-5m
+```
+
+Não rode `query:availability`, dry-run nem descubra container manualmente antes. Se o cache de container morrer: `--refresh-container`. Doc: `docs/operacao/atualizar-btc-5m-local.md`.
+
 ## Labs / sweeps grandes
 
 Ver rule `labs-brutus-performance.mdc` (pasta `labs/`). Smoke local; offload Brutus para 50+ variantes.

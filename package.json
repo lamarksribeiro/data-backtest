@@ -33,6 +33,7 @@
     "ops:check": "node src/cli.js ops:check",
     "cache:dataset": "node src/cli.js cache:dataset",
     "lake:pull": "node scripts/pull-lake-from-brutus.js",
+    "lake:update-btc-5m": "node scripts/update-local-btc-5m.js",
     "lake:verify": "node scripts/verify-local-setup.js",
     "backup:telegram": "node src/cli.js backup:telegram",
     "backup:telegram:restore": "node src/cli.js backup:telegram:restore",
