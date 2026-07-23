@@ -75,6 +75,7 @@
     "lab:tfc:v6-hybrid": "node labs/cli/run-preset.js --preset btc-champion-v6-hybrid --strategy tfc --strategy-family terminal",
     "lab:tfc:v7": "node labs/cli/run-preset.js --preset btc-champion-v7 --strategy tfc --strategy-family terminal",
     "lab:tfc:v5-practical": "node labs/cli/run-preset.js --preset btc-champion-v5-practical --strategy tfc --strategy-family terminal",
+    "lab:midas:micro-robust": "node labs/cli/run.js --experiment labs/strategies/terminal/midas-carry-v1/experiments/micro-robust-holdout.json --variant-workers 2",
     "lab:apex:analyze": "node scripts/analyze-apex-triad.js",
     "lab:apex:candidate": "node labs/cli/run-preset.js --preset btc-candidate-v1 --strategy apex-triad-v1 --strategy-family portfolio",
     "db:migrate-consolidate-strategies": "node scripts/migrate-consolidate-strategies.js",
