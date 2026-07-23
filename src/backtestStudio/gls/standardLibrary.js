@@ -1,7 +1,11 @@
 import { resolveNativeModels } from '../nativeLibrary/registry.js';
 
 export function createStandardLibrary({ nativeLibraries = [] } = {}) {
+  let activeSamples = [];
   const lib = {
+    setActiveSamples(samples) {
+      activeSamples = samples || [];
+    },
     market: {
       distanceFromPtb(price, ptb) {
         const p = Number(price);
@@ -83,14 +87,14 @@ export function createStandardLibrary({ nativeLibraries = [] } = {}) {
       },
     },
     signals: {
-      momentum(samples, seconds) {
-        return sampleDelta(samples, seconds, sampleUnderlyingValue);
+      momentum(arg1, arg2) {
+        return sampleDelta(arg1, arg2, sampleUnderlyingValue, activeSamples);
       },
-      slowMomentum(samples, seconds) {
-        return sampleDelta(samples, seconds, sampleUnderlyingValue);
+      slowMomentum(arg1, arg2) {
+        return sampleDelta(arg1, arg2, sampleUnderlyingValue, activeSamples);
       },
-      volatility(samples, seconds) {
-        const values = recentValues(samples, seconds, sampleUnderlyingValue);
+      volatility(arg1, arg2) {
+        const values = recentValues(arg1, arg2, sampleUnderlyingValue, activeSamples);
         if (values.length < 2) return stdDev(values);
         return stdDev(values);
       },
@@ -137,19 +141,20 @@ export function createStandardLibrary({ nativeLibraries = [] } = {}) {
         const bucket = normalized.find((item) => Number(secondsLeft) >= Math.min(300, Math.max(0, item.minSecondsRemaining)));
         return bucket ? Math.max(0, bucket.minDistanceAbs) : fallback;
       },
-      underlyingAgo(samples, seconds) {
-        const sample = sampleAgo(samples, seconds);
+      underlyingAgo(arg1, arg2) {
+        const sample = sampleAgo(arg1, arg2, activeSamples);
         return sample ? sampleUnderlyingValue(sample) : null;
       },
-      upAskAgo(samples, seconds) {
-        const sample = sampleAgo(samples, seconds);
+      upAskAgo(arg1, arg2) {
+        const sample = sampleAgo(arg1, arg2, activeSamples);
         return sample ? Number(sample?.up_best_ask ?? sample?.upBestAsk ?? sample?.up_price ?? sample?.upPrice) : null;
       },
-      downAskAgo(samples, seconds) {
-        const sample = sampleAgo(samples, seconds);
+      downAskAgo(arg1, arg2) {
+        const sample = sampleAgo(arg1, arg2, activeSamples);
         return sample ? Number(sample?.down_best_ask ?? sample?.downBestAsk ?? sample?.down_price ?? sample?.downPrice) : null;
       },
-      ptbFlipCount(samples, windowSeconds) {
+      ptbFlipCount(arg1, arg2) {
+        const { samples, seconds: windowSeconds } = resolveSamplesAndSeconds(arg1, arg2, activeSamples);
         if (!samples?.length) return 0;
         const latest = samples[samples.length - 1];
         const latestTs = latest._tsMs ?? timestampMs(latest.ts);
@@ -272,7 +277,21 @@ export function createStandardLibrary({ nativeLibraries = [] } = {}) {
   return lib;
 }
 
-function sampleAgo(samples, seconds) {
+function resolveSamplesAndSeconds(arg1, arg2, defaultSamples = []) {
+  if (Array.isArray(arg1)) {
+    return { samples: arg1, seconds: Number(arg2 ?? 0) };
+  }
+  if (Array.isArray(arg2)) {
+    return { samples: arg2, seconds: Number(arg1 ?? 0) };
+  }
+  if (typeof arg1 === 'number' || typeof arg1 === 'string') {
+    return { samples: defaultSamples, seconds: Number(arg1) };
+  }
+  return { samples: defaultSamples, seconds: Number(arg2 ?? 0) };
+}
+
+function sampleAgo(arg1, arg2, defaultSamples = []) {
+  const { samples, seconds } = resolveSamplesAndSeconds(arg1, arg2, defaultSamples);
   if (!samples?.length) return null;
   const latest = samples[samples.length - 1];
   const latestTs = latest._tsMs ?? timestampMs(latest.ts);
@@ -288,7 +307,8 @@ function sampleUnderlyingValue(sample) {
   return Number(sample?.underlyingPrice ?? sample?.btc_price ?? sample?.underlying_price);
 }
 
-function recentValues(samples, seconds, pick) {
+function recentValues(arg1, arg2, pick, defaultSamples = []) {
+  const { samples, seconds } = resolveSamplesAndSeconds(arg1, arg2, defaultSamples);
   if (!samples?.length) return [];
   const latest = samples[samples.length - 1];
   const latestTs = latest._tsMs ?? timestampMs(latest.ts);
@@ -302,8 +322,8 @@ function timestampMs(value) {
   return new Date(value).getTime();
 }
 
-function sampleDelta(samples, seconds, pick) {
-  const values = recentValues(samples, seconds, pick);
+function sampleDelta(arg1, arg2, pick, defaultSamples = []) {
+  const values = recentValues(arg1, arg2, pick, defaultSamples);
   if (values.length < 2) return 0;
   return values[values.length - 1] - values[0];
 }

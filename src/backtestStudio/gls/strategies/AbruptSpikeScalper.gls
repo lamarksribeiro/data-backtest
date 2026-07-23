@@ -1,0 +1,91 @@
+strategy "Abrupt Spike Scalper GLS" {
+  param walletSize = 100
+  param maxOrderValue = 15
+  param minShares = 5
+  param entryWindowStart = 280
+  param entryWindowEnd = 15
+  param impulseSec = 5
+  param minSpikeAbs = 25
+  param strategyMode = "fade"
+  param maxTradesPerEvent = 5
+  param cooldownSec = 8
+  param minAsk = 0.05
+  param maxAsk = 0.75
+  param entrySlippageMax = 0.02
+  param minLiquidityRatio = 0.50
+  param takeProfitPct = 0.20
+  param partialTakeProfitPct = 0.50
+  param takeProfitBid = 0.90
+  param trailDrop = 0.08
+  param stopLossPct = 0.18
+  param stopBid = 0.12
+  param maxHoldTimeSec = 25
+
+  onEventStart(event) {
+    state.entered = false
+    state.tradesCount = 0
+  }
+
+  onTick(tick, event) {
+    let secsLeft = time.secondsUntil(event.end, tick.ts)
+
+    if (position.open) {
+      let side = position.side
+      let bid = book.bid(side, tick)
+
+      if (bid >= params.takeProfitBid) {
+        let sold = exit({ price: bid, reason: "take_profit_target" })
+        if (sold) {
+          mark("exit", { reason: "take_profit_target", price: bid })
+        }
+      } else {
+        if (bid <= params.stopBid) {
+          let sold = exit({ price: bid, reason: "stop_bid_floor" })
+          if (sold) {
+            mark("exit", { reason: "stop_bid_floor", price: bid })
+          }
+        }
+      }
+    } else {
+      if (state.tradesCount < params.maxTradesPerEvent && time.inWindow(secsLeft, params.entryWindowStart, params.entryWindowEnd)) {
+        let btc = tick.underlyingPrice
+        let btcAgo = signals.underlyingAgo(samples, params.impulseSec)
+        if (btcAgo) {
+          let deltaBtc = btc - btcAgo
+          let absImpulse = math.abs(deltaBtc)
+          if (absImpulse >= params.minSpikeAbs) {
+            let favSide = "UP"
+            if (params.strategyMode == "fade") {
+              if (deltaBtc > 0) {
+                favSide = "DOWN"
+              } else {
+                favSide = "UP"
+              }
+            } else {
+              if (deltaBtc > 0) {
+                favSide = "UP"
+              } else {
+                favSide = "DOWN"
+              }
+            }
+
+            let ask = book.ask(favSide, tick)
+            if (ask >= params.minAsk && ask <= params.maxAsk) {
+              let maxPrice = ask + params.entrySlippageMax
+              let budget = math.min(params.maxOrderValue, params.walletSize + runState.totalPnl)
+              let bought = enter(favSide, { price: ask, maxPrice: maxPrice, budget: budget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "spike_scalp_entry" })
+              if (bought) {
+                state.entered = true
+                state.tradesCount = state.tradesCount + 1
+                mark("entry", { side: favSide, ask: ask, impulse: deltaBtc })
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  onEventEnd(event) {
+  }
+}

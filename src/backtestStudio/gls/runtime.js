@@ -229,6 +229,7 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
     normalizedHolder.tick = normalized;
     sharedCtx.tick = normalized;
     sharedCtx.event = event;
+    lib.setActiveSamples?.(samples);
     return sharedCtx;
   }
 
