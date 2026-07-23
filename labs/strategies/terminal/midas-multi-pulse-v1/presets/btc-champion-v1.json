@@ -1,0 +1,39 @@
+{
+  "id": "btc-champion-v1",
+  "strategyId": "midas-multi-pulse-v1",
+  "strategyFamily": "terminal",
+  "name": "MIDAS Multi-Pulse V1 — Champion (Multi-Entrada Alta Frequência)",
+  "studioSlug": "midas-multi-pulse-btc-champion-v1",
+  "studioName": "MIDAS Multi-Pulse V1 · Champion (3 Pulsos)",
+  "studioVersion": 1,
+  "role": "champion",
+  "tags": ["candidate", "depth25", "midas", "multi-pulse", "executable"],
+  "params": {
+    "walletSize": 100,
+    "entryBudget": 10,
+    "maxEntriesPerEvent": 3,
+    "minEntryIntervalSecs": 3,
+    "maxEventBudget": 35,
+    "minSecondsLeft": 4,
+    "maxSecondsLeft": 30,
+    "maxDistAbs": 40,
+    "minAsk": 0.55,
+    "maxAsk": 0.94,
+    "tierAskThreshold": 0.82,
+    "tierAskBudgetFactor": 1.5,
+    "earlyPulseEnabled": true,
+    "earlyMinSecondsLeft": 30,
+    "earlyMaxSecondsLeft": 90,
+    "earlyMinZ": 0.8,
+    "earlyMinObi": 0.10,
+    "earlyMaxAsk": 0.82,
+    "lateFlipExitEnabled": true,
+    "lateFlipExitSec": 8,
+    "lateFlipMinSec": 4,
+    "lateFlipReverseEnabled": true,
+    "lateFlipReverseMaxAsk": 0.95
+  },
+  "provenance": {
+    "source": "GLS lab multi-pulse engine. Treino: labs/strategies/terminal/midas-multi-pulse-v1/experiments/train-multi-pulse.json. Holdout: holdout-multi-pulse.json — 2026-07-23"
+  }
+}

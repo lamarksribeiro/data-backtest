@@ -1,0 +1,37 @@
+{
+  "name": "train-multi-pulse",
+  "strategyId": "midas-multi-pulse-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-07-01",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "single-entry-baseline",
+        "params": { "maxEntriesPerEvent": 1, "earlyPulseEnabled": false }
+      },
+      {
+        "id": "pulse-2-terminal-only",
+        "params": { "maxEntriesPerEvent": 2, "earlyPulseEnabled": false }
+      },
+      {
+        "id": "pulse-3-early-terminal",
+        "params": { "maxEntriesPerEvent": 3, "earlyPulseEnabled": true, "earlyMinZ": 0.8 }
+      },
+      {
+        "id": "pulse-4-aggressive",
+        "params": { "maxEntriesPerEvent": 4, "earlyPulseEnabled": true, "earlyMinZ": 0.5, "maxEventBudget": 45 }
+      }
+    ]
+  }
+}

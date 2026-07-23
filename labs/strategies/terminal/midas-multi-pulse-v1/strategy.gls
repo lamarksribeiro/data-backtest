@@ -1,0 +1,289 @@
+strategy "MIDAS Multi-Pulse V1" {
+  // MIDAS Multi-Pulse V1 — Estratégia de alta frequência com múltiplas entradas por evento
+  // 1) Suporta até N entradas por evento (maxEntriesPerEvent) respeitando intervalo mínimo.
+  // 2) Três janelas de pulso: Early Pulse (90s–30s), Terminal Pulse (30s–10s) e Final Lock Pulse (10s–4s).
+  // 3) Filtro dinâmico de compensação de taxas Polymarket (taxCompensate).
+  // 4) Núcleo de proteção contra viradas no piso (Late flip exit/reverse 8s->4s).
+
+  param walletSize = 100
+  param entryBudget = 10
+  param minShares = 1
+  param entrySlippageMax = 0.02
+  param minLiquidityRatio = 0.60
+
+  // Multi-entrada por evento
+  param maxEntriesPerEvent = 3
+  param minEntryIntervalSecs = 3
+  param maxEventBudget = 35
+
+  // Envelope terminal principal
+  param minSecondsLeft = 4
+  param maxSecondsLeft = 30
+  param maxDistAbs = 40
+  param minAsk = 0.55
+  param maxAsk = 0.94
+  param maxSpread = 0.03
+  param minOddsSum = 0.98
+  param maxOddsSum = 1.06
+
+  // Early pulse window (90s -> 30s)
+  param earlyPulseEnabled = true
+  param earlyMinSecondsLeft = 30
+  param earlyMaxSecondsLeft = 90
+  param earlyMinZ = 0.8
+  param earlyMinObi = 0.10
+  param earlyMaxAsk = 0.82
+
+  // Spot velocity guard
+  param velocityLookbackSecs = 5
+  param maxAdverseSpotChange = 8.0
+
+  // OBI gate
+  param minObi = 0.0
+  param obiLevels = 5
+
+  // Sizing & z-score
+  param sigmaSizingEnabled = true
+  param sigmaLookbackSecs = 90
+  param sigmaDivisor = 5.48
+  param zT1 = 0.5
+  param zT2 = 1.0
+  param zT3 = 2.5
+  param zT4 = 4.0
+  param wZ0 = 0.5
+  param wZ1 = 0.8
+  param wZ2 = 1.0
+  param wZ3 = 1.4
+  param wZ4 = 1.8
+
+  // Scoop — favorito barato com z alto
+  param scoopEnabled = true
+  param scoopMinZ = 1.5
+  param scoopMinAsk = 0.10
+  param scoopMaxAsk = 0.55
+  param scoopMaxSpread = 0.05
+  param scoopMaxDistAbs = 80
+  param scoopMinSecondsLeft = 5
+  param scoopMaxSecondsLeft = 30
+  param scoopBudgetFactor = 1.0
+
+  // Late flip exit/reverse (V7)
+  param stopMinBid = 0.05
+  param lateFlipExitEnabled = true
+  param lateFlipExitSec = 8
+  param lateFlipExitCrossDist = 0
+  param lateFlipMinSec = 4
+  param lateFlipReverseEnabled = true
+  param lateFlipReverseMaxAsk = 0.95
+  param lateFlipReverseMinAsk = 0.0
+  param lateFlipReverseBudgetFactor = 1.0
+
+  // Gate de z mínimo
+  param minEntryZ = 0.0
+
+  // Tier de orçamento para favorito caro
+  param tierAskThreshold = 0.82
+  param tierAskBudgetFactor = 1.5
+
+  onEventStart(event) {
+    state.entered = false
+    state.closed = false
+    state.reversed = false
+    state.signedDistance = 0
+    state.entryZ = 0
+    state.entryMode = ""
+    state.entryBudgetUsed = 0
+    state.z = 0
+    state.isAdverseMove = false
+    state.obiOk = true
+    state.budgetFactor = 1.0
+    state.reverseBudget = 0
+    state.entriesCount = 0
+    state.totalBudgetSpent = 0
+    state.lastEntrySecsLeft = 999
+  }
+
+  onTick(tick, event) {
+    let secsLeft = time.secondsUntil(event.end, tick.ts)
+
+    if (position.open) {
+      if (!state.entered) {
+        state.entered = true
+      }
+
+      let side = position.side
+      let bid = book.bid(side, tick)
+
+      state.signedDistance = tick.underlyingPrice - event.priceToBeat
+      if (side == "DOWN") {
+        state.signedDistance = event.priceToBeat - tick.underlyingPrice
+      }
+
+      // Late flip exit/reverse 8s -> piso 4s
+      let lateFlipExitOn = params.lateFlipExitEnabled == true || params.lateFlipExitEnabled == 1
+      if (!state.closed && lateFlipExitOn && secsLeft <= params.lateFlipExitSec && secsLeft >= params.lateFlipMinSec && state.signedDistance <= params.lateFlipExitCrossDist && bid >= params.stopMinBid) {
+        let lateFlipReverseOn = params.lateFlipReverseEnabled == true || params.lateFlipReverseEnabled == 1
+        if (lateFlipReverseOn && !state.reversed) {
+          let oppSide = prices.oppositeSide(side)
+          let oppAsk = book.ask(oppSide, tick)
+          if (oppAsk >= params.lateFlipReverseMinAsk && oppAsk > 0 && oppAsk <= params.lateFlipReverseMaxAsk) {
+            state.reverseBudget = params.entryBudget
+            if (state.entryBudgetUsed > 0) {
+              state.reverseBudget = state.entryBudgetUsed
+            }
+            state.reverseBudget = state.reverseBudget * params.lateFlipReverseBudgetFactor
+            let flipped = reverse(oppSide, { price: oppAsk, exitPrice: bid, budget: state.reverseBudget, tick: tick, ignoreConsumed: true, reason: "late_flip_reverse" })
+            if (flipped) {
+              state.reversed = true
+              mark("reverse", { reason: "late_flip_reverse", from: side, to: oppSide, ask: oppAsk })
+            }
+          }
+        }
+        if (!state.reversed) {
+          let lateFlipped = exit({ price: bid, reason: "late_flip_exit" })
+          if (lateFlipped) {
+            state.closed = lateFlipped.closed
+            mark("exit", { reason: "late_flip_exit", price: bid })
+          }
+        }
+      }
+    }
+
+    // Avaliação de entradas (mesmo com posição aberta ou para re-entradas/pulsos adicionais)
+    let canPulse = state.entriesCount < params.maxEntriesPerEvent && state.totalBudgetSpent < params.maxEventBudget && !state.closed && !state.reversed
+    let timeIntervalOk = (state.lastEntrySecsLeft - secsLeft) >= params.minEntryIntervalSecs
+
+    if (canPulse && timeIntervalOk) {
+      let btc = tick.underlyingPrice
+      let ptb = event.priceToBeat
+      let dist = math.abs(btc - ptb)
+      let fav = market.sideFromPrice(btc, ptb)
+      let ask = book.ask(fav, tick)
+      let bid = book.bid(fav, tick)
+      let spread = ask - bid
+
+      // z-score físico
+      let sigmaLevel = signals.volatility(samples, params.sigmaLookbackSecs)
+      let sigmaPs = sigmaLevel / params.sigmaDivisor
+      state.z = 0.0
+      if (sigmaPs > 0 && secsLeft > 0) {
+        state.z = dist / (sigmaPs * math.sqrt(secsLeft))
+      }
+
+      // Velocity guard
+      state.isAdverseMove = false
+      let btcPast = signals.underlyingAgo(samples, params.velocityLookbackSecs)
+      if (btcPast) {
+        let spotChange = btc - btcPast
+        if (fav == "UP" && spotChange < 0.0 - params.maxAdverseSpotChange) {
+          state.isAdverseMove = true
+        }
+        if (fav == "DOWN" && spotChange > params.maxAdverseSpotChange) {
+          state.isAdverseMove = true
+        }
+      }
+
+      let equity = math.max(0, params.walletSize + runState.totalPnl)
+
+      // ===== Pulso 1: Early Window Pulse (90s -> 30s) =====
+      let earlyPulseOn = params.earlyPulseEnabled == true || params.earlyPulseEnabled == 1
+      if (earlyPulseOn && !state.isAdverseMove && secsLeft >= params.earlyMinSecondsLeft && secsLeft <= params.earlyMaxSecondsLeft && dist < params.maxDistAbs && ask >= params.minAsk && ask <= params.earlyMaxAsk && spread <= params.maxSpread && state.z >= params.earlyMinZ) {
+        let earlyObi = model.orderBookImbalance(fav, tick, params.obiLevels)
+        if (earlyObi >= params.earlyMinObi) {
+          let pulseBudget = math.min(params.entryBudget, params.maxEventBudget - state.totalBudgetSpent, equity)
+          let maxPrice = ask + params.entrySlippageMax
+          let earlyBought = enter(fav, { price: ask, maxPrice: maxPrice, budget: pulseBudget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "midas_early_pulse" })
+          if (earlyBought) {
+            state.entered = true
+            state.entriesCount = state.entriesCount + 1
+            state.totalBudgetSpent = state.totalBudgetSpent + pulseBudget
+            state.lastEntrySecsLeft = secsLeft
+            state.entryZ = state.z
+            state.entryMode = "early_pulse"
+            state.entryBudgetUsed = pulseBudget
+            mark("midas_pulse", { mode: "early_pulse", pulseIndex: state.entriesCount, side: fav, ask: ask, dist: dist, z: state.z, secsLeft: secsLeft })
+          }
+        }
+      }
+
+      // ===== Pulso 2: Core Terminal Carry Pulse (30s -> 4s) =====
+      let remainingCanPulse = state.entriesCount < params.maxEntriesPerEvent && state.totalBudgetSpent < params.maxEventBudget
+      if (remainingCanPulse && !state.isAdverseMove && state.z >= params.minEntryZ && secsLeft >= params.minSecondsLeft && secsLeft <= params.maxSecondsLeft && dist < params.maxDistAbs && ask >= params.minAsk && ask <= params.maxAsk && spread <= params.maxSpread) {
+        let upAsk = book.ask("UP", tick)
+        let downAsk = book.ask("DOWN", tick)
+        let oddsSum = upAsk + downAsk
+        if (oddsSum >= params.minOddsSum && oddsSum <= params.maxOddsSum) {
+          state.obiOk = true
+          if (params.minObi > (0.0 - 1.0)) {
+            let obi = model.orderBookImbalance(fav, tick, params.obiLevels)
+            if (obi < params.minObi) {
+              state.obiOk = false
+            }
+          }
+          if (state.obiOk) {
+            state.budgetFactor = 1.0
+            let sizingOn = params.sigmaSizingEnabled == true || params.sigmaSizingEnabled == 1
+            if (sizingOn) {
+              state.budgetFactor = params.wZ2
+              if (state.z < params.zT1) {
+                state.budgetFactor = params.wZ0
+              }
+              if (state.z >= params.zT1 && state.z < params.zT2) {
+                state.budgetFactor = params.wZ1
+              }
+              if (state.z >= params.zT3 && state.z < params.zT4) {
+                state.budgetFactor = params.wZ3
+              }
+              if (state.z >= params.zT4) {
+                state.budgetFactor = params.wZ4
+              }
+            }
+            if (ask >= params.tierAskThreshold) {
+              state.budgetFactor = state.budgetFactor * params.tierAskBudgetFactor
+            }
+            let pulseBudget = math.min(params.entryBudget * state.budgetFactor, params.maxEventBudget - state.totalBudgetSpent, equity)
+            let maxPrice = ask + params.entrySlippageMax
+            let coreBought = enter(fav, { price: ask, maxPrice: maxPrice, budget: pulseBudget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "midas_core_pulse" })
+            if (coreBought) {
+              state.entered = true
+              state.entriesCount = state.entriesCount + 1
+              state.totalBudgetSpent = state.totalBudgetSpent + pulseBudget
+              state.lastEntrySecsLeft = secsLeft
+              state.entryZ = state.z
+              state.entryMode = "core_pulse"
+              state.entryBudgetUsed = pulseBudget
+              mark("midas_pulse", { mode: "core_pulse", pulseIndex: state.entriesCount, side: fav, ask: ask, dist: dist, z: state.z, budgetFactor: state.budgetFactor, secsLeft: secsLeft })
+            }
+          }
+        }
+      }
+
+      // ===== Pulso 3: Scoop Pulse (favorito barato com z alto) =====
+      let scoopOn = params.scoopEnabled == true || params.scoopEnabled == 1
+      let scoopCanPulse = state.entriesCount < params.maxEntriesPerEvent && state.totalBudgetSpent < params.maxEventBudget
+      if (scoopOn && scoopCanPulse && !state.isAdverseMove && secsLeft >= params.scoopMinSecondsLeft && secsLeft <= params.scoopMaxSecondsLeft && dist < params.scoopMaxDistAbs && ask >= params.scoopMinAsk && ask < params.scoopMaxAsk && spread <= params.scoopMaxSpread && state.z >= params.scoopMinZ) {
+        let scoopUpAsk = book.ask("UP", tick)
+        let scoopDownAsk = book.ask("DOWN", tick)
+        let scoopOddsSum = scoopUpAsk + scoopDownAsk
+        if (scoopOddsSum >= 0.90 && scoopOddsSum <= 1.10) {
+          let scoopBudget = math.min(params.entryBudget * params.scoopBudgetFactor, params.maxEventBudget - state.totalBudgetSpent, equity)
+          let scoopMaxPrice = ask + params.entrySlippageMax
+          let scooped = enter(fav, { price: ask, maxPrice: scoopMaxPrice, budget: scoopBudget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "midas_scoop_pulse" })
+          if (scooped) {
+            state.entered = true
+            state.entriesCount = state.entriesCount + 1
+            state.totalBudgetSpent = state.totalBudgetSpent + scoopBudget
+            state.lastEntrySecsLeft = secsLeft
+            state.entryZ = state.z
+            state.entryMode = "scoop_pulse"
+            state.entryBudgetUsed = scoopBudget
+            mark("midas_pulse", { mode: "scoop_pulse", pulseIndex: state.entriesCount, side: fav, ask: ask, dist: dist, z: state.z, secsLeft: secsLeft })
+          }
+        }
+      }
+    }
+  }
+
+  onEventEnd(event) {
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "holdout-multi-pulse",
+  "strategyId": "midas-multi-pulse-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-18",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "champion-multi-pulse-v1",
+        "params": { "maxEntriesPerEvent": 3, "earlyPulseEnabled": true, "earlyMinZ": 0.8 }
+      }
+    ]
+  }
+}

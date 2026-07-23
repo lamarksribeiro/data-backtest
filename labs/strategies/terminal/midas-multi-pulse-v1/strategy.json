@@ -1,0 +1,28 @@
+{
+  "id": "midas-multi-pulse-v1",
+  "name": "MIDAS Multi-Pulse V1",
+  "family": "terminal",
+  "status": "candidate",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "labs/strategies/terminal/midas-multi-pulse-v1/strategy.gls"
+  },
+  "promotedToStudio": true,
+  "studioSlug": "midas-multi-pulse-v1",
+  "studio": {
+    "description": "MIDAS Multi-Pulse V1 — Núcleo MIDAS com suporte a múltiplas entradas por evento (até 3-4 pulsos), janelas temporais de alta frequência (90s–4s) e compensação de taxas Polymarket.",
+    "tags": ["terminal", "midas", "multi-pulse", "high-frequency", "btc", "candidate"],
+    "defaultVersion": 1,
+    "defaultPreset": "btc-champion-v1",
+    "defaultGlsSource": "classic",
+    "glsSources": {
+      "classic": "labs/strategies/terminal/midas-multi-pulse-v1/strategy.gls"
+    }
+  },
+  "notes": "MIDAS Multi-Pulse V1. Permite até N entradas por evento (maxEntriesPerEvent=3) respeitando minEntryIntervalSecs. Janela Early Pulse (90s–30s) + Core Pulse (30s–4s) + Scoop Pulse."
+}
