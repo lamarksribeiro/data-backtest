@@ -1,5 +1,6 @@
 import { el } from './dom.js';
 import { escapeHtml } from './format.js';
+import { contextToApiRange } from './dateRange.js';
 
 const PICKER_CACHE_TTL_MS = 30_000;
 const STRATEGY_PICK_STORAGE_KEY = 'data-backtest-strategy-pick';
@@ -540,9 +541,10 @@ export function renderStrategyPicker(options, selectedValue = '', onChange = nul
 }
 
 export function backtestPayloadFromPick(pick, ctx, extra = {}) {
+  const range = contextToApiRange(ctx);
   const base = {
-    from: ctx.from,
-    to: ctx.to,
+    from: range.from,
+    to: range.to,
     underlying: ctx.underlying,
     interval: ctx.interval,
     book_depth: Number(ctx.book_depth) || 25,

@@ -6916,6 +6916,9 @@ i.fa-solid, i.fa-regular, i.fa-brands {
   align-items: center;
   gap: 6px;
 }
+.run-context-banner__period-actions {
+  margin-top: 10px;
+}
 .run-context-banner--compact {
   margin-bottom: 14px;
   padding-bottom: 12px;

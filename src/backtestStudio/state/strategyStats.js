@@ -1,5 +1,6 @@
 import { extractEquityFromResultJson } from '../../state/backtestRuns.js';
 import { downsamplePoints } from '../../utils/downsample.js';
+import { inclusiveEndInstantFromExclusive } from '../../query/request.js';
 
 const STATS_CACHE_TTL_MS = 30_000;
 const MAX_RUNS_PER_STRATEGY = 200;
@@ -93,8 +94,10 @@ function buildCardChart(runs, versionRows = [], lastRunEquity = []) {
 		run_id: Number(last.id),
 		underlying: last.underlying ?? null,
 		interval: last.interval ?? null,
-		from: last.from_ts ? String(last.from_ts).slice(0, 10) : null,
-		to: last.to_ts ? String(last.to_ts).slice(0, 10) : null,
+		from: last.from_ts ? String(last.from_ts) : null,
+		to: last.to_ts
+			? (inclusiveEndInstantFromExclusive(last.to_ts, last.from_ts) || String(last.to_ts))
+			: null,
 		version,
 	};
 

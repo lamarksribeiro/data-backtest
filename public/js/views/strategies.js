@@ -1,3 +1,4 @@
+import { formatStoredRange } from '../utils/dateRange.js';
 import { el, mount, emptyState } from '../utils/dom.js';
 import { loadContext } from '../utils/context.js';
 import { backtestPayloadFromPick } from '../utils/strategyPicker.js';
@@ -297,7 +298,7 @@ function renderRunTableRow(ctx, strategyId, run, versions) {
   const versionLabel = run.strategy_version_id
     ? `v${versions.find((v) => v.id === run.strategy_version_id)?.version || '?'}`
     : '—';
-  const period = `${run.from ? run.from.slice(0, 10) : '?'} → ${run.to ? run.to.slice(0, 10) : '?'}`;
+  const period = formatStoredRange(run.from, run.to);
   const ranAt = run.created_at ? run.created_at.slice(0, 16).replace('T', ' ') : '—';
 
   return el('tr', {

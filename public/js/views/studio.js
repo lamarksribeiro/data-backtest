@@ -1,5 +1,6 @@
 import { el, mount } from '../utils/dom.js';
 import { applyContextOptions, contextBarOptions, loadContext, saveContext, selectField } from '../utils/context.js';
+import { contextToApiRange, formatStoredRange, storedRangeToContext } from '../utils/dateRange.js';
 import { fetchContextOptionsCached } from '../utils/contextOptionsCache.js';
 import { formatPnl, shortId } from '../utils/format.js';
 import { loadStrategyOptions, renderStrategyPicker, backtestPayloadFromPick, resolveInitialStrategyPick, saveLastStrategyPick, getStrategyGroupFromPick, invalidateStrategyPickerCache } from '../utils/strategyPicker.js';
@@ -759,11 +760,11 @@ function renderConfigPanel(ctx, { formCtx, fieldOptions }) {
               el('span', { class: 'field__label' }, 'De'),
               el('span', { id: 'studio-coverage-indicator', class: 'studio-coverage-slot' }),
             ]),
-            el('input', { type: 'date', name: 'from', value: formCtx.from, class: 'field__input' }),
+            el('input', { type: 'datetime-local', name: 'from', value: formCtx.from, class: 'field__input' }),
           ]),
           el('label', { class: 'field' }, [
-            el('span', { class: 'field__label' }, 'Até'),
-            el('input', { type: 'date', name: 'to', value: formCtx.to, class: 'field__input' }),
+            el('span', { class: 'field__label' }, 'Até (incluso)'),
+            el('input', { type: 'datetime-local', name: 'to', value: formCtx.to, class: 'field__input' }),
           ]),
         ]),
         el('div', { class: 'studio-form__grid' }, [
@@ -896,15 +897,41 @@ function formFromDom() {
   };
 }
 
+function syncStudioFormFromContext(ctxSaved) {
+  const form = document.getElementById('studio-form');
+  if (!form) return false;
+  for (const name of ['from', 'to', 'underlying', 'interval', 'book_depth']) {
+    const input = form.querySelector(`[name="${name}"]`);
+    if (input && ctxSaved[name] != null) input.value = String(ctxSaved[name]);
+  }
+  return true;
+}
+
+function applyRunPeriodToForm(ctx, run) {
+  const period = storedRangeToContext(run.from, run.to);
+  const saved = saveContext({
+    ...period,
+    underlying: run.underlying,
+    interval: run.interval,
+    book_depth: run.book_depth ?? run.bookDepth,
+  });
+  syncStudioFormFromContext(saved);
+  ctx.renderContextBar?.();
+  void refreshCoverageIndicator(ctx, saved);
+  switchMobileTab('config');
+  ctx.toast.ok('Período e ativo copiados para o formulário');
+}
+
 async function refreshCoverageIndicator(ctx, formCtx) {
   const elWrap = document.getElementById('studio-coverage-indicator');
   if (!elWrap) return;
+  const range = contextToApiRange(formCtx);
   const q = new URLSearchParams({
     underlying: formCtx.underlying,
     interval: formCtx.interval,
     book_depth: formCtx.book_depth,
-    from: formCtx.from,
-    to: formCtx.to,
+    from: range.from,
+    to: range.to,
   });
   const res = await ctx.api.get(`/api/data/coverage?${q}`);
   if (!res.ok) {
@@ -955,10 +982,14 @@ function renderCoverageStatus(state, tone, { icon, label, title }) {
 async function fixDataFromStudio(ctx) {
   const form = document.getElementById('studio-form');
   const fd = new FormData(form);
-  const request = {
-    dataset: 'backtest_ticks',
+  const range = contextToApiRange({
     from: fd.get('from'),
     to: fd.get('to'),
+  });
+  const request = {
+    dataset: 'backtest_ticks',
+    from: range.from,
+    to: range.to,
     underlying: fd.get('underlying'),
     interval: fd.get('interval'),
     book_depth: Number(fd.get('book_depth')),
@@ -1012,8 +1043,14 @@ async function runBacktest(ctx, form) {
         tone: 'primary',
       });
       if (fix) {
+        const apiRange = contextToApiRange(ctxSaved);
         const fixRes = await ctx.api.post('/api/data/fix', { request: {
-          dataset: 'backtest_ticks', ...ctxSaved, book_depth: Number(ctxSaved.book_depth),
+          dataset: 'backtest_ticks',
+          from: apiRange.from,
+          to: apiRange.to,
+          underlying: ctxSaved.underlying,
+          interval: ctxSaved.interval,
+          book_depth: Number(ctxSaved.book_depth),
         }});
         if (fixRes.ok && fixRes.data.job) {
           const retry = await ctx.api.post('/api/backtest/run', { ...payload, depends_on_job: fixRes.data.job.id });
@@ -1192,13 +1229,7 @@ function collectRunFacetOptions(runs, key) {
 }
 
 function formatRunPeriodShort(from, to) {
-  const fmt = (iso) => {
-    if (!iso) return '?';
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return String(iso).slice(5, 10);
-    return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-  };
-  return `${fmt(from)} – ${fmt(to)}`;
+  return formatStoredRange(from, to, { short: true });
 }
 
 function buildPickerLinkage(strategyOptions) {
@@ -1661,7 +1692,9 @@ async function loadRunDetail(ctx, runId, { routeToken = ctx.getRouteToken?.() ??
 
   const summary = run.summary || {};
   mount(main, el('div', { class: 'studio-result' }, [
-    renderRunContextBanner(run),
+    renderRunContextBanner(run, {
+      onUsePeriod: (selected) => applyRunPeriodToForm(ctx, selected),
+    }),
     renderRunMetricsPanel(summary, { cardId: 'studio-metrics-card', equity: run.equity }),
     el('div', { class: 'card card--compact studio-equity-card' }, [
       el('div', { class: 'card__header studio-equity-card__title-row' }, [

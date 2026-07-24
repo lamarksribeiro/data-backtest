@@ -1,14 +1,9 @@
 import { el } from '../utils/dom.js';
+import { formatStoredRange } from '../utils/dateRange.js';
 import { StatusBadge } from './Skeleton.js';
 
 export function formatRunDateRange(from, to) {
-  const fmt = (iso) => {
-    if (!iso) return '?';
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return String(iso).slice(0, 10);
-    return d.toLocaleDateString('pt-BR');
-  };
-  return `${fmt(from)} → ${fmt(to)}`;
+  return formatStoredRange(from, to);
 }
 
 export function intervalBadgeClass(interval) {
@@ -58,13 +53,32 @@ function renderAssetChips(run) {
   ]);
 }
 
-export function renderRunContextBanner(run, { compact = false, showId = true, showStatus = true } = {}) {
+export function renderRunContextBanner(run, {
+  compact = false,
+  showId = true,
+  showStatus = true,
+  onUsePeriod = null,
+} = {}) {
   const period = formatRunDateRange(run.from, run.to);
   const version = versionLabel(run);
 
   const headChildren = [];
   if (showId) headChildren.push(el('strong', { class: 'run-context-banner__id' }, `Backtest #${run.id}`));
   if (showStatus && run.status) headChildren.push(StatusBadge({ status: run.status }));
+
+  const periodActions = onUsePeriod
+    ? el('div', { class: 'run-context-banner__period-actions' }, [
+      el('button', {
+        type: 'button',
+        class: 'btn btn--ghost btn--sm run-context-banner__use-period',
+        title: 'Copiar período e ativo para o formulário do Estúdio',
+        onclick: (event) => {
+          event.preventDefault();
+          onUsePeriod(run);
+        },
+      }, 'Usar período no formulário'),
+    ])
+    : null;
 
   if (compact) {
     return el('div', { class: 'run-context-banner run-context-banner--compact' }, [
@@ -99,6 +113,7 @@ export function renderRunContextBanner(run, { compact = false, showId = true, sh
       renderAssetChips(run),
     ]),
     el('div', { class: 'run-context-banner__meta-row muted' }, metaItems),
+    periodActions,
   ]);
 }
 

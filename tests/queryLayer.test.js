@@ -40,6 +40,17 @@ test('availability resolves valid active_path and reports missing partitions', a
         to: '2026-06-08T00:00:00.000Z',
       });
       assert.equal(inclusiveEndDateFromExclusive('2026-06-08T00:00:00.000Z'), '2026-06-07');
+      assert.equal(
+        inclusiveEndDateFromExclusive('2026-06-07T15:31:00.000Z', '2026-06-07T14:00:00.000Z'),
+        '2026-06-07',
+      );
+      assert.deepEqual(rangeFromParams(new URLSearchParams({
+        from: '2026-06-07T14:00',
+        to: '2026-06-07T18:30',
+      })), {
+        from: new Date('2026-06-07T14:00').toISOString(),
+        to: new Date(new Date('2026-06-07T18:30').getTime() + 60_000).toISOString(),
+      });
       assert.deepEqual(inclusiveDateRangeFromRequest({
         from: '2026-05-31T00:00:00.000Z',
         to: '2026-06-08T00:00:00.000Z',

@@ -1,3 +1,5 @@
+const DATETIME_LOCAL_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+
 export function parseDateStart(value) {
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return new Date(`${value}T00:00:00.000Z`);
   const date = new Date(value);
@@ -11,27 +13,56 @@ export function parseDateEnd(value) {
     date.setUTCDate(date.getUTCDate() + 1);
     return date;
   }
+  if (DATETIME_LOCAL_RE.test(value)) {
+    const inclusive = new Date(value);
+    if (Number.isNaN(inclusive.getTime())) throw new Error(`Invalid date: ${value}`);
+    return new Date(inclusive.getTime() + 60_000);
+  }
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) throw new Error(`Invalid date: ${value}`);
   return date;
 }
 
 /** Converte fim exclusivo (ISO) para a data inclusiva exibida na UI (YYYY-MM-DD). */
-export function inclusiveEndDateFromExclusive(value) {
+export function inclusiveEndDateFromExclusive(value, fromIso = null) {
   const text = String(value || '');
   const dateOnly = text.slice(0, 10);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) return dateOnly || '?';
   if (text.length <= 10) return dateOnly;
   const exclusive = new Date(text.includes('T') ? text : `${text}T00:00:00.000Z`);
   if (Number.isNaN(exclusive.getTime())) return dateOnly;
-  const inclusive = new Date(exclusive.getTime() - 86400000);
+
+  const fromText = String(fromIso || '');
+  const dateOnlyEnd = /T00:00:00\.000Z$/.test(text)
+    && (!fromText || /T00:00:00\.000Z$/.test(fromText));
+
+  const inclusive = dateOnlyEnd
+    ? new Date(exclusive.getTime() - 86_400_000)
+    : new Date(exclusive.getTime() - 60_000);
   return inclusive.toISOString().slice(0, 10);
+}
+
+/** Fim exclusivo → instante inclusivo (ISO) para exibição com hora. */
+export function inclusiveEndInstantFromExclusive(value, fromIso = null) {
+  const text = String(value || '');
+  if (!text) return null;
+  const exclusive = new Date(text.includes('T') ? text : `${text}T00:00:00.000Z`);
+  if (Number.isNaN(exclusive.getTime())) return text;
+
+  const fromText = String(fromIso || '');
+  const dateOnlyEnd = /T00:00:00\.000Z$/.test(text)
+    && (!fromText || /T00:00:00\.000Z$/.test(fromText));
+
+  const inclusive = dateOnlyEnd
+    ? new Date(exclusive.getTime() - 86_400_000)
+    : new Date(exclusive.getTime() - 60_000);
+  return inclusive.toISOString();
 }
 
 export function inclusiveDateRangeFromRequest(request) {
   return {
     from_date: String(request.from).slice(0, 10),
-    to_date: inclusiveEndDateFromExclusive(request.to),
+    to_date: inclusiveEndDateFromExclusive(request.to, request.from),
   };
 }
 

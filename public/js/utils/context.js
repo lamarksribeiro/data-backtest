@@ -1,9 +1,16 @@
+import {
+  defaultFromDateTime,
+  defaultToDateTime,
+  normalizeContextDateTime,
+  contextToApiRange,
+} from './dateRange.js';
+
 const STORAGE_KEY = 'data-backtest-context';
 
 const DEFAULTS = {
   dataset: 'backtest_ticks',
-  from: isoDate(daysAgo(1)),
-  to: isoDate(new Date()),
+  from: defaultFromDateTime(),
+  to: defaultToDateTime(),
   underlying: 'BTC',
   interval: '5m',
   book_depth: '25',
@@ -28,10 +35,11 @@ export function saveContext(patch, scope = null) {
 }
 
 export function contextQueryParams(ctx = loadContext()) {
+  const range = contextToApiRange(ctx);
   const params = new URLSearchParams({
     dataset: ctx.dataset,
-    from: ctx.from,
-    to: ctx.to,
+    from: range.from,
+    to: range.to,
     underlying: ctx.underlying,
     interval: ctx.interval,
   });
@@ -52,8 +60,8 @@ export function renderContextBar(ctx, onChange, options = {}) {
   const bar = document.createElement('div');
   bar.className = 'context-bar';
   bar.innerHTML = `
-    <label class="context-bar__field"><span class="context-bar__field-label">De</span><input type="date" name="from" value="${current.from || ''}"></label>
-    <label class="context-bar__field"><span class="context-bar__field-label">Até (incluso)</span><input type="date" name="to" value="${current.to || ''}"></label>
+    <label class="context-bar__field"><span class="context-bar__field-label">De</span><input type="datetime-local" name="from" value="${escapeAttr(current.from || '')}"></label>
+    <label class="context-bar__field"><span class="context-bar__field-label">Até (incluso)</span><input type="datetime-local" name="to" value="${escapeAttr(current.to || '')}"></label>
     <label class="context-bar__field"><span class="context-bar__field-label">Ativo</span>${selectHtml('underlying', underlyings, current.underlying, formatRaw)}</label>
     <label class="context-bar__field"><span class="context-bar__field-label">Intervalo</span>${selectHtml('interval', intervals, current.interval, formatInterval)}</label>
     <label class="context-bar__field"><span class="context-bar__field-label">Book</span>${selectHtml('book_depth', bookDepths, current.book_depth, (value) => `top ${value}`)}</label>
@@ -73,16 +81,6 @@ export function renderContextBar(ctx, onChange, options = {}) {
   return bar;
 }
 
-function isoDate(date) {
-  return date.toISOString().slice(0, 10);
-}
-
-function daysAgo(n) {
-  const d = new Date();
-  d.setDate(d.getDate() - n);
-  return d;
-}
-
 function normalizeContext(ctx) {
   const normalized = { ...DEFAULTS, ...(ctx || {}) };
   for (const key of Object.keys(DEFAULTS)) {
@@ -91,6 +89,8 @@ function normalizeContext(ctx) {
       normalized[key] = DEFAULTS[key];
     }
   }
+  normalized.from = normalizeContextDateTime(normalized.from, { end: false });
+  normalized.to = normalizeContextDateTime(normalized.to, { end: true });
   return normalized;
 }
 

@@ -1,6 +1,7 @@
 import { renderQualityEventChart } from '../components/qualityEventChart.js';
 import { el, mount, emptyState } from '../utils/dom.js';
 import { applyContextOptions, contextBarOptions, loadContext, saveContext, selectField } from '../utils/context.js';
+import { contextToApiRange, contextDateKey } from '../utils/dateRange.js';
 import { fetchContextOptionsCached } from '../utils/contextOptionsCache.js';
 import { connectSse, disconnectSse } from '../utils/sse.js';
 import { confirmDialog } from '../utils/confirm.js';
@@ -1196,14 +1197,22 @@ async function reprocessDay(ctx, day, ctxSaved, { fieldOptions = null } = {}) {
   return submitDataFix(ctx, request, { rebuild, fieldOptions });
 }
 
-async function submitDataFix(ctx, request, { rebuild = false, fieldOptions = null } = {}) {
+async function submitDataFix(ctx, request, { rebuild = false, fieldOptions = null, formCtx = null } = {}) {
   const payload = {
     ...request,
     dataset: 'backtest_ticks',
     book_depth: Number(request.book_depth),
     ...(rebuild ? { rebuild: true } : {}),
   };
-  saveDataContext(payload);
+  if (formCtx) {
+    saveDataContext(formCtx);
+  } else {
+    saveDataContext({
+      underlying: request.underlying,
+      interval: request.interval,
+      book_depth: request.book_depth,
+    });
+  }
   const preview = await ctx.api.post('/api/data/fix', { request: payload, dry_run: true });
   if (!preview.ok) {
     ctx.toast.err(preview.error?.message || 'Falha no plano');
@@ -1245,11 +1254,11 @@ function renderActions(ctx, formCtx, fieldOptions) {
     el('form', { id: 'data-prepare-form', class: 'studio-form' }, [
       el('label', { class: 'field' }, [
         el('span', { class: 'field__label' }, 'De'),
-        el('input', { type: 'date', name: 'from', value: formCtx.from, class: 'field__input' }),
+        el('input', { type: 'datetime-local', name: 'from', value: formCtx.from, class: 'field__input' }),
       ]),
       el('label', { class: 'field' }, [
         el('span', { class: 'field__label' }, 'Até (incluso)'),
-        el('input', { type: 'date', name: 'to', value: formCtx.to, class: 'field__input' }),
+        el('input', { type: 'datetime-local', name: 'to', value: formCtx.to, class: 'field__input' }),
       ]),
       el('label', { class: 'field' }, [
         el('span', { class: 'field__label' }, 'Ativo'),
@@ -1288,9 +1297,11 @@ function renderActions(ctx, formCtx, fieldOptions) {
   form?.addEventListener('submit', async (ev) => {
     ev.preventDefault();
     const fd = new FormData(ev.target);
+    const formValues = dataFormFromDom();
+    const range = contextToApiRange(formValues);
     const request = {
-      from: fd.get('from'),
-      to: fd.get('to'),
+      from: range.from,
+      to: range.to,
       underlying: fd.get('underlying'),
       interval: fd.get('interval'),
       book_depth: fd.get('book_depth'),
@@ -1298,6 +1309,7 @@ function renderActions(ctx, formCtx, fieldOptions) {
     await submitDataFix(ctx, request, {
       rebuild: fd.get('rebuild') === '1',
       fieldOptions,
+      formCtx: formValues,
     });
   });
 }
@@ -1317,12 +1329,13 @@ async function refreshCoverage(ctx, formCtx, { full = true } = {}) {
   const section = document.getElementById('data-coverage-section');
   if (section) section.classList.add('is-refreshing');
 
+  const range = contextToApiRange(formCtx);
   const q = new URLSearchParams({
     underlying: formCtx.underlying,
     interval: formCtx.interval,
     book_depth: formCtx.book_depth,
-    from: formCtx.from,
-    to: formCtx.to,
+    from: range.from,
+    to: range.to,
   });
   if (full) q.set('full', '1');
 
@@ -1335,7 +1348,10 @@ async function refreshCoverage(ctx, formCtx, { full = true } = {}) {
       return;
     }
     const { coverage } = res.data;
-    const range = { from: formCtx.from, to: formCtx.to };
+    const range = {
+      from: contextDateKey(formCtx.from),
+      to: contextDateKey(formCtx.to),
+    };
     mount(section, el('div', {}, [
     el('div', { class: 'card__header' }, [
       el('div', {}, [
@@ -1588,8 +1604,8 @@ function renderMonthlyHeatmap(ctx, coverage, range = {}) {
     return emptyState('Nenhuma partição no intervalo.');
   }
 
-  const selectedFrom = range.from || coverage.from_date || String(coverage.from || '').slice(0, 10);
-  const selectedTo = range.to || coverage.to_date || String(coverage.to || coverage.from || '').slice(0, 10);
+  const selectedFrom = contextDateKey(range.from || coverage.from_date || String(coverage.from || '').slice(0, 10));
+  const selectedTo = contextDateKey(range.to || coverage.to_date || String(coverage.to || coverage.from || '').slice(0, 10));
 
   const monthsRange = getMonthsRange(days);
   
