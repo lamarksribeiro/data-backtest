@@ -22,6 +22,19 @@ O núcleo de execução é idêntico à TFC V7 Danger Floor (late flip reverse 8
 
 Budget base US$ 10; entradas com ask ≥ 0,82 usam 15 (champion/robust) ou 20 (aggressive).
 
+### Presets micro (paridade data-robot)
+
+| Preset | Base / teto | Envelope | Uso |
+|---|---|---|---|
+| `btc-micro-robust-v1` | US$ 2 / US$ 3 | Robust (dist 30, tier 1.5×) | Estúdio **v4** · canário conservador |
+| `btc-micro-aggressive-v1` | US$ 2 / US$ 4 | Aggressive (dist 40, tier 2.0×) | Estúdio **v5** · **igual ao canário do data-robot** |
+
+Núcleo vencedor nos dois micros: late flip exit/reverse + danger exit no piso 4s + gates TFC (velocity, OBI, odds-sum, spread). Mecanismos rejeitados permanecem **OFF** (sigma sizing, scoop, danger contínuo, early-warn, `minEntryZ`, equity scale).
+
+```powershell
+npm run lab:run-preset -- --preset btc-micro-aggressive-v1 --strategy midas-carry-v1 --strategy-family terminal --from 2026-07-01 --to 2026-07-07 --daily-metrics
+```
+
 ## Resultados (GLS compiled-soa, book depth 25, fees honestas)
 
 Treino 2026-05-04 → 2026-07-01 e holdout de referência (champion/aggressive: 01–13/07; robust: 01–18/07 no lab de robustez):
