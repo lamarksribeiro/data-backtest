@@ -1,0 +1,132 @@
+{
+  "preset": "btc-micro-aggressive-v1",
+  "strategy": "midas-carry-v1",
+  "source": "postgres_raw_ticks_bypass_lake_omit",
+  "comparisons": [
+    {
+      "slug": "btc-updown-5m-1784931300",
+      "conditionId": "0x146a2fba5a334afede478638aa55eba82f6d313fc87f6fa590ad60590bdce533",
+      "tickCount": 600,
+      "lakeNote": "omitted_from_lake_underlying_stale_flat",
+      "live": {
+        "side": "UP",
+        "fillTs": 1784931570804,
+        "avgPrice": 0.51,
+        "limit": 0.66,
+        "qty": 3,
+        "pnlDelta": 1.47,
+        "exit": "binary_expiry_settlement",
+        "winner": "Up",
+        "fillIso": "2026-07-24T22:19:30.804Z"
+      },
+      "backtest": {
+        "conditionId": "0x146a2fba5a334afede478638aa55eba82f6d313fc87f6fa590ad60590bdce533",
+        "eventStart": "2026-07-24T22:15:00.000Z",
+        "finalPnl": 0,
+        "winnerSide": null,
+        "reason": "no_entry",
+        "orders": [],
+        "marks": []
+      },
+      "parity": {
+        "entered": false,
+        "sameSide": false,
+        "entryDeltaMs": null,
+        "entryPriceLive": 0.51,
+        "entryPriceBt": null,
+        "exitLive": "binary_expiry_settlement",
+        "exitBt": [],
+        "pnlLive": 1.47,
+        "pnlBt": 0
+      }
+    },
+    {
+      "slug": "btc-updown-5m-1784933100",
+      "conditionId": "0x28477124fba87d3db9f8a59b1d398eba765dd234b6de5d5c7288f645df7979c5",
+      "tickCount": 600,
+      "lakeNote": "present_in_lake",
+      "live": {
+        "side": "DOWN",
+        "fillTs": 1784933384632,
+        "avgPrice": 0.53,
+        "limit": 0.6,
+        "qty": 3,
+        "pnlDelta": -1.59,
+        "exit": "binary_expiry_settlement",
+        "winner": "Up",
+        "fillIso": "2026-07-24T22:49:44.632Z"
+      },
+      "backtest": {
+        "conditionId": "0x28477124fba87d3db9f8a59b1d398eba765dd234b6de5d5c7288f645df7979c5",
+        "eventStart": "2026-07-24T22:45:00.000Z",
+        "finalPnl": -0.8,
+        "winnerSide": "UP",
+        "reason": "expiry_win",
+        "orders": [
+          {
+            "type": "entry",
+            "side": "DOWN",
+            "ts": 1784933371914,
+            "iso": "2026-07-24T22:49:31.914Z",
+            "avgPrice": 0.55,
+            "reason": "midas_core_entry"
+          },
+          {
+            "type": "exit",
+            "side": "DOWN",
+            "ts": 1784933394414,
+            "iso": "2026-07-24T22:49:54.414Z",
+            "avgPrice": 0.17,
+            "reason": "reverse_exit"
+          },
+          {
+            "type": "entry",
+            "side": "UP",
+            "ts": 1784933394414,
+            "iso": "2026-07-24T22:49:54.414Z",
+            "avgPrice": 0.83,
+            "reason": "late_flip_reverse"
+          }
+        ],
+        "marks": [
+          {
+            "ts": "2026-07-24T22:49:31.914Z",
+            "name": "midas_entry",
+            "data": {
+              "mode": "core",
+              "side": "DOWN",
+              "ask": 0.55,
+              "dist": 11.043218170001637,
+              "z": 6.602267923910778,
+              "budgetFactor": 1,
+              "secsLeft": 28.086
+            }
+          },
+          {
+            "ts": "2026-07-24T22:49:54.414Z",
+            "name": "reverse",
+            "data": {
+              "reason": "late_flip_reverse",
+              "from": "DOWN",
+              "to": "UP",
+              "ask": 0.83
+            }
+          }
+        ]
+      },
+      "parity": {
+        "entered": true,
+        "sameSide": true,
+        "entryDeltaMs": -12718,
+        "entryPriceLive": 0.53,
+        "entryPriceBt": 0.55,
+        "exitLive": "binary_expiry_settlement",
+        "exitBt": [
+          "reverse_exit"
+        ],
+        "pnlLive": -1.59,
+        "pnlBt": -0.8
+      }
+    }
+  ]
+}
