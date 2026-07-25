@@ -1,0 +1,2502 @@
+{
+  "generatedAt": "2026-07-25T17:04:58.347Z",
+  "preset": "btc-micro-aggressive-v1",
+  "strategy": "midas-carry-v1",
+  "liveSummary": {
+    "net": 2.6655646,
+    "won": 17.040564600000003,
+    "lost": 14.375,
+    "wins": 32,
+    "losses": 8,
+    "pending": 0,
+    "closed": 40,
+    "breakeven": 0,
+    "decided": 40,
+    "winRate": 0.8
+  },
+  "targets": 40,
+  "captured": 23,
+  "classes": {
+    "bt_missing": 17,
+    "exit_path_diff": 2,
+    "near_parity": 13,
+    "pnl_gap": 7,
+    "bt_no_entry": 1
+  },
+  "totals": {
+    "livePnl": 2.6656,
+    "btPnlOnLiveMarkets": 4.0102,
+    "btEntered": 22,
+    "sameSide": 22,
+    "nearParity": 13,
+    "exitPathDiff": 2,
+    "btNoEntry": 1,
+    "btMissing": 17
+  },
+  "comparisons": [
+    {
+      "marketId": "btc-updown-5m-1784931300",
+      "eventStart": "2026-07-24T22:15:00.000Z",
+      "live": {
+        "side": "UP",
+        "entry": 0.66,
+        "qty": 3,
+        "pnl": 1.47,
+        "winner": "Up",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-24T22:19:30.781Z",
+        "closed": "2026-07-24T22:23:36.900Z",
+        "exitPrice": 1,
+        "enterLegs": 1,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": false,
+        "side": null,
+        "entryPrice": null,
+        "entryIso": null,
+        "entryReason": null,
+        "pnl": null,
+        "winnerSide": null,
+        "reason": "missing_from_lake_or_no_callback",
+        "exitReasons": [],
+        "orders": [],
+        "marks": [],
+        "lakePresent": false
+      },
+      "parity": {
+        "btFound": false,
+        "entered": false,
+        "sameSide": false,
+        "entryDeltaMs": null,
+        "entryPriceLive": 0.66,
+        "entryPriceBt": null,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 1.47,
+        "pnlBt": null,
+        "pnlDelta": null,
+        "class": "bt_missing"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784933100",
+      "eventStart": "2026-07-24T22:45:00.000Z",
+      "live": {
+        "side": "DOWN",
+        "entry": 0.6,
+        "qty": 3,
+        "pnl": -1.59,
+        "winner": "Up",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-24T22:49:44.593Z",
+        "closed": "2026-07-24T22:52:12.940Z",
+        "exitPrice": 0,
+        "enterLegs": 1,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": true,
+        "side": "DOWN",
+        "entryPrice": 0.58,
+        "entryIso": "2026-07-24T22:49:43.416Z",
+        "entryReason": "midas_core_entry",
+        "pnl": -0.8899999999999997,
+        "winnerSide": "UP",
+        "reason": "expiry_win",
+        "exitReasons": [
+          "reverse_exit"
+        ],
+        "orders": [
+          {
+            "type": "entry",
+            "side": "DOWN",
+            "ts": 1784933383416,
+            "iso": "2026-07-24T22:49:43.416Z",
+            "avgPrice": 0.58,
+            "qty": null,
+            "reason": "midas_core_entry"
+          },
+          {
+            "type": "exit",
+            "side": "DOWN",
+            "ts": 1784933394414,
+            "iso": "2026-07-24T22:49:54.414Z",
+            "avgPrice": 0.17,
+            "qty": null,
+            "reason": "reverse_exit"
+          },
+          {
+            "type": "entry",
+            "side": "UP",
+            "ts": 1784933394414,
+            "iso": "2026-07-24T22:49:54.414Z",
+            "avgPrice": 0.83,
+            "qty": null,
+            "reason": "late_flip_reverse"
+          }
+        ],
+        "marks": [
+          {
+            "ts": "2026-07-24T22:49:43.416Z",
+            "name": "midas_entry",
+            "data": {
+              "mode": "core",
+              "side": "DOWN",
+              "ask": 0.58,
+              "dist": 11.232953259997885,
+              "z": 11.93695449513424,
+              "budgetFactor": 1,
+              "secsLeft": 16.584
+            }
+          },
+          {
+            "ts": "2026-07-24T22:49:54.414Z",
+            "name": "reverse",
+            "data": {
+              "reason": "late_flip_reverse",
+              "from": "DOWN",
+              "to": "UP",
+              "ask": 0.83
+            }
+          }
+        ],
+        "lakePresent": true
+      },
+      "parity": {
+        "btFound": true,
+        "entered": true,
+        "sameSide": true,
+        "entryDeltaMs": -1177,
+        "entryPriceLive": 0.6,
+        "entryPriceBt": 0.58,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [
+          "reverse_exit"
+        ],
+        "pnlLive": -1.59,
+        "pnlBt": -0.8899999999999997,
+        "pnlDelta": -0.7,
+        "class": "exit_path_diff"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784937300",
+      "eventStart": "2026-07-24T23:55:00.000Z",
+      "live": {
+        "side": "DOWN",
+        "entry": 0.92,
+        "qty": 3,
+        "pnl": 0.3,
+        "winner": "Down",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-24T23:59:54.432Z",
+        "closed": "2026-07-25T00:01:50.130Z",
+        "exitPrice": 1,
+        "enterLegs": 1,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": false,
+        "side": null,
+        "entryPrice": null,
+        "entryIso": null,
+        "entryReason": null,
+        "pnl": null,
+        "winnerSide": null,
+        "reason": "missing_from_lake_or_no_callback",
+        "exitReasons": [],
+        "orders": [],
+        "marks": [],
+        "lakePresent": false
+      },
+      "parity": {
+        "btFound": false,
+        "entered": false,
+        "sameSide": false,
+        "entryDeltaMs": null,
+        "entryPriceLive": 0.92,
+        "entryPriceBt": null,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 0.3,
+        "pnlBt": null,
+        "pnlDelta": null,
+        "class": "bt_missing"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784944800",
+      "eventStart": "2026-07-25T02:00:00.000Z",
+      "live": {
+        "side": "UP",
+        "entry": 0.94,
+        "qty": 3,
+        "pnl": 0.2123,
+        "winner": "Up",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T02:04:35.058Z",
+        "closed": "2026-07-25T02:08:51.807Z",
+        "exitPrice": 1,
+        "enterLegs": 1,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": true,
+        "side": "UP",
+        "entryPrice": 0.92,
+        "entryIso": "2026-07-25T02:04:34.414Z",
+        "entryReason": "midas_core_entry",
+        "pnl": 0.31999999999999984,
+        "winnerSide": "UP",
+        "reason": "expiry_win",
+        "exitReasons": [],
+        "orders": [
+          {
+            "type": "entry",
+            "side": "UP",
+            "ts": 1784945074414,
+            "iso": "2026-07-25T02:04:34.414Z",
+            "avgPrice": 0.92,
+            "qty": null,
+            "reason": "midas_core_entry"
+          }
+        ],
+        "marks": [
+          {
+            "ts": "2026-07-25T02:04:34.414Z",
+            "name": "midas_entry",
+            "data": {
+              "mode": "core",
+              "side": "UP",
+              "ask": 0.92,
+              "dist": 13.893052669998724,
+              "z": 4.5366035643659774,
+              "budgetFactor": 2,
+              "secsLeft": 25.586
+            }
+          }
+        ],
+        "lakePresent": true
+      },
+      "parity": {
+        "btFound": true,
+        "entered": true,
+        "sameSide": true,
+        "entryDeltaMs": -644,
+        "entryPriceLive": 0.94,
+        "entryPriceBt": 0.92,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 0.2123,
+        "pnlBt": 0.31999999999999984,
+        "pnlDelta": -0.1077,
+        "class": "near_parity"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784946900",
+      "eventStart": "2026-07-25T02:35:00.000Z",
+      "live": {
+        "side": "UP",
+        "entry": 0.81,
+        "qty": 2,
+        "pnl": 0.38,
+        "winner": "Up",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T02:39:31.223Z",
+        "closed": "2026-07-25T02:43:24.569Z",
+        "exitPrice": 1,
+        "enterLegs": 1,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": true,
+        "side": "UP",
+        "entryPrice": 0.78,
+        "entryIso": "2026-07-25T02:39:31.914Z",
+        "entryReason": "midas_core_entry",
+        "pnl": 0.43999999999999995,
+        "winnerSide": "UP",
+        "reason": "expiry_win",
+        "exitReasons": [],
+        "orders": [
+          {
+            "type": "entry",
+            "side": "UP",
+            "ts": 1784947171914,
+            "iso": "2026-07-25T02:39:31.914Z",
+            "avgPrice": 0.78,
+            "qty": null,
+            "reason": "midas_core_entry"
+          }
+        ],
+        "marks": [
+          {
+            "ts": "2026-07-25T02:39:31.914Z",
+            "name": "midas_entry",
+            "data": {
+              "mode": "core",
+              "side": "UP",
+              "ask": 0.78,
+              "dist": 0.46577888000319945,
+              "z": 0.07371101700369606,
+              "budgetFactor": 1,
+              "secsLeft": 28.086
+            }
+          }
+        ],
+        "lakePresent": true
+      },
+      "parity": {
+        "btFound": true,
+        "entered": true,
+        "sameSide": true,
+        "entryDeltaMs": 691,
+        "entryPriceLive": 0.81,
+        "entryPriceBt": 0.78,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 0.38,
+        "pnlBt": 0.43999999999999995,
+        "pnlDelta": -0.06,
+        "class": "near_parity"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784947200",
+      "eventStart": "2026-07-25T02:40:00.000Z",
+      "live": {
+        "side": "UP",
+        "entry": 0.77,
+        "qty": 2,
+        "pnl": 1.0702,
+        "winner": "Up",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T02:44:43.348Z",
+        "closed": "2026-07-25T02:47:40.697Z",
+        "exitPrice": 1,
+        "enterLegs": 4,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": true,
+        "side": "UP",
+        "entryPrice": 0.84,
+        "entryIso": "2026-07-25T02:44:36.915Z",
+        "entryReason": "midas_core_entry",
+        "pnl": 0.6400000000000001,
+        "winnerSide": "UP",
+        "reason": "expiry_win",
+        "exitReasons": [],
+        "orders": [
+          {
+            "type": "entry",
+            "side": "UP",
+            "ts": 1784947476915,
+            "iso": "2026-07-25T02:44:36.915Z",
+            "avgPrice": 0.84,
+            "qty": null,
+            "reason": "midas_core_entry"
+          }
+        ],
+        "marks": [
+          {
+            "ts": "2026-07-25T02:44:36.915Z",
+            "name": "midas_entry",
+            "data": {
+              "mode": "core",
+              "side": "UP",
+              "ask": 0.84,
+              "dist": 3.400574339997547,
+              "z": 2.244616794671449,
+              "budgetFactor": 2,
+              "secsLeft": 23.085
+            }
+          }
+        ],
+        "lakePresent": true
+      },
+      "parity": {
+        "btFound": true,
+        "entered": true,
+        "sameSide": true,
+        "entryDeltaMs": -6433,
+        "entryPriceLive": 0.77,
+        "entryPriceBt": 0.84,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 1.0702,
+        "pnlBt": 0.6400000000000001,
+        "pnlDelta": 0.4302,
+        "class": "pnl_gap"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784947500",
+      "eventStart": "2026-07-25T02:45:00.000Z",
+      "live": {
+        "side": "DOWN",
+        "entry": 0.62,
+        "qty": 2.11,
+        "pnl": 0.8018,
+        "winner": "Down",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T02:49:33.816Z",
+        "closed": "2026-07-25T02:52:38.092Z",
+        "exitPrice": 1,
+        "enterLegs": 1,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": true,
+        "side": "DOWN",
+        "entryPrice": 0.62,
+        "entryIso": "2026-07-25T02:49:30.414Z",
+        "entryReason": "midas_core_entry",
+        "pnl": 1.1400000000000001,
+        "winnerSide": "DOWN",
+        "reason": "expiry_win",
+        "exitReasons": [],
+        "orders": [
+          {
+            "type": "entry",
+            "side": "DOWN",
+            "ts": 1784947770414,
+            "iso": "2026-07-25T02:49:30.414Z",
+            "avgPrice": 0.62,
+            "qty": null,
+            "reason": "midas_core_entry"
+          }
+        ],
+        "marks": [
+          {
+            "ts": "2026-07-25T02:49:30.414Z",
+            "name": "midas_entry",
+            "data": {
+              "mode": "core",
+              "side": "DOWN",
+              "ask": 0.62,
+              "dist": 0.57542571000522,
+              "z": 0.19344895646909663,
+              "budgetFactor": 1,
+              "secsLeft": 29.586
+            }
+          }
+        ],
+        "lakePresent": true
+      },
+      "parity": {
+        "btFound": true,
+        "entered": true,
+        "sameSide": true,
+        "entryDeltaMs": -3402,
+        "entryPriceLive": 0.62,
+        "entryPriceBt": 0.62,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 0.8018,
+        "pnlBt": 1.1400000000000001,
+        "pnlDelta": -0.3382,
+        "class": "pnl_gap"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784948700",
+      "eventStart": "2026-07-25T03:05:00.000Z",
+      "live": {
+        "side": "DOWN",
+        "entry": 0.73,
+        "qty": 2,
+        "pnl": 0.5963,
+        "winner": "Down",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T03:09:36.147Z",
+        "closed": "2026-07-25T03:12:40.688Z",
+        "exitPrice": 1,
+        "enterLegs": 1,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": true,
+        "side": "DOWN",
+        "entryPrice": 0.71,
+        "entryIso": "2026-07-25T03:09:35.413Z",
+        "entryReason": "midas_core_entry",
+        "pnl": 0.5800000000000001,
+        "winnerSide": "DOWN",
+        "reason": "expiry_win",
+        "exitReasons": [],
+        "orders": [
+          {
+            "type": "entry",
+            "side": "DOWN",
+            "ts": 1784948975413,
+            "iso": "2026-07-25T03:09:35.413Z",
+            "avgPrice": 0.71,
+            "qty": null,
+            "reason": "midas_core_entry"
+          }
+        ],
+        "marks": [
+          {
+            "ts": "2026-07-25T03:09:35.413Z",
+            "name": "midas_entry",
+            "data": {
+              "mode": "core",
+              "side": "DOWN",
+              "ask": 0.71,
+              "dist": 11.415439789998345,
+              "z": 3.921383857584075,
+              "budgetFactor": 1,
+              "secsLeft": 24.587
+            }
+          }
+        ],
+        "lakePresent": true
+      },
+      "parity": {
+        "btFound": true,
+        "entered": true,
+        "sameSide": true,
+        "entryDeltaMs": -734,
+        "entryPriceLive": 0.73,
+        "entryPriceBt": 0.71,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 0.5963,
+        "pnlBt": 0.5800000000000001,
+        "pnlDelta": 0.0163,
+        "class": "near_parity"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784949000",
+      "eventStart": "2026-07-25T03:10:00.000Z",
+      "live": {
+        "side": "UP",
+        "entry": 0.6,
+        "qty": 3,
+        "pnl": -1.8,
+        "winner": "Down",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T03:14:48.795Z",
+        "closed": "2026-07-25T03:20:00.765Z",
+        "exitPrice": 0,
+        "enterLegs": 1,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": true,
+        "side": "UP",
+        "entryPrice": 0.63,
+        "entryIso": "2026-07-25T03:14:50.413Z",
+        "entryReason": "midas_core_entry",
+        "pnl": -1.8900000000000001,
+        "winnerSide": "DOWN",
+        "reason": "expiry_loss",
+        "exitReasons": [],
+        "orders": [
+          {
+            "type": "entry",
+            "side": "UP",
+            "ts": 1784949290413,
+            "iso": "2026-07-25T03:14:50.413Z",
+            "avgPrice": 0.63,
+            "qty": null,
+            "reason": "midas_core_entry"
+          }
+        ],
+        "marks": [
+          {
+            "ts": "2026-07-25T03:14:50.413Z",
+            "name": "midas_entry",
+            "data": {
+              "mode": "core",
+              "side": "UP",
+              "ask": 0.63,
+              "dist": 32.1444488499983,
+              "z": 30.196383596479482,
+              "budgetFactor": 1,
+              "secsLeft": 9.587
+            }
+          }
+        ],
+        "lakePresent": true
+      },
+      "parity": {
+        "btFound": true,
+        "entered": true,
+        "sameSide": true,
+        "entryDeltaMs": 1618,
+        "entryPriceLive": 0.6,
+        "entryPriceBt": 0.63,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": -1.8,
+        "pnlBt": -1.8900000000000001,
+        "pnlDelta": 0.09,
+        "class": "near_parity"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784949900",
+      "eventStart": "2026-07-25T03:25:00.000Z",
+      "live": {
+        "side": "UP",
+        "entry": 0.8,
+        "qty": 2,
+        "pnl": 0.43,
+        "winner": "Up",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T03:29:33.130Z",
+        "closed": "2026-07-25T03:30:13.684Z",
+        "exitPrice": 0.995,
+        "enterLegs": 3,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": true,
+        "side": "UP",
+        "entryPrice": 0.74,
+        "entryIso": "2026-07-25T03:29:32.416Z",
+        "entryReason": "midas_core_entry",
+        "pnl": 0.52,
+        "winnerSide": "UP",
+        "reason": "expiry_win",
+        "exitReasons": [],
+        "orders": [
+          {
+            "type": "entry",
+            "side": "UP",
+            "ts": 1784950172416,
+            "iso": "2026-07-25T03:29:32.416Z",
+            "avgPrice": 0.74,
+            "qty": null,
+            "reason": "midas_core_entry"
+          }
+        ],
+        "marks": [
+          {
+            "ts": "2026-07-25T03:29:32.416Z",
+            "name": "midas_entry",
+            "data": {
+              "mode": "core",
+              "side": "UP",
+              "ask": 0.74,
+              "dist": 13.02334573000553,
+              "z": 1.8084110290590547,
+              "budgetFactor": 1,
+              "secsLeft": 27.584
+            }
+          }
+        ],
+        "lakePresent": true
+      },
+      "parity": {
+        "btFound": true,
+        "entered": true,
+        "sameSide": true,
+        "entryDeltaMs": -714,
+        "entryPriceLive": 0.8,
+        "entryPriceBt": 0.74,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 0.43,
+        "pnlBt": 0.52,
+        "pnlDelta": -0.09,
+        "class": "near_parity"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784951400",
+      "eventStart": "2026-07-25T03:50:00.000Z",
+      "live": {
+        "side": "DOWN",
+        "entry": 0.61,
+        "qty": 3,
+        "pnl": -1.605,
+        "winner": "Up",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T03:54:30.671Z",
+        "closed": "2026-07-25T03:55:13.910Z",
+        "exitPrice": 0.005,
+        "enterLegs": 3,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": true,
+        "side": "DOWN",
+        "entryPrice": 0.58,
+        "entryIso": "2026-07-25T03:54:30.416Z",
+        "entryReason": "midas_core_entry",
+        "pnl": -0.33999999999999964,
+        "winnerSide": "UP",
+        "reason": "expiry_win",
+        "exitReasons": [
+          "reverse_exit"
+        ],
+        "orders": [
+          {
+            "type": "entry",
+            "side": "DOWN",
+            "ts": 1784951670416,
+            "iso": "2026-07-25T03:54:30.416Z",
+            "avgPrice": 0.58,
+            "qty": null,
+            "reason": "midas_core_entry"
+          },
+          {
+            "type": "exit",
+            "side": "DOWN",
+            "ts": 1784951692915,
+            "iso": "2026-07-25T03:54:52.915Z",
+            "avgPrice": 0.28,
+            "qty": null,
+            "reason": "reverse_exit"
+          },
+          {
+            "type": "entry",
+            "side": "UP",
+            "ts": 1784951692915,
+            "iso": "2026-07-25T03:54:52.915Z",
+            "avgPrice": 0.72,
+            "qty": null,
+            "reason": "late_flip_reverse"
+          }
+        ],
+        "marks": [
+          {
+            "ts": "2026-07-25T03:54:30.416Z",
+            "name": "midas_entry",
+            "data": {
+              "mode": "core",
+              "side": "DOWN",
+              "ask": 0.58,
+              "dist": 4.7617537200057996,
+              "z": 1.5371137689209071,
+              "budgetFactor": 1,
+              "secsLeft": 29.584
+            }
+          },
+          {
+            "ts": "2026-07-25T03:54:52.915Z",
+            "name": "reverse",
+            "data": {
+              "reason": "late_flip_reverse",
+              "from": "DOWN",
+              "to": "UP",
+              "ask": 0.72
+            }
+          }
+        ],
+        "lakePresent": true
+      },
+      "parity": {
+        "btFound": true,
+        "entered": true,
+        "sameSide": true,
+        "entryDeltaMs": -255,
+        "entryPriceLive": 0.61,
+        "entryPriceBt": 0.58,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [
+          "reverse_exit"
+        ],
+        "pnlLive": -1.605,
+        "pnlBt": -0.33999999999999964,
+        "pnlDelta": -1.265,
+        "class": "exit_path_diff"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784951700",
+      "eventStart": "2026-07-25T03:55:00.000Z",
+      "live": {
+        "side": "UP",
+        "entry": 0.95,
+        "qty": 3,
+        "pnl": 0.165,
+        "winner": "Up",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T03:59:35.398Z",
+        "closed": "2026-07-25T04:00:00.278Z",
+        "exitPrice": 0.995,
+        "enterLegs": 1,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": true,
+        "side": "UP",
+        "entryPrice": 0.93,
+        "entryIso": "2026-07-25T03:59:34.917Z",
+        "entryReason": "midas_core_entry",
+        "pnl": 0.2799999999999998,
+        "winnerSide": "UP",
+        "reason": "expiry_win",
+        "exitReasons": [],
+        "orders": [
+          {
+            "type": "entry",
+            "side": "UP",
+            "ts": 1784951974917,
+            "iso": "2026-07-25T03:59:34.917Z",
+            "avgPrice": 0.93,
+            "qty": null,
+            "reason": "midas_core_entry"
+          }
+        ],
+        "marks": [
+          {
+            "ts": "2026-07-25T03:59:34.917Z",
+            "name": "midas_entry",
+            "data": {
+              "mode": "core",
+              "side": "UP",
+              "ask": 0.93,
+              "dist": 15.980888869999035,
+              "z": 14.083849620397705,
+              "budgetFactor": 2,
+              "secsLeft": 25.083
+            }
+          }
+        ],
+        "lakePresent": true
+      },
+      "parity": {
+        "btFound": true,
+        "entered": true,
+        "sameSide": true,
+        "entryDeltaMs": -481,
+        "entryPriceLive": 0.95,
+        "entryPriceBt": 0.93,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 0.165,
+        "pnlBt": 0.2799999999999998,
+        "pnlDelta": -0.115,
+        "class": "near_parity"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784952600",
+      "eventStart": "2026-07-25T04:10:00.000Z",
+      "live": {
+        "side": "UP",
+        "entry": 0.82,
+        "qty": 2,
+        "pnl": 0.35,
+        "winner": "Up",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T04:14:31.849Z",
+        "closed": "2026-07-25T04:15:13.968Z",
+        "exitPrice": 0.995,
+        "enterLegs": 1,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": true,
+        "side": "UP",
+        "entryPrice": 0.81,
+        "entryIso": "2026-07-25T04:14:31.420Z",
+        "entryReason": "midas_core_entry",
+        "pnl": 0.3799999999999999,
+        "winnerSide": "UP",
+        "reason": "expiry_win",
+        "exitReasons": [],
+        "orders": [
+          {
+            "type": "entry",
+            "side": "UP",
+            "ts": 1784952871420,
+            "iso": "2026-07-25T04:14:31.420Z",
+            "avgPrice": 0.81,
+            "qty": null,
+            "reason": "midas_core_entry"
+          }
+        ],
+        "marks": [
+          {
+            "ts": "2026-07-25T04:14:31.420Z",
+            "name": "midas_entry",
+            "data": {
+              "mode": "core",
+              "side": "UP",
+              "ask": 0.81,
+              "dist": 1.8580126200031373,
+              "z": 3.5160900412496408,
+              "budgetFactor": 1,
+              "secsLeft": 28.58
+            }
+          }
+        ],
+        "lakePresent": true
+      },
+      "parity": {
+        "btFound": true,
+        "entered": true,
+        "sameSide": true,
+        "entryDeltaMs": -429,
+        "entryPriceLive": 0.82,
+        "entryPriceBt": 0.81,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 0.35,
+        "pnlBt": 0.3799999999999999,
+        "pnlDelta": -0.03,
+        "class": "near_parity"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784952900",
+      "eventStart": "2026-07-25T04:15:00.000Z",
+      "live": {
+        "side": "DOWN",
+        "entry": 0.85,
+        "qty": 3,
+        "pnl": 0.495,
+        "winner": "Down",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T04:19:30.797Z",
+        "closed": "2026-07-25T04:20:00.249Z",
+        "exitPrice": 0.995,
+        "enterLegs": 1,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": true,
+        "side": "DOWN",
+        "entryPrice": 0.83,
+        "entryIso": "2026-07-25T04:19:30.919Z",
+        "entryReason": "midas_core_entry",
+        "pnl": 0.6800000000000002,
+        "winnerSide": "DOWN",
+        "reason": "expiry_win",
+        "exitReasons": [],
+        "orders": [
+          {
+            "type": "entry",
+            "side": "DOWN",
+            "ts": 1784953170919,
+            "iso": "2026-07-25T04:19:30.919Z",
+            "avgPrice": 0.83,
+            "qty": null,
+            "reason": "midas_core_entry"
+          }
+        ],
+        "marks": [
+          {
+            "ts": "2026-07-25T04:19:30.919Z",
+            "name": "midas_entry",
+            "data": {
+              "mode": "core",
+              "side": "DOWN",
+              "ask": 0.83,
+              "dist": 5.503108670003712,
+              "z": 11.527776991952159,
+              "budgetFactor": 2,
+              "secsLeft": 29.081
+            }
+          }
+        ],
+        "lakePresent": true
+      },
+      "parity": {
+        "btFound": true,
+        "entered": true,
+        "sameSide": true,
+        "entryDeltaMs": 122,
+        "entryPriceLive": 0.85,
+        "entryPriceBt": 0.83,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 0.495,
+        "pnlBt": 0.6800000000000002,
+        "pnlDelta": -0.185,
+        "class": "pnl_gap"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784953500",
+      "eventStart": "2026-07-25T04:25:00.000Z",
+      "live": {
+        "side": "UP",
+        "entry": 0.7,
+        "qty": 2,
+        "pnl": 0.63,
+        "winner": "Up",
+        "exitKind": "SETTLEMENT",
+        "rev": true,
+        "opened": "2026-07-25T04:29:37.492Z",
+        "closed": "2026-07-25T04:30:13.865Z",
+        "exitPrice": 0.995,
+        "enterLegs": 1,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": true,
+        "side": "UP",
+        "entryPrice": 0.68,
+        "entryIso": "2026-07-25T04:29:36.420Z",
+        "entryReason": "midas_core_entry",
+        "pnl": -1.52,
+        "winnerSide": "UP",
+        "reason": "expiry_loss",
+        "exitReasons": [
+          "reverse_exit"
+        ],
+        "orders": [
+          {
+            "type": "entry",
+            "side": "UP",
+            "ts": 1784953776420,
+            "iso": "2026-07-25T04:29:36.420Z",
+            "avgPrice": 0.68,
+            "qty": null,
+            "reason": "midas_core_entry"
+          },
+          {
+            "type": "exit",
+            "side": "UP",
+            "ts": 1784953792420,
+            "iso": "2026-07-25T04:29:52.420Z",
+            "avgPrice": 0.92,
+            "qty": null,
+            "reason": "reverse_exit"
+          },
+          {
+            "type": "entry",
+            "side": "DOWN",
+            "ts": 1784953792420,
+            "iso": "2026-07-25T04:29:52.420Z",
+            "avgPrice": 0.08,
+            "qty": null,
+            "reason": "late_flip_reverse"
+          }
+        ],
+        "marks": [
+          {
+            "ts": "2026-07-25T04:29:36.420Z",
+            "name": "midas_entry",
+            "data": {
+              "mode": "core",
+              "side": "UP",
+              "ask": 0.68,
+              "dist": 1.3407974600049783,
+              "z": 0.847740881322967,
+              "budgetFactor": 1,
+              "secsLeft": 23.58
+            }
+          },
+          {
+            "ts": "2026-07-25T04:29:52.420Z",
+            "name": "reverse",
+            "data": {
+              "reason": "late_flip_reverse",
+              "from": "UP",
+              "to": "DOWN",
+              "ask": 0.08
+            }
+          }
+        ],
+        "lakePresent": true
+      },
+      "parity": {
+        "btFound": true,
+        "entered": true,
+        "sameSide": true,
+        "entryDeltaMs": -1072,
+        "entryPriceLive": 0.7,
+        "entryPriceBt": 0.68,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [
+          "reverse_exit"
+        ],
+        "pnlLive": 0.63,
+        "pnlBt": -1.52,
+        "pnlDelta": 2.15,
+        "class": "pnl_gap"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784954700",
+      "eventStart": "2026-07-25T04:45:00.000Z",
+      "live": {
+        "side": "UP",
+        "entry": 0.78,
+        "qty": 2,
+        "pnl": 0.47,
+        "winner": "Up",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T04:49:31.000Z",
+        "closed": "2026-07-25T04:50:15.215Z",
+        "exitPrice": 0.995,
+        "enterLegs": 3,
+        "settLegs": 2
+      },
+      "backtest": {
+        "entered": true,
+        "side": "UP",
+        "entryPrice": 0.69,
+        "entryIso": "2026-07-25T04:49:30.918Z",
+        "entryReason": "midas_core_entry",
+        "pnl": 0.6200000000000001,
+        "winnerSide": "UP",
+        "reason": "expiry_win",
+        "exitReasons": [],
+        "orders": [
+          {
+            "type": "entry",
+            "side": "UP",
+            "ts": 1784954970918,
+            "iso": "2026-07-25T04:49:30.918Z",
+            "avgPrice": 0.69,
+            "qty": null,
+            "reason": "midas_core_entry"
+          }
+        ],
+        "marks": [
+          {
+            "ts": "2026-07-25T04:49:30.918Z",
+            "name": "midas_entry",
+            "data": {
+              "mode": "core",
+              "side": "UP",
+              "ask": 0.69,
+              "dist": 2.7362369499969645,
+              "z": 1.5237897591246738,
+              "budgetFactor": 1,
+              "secsLeft": 29.082
+            }
+          }
+        ],
+        "lakePresent": true
+      },
+      "parity": {
+        "btFound": true,
+        "entered": true,
+        "sameSide": true,
+        "entryDeltaMs": -82,
+        "entryPriceLive": 0.78,
+        "entryPriceBt": 0.69,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 0.47,
+        "pnlBt": 0.6200000000000001,
+        "pnlDelta": -0.15,
+        "class": "pnl_gap"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784955300",
+      "eventStart": "2026-07-25T04:55:00.000Z",
+      "live": {
+        "side": "DOWN",
+        "entry": 0.76,
+        "qty": 2,
+        "pnl": -1.47,
+        "winner": "Up",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T04:59:30.701Z",
+        "closed": "2026-07-25T05:00:00.260Z",
+        "exitPrice": 0.005,
+        "enterLegs": 1,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": true,
+        "side": "DOWN",
+        "entryPrice": 0.74,
+        "entryIso": "2026-07-25T04:59:30.417Z",
+        "entryReason": "midas_core_entry",
+        "pnl": -1.48,
+        "winnerSide": "UP",
+        "reason": "expiry_loss",
+        "exitReasons": [],
+        "orders": [
+          {
+            "type": "entry",
+            "side": "DOWN",
+            "ts": 1784955570417,
+            "iso": "2026-07-25T04:59:30.417Z",
+            "avgPrice": 0.74,
+            "qty": null,
+            "reason": "midas_core_entry"
+          }
+        ],
+        "marks": [
+          {
+            "ts": "2026-07-25T04:59:30.417Z",
+            "name": "midas_entry",
+            "data": {
+              "mode": "core",
+              "side": "DOWN",
+              "ask": 0.74,
+              "dist": 2.152934229998209,
+              "z": 1.52222001007454,
+              "budgetFactor": 1,
+              "secsLeft": 29.583
+            }
+          }
+        ],
+        "lakePresent": true
+      },
+      "parity": {
+        "btFound": true,
+        "entered": true,
+        "sameSide": true,
+        "entryDeltaMs": -284,
+        "entryPriceLive": 0.76,
+        "entryPriceBt": 0.74,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": -1.47,
+        "pnlBt": -1.48,
+        "pnlDelta": 0.01,
+        "class": "near_parity"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784958000",
+      "eventStart": "2026-07-25T05:40:00.000Z",
+      "live": {
+        "side": "UP",
+        "entry": 0.94,
+        "qty": 3,
+        "pnl": 0.405,
+        "winner": "Up",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T05:44:36.179Z",
+        "closed": "2026-07-25T05:45:17.678Z",
+        "exitPrice": 0.995,
+        "enterLegs": 1,
+        "settLegs": 3
+      },
+      "backtest": {
+        "entered": false,
+        "side": null,
+        "entryPrice": null,
+        "entryIso": null,
+        "entryReason": null,
+        "pnl": 0,
+        "winnerSide": null,
+        "reason": "no_entry",
+        "exitReasons": [],
+        "orders": [],
+        "marks": [],
+        "lakePresent": true
+      },
+      "parity": {
+        "btFound": true,
+        "entered": false,
+        "sameSide": false,
+        "entryDeltaMs": null,
+        "entryPriceLive": 0.94,
+        "entryPriceBt": null,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 0.405,
+        "pnlBt": 0,
+        "pnlDelta": 0.405,
+        "class": "bt_no_entry"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784960700",
+      "eventStart": "2026-07-25T06:25:00.000Z",
+      "live": {
+        "side": "UP",
+        "entry": 0.93,
+        "qty": 3,
+        "pnl": 0.225,
+        "winner": "Up",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T06:29:32.900Z",
+        "closed": "2026-07-25T06:30:17.367Z",
+        "exitPrice": 0.995,
+        "enterLegs": 1,
+        "settLegs": 3
+      },
+      "backtest": {
+        "entered": true,
+        "side": "UP",
+        "entryPrice": 0.92245,
+        "entryIso": "2026-07-25T06:29:32.418Z",
+        "entryReason": "midas_core_entry",
+        "pnl": 0.31020000000000003,
+        "winnerSide": "UP",
+        "reason": "expiry_win",
+        "exitReasons": [],
+        "orders": [
+          {
+            "type": "entry",
+            "side": "UP",
+            "ts": 1784960972418,
+            "iso": "2026-07-25T06:29:32.418Z",
+            "avgPrice": 0.92245,
+            "qty": null,
+            "reason": "midas_core_entry"
+          }
+        ],
+        "marks": [
+          {
+            "ts": "2026-07-25T06:29:32.418Z",
+            "name": "midas_entry",
+            "data": {
+              "mode": "core",
+              "side": "UP",
+              "ask": 0.92,
+              "dist": 15.719993890001206,
+              "z": 2.717272185327895,
+              "budgetFactor": 2,
+              "secsLeft": 27.582
+            }
+          }
+        ],
+        "lakePresent": true
+      },
+      "parity": {
+        "btFound": true,
+        "entered": true,
+        "sameSide": true,
+        "entryDeltaMs": -482,
+        "entryPriceLive": 0.93,
+        "entryPriceBt": 0.92245,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 0.225,
+        "pnlBt": 0.31020000000000003,
+        "pnlDelta": -0.0852,
+        "class": "near_parity"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784962500",
+      "eventStart": "2026-07-25T06:55:00.000Z",
+      "live": {
+        "side": "UP",
+        "entry": 0.93,
+        "qty": 3,
+        "pnl": 0.255,
+        "winner": "Up",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T06:59:30.783Z",
+        "closed": "2026-07-25T07:00:01.276Z",
+        "exitPrice": 0.995,
+        "enterLegs": 1,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": true,
+        "side": "UP",
+        "entryPrice": 0.94,
+        "entryIso": "2026-07-25T06:59:39.418Z",
+        "entryReason": "midas_core_entry",
+        "pnl": 0.2400000000000002,
+        "winnerSide": "UP",
+        "reason": "expiry_win",
+        "exitReasons": [],
+        "orders": [
+          {
+            "type": "entry",
+            "side": "UP",
+            "ts": 1784962779418,
+            "iso": "2026-07-25T06:59:39.418Z",
+            "avgPrice": 0.94,
+            "qty": null,
+            "reason": "midas_core_entry"
+          }
+        ],
+        "marks": [
+          {
+            "ts": "2026-07-25T06:59:39.418Z",
+            "name": "midas_entry",
+            "data": {
+              "mode": "core",
+              "side": "UP",
+              "ask": 0.94,
+              "dist": 19.844387670003925,
+              "z": 3.0101332850652995,
+              "budgetFactor": 2,
+              "secsLeft": 20.582
+            }
+          }
+        ],
+        "lakePresent": true
+      },
+      "parity": {
+        "btFound": true,
+        "entered": true,
+        "sameSide": true,
+        "entryDeltaMs": 8635,
+        "entryPriceLive": 0.93,
+        "entryPriceBt": 0.94,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 0.255,
+        "pnlBt": 0.2400000000000002,
+        "pnlDelta": 0.015,
+        "class": "near_parity"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784962800",
+      "eventStart": "2026-07-25T07:00:00.000Z",
+      "live": {
+        "side": "UP",
+        "entry": 0.58,
+        "qty": 3,
+        "pnl": 1.305,
+        "winner": "Up",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T07:04:34.022Z",
+        "closed": "2026-07-25T07:05:18.547Z",
+        "exitPrice": 0.995,
+        "enterLegs": 1,
+        "settLegs": 3
+      },
+      "backtest": {
+        "entered": true,
+        "side": "UP",
+        "entryPrice": 0.56,
+        "entryIso": "2026-07-25T07:04:33.417Z",
+        "entryReason": "midas_core_entry",
+        "pnl": 1.3199999999999998,
+        "winnerSide": "UP",
+        "reason": "expiry_win",
+        "exitReasons": [],
+        "orders": [
+          {
+            "type": "entry",
+            "side": "UP",
+            "ts": 1784963073417,
+            "iso": "2026-07-25T07:04:33.417Z",
+            "avgPrice": 0.56,
+            "qty": null,
+            "reason": "midas_core_entry"
+          }
+        ],
+        "marks": [
+          {
+            "ts": "2026-07-25T07:04:33.417Z",
+            "name": "midas_entry",
+            "data": {
+              "mode": "core",
+              "side": "UP",
+              "ask": 0.56,
+              "dist": 13.752365139996982,
+              "z": 2.6987199855098205,
+              "budgetFactor": 1,
+              "secsLeft": 26.583
+            }
+          }
+        ],
+        "lakePresent": true
+      },
+      "parity": {
+        "btFound": true,
+        "entered": true,
+        "sameSide": true,
+        "entryDeltaMs": -605,
+        "entryPriceLive": 0.58,
+        "entryPriceBt": 0.56,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 1.305,
+        "pnlBt": 1.3199999999999998,
+        "pnlDelta": -0.015,
+        "class": "near_parity"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784963100",
+      "eventStart": "2026-07-25T07:05:00.000Z",
+      "live": {
+        "side": "DOWN",
+        "entry": 0.92,
+        "qty": 3,
+        "pnl": 0.255,
+        "winner": "Down",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T07:09:51.887Z",
+        "closed": "2026-07-25T07:10:17.233Z",
+        "exitPrice": 0.995,
+        "enterLegs": 1,
+        "settLegs": 3
+      },
+      "backtest": {
+        "entered": true,
+        "side": "DOWN",
+        "entryPrice": 0.9,
+        "entryIso": "2026-07-25T07:09:51.419Z",
+        "entryReason": "midas_core_entry",
+        "pnl": 0.3999999999999999,
+        "winnerSide": "DOWN",
+        "reason": "expiry_win",
+        "exitReasons": [],
+        "orders": [
+          {
+            "type": "entry",
+            "side": "DOWN",
+            "ts": 1784963391419,
+            "iso": "2026-07-25T07:09:51.419Z",
+            "avgPrice": 0.9,
+            "qty": null,
+            "reason": "midas_core_entry"
+          }
+        ],
+        "marks": [
+          {
+            "ts": "2026-07-25T07:09:51.419Z",
+            "name": "midas_entry",
+            "data": {
+              "mode": "core",
+              "side": "DOWN",
+              "ask": 0.9,
+              "dist": 1.9936509499966633,
+              "z": 1.9359760955801653,
+              "budgetFactor": 2,
+              "secsLeft": 8.581
+            }
+          }
+        ],
+        "lakePresent": true
+      },
+      "parity": {
+        "btFound": true,
+        "entered": true,
+        "sameSide": true,
+        "entryDeltaMs": -468,
+        "entryPriceLive": 0.92,
+        "entryPriceBt": 0.9,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 0.255,
+        "pnlBt": 0.3999999999999999,
+        "pnlDelta": -0.145,
+        "class": "near_parity"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784963400",
+      "eventStart": "2026-07-25T07:10:00.000Z",
+      "live": {
+        "side": "UP",
+        "entry": 0.79,
+        "qty": 2,
+        "pnl": 0.45,
+        "winner": "Up",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T07:14:32.230Z",
+        "closed": "2026-07-25T07:15:17.713Z",
+        "exitPrice": 0.995,
+        "enterLegs": 1,
+        "settLegs": 3
+      },
+      "backtest": {
+        "entered": true,
+        "side": "UP",
+        "entryPrice": 0.77,
+        "entryIso": "2026-07-25T07:14:30.418Z",
+        "entryReason": "midas_core_entry",
+        "pnl": 0.45999999999999996,
+        "winnerSide": "UP",
+        "reason": "expiry_win",
+        "exitReasons": [],
+        "orders": [
+          {
+            "type": "entry",
+            "side": "UP",
+            "ts": 1784963670418,
+            "iso": "2026-07-25T07:14:30.418Z",
+            "avgPrice": 0.77,
+            "qty": null,
+            "reason": "midas_core_entry"
+          }
+        ],
+        "marks": [
+          {
+            "ts": "2026-07-25T07:14:30.418Z",
+            "name": "midas_entry",
+            "data": {
+              "mode": "core",
+              "side": "UP",
+              "ask": 0.77,
+              "dist": 2.933322440003394,
+              "z": 2.4764486279482156,
+              "budgetFactor": 1,
+              "secsLeft": 29.582
+            }
+          }
+        ],
+        "lakePresent": true
+      },
+      "parity": {
+        "btFound": true,
+        "entered": true,
+        "sameSide": true,
+        "entryDeltaMs": -1812,
+        "entryPriceLive": 0.79,
+        "entryPriceBt": 0.77,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 0.45,
+        "pnlBt": 0.45999999999999996,
+        "pnlDelta": -0.01,
+        "class": "near_parity"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784963700",
+      "eventStart": "2026-07-25T07:15:00.000Z",
+      "live": {
+        "side": "DOWN",
+        "entry": 0.69,
+        "qty": 2,
+        "pnl": -1.35,
+        "winner": "Up",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T07:19:33.345Z",
+        "closed": "2026-07-25T07:20:20.742Z",
+        "exitPrice": 0.005,
+        "enterLegs": 4,
+        "settLegs": 4
+      },
+      "backtest": {
+        "entered": true,
+        "side": "DOWN",
+        "entryPrice": 0.67,
+        "entryIso": "2026-07-25T07:19:36.919Z",
+        "entryReason": "midas_core_entry",
+        "pnl": 0.6599999999999999,
+        "winnerSide": "DOWN",
+        "reason": "expiry_win",
+        "exitReasons": [],
+        "orders": [
+          {
+            "type": "entry",
+            "side": "DOWN",
+            "ts": 1784963976919,
+            "iso": "2026-07-25T07:19:36.919Z",
+            "avgPrice": 0.67,
+            "qty": null,
+            "reason": "midas_core_entry"
+          }
+        ],
+        "marks": [
+          {
+            "ts": "2026-07-25T07:19:36.919Z",
+            "name": "midas_entry",
+            "data": {
+              "mode": "core",
+              "side": "DOWN",
+              "ask": 0.67,
+              "dist": 18.40060295999865,
+              "z": 4.99032936929801,
+              "budgetFactor": 1,
+              "secsLeft": 23.081
+            }
+          }
+        ],
+        "lakePresent": true
+      },
+      "parity": {
+        "btFound": true,
+        "entered": true,
+        "sameSide": true,
+        "entryDeltaMs": 3574,
+        "entryPriceLive": 0.69,
+        "entryPriceBt": 0.67,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": -1.35,
+        "pnlBt": 0.6599999999999999,
+        "pnlDelta": -2.01,
+        "class": "pnl_gap"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784965200",
+      "eventStart": "2026-07-25T07:40:00.000Z",
+      "live": {
+        "side": "DOWN",
+        "entry": 0.89,
+        "qty": 3,
+        "pnl": 0.345,
+        "winner": "Down",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T07:44:34.995Z",
+        "closed": "2026-07-25T07:45:50.312Z",
+        "exitPrice": 0.995,
+        "enterLegs": 2,
+        "settLegs": 13
+      },
+      "backtest": {
+        "entered": true,
+        "side": "DOWN",
+        "entryPrice": 0.62,
+        "entryIso": "2026-07-25T07:44:31.420Z",
+        "entryReason": "midas_core_entry",
+        "pnl": 1.1400000000000001,
+        "winnerSide": "DOWN",
+        "reason": "expiry_win",
+        "exitReasons": [],
+        "orders": [
+          {
+            "type": "entry",
+            "side": "DOWN",
+            "ts": 1784965471420,
+            "iso": "2026-07-25T07:44:31.420Z",
+            "avgPrice": 0.62,
+            "qty": null,
+            "reason": "midas_core_entry"
+          }
+        ],
+        "marks": [
+          {
+            "ts": "2026-07-25T07:44:31.420Z",
+            "name": "midas_entry",
+            "data": {
+              "mode": "core",
+              "side": "DOWN",
+              "ask": 0.62,
+              "dist": 9.247254080000857,
+              "z": 19.67988312190218,
+              "budgetFactor": 1,
+              "secsLeft": 28.58
+            }
+          }
+        ],
+        "lakePresent": true
+      },
+      "parity": {
+        "btFound": true,
+        "entered": true,
+        "sameSide": true,
+        "entryDeltaMs": -3575,
+        "entryPriceLive": 0.89,
+        "entryPriceBt": 0.62,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 0.345,
+        "pnlBt": 1.1400000000000001,
+        "pnlDelta": -0.795,
+        "class": "pnl_gap"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784966100",
+      "eventStart": "2026-07-25T07:55:00.000Z",
+      "live": {
+        "side": "UP",
+        "entry": 0.92,
+        "qty": 3,
+        "pnl": -2.565,
+        "winner": "Down",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T07:59:40.024Z",
+        "closed": "2026-07-25T08:00:01.583Z",
+        "exitPrice": 0.005,
+        "enterLegs": 2,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": false,
+        "side": null,
+        "entryPrice": null,
+        "entryIso": null,
+        "entryReason": null,
+        "pnl": null,
+        "winnerSide": null,
+        "reason": "missing_from_lake_or_no_callback",
+        "exitReasons": [],
+        "orders": [],
+        "marks": [],
+        "lakePresent": false
+      },
+      "parity": {
+        "btFound": false,
+        "entered": false,
+        "sameSide": false,
+        "entryDeltaMs": null,
+        "entryPriceLive": 0.92,
+        "entryPriceBt": null,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": -2.565,
+        "pnlBt": null,
+        "pnlDelta": null,
+        "class": "bt_missing"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784967300",
+      "eventStart": "2026-07-25T08:15:00.000Z",
+      "live": {
+        "side": "UP",
+        "entry": 0.96,
+        "qty": 3,
+        "pnl": 0.135,
+        "winner": "Up",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T08:19:34.093Z",
+        "closed": "2026-07-25T08:20:00.522Z",
+        "exitPrice": 0.995,
+        "enterLegs": 1,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": false,
+        "side": null,
+        "entryPrice": null,
+        "entryIso": null,
+        "entryReason": null,
+        "pnl": null,
+        "winnerSide": null,
+        "reason": "missing_from_lake_or_no_callback",
+        "exitReasons": [],
+        "orders": [],
+        "marks": [],
+        "lakePresent": false
+      },
+      "parity": {
+        "btFound": false,
+        "entered": false,
+        "sameSide": false,
+        "entryDeltaMs": null,
+        "entryPriceLive": 0.96,
+        "entryPriceBt": null,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 0.135,
+        "pnlBt": null,
+        "pnlDelta": null,
+        "class": "bt_missing"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784971200",
+      "eventStart": "2026-07-25T09:20:00.000Z",
+      "live": {
+        "side": "UP",
+        "entry": 0.88,
+        "qty": 3,
+        "pnl": 0.375,
+        "winner": "Up",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T09:24:30.713Z",
+        "closed": "2026-07-25T09:25:00.322Z",
+        "exitPrice": 0.995,
+        "enterLegs": 1,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": false,
+        "side": null,
+        "entryPrice": null,
+        "entryIso": null,
+        "entryReason": null,
+        "pnl": null,
+        "winnerSide": null,
+        "reason": "missing_from_lake_or_no_callback",
+        "exitReasons": [],
+        "orders": [],
+        "marks": [],
+        "lakePresent": false
+      },
+      "parity": {
+        "btFound": false,
+        "entered": false,
+        "sameSide": false,
+        "entryDeltaMs": null,
+        "entryPriceLive": 0.88,
+        "entryPriceBt": null,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 0.375,
+        "pnlBt": null,
+        "pnlDelta": null,
+        "class": "bt_missing"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784971800",
+      "eventStart": "2026-07-25T09:30:00.000Z",
+      "live": {
+        "side": "UP",
+        "entry": 0.7,
+        "qty": 2,
+        "pnl": -1.37,
+        "winner": "Down",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T09:34:50.203Z",
+        "closed": "2026-07-25T09:35:22.833Z",
+        "exitPrice": 0.005,
+        "enterLegs": 3,
+        "settLegs": 4
+      },
+      "backtest": {
+        "entered": false,
+        "side": null,
+        "entryPrice": null,
+        "entryIso": null,
+        "entryReason": null,
+        "pnl": null,
+        "winnerSide": null,
+        "reason": "missing_from_lake_or_no_callback",
+        "exitReasons": [],
+        "orders": [],
+        "marks": [],
+        "lakePresent": false
+      },
+      "parity": {
+        "btFound": false,
+        "entered": false,
+        "sameSide": false,
+        "entryDeltaMs": null,
+        "entryPriceLive": 0.7,
+        "entryPriceBt": null,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": -1.37,
+        "pnlBt": null,
+        "pnlDelta": null,
+        "class": "bt_missing"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784972100",
+      "eventStart": "2026-07-25T09:35:00.000Z",
+      "live": {
+        "side": "UP",
+        "entry": 0.97,
+        "qty": 2,
+        "pnl": 0.05,
+        "winner": "Down",
+        "exitKind": "SETTLEMENT",
+        "rev": true,
+        "opened": "2026-07-25T09:39:31.981Z",
+        "closed": "2026-07-25T09:40:01.286Z",
+        "exitPrice": 0.995,
+        "enterLegs": 1,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": false,
+        "side": null,
+        "entryPrice": null,
+        "entryIso": null,
+        "entryReason": null,
+        "pnl": null,
+        "winnerSide": null,
+        "reason": "missing_from_lake_or_no_callback",
+        "exitReasons": [],
+        "orders": [],
+        "marks": [],
+        "lakePresent": false
+      },
+      "parity": {
+        "btFound": false,
+        "entered": false,
+        "sameSide": false,
+        "entryDeltaMs": null,
+        "entryPriceLive": 0.97,
+        "entryPriceBt": null,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 0.05,
+        "pnlBt": null,
+        "pnlDelta": null,
+        "class": "bt_missing"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784985900",
+      "eventStart": "2026-07-25T13:25:00.000Z",
+      "live": {
+        "side": "UP",
+        "entry": 0.84,
+        "qty": 3,
+        "pnl": 0.465,
+        "winner": "Up",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T13:29:52.406Z",
+        "closed": "2026-07-25T13:30:01.470Z",
+        "exitPrice": 0.995,
+        "enterLegs": 1,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": false,
+        "side": null,
+        "entryPrice": null,
+        "entryIso": null,
+        "entryReason": null,
+        "pnl": null,
+        "winnerSide": null,
+        "reason": "missing_from_lake_or_no_callback",
+        "exitReasons": [],
+        "orders": [],
+        "marks": [],
+        "lakePresent": false
+      },
+      "parity": {
+        "btFound": false,
+        "entered": false,
+        "sameSide": false,
+        "entryDeltaMs": null,
+        "entryPriceLive": 0.84,
+        "entryPriceBt": null,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 0.465,
+        "pnlBt": null,
+        "pnlDelta": null,
+        "class": "bt_missing"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784986200",
+      "eventStart": "2026-07-25T13:30:00.000Z",
+      "live": {
+        "side": "DOWN",
+        "entry": 0.95,
+        "qty": 3,
+        "pnl": 0.255,
+        "winner": "Down",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T13:34:44.367Z",
+        "closed": "2026-07-25T13:35:15.745Z",
+        "exitPrice": 0.995,
+        "enterLegs": 1,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": false,
+        "side": null,
+        "entryPrice": null,
+        "entryIso": null,
+        "entryReason": null,
+        "pnl": null,
+        "winnerSide": null,
+        "reason": "missing_from_lake_or_no_callback",
+        "exitReasons": [],
+        "orders": [],
+        "marks": [],
+        "lakePresent": false
+      },
+      "parity": {
+        "btFound": false,
+        "entered": false,
+        "sameSide": false,
+        "entryDeltaMs": null,
+        "entryPriceLive": 0.95,
+        "entryPriceBt": null,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 0.255,
+        "pnlBt": null,
+        "pnlDelta": null,
+        "class": "bt_missing"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784987700",
+      "eventStart": "2026-07-25T13:55:00.000Z",
+      "live": {
+        "side": "DOWN",
+        "entry": 0.91,
+        "qty": 3,
+        "pnl": 0.315,
+        "winner": "Down",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T13:59:30.870Z",
+        "closed": "2026-07-25T14:00:01.625Z",
+        "exitPrice": 0.995,
+        "enterLegs": 1,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": false,
+        "side": null,
+        "entryPrice": null,
+        "entryIso": null,
+        "entryReason": null,
+        "pnl": null,
+        "winnerSide": null,
+        "reason": "missing_from_lake_or_no_callback",
+        "exitReasons": [],
+        "orders": [],
+        "marks": [],
+        "lakePresent": false
+      },
+      "parity": {
+        "btFound": false,
+        "entered": false,
+        "sameSide": false,
+        "entryDeltaMs": null,
+        "entryPriceLive": 0.91,
+        "entryPriceBt": null,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 0.315,
+        "pnlBt": null,
+        "pnlDelta": null,
+        "class": "bt_missing"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784988600",
+      "eventStart": "2026-07-25T14:10:00.000Z",
+      "live": {
+        "side": "DOWN",
+        "entry": 0.84,
+        "qty": 3,
+        "pnl": 1.035,
+        "winner": "Down",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T14:14:34.229Z",
+        "closed": "2026-07-25T14:15:17.178Z",
+        "exitPrice": 0.995,
+        "enterLegs": 1,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": false,
+        "side": null,
+        "entryPrice": null,
+        "entryIso": null,
+        "entryReason": null,
+        "pnl": null,
+        "winnerSide": null,
+        "reason": "missing_from_lake_or_no_callback",
+        "exitReasons": [],
+        "orders": [],
+        "marks": [],
+        "lakePresent": false
+      },
+      "parity": {
+        "btFound": false,
+        "entered": false,
+        "sameSide": false,
+        "entryDeltaMs": null,
+        "entryPriceLive": 0.84,
+        "entryPriceBt": null,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 1.035,
+        "pnlBt": null,
+        "pnlDelta": null,
+        "class": "bt_missing"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784990400",
+      "eventStart": "2026-07-25T14:40:00.000Z",
+      "live": {
+        "side": "DOWN",
+        "entry": 0.9,
+        "qty": 3,
+        "pnl": -2.625,
+        "winner": "Up",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T14:44:31.002Z",
+        "closed": "2026-07-25T14:45:06.537Z",
+        "exitPrice": 0.005,
+        "enterLegs": 1,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": false,
+        "side": null,
+        "entryPrice": null,
+        "entryIso": null,
+        "entryReason": null,
+        "pnl": null,
+        "winnerSide": null,
+        "reason": "missing_from_lake_or_no_callback",
+        "exitReasons": [],
+        "orders": [],
+        "marks": [],
+        "lakePresent": false
+      },
+      "parity": {
+        "btFound": false,
+        "entered": false,
+        "sameSide": false,
+        "entryDeltaMs": null,
+        "entryPriceLive": 0.9,
+        "entryPriceBt": null,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": -2.625,
+        "pnlBt": null,
+        "pnlDelta": null,
+        "class": "bt_missing"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784991300",
+      "eventStart": "2026-07-25T14:55:00.000Z",
+      "live": {
+        "side": "UP",
+        "entry": 0.9,
+        "qty": 3,
+        "pnl": 0.345,
+        "winner": "Up",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T14:59:31.290Z",
+        "closed": "2026-07-25T15:00:01.391Z",
+        "exitPrice": 0.995,
+        "enterLegs": 1,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": false,
+        "side": null,
+        "entryPrice": null,
+        "entryIso": null,
+        "entryReason": null,
+        "pnl": null,
+        "winnerSide": null,
+        "reason": "missing_from_lake_or_no_callback",
+        "exitReasons": [],
+        "orders": [],
+        "marks": [],
+        "lakePresent": false
+      },
+      "parity": {
+        "btFound": false,
+        "entered": false,
+        "sameSide": false,
+        "entryDeltaMs": null,
+        "entryPriceLive": 0.9,
+        "entryPriceBt": null,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 0.345,
+        "pnlBt": null,
+        "pnlDelta": null,
+        "class": "bt_missing"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784994900",
+      "eventStart": "2026-07-25T15:55:00.000Z",
+      "live": {
+        "side": "DOWN",
+        "entry": 0.81,
+        "qty": 2,
+        "pnl": 0.41,
+        "winner": "Down",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T15:59:30.805Z",
+        "closed": "2026-07-25T16:00:01.436Z",
+        "exitPrice": 0.995,
+        "enterLegs": 1,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": false,
+        "side": null,
+        "entryPrice": null,
+        "entryIso": null,
+        "entryReason": null,
+        "pnl": null,
+        "winnerSide": null,
+        "reason": "missing_from_lake_or_no_callback",
+        "exitReasons": [],
+        "orders": [],
+        "marks": [],
+        "lakePresent": false
+      },
+      "parity": {
+        "btFound": false,
+        "entered": false,
+        "sameSide": false,
+        "entryDeltaMs": null,
+        "entryPriceLive": 0.81,
+        "entryPriceBt": null,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 0.41,
+        "pnlBt": null,
+        "pnlDelta": null,
+        "class": "bt_missing"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784996700",
+      "eventStart": "2026-07-25T16:25:00.000Z",
+      "live": {
+        "side": "UP",
+        "entry": 0.57,
+        "qty": 3,
+        "pnl": 1.335,
+        "winner": "Up",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T16:29:31.268Z",
+        "closed": "2026-07-25T16:30:01.684Z",
+        "exitPrice": 0.995,
+        "enterLegs": 1,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": false,
+        "side": null,
+        "entryPrice": null,
+        "entryIso": null,
+        "entryReason": null,
+        "pnl": null,
+        "winnerSide": null,
+        "reason": "missing_from_lake_or_no_callback",
+        "exitReasons": [],
+        "orders": [],
+        "marks": [],
+        "lakePresent": false
+      },
+      "parity": {
+        "btFound": false,
+        "entered": false,
+        "sameSide": false,
+        "entryDeltaMs": null,
+        "entryPriceLive": 0.57,
+        "entryPriceBt": null,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 1.335,
+        "pnlBt": null,
+        "pnlDelta": null,
+        "class": "bt_missing"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784997300",
+      "eventStart": "2026-07-25T16:35:00.000Z",
+      "live": {
+        "side": "UP",
+        "entry": 0.87,
+        "qty": 3,
+        "pnl": 0.375,
+        "winner": "Up",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T16:39:34.286Z",
+        "closed": "2026-07-25T16:40:02.592Z",
+        "exitPrice": 0.995,
+        "enterLegs": 1,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": false,
+        "side": null,
+        "entryPrice": null,
+        "entryIso": null,
+        "entryReason": null,
+        "pnl": null,
+        "winnerSide": null,
+        "reason": "missing_from_lake_or_no_callback",
+        "exitReasons": [],
+        "orders": [],
+        "marks": [],
+        "lakePresent": false
+      },
+      "parity": {
+        "btFound": false,
+        "entered": false,
+        "sameSide": false,
+        "entryDeltaMs": null,
+        "entryPriceLive": 0.87,
+        "entryPriceBt": null,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 0.375,
+        "pnlBt": null,
+        "pnlDelta": null,
+        "class": "bt_missing"
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784998500",
+      "eventStart": "2026-07-25T16:55:00.000Z",
+      "live": {
+        "side": "UP",
+        "entry": 0.57,
+        "qty": 3,
+        "pnl": 1.335,
+        "winner": "Up",
+        "exitKind": "SETTLEMENT",
+        "rev": false,
+        "opened": "2026-07-25T16:59:34.958Z",
+        "closed": "2026-07-25T17:00:01.602Z",
+        "exitPrice": 0.995,
+        "enterLegs": 1,
+        "settLegs": 1
+      },
+      "backtest": {
+        "entered": false,
+        "side": null,
+        "entryPrice": null,
+        "entryIso": null,
+        "entryReason": null,
+        "pnl": null,
+        "winnerSide": null,
+        "reason": "missing_from_lake_or_no_callback",
+        "exitReasons": [],
+        "orders": [],
+        "marks": [],
+        "lakePresent": false
+      },
+      "parity": {
+        "btFound": false,
+        "entered": false,
+        "sameSide": false,
+        "entryDeltaMs": null,
+        "entryPriceLive": 0.57,
+        "entryPriceBt": null,
+        "exitLive": "SETTLEMENT",
+        "exitBt": [],
+        "pnlLive": 1.335,
+        "pnlBt": null,
+        "pnlDelta": null,
+        "class": "bt_missing"
+      }
+    }
+  ]
+}

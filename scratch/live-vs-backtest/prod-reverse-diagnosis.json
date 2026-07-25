@@ -1,0 +1,210 @@
+{
+  "reverseDecisionRows": 202,
+  "reverseMarkets": 2,
+  "marketsWithAcceptedReverse": 2,
+  "topSignalMarkets": [
+    {
+      "marketId": "btc-updown-5m-1784953500",
+      "signals": 201,
+      "accepted": 1,
+      "rejected": 200,
+      "firstTs": 1784953793840,
+      "lastTs": 1784953795977,
+      "sample": {
+        "marketId": "btc-updown-5m-1784953500",
+        "tsMs": 1784953793840,
+        "action": "REVERSE",
+        "lateAction": "REVERSE",
+        "secsLeft": 6.56,
+        "signedDistance": -0.1330991717040888,
+        "oppAsk": 0.07,
+        "exitBid": 0.93,
+        "accepted": [
+          {
+            "intentId": "midas-carry-v1:btc5m:primary:btc-updown-5m-1784953500:REVERSE:24600",
+            "kind": "REVERSE",
+            "side": "DOWN",
+            "reason": "late_flip_reverse",
+            "budget": 2,
+            "quantity": null,
+            "maxPrice": 0.09000000000000001,
+            "reasonCode": "OK",
+            "attempt": 1,
+            "maxAttempts": 5,
+            "isRetry": false
+          }
+        ],
+        "rejected": [],
+        "riskBlocked": null,
+        "inPosition": true,
+        "reversed": false
+      }
+    },
+    {
+      "marketId": "btc-updown-5m-1784972100",
+      "signals": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "firstTs": 1784972393416,
+      "lastTs": 1784972393416,
+      "sample": {
+        "marketId": "btc-updown-5m-1784972100",
+        "tsMs": 1784972393416,
+        "action": "REVERSE",
+        "lateAction": "REVERSE",
+        "secsLeft": 7.998,
+        "signedDistance": -6.492027634471015,
+        "oppAsk": 0.95,
+        "exitBid": 0.05,
+        "accepted": [
+          {
+            "intentId": "midas-carry-v1:btc5m:primary:btc-updown-5m-1784972100:REVERSE:24831",
+            "kind": "REVERSE",
+            "side": "DOWN",
+            "reason": "late_flip_reverse",
+            "budget": 2,
+            "quantity": null,
+            "maxPrice": 0.97,
+            "reasonCode": "OK",
+            "attempt": 1,
+            "maxAttempts": 5,
+            "isRetry": false
+          }
+        ],
+        "rejected": [],
+        "riskBlocked": null,
+        "inPosition": true,
+        "reversed": false
+      }
+    }
+  ],
+  "reverseOrders": [
+    {
+      "type": "order_submit",
+      "marketId": "btc-updown-5m-1784953500",
+      "reason": "late_flip_reverse",
+      "error": null,
+      "tsMs": 1784953793440
+    },
+    {
+      "type": "order_terminal",
+      "marketId": "btc-updown-5m-1784953500",
+      "reason": "REVERSE_EXIT_INCOMPLETE",
+      "error": null,
+      "tsMs": 1784953793839,
+      "price": 0.09000000000000001
+    },
+    {
+      "type": "order_submit",
+      "marketId": "btc-updown-5m-1784972100",
+      "reason": "late_flip_reverse",
+      "error": null,
+      "tsMs": 1784972392003
+    },
+    {
+      "type": "order_terminal",
+      "marketId": "btc-updown-5m-1784972100",
+      "reason": "late_flip_reverse",
+      "error": null,
+      "tsMs": 1784972393416,
+      "qty": 2,
+      "price": 0.97
+    }
+  ],
+  "lossParity": [
+    {
+      "marketId": "btc-updown-5m-1784990400",
+      "livePnl": -2.625,
+      "side": "DOWN",
+      "entry": 0.9,
+      "winner": "Up",
+      "reverseSignals": 0,
+      "reverseAccepted": 0,
+      "lateSamples": []
+    },
+    {
+      "marketId": "btc-updown-5m-1784966100",
+      "livePnl": -2.565,
+      "side": "UP",
+      "entry": 0.92,
+      "winner": "Down",
+      "reverseSignals": 0,
+      "reverseAccepted": 0,
+      "lateSamples": []
+    },
+    {
+      "marketId": "btc-updown-5m-1784949000",
+      "livePnl": -1.7999999999999998,
+      "side": "UP",
+      "entry": 0.6,
+      "winner": "Down",
+      "reverseSignals": 0,
+      "reverseAccepted": 0,
+      "lateSamples": []
+    },
+    {
+      "marketId": "btc-updown-5m-1784951400",
+      "livePnl": -1.605,
+      "side": "DOWN",
+      "entry": 0.61,
+      "winner": "Up",
+      "reverseSignals": 0,
+      "reverseAccepted": 0,
+      "lateSamples": []
+    },
+    {
+      "marketId": "btc-updown-5m-1784933100",
+      "livePnl": -1.59,
+      "side": "DOWN",
+      "entry": 0.6,
+      "winner": "Up",
+      "reverseSignals": 0,
+      "reverseAccepted": 0,
+      "lateSamples": []
+    },
+    {
+      "marketId": "btc-updown-5m-1784955300",
+      "livePnl": -1.47,
+      "side": "DOWN",
+      "entry": 0.76,
+      "winner": "Up",
+      "reverseSignals": 0,
+      "reverseAccepted": 0,
+      "lateSamples": []
+    },
+    {
+      "marketId": "btc-updown-5m-1784971800",
+      "livePnl": -1.3699999999999999,
+      "side": "UP",
+      "entry": 0.7,
+      "winner": "Down",
+      "reverseSignals": 0,
+      "reverseAccepted": 0,
+      "lateSamples": []
+    },
+    {
+      "marketId": "btc-updown-5m-1784963700",
+      "livePnl": -1.35,
+      "side": "DOWN",
+      "entry": 0.69,
+      "winner": "Up",
+      "reverseSignals": 0,
+      "reverseAccepted": 0,
+      "lateSamples": []
+    }
+  ],
+  "tradesSummary": {
+    "net": 2.6655646,
+    "won": 17.040564600000003,
+    "lost": 14.375,
+    "wins": 32,
+    "losses": 8,
+    "pending": 0,
+    "closed": 40,
+    "breakeven": 0,
+    "decided": 40,
+    "winRate": 0.8
+  },
+  "tradesNet": 2.6655646,
+  "tradesCount": 40
+}

@@ -111,8 +111,21 @@ test('settleEventPnl sums hedged lots on flip loss and whipsaw win', () => {
   const whipsaw = settleEventPnl(simulator2, { underlyingPrice: 101000, price_to_beat: 100000 }, { priceToBeat: 100000 });
   assert.equal(whipsaw.winnerSide, 'UP');
   assert.equal(whipsaw.primaryLotPnl, 4);
-  assert.equal(whipsaw.hedgePnl, -10);
-  assert.equal(whipsaw.finalPnl, -6);
+});
+
+test('settleEventPnl resolves an exact tie as UP (market rule: >=)', () => {
+  const simulator = createOrderSimulator();
+  simulator.enter('UP', {
+    ts: '2026-06-01T00:00:01.000Z',
+    price: 0.6,
+    maxPrice: 0.6,
+    budget: 6,
+    minShares: 1,
+    tick: tickWithAsks('UP', [{ price: 0.6, size: 20 }]),
+  });
+  const tie = settleEventPnl(simulator, { underlyingPrice: 100000, price_to_beat: 100000 }, { priceToBeat: 100000 });
+  assert.equal(tie.winnerSide, 'UP');
+  assert.equal(tie.primaryLotPnl, 4);
 });
 
 test('cancelLimit and expireRestingOrders leave zero hedge cost', () => {

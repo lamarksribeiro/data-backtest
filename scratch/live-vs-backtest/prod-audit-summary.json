@@ -1,0 +1,269 @@
+{
+  "typeCounts": {
+    "checkpoint": 4627,
+    "decision": 16393,
+    "engine_started": 35,
+    "engine_stopped": 34,
+    "entry_retry_gated": 983,
+    "entry_slot_released": 23,
+    "operator_action": 16,
+    "order_submit": 60,
+    "order_terminal": 61,
+    "position_settled": 69,
+    "protective_halt": 3,
+    "settlement_queued": 26
+  },
+  "settles": {
+    "n": 69,
+    "pnl": 4.3956,
+    "wins": 55,
+    "losses": 14,
+    "byDay": {
+      "2026-07-24": {
+        "n": 2,
+        "pnl": -0.12,
+        "wins": 1,
+        "losses": 1
+      },
+      "2026-07-25": {
+        "n": 67,
+        "pnl": 4.5156,
+        "wins": 54,
+        "losses": 13
+      }
+    },
+    "settlementPrices": {
+      "0": 2,
+      "1": 7,
+      "0.995": 48,
+      "0.005": 12
+    }
+  },
+  "enters": {
+    "n": 72,
+    "uniqueMarkets": 55,
+    "aboveMaxAskDecision": 0,
+    "maxPriceHist": {
+      "<0.80": 32,
+      "0.90-0.96": 22,
+      "0.80-0.90": 16,
+      ">=0.96": 2
+    }
+  },
+  "reversesAccepted": 2,
+  "reverseMarkets": [
+    "btc-updown-5m-1784953500",
+    "btc-updown-5m-1784972100"
+  ],
+  "lateFlipSignals": 202,
+  "lateFlipActions": {
+    "REVERSE": 202
+  },
+  "fakMisses": 23,
+  "fakMissSample": [
+    {
+      "marketId": "btc-updown-5m-1784947200",
+      "reason": "no orders found to match with FAK order. FAK orders are partially filled or killed if no match is found.",
+      "kind": "ENTER",
+      "tsMs": 1784947483623
+    },
+    {
+      "marketId": "btc-updown-5m-1784949900",
+      "reason": "no orders found to match with FAK order. FAK orders are partially filled or killed if no match is found.",
+      "kind": "ENTER",
+      "tsMs": 1784950173129
+    },
+    {
+      "marketId": "btc-updown-5m-1784949900",
+      "reason": "no orders found to match with FAK order. FAK orders are partially filled or killed if no match is found.",
+      "kind": "ENTER",
+      "tsMs": 1784950173763
+    },
+    {
+      "marketId": "btc-updown-5m-1784951400",
+      "reason": "no orders found to match with FAK order. FAK orders are partially filled or killed if no match is found.",
+      "kind": "ENTER",
+      "tsMs": 1784951670670
+    },
+    {
+      "marketId": "btc-updown-5m-1784951400",
+      "reason": "no orders found to match with FAK order. FAK orders are partially filled or killed if no match is found.",
+      "kind": "ENTER",
+      "tsMs": 1784951671056
+    },
+    {
+      "marketId": "btc-updown-5m-1784954700",
+      "reason": "no orders found to match with FAK order. FAK orders are partially filled or killed if no match is found.",
+      "kind": "ENTER",
+      "tsMs": 1784954970999
+    },
+    {
+      "marketId": "btc-updown-5m-1784954700",
+      "reason": "no orders found to match with FAK order. FAK orders are partially filled or killed if no match is found.",
+      "kind": "ENTER",
+      "tsMs": 1784954971384
+    },
+    {
+      "marketId": "btc-updown-5m-1784956800",
+      "reason": "no orders found to match with FAK order. FAK orders are partially filled or killed if no match is found.",
+      "kind": "ENTER",
+      "tsMs": 1784957081365
+    }
+  ],
+  "protectiveHalts": 3,
+  "protectiveHaltSample": [
+    {
+      "marketId": "btc-updown-5m-1784931300",
+      "reason": "market-rotated-with-position",
+      "tsMs": 1784931600260
+    },
+    {
+      "marketId": "btc-updown-5m-1784933100",
+      "reason": "market-rotated-with-position",
+      "tsMs": 1784933400345
+    },
+    {
+      "marketId": "btc-updown-5m-1784937300",
+      "reason": "market-rotated-with-position",
+      "tsMs": 1784937600158
+    }
+  ],
+  "rejectReasonTop": [
+    [
+      "CIRCUIT_OPEN",
+      196
+    ],
+    [
+      "MAX_NOTIONAL_EVENT",
+      4
+    ]
+  ],
+  "lossSettles": [
+    {
+      "marketId": "btc-updown-5m-1784990400",
+      "side": "DOWN",
+      "avgPrice": 0.88,
+      "qty": 3,
+      "pnl": -2.625,
+      "winner": "Up",
+      "settlementPrice": 0.005
+    },
+    {
+      "marketId": "btc-updown-5m-1784966100",
+      "side": "UP",
+      "avgPrice": 0.86,
+      "qty": 3,
+      "pnl": -2.565,
+      "winner": "Down",
+      "settlementPrice": 0.005
+    },
+    {
+      "marketId": "btc-updown-5m-1784949000",
+      "side": "UP",
+      "avgPrice": 0.6,
+      "qty": 3,
+      "pnl": -1.8,
+      "winner": "Down",
+      "settlementPrice": 0
+    },
+    {
+      "marketId": "btc-updown-5m-1784951400",
+      "side": "DOWN",
+      "avgPrice": 0.54,
+      "qty": 3,
+      "pnl": -1.605,
+      "winner": "Up",
+      "settlementPrice": 0.005
+    },
+    {
+      "marketId": "btc-updown-5m-1784933100",
+      "side": "DOWN",
+      "avgPrice": 0.53,
+      "qty": 3,
+      "pnl": -1.59,
+      "winner": "Up",
+      "settlementPrice": 0
+    },
+    {
+      "marketId": "btc-updown-5m-1784955300",
+      "side": "DOWN",
+      "avgPrice": 0.74,
+      "qty": 2,
+      "pnl": -1.47,
+      "winner": "Up",
+      "settlementPrice": 0.005
+    },
+    {
+      "marketId": "btc-updown-5m-1784971800",
+      "side": "UP",
+      "avgPrice": 0.69,
+      "qty": 2,
+      "pnl": -1.37,
+      "winner": "Down",
+      "settlementPrice": 0.005
+    },
+    {
+      "marketId": "btc-updown-5m-1784971800",
+      "side": "UP",
+      "avgPrice": 0.69,
+      "qty": 2,
+      "pnl": -1.37,
+      "winner": "Down",
+      "settlementPrice": 0.005
+    },
+    {
+      "marketId": "btc-updown-5m-1784971800",
+      "side": "UP",
+      "avgPrice": 0.69,
+      "qty": 2,
+      "pnl": -1.37,
+      "winner": "Down",
+      "settlementPrice": 0.005
+    },
+    {
+      "marketId": "btc-updown-5m-1784971800",
+      "side": "UP",
+      "avgPrice": 0.69,
+      "qty": 2,
+      "pnl": -1.37,
+      "winner": "Down",
+      "settlementPrice": 0.005
+    },
+    {
+      "marketId": "btc-updown-5m-1784963700",
+      "side": "DOWN",
+      "avgPrice": 0.68,
+      "qty": 2,
+      "pnl": -1.35,
+      "winner": "Up",
+      "settlementPrice": 0.005
+    },
+    {
+      "marketId": "btc-updown-5m-1784963700",
+      "side": "DOWN",
+      "avgPrice": 0.68,
+      "qty": 2,
+      "pnl": -1.35,
+      "winner": "Up",
+      "settlementPrice": 0.005
+    },
+    {
+      "marketId": "btc-updown-5m-1784963700",
+      "side": "DOWN",
+      "avgPrice": 0.68,
+      "qty": 2,
+      "pnl": -1.35,
+      "winner": "Up",
+      "settlementPrice": 0.005
+    },
+    {
+      "marketId": "btc-updown-5m-1784963700",
+      "side": "DOWN",
+      "avgPrice": 0.68,
+      "qty": 2,
+      "pnl": -1.35,
+      "winner": "Up",
+      "settlementPrice": 0.005
+    }
+  ]
+}

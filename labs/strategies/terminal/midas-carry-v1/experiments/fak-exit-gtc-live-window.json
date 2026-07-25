@@ -1,0 +1,74 @@
+{
+  "name": "fak-exit-gtc-live-window",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-24",
+  "to": "2026-07-25",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "notes": "Proxy lab da correção exitOrderType FAK→GTC. O lab não tem FAK/GTC CLOB; modelamos o resultado: proteção completa (fill de reverse/exit = GTC ok) vs miss total (hold = FAK kill sem retry) vs só EXIT sem reverse. Budget micro canário $2/$4.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "gtc-full-protect",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "lateFlipExitEnabled": true,
+          "lateFlipReverseEnabled": true,
+          "dangerExitEnabled": true
+        }
+      },
+      {
+        "id": "fak-miss-hold",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "lateFlipExitEnabled": false,
+          "lateFlipReverseEnabled": false,
+          "dangerExitEnabled": false
+        }
+      },
+      {
+        "id": "fak-miss-exit-only",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "lateFlipExitEnabled": true,
+          "lateFlipReverseEnabled": false,
+          "dangerExitEnabled": true
+        }
+      },
+      {
+        "id": "gtc-reverse-no-danger",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "lateFlipExitEnabled": true,
+          "lateFlipReverseEnabled": true,
+          "dangerExitEnabled": false
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "name": "fak-exit-gtc-holdout",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-22",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "notes": "Holdout julho da ablação FAK-exit miss vs GTC full-protect (mesmas variantes do live-window).",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "gtc-full-protect",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "lateFlipExitEnabled": true,
+          "lateFlipReverseEnabled": true,
+          "dangerExitEnabled": true
+        }
+      },
+      {
+        "id": "fak-miss-hold",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "lateFlipExitEnabled": false,
+          "lateFlipReverseEnabled": false,
+          "dangerExitEnabled": false
+        }
+      },
+      {
+        "id": "fak-miss-exit-only",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "lateFlipExitEnabled": true,
+          "lateFlipReverseEnabled": false,
+          "dangerExitEnabled": true
+        }
+      },
+      {
+        "id": "gtc-reverse-no-danger",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "lateFlipExitEnabled": true,
+          "lateFlipReverseEnabled": true,
+          "dangerExitEnabled": false
+        }
+      }
+    ]
+  }
+}
