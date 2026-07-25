@@ -1,0 +1,34 @@
+{
+  "name": "minsec-floor-holdout",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-22",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 6,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      { "id": "minsec-05", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 10, "maxEntryBudget": 30, "minSecondsLeft": 5 } },
+      { "id": "minsec-06", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 10, "maxEntryBudget": 30, "minSecondsLeft": 6 } },
+      { "id": "minsec-07", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 10, "maxEntryBudget": 30, "minSecondsLeft": 7 } },
+      { "id": "minsec-08", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 10, "maxEntryBudget": 30, "minSecondsLeft": 8 } },
+      { "id": "minsec-09", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 10, "maxEntryBudget": 30, "minSecondsLeft": 9 } },
+      { "id": "minsec-10", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 10, "maxEntryBudget": 30, "minSecondsLeft": 10 } },
+      { "id": "minsec-11", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 10, "maxEntryBudget": 30, "minSecondsLeft": 11 } },
+      { "id": "minsec-12", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 10, "maxEntryBudget": 30, "minSecondsLeft": 12 } },
+      { "id": "minsec-13", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 10, "maxEntryBudget": 30, "minSecondsLeft": 13 } },
+      { "id": "minsec-14", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 10, "maxEntryBudget": 30, "minSecondsLeft": 14 } },
+      { "id": "minsec-15", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 10, "maxEntryBudget": 30, "minSecondsLeft": 15 } },
+      { "id": "minsec-18", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 10, "maxEntryBudget": 30, "minSecondsLeft": 18 } },
+      { "id": "minsec-20", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 10, "maxEntryBudget": 30, "minSecondsLeft": 20 } }
+    ]
+  }
+}

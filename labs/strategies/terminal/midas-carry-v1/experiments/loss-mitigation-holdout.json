@@ -7,7 +7,7 @@
   "interval": "5m",
   "bookDepth": 25,
   "from": "2026-07-01",
-  "to": "2026-07-25",
+  "to": "2026-07-22",
   "engine": "soa",
   "glsExecution": "compiled-soa",
   "fastRun": true,
