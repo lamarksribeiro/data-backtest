@@ -11,7 +11,7 @@
 1. **O edge direcional existe** (WR live 80,0% ≈ BT 79,2%), mas o **edge por trade colapsa para ~zero no live** porque os atritos reais (haircut de settlement 0,995 + fees + fill drift + proteção que nunca dispara) consomem exatamente a margem fina que o lab otimista mostrava.
 2. **Todos os 8 losses live foram hold até expiry** (`exitKind: SETTLEMENT`) — a proteção (late-flip exit/reverse/danger) **nunca preencheu em produção**. Causa de código já identificada e corrigida (FAK na saída protetora + circuit breaker global); correção per-leg **pendente de deploy**.
 3. **Novidade desta rodada:** o lab agora suporta execução honesta (`settleWinnerPrice: 0.995`) e cada candidata foi validada no **pior caso real** — nenhuma ordem protetora preenche (modo `hold`). Resultado: a MIDAS é lucrativa mesmo assim, e uma variante ajustada (**honest-v2**) domina o canário atual em robustez.
-4. **Recomendação:** deploy do fix GTC per-leg + mudar 3 parâmetros do canário (`minSecondsLeft 5→9`, `maxAsk 0.94→0.90`, `tierAskBudgetFactor 2.0→1.5`). Sob execução honesta: julho PF 1,59 com proteção / **PF 1,31 sem nenhuma proteção**; pior dia no pior caso cai de −$9,5 para −$4,1. É a resposta direta ao requisito "as ordens que perdemos não podem tirar todo o lucro".
+4. **Recomendação (REVISADA na rodada do dia 25 — ver §9):** deploy do fix GTC per-leg + preset **guardian-v3**: manter envelope base (`maxAsk 0.94`, `tier 2.0`) e adicionar `minSecondsLeft 5→9` + **`tierMinZ: 2.0`** (mecanismo novo: favorito caro ask≥0,82 só entra com colchão físico z≥2). Sob execução honesta: julho PF 1,60 com PnL ≈ base (−2,6%) e **pior dia −$2,2 (base: −$7,3)**; junho stress **supera o base** (115,5 vs 114,2) com DD −35%; pior caso (nenhuma proteção preenche) PF 1,29 julho. A primeira proposta deste relatório (honest-v2: maxAsk 0,90 + tier 1,5) foi **substituída** — cortava lucro dos dias bons sem atacar a cauda tão bem quanto o tierMinZ.
 
 ---
 
@@ -139,15 +139,20 @@ O corte da faixa 0,90–0,94 (breakeven WR ≥ 93–95% com drift — exatamente
 - `src/strategy/midasV1.js` + `src/oms/reverseSaga.js`: intent REVERSE com order type **por perna** (EXIT=GTC, ENTER=FAK).
 - Testes já verdes: 231/231 (`midas-micro-live.test.js`, `reverse-saga.test.js`).
 
-**(b) Ajuste de envelope do canário** (`src/tfc/preset-midas.js`, preset `MICRO_AGGRESSIVE` / canário `btc-micro-aggressive-v1`):
+**(b) Ajuste de envelope do canário — REVISADO §9** (`src/tfc/preset-midas.js`, preset `MICRO_AGGRESSIVE` / canário `btc-micro-aggressive-v1`):
 
 ```js
-minSecondsLeft: 9,        // era 5  — entra mais cedo: book mais grosso, menos FAK miss
-maxAsk: 0.90,             // era 0.94 — corta a faixa onde breakeven WR ≥ 93% não tolera drift
-tierAskBudgetFactor: 1.5, // era 2.0 — reduz a assimetria "win $0.28 / loss $2.60" da banda alta
-// manter: entryBudget 2, maxEntryBudget 4, maxDistAbs 40, lateFlip exit+reverse ON (full),
-// dangerExit ON, entryOrderType 'FAK', exitOrderType 'GTC'
+minSecondsLeft: 9,   // era 5 — entra mais cedo: book mais grosso, menos FAK miss
+tierMinZ: 2.0,       // NOVO — favorito caro (ask >= tierAskThreshold 0.82) só entra
+                     // se z = dist/(sigma*sqrt(tau)) >= 2.0. O robot precisa portar
+                     // o gate (5 linhas): calcular z como no lab (sigma de níveis /
+                     // 5.48, lookback 90s) e pular entradas de tier com z < tierMinZ.
+// manter: maxAsk 0.94, tierAskBudgetFactor 2.0, entryBudget 2, maxEntryBudget 4,
+// maxDistAbs 40, lateFlip exit+reverse ON (full), dangerExit ON,
+// entryOrderType 'FAK', exitOrderType 'GTC'
 ```
+
+> A proposta anterior deste relatório (maxAsk 0,90 + tier 1,5) foi retirada: na janela 23–25/07 rendeu −21% vs base (o dia 23 foi excelente justamente na banda alta), enquanto o `tierMinZ` entrega proteção de cauda melhor sem cortar a banda inteira — ver comparação em §9.3.
 
 ### 5.2 data-backtest (paridade do lab) — já feito nesta rodada
 
@@ -228,3 +233,63 @@ node --test tests/orderSimulatorMaker.test.js
 ```
 
 **Limitações desta análise:** julho 01–22 foi usado em labs anteriores de seleção (holdout parcialmente queimado) — por isso a validação cruzada com junho e o critério pior-caso; a amostra live é de 1 dia; o lab não simula latência intra-tick nem falhas de API (coberto pelo critério hold + stress de drift, não por simulação).
+
+---
+
+## 9. Rodada dia 25/07 — diagnóstico do dia fraco e evolução para guardian-v3
+
+*(Adicionado após o fechamento das seções 0–8; esta seção REVISA a recomendação da §5.1b.)*
+
+### 9.1 O que aconteceu no dia 25 (fatos)
+
+Lake atualizado com 23–25/07 (`npm run lake:update-btc-5m -- --from 2026-07-23 --to 2026-07-26`) e dia backtestado (`experiments/day25-diagnosis.json`):
+
+| | Live (real) | Lab base-protect (honesto) | Captura |
+|---|--:|--:|--:|
+| Trades dia 25 | 37 | 75 | 49% |
+| PnL dia 25 | **+$2,49** | **+$10,3** | **24%** |
+| PnL/trade | $0,067 | $0,137 | 49% |
+
+- **O dia 25 é o pior dos três últimos no lab** (+10,3 vs +50,9 do dia 23) — regime de chop de baixa margem — **mas é positivo**. O "lucro quase nulo" live é **~75% execução, não seleção**: o live rodou só ~15h (zero trades 10–12 UTC e 17–24 UTC — restarts/feeds), capturou metade das entradas do lab e perdeu as proteções (7 losses hold, −$12,78, comendo 30 wins de +$15,27).
+- **Conclusão operacional nº 1: nenhum preset conserta o dia 25 live.** As alavancas do dia são: (1) deploy do fix GTC per-leg; (2) **uptime 24/7 do engine** (maior alavanca única: dobraria a captura); (3) gates da §6.
+
+### 9.2 Mecanismos novos implementados e testados (strategy.gls)
+
+1. **`tierMinZ`** — favorito caro (ask ≥ `tierAskThreshold` 0,82) só entra se o colchão físico `z = dist/(σ·√τ) ≥ tierMinZ`. Teoria: a 0,90 o mercado cobra WR 90%+; se o z não sustenta essa probabilidade, o preço está caro vs física → não compra. Ataca exatamente a taxonomia dos piores losses (entradas 0,82–0,95 com dist fraco que viram no fim, média −$16/17 por trade a $10).
+2. **`dailyStopLoss` + `lossStreakPauseCount/Events`** — circuit breakers de dia (bloqueiam novas entradas após perda diária X ou N losses seguidos). **Testados e REJEITADOS**: julho protect 294,1 vs 389,0 do base e pior dia PIOROU (−11,2 vs −7,3) — os dias ruins da MIDAS frequentemente se recuperam na segunda metade; o stop trava a perda no fundo. Ficam no GLS como params desligados (default 0) para reuso futuro.
+
+### 9.3 Resultados (execução honesta, micro $2/$4; experiments `v3-tierz-*`)
+
+**Julho 01–22:**
+
+| Variante | PnL | PF | MaxDD | Pior dia |
+|---|--:|--:|--:|--:|
+| base-protect | 389,0 | 1,54 | 16,1 | −7,3 |
+| ms9-protect | 399,1 | 1,57 | 16,1 | −7,5 |
+| tmz10-protect | 396,5 | 1,59 | 16,7 | −8,2 |
+| **tmz20-protect (guardian-v3)** | 379,0 | **1,60** | **12,7** | **−2,2** |
+| tmz20-hold (pior caso) | 197,4 | 1,29 | 15,2 | — |
+
+**Junho stress 01–08:** guardian-v3 **115,5 / PF 1,63 / DD 12,0 / pior dia −7,7** vs base 114,2 / 1,51 / 18,5 / −14,5. Hold: 40,6 / PF 1,17 (positivo).
+
+**23–25/07:** guardian-v3 60,4 (dia 25: +6,3) vs base 74,5 (dia 25: +10,3) — o gate custa nos dias bons da banda alta (dia 23). É o preço do seguro; a decisão privilegia matar a cauda (pior dia julho −2,2, junho −35% DD) mantendo o PnL anualizado ≈ base.
+
+**Vizinhança:** tmz 1,0/1,5/2,0 comportam-se monotonicamente (mais gate → menos PnL julho, cauda melhor) — não é fio de navalha. Alternativa agressiva documentada: `tmz10` (julho 396,5, +2% vs base) se a prioridade for PnL máximo com melhora leve de cauda.
+
+### 9.4 Preset final e porte para o robot
+
+Preset de paridade: `labs/strategies/terminal/midas-carry-v1/presets/btc-micro-guardian-v3.json` (Estúdio v7). Diff vs canário live:
+
+```js
+minSecondsLeft: 9,   // era 5
+tierMinZ: 2.0,       // NOVO — exige porte no data-robot (midasV1.js):
+                     // z = |spot-PTB| / ((sigmaNiveis(90s)/5.48) * sqrt(secsLeft));
+                     // if (ask >= 0.82 && z < 2.0) skip entry;
+// todo o resto idêntico ao canário (maxAsk 0.94, tier 2.0, proteções ON)
+```
+
+A recomendação de honest-v2 (§5.1b original, maxAsk 0,90/tier 1,5) está **retirada**: perdia −21% na janela 23–25 sem entregar a proteção de cauda do tierMinZ.
+
+### 9.5 Encadeamento com o playbook (§6 permanece válido)
+
+A sequência de deploy e os gates da §6 não mudam — apenas o conteúdo do passo (b): usar guardian-v3 em vez de honest-v2. Acrescentar ao monitoramento: contagem de entradas de tier bloqueadas por `tierMinZ` (esperado: ~10% das entradas; se >25%, o cálculo de σ do robot difere do lab — recalibrar antes de concluir).

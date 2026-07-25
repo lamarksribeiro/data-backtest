@@ -1,0 +1,32 @@
+{
+  "name": "v3-tierz-recent",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-23",
+  "to": "2026-07-25",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "notes": "Candidata v3: envelope base (maxAsk 0.94, tier 2.0) + tierMinZ (gate de z só no tier) + circuit breakers de dia. Tudo honest (settleWinnerPrice 0.995).",
+  "searchSpace": {
+    "variants": [
+      { "id": "base-protect", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 2, "maxEntryBudget": 4, "settleWinnerPrice": 0.995 } },
+      { "id": "base-hold", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 2, "maxEntryBudget": 4, "settleWinnerPrice": 0.995, "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false } },
+      { "id": "ms9-protect", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 2, "maxEntryBudget": 4, "settleWinnerPrice": 0.995, "minSecondsLeft": 9 } },
+      { "id": "tmz10-protect", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 2, "maxEntryBudget": 4, "settleWinnerPrice": 0.995, "minSecondsLeft": 9, "tierMinZ": 1.0 } },
+      { "id": "tmz15-protect", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 2, "maxEntryBudget": 4, "settleWinnerPrice": 0.995, "minSecondsLeft": 9, "tierMinZ": 1.5 } },
+      { "id": "tmz20-protect", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 2, "maxEntryBudget": 4, "settleWinnerPrice": 0.995, "minSecondsLeft": 9, "tierMinZ": 2.0 } },
+      { "id": "tmz15-hold", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 2, "maxEntryBudget": 4, "settleWinnerPrice": 0.995, "minSecondsLeft": 9, "tierMinZ": 1.5, "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false } },
+      { "id": "tmz15-brk-protect", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 2, "maxEntryBudget": 4, "settleWinnerPrice": 0.995, "minSecondsLeft": 9, "tierMinZ": 1.5, "dailyStopLoss": 6, "lossStreakPauseCount": 2, "lossStreakPauseEvents": 3 } },
+      { "id": "brk-protect", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 2, "maxEntryBudget": 4, "settleWinnerPrice": 0.995, "minSecondsLeft": 9, "dailyStopLoss": 6, "lossStreakPauseCount": 2, "lossStreakPauseEvents": 3 } },
+      { "id": "tmz15-brk-hold", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 2, "maxEntryBudget": 4, "settleWinnerPrice": 0.995, "minSecondsLeft": 9, "tierMinZ": 1.5, "dailyStopLoss": 6, "lossStreakPauseCount": 2, "lossStreakPauseEvents": 3, "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false } }
+    ]
+  }
+}

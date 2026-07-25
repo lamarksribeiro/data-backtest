@@ -169,11 +169,11 @@ test('loadPreset resolves tfc v6 hybrid stop params', () => {
   assert.equal(params.hedgeLimitEnabled, false);
 });
 
-test('midas-carry-v1 presets have unique studioVersion (Estúdio v1..v6)', () => {
+test('midas-carry-v1 presets have unique studioVersion (Estúdio v1..v7)', () => {
   const presets = listPresets({ strategyId: 'midas-carry-v1', strategyFamily: 'terminal', includeAliases: false });
   const versions = presets.map((item) => Number(item.studioVersion));
-  assert.equal(presets.length, 6);
-  assert.deepEqual([...new Set(versions)].sort((a, b) => a - b), [1, 2, 3, 4, 5, 6]);
+  assert.equal(presets.length, 7);
+  assert.deepEqual([...new Set(versions)].sort((a, b) => a - b), [1, 2, 3, 4, 5, 6, 7]);
   const microAggressive = presets.find((item) => item.id === 'btc-micro-aggressive-v1');
   assert.equal(microAggressive.studioVersion, 5);
   assert.equal(microAggressive.params?.entryBudget ?? loadPreset('btc-micro-aggressive-v1', { strategyId: 'midas-carry-v1', strategyFamily: 'terminal' }).params.entryBudget, 2);

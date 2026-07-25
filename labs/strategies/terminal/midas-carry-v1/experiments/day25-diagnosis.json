@@ -1,0 +1,181 @@
+{
+  "name": "day25-diagnosis",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-23",
+  "to": "2026-07-25",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "notes": "Diagnóstico do dia 25/07 (live quase zero): base vs honest-v2 vs candidatos anti-chop, tudo sob settleWinnerPrice 0.995, com split diário.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "base-protect",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995
+        }
+      },
+      {
+        "id": "base-hold",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "lateFlipExitEnabled": false,
+          "lateFlipReverseEnabled": false,
+          "dangerExitEnabled": false
+        }
+      },
+      {
+        "id": "v2-protect",
+        "params": {
+          "maxAsk": 0.9,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9
+        }
+      },
+      {
+        "id": "v2-hold",
+        "params": {
+          "maxAsk": 0.9,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "lateFlipExitEnabled": false,
+          "lateFlipReverseEnabled": false,
+          "dangerExitEnabled": false
+        }
+      },
+      {
+        "id": "v2-noreverse",
+        "params": {
+          "maxAsk": 0.9,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "lateFlipReverseEnabled": false
+        }
+      },
+      {
+        "id": "v2-z05",
+        "params": {
+          "maxAsk": 0.9,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "minEntryZ": 0.5
+        }
+      },
+      {
+        "id": "v2-z10",
+        "params": {
+          "maxAsk": 0.9,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "minEntryZ": 1
+        }
+      },
+      {
+        "id": "v2-vel5",
+        "params": {
+          "maxAsk": 0.9,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "maxAdverseSpotChange": 5
+        }
+      },
+      {
+        "id": "v2-odds103",
+        "params": {
+          "maxAsk": 0.9,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "maxOddsSum": 1.03
+        }
+      },
+      {
+        "id": "v2-dsl6",
+        "params": {
+          "maxAsk": 0.9,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "dailyStopLoss": 6
+        }
+      },
+      {
+        "id": "v2-streak2",
+        "params": {
+          "maxAsk": 0.9,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "lossStreakPauseCount": 2,
+          "lossStreakPauseEvents": 3
+        }
+      },
+      {
+        "id": "v2-dsl6-streak2",
+        "params": {
+          "maxAsk": 0.9,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "dailyStopLoss": 6,
+          "lossStreakPauseCount": 2,
+          "lossStreakPauseEvents": 3
+        }
+      }
+    ]
+  }
+}

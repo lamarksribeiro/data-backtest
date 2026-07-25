@@ -102,13 +102,58 @@ strategy "MIDAS Carry V1" {
   // Tier de orçamento para favorito caro (carry de alta certeza, fee baixa)
   param tierAskThreshold = 0.82
   param tierAskBudgetFactor = 1.0
+  // Gate de colchão físico só para o tier: favorito caro (ask >= tierAskThreshold)
+  // exige z >= tierMinZ (0 = desativado). Favorito barato não é afetado.
+  // Motivação: taxonomia de losses — os piores trades são entradas 0.82-0.95
+  // com dist/z fraco que viram no fim (breakeven WR >= 90% não tolera chop).
+  param tierMinZ = 0.0
 
   // Equity scale — orçamento proporcional à banca corrente (compound opcional)
   param equityScaleEnabled = false
   param equityScalePct = 0.10
   param maxEntryBudget = 30
 
+  // Circuit breakers de dia (proteção que não depende de fill em book fino):
+  // dailyStopLoss > 0: bloqueia novas entradas quando o PnL acumulado do run
+  //   (= do dia, em modo chunked/dailyMetrics) cai abaixo de -dailyStopLoss.
+  // lossStreakPauseCount > 0: após N eventos perdedores consecutivos, pula os
+  //   próximos lossStreakPauseEvents eventos (cooldown de ~5min por evento).
+  param dailyStopLoss = 0
+  param lossStreakPauseCount = 0
+  param lossStreakPauseEvents = 3
+
   onEventStart(event) {
+    // Rastreio de resultado do evento anterior via delta de runState.totalPnl
+    // (atualizado pelo runtime no finalize do evento anterior).
+    if (runState.breakerInit != 1) {
+      runState.breakerInit = 1
+      runState.prevPnl = 0
+      runState.lossStreak = 0
+      runState.pauseLeft = 0
+    }
+    let pnlDelta = runState.totalPnl - runState.prevPnl
+    if (pnlDelta < (0.0 - 0.000001)) {
+      runState.lossStreak = runState.lossStreak + 1
+    }
+    if (pnlDelta > 0.000001) {
+      runState.lossStreak = 0
+    }
+    runState.prevPnl = runState.totalPnl
+    if (runState.pauseLeft > 0) {
+      runState.pauseLeft = runState.pauseLeft - 1
+    }
+    if (params.lossStreakPauseCount > 0 && runState.lossStreak >= params.lossStreakPauseCount) {
+      runState.pauseLeft = params.lossStreakPauseEvents
+      runState.lossStreak = 0
+    }
+    state.entryBlocked = false
+    if (params.dailyStopLoss > 0 && runState.totalPnl <= (0.0 - params.dailyStopLoss)) {
+      state.entryBlocked = true
+    }
+    if (runState.pauseLeft > 0) {
+      state.entryBlocked = true
+    }
+
     state.entered = false
     state.closed = false
     state.reversed = false
@@ -270,7 +315,11 @@ strategy "MIDAS Carry V1" {
         }
 
         // ===== Modo 1: núcleo TFC (envelope V7) =====
-        if (!state.isAdverseMove && state.z >= params.minEntryZ && secsLeft >= params.minSecondsLeft && secsLeft < params.maxSecondsLeft && dist < params.maxDistAbs && ask >= params.minAsk && ask <= params.maxAsk && spread <= params.maxSpread) {
+        state.tierZOk = true
+        if (params.tierMinZ > 0 && ask >= params.tierAskThreshold && state.z < params.tierMinZ) {
+          state.tierZOk = false
+        }
+        if (state.tierZOk && !state.entryBlocked && !state.isAdverseMove && state.z >= params.minEntryZ && secsLeft >= params.minSecondsLeft && secsLeft < params.maxSecondsLeft && dist < params.maxDistAbs && ask >= params.minAsk && ask <= params.maxAsk && spread <= params.maxSpread) {
           let upAsk = book.ask("UP", tick)
           let downAsk = book.ask("DOWN", tick)
           let oddsSum = upAsk + downAsk
@@ -320,7 +369,7 @@ strategy "MIDAS Carry V1" {
 
         // ===== Modo 2: scoop — favorito barato com z alto =====
         let scoopOn = params.scoopEnabled == true || params.scoopEnabled == 1
-        if (scoopOn && !state.entered && !state.isAdverseMove && secsLeft >= params.scoopMinSecondsLeft && secsLeft < params.scoopMaxSecondsLeft && dist < params.scoopMaxDistAbs && ask >= params.scoopMinAsk && ask < params.scoopMaxAsk && spread <= params.scoopMaxSpread && state.z >= params.scoopMinZ) {
+        if (scoopOn && !state.entryBlocked && !state.entered && !state.isAdverseMove && secsLeft >= params.scoopMinSecondsLeft && secsLeft < params.scoopMaxSecondsLeft && dist < params.scoopMaxDistAbs && ask >= params.scoopMinAsk && ask < params.scoopMaxAsk && spread <= params.scoopMaxSpread && state.z >= params.scoopMinZ) {
           let scoopUpAsk = book.ask("UP", tick)
           let scoopDownAsk = book.ask("DOWN", tick)
           let scoopOddsSum = scoopUpAsk + scoopDownAsk
