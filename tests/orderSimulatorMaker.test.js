@@ -128,6 +128,46 @@ test('settleEventPnl resolves an exact tie as UP (market rule: >=)', () => {
   assert.equal(tie.primaryLotPnl, 4);
 });
 
+test('settleEventPnl applies winnerPayout haircut only to winning lots', () => {
+  const simulator = createOrderSimulator();
+  simulator.enter('UP', {
+    ts: '2026-06-01T00:00:01.000Z',
+    price: 0.6,
+    maxPrice: 0.6,
+    budget: 6,
+    minShares: 1,
+    tick: tickWithAsks('UP', [{ price: 0.6, size: 20 }]),
+  });
+  // 10 shares @0.60: payout cheio = 10 - 6 = 4; com haircut 0.995 = 9.95 - 6 = 3.95
+  const win = settleEventPnl(
+    simulator,
+    { underlyingPrice: 101000, price_to_beat: 100000 },
+    { priceToBeat: 100000 },
+    { winnerPayout: 0.995 },
+  );
+  assert.equal(win.winnerSide, 'UP');
+  assert.ok(Math.abs(win.primaryLotPnl - 3.95) < 1e-9);
+
+  const simulator2 = createOrderSimulator();
+  simulator2.enter('UP', {
+    ts: '2026-06-01T00:00:01.000Z',
+    price: 0.6,
+    maxPrice: 0.6,
+    budget: 6,
+    minShares: 1,
+    tick: tickWithAsks('UP', [{ price: 0.6, size: 20 }]),
+  });
+  // Perda não muda com haircut (perde o custo inteiro)
+  const loss = settleEventPnl(
+    simulator2,
+    { underlyingPrice: 99000, price_to_beat: 100000 },
+    { priceToBeat: 100000 },
+    { winnerPayout: 0.995 },
+  );
+  assert.equal(loss.winnerSide, 'DOWN');
+  assert.ok(Math.abs(loss.primaryLotPnl - -6) < 1e-9);
+});
+
 test('cancelLimit and expireRestingOrders leave zero hedge cost', () => {
   const simulator = createOrderSimulator();
   simulator.placeLimitBuy('DOWN', { price: 0.4, budget: 10, tick: restingTickDown });

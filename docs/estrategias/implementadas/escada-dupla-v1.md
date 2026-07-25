@@ -11,6 +11,8 @@
 **Simulador de referência:** `Simulador_manual85.html`  
 **Data:** 2026-07-24 (promoção Studio 2026-07-25)
 
+> ⚠️ **Auditoria de realismo (2026-07-25):** evidência aponta que o PnL do campeão é artefato de execução (preço taker fantasma no gap de cruzamento; modo honesto `resting`+`walk` → PF 0,86). Não usar em conta real; ver [`../auditoria-escada-dupla-realismo-2026-07-25.md`](../auditoria-escada-dupla-realismo-2026-07-25.md) e o plano de validação em 3 etapas antes de qualquer teste no data-robot.
+
 > Seed Studio: `npm run seed:ported-strategies` (ou reiniciar `src/server.js`).  
 > Não usar `lab:promote-to-studio` (só GLS).
 

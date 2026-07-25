@@ -163,7 +163,9 @@ export function createGlsBacktestRunner(ast, rawParams = {}, options = {}) {
     if (!currentEvent) return;
     orderSim.expireRestingOrders();
     const snap = orderSim.snapshot();
-    const settlement = settleEventPnl(orderSim, lastTick, currentEvent);
+    const settlement = settleEventPnl(orderSim, lastTick, currentEvent, {
+      winnerPayout: Number(params.settleWinnerPrice ?? 1),
+    });
     const pnl = settlement.finalPnl;
     totalPnl += pnl;
     runState.totalPnl = totalPnl;

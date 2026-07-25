@@ -1,0 +1,34 @@
+{
+  "name": "honest-exec-july",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-22",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "notes": "Execução honesta: settleWinnerPrice 0.995 (haircut live) em tudo; cada candidata roda em par protect (proteções ON) vs hold (proteções OFF = pior caso em que nenhuma ordem protetora preenche). Critério: hold precisa ser lucrativo por si só.",
+  "searchSpace": {
+    "variants": [
+      { "id": "base-protect", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 2, "maxEntryBudget": 4, "settleWinnerPrice": 0.995 } },
+      { "id": "base-hold", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 2, "maxEntryBudget": 4, "settleWinnerPrice": 0.995, "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false } },
+      { "id": "minsec9-protect", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 2, "maxEntryBudget": 4, "settleWinnerPrice": 0.995, "minSecondsLeft": 9 } },
+      { "id": "minsec9-hold", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 2, "maxEntryBudget": 4, "settleWinnerPrice": 0.995, "minSecondsLeft": 9, "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false } },
+      { "id": "tier10-protect", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 1.0, "entryBudget": 2, "maxEntryBudget": 4, "settleWinnerPrice": 0.995 } },
+      { "id": "tier10-hold", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 1.0, "entryBudget": 2, "maxEntryBudget": 4, "settleWinnerPrice": 0.995, "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false } },
+      { "id": "maxask90-tier15-protect", "params": { "maxAsk": 0.90, "maxDistAbs": 40, "tierAskBudgetFactor": 1.5, "entryBudget": 2, "maxEntryBudget": 4, "settleWinnerPrice": 0.995 } },
+      { "id": "maxask90-tier15-hold", "params": { "maxAsk": 0.90, "maxDistAbs": 40, "tierAskBudgetFactor": 1.5, "entryBudget": 2, "maxEntryBudget": 4, "settleWinnerPrice": 0.995, "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false } },
+      { "id": "combo-protect", "params": { "maxAsk": 0.90, "maxDistAbs": 40, "tierAskBudgetFactor": 1.5, "entryBudget": 2, "maxEntryBudget": 4, "settleWinnerPrice": 0.995, "minSecondsLeft": 9, "lateFlipReverseBudgetFactor": 0.5 } },
+      { "id": "combo-hold", "params": { "maxAsk": 0.90, "maxDistAbs": 40, "tierAskBudgetFactor": 1.5, "entryBudget": 2, "maxEntryBudget": 4, "settleWinnerPrice": 0.995, "minSecondsLeft": 9, "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false } },
+      { "id": "revhalf-protect", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 2, "maxEntryBudget": 4, "settleWinnerPrice": 0.995, "lateFlipReverseBudgetFactor": 0.5 } },
+      { "id": "minsec9-tier10-hold", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 1.0, "entryBudget": 2, "maxEntryBudget": 4, "settleWinnerPrice": 0.995, "minSecondsLeft": 9, "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false } }
+    ]
+  }
+}

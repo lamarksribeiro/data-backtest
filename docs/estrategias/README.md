@@ -21,6 +21,7 @@ Inclui as 16 teorias transferidas do polymarket-test, mais:
 - [`implementadas/vsmr-v1.md`](implementadas/vsmr-v1.md) — VSMR (nativa data-backtest)
 - [`implementadas/bs-lead-v1.md`](implementadas/bs-lead-v1.md) — BS-Lead (runner portado, Studio pendente)
 - [`implementadas/escada-dupla-v1.md`](implementadas/escada-dupla-v1.md) — Escada Dupla (library-runner, Studio)
+  - Auditoria de realismo (2026-07-25): [`auditoria-escada-dupla-realismo-2026-07-25.md`](auditoria-escada-dupla-realismo-2026-07-25.md) — edge do campeão apontado como artefato de execução; plano de validação em 3 etapas
 
 Estudo de suporte: [`../analise-quantitativa/estudo-correlacao-binance-polymarket.md`](../analise-quantitativa/estudo-correlacao-binance-polymarket.md).
 

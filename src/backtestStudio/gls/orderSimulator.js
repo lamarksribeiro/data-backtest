@@ -511,7 +511,12 @@ function resolveOrderRole(order) {
   return 'entry';
 }
 
-export function settleEventPnl(simulator, tick, event) {
+export function settleEventPnl(simulator, tick, event, options = {}) {
+  // winnerPayout < 1 modela o haircut de settlement observado no live
+  // (data-robot liquida vencedores a 0.995, não a 1.0). Default preserva
+  // o comportamento histórico do lab (payout binário cheio).
+  const winnerPayoutRaw = Number(options.winnerPayout);
+  const winnerPayout = Number.isFinite(winnerPayoutRaw) && winnerPayoutRaw > 0 ? winnerPayoutRaw : 1;
   const snap = simulator.snapshot();
   const hasAnyEntry = snap.orders.some((o) => o.type === 'entry');
   const lotData = snap.lots ?? { UP: null, DOWN: null };
@@ -549,7 +554,7 @@ export function settleEventPnl(simulator, tick, event) {
     const lot = effectiveLots[side];
     if (!lot || lot.shares <= 0) continue;
     const won = winnerSide === side;
-    const pnl = won ? lot.shares - lot.cost : -lot.cost;
+    const pnl = won ? lot.shares * winnerPayout - lot.cost : -lot.cost;
     lotPnls[side] = pnl;
     expiryPnl += pnl;
   }

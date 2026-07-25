@@ -1,0 +1,24 @@
+{
+  "name": "honest-v2-final-june",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-06-01",
+  "to": "2026-06-08",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 2,
+  "defaults": "../defaults.json",
+  "notes": "Validação final da variante recomendada (honest-v2): minSecondsLeft 9, maxAsk 0.90, tier 1.5, reverse full. Par protect/hold sob settleWinnerPrice 0.995.",
+  "searchSpace": {
+    "variants": [
+      { "id": "v2-protect", "params": { "maxAsk": 0.90, "maxDistAbs": 40, "tierAskBudgetFactor": 1.5, "entryBudget": 2, "maxEntryBudget": 4, "settleWinnerPrice": 0.995, "minSecondsLeft": 9 } },
+      { "id": "v2-hold", "params": { "maxAsk": 0.90, "maxDistAbs": 40, "tierAskBudgetFactor": 1.5, "entryBudget": 2, "maxEntryBudget": 4, "settleWinnerPrice": 0.995, "minSecondsLeft": 9, "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false } }
+    ]
+  }
+}
