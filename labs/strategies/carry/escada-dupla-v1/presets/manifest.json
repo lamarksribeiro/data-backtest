@@ -4,6 +4,7 @@
     "btc-champion",
     "btc-parity-sim",
     "btc-resting-honest",
-    "btc-touch-realistic"
+    "btc-touch-realistic",
+    "btc-touch-fill70"
   ]
 }

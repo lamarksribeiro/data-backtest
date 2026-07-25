@@ -51,6 +51,10 @@ const DEFAULT_PARAMS = {
   // formula = halfSpread+slip (realista leve); walk = book; capped = min(walk, formula+takerMaxExtraCents)
   takerPriceMode: 'auto', // auto | formula | walk | capped
   takerMaxExtraCents: 2, // só em capped: teto acima da fórmula
+  // Probabilidade de fill maker (fila / adverse selection). 1 = sempre preenche.
+  makerFillProb: 1,
+  // skip = perde o nível; rest = posta resting para nova chance de cross
+  makerMissPolicy: 'rest', // rest | skip
   ladderProfile: 'ascent_hedge',
   rearmMode: 'off', // full | once | off — em ascent_hedge força off
   maxSubLevels: 8, // 0 = todos; holdout julho campeão usa 8
@@ -99,6 +103,30 @@ function resolveTakerPriceMode(raw = {}, executionMode = 'optimistic_maker') {
   if (executionMode === 'optimistic_maker') return 'formula';
   if (executionMode === 'touch_maker') return 'capped';
   return 'walk'; // resting_maker / taker: book walk honesto
+}
+
+function resolveMakerMissPolicy(raw = {}) {
+  const mode = String(raw.makerMissPolicy ?? DEFAULT_PARAMS.makerMissPolicy).trim().toLowerCase();
+  if (mode === 'skip' || mode === 'rest') return mode;
+  return 'rest';
+}
+
+/** Hash determinístico → [0,1). Estável entre runs (lab reproduzível). */
+function hashUnitInterval(seed) {
+  const text = String(seed ?? '');
+  let hash = 2166136261;
+  for (let i = 0; i < text.length; i += 1) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return ((hash >>> 0) % 1_000_000) / 1_000_000;
+}
+
+function shouldMakerFillByProb(makerFillProb, seedKey) {
+  const p = Number(makerFillProb);
+  if (!(p < 1)) return true;
+  if (!(p > 0)) return false;
+  return hashUnitInterval(seedKey) < p;
 }
 
 function resolveLiquidityMode(raw = {}) {
@@ -173,6 +201,8 @@ function mergeEscadaParams(raw = {}) {
   params.rearmOnMakerCancel = toBool(raw.rearmOnMakerCancel, DEFAULT_PARAMS.rearmOnMakerCancel);
   params.takerPriceMode = resolveTakerPriceMode(raw, params.executionMode);
   params.takerMaxExtraCents = Math.max(0, toFiniteNumber(raw.takerMaxExtraCents, DEFAULT_PARAMS.takerMaxExtraCents));
+  params.makerFillProb = clamp(toFiniteNumber(raw.makerFillProb, DEFAULT_PARAMS.makerFillProb), 0, 1);
+  params.makerMissPolicy = resolveMakerMissPolicy(raw);
 
   if (sizeScale !== 1) {
     params.maxSharesPerSide = Math.round(params.maxSharesPerSide * sizeScale * 100) / 100;
@@ -318,7 +348,7 @@ function createEventState(tick, params) {
     cost: { UP: 0, DOWN: 0 },
     fills: { UP: [], DOWN: [] },
     restingOrders: [], // multi-resting no lado maker
-    restingStats: { placed: 0, filled: 0, cancelled: 0, rejected: 0 },
+    restingStats: { placed: 0, filled: 0, cancelled: 0, rejected: 0, attempts: 0, misses: 0 },
     equalized: false,
     frozenByPairEdge: false,
     startedLadder: false,
@@ -570,14 +600,47 @@ function createBacktestRunner(rawParams = {}) {
     const epsilon = params.makerFillEpsilon || 0.01;
     const isTouch = params.executionMode === 'touch_maker';
     const postMode = params.makerPostMode || (isTouch ? 'limit' : 'bid');
+    const bid = fields.bid;
 
-    // touch_maker: se o ask já imprimiu no/abaixo do limit (DESC hedge), fill maker no limit.
-    // Mais honesto que optimistic (exige preço ter chegado), mais fillável que resting-no-bid.
+    // touch_maker: se o ask já imprimiu no/abaixo do limit (DESC hedge), tenta fill maker.
+    // makerFillProb < 1 modela fila / não ser o first-in-queue.
     if (isTouch && params.throughFillOnTrigger && ask <= limit) {
-      return applyFill(lado, qty, limit, type, ts, 'maker', meta);
+      current.restingStats.attempts += 1;
+      const seed = `${current.eventId}|${lado}|${type}|${meta.idx || 0}|touch|${ts}`;
+      if (shouldMakerFillByProb(params.makerFillProb, seed)) {
+        return applyFill(lado, qty, limit, type, ts, 'maker', meta);
+      }
+      current.restingStats.misses += 1;
+      addLog(ts, `MAKER MISS touch | ${lado} ${type} @ ${limit} | p=${params.makerFillProb}`, 'info');
+      if (params.makerMissPolicy === 'skip') return 0;
+
+      // rest: posta abaixo do ask (não-marketable) e espera cross mais profundo / rebound
+      const restPrice = bid != null
+        ? Math.min(bid, Math.max(0.01, limit - epsilon))
+        : Math.max(0.01, Math.min(limit - epsilon, ask - epsilon));
+      if (!(restPrice > 0) || restPrice >= ask) return 0;
+      const keyTouch = `${lado}|${type}|${meta.idx || 0}`;
+      if (current.restingOrders.some((o) => o.key === keyTouch && o.status === 'open')) return 0;
+      current.restingOrders.push({
+        key: keyTouch,
+        side: lado,
+        price: restPrice,
+        qty,
+        type,
+        meta,
+        rearmLevel: meta.tipoBase && meta.idx
+          ? { lado, tipo: meta.tipoBase, idx: meta.idx }
+          : null,
+        placedTs: ts,
+        placedMs: new Date(ts).getTime(),
+        lastAsk: ask,
+        status: 'open',
+      });
+      current.restingStats.placed += 1;
+      addLog(ts, `RESTING PLACE after miss | ${lado} ${qty}sh @ $${restPrice.toFixed(4)} | ${type}`, 'info');
+      return 0;
     }
 
-    const bid = fields.bid;
     let postPrice = postMode === 'limit'
       ? limit
       : (bid != null ? Math.min(bid, limit) : limit);
@@ -590,7 +653,13 @@ function createBacktestRunner(rawParams = {}) {
     if (postPrice >= ask) {
       current.restingStats.rejected += 1;
       if (ask <= limit) {
-        return applyFill(lado, qty, limit, type, ts, 'maker', meta);
+        current.restingStats.attempts += 1;
+        const seed = `${current.eventId}|${lado}|${type}|${meta.idx || 0}|mkt|${ts}`;
+        if (shouldMakerFillByProb(params.makerFillProb, seed)) {
+          return applyFill(lado, qty, limit, type, ts, 'maker', meta);
+        }
+        current.restingStats.misses += 1;
+        return 0;
       }
       return 0;
     }
@@ -637,6 +706,15 @@ function createBacktestRunner(rawParams = {}) {
       const crossed = shouldFillRestingBuy(prevAsk, currAsk, resting.price, params.makerFillEpsilon);
       resting.lastAsk = currAsk;
       if (!crossed) continue;
+
+      current.restingStats.attempts += 1;
+      const seed = `${current.eventId}|${resting.key}|cross|${tick.ts}`;
+      if (!shouldMakerFillByProb(params.makerFillProb, seed)) {
+        current.restingStats.misses += 1;
+        addLog(tick.ts, `MAKER MISS cross | ${resting.side} ${resting.type} @ ${resting.price} | p=${params.makerFillProb}`, 'info');
+        cancelResting(resting.key, 'queue_miss');
+        continue;
+      }
 
       applyFill(resting.side, resting.qty, resting.price, resting.type, tick.ts, 'maker', resting.meta || {});
       resting.status = 'filled';
@@ -799,6 +877,8 @@ function createBacktestRunner(rawParams = {}) {
         restingPlaced: current.restingStats.placed,
         restingFilled: current.restingStats.filled,
         restingCancelled: current.restingStats.cancelled,
+        makerAttempts: current.restingStats.attempts,
+        makerMisses: current.restingStats.misses,
         executionMode: params.executionMode,
       });
       equity.push({ ts: closedAt, pnl: totalPnl });
@@ -861,6 +941,8 @@ function createBacktestRunner(rawParams = {}) {
       restingPlaced: current.restingStats.placed,
       restingFilled: current.restingStats.filled,
       restingCancelled: current.restingStats.cancelled,
+      makerAttempts: current.restingStats.attempts,
+      makerMisses: current.restingStats.misses,
       executionMode: params.executionMode,
       diagnostics: {
         leaderSide: current.leaderSide,
@@ -953,6 +1035,8 @@ var __escadaExports = {
   resolveRearmMode,
   resolveMakerPostMode,
   resolveTakerPriceMode,
+  shouldMakerFillByProb,
+  hashUnitInterval,
   shouldFillRestingBuy,
   simulateEscadaPath,
   expandPathTargets,

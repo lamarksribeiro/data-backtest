@@ -1,0 +1,275 @@
+{
+  "name": "loss-mitigation-holdout",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-25",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 6,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "baseline-aggressive",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30
+        }
+      },
+      {
+        "id": "ew-book-045",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "earlyWarnEnabled": true,
+          "earlyWarnOppAsk": 0.45,
+          "earlyWarnOnlyIfLosing": false
+        }
+      },
+      {
+        "id": "ew-book-050",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "earlyWarnEnabled": true,
+          "earlyWarnOppAsk": 0.5,
+          "earlyWarnOnlyIfLosing": false
+        }
+      },
+      {
+        "id": "ew-book-055",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "earlyWarnEnabled": true,
+          "earlyWarnOppAsk": 0.55,
+          "earlyWarnOnlyIfLosing": false
+        }
+      },
+      {
+        "id": "ew-book-060",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "earlyWarnEnabled": true,
+          "earlyWarnOppAsk": 0.6,
+          "earlyWarnOnlyIfLosing": false
+        }
+      },
+      {
+        "id": "bc-070",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "bookCollapseEnabled": true,
+          "bookCollapseBidRatio": 0.7,
+          "bookCollapseRequireSpotWinning": true
+        }
+      },
+      {
+        "id": "bc-060",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "bookCollapseEnabled": true,
+          "bookCollapseBidRatio": 0.6,
+          "bookCollapseRequireSpotWinning": true
+        }
+      },
+      {
+        "id": "bc-050",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "bookCollapseEnabled": true,
+          "bookCollapseBidRatio": 0.5,
+          "bookCollapseRequireSpotWinning": true
+        }
+      },
+      {
+        "id": "bc-abs-040",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "bookCollapseEnabled": true,
+          "bookCollapseBidRatio": 0,
+          "bookCollapseAbsBid": 0.4,
+          "bookCollapseRequireSpotWinning": true
+        }
+      },
+      {
+        "id": "bc-abs-035",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "bookCollapseEnabled": true,
+          "bookCollapseBidRatio": 0,
+          "bookCollapseAbsBid": 0.35,
+          "bookCollapseRequireSpotWinning": true
+        }
+      },
+      {
+        "id": "minsec-10",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "minSecondsLeft": 10
+        }
+      },
+      {
+        "id": "minsec-12",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "minSecondsLeft": 12
+        }
+      },
+      {
+        "id": "minsec-15",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "minSecondsLeft": 15
+        }
+      },
+      {
+        "id": "maxask-080",
+        "params": {
+          "maxAsk": 0.8,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30
+        }
+      },
+      {
+        "id": "maxask-086",
+        "params": {
+          "maxAsk": 0.86,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30
+        }
+      },
+      {
+        "id": "combo-ew050-minsec12",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "minSecondsLeft": 12,
+          "earlyWarnEnabled": true,
+          "earlyWarnOppAsk": 0.5,
+          "earlyWarnOnlyIfLosing": false
+        }
+      },
+      {
+        "id": "combo-bc070-minsec12",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "minSecondsLeft": 12,
+          "bookCollapseEnabled": true,
+          "bookCollapseBidRatio": 0.7,
+          "bookCollapseRequireSpotWinning": true
+        }
+      },
+      {
+        "id": "combo-ew050-bc070",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "earlyWarnEnabled": true,
+          "earlyWarnOppAsk": 0.5,
+          "earlyWarnOnlyIfLosing": false,
+          "bookCollapseEnabled": true,
+          "bookCollapseBidRatio": 0.7,
+          "bookCollapseRequireSpotWinning": true
+        }
+      },
+      {
+        "id": "combo-full",
+        "params": {
+          "maxAsk": 0.86,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "minSecondsLeft": 12,
+          "earlyWarnEnabled": true,
+          "earlyWarnOppAsk": 0.5,
+          "earlyWarnOnlyIfLosing": false,
+          "bookCollapseEnabled": true,
+          "bookCollapseBidRatio": 0.7,
+          "bookCollapseRequireSpotWinning": true
+        }
+      },
+      {
+        "id": "danger-cont",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "dangerContinuousEnabled": true
+        }
+      }
+    ]
+  }
+}

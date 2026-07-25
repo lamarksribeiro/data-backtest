@@ -87,6 +87,15 @@ strategy "MIDAS Carry V1" {
   param earlyWarnEndSec = 8
   param earlyWarnOnlyIfLosing = true
 
+  // Book collapse: sai quando o bid próprio desaba vs preço médio de entrada
+  // mesmo com spot ainda "a favor" (divergência book×spot do caso live 2026-07-25).
+  param bookCollapseEnabled = false
+  param bookCollapseBidRatio = 0.70
+  param bookCollapseAbsBid = 0.0
+  param bookCollapseStartSec = 30
+  param bookCollapseEndSec = 4
+  param bookCollapseRequireSpotWinning = true
+
   // Gate de z mínimo na entrada core (0 = desativado)
   param minEntryZ = 0.0
 
@@ -159,6 +168,23 @@ strategy "MIDAS Carry V1" {
           if (ewOut) {
             state.closed = ewOut.closed
             mark("exit", { reason: "early_warn_exit", price: bid, oppAsk: ewOppAsk, secsLeft: secsLeft })
+          }
+        }
+      }
+
+      // Book collapse: bid próprio << avgEntry (com spot ainda favorável opcional)
+      let bookCollapseOn = params.bookCollapseEnabled == true || params.bookCollapseEnabled == 1
+      if (bookCollapseOn && !state.closed && !state.reversed && secsLeft <= params.bookCollapseStartSec && secsLeft >= params.bookCollapseEndSec && bid >= params.stopMinBid) {
+        let entryPx = position.avgPrice
+        let requireWinning = params.bookCollapseRequireSpotWinning == true || params.bookCollapseRequireSpotWinning == 1
+        let spotOk = !requireWinning || state.signedDistance > 0
+        let ratioHit = entryPx > 0 && params.bookCollapseBidRatio > 0 && bid < (entryPx * params.bookCollapseBidRatio)
+        let absHit = params.bookCollapseAbsBid > 0 && bid < params.bookCollapseAbsBid
+        if (spotOk && (ratioHit || absHit)) {
+          let bcOut = exit({ price: bid, reason: "book_collapse_exit" })
+          if (bcOut) {
+            state.closed = bcOut.closed
+            mark("exit", { reason: "book_collapse_exit", price: bid, entry: entryPx, ratio: params.bookCollapseBidRatio, secsLeft: secsLeft })
           }
         }
       }

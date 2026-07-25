@@ -23,11 +23,12 @@
       "carry",
       "dual-ladder",
       "maker",
-      "resting-maker",
+      "touch-maker",
+      "fill-rate",
       "btc",
       "ascent-hedge"
     ],
     "defaultVersion": 2
   },
-  "notes": "Runner: escada-dupla-runner@1. Champion v2: optimistic_maker (jul/2026). v4 resting-honest: mesmo grid com resting_maker. Doc: docs/estrategias/implementadas/escada-dupla-v1.md"
+  "notes": "Runner: escada-dupla-runner@1. v2 optimistic champion; v5 touch-realistic (p=1); v6 touch-fill70 (p=0.7 skip, lab10). Doc: docs/estrategias/implementadas/escada-dupla-v1.md"
 }
