@@ -1,0 +1,120 @@
+{
+  "name": "escada-dupla-lab09-realistic-edge-july",
+  "strategyId": "escada-dupla-v1",
+  "strategyFamily": "carry",
+  "description": "Lab 9b: touch_maker com through-fill no hedge + taker formula/capped (sem walk profundo). Controles: optimistic e resting. Slip 0/1¢.",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-22",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "feeOptions": { "category": "crypto" },
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "opt-slip0",
+        "params": {
+          "executionMode": "optimistic_maker",
+          "slippageCents": 0,
+          "takerPriceMode": "formula",
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "opt-slip1",
+        "params": {
+          "executionMode": "optimistic_maker",
+          "slippageCents": 1,
+          "takerPriceMode": "formula",
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "touch-formula-slip0",
+        "params": {
+          "executionMode": "touch_maker",
+          "throughFillOnTrigger": true,
+          "makerPostMode": "limit",
+          "rearmOnMakerCancel": true,
+          "takerPriceMode": "formula",
+          "slippageCents": 0,
+          "spreadCents": 1,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "touch-formula-slip1",
+        "params": {
+          "executionMode": "touch_maker",
+          "throughFillOnTrigger": true,
+          "makerPostMode": "limit",
+          "rearmOnMakerCancel": true,
+          "takerPriceMode": "formula",
+          "slippageCents": 1,
+          "spreadCents": 1,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "touch-capped2-slip1",
+        "params": {
+          "executionMode": "touch_maker",
+          "throughFillOnTrigger": true,
+          "makerPostMode": "limit",
+          "rearmOnMakerCancel": true,
+          "takerPriceMode": "capped",
+          "takerMaxExtraCents": 2,
+          "slippageCents": 1,
+          "spreadCents": 1,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "touch-capped1-slip1",
+        "params": {
+          "executionMode": "touch_maker",
+          "throughFillOnTrigger": true,
+          "makerPostMode": "limit",
+          "rearmOnMakerCancel": true,
+          "takerPriceMode": "capped",
+          "takerMaxExtraCents": 1,
+          "slippageCents": 1,
+          "spreadCents": 1,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "resting-walk-slip0",
+        "params": {
+          "executionMode": "resting_maker",
+          "makerPostMode": "bid",
+          "throughFillOnTrigger": false,
+          "rearmOnMakerCancel": true,
+          "takerPriceMode": "walk",
+          "slippageCents": 0,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "resting-formula-slip1",
+        "params": {
+          "executionMode": "resting_maker",
+          "makerPostMode": "bid",
+          "throughFillOnTrigger": false,
+          "rearmOnMakerCancel": true,
+          "takerPriceMode": "formula",
+          "slippageCents": 1,
+          "sizeScale": 1
+        }
+      }
+    ]
+  },
+  "metrics": ["totalPnl", "entries", "winRate", "profitFactor", "maxDrawdown"]
+}

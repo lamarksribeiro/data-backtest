@@ -43,8 +43,14 @@ const DEFAULT_PARAMS = {
   equalizeMaxAskCents: 5,
   equalizeEnabled: true,
   liquidityMode: 'auto', // auto | taker | maker
-  executionMode: 'optimistic_maker', // lab default; resting_maker para honestidade
-  // oscillate = HTML original (re-arme dual). ascent_hedge = líder só SUB + oposto só DESC, sem loop.
+  executionMode: 'optimistic_maker', // optimistic_maker | resting_maker | touch_maker | taker
+  // touch_maker: taker com walk+slip; maker posta no limit; fill se ask já atravessou (DESC/hedge).
+  makerPostMode: 'auto', // auto | limit | bid — auto: limit em touch_maker, bid em resting_maker
+  throughFillOnTrigger: true, // touch_maker: se ask<=limit no disparo, fill maker imediato
+  rearmOnMakerCancel: true, // reaponta nível se resting cancelar sem fill
+  // formula = halfSpread+slip (realista leve); walk = book; capped = min(walk, formula+takerMaxExtraCents)
+  takerPriceMode: 'auto', // auto | formula | walk | capped
+  takerMaxExtraCents: 2, // só em capped: teto acima da fórmula
   ladderProfile: 'ascent_hedge',
   rearmMode: 'off', // full | once | off — em ascent_hedge força off
   maxSubLevels: 8, // 0 = todos; holdout julho campeão usa 8
@@ -75,8 +81,24 @@ function resolveExecutionMode(raw = {}) {
   const mode = String(raw.executionMode ?? DEFAULT_PARAMS.executionMode).trim().toLowerCase();
   if (mode === 'optimistic_maker' || mode === 'optimistic') return 'optimistic_maker';
   if (mode === 'resting_maker' || mode === 'resting') return 'resting_maker';
+  if (mode === 'touch_maker' || mode === 'touch') return 'touch_maker';
   if (mode === 'taker') return 'taker';
   return 'optimistic_maker';
+}
+
+function resolveMakerPostMode(raw = {}, executionMode = 'optimistic_maker') {
+  const mode = String(raw.makerPostMode ?? DEFAULT_PARAMS.makerPostMode).trim().toLowerCase();
+  if (mode === 'limit' || mode === 'bid') return mode;
+  if (executionMode === 'touch_maker') return 'limit';
+  return 'bid';
+}
+
+function resolveTakerPriceMode(raw = {}, executionMode = 'optimistic_maker') {
+  const mode = String(raw.takerPriceMode ?? DEFAULT_PARAMS.takerPriceMode).trim().toLowerCase();
+  if (mode === 'formula' || mode === 'walk' || mode === 'capped') return mode;
+  if (executionMode === 'optimistic_maker') return 'formula';
+  if (executionMode === 'touch_maker') return 'capped';
+  return 'walk'; // resting_maker / taker: book walk honesto
 }
 
 function resolveLiquidityMode(raw = {}) {
@@ -146,6 +168,11 @@ function mergeEscadaParams(raw = {}) {
   params.liquidityMode = resolveLiquidityMode(raw);
   params.ladderProfile = resolveLadderProfile(raw);
   params.rearmMode = resolveRearmMode(raw, params.ladderProfile);
+  params.makerPostMode = resolveMakerPostMode(raw, params.executionMode);
+  params.throughFillOnTrigger = toBool(raw.throughFillOnTrigger, DEFAULT_PARAMS.throughFillOnTrigger);
+  params.rearmOnMakerCancel = toBool(raw.rearmOnMakerCancel, DEFAULT_PARAMS.rearmOnMakerCancel);
+  params.takerPriceMode = resolveTakerPriceMode(raw, params.executionMode);
+  params.takerMaxExtraCents = Math.max(0, toFiniteNumber(raw.takerMaxExtraCents, DEFAULT_PARAMS.takerMaxExtraCents));
 
   if (sizeScale !== 1) {
     params.maxSharesPerSide = Math.round(params.maxSharesPerSide * sizeScale * 100) / 100;
@@ -473,6 +500,11 @@ function createBacktestRunner(rawParams = {}) {
     o.cancelReason = reason;
     current.restingStats.cancelled += 1;
     current.restingOrders.splice(idx, 1);
+    if (params.rearmOnMakerCancel && o.rearmLevel) {
+      const { lado, tipo, idx: levelIdx } = o.rearmLevel;
+      const level = current.ladder[lado]?.find((n) => n.tipo === tipo && n.idx === levelIdx);
+      if (level) level.armado = true;
+    }
     addLog(current.lastTick?.ts || new Date().toISOString(), `RESTING CANCEL | ${o.side} ${o.tipo} @ ${o.price} | ${reason}`, 'info');
   };
 
@@ -511,13 +543,19 @@ function createBacktestRunner(rawParams = {}) {
     const ask = fields.ask;
     if (ask == null) return 0;
 
-    // Taker (líder ou modo taker): walk + slip
+    // Taker (líder ou modo taker): fórmula / walk / capped
     if (liq === 'taker' || params.executionMode === 'taker') {
       const fillC = buyFillPriceCents(limitCents, 'taker', params, meta.extraSlip || 0);
       let fillPrice = fillC / 100;
-      if (params.executionMode !== 'optimistic_maker' && fields.rawAsks) {
+      const mode = params.takerPriceMode || 'formula';
+      if (mode !== 'formula' && fields.rawAsks) {
         const walked = walkBook(fields.rawAsks, qty, ask);
-        fillPrice = Math.max(fillPrice, walked.avgPrice);
+        if (mode === 'walk') {
+          fillPrice = Math.max(fillPrice, walked.avgPrice);
+        } else if (mode === 'capped') {
+          const cap = fillPrice + (params.takerMaxExtraCents || 0) / 100;
+          fillPrice = Math.max(fillPrice, Math.min(walked.avgPrice, cap));
+        }
       }
       return applyFill(lado, qty, fillPrice, type, ts, 'taker', meta);
     }
@@ -528,12 +566,29 @@ function createBacktestRunner(rawParams = {}) {
       return applyFill(lado, qty, fillC / 100, type, ts, 'maker', meta);
     }
 
-    // resting_maker: repousa no min(limit, bid) se não marketable
     const limit = limitCents / 100;
-    const bid = fields.bid != null ? Math.min(fields.bid, limit) : limit;
-    if (!(bid > 0) || !(ask > 0) || bid >= ask) {
+    const epsilon = params.makerFillEpsilon || 0.01;
+    const isTouch = params.executionMode === 'touch_maker';
+    const postMode = params.makerPostMode || (isTouch ? 'limit' : 'bid');
+
+    // touch_maker: se o ask já imprimiu no/abaixo do limit (DESC hedge), fill maker no limit.
+    // Mais honesto que optimistic (exige preço ter chegado), mais fillável que resting-no-bid.
+    if (isTouch && params.throughFillOnTrigger && ask <= limit) {
+      return applyFill(lado, qty, limit, type, ts, 'maker', meta);
+    }
+
+    const bid = fields.bid;
+    let postPrice = postMode === 'limit'
+      ? limit
+      : (bid != null ? Math.min(bid, limit) : limit);
+    if (!(postPrice > 0) || !(ask > 0)) {
       current.restingStats.rejected += 1;
-      // Fallback: se ask já no/abaixo do limit (DESC), fill maker imediato no limit
+      return 0;
+    }
+
+    // Ordem marketable (post >= ask): só aceita fill maker se ask já <= limit
+    if (postPrice >= ask) {
+      current.restingStats.rejected += 1;
       if (ask <= limit) {
         return applyFill(lado, qty, limit, type, ts, 'maker', meta);
       }
@@ -547,17 +602,20 @@ function createBacktestRunner(rawParams = {}) {
     current.restingOrders.push({
       key,
       side: lado,
-      price: bid,
+      price: postPrice,
       qty,
       type,
       meta,
+      rearmLevel: meta.tipoBase && meta.idx
+        ? { lado, tipo: meta.tipoBase, idx: meta.idx }
+        : null,
       placedTs: ts,
       placedMs: new Date(ts).getTime(),
       lastAsk: ask,
       status: 'open',
     });
     current.restingStats.placed += 1;
-    addLog(ts, `RESTING PLACE | ${lado} ${qty}sh @ $${bid.toFixed(4)} | ${type}`, 'info');
+    addLog(ts, `RESTING PLACE | ${lado} ${qty}sh @ $${postPrice.toFixed(4)} | ${type} | eps=${epsilon}`, 'info');
     return 0;
   };
 
@@ -609,7 +667,7 @@ function createBacktestRunner(rawParams = {}) {
       tick.ts,
       { extraSlip: params.equalizeExtraSlipCents },
     );
-    if (filled > 0 || params.executionMode === 'resting_maker') {
+    if (filled > 0 || params.executionMode === 'resting_maker' || params.executionMode === 'touch_maker') {
       // marca equalizado só se shares iguais (fill imediato) ou deixa resting tentar
       if (Math.abs(current.shares.UP - current.shares.DOWN) < 1e-9) current.equalized = true;
     }
@@ -675,6 +733,17 @@ function createBacktestRunner(rawParams = {}) {
           idx: n.idx,
           tipoBase: n.tipo,
         });
+
+        // Sem fill imediato: se não ficou resting aberta, reaponta o nível (reject / falta de book)
+        if (filled <= 0 && params.executionMode !== 'optimistic_maker') {
+          const restingOpen = current.restingOrders.some(
+            (o) => o.status === 'open' && o.side === lado && o.type === `${n.tipo}-${n.idx}`,
+          );
+          if (!restingOpen && params.rearmOnMakerCancel) {
+            n.armado = true;
+            n.vezes = Math.max(0, n.vezes - 1);
+          }
+        }
 
         if (n.tipo === 'SUB' && filled > 0) {
           current.subEntryCountByIdx.set(n.idx, (current.subEntryCountByIdx.get(n.idx) || 0) + 1);
@@ -882,6 +951,8 @@ var __escadaExports = {
   resolveLiquidityMode,
   resolveLadderProfile,
   resolveRearmMode,
+  resolveMakerPostMode,
+  resolveTakerPriceMode,
   shouldFillRestingBuy,
   simulateEscadaPath,
   expandPathTargets,

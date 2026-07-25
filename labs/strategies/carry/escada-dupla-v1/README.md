@@ -30,6 +30,20 @@ Relatórios: `reports/labs/escada-dupla-v1/`.
 
 `sizeScale` escala shares + `maxEventNotional`/`walletSize`/`maxSharesPerSide`. Campeão = `1.0` (~$80/evento).
 
+### Microestrutura (jul/2026)
+
+| Camada | Status no campeão atual (v2) | Lab 9 realista (v5) |
+|---|---|---|
+| Fees crypto | on | on |
+| `spreadCents` | 1 | 1 |
+| `slippageCents` | 0 | **1** |
+| `executionMode` | `optimistic_maker` | **`touch_maker`** |
+| Taker | fórmula | **capped (+1¢)** |
+| Maker hedge | fill imediato | **só se ask ≤ limit (through-fill)** |
+
+Lab 9 (`lab09-realistic-edge-july`): `touch-capped1-slip1` → PnL **+$29.3k**, PF **1.63**, 22/22 dias.  
+`resting` + walk profundo continua inviável; o buraco era sobretudo o **walk adverso no taker**.
+
 ## Arquivos
 
 | Path | Papel |
