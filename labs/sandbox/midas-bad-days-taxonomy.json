@@ -1,0 +1,545 @@
+{
+  "generatedAt": "2026-07-25T19:59:46.534Z",
+  "window": {
+    "from": "2026-07-01",
+    "to": "2026-07-25"
+  },
+  "badDays": [
+    "2026-07-03",
+    "2026-07-04",
+    "2026-07-05",
+    "2026-07-07",
+    "2026-07-09",
+    "2026-07-14",
+    "2026-07-22"
+  ],
+  "totals": {
+    "events": 2272,
+    "wins": 1845,
+    "losses": 427,
+    "totalPnl": 2326.563569999989,
+    "lossPnl": -4168.46,
+    "stressLossCount": 152,
+    "stressLossPnl": -1597.6
+  },
+  "byTau": [
+    {
+      "key": "20-30s",
+      "n": 275,
+      "pnl": -2733.91,
+      "avgPnl": -9.942
+    },
+    {
+      "key": ">=30s",
+      "n": 86,
+      "pnl": -804.55,
+      "avgPnl": -9.355
+    },
+    {
+      "key": "12-20s",
+      "n": 48,
+      "pnl": -444.7,
+      "avgPnl": -9.265
+    },
+    {
+      "key": "8-12s",
+      "n": 15,
+      "pnl": -151.72,
+      "avgPnl": -10.115
+    },
+    {
+      "key": "<8s",
+      "n": 3,
+      "pnl": -33.57,
+      "avgPnl": -11.19
+    }
+  ],
+  "byAsk": [
+    {
+      "key": "<0.70",
+      "n": 221,
+      "pnl": -1803.33,
+      "avgPnl": -8.16
+    },
+    {
+      "key": "0.82-0.90",
+      "n": 64,
+      "pnl": -1044.78,
+      "avgPnl": -16.325
+    },
+    {
+      "key": "0.70-0.82",
+      "n": 119,
+      "pnl": -923.51,
+      "avgPnl": -7.761
+    },
+    {
+      "key": "0.90-0.95",
+      "n": 23,
+      "pnl": -396.83,
+      "avgPnl": -17.254
+    }
+  ],
+  "byDist": [
+    {
+      "key": "<20",
+      "n": 348,
+      "pnl": -3180.12,
+      "avgPnl": -9.138
+    },
+    {
+      "key": "20-30",
+      "n": 55,
+      "pnl": -652.33,
+      "avgPnl": -11.861
+    },
+    {
+      "key": "30-40",
+      "n": 24,
+      "pnl": -336.01,
+      "avgPnl": -14.001
+    }
+  ],
+  "byReason": [
+    {
+      "key": "expiry_loss",
+      "n": 272,
+      "pnl": -3058.1,
+      "avgPnl": -11.243
+    },
+    {
+      "key": "expiry_win",
+      "n": 131,
+      "pnl": -911.68,
+      "avgPnl": -6.959
+    },
+    {
+      "key": "closed",
+      "n": 24,
+      "pnl": -198.68,
+      "avgPnl": -8.278
+    }
+  ],
+  "byReverse": [
+    {
+      "key": "reverse_no",
+      "n": 211,
+      "pnl": -2328.12,
+      "avgPnl": -11.034
+    },
+    {
+      "key": "reverse_yes",
+      "n": 216,
+      "pnl": -1840.34,
+      "avgPnl": -8.52
+    }
+  ],
+  "byDanger": [
+    {
+      "key": "danger_no",
+      "n": 391,
+      "pnl": -3859.87,
+      "avgPnl": -9.872
+    },
+    {
+      "key": "danger_yes",
+      "n": 36,
+      "pnl": -308.6,
+      "avgPnl": -8.572
+    }
+  ],
+  "stressByTau": [
+    {
+      "key": "20-30s",
+      "n": 94,
+      "pnl": -1014.56,
+      "avgPnl": -10.793
+    },
+    {
+      "key": ">=30s",
+      "n": 36,
+      "pnl": -372.63,
+      "avgPnl": -10.351
+    },
+    {
+      "key": "12-20s",
+      "n": 17,
+      "pnl": -160.57,
+      "avgPnl": -9.445
+    },
+    {
+      "key": "8-12s",
+      "n": 5,
+      "pnl": -49.82,
+      "avgPnl": -9.965
+    }
+  ],
+  "stressByAsk": [
+    {
+      "key": "<0.70",
+      "n": 79,
+      "pnl": -659.58,
+      "avgPnl": -8.349
+    },
+    {
+      "key": "0.82-0.90",
+      "n": 27,
+      "pnl": -480.07,
+      "avgPnl": -17.78
+    },
+    {
+      "key": "0.70-0.82",
+      "n": 39,
+      "pnl": -318.28,
+      "avgPnl": -8.161
+    },
+    {
+      "key": "0.90-0.95",
+      "n": 7,
+      "pnl": -139.66,
+      "avgPnl": -19.951
+    }
+  ],
+  "topLosses": [
+    {
+      "eventId": "0x92481fc14218070730acc76c1314b0efd70c28b7de2aaaaa12176905fefe6f76",
+      "dt": "2026-07-19",
+      "finalPnl": -36.60188,
+      "reason": "expiry_loss",
+      "side": "UP",
+      "secsLeft": 30,
+      "ask": 0.88,
+      "dist": 14.543296629999531,
+      "exitCount": 1,
+      "hadReverse": true,
+      "hadDanger": false,
+      "winnerSide": "DOWN",
+      "tauBin": ">=30s",
+      "askBin": "0.82-0.90",
+      "distBin": "<20"
+    },
+    {
+      "eventId": "0xb4e5afded2a2a21899b05d1af7875ef1226cba53af6a5181cd6f05609c6b7dc7",
+      "dt": "2026-07-14",
+      "finalPnl": -35.833549999999995,
+      "reason": "expiry_loss",
+      "side": "UP",
+      "secsLeft": 25,
+      "ask": 0.94,
+      "dist": 27.822567080002045,
+      "exitCount": 1,
+      "hadReverse": true,
+      "hadDanger": false,
+      "winnerSide": "DOWN",
+      "tauBin": "20-30s",
+      "askBin": "0.90-0.95",
+      "distBin": "20-30"
+    },
+    {
+      "eventId": "0x27b2e3e930e9de656c7da1705c4f8d6f3324a321f930767f9ef282f28aa4a26c",
+      "dt": "2026-07-03",
+      "finalPnl": -35.06973000000001,
+      "reason": "expiry_loss",
+      "side": "DOWN",
+      "secsLeft": 26,
+      "ask": 0.87,
+      "dist": 22.692589650003356,
+      "exitCount": 1,
+      "hadReverse": true,
+      "hadDanger": false,
+      "winnerSide": "UP",
+      "tauBin": "20-30s",
+      "askBin": "0.82-0.90",
+      "distBin": "20-30"
+    },
+    {
+      "eventId": "0xcc29320471d3acc7d50bd6b3fd66398d6d51b67868a9ae883fa8b3649d0a549d",
+      "dt": "2026-07-07",
+      "finalPnl": -32.25896,
+      "reason": "expiry_loss",
+      "side": "DOWN",
+      "secsLeft": 30,
+      "ask": 0.89,
+      "dist": 29.27745634999883,
+      "exitCount": 2,
+      "hadReverse": true,
+      "hadDanger": false,
+      "winnerSide": "UP",
+      "tauBin": ">=30s",
+      "askBin": "0.82-0.90",
+      "distBin": "20-30"
+    },
+    {
+      "eventId": "0x0c955207ae00077fa1496b8a0224e5cfec6d114d00994f5999f7c35be579ffdd",
+      "dt": "2026-07-06",
+      "finalPnl": -30.725750000000005,
+      "reason": "expiry_loss",
+      "side": "DOWN",
+      "secsLeft": 28,
+      "ask": 0.82,
+      "dist": 34.34489356999984,
+      "exitCount": 1,
+      "hadReverse": true,
+      "hadDanger": false,
+      "winnerSide": "UP",
+      "tauBin": "20-30s",
+      "askBin": "0.82-0.90",
+      "distBin": "30-40"
+    },
+    {
+      "eventId": "0x349340f5e77febf54a4135ea19a6fb0da3e68fc5470b9559ddd6d6b652fbd376",
+      "dt": "2026-07-10",
+      "finalPnl": -21.864820000000005,
+      "reason": "expiry_loss",
+      "side": "DOWN",
+      "secsLeft": 9,
+      "ask": 0.88,
+      "dist": 1.021650230002706,
+      "exitCount": 1,
+      "hadReverse": true,
+      "hadDanger": false,
+      "winnerSide": "UP",
+      "tauBin": "8-12s",
+      "askBin": "0.82-0.90",
+      "distBin": "<20"
+    },
+    {
+      "eventId": "0x5c3a2bffdde0681d839f7d61ddcf465974478932d0223066b2144dc6edc3a57a",
+      "dt": "2026-07-23",
+      "finalPnl": -21.656370000000006,
+      "reason": "expiry_loss",
+      "side": "DOWN",
+      "secsLeft": 26,
+      "ask": 0.87,
+      "dist": 9.356141809999826,
+      "exitCount": 1,
+      "hadReverse": true,
+      "hadDanger": false,
+      "winnerSide": "UP",
+      "tauBin": "20-30s",
+      "askBin": "0.82-0.90",
+      "distBin": "<20"
+    },
+    {
+      "eventId": "0x4c0ff6ca3baf17a8e2ad53a7f99ecfef9d9a6717254b67d27d8967e05d6a8b34",
+      "dt": "2026-07-19",
+      "finalPnl": -19.775959999999998,
+      "reason": "expiry_loss",
+      "side": "UP",
+      "secsLeft": 24,
+      "ask": 0.93,
+      "dist": 13.447952079994138,
+      "exitCount": 0,
+      "hadReverse": false,
+      "hadDanger": false,
+      "winnerSide": "DOWN",
+      "tauBin": "20-30s",
+      "askBin": "0.90-0.95",
+      "distBin": "<20"
+    },
+    {
+      "eventId": "0xd6dd8d7142ef3388f1a748b33a8301335f2df4934f97c98eea0be7b1c4bca684",
+      "dt": "2026-07-21",
+      "finalPnl": -19.647859999999998,
+      "reason": "expiry_loss",
+      "side": "DOWN",
+      "secsLeft": 7,
+      "ask": 0.93,
+      "dist": 18.452368350001052,
+      "exitCount": 0,
+      "hadReverse": false,
+      "hadDanger": false,
+      "winnerSide": "UP",
+      "tauBin": "<8s",
+      "askBin": "0.90-0.95",
+      "distBin": "<20"
+    },
+    {
+      "eventId": "0xd49d82054193b1b6579ff0e79fbc388ede53b41e69c9b58f1ef443cc974cc6b7",
+      "dt": "2026-07-18",
+      "finalPnl": -19.61204,
+      "reason": "expiry_loss",
+      "side": "DOWN",
+      "secsLeft": 28,
+      "ask": 0.84,
+      "dist": 1.0281590699960361,
+      "exitCount": 0,
+      "hadReverse": false,
+      "hadDanger": false,
+      "winnerSide": "UP",
+      "tauBin": "20-30s",
+      "askBin": "0.82-0.90",
+      "distBin": "<20"
+    },
+    {
+      "eventId": "0xaef09951725cc96dcecc65bcb13278717e8881b54689f4e4519945c2428482d0",
+      "dt": "2026-07-12",
+      "finalPnl": -19.56494,
+      "reason": "expiry_loss",
+      "side": "UP",
+      "secsLeft": 26,
+      "ask": 0.84,
+      "dist": 38.06982503000472,
+      "exitCount": 0,
+      "hadReverse": false,
+      "hadDanger": false,
+      "winnerSide": "DOWN",
+      "tauBin": "20-30s",
+      "askBin": "0.82-0.90",
+      "distBin": "30-40"
+    },
+    {
+      "eventId": "0x85d93a7318bd05634d9cafa434de8235d9628a4c1fc9db9b824e5e4b773c6207",
+      "dt": "2026-07-03",
+      "finalPnl": -19.564870000000003,
+      "reason": "expiry_loss",
+      "side": "DOWN",
+      "secsLeft": 28,
+      "ask": 0.83,
+      "dist": 30.403570610003953,
+      "exitCount": 0,
+      "hadReverse": false,
+      "hadDanger": false,
+      "winnerSide": "UP",
+      "tauBin": "20-30s",
+      "askBin": "0.82-0.90",
+      "distBin": "30-40"
+    },
+    {
+      "eventId": "0xfbe60a3f441b7b50094e1691b8304fe07d9aaa41dd5cb9a46e2c83b7a54b38c4",
+      "dt": "2026-07-06",
+      "finalPnl": -19.56378,
+      "reason": "expiry_loss",
+      "side": "UP",
+      "secsLeft": 14,
+      "ask": 0.88,
+      "dist": 34.20694293999986,
+      "exitCount": 0,
+      "hadReverse": false,
+      "hadDanger": false,
+      "winnerSide": "DOWN",
+      "tauBin": "12-20s",
+      "askBin": "0.82-0.90",
+      "distBin": "30-40"
+    },
+    {
+      "eventId": "0x4f0500e0211342803d8240a1a95f04d784e72d85a5b89e555d1558b7ce83722c",
+      "dt": "2026-07-05",
+      "finalPnl": -19.53638,
+      "reason": "expiry_loss",
+      "side": "UP",
+      "secsLeft": 29,
+      "ask": 0.84,
+      "dist": 12.044253080006456,
+      "exitCount": 0,
+      "hadReverse": false,
+      "hadDanger": false,
+      "winnerSide": "DOWN",
+      "tauBin": "20-30s",
+      "askBin": "0.82-0.90",
+      "distBin": "<20"
+    },
+    {
+      "eventId": "0x89c74522b2108800a07851c3f343d7986fc6df6a905a6e3beb0f5d00ba852217",
+      "dt": "2026-07-15",
+      "finalPnl": -19.53638,
+      "reason": "expiry_loss",
+      "side": "DOWN",
+      "secsLeft": 29,
+      "ask": 0.84,
+      "dist": 2.5387956100021256,
+      "exitCount": 0,
+      "hadReverse": false,
+      "hadDanger": false,
+      "winnerSide": "UP",
+      "tauBin": "20-30s",
+      "askBin": "0.82-0.90",
+      "distBin": "<20"
+    },
+    {
+      "eventId": "0x12d31acf2e9fdec08eff75fae997fa50d14871fba18acab802ed0622440b6745",
+      "dt": "2026-07-17",
+      "finalPnl": -19.53638,
+      "reason": "expiry_loss",
+      "side": "UP",
+      "secsLeft": 29,
+      "ask": 0.84,
+      "dist": 33.73998885000037,
+      "exitCount": 0,
+      "hadReverse": false,
+      "hadDanger": false,
+      "winnerSide": "DOWN",
+      "tauBin": "20-30s",
+      "askBin": "0.82-0.90",
+      "distBin": "30-40"
+    },
+    {
+      "eventId": "0x3e6f5f7d7c71db4f1823945fa8a159e6dc983b061160eeaee96d2f25a8ce25ed",
+      "dt": "2026-07-19",
+      "finalPnl": -19.53638,
+      "reason": "expiry_loss",
+      "side": "UP",
+      "secsLeft": 29,
+      "ask": 0.84,
+      "dist": 3.9975237200051197,
+      "exitCount": 0,
+      "hadReverse": false,
+      "hadDanger": false,
+      "winnerSide": "DOWN",
+      "tauBin": "20-30s",
+      "askBin": "0.82-0.90",
+      "distBin": "<20"
+    },
+    {
+      "eventId": "0x8b8365c8726520fb5d21f2ec80969a3c5a13045fe0403b698784715f4e25c49a",
+      "dt": "2026-07-01",
+      "finalPnl": -19.464090000000002,
+      "reason": "expiry_loss",
+      "side": "UP",
+      "secsLeft": 28,
+      "ask": 0.92,
+      "dist": 22.842052430001786,
+      "exitCount": 1,
+      "hadReverse": true,
+      "hadDanger": false,
+      "winnerSide": "DOWN",
+      "tauBin": "20-30s",
+      "askBin": "0.90-0.95",
+      "distBin": "20-30"
+    },
+    {
+      "eventId": "0x4bef2847e3665b0d6dcbd12c4607f8a2b9b9924e53f07f839bfebd28d22df837",
+      "dt": "2026-07-19",
+      "finalPnl": -19.437640000000002,
+      "reason": "expiry_loss",
+      "side": "DOWN",
+      "secsLeft": 30,
+      "ask": 0.87,
+      "dist": 7.122271250002086,
+      "exitCount": 0,
+      "hadReverse": false,
+      "hadDanger": false,
+      "winnerSide": "UP",
+      "tauBin": ">=30s",
+      "askBin": "0.82-0.90",
+      "distBin": "<20"
+    },
+    {
+      "eventId": "0xcc55ebf25c9e607422ad599aad9ab21afbfc3f49a7a62da726648b3e3e7dc34c",
+      "dt": "2026-07-13",
+      "finalPnl": -19.42819,
+      "reason": "expiry_loss",
+      "side": "DOWN",
+      "secsLeft": 25,
+      "ask": 0.92,
+      "dist": 13.07500445000187,
+      "exitCount": 0,
+      "hadReverse": false,
+      "hadDanger": false,
+      "winnerSide": "UP",
+      "tauBin": "20-30s",
+      "askBin": "0.90-0.95",
+      "distBin": "<20"
+    }
+  ]
+}

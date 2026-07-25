@@ -1,0 +1,128 @@
+{
+  "name": "bad-days-levers-july",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-25",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 6,
+  "defaults": "../defaults.json",
+  "notes": "Fase 2 — sweep de alavancas anti-perda no julho cheio (incl. hoje).",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "baseline-aggressive",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30
+        }
+      },
+      {
+        "id": "minsec-09",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "minSecondsLeft": 9
+        }
+      },
+      {
+        "id": "minsec-10",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "minSecondsLeft": 10
+        }
+      },
+      {
+        "id": "dist-30",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 30,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30
+        }
+      },
+      {
+        "id": "maxask-090",
+        "params": {
+          "maxAsk": 0.9,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30
+        }
+      },
+      {
+        "id": "maxask-086",
+        "params": {
+          "maxAsk": 0.86,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30
+        }
+      },
+      {
+        "id": "rev-ask-085",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "lateFlipReverseMaxAsk": 0.85
+        }
+      },
+      {
+        "id": "rev-ask-090",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "lateFlipReverseMaxAsk": 0.9
+        }
+      },
+      {
+        "id": "rev-half",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "lateFlipReverseBudgetFactor": 0.5
+        }
+      },
+      {
+        "id": "minsec10-dist30",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 30,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "minSecondsLeft": 10
+        }
+      }
+    ]
+  }
+}

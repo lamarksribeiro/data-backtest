@@ -1,0 +1,1053 @@
+{
+  "strategy": "MIDAS Carry V1",
+  "source": "lakehouse",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01T00:00:00.000Z",
+  "to": "2026-07-26T00:00:00.000Z",
+  "ticks": 3920288,
+  "variantCount": 1,
+  "variants": [
+    {
+      "id": "baseline-aggressive",
+      "params": {
+        "walletSize": 100,
+        "entryBudget": 10,
+        "minShares": 1,
+        "entrySlippageMax": 0.02,
+        "minLiquidityRatio": 0.6,
+        "minSecondsLeft": 5,
+        "maxSecondsLeft": 30,
+        "maxDistAbs": 40,
+        "minAsk": 0.55,
+        "maxAsk": 0.94,
+        "maxSpread": 0.03,
+        "minOddsSum": 0.98,
+        "maxOddsSum": 1.06,
+        "velocityLookbackSecs": 5,
+        "maxAdverseSpotChange": 8,
+        "minObi": 0,
+        "obiLevels": 5,
+        "sigmaSizingEnabled": false,
+        "sigmaLookbackSecs": 90,
+        "sigmaDivisor": 5.48,
+        "zT1": 0.5,
+        "zT2": 1,
+        "zT3": 2.5,
+        "zT4": 4,
+        "wZ0": 0.4,
+        "wZ1": 0.7,
+        "wZ2": 1,
+        "wZ3": 1.4,
+        "wZ4": 1.8,
+        "scoopEnabled": false,
+        "scoopMinZ": 1.5,
+        "scoopMinAsk": 0.1,
+        "scoopMaxAsk": 0.55,
+        "scoopMaxSpread": 0.05,
+        "scoopMaxDistAbs": 80,
+        "scoopMinSecondsLeft": 5,
+        "scoopMaxSecondsLeft": 30,
+        "scoopBudgetFactor": 1,
+        "scoopMinOddsSum": 0.9,
+        "scoopMaxOddsSum": 1.1,
+        "stopMinBid": 0.05,
+        "lateFlipExitEnabled": true,
+        "lateFlipExitSec": 8,
+        "lateFlipExitCrossDist": 0,
+        "lateFlipMinSec": 4,
+        "lateFlipReverseEnabled": true,
+        "lateFlipReverseMaxAsk": 0.95,
+        "lateFlipReverseMinAsk": 0,
+        "lateFlipReverseBudgetFactor": 1,
+        "dangerExitEnabled": true,
+        "dangerExitK": 0.3,
+        "dangerExitFloorSec": 4,
+        "dangerContinuousEnabled": false,
+        "dangerContinuousStartSec": 8,
+        "dangerContinuousMinZ": 0.25,
+        "earlyWarnEnabled": false,
+        "earlyWarnOppAsk": 0.45,
+        "earlyWarnStartSec": 20,
+        "earlyWarnEndSec": 8,
+        "earlyWarnOnlyIfLosing": true,
+        "bookCollapseEnabled": false,
+        "bookCollapseBidRatio": 0.7,
+        "bookCollapseAbsBid": 0,
+        "bookCollapseStartSec": 30,
+        "bookCollapseEndSec": 4,
+        "bookCollapseRequireSpotWinning": true,
+        "minEntryZ": 0,
+        "tierAskThreshold": 0.82,
+        "tierAskBudgetFactor": 2,
+        "equityScaleEnabled": false,
+        "equityScalePct": 0.1,
+        "maxEntryBudget": 30
+      },
+      "summary": {
+        "totalEvents": 6544,
+        "totalNoEntry": 4200,
+        "eventsWithEntries": 2344,
+        "totalEntries": 2344,
+        "entries": 2344,
+        "wins": 1905,
+        "losses": 439,
+        "totalWins": 1905,
+        "totalLosses": 439,
+        "totalPnl": 2398.7237000000005,
+        "grossProfit": 6679.563629999998,
+        "grossLoss": 4280.839929999998,
+        "maxDrawdown": 95.5755,
+        "volume": 34939.852719999995,
+        "ticksProcessed": 3920047,
+        "totalFees": 526.0333800000002,
+        "feesPaid": 526.0333800000002,
+        "winRate": 81.27133105802048,
+        "avgPnl": 1.0233462883959046,
+        "profitFactor": 1.5603394986086294,
+        "pnl": 2398.7237000000005,
+        "feeDrag": 0.17985540870970387,
+        "daily": {
+          "days": 25,
+          "profitableDays": 23,
+          "losingDays": 2,
+          "flatDays": 0,
+          "positiveDayRate": 92,
+          "worstDayPnl": -18.56016000000003,
+          "bestDayPnl": 262.5001400000001,
+          "avgDailyPnl": 95.94894800000002,
+          "medianDailyPnl": 88.16978999999999,
+          "maxDailyDrawdown": 95.5755,
+          "series": [
+            {
+              "dt": "2026-07-01",
+              "pnl": 120.09874,
+              "cumulativePnl": 120.09874
+            },
+            {
+              "dt": "2026-07-02",
+              "pnl": 135.81304999999995,
+              "cumulativePnl": 255.91178999999994
+            },
+            {
+              "dt": "2026-07-03",
+              "pnl": -18.56016000000003,
+              "cumulativePnl": 237.35162999999991
+            },
+            {
+              "dt": "2026-07-04",
+              "pnl": 16.512399999999996,
+              "cumulativePnl": 253.8640299999999
+            },
+            {
+              "dt": "2026-07-05",
+              "pnl": 62.46153999999994,
+              "cumulativePnl": 316.32556999999986
+            },
+            {
+              "dt": "2026-07-06",
+              "pnl": 69.34585999999999,
+              "cumulativePnl": 385.6714299999999
+            },
+            {
+              "dt": "2026-07-07",
+              "pnl": 31.55934999999997,
+              "cumulativePnl": 417.23077999999987
+            },
+            {
+              "dt": "2026-07-08",
+              "pnl": 88.16978999999999,
+              "cumulativePnl": 505.40056999999985
+            },
+            {
+              "dt": "2026-07-09",
+              "pnl": -17.072159999999986,
+              "cumulativePnl": 488.32840999999985
+            },
+            {
+              "dt": "2026-07-10",
+              "pnl": 112.17458999999997,
+              "cumulativePnl": 600.5029999999998
+            },
+            {
+              "dt": "2026-07-11",
+              "pnl": 114.49557000000003,
+              "cumulativePnl": 714.9985699999999
+            },
+            {
+              "dt": "2026-07-12",
+              "pnl": 91.28870999999997,
+              "cumulativePnl": 806.2872799999998
+            },
+            {
+              "dt": "2026-07-13",
+              "pnl": 203.44251999999997,
+              "cumulativePnl": 1009.7297999999997
+            },
+            {
+              "dt": "2026-07-14",
+              "pnl": 62.19381999999999,
+              "cumulativePnl": 1071.9236199999998
+            },
+            {
+              "dt": "2026-07-15",
+              "pnl": 113.68121999999998,
+              "cumulativePnl": 1185.6048399999997
+            },
+            {
+              "dt": "2026-07-16",
+              "pnl": 158.64652,
+              "cumulativePnl": 1344.2513599999997
+            },
+            {
+              "dt": "2026-07-17",
+              "pnl": 70.50874000000002,
+              "cumulativePnl": 1414.7600999999997
+            },
+            {
+              "dt": "2026-07-18",
+              "pnl": 166.30916,
+              "cumulativePnl": 1581.0692599999998
+            },
+            {
+              "dt": "2026-07-19",
+              "pnl": 171.95547999999997,
+              "cumulativePnl": 1753.0247399999998
+            },
+            {
+              "dt": "2026-07-20",
+              "pnl": 107.26314,
+              "cumulativePnl": 1860.2878799999999
+            },
+            {
+              "dt": "2026-07-21",
+              "pnl": 72.70626,
+              "cumulativePnl": 1932.9941399999998
+            },
+            {
+              "dt": "2026-07-22",
+              "pnl": 49.6161,
+              "cumulativePnl": 1982.6102399999997
+            },
+            {
+              "dt": "2026-07-23",
+              "pnl": 262.5001400000001,
+              "cumulativePnl": 2245.11038
+            },
+            {
+              "dt": "2026-07-24",
+              "pnl": 81.45319000000005,
+              "cumulativePnl": 2326.5635700000003
+            },
+            {
+              "dt": "2026-07-25",
+              "pnl": 72.16013,
+              "cumulativePnl": 2398.7237000000005
+            }
+          ]
+        }
+      },
+      "ticks": 3920288,
+      "variantMs": 169267,
+      "daily": [
+        {
+          "dt": "2026-07-01",
+          "from": "2026-07-01T00:00:00.000Z",
+          "to": "2026-07-02T00:00:00.000Z",
+          "ticks": 167729,
+          "variantMs": 7232,
+          "totalEvents": 280,
+          "entries": 111,
+          "wins": 93,
+          "losses": 18,
+          "winRate": 83.78378378378379,
+          "totalPnl": 120.09874,
+          "profitFactor": 1.6536009682321025,
+          "maxDrawdown": 50.42582,
+          "feesPaid": 26.07696
+        },
+        {
+          "dt": "2026-07-02",
+          "from": "2026-07-02T00:00:00.000Z",
+          "to": "2026-07-03T00:00:00.000Z",
+          "ticks": 161755,
+          "variantMs": 6880,
+          "totalEvents": 270,
+          "entries": 94,
+          "wins": 80,
+          "losses": 14,
+          "winRate": 85.1063829787234,
+          "totalPnl": 135.81304999999995,
+          "profitFactor": 1.9767496234337554,
+          "maxDrawdown": 44.71908000000002,
+          "feesPaid": 18.75578
+        },
+        {
+          "dt": "2026-07-03",
+          "from": "2026-07-03T00:00:00.000Z",
+          "to": "2026-07-04T00:00:00.000Z",
+          "ticks": 172508,
+          "variantMs": 7621,
+          "totalEvents": 288,
+          "entries": 114,
+          "wins": 89,
+          "losses": 25,
+          "winRate": 78.0701754385965,
+          "totalPnl": -18.56016000000003,
+          "profitFactor": 0.9383929153791163,
+          "maxDrawdown": 95.5755,
+          "feesPaid": 24.67206
+        },
+        {
+          "dt": "2026-07-04",
+          "from": "2026-07-04T00:00:00.000Z",
+          "to": "2026-07-05T00:00:00.000Z",
+          "ticks": 156343,
+          "variantMs": 7223,
+          "totalEvents": 261,
+          "entries": 104,
+          "wins": 80,
+          "losses": 24,
+          "winRate": 76.92307692307693,
+          "totalPnl": 16.512399999999996,
+          "profitFactor": 1.0640493714357353,
+          "maxDrawdown": 56.47949000000001,
+          "feesPaid": 22.2706
+        },
+        {
+          "dt": "2026-07-05",
+          "from": "2026-07-05T00:00:00.000Z",
+          "to": "2026-07-06T00:00:00.000Z",
+          "ticks": 171326,
+          "variantMs": 7215,
+          "totalEvents": 286,
+          "entries": 119,
+          "wins": 91,
+          "losses": 28,
+          "winRate": 76.47058823529412,
+          "totalPnl": 62.46153999999994,
+          "profitFactor": 1.2281746184680922,
+          "maxDrawdown": 42.31527,
+          "feesPaid": 28.77616
+        },
+        {
+          "dt": "2026-07-06",
+          "from": "2026-07-06T00:00:00.000Z",
+          "to": "2026-07-07T00:00:00.000Z",
+          "ticks": 172519,
+          "variantMs": 7566,
+          "totalEvents": 288,
+          "entries": 95,
+          "wins": 77,
+          "losses": 18,
+          "winRate": 81.05263157894737,
+          "totalPnl": 69.34585999999999,
+          "profitFactor": 1.3790685268353629,
+          "maxDrawdown": 56.93502000000001,
+          "feesPaid": 20.65434
+        },
+        {
+          "dt": "2026-07-07",
+          "from": "2026-07-07T00:00:00.000Z",
+          "to": "2026-07-08T00:00:00.000Z",
+          "ticks": 130019,
+          "variantMs": 5403,
+          "totalEvents": 217,
+          "entries": 62,
+          "wins": 48,
+          "losses": 14,
+          "winRate": 77.41935483870968,
+          "totalPnl": 31.55934999999997,
+          "profitFactor": 1.2071084278919368,
+          "maxDrawdown": 51.28510000000001,
+          "feesPaid": 15.48305
+        },
+        {
+          "dt": "2026-07-08",
+          "from": "2026-07-08T00:00:00.000Z",
+          "to": "2026-07-09T00:00:00.000Z",
+          "ticks": 169543,
+          "variantMs": 7271,
+          "totalEvents": 283,
+          "entries": 93,
+          "wins": 75,
+          "losses": 18,
+          "winRate": 80.64516129032258,
+          "totalPnl": 88.16978999999999,
+          "profitFactor": 1.5544615965098454,
+          "maxDrawdown": 33.356820000000006,
+          "feesPaid": 21.38981
+        },
+        {
+          "dt": "2026-07-09",
+          "from": "2026-07-09T00:00:00.000Z",
+          "to": "2026-07-10T00:00:00.000Z",
+          "ticks": 152169,
+          "variantMs": 6852,
+          "totalEvents": 254,
+          "entries": 91,
+          "wins": 69,
+          "losses": 22,
+          "winRate": 75.82417582417582,
+          "totalPnl": -17.072159999999986,
+          "profitFactor": 0.9270432516388089,
+          "maxDrawdown": 67.54972,
+          "feesPaid": 19.48566
+        },
+        {
+          "dt": "2026-07-10",
+          "from": "2026-07-10T00:00:00.000Z",
+          "to": "2026-07-11T00:00:00.000Z",
+          "ticks": 152778,
+          "variantMs": 6544,
+          "totalEvents": 255,
+          "entries": 91,
+          "wins": 77,
+          "losses": 14,
+          "winRate": 84.61538461538461,
+          "totalPnl": 112.17458999999997,
+          "profitFactor": 1.8371109994212778,
+          "maxDrawdown": 29.615960000000005,
+          "feesPaid": 20.14941
+        },
+        {
+          "dt": "2026-07-11",
+          "from": "2026-07-11T00:00:00.000Z",
+          "to": "2026-07-12T00:00:00.000Z",
+          "ticks": 168944,
+          "variantMs": 7060,
+          "totalEvents": 282,
+          "entries": 96,
+          "wins": 76,
+          "losses": 20,
+          "winRate": 79.16666666666666,
+          "totalPnl": 114.49557000000003,
+          "profitFactor": 1.6930250953188488,
+          "maxDrawdown": 24.377719999999993,
+          "feesPaid": 22.19273
+        },
+        {
+          "dt": "2026-07-12",
+          "from": "2026-07-12T00:00:00.000Z",
+          "to": "2026-07-13T00:00:00.000Z",
+          "ticks": 145557,
+          "variantMs": 6193,
+          "totalEvents": 243,
+          "entries": 77,
+          "wins": 65,
+          "losses": 12,
+          "winRate": 84.4155844155844,
+          "totalPnl": 91.28870999999997,
+          "profitFactor": 1.8235293852319043,
+          "maxDrawdown": 35.258430000000004,
+          "feesPaid": 16.60369
+        },
+        {
+          "dt": "2026-07-13",
+          "from": "2026-07-13T00:00:00.000Z",
+          "to": "2026-07-14T00:00:00.000Z",
+          "ticks": 172526,
+          "variantMs": 7323,
+          "totalEvents": 288,
+          "entries": 100,
+          "wins": 82,
+          "losses": 18,
+          "winRate": 82,
+          "totalPnl": 203.44251999999997,
+          "profitFactor": 2.2621026727410296,
+          "maxDrawdown": 48.63001999999997,
+          "feesPaid": 22.14878
+        },
+        {
+          "dt": "2026-07-14",
+          "from": "2026-07-14T00:00:00.000Z",
+          "to": "2026-07-15T00:00:00.000Z",
+          "ticks": 157569,
+          "variantMs": 6865,
+          "totalEvents": 263,
+          "entries": 98,
+          "wins": 81,
+          "losses": 17,
+          "winRate": 82.6530612244898,
+          "totalPnl": 62.19381999999999,
+          "profitFactor": 1.3306317187173633,
+          "maxDrawdown": 54.888070000000006,
+          "feesPaid": 20.11978
+        },
+        {
+          "dt": "2026-07-15",
+          "from": "2026-07-15T00:00:00.000Z",
+          "to": "2026-07-16T00:00:00.000Z",
+          "ticks": 169560,
+          "variantMs": 7108,
+          "totalEvents": 283,
+          "entries": 95,
+          "wins": 80,
+          "losses": 15,
+          "winRate": 84.21052631578947,
+          "totalPnl": 113.68121999999998,
+          "profitFactor": 1.7174412915218316,
+          "maxDrawdown": 19.536379999999994,
+          "feesPaid": 20.54138
+        },
+        {
+          "dt": "2026-07-16",
+          "from": "2026-07-16T00:00:00.000Z",
+          "to": "2026-07-17T00:00:00.000Z",
+          "ticks": 152747,
+          "variantMs": 6840,
+          "totalEvents": 255,
+          "entries": 89,
+          "wins": 74,
+          "losses": 15,
+          "winRate": 83.14606741573034,
+          "totalPnl": 158.64652,
+          "profitFactor": 2.2104752468977313,
+          "maxDrawdown": 28.0045,
+          "feesPaid": 20.76918
+        },
+        {
+          "dt": "2026-07-17",
+          "from": "2026-07-17T00:00:00.000Z",
+          "to": "2026-07-18T00:00:00.000Z",
+          "ticks": 159967,
+          "variantMs": 6845,
+          "totalEvents": 267,
+          "entries": 94,
+          "wins": 75,
+          "losses": 19,
+          "winRate": 79.7872340425532,
+          "totalPnl": 70.50874000000002,
+          "profitFactor": 1.4181644736510455,
+          "maxDrawdown": 43.82928000000001,
+          "feesPaid": 20.30846
+        },
+        {
+          "dt": "2026-07-18",
+          "from": "2026-07-18T00:00:00.000Z",
+          "to": "2026-07-19T00:00:00.000Z",
+          "ticks": 158750,
+          "variantMs": 6679,
+          "totalEvents": 265,
+          "entries": 99,
+          "wins": 84,
+          "losses": 15,
+          "winRate": 84.84848484848484,
+          "totalPnl": 166.30916,
+          "profitFactor": 2.167568352342189,
+          "maxDrawdown": 19.61204,
+          "feesPaid": 22.90919
+        },
+        {
+          "dt": "2026-07-19",
+          "from": "2026-07-19T00:00:00.000Z",
+          "to": "2026-07-20T00:00:00.000Z",
+          "ticks": 149131,
+          "variantMs": 6074,
+          "totalEvents": 249,
+          "entries": 100,
+          "wins": 89,
+          "losses": 11,
+          "winRate": 89,
+          "totalPnl": 171.95547999999997,
+          "profitFactor": 1.9524676462120032,
+          "maxDrawdown": 55.71443000000001,
+          "feesPaid": 22.08472
+        },
+        {
+          "dt": "2026-07-20",
+          "from": "2026-07-20T00:00:00.000Z",
+          "to": "2026-07-21T00:00:00.000Z",
+          "ticks": 165357,
+          "variantMs": 6853,
+          "totalEvents": 276,
+          "entries": 91,
+          "wins": 74,
+          "losses": 17,
+          "winRate": 81.31868131868131,
+          "totalPnl": 107.26314,
+          "profitFactor": 1.7654278506535983,
+          "maxDrawdown": 36.71512999999999,
+          "feesPaid": 20.77186
+        },
+        {
+          "dt": "2026-07-21",
+          "from": "2026-07-21T00:00:00.000Z",
+          "to": "2026-07-22T00:00:00.000Z",
+          "ticks": 115644,
+          "variantMs": 5207,
+          "totalEvents": 193,
+          "entries": 74,
+          "wins": 57,
+          "losses": 17,
+          "winRate": 77.02702702702703,
+          "totalPnl": 72.70626,
+          "profitFactor": 1.5453055112965264,
+          "maxDrawdown": 24.08259000000001,
+          "feesPaid": 18.30234
+        },
+        {
+          "dt": "2026-07-22",
+          "from": "2026-07-22T00:00:00.000Z",
+          "to": "2026-07-23T00:00:00.000Z",
+          "ticks": 166527,
+          "variantMs": 6810,
+          "totalEvents": 278,
+          "entries": 93,
+          "wins": 71,
+          "losses": 22,
+          "winRate": 76.34408602150538,
+          "totalPnl": 49.6161,
+          "profitFactor": 1.260744741733631,
+          "maxDrawdown": 64.6825,
+          "feesPaid": 23.4173
+        },
+        {
+          "dt": "2026-07-23",
+          "from": "2026-07-23T00:00:00.000Z",
+          "to": "2026-07-24T00:00:00.000Z",
+          "ticks": 154544,
+          "variantMs": 6982,
+          "totalEvents": 258,
+          "entries": 99,
+          "wins": 86,
+          "losses": 13,
+          "winRate": 86.86868686868688,
+          "totalPnl": 262.5001400000001,
+          "profitFactor": 3.2713796196700176,
+          "maxDrawdown": 21.65637000000001,
+          "feesPaid": 23.40996
+        },
+        {
+          "dt": "2026-07-24",
+          "from": "2026-07-24T00:00:00.000Z",
+          "to": "2026-07-25T00:00:00.000Z",
+          "ticks": 141986,
+          "variantMs": 6591,
+          "totalEvents": 237,
+          "entries": 93,
+          "wins": 72,
+          "losses": 21,
+          "winRate": 77.41935483870968,
+          "totalPnl": 81.45319000000005,
+          "profitFactor": 1.4945016544363492,
+          "maxDrawdown": 28.386700000000012,
+          "feesPaid": 21.27801
+        },
+        {
+          "dt": "2026-07-25",
+          "from": "2026-07-25T00:00:00.000Z",
+          "to": "2026-07-26T00:00:00.000Z",
+          "ticks": 134790,
+          "variantMs": 6030,
+          "totalEvents": 225,
+          "entries": 72,
+          "wins": 60,
+          "losses": 12,
+          "winRate": 83.33333333333334,
+          "totalPnl": 72.16013,
+          "profitFactor": 1.6421305204460268,
+          "maxDrawdown": 39.624460000000006,
+          "feesPaid": 13.46217
+        }
+      ]
+    }
+  ],
+  "timings": {
+    "duckdbReadMs": 12816,
+    "shareMs": 2333,
+    "sweepProcessMs": 173093,
+    "totalMs": 188242,
+    "chunks": 25,
+    "variantWorkers": 4,
+    "avgVariantMs": 173093
+  },
+  "chunks": [
+    {
+      "index": 0,
+      "from": "2026-07-01T00:00:00.000Z",
+      "to": "2026-07-02T00:00:00.000Z",
+      "ticks": 167729,
+      "variantCount": 1,
+      "timings": {
+        "duckdbReadMs": 526,
+        "shareMs": 157,
+        "sweepProcessMs": 7427,
+        "avgVariantMs": 7427,
+        "totalMs": 8110,
+        "variantWorkers": 1
+      }
+    },
+    {
+      "index": 1,
+      "from": "2026-07-02T00:00:00.000Z",
+      "to": "2026-07-03T00:00:00.000Z",
+      "ticks": 161755,
+      "variantCount": 1,
+      "timings": {
+        "duckdbReadMs": 446,
+        "shareMs": 152,
+        "sweepProcessMs": 7028,
+        "avgVariantMs": 7028,
+        "totalMs": 7626,
+        "variantWorkers": 1
+      }
+    },
+    {
+      "index": 2,
+      "from": "2026-07-03T00:00:00.000Z",
+      "to": "2026-07-04T00:00:00.000Z",
+      "ticks": 172508,
+      "variantCount": 1,
+      "timings": {
+        "duckdbReadMs": 350,
+        "shareMs": 82,
+        "sweepProcessMs": 7770,
+        "avgVariantMs": 7770,
+        "totalMs": 8202,
+        "variantWorkers": 1
+      }
+    },
+    {
+      "index": 3,
+      "from": "2026-07-04T00:00:00.000Z",
+      "to": "2026-07-05T00:00:00.000Z",
+      "ticks": 156343,
+      "variantCount": 1,
+      "timings": {
+        "duckdbReadMs": 331,
+        "shareMs": 67,
+        "sweepProcessMs": 7387,
+        "avgVariantMs": 7387,
+        "totalMs": 7785,
+        "variantWorkers": 1
+      }
+    },
+    {
+      "index": 4,
+      "from": "2026-07-05T00:00:00.000Z",
+      "to": "2026-07-06T00:00:00.000Z",
+      "ticks": 171326,
+      "variantCount": 1,
+      "timings": {
+        "duckdbReadMs": 368,
+        "shareMs": 81,
+        "sweepProcessMs": 7363,
+        "avgVariantMs": 7363,
+        "totalMs": 7812,
+        "variantWorkers": 1
+      }
+    },
+    {
+      "index": 5,
+      "from": "2026-07-06T00:00:00.000Z",
+      "to": "2026-07-07T00:00:00.000Z",
+      "ticks": 172519,
+      "variantCount": 1,
+      "timings": {
+        "duckdbReadMs": 461,
+        "shareMs": 89,
+        "sweepProcessMs": 7711,
+        "avgVariantMs": 7711,
+        "totalMs": 8261,
+        "variantWorkers": 1
+      }
+    },
+    {
+      "index": 6,
+      "from": "2026-07-07T00:00:00.000Z",
+      "to": "2026-07-08T00:00:00.000Z",
+      "ticks": 130019,
+      "variantCount": 1,
+      "timings": {
+        "duckdbReadMs": 325,
+        "shareMs": 54,
+        "sweepProcessMs": 5549,
+        "avgVariantMs": 5549,
+        "totalMs": 5928,
+        "variantWorkers": 1
+      }
+    },
+    {
+      "index": 7,
+      "from": "2026-07-08T00:00:00.000Z",
+      "to": "2026-07-09T00:00:00.000Z",
+      "ticks": 169543,
+      "variantCount": 1,
+      "timings": {
+        "duckdbReadMs": 588,
+        "shareMs": 148,
+        "sweepProcessMs": 7420,
+        "avgVariantMs": 7420,
+        "totalMs": 8156,
+        "variantWorkers": 1
+      }
+    },
+    {
+      "index": 8,
+      "from": "2026-07-09T00:00:00.000Z",
+      "to": "2026-07-10T00:00:00.000Z",
+      "ticks": 152169,
+      "variantCount": 1,
+      "timings": {
+        "duckdbReadMs": 420,
+        "shareMs": 68,
+        "sweepProcessMs": 7004,
+        "avgVariantMs": 7004,
+        "totalMs": 7492,
+        "variantWorkers": 1
+      }
+    },
+    {
+      "index": 9,
+      "from": "2026-07-10T00:00:00.000Z",
+      "to": "2026-07-11T00:00:00.000Z",
+      "ticks": 152778,
+      "variantCount": 1,
+      "timings": {
+        "duckdbReadMs": 332,
+        "shareMs": 67,
+        "sweepProcessMs": 6692,
+        "avgVariantMs": 6692,
+        "totalMs": 7091,
+        "variantWorkers": 1
+      }
+    },
+    {
+      "index": 10,
+      "from": "2026-07-11T00:00:00.000Z",
+      "to": "2026-07-12T00:00:00.000Z",
+      "ticks": 168944,
+      "variantCount": 1,
+      "timings": {
+        "duckdbReadMs": 306,
+        "shareMs": 97,
+        "sweepProcessMs": 7209,
+        "avgVariantMs": 7209,
+        "totalMs": 7612,
+        "variantWorkers": 1
+      }
+    },
+    {
+      "index": 11,
+      "from": "2026-07-12T00:00:00.000Z",
+      "to": "2026-07-13T00:00:00.000Z",
+      "ticks": 145557,
+      "variantCount": 1,
+      "timings": {
+        "duckdbReadMs": 252,
+        "shareMs": 61,
+        "sweepProcessMs": 6340,
+        "avgVariantMs": 6340,
+        "totalMs": 6653,
+        "variantWorkers": 1
+      }
+    },
+    {
+      "index": 12,
+      "from": "2026-07-13T00:00:00.000Z",
+      "to": "2026-07-14T00:00:00.000Z",
+      "ticks": 172526,
+      "variantCount": 1,
+      "timings": {
+        "duckdbReadMs": 306,
+        "shareMs": 132,
+        "sweepProcessMs": 7471,
+        "avgVariantMs": 7471,
+        "totalMs": 7909,
+        "variantWorkers": 1
+      }
+    },
+    {
+      "index": 13,
+      "from": "2026-07-14T00:00:00.000Z",
+      "to": "2026-07-15T00:00:00.000Z",
+      "ticks": 157569,
+      "variantCount": 1,
+      "timings": {
+        "duckdbReadMs": 293,
+        "shareMs": 68,
+        "sweepProcessMs": 7012,
+        "avgVariantMs": 7012,
+        "totalMs": 7373,
+        "variantWorkers": 1
+      }
+    },
+    {
+      "index": 14,
+      "from": "2026-07-15T00:00:00.000Z",
+      "to": "2026-07-16T00:00:00.000Z",
+      "ticks": 169560,
+      "variantCount": 1,
+      "timings": {
+        "duckdbReadMs": 348,
+        "shareMs": 141,
+        "sweepProcessMs": 7254,
+        "avgVariantMs": 7254,
+        "totalMs": 7743,
+        "variantWorkers": 1
+      }
+    },
+    {
+      "index": 15,
+      "from": "2026-07-16T00:00:00.000Z",
+      "to": "2026-07-17T00:00:00.000Z",
+      "ticks": 152747,
+      "variantCount": 1,
+      "timings": {
+        "duckdbReadMs": 581,
+        "shareMs": 64,
+        "sweepProcessMs": 6998,
+        "avgVariantMs": 6998,
+        "totalMs": 7643,
+        "variantWorkers": 1
+      }
+    },
+    {
+      "index": 16,
+      "from": "2026-07-17T00:00:00.000Z",
+      "to": "2026-07-18T00:00:00.000Z",
+      "ticks": 159967,
+      "variantCount": 1,
+      "timings": {
+        "duckdbReadMs": 799,
+        "shareMs": 142,
+        "sweepProcessMs": 7005,
+        "avgVariantMs": 7005,
+        "totalMs": 7946,
+        "variantWorkers": 1
+      }
+    },
+    {
+      "index": 17,
+      "from": "2026-07-18T00:00:00.000Z",
+      "to": "2026-07-19T00:00:00.000Z",
+      "ticks": 158750,
+      "variantCount": 1,
+      "timings": {
+        "duckdbReadMs": 279,
+        "shareMs": 68,
+        "sweepProcessMs": 6826,
+        "avgVariantMs": 6826,
+        "totalMs": 7173,
+        "variantWorkers": 1
+      }
+    },
+    {
+      "index": 18,
+      "from": "2026-07-19T00:00:00.000Z",
+      "to": "2026-07-20T00:00:00.000Z",
+      "ticks": 149131,
+      "variantCount": 1,
+      "timings": {
+        "duckdbReadMs": 419,
+        "shareMs": 120,
+        "sweepProcessMs": 6225,
+        "avgVariantMs": 6225,
+        "totalMs": 6764,
+        "variantWorkers": 1
+      }
+    },
+    {
+      "index": 19,
+      "from": "2026-07-20T00:00:00.000Z",
+      "to": "2026-07-21T00:00:00.000Z",
+      "ticks": 165357,
+      "variantCount": 1,
+      "timings": {
+        "duckdbReadMs": 754,
+        "shareMs": 93,
+        "sweepProcessMs": 7007,
+        "avgVariantMs": 7007,
+        "totalMs": 7854,
+        "variantWorkers": 1
+      }
+    },
+    {
+      "index": 20,
+      "from": "2026-07-21T00:00:00.000Z",
+      "to": "2026-07-22T00:00:00.000Z",
+      "ticks": 115644,
+      "variantCount": 1,
+      "timings": {
+        "duckdbReadMs": 291,
+        "shareMs": 48,
+        "sweepProcessMs": 5359,
+        "avgVariantMs": 5359,
+        "totalMs": 5698,
+        "variantWorkers": 1
+      }
+    },
+    {
+      "index": 21,
+      "from": "2026-07-22T00:00:00.000Z",
+      "to": "2026-07-23T00:00:00.000Z",
+      "ticks": 166527,
+      "variantCount": 1,
+      "timings": {
+        "duckdbReadMs": 299,
+        "shareMs": 70,
+        "sweepProcessMs": 6964,
+        "avgVariantMs": 6964,
+        "totalMs": 7333,
+        "variantWorkers": 1
+      }
+    },
+    {
+      "index": 22,
+      "from": "2026-07-23T00:00:00.000Z",
+      "to": "2026-07-24T00:00:00.000Z",
+      "ticks": 154544,
+      "variantCount": 1,
+      "timings": {
+        "duckdbReadMs": 281,
+        "shareMs": 146,
+        "sweepProcessMs": 7139,
+        "avgVariantMs": 7139,
+        "totalMs": 7566,
+        "variantWorkers": 1
+      }
+    },
+    {
+      "index": 23,
+      "from": "2026-07-24T00:00:00.000Z",
+      "to": "2026-07-25T00:00:00.000Z",
+      "ticks": 141986,
+      "variantCount": 1,
+      "timings": {
+        "duckdbReadMs": 254,
+        "shareMs": 60,
+        "sweepProcessMs": 6754,
+        "avgVariantMs": 6754,
+        "totalMs": 7068,
+        "variantWorkers": 1
+      }
+    },
+    {
+      "index": 24,
+      "from": "2026-07-25T00:00:00.000Z",
+      "to": "2026-07-26T00:00:00.000Z",
+      "ticks": 134790,
+      "variantCount": 1,
+      "timings": {
+        "duckdbReadMs": 3207,
+        "shareMs": 58,
+        "sweepProcessMs": 6179,
+        "avgVariantMs": 6179,
+        "totalMs": 9444,
+        "variantWorkers": 1
+      }
+    }
+  ],
+  "strategyMeta": {
+    "lab": true,
+    "id": "midas-carry-v1",
+    "family": "terminal",
+    "source": {
+      "type": "file",
+      "path": "labs/strategies/terminal/midas-carry-v1/strategy.gls"
+    },
+    "execution_kind": "compiled-soa"
+  }
+}

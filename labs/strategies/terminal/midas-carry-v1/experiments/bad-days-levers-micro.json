@@ -1,0 +1,53 @@
+{
+  "name": "bad-days-levers-micro",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-25",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "notes": "Fase 3 — revalidação micro $2/$4 dos vencedores maxask-090 e minsec-09.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "baseline-micro",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4
+        }
+      },
+      {
+        "id": "minsec-09-micro",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "minSecondsLeft": 9
+        }
+      },
+      {
+        "id": "maxask-090-micro",
+        "params": {
+          "maxAsk": 0.9,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4
+        }
+      }
+    ]
+  }
+}

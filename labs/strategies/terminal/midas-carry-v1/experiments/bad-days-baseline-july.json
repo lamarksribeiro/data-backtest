@@ -1,0 +1,32 @@
+{
+  "name": "bad-days-baseline-july",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-25",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 1,
+  "defaults": "../defaults.json",
+  "notes": "Fase 0 — baseline aggressive julho cheio (incl. 25) para mapear dias ruins.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "baseline-aggressive",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30
+        }
+      }
+    ]
+  }
+}
