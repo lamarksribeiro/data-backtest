@@ -3,6 +3,13 @@ import { checkDatasetAvailability, partitionDatesForRange } from '../query/avail
 import { resolveDataRequest } from '../query/dataMode.js';
 import { datasetRequestFromObject, inclusiveEndDateFromExclusive } from '../query/request.js';
 
+/** Statuses that export skips unless --rebuild is set. */
+const REBUILD_REQUIRED_STATUSES = new Set(['needs_review', 'valid', 'accepted']);
+
+export function unavailableNeedsRebuild(unavailable = []) {
+  return unavailable.some((item) => REBUILD_REQUIRED_STATUSES.has(item?.status));
+}
+
 export function buildDataFixPlan(db, request, config) {
   const normalized = datasetRequestFromObject(request, config);
   const dates = partitionDatesForRange(normalized.from, normalized.to);
@@ -25,6 +32,7 @@ export function buildDataFixPlan(db, request, config) {
       rebuild_required: false,
       preparation: [],
       availability: strict.availability,
+      request: normalized,
     };
   }
 
@@ -33,7 +41,7 @@ export function buildDataFixPlan(db, request, config) {
   const usablePartitions = (prepare.availability.partitions || []).filter((p) => p.usable);
   const rebuildRequired = normalized.rebuild
     ? usablePartitions.length > 0
-    : unavailable.some((p) => p.status === 'valid');
+    : unavailableNeedsRebuild(unavailable);
   const missing = prepare.availability.missing?.length ?? 0;
   const syncDays = new Set([
     ...(prepare.availability.missing || []),
@@ -45,6 +53,8 @@ export function buildDataFixPlan(db, request, config) {
   if (accepted.length) lines.push(`${accepted.length} partição(ões) aceita(s) automaticamente.`);
   if (normalized.rebuild && usablePartitions.length) {
     lines.push(`${usablePartitions.length} dia(s) prontos serão reprocessados (--rebuild).`);
+  } else if (rebuildRequired) {
+    lines.push('Há partições que exigem reprocessamento (--rebuild) para atualizar o parquet.');
   }
   if (syncDays.size) lines.push(`${syncDays.size} dia(s) serão re-sincronizados.`);
   if (missing && !syncDays.size) lines.push(`${missing} dia(s) sem dados na origem.`);
@@ -123,7 +133,7 @@ export function runDataFix(db, config, { body, prepareRunner, dryRun = false }) 
     return {
       ok: false,
       code: 'CONFIRMATION_REQUIRED',
-      message: 'Rebuild de partição valid exige confirmação explícita.',
+      message: 'Reprocessar parquet existente exige confirmação explícita.',
       needs_rebuild_confirm: true,
       summary_lines,
       summary: plan.summary,
@@ -132,6 +142,15 @@ export function runDataFix(db, config, { body, prepareRunner, dryRun = false }) 
 
   if (plan.ready) {
     return { ok: true, ready: true, summary: plan.summary, summary_lines };
+  }
+
+  if (!plan.preparation?.length) {
+    return {
+      ok: true,
+      ready: Boolean(plan.ready),
+      summary: plan.summary || 'Nenhuma ação de sync necessária.',
+      summary_lines,
+    };
   }
 
   const job = prepareRunner.enqueue({

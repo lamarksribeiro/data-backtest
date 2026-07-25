@@ -10,18 +10,81 @@ export function localDateYmd(date = new Date()) {
   return `${y}-${m}-${d}`;
 }
 
-export function daysAgoLocal(n) {
-  const d = new Date();
+export function daysAgoLocal(n, now = new Date()) {
+  const d = new Date(now.getTime());
   d.setDate(d.getDate() - n);
   return d;
 }
 
-export function defaultFromDateTime() {
-  return `${localDateYmd(daysAgoLocal(1))}T00:00`;
+/** HH:mm no fuso local (minuto atual). */
+export function currentTimeLocal(date = new Date()) {
+  const h = String(date.getHours()).padStart(2, '0');
+  const min = String(date.getMinutes()).padStart(2, '0');
+  return `${h}:${min}`;
 }
 
-export function defaultToDateTime() {
-  return `${localDateYmd(new Date())}T23:59`;
+/** Converte intervalo (`5m`, `15m`, `1h`, `4h`) para milissegundos. */
+export function parseIntervalMs(interval = '5m') {
+  const match = String(interval || '').trim().match(/^(\d+)\s*([mhd])$/i);
+  if (!match) return 5 * 60_000;
+  const amount = Number(match[1]);
+  if (!Number.isFinite(amount) || amount <= 0) return 5 * 60_000;
+  const unit = match[2].toLowerCase();
+  if (unit === 'm') return amount * 60_000;
+  if (unit === 'h') return amount * 3_600_000;
+  return amount * 86_400_000;
+}
+
+/**
+ * Epoch ms do fim do último evento completo (grade UTC do intervalo).
+ * Ex.: agora 19:18Z com 5m → 19:15Z.
+ */
+export function lastCompleteEventEndMs(now = new Date(), interval = '5m') {
+  const step = parseIntervalMs(interval);
+  const t = now instanceof Date ? now.getTime() : new Date(now).getTime();
+  if (!Number.isFinite(t) || step <= 0) return Date.now();
+  return Math.floor(t / step) * step;
+}
+
+/**
+ * Fim inclusivo (datetime-local) até o último evento completo.
+ * Usa fim−1min porque a API converte inclusivo → exclusivo com +1min,
+ * alinhando o corte exatamente no event_end.
+ */
+export function lastCompleteInclusiveDateTime(now = new Date(), interval = '5m') {
+  const endMs = lastCompleteEventEndMs(now, interval);
+  return isoToDateTimeLocal(new Date(endMs - 60_000), { end: true });
+}
+
+/**
+ * Fim padrão para uma data escolhida:
+ * - dia passado → 23:59 (dia completo)
+ * - hoje/futuro → último evento completo do intervalo (sem evento quebrado)
+ */
+export function defaultEndDateTimeForDate(dateKey, now = new Date(), interval = '5m') {
+  const today = localDateYmd(now);
+  const key = String(dateKey || '').slice(0, 10) || today;
+  if (key < today) return `${key}T23:59`;
+
+  const inclusive = lastCompleteInclusiveDateTime(now, interval);
+  if (key === today) {
+    return inclusive.slice(0, 10) === today ? inclusive : `${today}T00:00`;
+  }
+  // Data futura: não há eventos — volta ao máximo disponível real.
+  return inclusive;
+}
+
+/** @deprecated use defaultEndDateTimeForDate; mantido para HH:mm em labels. */
+export function defaultEndTimeForDate(dateKey, now = new Date(), interval = '5m') {
+  return defaultEndDateTimeForDate(dateKey, now, interval).slice(11, 16);
+}
+
+export function defaultFromDateTime(now = new Date()) {
+  return `${localDateYmd(daysAgoLocal(1, now))}T00:00`;
+}
+
+export function defaultToDateTime(now = new Date(), interval = '5m') {
+  return lastCompleteInclusiveDateTime(now, interval);
 }
 
 export function isDateOnlyValue(value) {
@@ -33,14 +96,72 @@ export function isDateTimeLocalValue(value) {
 }
 
 /** Normaliza valor do contexto (migra date-only legado para datetime-local). */
-export function normalizeContextDateTime(value, { end = false } = {}) {
+export function normalizeContextDateTime(value, { end = false, now = new Date(), interval = '5m' } = {}) {
   const text = String(value || '').trim();
-  if (!text) return end ? defaultToDateTime() : defaultFromDateTime();
-  if (isDateOnlyValue(text)) return `${text}T${end ? '23:59' : '00:00'}`;
-  if (isDateTimeLocalValue(text)) return text;
+  if (!text) return end ? defaultToDateTime(now, interval) : defaultFromDateTime(now);
+  if (isDateOnlyValue(text)) {
+    return end
+      ? defaultEndDateTimeForDate(text, now, interval)
+      : `${text}T00:00`;
+  }
+  if (isDateTimeLocalValue(text)) {
+    return end ? clampToAvailableEnd(text, now, interval) : text;
+  }
   const parsed = new Date(text);
-  if (!Number.isNaN(parsed.getTime())) return isoToDateTimeLocal(parsed, { end });
-  return end ? defaultToDateTime() : defaultFromDateTime();
+  if (!Number.isNaN(parsed.getTime())) {
+    const local = isoToDateTimeLocal(parsed, { end });
+    return end ? clampToAvailableEnd(local, now, interval) : local;
+  }
+  return end ? defaultToDateTime(now, interval) : defaultFromDateTime(now);
+}
+
+/**
+ * Ao escolher/alterar a data no seletor:
+ * - início → 00:00
+ * - fim → 23:59 (dia completo) ou último evento completo (dia parcial)
+ * Se só o horário mudou, preserva (com clamp no fim).
+ */
+export function applyDateSelectionDefaults(value, {
+  end = false,
+  previousDateKey = null,
+  now = new Date(),
+  interval = '5m',
+} = {}) {
+  const text = String(value || '').trim();
+  if (!text) return end ? defaultToDateTime(now, interval) : defaultFromDateTime(now);
+
+  const normalized = isDateOnlyValue(text)
+    ? (end ? defaultEndDateTimeForDate(text, now, interval) : `${text}T00:00`)
+    : (isDateTimeLocalValue(text) ? text : normalizeContextDateTime(text, { end, now, interval }));
+
+  const dateKey = normalized.slice(0, 10);
+  const dateChanged = Boolean(previousDateKey) && previousDateKey !== dateKey;
+
+  if (!previousDateKey || dateChanged || isDateOnlyValue(text)) {
+    if (!end) return `${dateKey}T00:00`;
+    return defaultEndDateTimeForDate(dateKey, now, interval);
+  }
+
+  return end ? clampToAvailableEnd(normalized, now, interval) : normalized;
+}
+
+/**
+ * Impede fim além do último evento completo do intervalo
+ * (evita janela parcial / evento quebrado).
+ */
+export function clampToAvailableEnd(value, now = new Date(), interval = '5m') {
+  const normalized = String(value || '').trim();
+  if (!isDateTimeLocalValue(normalized) && !isDateOnlyValue(normalized)) {
+    return defaultToDateTime(now, interval);
+  }
+  const maxInclusive = lastCompleteInclusiveDateTime(now, interval);
+  const candidate = isDateOnlyValue(normalized)
+    ? defaultEndDateTimeForDate(normalized, now, interval)
+    : normalized;
+  const parsed = parseContextAsLocalDate(candidate);
+  const maxParsed = parseContextAsLocalDate(maxInclusive);
+  if (parsed.getTime() > maxParsed.getTime()) return maxInclusive;
+  return candidate;
 }
 
 export function isoToDateTimeLocal(iso, { end = false } = {}) {
@@ -61,8 +182,17 @@ export function contextDateKey(value) {
 }
 
 function parseContextAsLocalDate(value) {
-  const text = normalizeContextDateTime(value);
-  const [datePart, timePart = '00:00'] = text.split('T');
+  const text = String(value || '').trim();
+  let datePart;
+  let timePart = '00:00';
+  if (isDateOnlyValue(text)) {
+    datePart = text;
+  } else if (isDateTimeLocalValue(text)) {
+    [datePart, timePart = '00:00'] = text.split('T');
+  } else {
+    const normalized = normalizeContextDateTime(text);
+    [datePart, timePart = '00:00'] = normalized.split('T');
+  }
   const [y, m, d] = datePart.split('-').map(Number);
   const [hh, mm] = timePart.split(':').map(Number);
   return new Date(y, m - 1, d, hh, mm, 0, 0);

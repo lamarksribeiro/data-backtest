@@ -1,7 +1,8 @@
 import { renderQualityEventChart } from '../components/qualityEventChart.js';
 import { el, mount, emptyState } from '../utils/dom.js';
 import { applyContextOptions, contextBarOptions, loadContext, saveContext, selectField } from '../utils/context.js';
-import { contextToApiRange, contextDateKey } from '../utils/dateRange.js';
+import { contextToApiRange, contextDateKey, clampToAvailableEnd } from '../utils/dateRange.js';
+import { datetimeField } from '../utils/datetimeField.js';
 import { fetchContextOptionsCached } from '../utils/contextOptionsCache.js';
 import { connectSse, disconnectSse } from '../utils/sse.js';
 import { confirmDialog } from '../utils/confirm.js';
@@ -1233,7 +1234,7 @@ async function submitDataFix(ctx, request, { rebuild = false, fieldOptions = nul
   if (!ok) return false;
   const fix = await ctx.api.post('/api/data/fix', {
     request: payload,
-    confirm_rebuild: preview.data.needs_rebuild_confirm || rebuild ? true : undefined,
+    confirm_rebuild: (preview.data.needs_rebuild_confirm || rebuild) ? true : undefined,
   });
   if (!fix.ok) {
     ctx.toast.err(fix.error?.message || 'Falha');
@@ -1254,11 +1255,21 @@ function renderActions(ctx, formCtx, fieldOptions) {
     el('form', { id: 'data-prepare-form', class: 'studio-form' }, [
       el('label', { class: 'field' }, [
         el('span', { class: 'field__label' }, 'De'),
-        el('input', { type: 'datetime-local', name: 'from', value: formCtx.from, class: 'field__input' }),
+        datetimeField({
+          name: 'from',
+          value: formCtx.from,
+          end: false,
+          getInterval: () => document.querySelector('#data-prepare-form [name=interval]')?.value || formCtx.interval || '5m',
+        }),
       ]),
       el('label', { class: 'field' }, [
         el('span', { class: 'field__label' }, 'Até (incluso)'),
-        el('input', { type: 'datetime-local', name: 'to', value: formCtx.to, class: 'field__input' }),
+        datetimeField({
+          name: 'to',
+          value: formCtx.to,
+          end: true,
+          getInterval: () => document.querySelector('#data-prepare-form [name=interval]')?.value || formCtx.interval || '5m',
+        }),
       ]),
       el('label', { class: 'field' }, [
         el('span', { class: 'field__label' }, 'Ativo'),
@@ -1288,6 +1299,13 @@ function renderActions(ctx, formCtx, fieldOptions) {
   const form = document.getElementById('data-prepare-form');
   form?.querySelectorAll('input, select').forEach((input) => {
     input.addEventListener('change', () => {
+      if (input.name === 'interval') {
+        const toInput = form.querySelector('[name="to"]');
+        if (toInput) {
+          const next = clampToAvailableEnd(toInput.value, new Date(), input.value || '5m');
+          if (next !== toInput.value) toInput.value = next;
+        }
+      }
       const current = dataFormFromDom();
       saveDataContext(current);
       refreshCoverage(ctx, current);

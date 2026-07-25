@@ -4,13 +4,14 @@ import {
   normalizeContextDateTime,
   contextToApiRange,
 } from './dateRange.js';
+import { bindDateTimeDefaults } from './datetimeField.js';
 
 const STORAGE_KEY = 'data-backtest-context';
 
 const DEFAULTS = {
   dataset: 'backtest_ticks',
   from: defaultFromDateTime(),
-  to: defaultToDateTime(),
+  to: defaultToDateTime(new Date(), '5m'),
   underlying: 'BTC',
   interval: '5m',
   book_depth: '25',
@@ -66,6 +67,7 @@ export function renderContextBar(ctx, onChange, options = {}) {
     <label class="context-bar__field"><span class="context-bar__field-label">Intervalo</span>${selectHtml('interval', intervals, current.interval, formatInterval)}</label>
     <label class="context-bar__field"><span class="context-bar__field-label">Book</span>${selectHtml('book_depth', bookDepths, current.book_depth, (value) => `top ${value}`)}</label>
   `;
+  bindDateTimeDefaults(bar);
   bar.querySelectorAll('input, select').forEach((input) => {
     input.addEventListener('change', () => {
       const next = saveContext({
@@ -90,7 +92,10 @@ function normalizeContext(ctx) {
     }
   }
   normalized.from = normalizeContextDateTime(normalized.from, { end: false });
-  normalized.to = normalizeContextDateTime(normalized.to, { end: true });
+  normalized.to = normalizeContextDateTime(normalized.to, {
+    end: true,
+    interval: normalized.interval || '5m',
+  });
   return normalized;
 }
 

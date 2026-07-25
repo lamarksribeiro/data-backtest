@@ -1,6 +1,7 @@
 import { el, mount } from '../utils/dom.js';
 import { applyContextOptions, contextBarOptions, loadContext, saveContext, selectField } from '../utils/context.js';
-import { contextToApiRange, formatStoredRange, storedRangeToContext } from '../utils/dateRange.js';
+import { clampToAvailableEnd, contextToApiRange, formatStoredRange, storedRangeToContext } from '../utils/dateRange.js';
+import { datetimeField } from '../utils/datetimeField.js';
 import { fetchContextOptionsCached } from '../utils/contextOptionsCache.js';
 import { formatPnl, shortId } from '../utils/format.js';
 import { loadStrategyOptions, renderStrategyPicker, backtestPayloadFromPick, resolveInitialStrategyPick, saveLastStrategyPick, getStrategyGroupFromPick, invalidateStrategyPickerCache } from '../utils/strategyPicker.js';
@@ -754,17 +755,27 @@ function renderConfigPanel(ctx, { formCtx, fieldOptions }) {
     el('form', { id: 'studio-form', class: 'studio-form' }, [
       el('div', { class: 'studio-form__scroll' }, [
         el('div', { id: 'studio-strategy-pick' }),
-        el('div', { class: 'studio-form__grid' }, [
+        el('div', { class: 'studio-form__grid studio-form__grid--datetimes' }, [
           el('label', { class: 'field' }, [
             el('div', { class: 'field__label-row' }, [
               el('span', { class: 'field__label' }, 'De'),
               el('span', { id: 'studio-coverage-indicator', class: 'studio-coverage-slot' }),
             ]),
-            el('input', { type: 'datetime-local', name: 'from', value: formCtx.from, class: 'field__input' }),
+            datetimeField({
+              name: 'from',
+              value: formCtx.from,
+              end: false,
+              getInterval: () => document.querySelector('#studio-form [name=interval]')?.value || formCtx.interval || '5m',
+            }),
           ]),
           el('label', { class: 'field' }, [
             el('span', { class: 'field__label' }, 'Até (incluso)'),
-            el('input', { type: 'datetime-local', name: 'to', value: formCtx.to, class: 'field__input' }),
+            datetimeField({
+              name: 'to',
+              value: formCtx.to,
+              end: true,
+              getInterval: () => document.querySelector('#studio-form [name=interval]')?.value || formCtx.interval || '5m',
+            }),
           ]),
         ]),
         el('div', { class: 'studio-form__grid' }, [
@@ -790,7 +801,16 @@ function renderConfigPanel(ctx, { formCtx, fieldOptions }) {
 
   const form = document.getElementById('studio-form');
   form?.querySelectorAll('[name="from"], [name="to"], [name="underlying"], [name="interval"], [name="book_depth"]').forEach((input) => {
-    input.addEventListener('change', () => refreshCoverageIndicator(ctx, formFromDom()));
+    input.addEventListener('change', () => {
+      if (input.name === 'interval') {
+        const toInput = form.querySelector('[name="to"]');
+        if (toInput) {
+          const next = clampToAvailableEnd(toInput.value, new Date(), input.value || '5m');
+          if (next !== toInput.value) toInput.value = next;
+        }
+      }
+      refreshCoverageIndicator(ctx, formFromDom());
+    });
   });
 
   form?.addEventListener('submit', (ev) => {
@@ -1005,7 +1025,11 @@ async function fixDataFromStudio(ctx) {
     tone: 'primary',
   });
   if (!ok) return;
-  const fix = await ctx.api.post('/api/data/fix', { request, confirm_rebuild: preview.data.needs_rebuild_confirm || undefined });
+  const needsRebuild = preview.data.needs_rebuild_confirm === true;
+  const fix = await ctx.api.post('/api/data/fix', {
+    request,
+    confirm_rebuild: needsRebuild ? true : undefined,
+  });
   if (!fix.ok) return ctx.toast.err(fix.error?.message || 'Falha');
   ctx.toast.ok(fix.data.job ? `Job #${fix.data.job.id} criado` : 'Dados prontos');
   await refreshCoverageIndicator(ctx, formFromDom());
@@ -1044,14 +1068,20 @@ async function runBacktest(ctx, form) {
       });
       if (fix) {
         const apiRange = contextToApiRange(ctxSaved);
-        const fixRes = await ctx.api.post('/api/data/fix', { request: {
+        const fixRequest = {
           dataset: 'backtest_ticks',
           from: apiRange.from,
           to: apiRange.to,
           underlying: ctxSaved.underlying,
           interval: ctxSaved.interval,
           book_depth: Number(ctxSaved.book_depth),
-        }});
+        };
+        const fixPreview = await ctx.api.post('/api/data/fix', { request: fixRequest, dry_run: true });
+        const needsRebuild = fixPreview.ok && fixPreview.data.needs_rebuild_confirm === true;
+        const fixRes = await ctx.api.post('/api/data/fix', {
+          request: fixRequest,
+          confirm_rebuild: needsRebuild ? true : undefined,
+        });
         if (fixRes.ok && fixRes.data.job) {
           const retry = await ctx.api.post('/api/backtest/run', { ...payload, depends_on_job: fixRes.data.job.id });
           if (retry.ok) {

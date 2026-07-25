@@ -58,15 +58,24 @@ export function buildPreparationPlan(request, availability) {
   const uniqueDates = [...new Set(dates)].sort();
   if (!uniqueDates.length) return [];
 
+  // needs_review / valid-sem-path só exportam com --rebuild; sem incluir dias já prontos.
+  const forceRebuild = Boolean(request.rebuild) || unavailableNeedsRebuildFlag(availability.unavailable);
+
   const ranges = collapseDatesToRanges(uniqueDates);
   const actions = [];
   for (const range of ranges) {
-    actions.push(...actionsForRange(request, range));
+    actions.push(...actionsForRange(request, range, { forceRebuild }));
   }
   return actions;
 }
 
-function actionsForRange(request, range) {
+function unavailableNeedsRebuildFlag(unavailable = []) {
+  return unavailable.some((item) => item?.status === 'needs_review'
+    || item?.status === 'valid'
+    || item?.status === 'accepted');
+}
+
+function actionsForRange(request, range, { forceRebuild = false } = {}) {
   const base = {
     from: `${range.from}T00:00:00.000Z`,
     to: nextDayIso(range.to),
@@ -74,21 +83,21 @@ function actionsForRange(request, range) {
     interval: request.interval,
   };
 
-  if (request.dataset === 'scalars') return [syncAction('sync:backfill', base, request)];
-  if (request.dataset === 'books') return [syncAction('sync:backfill-books', base, request)];
+  if (request.dataset === 'scalars') return [syncAction('sync:backfill', base, request, { forceRebuild })];
+  if (request.dataset === 'books') return [syncAction('sync:backfill-books', base, request, { forceRebuild })];
   if (request.dataset === 'backtest_ticks') {
-    return [syncAction('sync:backfill-backtest-ticks', { ...base, bookDepth: request.bookDepth }, request)];
+    return [syncAction('sync:backfill-backtest-ticks', { ...base, bookDepth: request.bookDepth }, request, { forceRebuild })];
   }
   if (request.dataset === 'backtest_ticks_lite') {
     return [
-      syncAction('sync:backfill-backtest-ticks', { ...base, bookDepth: request.bookDepth }, request, { prerequisite: true }),
-      syncAction('sync:backfill-backtest-ticks-lite', { ...base, bookDepth: request.bookDepth }, request),
+      syncAction('sync:backfill-backtest-ticks', { ...base, bookDepth: request.bookDepth }, request, { prerequisite: true, forceRebuild }),
+      syncAction('sync:backfill-backtest-ticks-lite', { ...base, bookDepth: request.bookDepth }, request, { forceRebuild }),
     ];
   }
   if (request.dataset === 'ohlc') {
     return [
-      syncAction('sync:backfill', base, request, { prerequisite: true }),
-      syncAction('sync:backfill-ohlc', { ...base, resolution: request.resolution }, request),
+      syncAction('sync:backfill', base, request, { prerequisite: true, forceRebuild }),
+      syncAction('sync:backfill-ohlc', { ...base, resolution: request.resolution }, request, { forceRebuild }),
     ];
   }
   throw new Error(`Unsupported dataset for prepare mode: ${request.dataset}`);
@@ -103,7 +112,8 @@ function syncAction(command, params, request, extra = {}) {
   ];
   if (params.bookDepth != null) args.push('--book-depth', String(params.bookDepth));
   if (params.resolution) args.push('--resolution', params.resolution);
-  if (request.rebuild) args.push('--rebuild');
+  if (request.rebuild || extra.forceRebuild) args.push('--rebuild');
+  const { forceRebuild: _forceRebuild, ...restExtra } = extra;
   return {
     command,
     args,
@@ -113,7 +123,7 @@ function syncAction(command, params, request, extra = {}) {
     interval: params.interval,
     book_depth: params.bookDepth ?? null,
     resolution: params.resolution ?? null,
-    ...extra,
+    ...restExtra,
   };
 }
 
