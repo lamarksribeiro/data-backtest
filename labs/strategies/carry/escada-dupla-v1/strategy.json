@@ -1,0 +1,32 @@
+{
+  "id": "escada-dupla-v1",
+  "name": "Escada Dupla V1",
+  "family": "carry",
+  "status": "candidate",
+  "kind": "library-runner",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "library-runner",
+    "runnerSlug": "escada-dupla-runner",
+    "runnerVersion": 1
+  },
+  "portStatus": "ported",
+  "promotedToStudio": true,
+  "studioSlug": "escada-dupla-v1",
+  "studio": {
+    "description": "Escada Dupla: grade SUB/DESC dual com líder 55¢ taker e oposto maker. Perfil ascent_hedge (anti-chicote) + freio de soma das médias.",
+    "tags": [
+      "escada-dupla",
+      "carry",
+      "dual-ladder",
+      "maker",
+      "btc",
+      "ascent-hedge"
+    ],
+    "defaultVersion": 2
+  },
+  "notes": "Runner: escada-dupla-runner@1. Champion: holdout julho 2026-07-01..22 (ascent_hedge, maxSub=8, freio=98). Doc: docs/estrategias/implementadas/escada-dupla-v1.md"
+}

@@ -1,0 +1,7 @@
+{
+  "presets": [
+    "v1",
+    "btc-champion",
+    "btc-parity-sim"
+  ]
+}

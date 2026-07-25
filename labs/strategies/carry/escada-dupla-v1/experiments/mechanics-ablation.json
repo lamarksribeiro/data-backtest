@@ -1,0 +1,30 @@
+{
+  "name": "escada-dupla-mechanics-ablation",
+  "strategyId": "escada-dupla-v1",
+  "strategyFamily": "carry",
+  "description": "Compara mecânica oscillate (HTML) vs ascent_hedge (anti-chicote) no lake BTC 5m",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-20",
+  "to": "2026-07-21",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 2,
+  "defaults": "../defaults.json",
+  "feeOptions": { "category": "crypto" },
+  "searchSpace": {
+    "grid": {
+      "ladderProfile": ["oscillate", "ascent_hedge"],
+      "rearmMode": ["full", "off"],
+      "sideMultiplier": [1],
+      "maxSubLevels": [4, 8],
+      "maxPairAvgSumCents": [98, 105],
+      "spreadCents": [1]
+    }
+  },
+  "metrics": ["totalPnl", "entries", "winRate", "profitFactor", "maxDrawdown"]
+}

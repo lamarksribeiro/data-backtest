@@ -1,0 +1,33 @@
+{
+  "name": "escada-dupla-holdout-july",
+  "strategyId": "escada-dupla-v1",
+  "strategyFamily": "carry",
+  "description": "Julho completo no lake local (tip 2026-07-22). Perfil ascent_hedge + ablação leve de níveis/freio.",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-22",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "feeOptions": { "category": "crypto" },
+  "searchSpace": {
+    "grid": {
+      "ladderProfile": ["ascent_hedge"],
+      "rearmMode": ["off"],
+      "sideMultiplier": [1],
+      "maxSubLevels": [4, 8],
+      "maxDescLevels": [4],
+      "maxPairAvgSumCents": [96, 98],
+      "spreadCents": [1],
+      "executionMode": ["optimistic_maker"],
+      "liquidityMode": ["auto"]
+    }
+  },
+  "metrics": ["totalPnl", "entries", "winRate", "profitFactor", "maxDrawdown"]
+}

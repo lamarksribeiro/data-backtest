@@ -25,6 +25,7 @@ Teorias portadas ao `data-backtest` (runners no Studio ou biblioteca). Origem pr
 | [lead-inertia-v1.md](lead-inertia-v1.md) | `lead-inertia-v1` |
 | [volatility-compression-lock-v1.md](volatility-compression-lock-v1.md) | `volatility-compression-lock-v1` |
 | [stable-carry-compression-v1.md](stable-carry-compression-v1.md) | `stable-carry-compression-v1` |
+| [escada-dupla-v1.md](escada-dupla-v1.md) | `escada-dupla-v1` |
 | [convergence-undershoot-theory.md](convergence-undershoot-theory.md) | `convergence-undershoot-v1` |
 | [momentum-edge-theory-v1.md](momentum-edge-theory-v1.md) | `momentum-edge-v1` |
 | [bs-lead-v1.md](bs-lead-v1.md) | `bs-lead-v1` *(runner portado, Studio pendente)* |

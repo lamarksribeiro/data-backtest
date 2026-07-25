@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "walletSize": { "type": "number", "minimum": 1 },
+    "sideMultiplier": { "type": "integer", "minimum": 1, "maximum": 5 },
+    "leaderThresholdCents": { "type": "number", "minimum": 50, "maximum": 90 },
+    "equalizeMaxAskCents": { "type": "number", "minimum": 1, "maximum": 20 },
+    "equalizeEnabled": { "type": "boolean" },
+    "liquidityMode": { "type": "string", "enum": ["auto", "taker", "maker"] },
+    "executionMode": { "type": "string", "enum": ["optimistic_maker", "resting_maker", "taker"] },
+    "ladderProfile": { "type": "string", "enum": ["ascent_hedge", "oscillate"] },
+    "rearmMode": { "type": "string", "enum": ["off", "once", "full"] },
+    "maxSubLevels": { "type": "integer", "minimum": 0, "maximum": 16 },
+    "maxDescLevels": { "type": "integer", "minimum": 0, "maximum": 16 },
+    "maxPairAvgSumCents": { "type": "number", "minimum": 80, "maximum": 120 },
+    "minSecondsLeftToStart": { "type": "number", "minimum": 0 },
+    "maxSecondsLeftToStart": { "type": "number", "minimum": 0 },
+    "spreadCents": { "type": "number", "minimum": 0, "maximum": 20 },
+    "slippageCents": { "type": "number", "minimum": 0, "maximum": 20 },
+    "equalizeExtraSlipCents": { "type": "number", "minimum": 0, "maximum": 10 },
+    "makerFillEpsilon": { "type": "number", "minimum": 0 },
+    "makerTimeoutSec": { "type": "number", "minimum": 1 },
+    "maxSharesPerSide": { "type": "number", "minimum": 10 },
+    "maxEventNotional": { "type": "number", "minimum": 5 },
+    "minSecondsLeftToEnter": { "type": "number", "minimum": 0 },
+    "applyPolymarketFees": { "type": "boolean" },
+    "polymarketFeeCategory": { "type": "string", "enum": ["crypto", "sports", "politics", "other"] }
+  }
+}

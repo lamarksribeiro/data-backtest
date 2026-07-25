@@ -1,0 +1,29 @@
+{
+  "name": "escada-dupla-train-chunked",
+  "strategyId": "escada-dupla-v1",
+  "strategyFamily": "carry",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-07-01",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "feeOptions": { "category": "crypto" },
+  "searchSpace": {
+    "grid": {
+      "sideMultiplier": [1, 2, 3],
+      "executionMode": ["optimistic_maker"],
+      "liquidityMode": ["auto"],
+      "spreadCents": [0, 1],
+      "equalizeEnabled": [true, false],
+      "maxEventNotional": [80, 150]
+    }
+  },
+  "metrics": ["totalPnl", "entries", "winRate", "profitFactor", "maxDrawdown"]
+}

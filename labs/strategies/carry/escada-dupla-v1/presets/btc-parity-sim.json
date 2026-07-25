@@ -1,0 +1,18 @@
+{
+  "id": "btc-parity-sim",
+  "name": "Parity Sim (HTML oscillate)",
+  "studioVersion": 3,
+  "studioName": "Escada Dupla · Parity Sim",
+  "params": {
+    "sideMultiplier": 2,
+    "liquidityMode": "auto",
+    "executionMode": "optimistic_maker",
+    "ladderProfile": "oscillate",
+    "rearmMode": "full",
+    "maxSubLevels": 0,
+    "maxDescLevels": 0,
+    "spreadCents": 1,
+    "slippageCents": 0,
+    "equalizeEnabled": true
+  }
+}

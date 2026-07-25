@@ -181,6 +181,19 @@ export const INDIVIDUAL_RUNNERS = [
     promotedToStudio: true,
     sourceDoc: 'polymarket-fm/Hopper4.py',
   },
+  {
+    id: 'escada-dupla-v1',
+    family: 'carry',
+    name: 'Escada Dupla V1',
+    sourceFile: 'escada-dupla-runner.js',
+    createFn: 'createBacktestRunner',
+    runnerSlug: 'escada-dupla-runner',
+    strategyLabel: 'ESCADA_DUPLA_V1',
+    usesStopReverse: false,
+    tier: 'A',
+    promotedToStudio: true,
+    sourceDoc: 'docs/estrategias/implementadas/escada-dupla-v1.md',
+  },
 ];
 
 export const PORTFOLIO_RUNNERS = [

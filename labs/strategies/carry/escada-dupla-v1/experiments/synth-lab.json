@@ -1,0 +1,16 @@
+{
+  "name": "escada-dupla-lab-synth-sweep",
+  "strategyId": "escada-dupla-v1",
+  "strategyFamily": "carry",
+  "description": "Sweep sintético (paths do simulador) antes do lakehouse — ver labs/sandbox/escada-dupla-lab.mjs",
+  "modes": ["optimistic_maker", "taker"],
+  "baseParams": {
+    "sideMultiplier": 2,
+    "liquidityMode": "auto",
+    "spreadCents": 1,
+    "slippageCents": 0,
+    "equalizeEnabled": true,
+    "maxEventNotional": 200,
+    "maxSharesPerSide": 800
+  }
+}

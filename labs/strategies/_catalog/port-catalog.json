@@ -29,12 +29,6 @@
       "portStatus": "ported",
       "notes": "Cofre Sete unificada (V1 clássica + V2 linear)",
       "sourceDoc": "docs/estrategias/implementadas/cofre-sete-v1.md"
-    },
-    {
-      "id": "whipsaw-lock",
-      "portStatus": "ported",
-      "notes": "Whipsaw Lock ANOM-22/33 — descoberta loop de anomalias",
-      "sourceDoc": "docs/estrategias/implementadas/whipsaw-lock-v1.md"
     }
   ],
   "runners": [
@@ -231,6 +225,19 @@
       "tier": "A",
       "promotedToStudio": true,
       "sourceDoc": "polymarket-fm/Hopper4.py"
+    },
+    {
+      "id": "escada-dupla-v1",
+      "family": "carry",
+      "name": "Escada Dupla V1",
+      "sourceFile": "escada-dupla-runner.js",
+      "createFn": "createBacktestRunner",
+      "runnerSlug": "escada-dupla-runner",
+      "strategyLabel": "ESCADA_DUPLA_V1",
+      "usesStopReverse": false,
+      "tier": "A",
+      "promotedToStudio": true,
+      "sourceDoc": "docs/estrategias/implementadas/escada-dupla-v1.md"
     }
   ],
   "portfolios": [

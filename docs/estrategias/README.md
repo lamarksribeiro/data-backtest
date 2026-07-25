@@ -20,6 +20,7 @@ Inclui as 16 teorias transferidas do polymarket-test, mais:
 - [`implementadas/edge-snipper.md`](implementadas/edge-snipper.md) — evolução compilada no Studio
 - [`implementadas/vsmr-v1.md`](implementadas/vsmr-v1.md) — VSMR (nativa data-backtest)
 - [`implementadas/bs-lead-v1.md`](implementadas/bs-lead-v1.md) — BS-Lead (runner portado, Studio pendente)
+- [`implementadas/escada-dupla-v1.md`](implementadas/escada-dupla-v1.md) — Escada Dupla (library-runner, Studio)
 
 Estudo de suporte: [`../analise-quantitativa/estudo-correlacao-binance-polymarket.md`](../analise-quantitativa/estudo-correlacao-binance-polymarket.md).
 
