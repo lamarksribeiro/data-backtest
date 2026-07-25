@@ -9,16 +9,26 @@ Aparece no Estúdio / Estratégias após `npm run seed:ported-strategies` (ou re
 | v | Preset | Uso |
 |---|---|---|
 | 1 | `v1` | Defaults (`ascent_hedge`) |
-| 2 | `btc-champion` *(default)* | Holdout jul/2026 · maxSub=8 · freio=98 |
+| 2 | `btc-champion` *(default)* | Holdout jul/2026 · maxSub=8 · freio=98 · `optimistic_maker` |
 | 3 | `btc-parity-sim` | Perfil HTML oscillate (referência) |
+| 4 | `btc-resting-honest` | Mesmo grid do champion · `resting_maker` (fill só com atravessamento) |
 
 ## Lab no lake
 
 ```powershell
+# Holdout julho
 npm run lab:run -- --experiment labs/strategies/carry/escada-dupla-v1/experiments/holdout-july.json --variant-workers 4
+
+# A/B optimistic vs resting (honestidade de fill)
+npm run lab:run -- --experiment labs/strategies/carry/escada-dupla-v1/experiments/resting-holdout-july.json --variant-workers 4
+
+# Budget mínimo (sizeScale)
+npm run lab:run -- --experiment labs/strategies/carry/escada-dupla-v1/experiments/budget-min-july.json --variant-workers 4
 ```
 
 Relatórios: `reports/labs/escada-dupla-v1/`.
+
+`sizeScale` escala shares + `maxEventNotional`/`walletSize`/`maxSharesPerSide`. Campeão = `1.0` (~$80/evento).
 
 ## Arquivos
 

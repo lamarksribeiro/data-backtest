@@ -6,6 +6,7 @@
 **Lab path:** `labs/strategies/carry/escada-dupla-v1/`  
 **Runner:** `labs/legacy/strategy-runners/portable/escada-dupla-runner.js` · library `escada-dupla-runner@1`  
 **Champion Studio:** v2 · `ascent_hedge` · holdout 2026-07-01→22 · PnL +$38.798 · PF 1.87 · WR 67% · 22/22 dias+  
+**Versão realista:** Studio v4 · preset `btc-resting-honest` · mesmo grid · `executionMode=resting_maker` (A/B: `experiments/resting-holdout-july.json`)  
 **Sandbox auxiliar:** `node labs/sandbox/escada-dupla-lab.mjs`  
 **Simulador de referência:** `Simulador_manual85.html`  
 **Data:** 2026-07-24 (promoção Studio 2026-07-25)

@@ -2,6 +2,7 @@
   "presets": [
     "v1",
     "btc-champion",
-    "btc-parity-sim"
+    "btc-parity-sim",
+    "btc-resting-honest"
   ]
 }

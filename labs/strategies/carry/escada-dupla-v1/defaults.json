@@ -20,6 +20,7 @@
   "makerTimeoutSec": 30,
   "maxSharesPerSide": 400,
   "maxEventNotional": 80,
+  "sizeScale": 1,
   "minSecondsLeftToEnter": 15,
   "applyPolymarketFees": true,
   "polymarketFeeCategory": "crypto"

@@ -23,6 +23,7 @@
     "makerTimeoutSec": { "type": "number", "minimum": 1 },
     "maxSharesPerSide": { "type": "number", "minimum": 10 },
     "maxEventNotional": { "type": "number", "minimum": 5 },
+    "sizeScale": { "type": "number", "minimum": 0.05, "maximum": 5 },
     "minSecondsLeftToEnter": { "type": "number", "minimum": 0 },
     "applyPolymarketFees": { "type": "boolean" },
     "polymarketFeeCategory": { "type": "string", "enum": ["crypto", "sports", "politics", "other"] }

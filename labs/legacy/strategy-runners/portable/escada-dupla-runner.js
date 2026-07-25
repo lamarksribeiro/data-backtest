@@ -61,6 +61,8 @@ const DEFAULT_PARAMS = {
   makerTimeoutSec: 30,
   maxSharesPerSide: 400,
   maxEventNotional: 80,
+  // Escala proporcional da escada (shares + caps). 1 = budget campeão (~$80/evento).
+  sizeScale: 1,
   minSecondsLeftToEnter: 15, // legado: corta fills tardios sem posição
   fallbackBookSize: 0,
   applyPolymarketFees: true,
@@ -120,6 +122,8 @@ function resolveRearmMode(raw = {}, ladderProfile = 'ascent_hedge') {
 
 function mergeEscadaParams(raw = {}) {
   const params = { ...DEFAULT_PARAMS, ...raw };
+  const sizeScale = clamp(toFiniteNumber(raw.sizeScale, DEFAULT_PARAMS.sizeScale), 0.05, 5);
+  params.sizeScale = sizeScale;
   params.sideMultiplier = Math.max(1, Math.round(toFiniteNumber(raw.sideMultiplier, DEFAULT_PARAMS.sideMultiplier)));
   params.leaderThresholdCents = toFiniteNumber(raw.leaderThresholdCents, DEFAULT_PARAMS.leaderThresholdCents);
   params.equalizeMaxAskCents = toFiniteNumber(raw.equalizeMaxAskCents, DEFAULT_PARAMS.equalizeMaxAskCents);
@@ -143,10 +147,24 @@ function mergeEscadaParams(raw = {}) {
   params.ladderProfile = resolveLadderProfile(raw);
   params.rearmMode = resolveRearmMode(raw, params.ladderProfile);
 
+  if (sizeScale !== 1) {
+    params.maxSharesPerSide = Math.round(params.maxSharesPerSide * sizeScale * 100) / 100;
+    params.maxEventNotional = Math.round(params.maxEventNotional * sizeScale * 100) / 100;
+    params.walletSize = Math.round(params.walletSize * sizeScale * 100) / 100;
+  }
+
   let sub = parseLevels(raw.subLevels, DEFAULT_SUB).map((n) => ({ ...n, tipo: 'SUB' }));
   let desc = parseLevels(raw.descLevels, DEFAULT_DESC).map((n) => ({ ...n, tipo: 'DESC' }));
   if (params.maxSubLevels > 0) sub = sub.slice(0, params.maxSubLevels);
   if (params.maxDescLevels > 0) desc = desc.slice(0, params.maxDescLevels);
+  if (sizeScale !== 1) {
+    const scaleShares = (n) => ({
+      ...n,
+      shares: Math.max(0.01, Math.round(n.shares * sizeScale * 100) / 100),
+    });
+    sub = sub.map(scaleShares);
+    desc = desc.map(scaleShares);
+  }
   params.subLevels = sub;
   params.descLevels = desc;
   return params;

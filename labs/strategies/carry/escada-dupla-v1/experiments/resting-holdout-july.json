@@ -1,0 +1,36 @@
+{
+  "name": "escada-dupla-resting-holdout-july",
+  "strategyId": "escada-dupla-v1",
+  "strategyFamily": "carry",
+  "description": "A/B honestidade: champion ascent_hedge em optimistic_maker vs resting_maker (spread 1¢, fees crypto).",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-22",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "feeOptions": { "category": "crypto" },
+  "searchSpace": {
+    "grid": {
+      "ladderProfile": ["ascent_hedge"],
+      "rearmMode": ["off"],
+      "sideMultiplier": [1],
+      "maxSubLevels": [8],
+      "maxDescLevels": [4],
+      "maxPairAvgSumCents": [98],
+      "spreadCents": [1],
+      "slippageCents": [0],
+      "makerFillEpsilon": [0.01],
+      "makerTimeoutSec": [30],
+      "executionMode": ["optimistic_maker", "resting_maker"],
+      "liquidityMode": ["auto"]
+    }
+  },
+  "metrics": ["totalPnl", "entries", "winRate", "profitFactor", "maxDrawdown"]
+}

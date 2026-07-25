@@ -23,10 +23,11 @@
       "carry",
       "dual-ladder",
       "maker",
+      "resting-maker",
       "btc",
       "ascent-hedge"
     ],
     "defaultVersion": 2
   },
-  "notes": "Runner: escada-dupla-runner@1. Champion: holdout julho 2026-07-01..22 (ascent_hedge, maxSub=8, freio=98). Doc: docs/estrategias/implementadas/escada-dupla-v1.md"
+  "notes": "Runner: escada-dupla-runner@1. Champion v2: optimistic_maker (jul/2026). v4 resting-honest: mesmo grid com resting_maker. Doc: docs/estrategias/implementadas/escada-dupla-v1.md"
 }

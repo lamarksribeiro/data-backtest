@@ -106,6 +106,34 @@ test('multiplicador escala 2ª entrada SUB do mesmo idx (conta os dois lados)', 
   assert.equal(sub1Up[1].shares, 120);
 });
 
+test('sizeScale 0.5 reduz shares e caps proporcionalmente', () => {
+  const full = escada.mergeEscadaParams({ sizeScale: 1, maxSubLevels: 1, maxDescLevels: 0 });
+  const half = escada.mergeEscadaParams({ sizeScale: 0.5, maxSubLevels: 1, maxDescLevels: 0 });
+  assert.equal(full.subLevels[0].shares, 30);
+  assert.equal(half.subLevels[0].shares, 15);
+  assert.equal(full.maxEventNotional, 80);
+  assert.equal(half.maxEventNotional, 40);
+  assert.equal(half.maxSharesPerSide, 200);
+  assert.equal(half.walletSize, 50);
+
+  const path = escada.expandPathTargets([55]);
+  const sim = escada.simulateEscadaPath(
+    {
+      sizeScale: 0.5,
+      sideMultiplier: 1,
+      spreadCents: 0,
+      equalizeEnabled: false,
+      ladderProfile: 'oscillate',
+      rearmMode: 'off',
+      maxSubLevels: 1,
+      maxDescLevels: 0,
+    },
+    path,
+    'UP',
+  );
+  assert.equal(sim.shares.UP, 15);
+});
+
 test('ascent_hedge: líder só SUB, oposto só DESC, sem re-arme', () => {
   const path = escada.expandPathTargets([55, 70, 40]);
   const sim = escada.simulateEscadaPath(

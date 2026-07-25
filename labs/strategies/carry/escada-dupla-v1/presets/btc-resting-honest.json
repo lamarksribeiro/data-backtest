@@ -1,0 +1,33 @@
+{
+  "id": "btc-resting-honest",
+  "name": "BTC Resting Honest (Ascent Hedge)",
+  "studioVersion": 4,
+  "studioName": "Escada Dupla · Resting Honest",
+  "notes": "Mesmo grid do champion (ascent_hedge), com executionMode=resting_maker: lado oposto só preenche se o ask atravessar o limit. Spread 1¢ + fees crypto. Use para A/B vs v2 optimistic.",
+  "params": {
+    "walletSize": 100,
+    "sideMultiplier": 1,
+    "leaderThresholdCents": 55,
+    "equalizeMaxAskCents": 5,
+    "equalizeEnabled": true,
+    "liquidityMode": "auto",
+    "executionMode": "resting_maker",
+    "ladderProfile": "ascent_hedge",
+    "rearmMode": "off",
+    "maxSubLevels": 8,
+    "maxDescLevels": 4,
+    "maxPairAvgSumCents": 98,
+    "minSecondsLeftToStart": 45,
+    "maxSecondsLeftToStart": 240,
+    "spreadCents": 1,
+    "slippageCents": 0,
+    "equalizeExtraSlipCents": 0,
+    "makerFillEpsilon": 0.01,
+    "makerTimeoutSec": 30,
+    "maxSharesPerSide": 400,
+    "maxEventNotional": 80,
+    "minSecondsLeftToEnter": 15,
+    "applyPolymarketFees": true,
+    "polymarketFeeCategory": "crypto"
+  }
+}
