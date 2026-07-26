@@ -1,0 +1,48 @@
+{
+  "name": "escada-adaptativa-hibrida-frequency-calibration-fine",
+  "strategyId": "escada-adaptativa-hibrida-v1",
+  "strategyFamily": "carry",
+  "description": "Refino entre 30 entradas/dia e zero entradas/dia observado no smoke inicial.",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-01",
+  "to": "2026-05-01",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": false,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "feeOptions": { "category": "crypto" },
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "p81-e15",
+        "params": { "maxCycles": 1, "minDirectionalProbability": 0.81, "minEdge": 0.15, "maxSpread": 0.03 }
+      },
+      {
+        "id": "p82-e15",
+        "params": { "maxCycles": 1, "minDirectionalProbability": 0.82, "minEdge": 0.15, "maxSpread": 0.03 }
+      },
+      {
+        "id": "p83-e15",
+        "params": { "maxCycles": 1, "minDirectionalProbability": 0.83, "minEdge": 0.15, "maxSpread": 0.03 }
+      },
+      {
+        "id": "p84-e15",
+        "params": { "maxCycles": 1, "minDirectionalProbability": 0.84, "minEdge": 0.15, "maxSpread": 0.03 }
+      },
+      {
+        "id": "p80-e16",
+        "params": { "maxCycles": 1, "minDirectionalProbability": 0.8, "minEdge": 0.16, "maxSpread": 0.03 }
+      },
+      {
+        "id": "p80-e17",
+        "params": { "maxCycles": 1, "minDirectionalProbability": 0.8, "minEdge": 0.17, "maxSpread": 0.03 }
+      }
+    ]
+  },
+  "metrics": ["totalPnl", "entries", "winRate", "profitFactor", "maxDrawdown", "maxObservedWorstLoss"]
+}

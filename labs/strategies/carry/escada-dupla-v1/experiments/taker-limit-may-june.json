@@ -1,0 +1,139 @@
+{
+  "name": "escada-dupla-taker-limit-may-june",
+  "strategyId": "escada-dupla-v1",
+  "strategyFamily": "carry",
+  "description": "Etapa 1 da auditoria 2026-07-25: backtest honesto com taker_limit (fill só se walk real <= fórmula+cap, senão miss) + latência 1 tick + maker resting por atravessamento. Janela limpa mai-jun (treino); julho fica congelado para validação. Controles: resting-walk (honesto antigo) com e sem latência.",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-01",
+  "to": "2026-06-30",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "feeOptions": { "category": "crypto" },
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "tl-cap1-rearm-lat1",
+        "params": {
+          "executionMode": "resting_maker",
+          "makerPostMode": "bid",
+          "throughFillOnTrigger": false,
+          "rearmOnMakerCancel": true,
+          "makerFillProb": 1,
+          "takerPriceMode": "taker_limit",
+          "takerMaxExtraCents": 1,
+          "takerMissPolicy": "rearm",
+          "takerLatencyTicks": 1,
+          "slippageCents": 0,
+          "spreadCents": 1,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "tl-cap1-skip-lat1",
+        "params": {
+          "executionMode": "resting_maker",
+          "makerPostMode": "bid",
+          "throughFillOnTrigger": false,
+          "rearmOnMakerCancel": true,
+          "makerFillProb": 1,
+          "takerPriceMode": "taker_limit",
+          "takerMaxExtraCents": 1,
+          "takerMissPolicy": "skip",
+          "takerLatencyTicks": 1,
+          "slippageCents": 0,
+          "spreadCents": 1,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "tl-cap2-rearm-lat1",
+        "params": {
+          "executionMode": "resting_maker",
+          "makerPostMode": "bid",
+          "throughFillOnTrigger": false,
+          "rearmOnMakerCancel": true,
+          "makerFillProb": 1,
+          "takerPriceMode": "taker_limit",
+          "takerMaxExtraCents": 2,
+          "takerMissPolicy": "rearm",
+          "takerLatencyTicks": 1,
+          "slippageCents": 0,
+          "spreadCents": 1,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "tl-cap0-rearm-lat1",
+        "params": {
+          "executionMode": "resting_maker",
+          "makerPostMode": "bid",
+          "throughFillOnTrigger": false,
+          "rearmOnMakerCancel": true,
+          "makerFillProb": 1,
+          "takerPriceMode": "taker_limit",
+          "takerMaxExtraCents": 0,
+          "takerMissPolicy": "rearm",
+          "takerLatencyTicks": 1,
+          "slippageCents": 0,
+          "spreadCents": 1,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "tl-cap1-rearm-lat0",
+        "params": {
+          "executionMode": "resting_maker",
+          "makerPostMode": "bid",
+          "throughFillOnTrigger": false,
+          "rearmOnMakerCancel": true,
+          "makerFillProb": 1,
+          "takerPriceMode": "taker_limit",
+          "takerMaxExtraCents": 1,
+          "takerMissPolicy": "rearm",
+          "takerLatencyTicks": 0,
+          "slippageCents": 0,
+          "spreadCents": 1,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "control-walk-lat1",
+        "params": {
+          "executionMode": "resting_maker",
+          "makerPostMode": "bid",
+          "throughFillOnTrigger": false,
+          "rearmOnMakerCancel": true,
+          "makerFillProb": 1,
+          "takerPriceMode": "walk",
+          "takerLatencyTicks": 1,
+          "slippageCents": 0,
+          "spreadCents": 1,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "control-walk-lat0",
+        "params": {
+          "executionMode": "resting_maker",
+          "makerPostMode": "bid",
+          "throughFillOnTrigger": false,
+          "rearmOnMakerCancel": true,
+          "makerFillProb": 1,
+          "takerPriceMode": "walk",
+          "takerLatencyTicks": 0,
+          "slippageCents": 0,
+          "spreadCents": 1,
+          "sizeScale": 1
+        }
+      }
+    ]
+  },
+  "metrics": ["totalPnl", "entries", "winRate", "profitFactor", "maxDrawdown"]
+}

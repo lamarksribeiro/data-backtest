@@ -339,6 +339,7 @@ function emptyAggregateSummary() {
     grossProfit: 0,
     grossLoss: 0,
     maxDrawdown: 0,
+    maxObservedWorstLoss: 0,
     volume: 0,
     ticksProcessed: 0,
     totalFees: 0,
@@ -363,6 +364,10 @@ function mergeVariantSummary(target, variant, chunk = null) {
   target.summary.grossProfit += Number(summary.grossProfit || 0);
   target.summary.grossLoss += Number(summary.grossLoss || 0);
   target.summary.maxDrawdown = Math.max(target.summary.maxDrawdown, Number(summary.maxDrawdown || 0));
+  target.summary.maxObservedWorstLoss = Math.max(
+    target.summary.maxObservedWorstLoss,
+    Number(summary.maxObservedWorstLoss || 0),
+  );
   target.summary.volume += Number(summary.volume || 0);
   target.summary.ticksProcessed += Number(summary.ticksProcessed || 0);
   target.summary.totalFees += Number(summary.totalFees || summary.feesPaid || 0);
@@ -382,6 +387,7 @@ function mergeVariantSummary(target, variant, chunk = null) {
       totalPnl: Number(summary.totalPnl || 0),
       profitFactor: Number(summary.profitFactor || 0),
       maxDrawdown: Number(summary.maxDrawdown || 0),
+      maxObservedWorstLoss: Number(summary.maxObservedWorstLoss || 0),
       feesPaid: Number(summary.totalFees || summary.feesPaid || 0),
     });
   }

@@ -1,0 +1,29 @@
+{
+  "name": "escada-adaptativa-hibrida-historical-grid",
+  "strategyId": "escada-adaptativa-hibrida-v1",
+  "strategyFamily": "carry",
+  "description": "Pesquisa histórica contaminada, destinada apenas aos folds temporais definidos na documentação; não é holdout.",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-04-23",
+  "to": "2026-07-25",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "maxVariants": 400,
+  "defaults": "../defaults.json",
+  "searchSpace": "../search-spaces/walk-forward-grid.json",
+  "feeOptions": { "category": "crypto" },
+  "metrics": [
+    "totalPnl",
+    "entries",
+    "winRate",
+    "profitFactor",
+    "maxDrawdown",
+    "maxObservedWorstLoss"
+  ]
+}

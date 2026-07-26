@@ -1,0 +1,30 @@
+{
+  "name": "profit-scale-july",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-22",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "notes": "Lucro maior mantendo o perfil de erros: escala de budget (2x/4x, teste de profundidade), realocação para banda média (margem gorda) e pior caso. Base = guardian-v3 honesto.",
+  "searchSpace": {
+    "variants": [
+      { "id": "g3-protect", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 2, "maxEntryBudget": 4, "settleWinnerPrice": 0.995, "minSecondsLeft": 9, "tierMinZ": 2.0 } },
+      { "id": "g3-2x", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 4, "maxEntryBudget": 8, "settleWinnerPrice": 0.995, "minSecondsLeft": 9, "tierMinZ": 2.0 } },
+      { "id": "g3-4x", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 8, "maxEntryBudget": 16, "settleWinnerPrice": 0.995, "minSecondsLeft": 9, "tierMinZ": 2.0 } },
+      { "id": "g3-10x", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 20, "maxEntryBudget": 40, "settleWinnerPrice": 0.995, "minSecondsLeft": 9, "tierMinZ": 2.0 } },
+      { "id": "g3-midshift", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 1.0, "entryBudget": 4, "maxEntryBudget": 6, "settleWinnerPrice": 0.995, "minSecondsLeft": 9, "tierMinZ": 2.0 } },
+      { "id": "g3-fatband", "params": { "maxAsk": 0.86, "maxDistAbs": 40, "tierAskBudgetFactor": 1.0, "entryBudget": 4, "maxEntryBudget": 6, "settleWinnerPrice": 0.995, "minSecondsLeft": 9, "tierMinZ": 2.0 } },
+      { "id": "g3-2x-hold", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 4, "maxEntryBudget": 8, "settleWinnerPrice": 0.995, "minSecondsLeft": 9, "tierMinZ": 2.0, "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false } },
+      { "id": "g3-10x-hold", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 20, "maxEntryBudget": 40, "settleWinnerPrice": 0.995, "minSecondsLeft": 9, "tierMinZ": 2.0, "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false } }
+    ]
+  }
+}

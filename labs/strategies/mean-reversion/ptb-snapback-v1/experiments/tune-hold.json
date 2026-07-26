@@ -1,0 +1,68 @@
+{
+  "name": "tune-hold",
+  "strategyId": "ptb-snapback-v1",
+  "strategyFamily": "mean-reversion",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-06-12",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "hold-v3-base",
+        "params": {}
+      },
+      {
+        "id": "hold-near-ptb",
+        "params": {
+          "maxEntryDist": 30,
+          "minPullbackUsd": 15,
+          "minPeakDist": 35
+        }
+      },
+      {
+        "id": "hold-late-window",
+        "params": {
+          "minSecondsLeft": 30,
+          "maxSecondsLeft": 120,
+          "minPullbackUsd": 12
+        }
+      },
+      {
+        "id": "hold-big-snap",
+        "params": {
+          "minPeakDist": 40,
+          "minPullbackUsd": 18,
+          "maxEntryDist": 28,
+          "minGdi": 0.10
+        }
+      },
+      {
+        "id": "hold-gdi15-near",
+        "params": {
+          "minGdi": 0.15,
+          "maxEntryDist": 32,
+          "minPullbackUsd": 14,
+          "maxAsk": 0.40
+        }
+      },
+      {
+        "id": "hold-strong-conv",
+        "params": {
+          "minConvTowardPtb": 6,
+          "maxMomentumAbs": 6,
+          "maxEntryDist": 32,
+          "minPullbackUsd": 12
+        }
+      }
+    ]
+  }
+}

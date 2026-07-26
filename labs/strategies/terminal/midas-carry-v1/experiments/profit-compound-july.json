@@ -1,0 +1,25 @@
+{
+  "name": "profit-compound-july",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-22",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": false,
+  "variantWorkers": 3,
+  "defaults": "../defaults.json",
+  "notes": "Compounding por equity (single-pass obrigatório — lição Hopper): banca 100, budget = 2%/4% da equity com piso entryBudget e teto maxEntryBudget. Guardian-v3 honesto.",
+  "searchSpace": {
+    "variants": [
+      { "id": "g3-fixed", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 2, "maxEntryBudget": 4, "settleWinnerPrice": 0.995, "minSecondsLeft": 9, "tierMinZ": 2.0 } },
+      { "id": "g3-eq2pct", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 2, "maxEntryBudget": 40, "settleWinnerPrice": 0.995, "minSecondsLeft": 9, "tierMinZ": 2.0, "equityScaleEnabled": true, "equityScalePct": 0.02, "walletSize": 100 } },
+      { "id": "g3-eq4pct", "params": { "maxAsk": 0.94, "maxDistAbs": 40, "tierAskBudgetFactor": 2.0, "entryBudget": 2, "maxEntryBudget": 40, "settleWinnerPrice": 0.995, "minSecondsLeft": 9, "tierMinZ": 2.0, "equityScaleEnabled": true, "equityScalePct": 0.04, "walletSize": 100 } }
+    ]
+  }
+}

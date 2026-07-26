@@ -125,6 +125,9 @@ export function toLegacyBacktestTick(row, {
   tick.up_best_ask = bestPrice(upBookAsks, 'ask') ?? row.up_best_ask;
   tick.down_best_bid = bestPrice(downBookBids, 'bid') ?? row.down_best_bid;
   tick.down_best_ask = bestPrice(downBookAsks, 'ask') ?? row.down_best_ask;
+  tick.coverage = finiteOrNull(row.coverage);
+  tick.degraded = row.degraded == null ? null : Boolean(row.degraded);
+  tick.book_depth = finiteOrNull(row.book_depth);
 
   if (useParsedBooks) {
     tick.up_book_asks = upBookAsksParsed;

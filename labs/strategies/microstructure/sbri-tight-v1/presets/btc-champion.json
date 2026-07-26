@@ -1,0 +1,50 @@
+{
+  "id": "btc-champion",
+  "studioVersion": 1,
+  "name": "BTC SBRI Tight Champion",
+  "studioSlug": "sbri-tight-v1-btc-champion",
+  "studioName": "SBRI Tight · BTC Champion",
+  "role": "champion",
+  "description": "Pós-flip ≤8s, dist≥12, edge_phys≥0.08, ask≤0.52, spread≤0.04, τ 35–120s, odds_sum 0.96–1.06. Hold to settlement. Cubo: train/hold/fresh/july positivos.",
+  "tags": ["champion", "depth25", "sbri", "post-flip"],
+  "window": {
+    "from": "2026-04-27",
+    "to": "2026-07-13"
+  },
+  "labSummary": {
+    "trainPnl": 632.70,
+    "trainEntries": 135,
+    "trainWinRate": 59.3,
+    "trainProfitFactor": 2.19,
+    "trainMaxDrawdown": 29.46,
+    "trainPositiveDays": "24/35",
+    "holdoutPnl": 574.36,
+    "holdoutEntries": 194,
+    "holdoutWinRate": 54.1,
+    "holdoutProfitFactor": 1.68,
+    "holdoutMaxDrawdown": 77.89,
+    "holdoutPositiveDays": "25/43",
+    "combinedPnlApprox": 1207,
+    "source": "GLS compiled-soa depth25 · train 2026-07-26T02-23-10 · holdout 2026-07-26T02-23-21"
+  },
+  "params": {
+    "walletSize": 100,
+    "entryBudget": 10,
+    "minShares": 1,
+    "minSecondsLeft": 35,
+    "maxSecondsLeft": 120,
+    "maxSecsSinceFlip": 8,
+    "minFlipsInWindow": 1,
+    "minDistAbs": 12,
+    "maxDistAbs": 80,
+    "minEdge": 0.08,
+    "volStepSecs": 30,
+    "minAsk": 0.05,
+    "maxAsk": 0.52,
+    "maxSpread": 0.04,
+    "minOddsSum": 0.96,
+    "maxOddsSum": 1.06,
+    "entrySlippageMax": 0.02,
+    "minLiquidityRatio": 0.60
+  }
+}

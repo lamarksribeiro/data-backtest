@@ -1,0 +1,30 @@
+{
+  "id": "paridade-invariante-v1",
+  "name": "Paridade Invariante V1",
+  "family": "arbitrage",
+  "status": "research",
+  "kind": "library-runner",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "library-runner",
+    "runnerSlug": "paridade-invariante-runner",
+    "runnerVersion": 1
+  },
+  "promotedToStudio": false,
+  "studioSlug": null,
+  "studio": {
+    "description": "Compra quantidades iguais de UP e DOWN apenas quando o payout de US$ 1 supera book, taxas e reserva operacional após confirmação e latência.",
+    "tags": [
+      "arbitrage",
+      "complete-set",
+      "market-neutral",
+      "btc",
+      "fok",
+      "latency-aware"
+    ]
+  },
+  "notes": "Research only. O backtest valida o invariante do payoff, mas as duas pernas FOK não são atômicas entre outcomes no CLOB."
+}

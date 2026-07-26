@@ -1,0 +1,47 @@
+{
+  "name": "escada-adaptativa-hibrida-smoke",
+  "strategyId": "escada-adaptativa-hibrida-v1",
+  "strategyFamily": "carry",
+  "description": "Smoke de integração e comparação determinística entre fill base e fill adverso.",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-01",
+  "to": "2026-05-02",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 2,
+  "defaults": "../defaults.json",
+  "feeOptions": { "category": "crypto" },
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "base-strict-cross-lat1",
+        "params": {
+          "makerFillMode": "strict_cross",
+          "cancelLatencyTicks": 1,
+          "takerLatencyTicks": 1
+        }
+      },
+      {
+        "id": "stress-entry-touch-lat2",
+        "params": {
+          "makerFillMode": "adverse_entry_touch",
+          "cancelLatencyTicks": 2,
+          "takerLatencyTicks": 2
+        }
+      }
+    ]
+  },
+  "metrics": [
+    "totalPnl",
+    "entries",
+    "winRate",
+    "profitFactor",
+    "maxDrawdown",
+    "maxObservedWorstLoss"
+  ]
+}

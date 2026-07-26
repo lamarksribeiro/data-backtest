@@ -1,0 +1,17 @@
+{
+  "id": "ptb-snapback-v1",
+  "name": "PTB Snapback V1",
+  "family": "mean-reversion",
+  "status": "draft",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "labs/strategies/mean-reversion/ptb-snapback-v1/strategy.gls"
+  },
+  "promotedToStudio": false,
+  "notes": "PTB snapback v3: excursao + pullback + GDI + hold settlement. Campeao ultra-select: +970 PnL full mai-jul/2026, PF 1.47."
+}

@@ -1,0 +1,27 @@
+{
+  "id": "sbri-tight-v1",
+  "name": "SBRI Tight V1",
+  "family": "microstructure",
+  "status": "candidate",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "src/backtestStudio/gls/strategies/SbriTight.gls"
+  },
+  "promotedToStudio": false,
+  "studioSlug": "sbri-tight-v1",
+  "studio": {
+    "description": "SBRI Tight — pós-cruzamento do PTB (≤8s), compra o novo favorito com desconto vs P_phys browniano. Side-symmetric (sem bias a priori UP/DOWN). Hold to settlement.",
+    "tags": ["microstructure", "sbri", "post-flip", "btc", "candidate"],
+    "defaultVersion": 1,
+    "defaultGlsSource": "classic",
+    "glsSources": {
+      "classic": "src/backtestStudio/gls/strategies/SbriTight.gls"
+    }
+  },
+  "notes": "Strike Boundary Repricing Inelasticity (teoria em docs/estrategias/nao-implementadas). Variante tight calibrada no cubo 78d (train/hold/fresh/july positivos). Mecanismo: inelasticidade de repricing imediatamente após o spot cruzar o PTB."
+}

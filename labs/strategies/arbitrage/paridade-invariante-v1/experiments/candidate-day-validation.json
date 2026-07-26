@@ -1,0 +1,50 @@
+{
+  "name": "paridade-invariante-candidate-day-validation",
+  "strategyId": "paridade-invariante-v1",
+  "strategyFamily": "arbitrage",
+  "description": "Valida sizing e sensibilidade a latência no único dia candidato encontrado pela sonda integral.",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-02",
+  "to": "2026-07-02",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": false,
+  "variantWorkers": 1,
+  "defaults": "../defaults.json",
+  "feeOptions": {
+    "category": "crypto"
+  },
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "guarded-default",
+        "params": {}
+      },
+      {
+        "id": "fixed-20",
+        "params": {
+          "sizingMode": "fixed",
+          "targetPairShares": 20,
+          "maxEventNotional": 25
+        }
+      },
+      {
+        "id": "latency-3ticks",
+        "params": {
+          "executionLatencyTicks": 3
+        }
+      }
+    ]
+  },
+  "metrics": [
+    "totalPnl",
+    "entries",
+    "winRate",
+    "profitFactor",
+    "maxDrawdown"
+  ]
+}

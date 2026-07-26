@@ -293,3 +293,61 @@ A recomendação de honest-v2 (§5.1b original, maxAsk 0,90/tier 1,5) está **re
 ### 9.5 Encadeamento com o playbook (§6 permanece válido)
 
 A sequência de deploy e os gates da §6 não mudam — apenas o conteúdo do passo (b): usar guardian-v3 em vez de honest-v2. Acrescentar ao monitoramento: contagem de entradas de tier bloqueadas por `tierMinZ` (esperado: ~10% das entradas; se >25%, o cálculo de σ do robot difere do lab — recalibrar antes de concluir).
+
+---
+
+## 10. Rodada "lucros maiores" — escala, mix e compounding (execução honesta)
+
+Pergunta do operador: *manter o perfil de erros e aumentar o lucro absoluto.* Como o EV honesto por trade é positivo (PF 1,5–1,6), lucro = EV × tamanho × nº de trades. Três caminhos foram quantificados (experiments `profit-scale-july`, `profit-scale-june`, `profit-compound-july`; tudo guardian-v3 + settleWinnerPrice 0,995).
+
+### 10.1 Escala de budget (julho 01–22)
+
+| Variante | Budget | PnL | ×vs micro | PF | MaxDD | Pior dia |
+|---|---|--:|--:|--:|--:|--:|
+| g3 (micro) | $2/$4 | 379,0 | 1,0× | 1,60 | 12,7 | −2,2 |
+| **g3-2x** | **$4/$8** | **795,1** | **2,10×** | **1,59** | 28,9 | −5,3 |
+| g3-4x | $8/$16 | 1452,8 | 3,83× | 1,52 | 61,2 | −11,8 |
+| g3-10x | $20/$40 | 2915,1 | 7,69× | **1,44** | 169,1 | **−119,9** |
+| g3-2x-hold (pior caso) | $4/$8 | 439,0 | — | 1,29 | 31,9 | −10,7 |
+| g3-10x-hold | $20/$40 | 1781,1 | — | 1,24 | 173,5 | −123,4 |
+
+Junho stress: g3-2x **252,8 / PF 1,63**; hold 91,7 (positivo).
+
+**Leituras:** (1) até **2× a escala é gratuita** — PF idêntico, PnL lineariza; (2) em 4× começa custo leve; (3) **~10× ($20/$40) é o teto de liquidez atual** — PnL sub-linear (7,7×), PF 1,60→1,44 e cauda não-linear (pior dia −$120): o book de 25 níveis passa a ser andado fundo. Acima disso, diversificar por ativo (ETH/SOL 5m) em vez de subir budget.
+
+### 10.2 Mix de bandas (realocar para a margem gorda)
+
+A margem da banda média (0,55–0,82) é ~10pp acima do breakeven (WR ~79% vs 69%; win $0,30/share); a banda alta tem margem de ~1,6pp (WR 92% vs 90,4%; win $0,09/share). Realocação testada:
+
+| Variante | Config | PnL jul | PF | MaxDD |
+|---|---|--:|--:|--:|
+| g3-2x (referência) | $4/$8, tier 2,0 | 795,1 | 1,59 | 28,9 |
+| **g3-midshift** | **$4/$6, tier 1,0** | 715,4 | **1,61** | **22,8** |
+| g3-fatband | $4/$6, tier 1,0, maxAsk 0,86 | 702,3 | 1,62 | 24,3 |
+
+Midshift é o melhor PnL/risco por dólar; 2× puro é o maior PnL absoluto. Ambos válidos — escolha operacional (2× se a prioridade é lucro absoluto; midshift se é eficiência de capital).
+
+### 10.3 Compounding por equity (o motor de crescimento)
+
+Single-pass (obrigatório — `dailyMetrics: false`; o modo chunked reinicia a banca por dia), banca inicial $100, `equityScaleEnabled: true`, teto $40/entrada:
+
+| Variante | PnL 22d | PF | MaxDD abs |
+|---|--:|--:|--:|
+| g3 fixo $2/$4 | 379,0 | 1,60 | 15,4 |
+| **g3-eq2pct (budget = 2% da equity)** | **2831,2** | **1,59** | 197,2 |
+| g3-eq4pct (4%) | 3728,9 | 1,47 | 221,9 |
+
+**2% da equity preserva o PF integralmente** e multiplica o lucro ~7,5× em 22 dias partindo de $100. A 4% o PF começa a ceder (budget médio entra na zona de degradação de liquidez cedo demais). O DD absoluto cresce com a banca (é ~7% da equity final — saudável); o mecanismo já respeita `min(…, equity)` como piso de ruína.
+
+### 10.4 Plano de escala revisado (substitui §6.3)
+
+```text
+Fase A (gates §6.2 passando, 72h):    $2/$4  → $4/$8  (2x — custo zero de PF)
+Fase B (+72h de gates verdes):        ligar equityScaleEnabled, equityScalePct 0.02,
+                                      maxEntryBudget 8 → subir teto gradualmente (16 → 40)
+                                      conforme os gates continuam verdes a cada degrau
+Teto por evento:                      $40 (limite de liquidez medido; PF 1.44 além disso)
+Crescimento além do teto:             ETH/SOL 5m (dados já no lake) — não subir budget BTC
+```
+
+**Aviso central (não pular):** a escala multiplica o PnL do **lab**; o live hoje captura ~24% (dia 25). Escalar antes de fechar execução/uptime multiplica o gap, não o lucro. Ordem obrigatória: deploy GTC + uptime 24/7 → gates §6.2 → Fase A → Fase B.

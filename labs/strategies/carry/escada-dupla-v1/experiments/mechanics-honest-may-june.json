@@ -1,0 +1,208 @@
+{
+  "name": "escada-dupla-mechanics-honest-may-june",
+  "strategyId": "escada-dupla-v1",
+  "strategyFamily": "carry",
+  "description": "Matriz de mecânicas alternativas com execução honesta (pós-rejeição da Etapa 1): gate de gap no gatilho, shares dinâmicas por gap, tudo-maker (líder resting), grade SUB esparsa decrescente, hedge só profundo, e combos. Base honesta: resting_maker + taker_limit cap1 skip + latência 1 tick + fees crypto. Janela limpa mai-jun; julho segue congelado.",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-01",
+  "to": "2026-06-30",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "feeOptions": { "category": "crypto" },
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "base-tl-skip",
+        "params": {
+          "executionMode": "resting_maker",
+          "makerPostMode": "bid",
+          "throughFillOnTrigger": false,
+          "rearmOnMakerCancel": true,
+          "makerFillProb": 1,
+          "takerPriceMode": "taker_limit",
+          "takerMaxExtraCents": 1,
+          "takerMissPolicy": "skip",
+          "takerLatencyTicks": 1,
+          "slippageCents": 0,
+          "spreadCents": 1,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "gate1-tl-skip",
+        "params": {
+          "executionMode": "resting_maker",
+          "makerPostMode": "bid",
+          "throughFillOnTrigger": false,
+          "rearmOnMakerCancel": true,
+          "makerFillProb": 1,
+          "takerPriceMode": "taker_limit",
+          "takerMaxExtraCents": 1,
+          "takerMissPolicy": "skip",
+          "takerLatencyTicks": 1,
+          "maxCrossGapCents": 1,
+          "slippageCents": 0,
+          "spreadCents": 1,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "gate2-tl-skip",
+        "params": {
+          "executionMode": "resting_maker",
+          "makerPostMode": "bid",
+          "throughFillOnTrigger": false,
+          "rearmOnMakerCancel": true,
+          "makerFillProb": 1,
+          "takerPriceMode": "taker_limit",
+          "takerMaxExtraCents": 1,
+          "takerMissPolicy": "skip",
+          "takerLatencyTicks": 1,
+          "maxCrossGapCents": 2,
+          "slippageCents": 0,
+          "spreadCents": 1,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "dyn5-tl-skip",
+        "params": {
+          "executionMode": "resting_maker",
+          "makerPostMode": "bid",
+          "throughFillOnTrigger": false,
+          "rearmOnMakerCancel": true,
+          "makerFillProb": 1,
+          "takerPriceMode": "taker_limit",
+          "takerMaxExtraCents": 1,
+          "takerMissPolicy": "skip",
+          "takerLatencyTicks": 1,
+          "gapShareScaleCents": 5,
+          "slippageCents": 0,
+          "spreadCents": 1,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "gate2-dyn5-tl-skip",
+        "params": {
+          "executionMode": "resting_maker",
+          "makerPostMode": "bid",
+          "throughFillOnTrigger": false,
+          "rearmOnMakerCancel": true,
+          "makerFillProb": 1,
+          "takerPriceMode": "taker_limit",
+          "takerMaxExtraCents": 1,
+          "takerMissPolicy": "skip",
+          "takerLatencyTicks": 1,
+          "maxCrossGapCents": 2,
+          "gapShareScaleCents": 5,
+          "slippageCents": 0,
+          "spreadCents": 1,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "all-maker",
+        "params": {
+          "executionMode": "resting_maker",
+          "makerPostMode": "bid",
+          "throughFillOnTrigger": false,
+          "rearmOnMakerCancel": true,
+          "makerFillProb": 1,
+          "liquidityMode": "maker",
+          "takerPriceMode": "walk",
+          "slippageCents": 0,
+          "spreadCents": 1,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "sparse-sub-tl-skip",
+        "params": {
+          "executionMode": "resting_maker",
+          "makerPostMode": "bid",
+          "throughFillOnTrigger": false,
+          "rearmOnMakerCancel": true,
+          "makerFillProb": 1,
+          "takerPriceMode": "taker_limit",
+          "takerMaxExtraCents": 1,
+          "takerMissPolicy": "skip",
+          "takerLatencyTicks": 1,
+          "subLevels": [[55, 40], [65, 25], [75, 15], [85, 10]],
+          "maxSubLevels": 4,
+          "slippageCents": 0,
+          "spreadCents": 1,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "deep-hedge-tl-skip",
+        "params": {
+          "executionMode": "resting_maker",
+          "makerPostMode": "bid",
+          "throughFillOnTrigger": false,
+          "rearmOnMakerCancel": true,
+          "makerFillProb": 1,
+          "takerPriceMode": "taker_limit",
+          "takerMaxExtraCents": 1,
+          "takerMissPolicy": "skip",
+          "takerLatencyTicks": 1,
+          "descLevels": [[35, 15], [30, 10], [25, 10], [20, 10]],
+          "maxDescLevels": 4,
+          "slippageCents": 0,
+          "spreadCents": 1,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "sparse-deep-gate2",
+        "params": {
+          "executionMode": "resting_maker",
+          "makerPostMode": "bid",
+          "throughFillOnTrigger": false,
+          "rearmOnMakerCancel": true,
+          "makerFillProb": 1,
+          "takerPriceMode": "taker_limit",
+          "takerMaxExtraCents": 1,
+          "takerMissPolicy": "skip",
+          "takerLatencyTicks": 1,
+          "maxCrossGapCents": 2,
+          "subLevels": [[55, 40], [65, 25], [75, 15], [85, 10]],
+          "maxSubLevels": 4,
+          "descLevels": [[35, 15], [30, 10], [25, 10], [20, 10]],
+          "maxDescLevels": 4,
+          "slippageCents": 0,
+          "spreadCents": 1,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "all-maker-sparse-deep",
+        "params": {
+          "executionMode": "resting_maker",
+          "makerPostMode": "bid",
+          "throughFillOnTrigger": false,
+          "rearmOnMakerCancel": true,
+          "makerFillProb": 1,
+          "liquidityMode": "maker",
+          "takerPriceMode": "walk",
+          "subLevels": [[55, 40], [65, 25], [75, 15], [85, 10]],
+          "maxSubLevels": 4,
+          "descLevels": [[35, 15], [30, 10], [25, 10], [20, 10]],
+          "maxDescLevels": 4,
+          "slippageCents": 0,
+          "spreadCents": 1,
+          "sizeScale": 1
+        }
+      }
+    ]
+  },
+  "metrics": ["totalPnl", "entries", "winRate", "profitFactor", "maxDrawdown"]
+}

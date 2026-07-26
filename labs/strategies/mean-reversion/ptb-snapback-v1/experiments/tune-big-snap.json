@@ -1,0 +1,25 @@
+{
+  "name": "tune-big-snap",
+  "strategyId": "ptb-snapback-v1",
+  "strategyFamily": "mean-reversion",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-06-12",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "grid": {
+      "minPeakDist": [42, 48],
+      "minPullbackUsd": [20, 24],
+      "maxEntryDist": [24, 28],
+      "minGdi": [0.11, 0.13]
+    }
+  }
+}

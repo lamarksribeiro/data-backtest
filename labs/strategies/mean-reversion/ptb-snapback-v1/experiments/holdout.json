@@ -1,0 +1,22 @@
+{
+  "name": "holdout",
+  "strategyId": "ptb-snapback-v1",
+  "strategyFamily": "mean-reversion",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-06-13",
+  "to": "2026-07-07",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      { "id": "ultra-select", "params": {} }
+    ]
+  }
+}

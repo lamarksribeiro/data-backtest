@@ -1,0 +1,85 @@
+{
+  "name": "escada-adaptativa-hibrida-frequency-calibration-smoke",
+  "strategyId": "escada-adaptativa-hibrida-v1",
+  "strategyFamily": "carry",
+  "description": "Calibração de frequência em um único dia; não seleciona lucratividade nem substitui walk-forward.",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-01",
+  "to": "2026-05-01",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": false,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "feeOptions": { "category": "crypto" },
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "p65-e08",
+        "params": {
+          "maxCycles": 1,
+          "minDirectionalProbability": 0.65,
+          "minEdge": 0.08,
+          "maxSpread": 0.03
+        }
+      },
+      {
+        "id": "p70-e10",
+        "params": {
+          "maxCycles": 1,
+          "minDirectionalProbability": 0.7,
+          "minEdge": 0.1,
+          "maxSpread": 0.03
+        }
+      },
+      {
+        "id": "p75-e12",
+        "params": {
+          "maxCycles": 1,
+          "minDirectionalProbability": 0.75,
+          "minEdge": 0.12,
+          "maxSpread": 0.03
+        }
+      },
+      {
+        "id": "p80-e15",
+        "params": {
+          "maxCycles": 1,
+          "minDirectionalProbability": 0.8,
+          "minEdge": 0.15,
+          "maxSpread": 0.03
+        }
+      },
+      {
+        "id": "p85-e18",
+        "params": {
+          "maxCycles": 1,
+          "minDirectionalProbability": 0.85,
+          "minEdge": 0.18,
+          "maxSpread": 0.03
+        }
+      },
+      {
+        "id": "p90-e20",
+        "params": {
+          "maxCycles": 1,
+          "minDirectionalProbability": 0.9,
+          "minEdge": 0.2,
+          "maxSpread": 0.03
+        }
+      }
+    ]
+  },
+  "metrics": [
+    "totalPnl",
+    "entries",
+    "winRate",
+    "profitFactor",
+    "maxDrawdown",
+    "maxObservedWorstLoss"
+  ]
+}

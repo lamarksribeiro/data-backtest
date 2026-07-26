@@ -1,0 +1,24 @@
+{
+  "id": "research-v1",
+  "name": "Research V1 — Strict Cross",
+  "studioVersion": 1,
+  "studioName": "Escada Adaptativa Híbrida · Research V1",
+  "role": "research",
+  "notes": "Parâmetros pré-registrados. Não é champion nem aprovação live.",
+  "params": {
+    "walletSize": 1000,
+    "riskPerEventPct": 0.0025,
+    "minShares": 5,
+    "maxGrossExposurePct": 0.025,
+    "maxCycles": 3,
+    "minEdge": 0.06,
+    "cancelEdge": 0.03,
+    "minDirectionalProbability": 0.57,
+    "maxSpread": 0.05,
+    "makerFillMode": "strict_cross",
+    "cancelLatencyTicks": 1,
+    "takerLatencyTicks": 1,
+    "applyPolymarketFees": true,
+    "polymarketFeeCategory": "crypto"
+  }
+}

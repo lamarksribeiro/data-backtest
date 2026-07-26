@@ -1,0 +1,73 @@
+{
+  "name": "escada-dupla-taker-limit-smoke",
+  "strategyId": "escada-dupla-v1",
+  "strategyFamily": "carry",
+  "description": "Smoke de 2 dias do taker_limit antes da rodada mai-jun: valida plumbing dos params novos (takerMissPolicy/takerLatencyTicks) e stats de miss no lab.",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-01",
+  "to": "2026-05-02",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 3,
+  "defaults": "../defaults.json",
+  "feeOptions": { "category": "crypto" },
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "tl-cap1-rearm-lat1",
+        "params": {
+          "executionMode": "resting_maker",
+          "makerPostMode": "bid",
+          "throughFillOnTrigger": false,
+          "rearmOnMakerCancel": true,
+          "makerFillProb": 1,
+          "takerPriceMode": "taker_limit",
+          "takerMaxExtraCents": 1,
+          "takerMissPolicy": "rearm",
+          "takerLatencyTicks": 1,
+          "slippageCents": 0,
+          "spreadCents": 1,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "tl-cap1-skip-lat1",
+        "params": {
+          "executionMode": "resting_maker",
+          "makerPostMode": "bid",
+          "throughFillOnTrigger": false,
+          "rearmOnMakerCancel": true,
+          "makerFillProb": 1,
+          "takerPriceMode": "taker_limit",
+          "takerMaxExtraCents": 1,
+          "takerMissPolicy": "skip",
+          "takerLatencyTicks": 1,
+          "slippageCents": 0,
+          "spreadCents": 1,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "control-walk-lat0",
+        "params": {
+          "executionMode": "resting_maker",
+          "makerPostMode": "bid",
+          "throughFillOnTrigger": false,
+          "rearmOnMakerCancel": true,
+          "makerFillProb": 1,
+          "takerPriceMode": "walk",
+          "takerLatencyTicks": 0,
+          "slippageCents": 0,
+          "spreadCents": 1,
+          "sizeScale": 1
+        }
+      }
+    ]
+  },
+  "metrics": ["totalPnl", "entries", "winRate", "profitFactor", "maxDrawdown"]
+}

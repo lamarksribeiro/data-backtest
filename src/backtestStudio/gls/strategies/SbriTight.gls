@@ -1,0 +1,102 @@
+strategy "SBRI Tight" {
+  // Strike Boundary Repricing Inelasticity — variante tight validada no cubo.
+  // Após cruzamento recente do PTB, o ask do novo favorito atrasa vs P_phys.
+  // Side-symmetric: UP/DOWN escolhidos só pela geometria pós-flip (sem bias a priori).
+  // Hold-to-settlement (sem saída taker).
+
+  param walletSize = 100
+  param entryBudget = 10
+  param minShares = 1
+
+  // Janela temporal intermediária-final
+  param minSecondsLeft = 35
+  param maxSecondsLeft = 120
+
+  // Pós-flip recente
+  param maxSecsSinceFlip = 8
+  param minFlipsInWindow = 1
+
+  // Geometria física
+  param minDistAbs = 12
+  param maxDistAbs = 80
+  param minEdge = 0.08
+  param volStepSecs = 30
+
+  // Book
+  param minAsk = 0.05
+  param maxAsk = 0.52
+  param maxSpread = 0.04
+  param minOddsSum = 0.96
+  param maxOddsSum = 1.06
+
+  param entrySlippageMax = 0.02
+  param minLiquidityRatio = 0.60
+
+  onEventStart(event) {
+    state.entered = false
+  }
+
+  onTick(tick, event) {
+    if (!state.entered) {
+      let secsLeft = time.secondsUntil(event.end, tick.ts)
+      if (secsLeft >= params.minSecondsLeft && secsLeft <= params.maxSecondsLeft) {
+        let btc = tick.underlyingPrice
+        let ptb = event.priceToBeat
+        let dist = math.abs(btc - ptb)
+        if (dist >= params.minDistAbs && dist <= params.maxDistAbs) {
+          let flips = signals.ptbFlipCount(samples, params.maxSecsSinceFlip)
+          if (flips >= params.minFlipsInWindow) {
+            let fav = market.sideFromPrice(btc, ptb)
+            let ask = book.ask(fav, tick)
+            let bid = book.bid(fav, tick)
+            if (ask >= params.minAsk && ask <= params.maxAsk) {
+              let spread = ask - bid
+              if (spread <= params.maxSpread) {
+                let upAsk = book.ask("UP", tick)
+                let downAsk = book.ask("DOWN", tick)
+                let oddsSum = upAsk + downAsk
+                if (oddsSum >= params.minOddsSum && oddsSum <= params.maxOddsSum) {
+                  let u1 = signals.underlyingAgo(samples, params.volStepSecs)
+                  let u2 = signals.underlyingAgo(samples, params.volStepSecs * 2)
+                  let u3 = signals.underlyingAgo(samples, params.volStepSecs * 3)
+                  if (u1 && u2 && u3) {
+                    let d1 = btc - u1
+                    let d2 = u1 - u2
+                    let d3 = u2 - u3
+                    let meanSq = (d1 * d1 + d2 * d2 + d3 * d3) / (3 * params.volStepSecs)
+                    let sigmaPs = math.sqrt(meanSq)
+                    if (sigmaPs > 0) {
+                      let z = dist / (sigmaPs * math.sqrt(secsLeft))
+                      let pPhys = math.normalCdf(z)
+                      let edge = pPhys - ask
+                      if (edge >= params.minEdge) {
+                        let maxPrice = ask + params.entrySlippageMax
+                        let budget = math.min(params.entryBudget, params.walletSize + runState.totalPnl)
+                        let bought = enter(fav, {
+                          price: ask,
+                          maxPrice: maxPrice,
+                          budget: budget,
+                          minShares: params.minShares,
+                          minLiquidityRatio: params.minLiquidityRatio,
+                          tick: tick,
+                          reason: "sbri_tight"
+                        })
+                        if (bought) {
+                          state.entered = true
+                          mark("sbri_entry", { side: fav, ask: ask, edge: edge, dist: dist, flips: flips })
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  onEventEnd(event) {
+  }
+}

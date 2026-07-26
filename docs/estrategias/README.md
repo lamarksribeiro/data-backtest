@@ -33,7 +33,7 @@ Prioridade e `sourceDoc` no catálogo de port:
 
 | Prioridade | Documento | ID |
 |---:|---|---|
-| 1 | `strike-boundary-repricing-inelasticity-v1.md` | SBRI |
+| 1 | `strike-boundary-repricing-inelasticity-v1.md` | SBRI (teoria; **lab GLS em `implementadas/sbri-tight-v1.md`**) |
 | 2 | `stochastic-escape-barrier-theory-v1.md` | SEBT |
 | 2 | `transition-acceleration-threshold-v1.md` | TAT |
 | 2 | `u-shape-volatility-v1.md` | USVM |

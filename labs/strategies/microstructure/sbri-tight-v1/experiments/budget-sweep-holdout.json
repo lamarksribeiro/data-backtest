@@ -1,0 +1,29 @@
+{
+  "name": "sbri-tight-budget-sweep-holdout",
+  "strategyId": "sbri-tight-v1",
+  "strategyFamily": "microstructure",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-06-01",
+  "to": "2026-07-13",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      { "id": "b2", "params": { "entryBudget": 2, "walletSize": 100 } },
+      { "id": "b5", "params": { "entryBudget": 5, "walletSize": 100 } },
+      { "id": "b10", "params": { "entryBudget": 10, "walletSize": 100 } },
+      { "id": "b15", "params": { "entryBudget": 15, "walletSize": 150 } },
+      { "id": "b20", "params": { "entryBudget": 20, "walletSize": 200 } },
+      { "id": "b30", "params": { "entryBudget": 30, "walletSize": 300 } },
+      { "id": "b50", "params": { "entryBudget": 50, "walletSize": 500 } },
+      { "id": "b75", "params": { "entryBudget": 75, "walletSize": 750 } },
+      { "id": "b100", "params": { "entryBudget": 100, "walletSize": 1000 } }
+    ]
+  }
+}

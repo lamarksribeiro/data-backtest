@@ -1,0 +1,64 @@
+{
+  "name": "profit-scale-june",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-06-01",
+  "to": "2026-06-08",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "notes": "Lucro maior mantendo o perfil de erros: escala de budget (2x/4x, teste de profundidade), realocação para banda média (margem gorda) e pior caso. Base = guardian-v3 honesto.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "g3-2x",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2,
+          "entryBudget": 4,
+          "maxEntryBudget": 8,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2
+        }
+      },
+      {
+        "id": "g3-midshift",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1,
+          "entryBudget": 4,
+          "maxEntryBudget": 6,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2
+        }
+      },
+      {
+        "id": "g3-2x-hold",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2,
+          "entryBudget": 4,
+          "maxEntryBudget": 8,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2,
+          "lateFlipExitEnabled": false,
+          "lateFlipReverseEnabled": false,
+          "dangerExitEnabled": false
+        }
+      }
+    ]
+  }
+}

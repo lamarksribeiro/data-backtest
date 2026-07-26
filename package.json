@@ -79,7 +79,9 @@
     "lab:apex:analyze": "node scripts/analyze-apex-triad.js",
     "lab:apex:candidate": "node labs/cli/run-preset.js --preset btc-candidate-v1 --strategy apex-triad-v1 --strategy-family portfolio",
     "db:migrate-consolidate-strategies": "node scripts/migrate-consolidate-strategies.js",
+    "package:strategy-library": "node scripts/package-strategy-library.js",
     "embed:strategy-libraries": "node scripts/embed-strategy-libraries.js",
+    "analyze:paridade-invariante": "node scripts/analyze-paridade-invariante.js",
     "port:polymarket": "node scripts/port-from-polymarket.js",
     "seed:ported-strategies": "node scripts/seed-ported-strategies.js",
     "verify:ported-strategies": "node scripts/verify-ported-strategies.js"

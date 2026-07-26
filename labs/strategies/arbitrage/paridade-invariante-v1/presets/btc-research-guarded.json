@@ -1,0 +1,34 @@
+{
+  "id": "btc-research-guarded",
+  "name": "BTC Research Guarded",
+  "role": "research",
+  "notes": "Preset conservador: confirmação em 2 snapshots, execução no tick seguinte, book coerente, profundidade real, taxas crypto e reserva operacional de 0,2 centavo por par.",
+  "bookDepth": 25,
+  "window": {
+    "from": "2026-04-23",
+    "to": "2026-07-25"
+  },
+  "params": {
+    "walletSize": 100,
+    "sizingMode": "maximize",
+    "minPairShares": 5,
+    "maxPairShares": 80,
+    "maxEventNotional": 80,
+    "maxPairsPerEvent": 1,
+    "minNetEdgePerShare": 0.005,
+    "minNetProfitUsd": 0.1,
+    "operationalBufferPerShare": 0.002,
+    "confirmationTicks": 2,
+    "executionLatencyTicks": 1,
+    "maxSignalGapMs": 750,
+    "minSecondsLeft": 15,
+    "maxSecondsLeft": 285,
+    "maxSpread": 0.03,
+    "requireBookCoherence": true,
+    "maxBookTopDrift": 0.0015,
+    "requireQuality": true,
+    "minCoverage": 0.99,
+    "applyPolymarketFees": true,
+    "polymarketFeeCategory": "crypto"
+  }
+}

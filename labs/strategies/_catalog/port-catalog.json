@@ -401,10 +401,12 @@
   "backlog": [
     {
       "id": "strike-boundary-repricing-inelasticity-v1",
-      "portStatus": "backlog",
+      "portStatus": "ported-as-sbri-tight-v1",
       "tier": "E",
       "priority": 1,
-      "sourceDoc": "docs/estrategias/nao-implementadas/strike-boundary-repricing-inelasticity-v1.md"
+      "sourceDoc": "docs/estrategias/nao-implementadas/strike-boundary-repricing-inelasticity-v1.md",
+      "labPath": "labs/strategies/microstructure/sbri-tight-v1",
+      "notes": "Implementada como sbri-tight-v1 (GLS + lab 2026-07-26). Doc: docs/estrategias/implementadas/sbri-tight-v1.md"
     },
     {
       "id": "stochastic-escape-barrier-theory-v1",

@@ -1,0 +1,36 @@
+{
+  "name": "escada-adaptativa-hibrida-future-shadow-30d",
+  "strategyId": "escada-adaptativa-hibrida-v1",
+  "strategyFamily": "carry",
+  "description": "Período futuro pré-registrado e intocado. Deve permanecer sem execução até os dados de 2026-08-24 estarem completos.",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-26",
+  "to": "2026-08-24",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 1,
+  "maxVariants": 1,
+  "defaults": "../defaults.json",
+  "feeOptions": { "category": "crypto" },
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "future-shadow-locked",
+        "params": {}
+      }
+    ]
+  },
+  "metrics": [
+    "totalPnl",
+    "entries",
+    "winRate",
+    "profitFactor",
+    "maxDrawdown",
+    "maxObservedWorstLoss"
+  ]
+}

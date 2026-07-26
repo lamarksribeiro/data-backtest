@@ -1,0 +1,29 @@
+{
+  "name": "smoke",
+  "strategyId": "ptb-snapback-v1",
+  "strategyFamily": "mean-reversion",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-05-11",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      { "id": "champion-v0006", "params": {} },
+      {
+        "id": "champion-tighter-gdi",
+        "params": { "minGdi": 0.14, "minPullbackUsd": 26 }
+      },
+      {
+        "id": "champion-scalp",
+        "params": { "holdToSettlement": 0, "profitTargetBid": 0.18 }
+      }
+    ]
+  }
+}

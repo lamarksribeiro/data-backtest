@@ -1,0 +1,43 @@
+{
+  "name": "full-period",
+  "strategyId": "ptb-snapback-v1",
+  "strategyFamily": "mean-reversion",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-07-07",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      { "id": "champion-v0006", "params": {} },
+      {
+        "id": "conservative",
+        "params": {
+          "minPeakDist": 50,
+          "minPullbackUsd": 28,
+          "maxEntryDist": 20,
+          "minGdi": 0.15,
+          "maxAsk": 0.40
+        }
+      },
+      {
+        "id": "ultra-select",
+        "params": {
+          "minPeakDist": 55,
+          "minPullbackUsd": 30,
+          "maxEntryDist": 18,
+          "minGdi": 0.16,
+          "maxAsk": 0.38,
+          "minConvTowardPtb": 5
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,263 @@
+strategy "PTB Snapback V1" {
+  // PTB Snapback: excursao do spot + snapback confirmado + azarao barato.
+  // Modo settlement (default): hold ate expiracao — evita taxa taker de saida (edge BGET).
+  // Modo scalp: saidas ativas quando holdToSettlement=0.
+
+  param walletSize = 100
+  param entryBudget = 15
+  param minShares = 1
+  param entrySlippageMax = 0.02
+  param minLiquidityRatio = 0.60
+
+  // Janela por tempo restante (meio do evento — onde snapback tem tempo de materializar)
+  param minSecondsLeft = 60
+  param maxSecondsLeft = 240
+
+  // Fase 1: excursao registrada no pico de distancia
+  param minPeakDist = 25
+  param maxEntryDist = 55
+  param minPullbackUsd = 8
+
+  // Fase 2: snapback — distancia CAINDO, momentum calmo ou convergindo
+  param awayLookbackSec = 5
+  param maxAwayVel = 0
+  param convLookbackSec = 5
+  param maxMomentumAbs = 10
+  param requireConvTowardPtb = 1
+  param minConvTowardPtb = 3
+
+  // Edge probabilistico (GDI simplificado — azarao subprecificado vs browniano)
+  param gdiEnabled = 1
+  param minGdi = 0.08
+  param volLookbackSec = 45
+
+  // Book — azarao barato
+  param minAsk = 0.15
+  param maxAsk = 0.45
+  param maxSpread = 0.03
+  param minOddsSum = 0.96
+  param maxOddsSum = 1.08
+
+  // Saida: settlement (default) ou scalp
+  param holdToSettlement = 1
+  param profitTargetBid = 0.15
+  param stopLossDelta = 0.12
+  param distReversionExitUsd = 12
+  param maxHoldSecs = 90
+  param forceExitSecsLeft = 8
+  param forceExitMinBid = 0.05
+
+  param maxEntriesPerEvent = 1
+  param minEntryIntervalSecs = 30
+  param maxEventBudget = 15
+
+  onEventStart(event) {
+    state.entriesCount = 0
+    state.totalBudgetSpent = 0
+    state.lastEntryElapsed = 0
+    state.entryDist = 0
+    state.entryElapsed = 0
+    state.entrySide = ""
+    state.peakDist = 0
+    state.pullback = 0
+    state.awayVel = 0
+    state.convSpeed = 0
+    state.gdi = 0
+    state.pFair = 0
+    state.signalOk = false
+    state.bookOk = false
+    state.intervalOk = false
+    state.budgetOk = false
+    state.windowOk = false
+    state.convOk = false
+    state.holdSecs = 0
+    state.targetPrice = 0
+    state.stopPrice = 0
+    state.reversionDist = 0
+    state.zScore = 0
+    state.sigmaInt = 0
+  }
+
+  onTick(tick, event) {
+    let secsLeft = time.secondsUntil(event.end, tick.ts)
+    let secsElapsed = time.secondsSince(event.start, tick.ts)
+    let btc = tick.underlyingPrice
+    let ptb = event.priceToBeat
+    let dist = math.abs(btc - ptb)
+
+    if (dist > state.peakDist) {
+      state.peakDist = dist
+    }
+
+    state.windowOk = false
+    if (secsLeft >= params.minSecondsLeft && secsLeft <= params.maxSecondsLeft) {
+      state.windowOk = true
+    }
+
+    let holdMode = params.holdToSettlement == true || params.holdToSettlement == 1
+
+    if (position.open && !holdMode) {
+      let side = position.side
+      let bid = book.bid(side, tick)
+      state.holdSecs = secsElapsed - state.entryElapsed
+
+      state.targetPrice = position.avgPrice + params.profitTargetBid
+      if (bid >= state.targetPrice) {
+        let profitOut = exit({ price: bid, reason: "profit_target" })
+        if (profitOut) {
+          mark("exit", { reason: "profit_target", price: bid, holdSecs: state.holdSecs })
+        }
+      }
+
+      if (position.open) {
+        state.stopPrice = position.avgPrice - params.stopLossDelta
+        if (bid <= state.stopPrice && bid > 0.05) {
+          let stopped = exit({ price: bid, reason: "stop_loss" })
+          if (stopped) {
+            mark("exit", { reason: "stop_loss", price: bid, holdSecs: state.holdSecs })
+          }
+        }
+      }
+
+      if (position.open && params.distReversionExitUsd > 0) {
+        state.reversionDist = state.entryDist - dist
+        if (state.reversionDist >= params.distReversionExitUsd) {
+          let reverted = exit({ price: bid, reason: "dist_reversion" })
+          if (reverted) {
+            mark("exit", { reason: "dist_reversion", price: bid, revertedUsd: state.reversionDist })
+          }
+        }
+      }
+
+      if (position.open && params.maxHoldSecs > 0 && state.holdSecs >= params.maxHoldSecs) {
+        let timed = exit({ price: bid, reason: "time_stop" })
+        if (timed) {
+          mark("exit", { reason: "time_stop", price: bid })
+        }
+      }
+
+      if (position.open && secsLeft <= params.forceExitSecsLeft && bid >= params.forceExitMinBid) {
+        let forced = exit({ price: bid, reason: "force_exit" })
+        if (forced) {
+          mark("exit", { reason: "force_exit", price: bid, secsLeft: secsLeft })
+        }
+      }
+    }
+
+    state.intervalOk = false
+    if (state.entriesCount == 0) {
+      state.intervalOk = true
+    }
+    if (state.entriesCount > 0 && (secsElapsed - state.lastEntryElapsed) >= params.minEntryIntervalSecs) {
+      state.intervalOk = true
+    }
+
+    state.budgetOk = false
+    if (state.entriesCount < params.maxEntriesPerEvent && state.totalBudgetSpent < params.maxEventBudget) {
+      state.budgetOk = true
+    }
+
+    if (!position.open && state.budgetOk && state.intervalOk && state.windowOk) {
+      state.pullback = state.peakDist - dist
+      state.convSpeed = signals.momentum(samples, params.convLookbackSec)
+      state.awayVel = 0
+
+      let btcPast = signals.underlyingAgo(samples, params.awayLookbackSec)
+      if (btcPast) {
+        let distPast = math.abs(btcPast - ptb)
+        state.awayVel = dist - distPast
+      }
+
+      state.entrySide = ""
+      state.signalOk = false
+      state.convOk = true
+
+      if (state.peakDist >= params.minPeakDist && state.pullback >= params.minPullbackUsd && dist <= params.maxEntryDist && state.awayVel <= params.maxAwayVel) {
+        if (btc > ptb) {
+          state.entrySide = "DOWN"
+        }
+        if (btc < ptb) {
+          state.entrySide = "UP"
+        }
+
+        let convRequired = params.requireConvTowardPtb == true || params.requireConvTowardPtb == 1
+        if (convRequired && state.entrySide != "") {
+          state.convOk = false
+          let negConv = 0.0 - params.minConvTowardPtb
+          if (state.entrySide == "DOWN" && state.convSpeed < negConv) {
+            state.convOk = true
+          }
+          if (state.entrySide == "UP" && state.convSpeed > params.minConvTowardPtb) {
+            state.convOk = true
+          }
+        }
+
+        let momAbs = math.abs(state.convSpeed)
+        if (momAbs > params.maxMomentumAbs) {
+          state.convOk = false
+        }
+
+        if (state.convOk && state.entrySide != "") {
+          state.signalOk = true
+        }
+      }
+
+      if (state.signalOk && state.entrySide != "") {
+        let ask = book.ask(state.entrySide, tick)
+        let bid = book.bid(state.entrySide, tick)
+        let spread = ask - bid
+
+        state.gdi = 0
+        state.pFair = 0
+        let gdiOn = params.gdiEnabled == true || params.gdiEnabled == 1
+        if (gdiOn) {
+          let volSlow = signals.volatility(samples, params.volLookbackSec)
+          state.sigmaInt = volSlow * math.sqrt(secsLeft)
+          state.zScore = 0
+          if (state.sigmaInt > 0.0001) {
+            state.zScore = (btc - ptb) / state.sigmaInt
+          }
+          if (state.entrySide == "DOWN") {
+            state.pFair = 1.0 - math.normalCdf(state.zScore)
+          }
+          if (state.entrySide == "UP") {
+            state.pFair = math.normalCdf(state.zScore)
+          }
+          state.gdi = state.pFair - ask
+          if (state.gdi < params.minGdi) {
+            state.signalOk = false
+          }
+        }
+
+        state.bookOk = false
+        if (state.signalOk && ask >= params.minAsk && ask <= params.maxAsk && spread <= params.maxSpread) {
+          let upAsk = book.ask("UP", tick)
+          let downAsk = book.ask("DOWN", tick)
+          let oddsSum = upAsk + downAsk
+          if (oddsSum >= params.minOddsSum && oddsSum <= params.maxOddsSum) {
+            state.bookOk = true
+          }
+        }
+
+        if (state.bookOk) {
+          let equity = math.max(0, params.walletSize + runState.totalPnl)
+          let pulseBudget = math.min(params.entryBudget, params.maxEventBudget - state.totalBudgetSpent, equity)
+          let maxPrice = ask + params.entrySlippageMax
+          let bought = enter(state.entrySide, { price: ask, maxPrice: maxPrice, budget: pulseBudget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "snap_entry" })
+          if (bought) {
+            state.entriesCount = state.entriesCount + 1
+            state.totalBudgetSpent = state.totalBudgetSpent + pulseBudget
+            state.lastEntryElapsed = secsElapsed
+            state.entryDist = dist
+            state.entryElapsed = secsElapsed
+            state.peakDist = dist
+            mark("snap_entry", { side: state.entrySide, ask: ask, dist: dist, peakDist: state.peakDist, pullback: state.pullback, gdi: state.gdi, pFair: state.pFair, convSpeed: state.convSpeed, awayVel: state.awayVel, secsLeft: secsLeft, holdMode: holdMode })
+          }
+        }
+      }
+    }
+  }
+
+  onEventEnd(event) {
+  }
+}

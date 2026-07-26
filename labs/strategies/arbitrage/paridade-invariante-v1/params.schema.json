@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "walletSize": { "type": "number", "minimum": 1 },
+    "sizingMode": { "type": "string", "enum": ["maximize", "fixed"] },
+    "targetPairShares": { "type": "integer", "minimum": 1 },
+    "minPairShares": { "type": "integer", "minimum": 1 },
+    "maxPairShares": { "type": "integer", "minimum": 1 },
+    "maxEventNotional": { "type": "number", "exclusiveMinimum": 0 },
+    "maxPairsPerEvent": { "type": "integer", "minimum": 1 },
+    "payoutPerPair": { "type": "number", "exclusiveMinimum": 0 },
+    "takerFeeRate": { "type": "number", "minimum": 0 },
+    "minNetEdgePerShare": { "type": "number", "minimum": 0 },
+    "minNetProfitUsd": { "type": "number", "minimum": 0 },
+    "operationalBufferPerShare": { "type": "number", "minimum": 0 },
+    "confirmationTicks": { "type": "integer", "minimum": 1 },
+    "executionLatencyTicks": { "type": "integer", "minimum": 0 },
+    "maxSignalGapMs": { "type": "number", "exclusiveMinimum": 0 },
+    "minSecondsLeft": { "type": "number", "minimum": 0, "maximum": 300 },
+    "maxSecondsLeft": { "type": "number", "minimum": 0, "maximum": 300 },
+    "maxSpread": { "type": "number", "minimum": 0, "maximum": 1 },
+    "requireBookCoherence": { "type": "boolean" },
+    "maxBookTopDrift": { "type": "number", "minimum": 0 },
+    "requireQuality": { "type": "boolean" },
+    "minCoverage": { "type": "number", "minimum": 0, "maximum": 1 },
+    "applyPolymarketFees": { "type": "boolean" },
+    "polymarketFeeCategory": { "type": "string", "enum": ["crypto"] }
+  }
+}

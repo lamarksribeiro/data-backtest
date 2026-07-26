@@ -283,6 +283,14 @@ Relatórios usados: `reports/labs/escada-dupla-v1/2026-07-25T05-03-21-873Z-…la
 
 ---
 
+## 12b. RESULTADO DA ETAPA 1 (2026-07-26) — REJEITADA
+
+A Etapa 1 foi executada em 2026-07-26: `taker_limit` + `takerLatencyTicks` implementados no runner (testes em `tests/escadaDuplaTakerLimit.test.js`), janela limpa mai–jun/2026 (61 dias, 10,97M ticks, nunca usados em seleção). Experimento: `taker-limit-may-june.json`; relatório `reports/labs/escada-dupla-v1/2026-07-26T00-26-13-517Z-…`.
+
+**Todas as 7 configs honestas perderam**: PnL entre −US$ 27,5k e −US$ 43k, PF 0,60–0,84, 0–9 dias positivos em 61. O gate (PF ≥ 1,2, PnL > 0) falhou por margem enorme; a validação em julho congelado tornou-se sem objeto. O win rate honesto desabou para 32–41% (vs 67% otimista), confirmando que o PnL do campeão morava nos fills a preço fantasma. `skip` "vence" por comprar menos; retry com latência piora (seleção adversa no rearm).
+
+**Desfecho: estratégia movida para [`../rejeitadas/escada-dupla-v1.md`](../rejeitadas/escada-dupla-v1.md) (post-mortem completo). Este documento passa a ser o anexo técnico do post-mortem.**
+
 ## 13. Decisão recomendada (vigente até a Etapa 1)
 
 - **Não** iniciar testes com capital no `data-robot`.

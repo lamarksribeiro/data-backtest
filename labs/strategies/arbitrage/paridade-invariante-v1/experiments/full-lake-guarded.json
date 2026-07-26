@@ -1,0 +1,51 @@
+{
+  "name": "paridade-invariante-full-lake-guarded",
+  "strategyId": "paridade-invariante-v1",
+  "strategyFamily": "arbitrage",
+  "description": "Teste integral do complete-set com book depth 25, confirmação temporal, um tick de latência, taxa crypto e reserva operacional.",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-04-23",
+  "to": "2026-07-25",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": false,
+  "chunkDays": 7,
+  "variantWorkers": 1,
+  "defaults": "../defaults.json",
+  "feeOptions": {
+    "category": "crypto"
+  },
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "guarded-default",
+        "params": {}
+      },
+      {
+        "id": "fixed-20",
+        "params": {
+          "sizingMode": "fixed",
+          "targetPairShares": 20,
+          "maxEventNotional": 25
+        }
+      },
+      {
+        "id": "latency-3ticks",
+        "params": {
+          "executionLatencyTicks": 3
+        }
+      }
+    ]
+  },
+  "metrics": [
+    "totalPnl",
+    "entries",
+    "winRate",
+    "profitFactor",
+    "maxDrawdown"
+  ]
+}

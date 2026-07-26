@@ -49,8 +49,19 @@ const DEFAULT_PARAMS = {
   throughFillOnTrigger: true, // touch_maker: se ask<=limit no disparo, fill maker imediato
   rearmOnMakerCancel: true, // reaponta nível se resting cancelar sem fill
   // formula = halfSpread+slip (realista leve); walk = book; capped = min(walk, formula+takerMaxExtraCents)
-  takerPriceMode: 'auto', // auto | formula | walk | capped
-  takerMaxExtraCents: 2, // só em capped: teto acima da fórmula
+  // taker_limit = marketable-limit honesto: fill só se walk real <= formula+cap, senão MISS (sem inventário)
+  takerPriceMode: 'auto', // auto | formula | walk | capped | taker_limit
+  takerMaxExtraCents: 2, // capped/taker_limit: teto acima da fórmula
+  // taker_limit: destino do miss — skip perde o nível; rearm reaponta (equivale a limit resting no nível+cap)
+  takerMissPolicy: 'rearm', // rearm | skip
+  // Latência do taker em ticks (~0,5s/tick): decide no tick t, executa com o book do tick t+N
+  takerLatencyTicks: 0,
+  // Gate de gap no disparo: se o ask cruzou o nível com salto > X¢, o gatilho NÃO executa
+  // (nível permanece armado e re-tenta quando o gap fechar). 0 = off.
+  maxCrossGapCents: 0,
+  // Shares dinâmicas: reduz o tamanho proporcionalmente ao gap do cruzamento
+  // sh *= max(0, 1 - gap/X). 0 = off; gap >= X zera a compra (nível permanece armado).
+  gapShareScaleCents: 0,
   // Probabilidade de fill maker (fila / adverse selection). 1 = sempre preenche.
   makerFillProb: 1,
   // skip = perde o nível; rest = posta resting para nova chance de cross
@@ -99,10 +110,16 @@ function resolveMakerPostMode(raw = {}, executionMode = 'optimistic_maker') {
 
 function resolveTakerPriceMode(raw = {}, executionMode = 'optimistic_maker') {
   const mode = String(raw.takerPriceMode ?? DEFAULT_PARAMS.takerPriceMode).trim().toLowerCase();
-  if (mode === 'formula' || mode === 'walk' || mode === 'capped') return mode;
+  if (mode === 'formula' || mode === 'walk' || mode === 'capped' || mode === 'taker_limit') return mode;
   if (executionMode === 'optimistic_maker') return 'formula';
   if (executionMode === 'touch_maker') return 'capped';
   return 'walk'; // resting_maker / taker: book walk honesto
+}
+
+function resolveTakerMissPolicy(raw = {}) {
+  const mode = String(raw.takerMissPolicy ?? DEFAULT_PARAMS.takerMissPolicy).trim().toLowerCase();
+  if (mode === 'skip' || mode === 'rearm') return mode;
+  return 'rearm';
 }
 
 function resolveMakerMissPolicy(raw = {}) {
@@ -201,6 +218,10 @@ function mergeEscadaParams(raw = {}) {
   params.rearmOnMakerCancel = toBool(raw.rearmOnMakerCancel, DEFAULT_PARAMS.rearmOnMakerCancel);
   params.takerPriceMode = resolveTakerPriceMode(raw, params.executionMode);
   params.takerMaxExtraCents = Math.max(0, toFiniteNumber(raw.takerMaxExtraCents, DEFAULT_PARAMS.takerMaxExtraCents));
+  params.takerMissPolicy = resolveTakerMissPolicy(raw);
+  params.takerLatencyTicks = clamp(Math.round(toFiniteNumber(raw.takerLatencyTicks, DEFAULT_PARAMS.takerLatencyTicks)), 0, 10);
+  params.maxCrossGapCents = Math.max(0, toFiniteNumber(raw.maxCrossGapCents, DEFAULT_PARAMS.maxCrossGapCents));
+  params.gapShareScaleCents = Math.max(0, toFiniteNumber(raw.gapShareScaleCents, DEFAULT_PARAMS.gapShareScaleCents));
   params.makerFillProb = clamp(toFiniteNumber(raw.makerFillProb, DEFAULT_PARAMS.makerFillProb), 0, 1);
   params.makerMissPolicy = resolveMakerMissPolicy(raw);
 
@@ -349,6 +370,10 @@ function createEventState(tick, params) {
     fills: { UP: [], DOWN: [] },
     restingOrders: [], // multi-resting no lado maker
     restingStats: { placed: 0, filled: 0, cancelled: 0, rejected: 0, attempts: 0, misses: 0 },
+    pendingTakerOrders: [], // ordens taker aguardando latência (takerLatencyTicks)
+    takerStats: { attempts: 0, fills: 0, misses: 0 },
+    gateStats: { gapSkips: 0, scaledDown: 0 },
+    lastBuyOutcome: null, // taker_miss | taker_pending | null — guia o re-arme genérico
     equalized: false,
     frozenByPairEdge: false,
     startedLadder: false,
@@ -567,27 +592,94 @@ function createBacktestRunner(rawParams = {}) {
     return qty;
   };
 
+  /**
+   * Executa compra taker contra o book do lastTick.
+   * taker_limit: marketable-limit honesto — fill só se o walk real <= fórmula+cap;
+   * senão registra MISS sem inventário (skip perde o nível; rearm reaponta).
+   */
+  const executeTakerBuy = (lado, qty, limitCents, type, ts, meta = {}) => {
+    const fields = sideFields(current.lastTick, lado);
+    const ask = fields.ask;
+    if (ask == null) return 0;
+    const fillC = buyFillPriceCents(limitCents, 'taker', params, meta.extraSlip || 0);
+    let fillPrice = fillC / 100;
+    const mode = params.takerPriceMode || 'formula';
+    if (mode === 'taker_limit') {
+      const cap = fillPrice + (params.takerMaxExtraCents || 0) / 100;
+      const walked = walkBook(fields.rawAsks, qty, ask);
+      current.takerStats.attempts += 1;
+      if (walked.avgPrice > cap + 1e-9) {
+        current.takerStats.misses += 1;
+        current.lastBuyOutcome = 'taker_miss';
+        addLog(ts, `TAKER MISS | ${lado} ${type} | walk $${walked.avgPrice.toFixed(4)} > cap $${cap.toFixed(4)} | ${params.takerMissPolicy}`, 'info');
+        if (params.takerMissPolicy === 'rearm' && meta.tipoBase && meta.idx) {
+          const level = current.ladder[lado]?.find((n) => n.tipo === meta.tipoBase && n.idx === meta.idx);
+          if (level && !level.armado) {
+            level.armado = true;
+            level.vezes = Math.max(0, level.vezes - 1);
+          }
+        }
+        return 0;
+      }
+      fillPrice = Math.max(fillPrice, walked.avgPrice);
+      current.takerStats.fills += 1;
+    } else if (mode !== 'formula' && fields.rawAsks) {
+      const walked = walkBook(fields.rawAsks, qty, ask);
+      if (mode === 'walk') {
+        fillPrice = Math.max(fillPrice, walked.avgPrice);
+      } else if (mode === 'capped') {
+        const cap = fillPrice + (params.takerMaxExtraCents || 0) / 100;
+        fillPrice = Math.max(fillPrice, Math.min(walked.avgPrice, cap));
+      }
+    }
+    return applyFill(lado, qty, fillPrice, type, ts, 'taker', meta);
+  };
+
+  /** Executa ordens taker pendentes de latência contra o book do tick atual. */
+  const processPendingTaker = (tick) => {
+    if (!current?.pendingTakerOrders?.length) return;
+    for (const o of current.pendingTakerOrders) o.ticksLeft -= 1;
+    const due = current.pendingTakerOrders.filter((o) => o.ticksLeft <= 0);
+    if (!due.length) return;
+    current.pendingTakerOrders = current.pendingTakerOrders.filter((o) => o.ticksLeft > 0);
+    for (const o of due) {
+      current.lastBuyOutcome = null;
+      const filled = executeTakerBuy(o.lado, o.qty, o.limitCents, o.type, tick.ts, o.meta || {});
+      if (filled > 0 && o.meta?.tipoBase === 'SUB' && o.meta?.idx) {
+        current.subEntryCountByIdx.set(o.meta.idx, (current.subEntryCountByIdx.get(o.meta.idx) || 0) + 1);
+      }
+    }
+  };
+
   const placeOrFillBuy = (lado, qty, limitCents, type, ts, meta = {}) => {
     const liq = resolveLiquidityForSide(lado, current.leaderSide, params.liquidityMode);
     const fields = sideFields(current.lastTick, lado);
     const ask = fields.ask;
     if (ask == null) return 0;
+    current.lastBuyOutcome = null;
 
-    // Taker (líder ou modo taker): fórmula / walk / capped
+    // Taker (líder ou modo taker): fórmula / walk / capped / taker_limit
     if (liq === 'taker' || params.executionMode === 'taker') {
-      const fillC = buyFillPriceCents(limitCents, 'taker', params, meta.extraSlip || 0);
-      let fillPrice = fillC / 100;
-      const mode = params.takerPriceMode || 'formula';
-      if (mode !== 'formula' && fields.rawAsks) {
-        const walked = walkBook(fields.rawAsks, qty, ask);
-        if (mode === 'walk') {
-          fillPrice = Math.max(fillPrice, walked.avgPrice);
-        } else if (mode === 'capped') {
-          const cap = fillPrice + (params.takerMaxExtraCents || 0) / 100;
-          fillPrice = Math.max(fillPrice, Math.min(walked.avgPrice, cap));
+      if ((params.takerLatencyTicks || 0) > 0) {
+        const pendKey = `${lado}|${type}|${meta.idx || 0}`;
+        if (current.pendingTakerOrders.some((o) => o.key === pendKey)) {
+          current.lastBuyOutcome = 'taker_pending';
+          return 0;
         }
+        current.pendingTakerOrders.push({
+          key: pendKey,
+          lado,
+          qty,
+          limitCents,
+          type,
+          meta,
+          placedTs: ts,
+          ticksLeft: params.takerLatencyTicks,
+        });
+        current.lastBuyOutcome = 'taker_pending';
+        return 0;
       }
-      return applyFill(lado, qty, fillPrice, type, ts, 'taker', meta);
+      return executeTakerBuy(lado, qty, limitCents, type, ts, meta);
     }
 
     // Maker + optimistic: fill no limit
@@ -753,6 +845,7 @@ function createBacktestRunner(rawParams = {}) {
 
   const evaluateLadder = (tick) => {
     checkResting(tick);
+    processPendingTaker(tick);
     const tau = secondsRemaining(current, tick);
     const hasPos = current.fills.UP.length > 0 || current.fills.DOWN.length > 0;
 
@@ -797,10 +890,27 @@ function createBacktestRunner(rawParams = {}) {
         const disparaDesc = n.tipo === 'DESC' && askC <= n.preco;
         if (!disparaSub && !disparaDesc) continue;
 
+        // Gap do cruzamento: quanto o ask pulou além do nível neste disparo
+        const crossGap = disparaSub ? askC - n.preco : n.preco - askC;
+
+        // Gate: book pulou além do tolerado → gatilho não executa (nível segue armado)
+        if ((params.maxCrossGapCents || 0) > 0 && crossGap > params.maxCrossGapCents) {
+          current.gateStats.gapSkips += 1;
+          continue;
+        }
+
         let sh = n.shares;
         if (disparaSub && params.sideMultiplier > 1) {
           const jaHist = current.subEntryCountByIdx.get(n.idx) || 0;
           sh = n.shares * Math.pow(params.sideMultiplier, jaHist);
+        }
+
+        // Shares dinâmicas: encolhe a compra proporcionalmente ao gap
+        if ((params.gapShareScaleCents || 0) > 0 && crossGap > 0) {
+          const scale = Math.max(0, 1 - crossGap / params.gapShareScaleCents);
+          sh = Math.round(sh * scale * 100) / 100;
+          current.gateStats.scaledDown += 1;
+          if (sh <= 0) continue; // gap zerou a compra; nível segue armado
         }
 
         n.armado = false;
@@ -812,8 +922,10 @@ function createBacktestRunner(rawParams = {}) {
           tipoBase: n.tipo,
         });
 
-        // Sem fill imediato: se não ficou resting aberta, reaponta o nível (reject / falta de book)
-        if (filled <= 0 && params.executionMode !== 'optimistic_maker') {
+        // Sem fill imediato: se não ficou resting aberta, reaponta o nível (reject / falta de book).
+        // taker_miss/taker_pending já decidiram o destino do nível — não sobrescrever.
+        if (filled <= 0 && params.executionMode !== 'optimistic_maker'
+          && current.lastBuyOutcome !== 'taker_miss' && current.lastBuyOutcome !== 'taker_pending') {
           const restingOpen = current.restingOrders.some(
             (o) => o.status === 'open' && o.side === lado && o.type === `${n.tipo}-${n.idx}`,
           );
@@ -879,6 +991,11 @@ function createBacktestRunner(rawParams = {}) {
         restingCancelled: current.restingStats.cancelled,
         makerAttempts: current.restingStats.attempts,
         makerMisses: current.restingStats.misses,
+        takerAttempts: current.takerStats.attempts,
+        takerFills: current.takerStats.fills,
+        takerMisses: current.takerStats.misses,
+        gateGapSkips: current.gateStats.gapSkips,
+        gateScaledDown: current.gateStats.scaledDown,
         executionMode: params.executionMode,
       });
       equity.push({ ts: closedAt, pnl: totalPnl });
@@ -943,6 +1060,11 @@ function createBacktestRunner(rawParams = {}) {
       restingCancelled: current.restingStats.cancelled,
       makerAttempts: current.restingStats.attempts,
       makerMisses: current.restingStats.misses,
+      takerAttempts: current.takerStats.attempts,
+      takerFills: current.takerStats.fills,
+      takerMisses: current.takerStats.misses,
+      gateGapSkips: current.gateStats.gapSkips,
+      gateScaledDown: current.gateStats.scaledDown,
       executionMode: params.executionMode,
       diagnostics: {
         leaderSide: current.leaderSide,
@@ -1035,6 +1157,7 @@ var __escadaExports = {
   resolveRearmMode,
   resolveMakerPostMode,
   resolveTakerPriceMode,
+  resolveTakerMissPolicy,
   shouldMakerFillByProb,
   hashUnitInterval,
   shouldFillRestingBuy,

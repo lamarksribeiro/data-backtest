@@ -1,0 +1,10 @@
+{
+  "name": "core-ablation",
+  "description": "Ablation em torno do campeao ultra-select.",
+  "grid": {
+    "minPeakDist": [50, 55, 60],
+    "minPullbackUsd": [28, 30, 32],
+    "minGdi": [0.14, 0.16, 0.18],
+    "maxAsk": [0.36, 0.38, 0.40]
+  }
+}

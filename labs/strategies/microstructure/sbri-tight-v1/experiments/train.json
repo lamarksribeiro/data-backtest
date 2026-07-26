@@ -1,0 +1,41 @@
+{
+  "name": "sbri-tight-train",
+  "strategyId": "sbri-tight-v1",
+  "strategyFamily": "microstructure",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-04-27",
+  "to": "2026-05-31",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      { "id": "champion", "params": {} },
+      {
+        "id": "catalog-tight",
+        "params": {
+          "maxSecsSinceFlip": 10,
+          "minDistAbs": 15,
+          "minEdge": 0.10,
+          "maxAsk": 0.48,
+          "maxSpread": 0.035,
+          "minSecondsLeft": 40,
+          "maxSecondsLeft": 100
+        }
+      },
+      {
+        "id": "edge10-ask52",
+        "params": { "minEdge": 0.10, "maxAsk": 0.52 }
+      },
+      {
+        "id": "spread03",
+        "params": { "maxSpread": 0.03 }
+      }
+    ]
+  }
+}

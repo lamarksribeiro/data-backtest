@@ -1,0 +1,19 @@
+{
+  "name": "sbri-tight-smoke",
+  "strategyId": "sbri-tight-v1",
+  "strategyFamily": "microstructure",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-06-01",
+  "to": "2026-06-03",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [{ "id": "champion", "params": {} }]
+  }
+}
