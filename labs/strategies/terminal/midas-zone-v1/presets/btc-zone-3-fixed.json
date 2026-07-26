@@ -1,0 +1,32 @@
+{
+  "id": "btc-zone-3-fixed",
+  "strategyId": "midas-zone-v1",
+  "strategyFamily": "terminal",
+  "name": "MIDAS Zone V1 — 3 zonas fixas (100s)",
+  "studioSlug": "midas-zone-btc-zone-3-fixed",
+  "studioName": "MIDAS Zone V1 · 3 zonas fixas",
+  "studioVersion": 2,
+  "role": "candidate",
+  "tags": ["experimental", "depth25", "midas", "zones", "multi-entry"],
+  "params": {
+    "walletSize": 100,
+    "entryBudget": 5,
+    "settleWinnerPrice": 0.995,
+    "maxEventBudget": 20,
+    "maxEntriesPerEvent": 3,
+    "zoneMode": 0,
+    "zoneCount": 3,
+    "zoneExitEnabled": true,
+    "holdLastZoneToSettle": true,
+    "minSecondsLeft": 5,
+    "maxSecondsLeft": 30,
+    "maxDistAbs": 40,
+    "minAsk": 0.55,
+    "maxAsk": 0.94,
+    "tierAskThreshold": 0.82,
+    "tierAskBudgetFactor": 1.5
+  },
+  "provenance": {
+    "source": "Default experimental: 3 mini-terminais artificiais de 100s + exit na fronteira."
+  }
+}

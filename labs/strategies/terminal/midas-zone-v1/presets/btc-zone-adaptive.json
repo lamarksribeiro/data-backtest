@@ -1,0 +1,36 @@
+{
+  "id": "btc-zone-adaptive",
+  "strategyId": "midas-zone-v1",
+  "strategyFamily": "terminal",
+  "name": "MIDAS Zone V1 — Zonas adaptativas (warmup σ)",
+  "studioSlug": "midas-zone-btc-zone-adaptive",
+  "studioName": "MIDAS Zone V1 · Adaptativo",
+  "studioVersion": 3,
+  "role": "candidate",
+  "tags": ["experimental", "depth25", "midas", "zones", "adaptive"],
+  "params": {
+    "walletSize": 100,
+    "entryBudget": 5,
+    "settleWinnerPrice": 0.995,
+    "maxEventBudget": 20,
+    "maxEntriesPerEvent": 5,
+    "zoneMode": 1,
+    "zoneWarmupSecs": 45,
+    "adaptiveBaseZoneLen": 100,
+    "adaptiveRefSigma": 20,
+    "adaptiveMinZoneLen": 60,
+    "adaptiveMaxZoneLen": 150,
+    "zoneExitEnabled": true,
+    "holdLastZoneToSettle": true,
+    "minSecondsLeft": 5,
+    "maxSecondsLeft": 30,
+    "maxDistAbs": 40,
+    "minAsk": 0.55,
+    "maxAsk": 0.94,
+    "tierAskThreshold": 0.82,
+    "tierAskBudgetFactor": 1.5
+  },
+  "provenance": {
+    "source": "Após 45s mede σ e define zoneLen (σ alta → zonas longas / menos entradas)."
+  }
+}

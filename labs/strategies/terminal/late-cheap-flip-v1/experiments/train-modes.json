@@ -1,0 +1,185 @@
+{
+  "name": "late-cheap-flip-train-modes",
+  "strategyId": "late-cheap-flip-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-04-27",
+  "to": "2026-05-31",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "m1-base",
+        "params": {
+          "entryMode": 1,
+          "minSecondsLeft": 10,
+          "maxSecondsLeft": 45,
+          "minDistAbs": 5,
+          "maxDistAbs": 30,
+          "maxAsk": 0.35,
+          "minEdge": 0.05,
+          "minMomAbs": 3
+        }
+      },
+      {
+        "id": "m1-tight-ask",
+        "params": {
+          "entryMode": 1,
+          "minSecondsLeft": 10,
+          "maxSecondsLeft": 45,
+          "minDistAbs": 5,
+          "maxDistAbs": 25,
+          "maxAsk": 0.28,
+          "minEdge": 0.08,
+          "minMomAbs": 4
+        }
+      },
+      {
+        "id": "m1-wide-mom",
+        "params": {
+          "entryMode": 1,
+          "minSecondsLeft": 15,
+          "maxSecondsLeft": 60,
+          "minDistAbs": 5,
+          "maxDistAbs": 35,
+          "maxAsk": 0.35,
+          "minEdge": 0.05,
+          "minMomAbs": 5,
+          "momLookbackSecs": 8
+        }
+      },
+      {
+        "id": "m1-near-ptb",
+        "params": {
+          "entryMode": 1,
+          "minSecondsLeft": 8,
+          "maxSecondsLeft": 30,
+          "minDistAbs": 3,
+          "maxDistAbs": 18,
+          "maxAsk": 0.32,
+          "minEdge": 0.06,
+          "minMomAbs": 3
+        }
+      },
+      {
+        "id": "m2-base",
+        "params": {
+          "entryMode": 2,
+          "minSecondsLeft": 15,
+          "maxSecondsLeft": 60,
+          "maxAsk": 0.52,
+          "minEdge": 0.08,
+          "minDistAbs": 8
+        }
+      },
+      {
+        "id": "m2-edge10",
+        "params": {
+          "entryMode": 2,
+          "minSecondsLeft": 15,
+          "maxSecondsLeft": 60,
+          "maxAsk": 0.52,
+          "minEdge": 0.10,
+          "minDistAbs": 10
+        }
+      },
+      {
+        "id": "m2-ask48",
+        "params": {
+          "entryMode": 2,
+          "minSecondsLeft": 15,
+          "maxSecondsLeft": 60,
+          "maxAsk": 0.48,
+          "minEdge": 0.08,
+          "minDistAbs": 12,
+          "maxSpread": 0.035
+        }
+      },
+      {
+        "id": "m2-midlate",
+        "params": {
+          "entryMode": 2,
+          "minSecondsLeft": 25,
+          "maxSecondsLeft": 90,
+          "maxAsk": 0.52,
+          "minEdge": 0.08,
+          "minDistAbs": 12
+        }
+      },
+      {
+        "id": "m2-flip10",
+        "params": {
+          "entryMode": 2,
+          "minSecondsLeft": 15,
+          "maxSecondsLeft": 60,
+          "maxSecsSinceFlip": 10,
+          "maxAsk": 0.50,
+          "minEdge": 0.09,
+          "minDistAbs": 10
+        }
+      },
+      {
+        "id": "m3-base",
+        "params": {
+          "entryMode": 3,
+          "minSecondsLeft": 3,
+          "maxSecondsLeft": 15,
+          "minDistAbs": 5,
+          "maxAsk": 0.45,
+          "minEdge": 0.12
+        }
+      },
+      {
+        "id": "m3-ultra",
+        "params": {
+          "entryMode": 3,
+          "minSecondsLeft": 3,
+          "maxSecondsLeft": 8,
+          "minDistAbs": 8,
+          "maxAsk": 0.40,
+          "minEdge": 0.15
+        }
+      },
+      {
+        "id": "m3-edge18",
+        "params": {
+          "entryMode": 3,
+          "minSecondsLeft": 3,
+          "maxSecondsLeft": 12,
+          "minDistAbs": 6,
+          "maxAsk": 0.42,
+          "minEdge": 0.18
+        }
+      },
+      {
+        "id": "m3-wide15",
+        "params": {
+          "entryMode": 3,
+          "minSecondsLeft": 5,
+          "maxSecondsLeft": 20,
+          "minDistAbs": 5,
+          "maxAsk": 0.48,
+          "minEdge": 0.10
+        }
+      },
+      {
+        "id": "m3-ask35",
+        "params": {
+          "entryMode": 3,
+          "minSecondsLeft": 3,
+          "maxSecondsLeft": 15,
+          "minDistAbs": 8,
+          "maxAsk": 0.35,
+          "minEdge": 0.12
+        }
+      }
+    ]
+  }
+}

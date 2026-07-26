@@ -1,0 +1,28 @@
+{
+  "id": "midas-probe-v1",
+  "name": "MIDAS Probe V1",
+  "family": "terminal",
+  "status": "candidate",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "labs/strategies/terminal/midas-probe-v1/strategy.gls"
+  },
+  "promotedToStudio": true,
+  "studioSlug": "midas-probe-v1",
+  "studio": {
+    "description": "MIDAS Probe V1 — anti-wipeout no terminal: probe barato (τ 30–22s); se o path confirmar (τ 18–9s) reentra cheio; se morrer, aborta com perda ~probe. Default v2 = Probe→Confirm. Validação 2026-07-26: jul +555 (pior dia −7 vs −14 baseline); jun stress pior dia −14 vs −32. Relatório: labs/sandbox/midas-probe-validation-report.md.",
+    "tags": ["terminal", "midas", "probe", "confirm", "anti-wipeout", "btc", "candidate"],
+    "defaultVersion": 2,
+    "defaultPreset": "btc-probe-confirm",
+    "defaultGlsSource": "classic",
+    "glsSources": {
+      "classic": "labs/strategies/terminal/midas-probe-v1/strategy.gls"
+    }
+  },
+  "notes": "Candidata Estúdio v2 (btc-probe-confirm). Validação smoke/jun/jul 2026-07-26: corta cauda ~50% vs baseline MIDAS; PnL ~50%. Doc: docs/estrategias/implementadas/midas-probe-v1.md."
+}

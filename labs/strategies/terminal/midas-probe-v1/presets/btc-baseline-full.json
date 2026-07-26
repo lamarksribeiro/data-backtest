@@ -1,0 +1,47 @@
+{
+  "id": "btc-baseline-full",
+  "strategyId": "midas-probe-v1",
+  "strategyFamily": "terminal",
+  "name": "MIDAS Probe V1 — Baseline full (sem probe)",
+  "studioSlug": "midas-probe-btc-baseline-full",
+  "studioName": "MIDAS Probe V1 · Baseline full",
+  "studioVersion": 1,
+  "role": "baseline",
+  "description": "Controle: MIDAS terminal puro (probe desligado). Mesmo envelope ask/dist/tier do lab probe.",
+  "tags": ["baseline", "depth25", "midas", "executable"],
+  "window": {
+    "from": "2026-07-01",
+    "to": "2026-07-25"
+  },
+  "labSummary": {
+    "julyPnl": 1146.6,
+    "julyWinRate": 81.5,
+    "julyProfitFactor": 1.59,
+    "julyMaxDrawdown": 36.9,
+    "julyWorstDay": -13.8,
+    "juneStressPnl": 294.2,
+    "juneStressWorstDay": -32.3,
+    "source": "labs/sandbox/midas-probe-validation-report.md (2026-07-26)"
+  },
+  "params": {
+    "walletSize": 100,
+    "entryBudget": 5,
+    "probeBudget": 1.5,
+    "settleWinnerPrice": 0.995,
+    "probeEnabled": false,
+    "allowDirectFull": true,
+    "minSecondsLeft": 5,
+    "maxSecondsLeft": 30,
+    "maxDistAbs": 40,
+    "minAsk": 0.55,
+    "maxAsk": 0.94,
+    "maxSpread": 0.03,
+    "minOddsSum": 0.98,
+    "maxOddsSum": 1.06,
+    "tierAskThreshold": 0.82,
+    "tierAskBudgetFactor": 1.5,
+    "lateFlipExitEnabled": true,
+    "lateFlipReverseEnabled": true,
+    "dangerExitEnabled": true
+  }
+}

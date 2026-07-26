@@ -1,0 +1,32 @@
+{
+  "id": "btc-zone-1-baseline",
+  "strategyId": "midas-zone-v1",
+  "strategyFamily": "terminal",
+  "name": "MIDAS Zone V1 — Baseline 1 zona (≈ MIDAS clássico)",
+  "studioSlug": "midas-zone-btc-zone-1-baseline",
+  "studioName": "MIDAS Zone V1 · Baseline 1 zona",
+  "studioVersion": 1,
+  "role": "baseline",
+  "tags": ["experimental", "depth25", "midas", "zones", "baseline"],
+  "params": {
+    "walletSize": 100,
+    "entryBudget": 5,
+    "settleWinnerPrice": 0.995,
+    "maxEventBudget": 10,
+    "maxEntriesPerEvent": 1,
+    "zoneMode": 0,
+    "zoneCount": 1,
+    "zoneExitEnabled": false,
+    "holdLastZoneToSettle": true,
+    "minSecondsLeft": 5,
+    "maxSecondsLeft": 30,
+    "maxDistAbs": 40,
+    "minAsk": 0.55,
+    "maxAsk": 0.94,
+    "tierAskThreshold": 0.82,
+    "tierAskBudgetFactor": 1.5
+  },
+  "provenance": {
+    "source": "Controle: 1 zona = só o terminal real do evento (comportamento próximo ao MIDAS Carry)."
+  }
+}

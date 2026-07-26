@@ -1,0 +1,28 @@
+{
+  "id": "midas-zone-v1",
+  "name": "MIDAS Zone V1",
+  "family": "terminal",
+  "status": "experimental",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "labs/strategies/terminal/midas-zone-v1/strategy.gls"
+  },
+  "promotedToStudio": true,
+  "studioSlug": "midas-zone-v1",
+  "studio": {
+    "description": "MIDAS Zone V1 — divide o evento 5m em zonas artificiais (início/fim) e aplica o envelope terminal MIDAS em cada zona. Modo fixo (N zonas iguais) ou adaptativo (define zonas após warmup via σ). Exit na fronteira para permitir reentrada (motor = 1 posição).",
+    "tags": ["terminal", "midas", "zones", "multi-entry", "experimental", "btc"],
+    "defaultVersion": 2,
+    "defaultPreset": "btc-zone-3-fixed",
+    "defaultGlsSource": "classic",
+    "glsSources": {
+      "classic": "labs/strategies/terminal/midas-zone-v1/strategy.gls"
+    }
+  },
+  "notes": "Lab experimental 2026-07-26. zoneCount=1 ≈ MIDAS clássico (só terminal real). zoneCount≥2 = mini-terminais artificiais + exit na fronteira. Doc: docs/estrategias/implementadas/midas-zone-v1.md."
+}

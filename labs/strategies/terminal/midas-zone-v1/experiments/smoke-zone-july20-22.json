@@ -1,0 +1,68 @@
+{
+  "name": "smoke-zone-july20-22",
+  "strategyId": "midas-zone-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-20",
+  "to": "2026-07-22",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "zone-1-baseline",
+        "params": {
+          "zoneMode": 0,
+          "zoneCount": 1,
+          "maxEntriesPerEvent": 1,
+          "maxEventBudget": 10,
+          "zoneExitEnabled": false
+        }
+      },
+      {
+        "id": "zone-2-fixed",
+        "params": {
+          "zoneMode": 0,
+          "zoneCount": 2,
+          "maxEntriesPerEvent": 2,
+          "maxEventBudget": 15
+        }
+      },
+      {
+        "id": "zone-3-fixed",
+        "params": {
+          "zoneMode": 0,
+          "zoneCount": 3,
+          "maxEntriesPerEvent": 3,
+          "maxEventBudget": 20
+        }
+      },
+      {
+        "id": "zone-4-fixed",
+        "params": {
+          "zoneMode": 0,
+          "zoneCount": 4,
+          "maxEntriesPerEvent": 4,
+          "maxEventBudget": 20
+        }
+      },
+      {
+        "id": "zone-adaptive",
+        "params": {
+          "zoneMode": 1,
+          "zoneWarmupSecs": 45,
+          "adaptiveBaseZoneLen": 100,
+          "maxEntriesPerEvent": 5,
+          "maxEventBudget": 20
+        }
+      }
+    ]
+  }
+}

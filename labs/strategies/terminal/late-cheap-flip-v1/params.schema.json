@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "walletSize": { "type": "number", "minimum": 1 },
+    "entryBudget": { "type": "number", "minimum": 1 },
+    "minShares": { "type": "number", "minimum": 1 },
+    "entryMode": { "type": "number", "enum": [1, 2, 3] },
+    "minSecondsLeft": { "type": "number", "minimum": 1 },
+    "maxSecondsLeft": { "type": "number", "minimum": 1 },
+    "maxSecsSinceFlip": { "type": "number", "minimum": 1 },
+    "minFlipsInWindow": { "type": "number", "minimum": 0 },
+    "minDistAbs": { "type": "number", "minimum": 0 },
+    "maxDistAbs": { "type": "number", "minimum": 1 },
+    "minEdge": { "type": "number" },
+    "volStepSecs": { "type": "number", "minimum": 1 },
+    "momLookbackSecs": { "type": "number", "minimum": 1 },
+    "minMomAbs": { "type": "number", "minimum": 0 },
+    "minAsk": { "type": "number", "minimum": 0 },
+    "maxAsk": { "type": "number", "minimum": 0 },
+    "maxSpread": { "type": "number", "minimum": 0 },
+    "minOddsSum": { "type": "number" },
+    "maxOddsSum": { "type": "number" },
+    "entrySlippageMax": { "type": "number", "minimum": 0 },
+    "minLiquidityRatio": { "type": "number", "minimum": 0, "maximum": 1 }
+  },
+  "additionalProperties": true
+}

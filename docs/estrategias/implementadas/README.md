@@ -14,6 +14,8 @@ Teorias portadas ao `data-backtest` (runners no Studio ou biblioteca). Origem pr
 | [whipsaw-lock-v1.md](whipsaw-lock-v1.md) | `whipsaw-lock` | Whipsaw Lock ANOM-22/33 (nativa data-backtest) |
 | [sbri-tight-v1.md](sbri-tight-v1.md) | `sbri-tight-v1` | SBRI Tight — pós-flip PTB com desconto vs P_phys (~+US$1.2k / 78d lab) |
 | [midas-carry-v1.md](midas-carry-v1.md) | `midas-carry-v1` | TFC V7 + envelope high-ask em tier; supera TFC em treino e holdout |
+| [midas-zone-v1.md](midas-zone-v1.md) | `midas-zone-v1` | MIDAS com zonas artificiais (multi-entrada sequencial) + modo adaptativo |
+| [midas-probe-v1.md](midas-probe-v1.md) | `midas-probe-v1` | Probe barato → confirm cheio (anti-wipeout no terminal) |
 
 ## Library runners (tier A)
 

@@ -1,0 +1,54 @@
+{
+  "name": "late-cheap-flip-smoke",
+  "strategyId": "late-cheap-flip-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-06-01",
+  "to": "2026-06-03",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "mode1-pre",
+        "params": {
+          "entryMode": 1,
+          "minSecondsLeft": 10,
+          "maxSecondsLeft": 45,
+          "minDistAbs": 5,
+          "maxDistAbs": 30,
+          "maxAsk": 0.35,
+          "minEdge": 0.05,
+          "minMomAbs": 3
+        }
+      },
+      {
+        "id": "mode2-post",
+        "params": {
+          "entryMode": 2,
+          "minSecondsLeft": 15,
+          "maxSecondsLeft": 60,
+          "maxAsk": 0.52,
+          "minEdge": 0.08
+        }
+      },
+      {
+        "id": "mode3-late",
+        "params": {
+          "entryMode": 3,
+          "minSecondsLeft": 3,
+          "maxSecondsLeft": 15,
+          "minDistAbs": 5,
+          "maxAsk": 0.45,
+          "minEdge": 0.12
+        }
+      }
+    ]
+  }
+}

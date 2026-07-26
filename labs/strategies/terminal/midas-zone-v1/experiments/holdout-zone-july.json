@@ -1,0 +1,59 @@
+{
+  "name": "holdout-zone-july",
+  "strategyId": "midas-zone-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-18",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "zone-1-baseline",
+        "params": {
+          "zoneMode": 0,
+          "zoneCount": 1,
+          "maxEntriesPerEvent": 1,
+          "maxEventBudget": 10,
+          "zoneExitEnabled": false
+        }
+      },
+      {
+        "id": "zone-3-fixed",
+        "params": {
+          "zoneMode": 0,
+          "zoneCount": 3,
+          "maxEntriesPerEvent": 3,
+          "maxEventBudget": 20
+        }
+      },
+      {
+        "id": "zone-5-fixed",
+        "params": {
+          "zoneMode": 0,
+          "zoneCount": 5,
+          "maxEntriesPerEvent": 5,
+          "maxEventBudget": 25
+        }
+      },
+      {
+        "id": "zone-adaptive",
+        "params": {
+          "zoneMode": 1,
+          "zoneWarmupSecs": 45,
+          "adaptiveBaseZoneLen": 100,
+          "maxEntriesPerEvent": 5,
+          "maxEventBudget": 20
+        }
+      }
+    ]
+  }
+}

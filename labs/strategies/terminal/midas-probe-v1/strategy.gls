@@ -1,0 +1,302 @@
+strategy "MIDAS Probe V1" {
+  // Probe → Confirm no envelope terminal MIDAS (sem zonas mid-event).
+  // 1) Probe barato em τ ∈ [probeMin, probeMax] (ex. 30–22s).
+  // 2) Se o colchão morrer ou oppAsk disparar → exit do probe e ABORTA o evento
+  //    (perda limitada ao probeBudget — anti-wipeout).
+  // 3) Se em τ ∈ [confirmMax, confirmMin] o path ainda confirma → exit probe
+  //    + reentrada cheia (entryBudget × tier) até o settlement.
+  // 4) allowDirectFull: se o probe não disparou, permite entrada cheia clássica.
+
+  param walletSize = 100
+  param entryBudget = 5
+  param probeBudget = 1.5
+  param minShares = 1
+  param settleWinnerPrice = 0.995
+  param entrySlippageMax = 0.02
+  param minLiquidityRatio = 0.60
+
+  param probeMinSecondsLeft = 22
+  param probeMaxSecondsLeft = 30
+  param confirmMinSecondsLeft = 9
+  param confirmMaxSecondsLeft = 18
+  param probeKillCrossDist = 0
+  param probeKillOppAsk = 0.45
+  param confirmMinDist = 2
+  param allowDirectFull = true
+  param probeEnabled = true
+
+  param minSecondsLeft = 5
+  param maxSecondsLeft = 30
+  param maxDistAbs = 40
+  param minAsk = 0.55
+  param maxAsk = 0.94
+  param maxSpread = 0.03
+  param minOddsSum = 0.98
+  param maxOddsSum = 1.06
+
+  param velocityLookbackSecs = 5
+  param maxAdverseSpotChange = 8.0
+  param minObi = 0.0
+  param obiLevels = 5
+  param sigmaLookbackSecs = 90
+  param sigmaDivisor = 5.48
+  param minEntryZ = 0.0
+  param tierAskThreshold = 0.82
+  param tierAskBudgetFactor = 1.5
+  param tierMinZ = 0.0
+
+  param stopMinBid = 0.05
+  param lateFlipExitEnabled = true
+  param lateFlipExitSec = 8
+  param lateFlipExitCrossDist = 0
+  param lateFlipMinSec = 4
+  param lateFlipReverseEnabled = true
+  param lateFlipReverseMaxAsk = 0.95
+  param lateFlipReverseMinAsk = 0.0
+  param lateFlipReverseBudgetFactor = 1.0
+  param dangerExitEnabled = true
+  param dangerExitK = 0.3
+  param dangerExitFloorSec = 4
+
+  onEventStart(event) {
+    state.entered = false
+    state.closed = false
+    state.reversed = false
+    state.signedDistance = 0
+    state.entryZ = 0
+    state.entryMode = ""
+    state.entryBudgetUsed = 0
+    state.z = 0
+    state.isAdverseMove = false
+    state.obiOk = true
+    state.budgetFactor = 1.0
+    state.reverseBudget = 0
+    state.tierZOk = true
+    state.filtersOk = false
+    state.probeEntered = false
+    state.probeKilled = false
+    state.confirmed = false
+    state.eventAborted = false
+    state.pendingConfirm = false
+  }
+
+  onTick(tick, event) {
+    let secsLeft = time.secondsUntil(event.end, tick.ts)
+
+    // ===== Gestão de posição =====
+    if (position.open) {
+      if (!state.entered) {
+        state.entered = true
+      }
+
+      let side = position.side
+      let bid = book.bid(side, tick)
+
+      state.signedDistance = tick.underlyingPrice - event.priceToBeat
+      if (side == "DOWN") {
+        state.signedDistance = event.priceToBeat - tick.underlyingPrice
+      }
+
+      // --- Probe aberto: kill ou upgrade ---
+      if (state.entryMode == "probe" && !state.probeKilled && !state.confirmed) {
+        let oppSide = prices.oppositeSide(side)
+        let oppAsk = book.ask(oppSide, tick)
+
+        // Kill: colchão sumiu ou mercado reprecifica contra
+        if (bid >= params.stopMinBid && (state.signedDistance <= params.probeKillCrossDist || (oppAsk > 0 && oppAsk >= params.probeKillOppAsk))) {
+          let killOut = exit({ price: bid, reason: "probe_kill_exit" })
+          if (killOut) {
+            state.closed = killOut.closed
+            state.probeKilled = true
+            state.eventAborted = true
+            mark("exit", { reason: "probe_kill_exit", price: bid, dist: state.signedDistance, oppAsk: oppAsk, secsLeft: secsLeft })
+          }
+        }
+
+        // Confirm: ainda a favor na janela de confirmação → exit + full
+        if (!state.probeKilled && position.open && secsLeft <= params.confirmMaxSecondsLeft && secsLeft >= params.confirmMinSecondsLeft && state.signedDistance >= params.confirmMinDist && bid >= params.stopMinBid) {
+          let upgradeOut = exit({ price: bid, reason: "probe_upgrade_exit" })
+          if (upgradeOut) {
+            state.closed = upgradeOut.closed
+            state.pendingConfirm = true
+            mark("exit", { reason: "probe_upgrade_exit", price: bid, dist: state.signedDistance, secsLeft: secsLeft })
+          }
+        }
+      }
+
+      // --- Posição cheia (confirm/full): late flip / danger ---
+      if (state.entryMode == "confirm" || state.entryMode == "full") {
+        let dangerExitOn = params.dangerExitEnabled == true || params.dangerExitEnabled == 1
+        if (dangerExitOn && !state.closed && !state.reversed && secsLeft >= params.dangerExitFloorSec && secsLeft < (params.dangerExitFloorSec + 1)) {
+          let sigmaDanger = signals.volatility(samples, 5)
+          if (math.abs(state.signedDistance) < (params.dangerExitK * sigmaDanger)) {
+            let dangerOut = exit({ price: bid, reason: "danger_exit" })
+            if (dangerOut) {
+              state.closed = dangerOut.closed
+              mark("exit", { reason: "danger_exit", price: bid })
+            }
+          }
+        }
+
+        let lateFlipExitOn = params.lateFlipExitEnabled == true || params.lateFlipExitEnabled == 1
+        if (!state.closed && lateFlipExitOn && secsLeft <= params.lateFlipExitSec && secsLeft >= params.lateFlipMinSec && state.signedDistance <= params.lateFlipExitCrossDist && bid >= params.stopMinBid) {
+          let lateFlipReverseOn = params.lateFlipReverseEnabled == true || params.lateFlipReverseEnabled == 1
+          if (lateFlipReverseOn && !state.reversed) {
+            let lfOpp = prices.oppositeSide(side)
+            let lfAsk = book.ask(lfOpp, tick)
+            if (lfAsk >= params.lateFlipReverseMinAsk && lfAsk > 0 && lfAsk <= params.lateFlipReverseMaxAsk) {
+              state.reverseBudget = params.entryBudget
+              if (state.entryBudgetUsed > 0) {
+                state.reverseBudget = state.entryBudgetUsed
+              }
+              state.reverseBudget = state.reverseBudget * params.lateFlipReverseBudgetFactor
+              let flipped = reverse(lfOpp, { price: lfAsk, exitPrice: bid, budget: state.reverseBudget, tick: tick, ignoreConsumed: true, reason: "late_flip_reverse" })
+              if (flipped) {
+                state.reversed = true
+                mark("reverse", { reason: "late_flip_reverse", from: side, to: lfOpp, ask: lfAsk })
+              }
+            }
+          }
+          if (!state.reversed) {
+            let lateFlipped = exit({ price: bid, reason: "late_flip_exit" })
+            if (lateFlipped) {
+              state.closed = lateFlipped.closed
+              mark("exit", { reason: "late_flip_exit", price: bid })
+            }
+          }
+        }
+      }
+    }
+
+    // ===== Reentrada cheia após upgrade do probe (mesmo tick ou seguinte) =====
+    if (state.pendingConfirm && !position.open && !state.confirmed && !state.eventAborted) {
+      state.pendingConfirm = false
+      let btcC = tick.underlyingPrice
+      let ptbC = event.priceToBeat
+      let favC = market.sideFromPrice(btcC, ptbC)
+      let askC = book.ask(favC, tick)
+      if (askC >= params.minAsk && askC <= params.maxAsk) {
+        state.budgetFactor = 1.0
+        if (askC >= params.tierAskThreshold) {
+          state.budgetFactor = params.tierAskBudgetFactor
+        }
+        let equityC = math.max(0, params.walletSize + runState.totalPnl)
+        let fullBudget = math.min(params.entryBudget * state.budgetFactor, equityC)
+        let maxPriceC = askC + params.entrySlippageMax
+        let fullBought = enter(favC, { price: askC, maxPrice: maxPriceC, budget: fullBudget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "midas_confirm_entry" })
+        if (fullBought) {
+          state.entered = true
+          state.closed = false
+          state.confirmed = true
+          state.entryMode = "confirm"
+          state.entryBudgetUsed = fullBudget
+          mark("midas_confirm_entry", { side: favC, ask: askC, budget: fullBudget, secsLeft: secsLeft })
+        }
+      }
+    }
+
+    // ===== Filtros MIDAS compartilhados =====
+    state.filtersOk = false
+    if (!state.eventAborted && !position.open && !state.confirmed && !state.pendingConfirm) {
+      let btc = tick.underlyingPrice
+      let ptb = event.priceToBeat
+      let dist = math.abs(btc - ptb)
+      let fav = market.sideFromPrice(btc, ptb)
+      let ask = book.ask(fav, tick)
+      let bidFav = book.bid(fav, tick)
+      let spread = ask - bidFav
+
+      let sigmaLevel = signals.volatility(samples, params.sigmaLookbackSecs)
+      let sigmaPs = sigmaLevel / params.sigmaDivisor
+      state.z = 0.0
+      if (sigmaPs > 0 && secsLeft > 0) {
+        state.z = dist / (sigmaPs * math.sqrt(secsLeft))
+      }
+
+      state.isAdverseMove = false
+      let btcPast = signals.underlyingAgo(samples, params.velocityLookbackSecs)
+      if (btcPast) {
+        let spotChange = btc - btcPast
+        if (fav == "UP" && spotChange < (0.0 - params.maxAdverseSpotChange)) {
+          state.isAdverseMove = true
+        }
+        if (fav == "DOWN" && spotChange > params.maxAdverseSpotChange) {
+          state.isAdverseMove = true
+        }
+      }
+
+      state.tierZOk = true
+      if (ask >= params.tierAskThreshold && params.tierMinZ > 0 && state.z < params.tierMinZ) {
+        state.tierZOk = false
+      }
+
+      if (!state.isAdverseMove && state.tierZOk && state.z >= params.minEntryZ && dist < params.maxDistAbs && ask >= params.minAsk && ask <= params.maxAsk && spread <= params.maxSpread) {
+        let upAsk = book.ask("UP", tick)
+        let downAsk = book.ask("DOWN", tick)
+        let oddsSum = upAsk + downAsk
+        if (oddsSum >= params.minOddsSum && oddsSum <= params.maxOddsSum) {
+          state.obiOk = true
+          if (params.minObi > (0.0 - 1.0)) {
+            let obi = model.orderBookImbalance(fav, tick, params.obiLevels)
+            if (obi < params.minObi) {
+              state.obiOk = false
+            }
+          }
+          if (state.obiOk) {
+            state.filtersOk = true
+            state.budgetFactor = 1.0
+            if (ask >= params.tierAskThreshold) {
+              state.budgetFactor = params.tierAskBudgetFactor
+            }
+
+            let equity = math.max(0, params.walletSize + runState.totalPnl)
+
+            // 1) Probe
+            let probeOn = params.probeEnabled == true || params.probeEnabled == 1
+            if (probeOn && !state.probeEntered && secsLeft >= params.probeMinSecondsLeft && secsLeft <= params.probeMaxSecondsLeft) {
+              let pBudget = math.min(params.probeBudget, equity)
+              if (pBudget >= params.minShares * ask) {
+                let maxPriceP = ask + params.entrySlippageMax
+                let probed = enter(fav, { price: ask, maxPrice: maxPriceP, budget: pBudget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "midas_probe_entry" })
+                if (probed) {
+                  state.entered = true
+                  state.closed = false
+                  state.probeEntered = true
+                  state.entryMode = "probe"
+                  state.entryBudgetUsed = pBudget
+                  state.entryZ = state.z
+                  mark("midas_probe_entry", { side: fav, ask: ask, dist: dist, z: state.z, budget: pBudget, secsLeft: secsLeft })
+                }
+              }
+            }
+
+            // 2) Direct full — MIDAS clássico (sem probe, ou probe desligado, ou janela de probe já passou)
+            let directOn = params.allowDirectFull == true || params.allowDirectFull == 1
+            if (directOn && !state.probeEntered && !state.entered && secsLeft >= params.minSecondsLeft && secsLeft <= params.maxSecondsLeft) {
+              let pastProbeWindow = !probeOn || secsLeft < params.probeMinSecondsLeft
+              if (pastProbeWindow) {
+                let fBudget = math.min(params.entryBudget * state.budgetFactor, equity)
+                if (fBudget >= params.minShares * ask) {
+                  let maxPriceF = ask + params.entrySlippageMax
+                  let fullDirect = enter(fav, { price: ask, maxPrice: maxPriceF, budget: fBudget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "midas_full_direct" })
+                  if (fullDirect) {
+                    state.entered = true
+                    state.closed = false
+                    state.confirmed = true
+                    state.entryMode = "full"
+                    state.entryBudgetUsed = fBudget
+                    state.entryZ = state.z
+                    mark("midas_full_direct", { side: fav, ask: ask, dist: dist, z: state.z, budget: fBudget, secsLeft: secsLeft })
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  onEventEnd(event) {
+  }
+}

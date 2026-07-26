@@ -1,0 +1,327 @@
+strategy "MIDAS Zone V1" {
+  // Divide o evento 5m em zonas artificiais (início/fim) e aplica o envelope
+  // terminal MIDAS relativo ao FIM de cada zona — não só ao fim real do evento.
+  //
+  // Por que exit na fronteira: o simulador só permite 1 posição aberta. Sem
+  // fechar ao trocar de zona, a 2ª+ entrada nunca preenche (enter() retorna false).
+  //
+  // zoneMode=0 (fixo): N zonas iguais de eventDuration/zoneCount.
+  // zoneMode=1 (adaptativo): após zoneWarmupSecs mede σ e escolhe zoneLen;
+  //   σ alta → zonas mais longas (menos mini-terminais ruidosos);
+  //   σ baixa → zonas mais curtas (mais colheitas de carry).
+
+  param walletSize = 100
+  param entryBudget = 5
+  param minShares = 1
+  param settleWinnerPrice = 0.995
+  param entrySlippageMax = 0.02
+  param minLiquidityRatio = 0.60
+  param maxEventBudget = 20
+  param maxEntriesPerEvent = 5
+
+  // Zonas
+  param zoneMode = 0
+  param zoneCount = 3
+  param eventDurationSecs = 300
+  param zoneWarmupSecs = 45
+  param adaptiveBaseZoneLen = 100
+  param adaptiveRefSigma = 20
+  param adaptiveMinZoneLen = 60
+  param adaptiveMaxZoneLen = 150
+  param zoneExitEnabled = true
+  param holdLastZoneToSettle = true
+
+  // Envelope MIDAS (relativo a zoneSecsLeft)
+  param minSecondsLeft = 5
+  param maxSecondsLeft = 30
+  param maxDistAbs = 40
+  param minAsk = 0.55
+  param maxAsk = 0.94
+  param maxSpread = 0.03
+  param minOddsSum = 0.98
+  param maxOddsSum = 1.06
+
+  param velocityLookbackSecs = 5
+  param maxAdverseSpotChange = 8.0
+  param minObi = 0.0
+  param obiLevels = 5
+  param sigmaLookbackSecs = 90
+  param sigmaDivisor = 5.48
+  param minEntryZ = 0.0
+  param tierAskThreshold = 0.82
+  param tierAskBudgetFactor = 1.5
+  param tierMinZ = 0.0
+
+  param stopMinBid = 0.05
+  param lateFlipExitEnabled = true
+  param lateFlipExitSec = 8
+  param lateFlipExitCrossDist = 0
+  param lateFlipMinSec = 4
+  param lateFlipReverseEnabled = true
+  param lateFlipReverseMaxAsk = 0.95
+  param lateFlipReverseMinAsk = 0.0
+  param lateFlipReverseBudgetFactor = 1.0
+  param dangerExitEnabled = true
+  param dangerExitK = 0.3
+  param dangerExitFloorSec = 4
+
+  onEventStart(event) {
+    state.entered = false
+    state.closed = false
+    state.reversed = false
+    state.signedDistance = 0
+    state.entryZ = 0
+    state.entryMode = ""
+    state.entryBudgetUsed = 0
+    state.z = 0
+    state.isAdverseMove = false
+    state.obiOk = true
+    state.budgetFactor = 1.0
+    state.reverseBudget = 0
+    state.entriesCount = 0
+    state.totalBudgetSpent = 0
+    state.zonesReady = false
+    state.zoneLen = 0
+    state.activeZoneCount = 1
+    state.zoneIndex = 0
+    state.prevZoneIndex = 999
+    state.zoneSecsLeft = 0
+    state.enteredThisZone = false
+    state.warmupSigma = 0
+    state.adaptRatio = 1.0
+    state.tierZOk = true
+  }
+
+  onTick(tick, event) {
+    let secsLeftReal = time.secondsUntil(event.end, tick.ts)
+    let elapsed = time.secondsSince(event.start, tick.ts)
+
+    // ===== 1) Resolver grade de zonas =====
+    // zoneMode: 0 = fixo, 1 = adaptativo
+    if (params.zoneMode == 0) {
+      state.activeZoneCount = params.zoneCount
+      if (state.activeZoneCount < 1) {
+        state.activeZoneCount = 1
+      }
+      if (state.activeZoneCount > 5) {
+        state.activeZoneCount = 5
+      }
+      state.zoneLen = params.eventDurationSecs / state.activeZoneCount
+      state.zonesReady = true
+    }
+
+    if (params.zoneMode == 1 && !state.zonesReady && elapsed >= params.zoneWarmupSecs) {
+      state.warmupSigma = signals.volatility(samples, params.zoneWarmupSecs)
+      state.adaptRatio = 1.0
+      if (params.adaptiveRefSigma > 0 && state.warmupSigma > 0) {
+        state.adaptRatio = state.warmupSigma / params.adaptiveRefSigma
+      }
+      state.adaptRatio = math.clamp(state.adaptRatio, 0.5, 2.0)
+      state.zoneLen = math.clamp(params.adaptiveBaseZoneLen * state.adaptRatio, params.adaptiveMinZoneLen, params.adaptiveMaxZoneLen)
+      let approx = params.eventDurationSecs / state.zoneLen
+      state.activeZoneCount = 2
+      if (approx >= 2.5) {
+        state.activeZoneCount = 3
+      }
+      if (approx >= 3.5) {
+        state.activeZoneCount = 4
+      }
+      if (approx >= 4.5) {
+        state.activeZoneCount = 5
+      }
+      state.zoneLen = params.eventDurationSecs / state.activeZoneCount
+      state.zonesReady = true
+      mark("zone_plan", { mode: "adaptive", sigma: state.warmupSigma, zoneLen: state.zoneLen, zoneCount: state.activeZoneCount })
+    }
+
+    if (state.zonesReady) {
+      // Índice da zona atual (unroll — GLS sem floor)
+      state.zoneIndex = 0
+      if (elapsed >= state.zoneLen) {
+        state.zoneIndex = 1
+      }
+      if (elapsed >= state.zoneLen * 2) {
+        state.zoneIndex = 2
+      }
+      if (elapsed >= state.zoneLen * 3) {
+        state.zoneIndex = 3
+      }
+      if (elapsed >= state.zoneLen * 4) {
+        state.zoneIndex = 4
+      }
+      if (state.zoneIndex > state.activeZoneCount - 1) {
+        state.zoneIndex = state.activeZoneCount - 1
+      }
+
+      let isLastZone = state.zoneIndex >= state.activeZoneCount - 1
+      if (isLastZone) {
+        state.zoneSecsLeft = secsLeftReal
+      }
+      if (!isLastZone) {
+        let zoneEndElapsed = (state.zoneIndex + 1) * state.zoneLen
+        state.zoneSecsLeft = zoneEndElapsed - elapsed
+        if (state.zoneSecsLeft < 0) {
+          state.zoneSecsLeft = 0
+        }
+      }
+
+      // ===== 2) Transição de zona → exit para liberar reentrada =====
+      if (state.prevZoneIndex == 999) {
+        state.prevZoneIndex = state.zoneIndex
+      }
+      if (state.zoneIndex != state.prevZoneIndex) {
+        let zoneExitOn = params.zoneExitEnabled == true || params.zoneExitEnabled == 1
+        let holdLast = params.holdLastZoneToSettle == true || params.holdLastZoneToSettle == 1
+        let leavingLast = holdLast && state.prevZoneIndex >= state.activeZoneCount - 1
+        if (zoneExitOn && !leavingLast && position.open && !state.closed) {
+          let exitSide = position.side
+          let exitBid = book.bid(exitSide, tick)
+          if (exitBid >= params.stopMinBid) {
+            let zoneOut = exit({ price: exitBid, reason: "zone_boundary_exit" })
+            if (zoneOut) {
+              state.closed = zoneOut.closed
+              mark("exit", { reason: "zone_boundary_exit", price: exitBid, fromZone: state.prevZoneIndex, toZone: state.zoneIndex, zoneSecsLeft: state.zoneSecsLeft })
+            }
+          }
+        }
+        state.enteredThisZone = false
+        state.closed = false
+        state.reversed = false
+        state.entered = false
+        state.prevZoneIndex = state.zoneIndex
+      }
+
+      // ===== 3) Gestão de posição aberta (relativa à zona) =====
+      if (position.open) {
+        if (!state.entered) {
+          state.entered = true
+        }
+
+        let side = position.side
+        let bid = book.bid(side, tick)
+
+        state.signedDistance = tick.underlyingPrice - event.priceToBeat
+        if (side == "DOWN") {
+          state.signedDistance = event.priceToBeat - tick.underlyingPrice
+        }
+
+        let dangerExitOn = params.dangerExitEnabled == true || params.dangerExitEnabled == 1
+        if (dangerExitOn && !state.closed && !state.reversed && state.zoneSecsLeft >= params.dangerExitFloorSec && state.zoneSecsLeft < (params.dangerExitFloorSec + 1)) {
+          let sigmaDanger = signals.volatility(samples, 5)
+          if (math.abs(state.signedDistance) < (params.dangerExitK * sigmaDanger)) {
+            let dangerOut = exit({ price: bid, reason: "danger_exit" })
+            if (dangerOut) {
+              state.closed = dangerOut.closed
+              mark("exit", { reason: "danger_exit", price: bid, zone: state.zoneIndex })
+            }
+          }
+        }
+
+        let lateFlipExitOn = params.lateFlipExitEnabled == true || params.lateFlipExitEnabled == 1
+        if (!state.closed && lateFlipExitOn && state.zoneSecsLeft <= params.lateFlipExitSec && state.zoneSecsLeft >= params.lateFlipMinSec && state.signedDistance <= params.lateFlipExitCrossDist && bid >= params.stopMinBid) {
+          let lateFlipReverseOn = params.lateFlipReverseEnabled == true || params.lateFlipReverseEnabled == 1
+          if (lateFlipReverseOn && !state.reversed) {
+            let oppSide = prices.oppositeSide(side)
+            let oppAsk = book.ask(oppSide, tick)
+            if (oppAsk >= params.lateFlipReverseMinAsk && oppAsk > 0 && oppAsk <= params.lateFlipReverseMaxAsk) {
+              state.reverseBudget = params.entryBudget
+              if (state.entryBudgetUsed > 0) {
+                state.reverseBudget = state.entryBudgetUsed
+              }
+              state.reverseBudget = state.reverseBudget * params.lateFlipReverseBudgetFactor
+              let flipped = reverse(oppSide, { price: oppAsk, exitPrice: bid, budget: state.reverseBudget, tick: tick, ignoreConsumed: true, reason: "late_flip_reverse" })
+              if (flipped) {
+                state.reversed = true
+                mark("reverse", { reason: "late_flip_reverse", from: side, to: oppSide, ask: oppAsk, zone: state.zoneIndex })
+              }
+            }
+          }
+          if (!state.reversed) {
+            let lateFlipped = exit({ price: bid, reason: "late_flip_exit" })
+            if (lateFlipped) {
+              state.closed = lateFlipped.closed
+              mark("exit", { reason: "late_flip_exit", price: bid, zone: state.zoneIndex })
+            }
+          }
+        }
+      }
+
+      // ===== 4) Entrada MIDAS relativa à zona =====
+      let canEnter = !position.open && !state.enteredThisZone && !state.reversed && state.entriesCount < params.maxEntriesPerEvent && state.totalBudgetSpent < params.maxEventBudget
+      if (canEnter && state.zoneSecsLeft >= params.minSecondsLeft && state.zoneSecsLeft <= params.maxSecondsLeft) {
+        let btc = tick.underlyingPrice
+        let ptb = event.priceToBeat
+        let dist = math.abs(btc - ptb)
+        let fav = market.sideFromPrice(btc, ptb)
+        let ask = book.ask(fav, tick)
+        let bidFav = book.bid(fav, tick)
+        let spread = ask - bidFav
+
+        let sigmaLevel = signals.volatility(samples, params.sigmaLookbackSecs)
+        let sigmaPs = sigmaLevel / params.sigmaDivisor
+        state.z = 0.0
+        if (sigmaPs > 0 && state.zoneSecsLeft > 0) {
+          state.z = dist / (sigmaPs * math.sqrt(state.zoneSecsLeft))
+        }
+
+        state.isAdverseMove = false
+        let btcPast = signals.underlyingAgo(samples, params.velocityLookbackSecs)
+        if (btcPast) {
+          let spotChange = btc - btcPast
+          if (fav == "UP" && spotChange < (0.0 - params.maxAdverseSpotChange)) {
+            state.isAdverseMove = true
+          }
+          if (fav == "DOWN" && spotChange > params.maxAdverseSpotChange) {
+            state.isAdverseMove = true
+          }
+        }
+
+        state.tierZOk = true
+        if (ask >= params.tierAskThreshold && params.tierMinZ > 0 && state.z < params.tierMinZ) {
+          state.tierZOk = false
+        }
+
+        if (!state.isAdverseMove && state.tierZOk && state.z >= params.minEntryZ && dist < params.maxDistAbs && ask >= params.minAsk && ask <= params.maxAsk && spread <= params.maxSpread) {
+          let upAsk = book.ask("UP", tick)
+          let downAsk = book.ask("DOWN", tick)
+          let oddsSum = upAsk + downAsk
+          if (oddsSum >= params.minOddsSum && oddsSum <= params.maxOddsSum) {
+            state.obiOk = true
+            if (params.minObi > (0.0 - 1.0)) {
+              let obi = model.orderBookImbalance(fav, tick, params.obiLevels)
+              if (obi < params.minObi) {
+                state.obiOk = false
+              }
+            }
+            if (state.obiOk) {
+              state.budgetFactor = 1.0
+              if (ask >= params.tierAskThreshold) {
+                state.budgetFactor = params.tierAskBudgetFactor
+              }
+              let equity = math.max(0, params.walletSize + runState.totalPnl)
+              let pulseBudget = math.min(params.entryBudget * state.budgetFactor, params.maxEventBudget - state.totalBudgetSpent, equity)
+              if (pulseBudget >= params.minShares * ask) {
+                let maxPrice = ask + params.entrySlippageMax
+                let bought = enter(fav, { price: ask, maxPrice: maxPrice, budget: pulseBudget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "midas_zone_entry" })
+                if (bought) {
+                  state.entered = true
+                  state.enteredThisZone = true
+                  state.closed = false
+                  state.entriesCount = state.entriesCount + 1
+                  state.totalBudgetSpent = state.totalBudgetSpent + pulseBudget
+                  state.entryZ = state.z
+                  state.entryMode = "zone"
+                  state.entryBudgetUsed = pulseBudget
+                  mark("midas_zone_entry", { zone: state.zoneIndex, zoneCount: state.activeZoneCount, zoneSecsLeft: state.zoneSecsLeft, side: fav, ask: ask, dist: dist, z: state.z, budget: pulseBudget, secsLeftReal: secsLeftReal })
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  onEventEnd(event) {
+  }
+}

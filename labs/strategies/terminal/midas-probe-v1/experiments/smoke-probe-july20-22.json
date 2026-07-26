@@ -1,0 +1,62 @@
+{
+  "name": "smoke-probe-july20-22",
+  "strategyId": "midas-probe-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-20",
+  "to": "2026-07-22",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "baseline-full",
+        "params": {
+          "probeEnabled": false,
+          "allowDirectFull": true,
+          "entryBudget": 5
+        }
+      },
+      {
+        "id": "probe-confirm",
+        "params": {
+          "probeEnabled": true,
+          "allowDirectFull": true,
+          "probeBudget": 1.5,
+          "entryBudget": 5,
+          "probeKillOppAsk": 0.45,
+          "confirmMinDist": 2
+        }
+      },
+      {
+        "id": "probe-dist-kill",
+        "params": {
+          "probeEnabled": true,
+          "allowDirectFull": true,
+          "probeBudget": 1.5,
+          "entryBudget": 5,
+          "probeKillOppAsk": 0.99,
+          "confirmMinDist": 2
+        }
+      },
+      {
+        "id": "probe-strict-no-direct",
+        "params": {
+          "probeEnabled": true,
+          "allowDirectFull": false,
+          "probeBudget": 1.5,
+          "entryBudget": 5,
+          "probeKillOppAsk": 0.45,
+          "confirmMinDist": 2
+        }
+      }
+    ]
+  }
+}
