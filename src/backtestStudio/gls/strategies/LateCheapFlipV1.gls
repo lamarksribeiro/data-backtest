@@ -7,24 +7,24 @@ strategy "Late Cheap Flip V1" {
   param walletSize = 100
   param entryBudget = 10
   param minShares = 1
-  param entryMode = 2
+  param entryMode = 3
 
-  param minSecondsLeft = 15
-  param maxSecondsLeft = 60
+  param minSecondsLeft = 3
+  param maxSecondsLeft = 15
 
   param maxSecsSinceFlip = 8
   param minFlipsInWindow = 1
 
   param minDistAbs = 8
   param maxDistAbs = 80
-  param minEdge = 0.08
+  param minEdge = 0.12
   param volStepSecs = 30
 
   param momLookbackSecs = 5
   param minMomAbs = 3
 
   param minAsk = 0.05
-  param maxAsk = 0.52
+  param maxAsk = 0.35
   param maxSpread = 0.04
   param minOddsSum = 0.96
   param maxOddsSum = 1.06

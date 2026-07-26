@@ -1,0 +1,53 @@
+{
+  "id": "btc-champion",
+  "studioVersion": 1,
+  "name": "BTC Late Cheap Flip Champion",
+  "studioSlug": "late-cheap-flip-v1-btc-champion",
+  "studioName": "Late Cheap Flip · BTC Champion (late_surprise)",
+  "role": "champion",
+  "description": "entryMode=3 late_surprise: τ 3–15s, dist≥8, edge_phys≥0.12, ask≤0.35. Hold to settlement. Melhor PnL holdout com PF≥1.2 entre as 3 teses.",
+  "tags": ["champion", "depth25", "late-surprise", "mode3"],
+  "window": {
+    "from": "2026-04-27",
+    "to": "2026-07-13"
+  },
+  "labSummary": {
+    "trainPnl": 7444.45,
+    "trainEntries": 665,
+    "trainWinRate": 52.9,
+    "trainProfitFactor": 3.54,
+    "trainMaxDrawdown": 120.06,
+    "trainPositiveDays": "26/35",
+    "holdoutPnl": 892.65,
+    "holdoutEntries": 461,
+    "holdoutWinRate": 31.5,
+    "holdoutProfitFactor": 1.30,
+    "holdoutMaxDrawdown": 99.95,
+    "holdoutPositiveDays": "29/43",
+    "combinedPnlApprox": 8337,
+    "source": "GLS compiled-soa depth25 · train 2026-07-26T17-51-29 · holdout 2026-07-26T17-58-06 · variant m3-ask35"
+  },
+  "params": {
+    "walletSize": 100,
+    "entryBudget": 10,
+    "minShares": 1,
+    "entryMode": 3,
+    "minSecondsLeft": 3,
+    "maxSecondsLeft": 15,
+    "maxSecsSinceFlip": 8,
+    "minFlipsInWindow": 1,
+    "minDistAbs": 8,
+    "maxDistAbs": 80,
+    "minEdge": 0.12,
+    "volStepSecs": 30,
+    "momLookbackSecs": 5,
+    "minMomAbs": 3,
+    "minAsk": 0.05,
+    "maxAsk": 0.35,
+    "maxSpread": 0.04,
+    "minOddsSum": 0.96,
+    "maxOddsSum": 1.06,
+    "entrySlippageMax": 0.02,
+    "minLiquidityRatio": 0.60
+  }
+}

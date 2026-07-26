@@ -16,30 +16,6 @@
   "searchSpace": {
     "variants": [
       {
-        "id": "m1-base",
-        "params": {
-          "entryMode": 1,
-          "minSecondsLeft": 10,
-          "maxSecondsLeft": 45,
-          "minDistAbs": 5,
-          "maxDistAbs": 30,
-          "maxAsk": 0.35,
-          "minEdge": 0.05,
-          "minMomAbs": 3
-        }
-      },
-      {
-        "id": "m2-base",
-        "params": {
-          "entryMode": 2,
-          "minSecondsLeft": 15,
-          "maxSecondsLeft": 60,
-          "maxAsk": 0.52,
-          "minEdge": 0.08,
-          "minDistAbs": 8
-        }
-      },
-      {
         "id": "m3-base",
         "params": {
           "entryMode": 3,
@@ -49,8 +25,77 @@
           "maxAsk": 0.45,
           "minEdge": 0.12
         }
+      },
+      {
+        "id": "m3-ask35",
+        "params": {
+          "entryMode": 3,
+          "minSecondsLeft": 3,
+          "maxSecondsLeft": 15,
+          "minDistAbs": 8,
+          "maxAsk": 0.35,
+          "minEdge": 0.12
+        }
+      },
+      {
+        "id": "m3-ultra",
+        "params": {
+          "entryMode": 3,
+          "minSecondsLeft": 3,
+          "maxSecondsLeft": 8,
+          "minDistAbs": 8,
+          "maxAsk": 0.40,
+          "minEdge": 0.15
+        }
+      },
+      {
+        "id": "m3-edge18",
+        "params": {
+          "entryMode": 3,
+          "minSecondsLeft": 3,
+          "maxSecondsLeft": 12,
+          "minDistAbs": 6,
+          "maxAsk": 0.42,
+          "minEdge": 0.18
+        }
+      },
+      {
+        "id": "m2-midlate",
+        "params": {
+          "entryMode": 2,
+          "minSecondsLeft": 25,
+          "maxSecondsLeft": 90,
+          "maxAsk": 0.52,
+          "minEdge": 0.08,
+          "minDistAbs": 12
+        }
+      },
+      {
+        "id": "m2-ask48",
+        "params": {
+          "entryMode": 2,
+          "minSecondsLeft": 15,
+          "maxSecondsLeft": 60,
+          "maxAsk": 0.48,
+          "minEdge": 0.08,
+          "minDistAbs": 12,
+          "maxSpread": 0.035
+        }
+      },
+      {
+        "id": "m1-tight-ask",
+        "params": {
+          "entryMode": 1,
+          "minSecondsLeft": 10,
+          "maxSecondsLeft": 45,
+          "minDistAbs": 5,
+          "maxDistAbs": 25,
+          "maxAsk": 0.28,
+          "minEdge": 0.08,
+          "minMomAbs": 4
+        }
       }
     ]
   },
-  "notes": "Placeholder — será atualizado com top train após late-cheap-flip-train-modes."
+  "notes": "Top train: m3-base/ask35/ultra/edge18; best m2 midlate+ask48; least-bad m1 tight-ask."
 }

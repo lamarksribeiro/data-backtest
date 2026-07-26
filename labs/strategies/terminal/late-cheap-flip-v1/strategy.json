@@ -2,7 +2,7 @@
   "id": "late-cheap-flip-v1",
   "name": "Late Cheap Flip V1",
   "family": "terminal",
-  "status": "draft",
+  "status": "candidate",
   "kind": "gls",
   "assets": ["BTC"],
   "intervals": ["5m"],
@@ -15,13 +15,13 @@
   "promotedToStudio": false,
   "studioSlug": "late-cheap-flip-v1",
   "studio": {
-    "description": "Virada barata no fim do evento: 3 modos (pre_flip / post_flip / late_surprise). Hold to settlement. Lab compara as teses e elege campeã.",
-    "tags": ["terminal", "btc", "flip", "cheap", "draft"],
+    "description": "Virada barata no fim: campeã late_surprise (mode 3, ask≤0.35). Alternativa estável post_flip (mode 2). Hold to settlement.",
+    "tags": ["terminal", "btc", "flip", "cheap", "candidate", "late-surprise"],
     "defaultVersion": 1,
     "defaultGlsSource": "classic",
     "glsSources": {
       "classic": "src/backtestStudio/gls/strategies/LateCheapFlipV1.gls"
     }
   },
-  "notes": "entryMode 1=pre_flip azarão+momentum; 2=post_flip favorito pós-PTB (SBRI-like terminal); 3=late_surprise favorito físico barato em τ curto."
+  "notes": "Campeã m3-ask35 (entryMode=3): holdout +893 PnL PF 1.30. Mode 1 pre_flip rejeitado (WR~15%). Mode 2 m2-midlate estável PF~1.94. Ver README."
 }
