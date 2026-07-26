@@ -1,0 +1,17 @@
+{
+  "id": "btc-clip-ladder-no-vacuum",
+  "label": "BTC Clip Ladder No Vacuum",
+  "params": {
+    "mode": "clip_ladder",
+    "openShares": 50,
+    "clipShares": 100,
+    "stopAvgSum": 0.98,
+    "stopMinBalance": 0.95,
+    "blockAvgSum": 1.02,
+    "lateStartSec": 180,
+    "lateMaxAsk": 0.01,
+    "lateUltraAsk": 0.01,
+    "maxEventNotional": 250,
+    "applyPolymarketFees": true
+  }
+}

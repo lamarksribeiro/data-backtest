@@ -1,0 +1,85 @@
+{
+  "name": "odds-shock-bidfloor-july",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-25",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "notes": "Última fatia do exit-no-choque: só agir se bid ainda >= ratio*entry (há o que salvar) + spot perdendo.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "baseline",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2
+        }
+      },
+      {
+        "id": "os-losing-d15",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.4,
+          "oddsShockOnlyIfLosing": true
+        }
+      },
+      {
+        "id": "os-losing-bid55",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.4,
+          "oddsShockOnlyIfLosing": true,
+          "oddsShockMinBidRatio": 0.55
+        }
+      },
+      {
+        "id": "os-losing-bid70",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.4,
+          "oddsShockOnlyIfLosing": true,
+          "oddsShockMinBidRatio": 0.7
+        }
+      },
+      {
+        "id": "os-losing-bid55-d20",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.2,
+          "oddsShockOwnAskDelta": 0.2,
+          "oddsShockMinOppAsk": 0.4,
+          "oddsShockOnlyIfLosing": true,
+          "oddsShockMinBidRatio": 0.55
+        }
+      }
+    ]
+  }
+}

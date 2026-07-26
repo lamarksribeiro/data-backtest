@@ -21,6 +21,20 @@ export const POLYMARKET_FEE_RATES = Object.freeze({
 
 export const DEFAULT_POLYMARKET_FEE_CATEGORY = 'crypto';
 
+/** Official Taker Rebate Program tiers (docs.polymarket.com/trading/taker-rebates). */
+export const POLYMARKET_TAKER_REBATE_TIERS = Object.freeze({
+  none: 0,
+  bronze: 0.03,
+  silver: 0.08,
+  gold: 0.18,
+  platinum: 0.32,
+  diamond: 0.44,
+  obsidian: 0.5,
+});
+
+/** DoggyStyIe profile badge = Diamond → research default overlay. */
+export const DEFAULT_TAKER_REBATE_RATE_DIAMOND = POLYMARKET_TAKER_REBATE_TIERS.diamond;
+
 const FEE_SCALE = 100000;
 
 export function calculatePolymarketTakerFee({ shares, price, feeRate = POLYMARKET_FEE_RATES.crypto } = {}) {
@@ -106,11 +120,36 @@ export function applyPolymarketFeesToBacktestResult(result, options = {}) {
     feeTotals.makerShares += entrySummary.makerShares + exitSummary.makerShares;
   }
 
+  // Research overlay: Taker Rebate Program by tier (docs.polymarket.com/trading/taker-rebates).
+  // Diamond = 44%, Obsidian = 50%. Credits back a fraction of taker fees — does NOT change fee formula.
+  // Doggy RE Etapa 3: lag-match rebate_D / fee_{D-1} = 44.00% (not the naive same-window ~76%).
+  const rebateRaw = Object.prototype.hasOwnProperty.call(params, 'takerRebateRate')
+    ? params.takerRebateRate
+    : options.takerRebateRate;
+  const rebateRate = clamp01(toFiniteNumber(rebateRaw) ?? 0);
+  let totalRebate = 0;
+  if (rebateRate > 0) {
+    for (const event of events) {
+      if (!isEnteredEvent(event) || !event.fees) continue;
+      const fee = toFiniteNumber(event.fees.totalFee) ?? 0;
+      const rebate = roundFee(fee * rebateRate);
+      if (rebate <= 0) continue;
+      event.fees.takerRebateRate = rebateRate;
+      event.fees.takerRebate = rebate;
+      event.finalPnl = (toFiniteNumber(event.finalPnl) ?? 0) + rebate;
+      totalRebate = roundFee(totalRebate + rebate);
+    }
+  }
+  feeTotals.takerRebateRate = rebateRate;
+  feeTotals.takerRebate = totalRebate;
+  feeTotals.netFeeAfterRebate = roundFee(Math.max(0, feeTotals.totalFee - totalRebate));
+
   result.params = {
     ...params,
     applyPolymarketFees: true,
     polymarketFeeCategory: category,
     polymarketFeeRate: feeRate,
+    ...(rebateRate > 0 ? { takerRebateRate: rebateRate } : {}),
   };
   result.feeModel = {
     applied: true,
@@ -120,6 +159,14 @@ export function applyPolymarketFeesToBacktestResult(result, options = {}) {
     feeRate,
     formula: 'shares * feeRate * price * (1 - price)',
     roundingDecimals: 5,
+    ...(rebateRate > 0
+      ? {
+          takerRebateRate: rebateRate,
+          takerRebate: totalRebate,
+          netFeeAfterRebate: feeTotals.netFeeAfterRebate,
+          note: 'takerRebateRate is a research overlay for volume-tier rebates; not a guarantee of live payout',
+        }
+      : {}),
   };
 
   recomputeSummary(result, feeTotals);
@@ -351,7 +398,14 @@ function recomputeSummary(result, fees) {
   summary.fees = fees;
   summary.totalFees = fees.totalFee;
   summary.feesPaid = fees.totalFee;
+  summary.takerRebate = fees.takerRebate ?? 0;
+  summary.netFeesAfterRebate = fees.netFeeAfterRebate ?? fees.totalFee;
   summary.feeDrag = Math.abs(totalPnl) + fees.totalFee > 0 ? fees.totalFee / (Math.abs(totalPnl) + fees.totalFee) : 0;
+}
+
+function clamp01(value) {
+  if (value == null || !Number.isFinite(value)) return 0;
+  return Math.min(1, Math.max(0, value));
 }
 
 function std(values) {

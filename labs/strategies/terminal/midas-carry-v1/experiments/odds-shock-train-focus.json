@@ -1,0 +1,103 @@
+{
+  "name": "odds-shock-train-focus",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-07-01",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 6,
+  "defaults": "../defaults.json",
+  "notes": "Treino focado nas candidatas de julho: baseline, os-exit-d15-losing (melhor tradeoff PnL/DD), partial50, minopp55, ew ref.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "baseline-aggressive",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30
+        }
+      },
+      {
+        "id": "os-exit-d15-losing",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.40,
+          "oddsShockOnlyIfLosing": true
+        }
+      },
+      {
+        "id": "os-partial50-d15",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.40,
+          "oddsShockPartialPct": 0.5
+        }
+      },
+      {
+        "id": "os-exit-d15-minopp55",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.55
+        }
+      },
+      {
+        "id": "os-exit-d15",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.40
+        }
+      },
+      {
+        "id": "ew-045-ref",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "earlyWarnEnabled": true,
+          "earlyWarnOppAsk": 0.45,
+          "earlyWarnOnlyIfLosing": false
+        }
+      }
+    ]
+  }
+}

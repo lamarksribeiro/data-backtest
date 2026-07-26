@@ -194,6 +194,19 @@ export const INDIVIDUAL_RUNNERS = [
     promotedToStudio: true,
     sourceDoc: 'docs/estrategias/implementadas/escada-dupla-v1.md',
   },
+  {
+    id: 'pair-ladder-complete-set-v1',
+    family: 'carry',
+    name: 'Pair Ladder Complete-Set V1',
+    sourceFile: 'pair-ladder-complete-set-runner.js',
+    createFn: 'createBacktestRunner',
+    runnerSlug: 'pair-ladder-complete-set-runner',
+    strategyLabel: 'PAIR_LADDER_COMPLETE_SET_V1',
+    usesStopReverse: false,
+    tier: 'A',
+    promotedToStudio: false,
+    sourceDoc: 'docs/estrategias/nao-implementadas/pair-ladder-complete-set-v1.md',
+  },
 ];
 
 export const PORTFOLIO_RUNNERS = [

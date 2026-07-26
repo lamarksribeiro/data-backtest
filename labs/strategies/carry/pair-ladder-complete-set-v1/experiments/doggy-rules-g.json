@@ -1,0 +1,91 @@
+{
+  "name": "pair-ladder-complete-set-doggy-rules-g",
+  "strategyId": "pair-ladder-complete-set-v1",
+  "strategyFamily": "carry",
+  "description": "Iteração G: async hedge wait + forbidOverweight + softLock vacuum",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-20",
+  "to": "2026-07-21",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 2,
+  "defaults": "../defaults.json",
+  "feeOptions": { "category": "crypto" },
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "rules-g",
+        "params": {
+          "fillMode": "taker",
+          "spreadCents": 0,
+          "seedHedgeSameTick": false,
+          "forbidOverweight": true,
+          "softLockAllowVacuum": true,
+          "hedgePreferAsk": 0.50,
+          "minSecToHedge": 5,
+          "hedgeTargetAvgSum": 0.99,
+          "maxResidualShares": 150,
+          "maxEventNotional": 600,
+          "maxFillsPerEvent": 16,
+          "refuseAvgSum": 1.0,
+          "stopAvgSum": 0.95
+        }
+      },
+      {
+        "id": "rules-g-tight",
+        "params": {
+          "fillMode": "taker",
+          "spreadCents": 0,
+          "seedHedgeSameTick": false,
+          "forbidOverweight": true,
+          "softLockAllowVacuum": true,
+          "hedgePreferAsk": 0.48,
+          "minSecToHedge": 8,
+          "hedgeTargetAvgSum": 0.98,
+          "maxResidualShares": 100,
+          "maxEventNotional": 400,
+          "maxFillsPerEvent": 12,
+          "refuseAvgSum": 0.99,
+          "stopAvgSum": 0.95,
+          "chaseMaxAsk": 0.35
+        }
+      },
+      {
+        "id": "rules-g-rebate50",
+        "params": {
+          "fillMode": "taker",
+          "spreadCents": 0,
+          "seedHedgeSameTick": false,
+          "forbidOverweight": true,
+          "softLockAllowVacuum": true,
+          "hedgePreferAsk": 0.50,
+          "minSecToHedge": 5,
+          "maxResidualShares": 150,
+          "maxEventNotional": 600,
+          "takerRebateRate": 0.44
+        }
+      },
+      {
+        "id": "rules-g-fill-improve",
+        "params": {
+          "fillMode": "taker",
+          "spreadCents": 0,
+          "slippageCents": -1,
+          "seedHedgeSameTick": false,
+          "forbidOverweight": true,
+          "softLockAllowVacuum": true,
+          "hedgePreferAsk": 0.50,
+          "minSecToHedge": 5,
+          "maxResidualShares": 150,
+          "maxEventNotional": 600
+        }
+      }
+    ]
+  },
+  "metrics": ["totalPnl", "entries", "winRate", "profitFactor", "maxDrawdown", "totalFees"]
+}

@@ -33,6 +33,7 @@ Prioridade e `sourceDoc` no catálogo de port:
 
 | Prioridade | Documento | ID |
 |---:|---|---|
+| 0 | [`nao-implementadas/pair-ladder-complete-set-v1.md`](nao-implementadas/pair-ladder-complete-set-v1.md) | Pair Ladder Complete-Set — **lab research** (`labs/strategies/carry/pair-ladder-complete-set-v1/`); smoke ainda negativo; proibido Studio |
 | 1 | `strike-boundary-repricing-inelasticity-v1.md` | SBRI (teoria; **lab GLS em `implementadas/sbri-tight-v1.md`**) |
 | 2 | `stochastic-escape-barrier-theory-v1.md` | SEBT |
 | 2 | `transition-acceleration-threshold-v1.md` | TAT |

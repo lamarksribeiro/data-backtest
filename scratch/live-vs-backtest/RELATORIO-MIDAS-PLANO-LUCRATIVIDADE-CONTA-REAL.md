@@ -351,3 +351,48 @@ Crescimento além do teto:             ETH/SOL 5m (dados já no lake) — não s
 ```
 
 **Aviso central (não pular):** a escala multiplica o PnL do **lab**; o live hoje captura ~24% (dia 25). Escalar antes de fechar execução/uptime multiplica o gap, não o lucro. Ordem obrigatória: deploy GTC + uptime 24/7 → gates §6.2 → Fase A → Fase B.
+
+---
+
+## 11. Filtro de virada brusca no final (odds-shock) — versão final validada
+
+**Fenômeno-alvo** (caso 26/07 04:40, evento `0x114dc7…a4871b`): spot acima do PTB o evento inteiro; nos últimos ~20s as odds DOWN disparam **antes** do preço cair — o book lidera o feed de spot em 10–20s (o mercado precifica o fluxo Chainlink antes do nosso RTDS mostrar). A posição UP morre no settlement sem que nenhuma proteção spot-based dispare.
+
+### 11.1 A matemática do problema
+
+Perto do expiry, prob justa `p = Φ(z)` com `z = dist/(σ·√τ)`. A sensibilidade `∂p/∂spot = φ(z)/(σ·√τ)` **explode** quando τ→0 com z≈0 — a virada brusca é estrutural (gamma terminal), não anomalia. Consequências comprovadas nos labs de 2026-07-26:
+
+1. **Detectar é fácil; agir é o difícil.** Quando Δodds dispara, o bid da posição já caiu junto. Exit puro no choque: **negativo em todas as 10 configurações** (julho −4% a −30%; treino −7% a −47%; reverse no choque: PF 1,19). Whipsaw ~74–80%: choques que revertem custam mais (wins abortados) do que os que colam economizam.
+2. **Duas condições consertam a matemática** (validadas):
+   - **Piso de salvamento:** só agir se `bid ≥ 0,55 × avgEntry` — abaixo disso não há mais o que salvar; segure para o whipsaw (frequente) em vez de travar a perda no fundo.
+   - **Não esperar o spot confirmar** (`onlyIfLosing: false`) — o book lidera; esperar nosso feed cruzar joga fora a janela de liderança (o caso da imagem).
+3. **Vender metade, não tudo.** No gatilho, P(virada cola) ≈ 50–60% — vender 50% é o minimax do arrependimento. Os dados confirmam: partial50 ≥ exit total nas duas janelas.
+
+### 11.2 O filtro exato (promovível como A/B)
+
+Em posição, janela `τ ∈ [20s, 3s]`, no máximo 1 disparo por evento:
+
+```text
+GATILHO  = [ oppAsk(t) − oppAsk(t−2s) ≥ 0,15   OU   ownAsk(t−2s) − ownAsk(t) ≥ 0,15 ]
+       E    oppAsk(t) ≥ 0,50                    (book já votou no oposto)
+       E    bid(t) ≥ 0,55 × avgEntry            (ainda há o que salvar)
+AÇÃO     = vender 50% da posição a mercado (GTC marketable no bid); manter 50%
+```
+
+Params GLS (`strategy.gls`, já implementados): `oddsShockEnabled: true, oddsShockStartSec: 20, oddsShockEndSec: 3, oddsShockLookbackSec: 2, oddsShockOppAskDelta: 0.15, oddsShockOwnAskDelta: 0.15, oddsShockMinOppAsk: 0.50, oddsShockOnlyIfLosing: false, oddsShockMinBidRatio: 0.55, oddsShockPartialPct: 0.5, oddsShockReverseEnabled: false`.
+
+### 11.3 Resultados (aggressive $10/$30, julho 01–25 e junho 01–08)
+
+| Variante | Jul PnL | Jul PF | Jul DD | Jul pior dia | Jun PnL | Jun PF | Jun pior dia |
+|---|--:|--:|--:|--:|--:|--:|--:|
+| baseline | 2416,4 | 1,56 | 95,6 | −18,6 | 631,3 | 1,49 | −66,2 |
+| **os-lead-bid55-partial50 (o filtro)** | 2398,6 (−0,7%) | **1,60** | **81,4 (−15%)** | **−3,8** | 624,2 (−1,1%) | **1,53** | **−57,4** |
+| os-lead-bid55-opp60 (exit total, opp≥0,60) | 2468,8 (+2,2%) | 1,60 | 100,3 | −3,8 | 566,1 (−10%) | 1,45 | −72,9 |
+| os-lead-bid70 (exit total, piso 0,70) | 2314,5 (−4,2%) | 1,55 | 88,8 | −19,5 | **676,1 (+7%)** | 1,57 | −48,3 |
+| os-losing-* (esperar spot cruzar) | ≤2387 | ≤1,55 | — | −18,6 | ≤655 | ≤1,53 | −59,1 |
+
+**Veredito:** `os-lead-bid55-partial50` é a única configuração consistente nas duas janelas: PnL neutro (−1%), PF +0,04, DD −15%, e o **pior dia de julho cai de −18,6 para −3,8** (junho: −66→−57). As variantes de exit total têm mais PnL numa janela e menos na outra (regime-dependentes) — não promover.
+
+**Custo/benefício honesto:** o filtro não aumenta o lucro médio; ele **compra seguro de cauda de graça** (paga −1% de PnL por −80% no pior dia de julho). Promover como A/B **depois** dos itens de execução (§6) e escala (§10.4). Porte para o robot: o `midasV1.js` precisa das séries `upAsk/downAsk` com lookback 2s (o snapshot loop hot de 50ms já as tem) e da ação de exit parcial (50% do qty) via GTC marketable.
+
+**Reprodução:** `experiments/odds-shock-bidfloor-{july,june}.json`, `odds-shock-booklead-{july,june}.json`; histórico negativo do exit puro em `odds-shock-{july,train,train-focus}.json` e contrafactuais `labs/sandbox/midas-odds-vel-cf-report.md`.

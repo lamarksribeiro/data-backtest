@@ -1,0 +1,112 @@
+{
+  "name": "pair-ladder-doggy-holdout-etapa5",
+  "strategyId": "pair-ladder-complete-set-v1",
+  "strategyFamily": "carry",
+  "description": "Etapa 5: holdout honesto path G × ask vs ask−1¢ × rebate 0/44% (Diamond)",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-22",
+  "to": "2026-07-25",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "feeOptions": { "category": "crypto" },
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "g-ask-fee",
+        "params": {
+          "fillMode": "taker",
+          "spreadCents": 0,
+          "slippageCents": 0,
+          "seedHedgeSameTick": false,
+          "forbidOverweight": true,
+          "softLockAllowVacuum": true,
+          "softLockAllowBuild": true,
+          "hedgePreferAsk": 0.50,
+          "minSecToHedge": 5,
+          "hedgeTargetAvgSum": 0.99,
+          "maxResidualShares": 150,
+          "maxEventNotional": 600,
+          "maxFillsPerEvent": 16,
+          "refuseAvgSum": 1.0,
+          "stopAvgSum": 0.95,
+          "stopMinBalance": 0.90,
+          "takerRebateRate": 0
+        }
+      },
+      {
+        "id": "g-ask-diamond44",
+        "params": {
+          "fillMode": "taker",
+          "spreadCents": 0,
+          "slippageCents": 0,
+          "seedHedgeSameTick": false,
+          "forbidOverweight": true,
+          "softLockAllowVacuum": true,
+          "softLockAllowBuild": true,
+          "hedgePreferAsk": 0.50,
+          "minSecToHedge": 5,
+          "hedgeTargetAvgSum": 0.99,
+          "maxResidualShares": 150,
+          "maxEventNotional": 600,
+          "maxFillsPerEvent": 16,
+          "refuseAvgSum": 1.0,
+          "stopAvgSum": 0.95,
+          "stopMinBalance": 0.90,
+          "takerRebateRate": 0.44
+        }
+      },
+      {
+        "id": "g-askm1-fee",
+        "params": {
+          "fillMode": "taker",
+          "spreadCents": 0,
+          "slippageCents": -1,
+          "seedHedgeSameTick": false,
+          "forbidOverweight": true,
+          "softLockAllowVacuum": true,
+          "softLockAllowBuild": true,
+          "hedgePreferAsk": 0.50,
+          "minSecToHedge": 5,
+          "hedgeTargetAvgSum": 0.99,
+          "maxResidualShares": 150,
+          "maxEventNotional": 600,
+          "maxFillsPerEvent": 16,
+          "refuseAvgSum": 1.0,
+          "stopAvgSum": 0.95,
+          "stopMinBalance": 0.90,
+          "takerRebateRate": 0
+        }
+      },
+      {
+        "id": "g-askm1-diamond44",
+        "params": {
+          "fillMode": "taker",
+          "spreadCents": 0,
+          "slippageCents": -1,
+          "seedHedgeSameTick": false,
+          "forbidOverweight": true,
+          "softLockAllowVacuum": true,
+          "softLockAllowBuild": true,
+          "hedgePreferAsk": 0.50,
+          "minSecToHedge": 5,
+          "hedgeTargetAvgSum": 0.99,
+          "maxResidualShares": 150,
+          "maxEventNotional": 600,
+          "maxFillsPerEvent": 16,
+          "refuseAvgSum": 1.0,
+          "stopAvgSum": 0.95,
+          "stopMinBalance": 0.90,
+          "takerRebateRate": 0.44
+        }
+      }
+    ]
+  },
+  "metrics": ["totalPnl", "entries", "winRate", "profitFactor", "maxDrawdown", "totalFees"]
+}

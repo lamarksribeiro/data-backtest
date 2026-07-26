@@ -1,0 +1,30 @@
+{
+  "id": "pair-ladder-complete-set-v1",
+  "name": "Pair Ladder Complete-Set V1",
+  "family": "carry",
+  "status": "research",
+  "kind": "library-runner",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "library-runner",
+    "runnerSlug": "pair-ladder-complete-set-runner",
+    "runnerVersion": 1
+  },
+  "promotedToStudio": false,
+  "studioSlug": null,
+  "studio": {
+    "description": "Constrói conjunto completo UP+DOWN ao longo do path (clip ladder + late vacuum) e trava quando avgSum/balance atingem gates. Research — proibido conta real.",
+    "tags": [
+      "carry",
+      "complete-set",
+      "pair-ladder",
+      "btc",
+      "path-builder",
+      "research"
+    ]
+  },
+  "notes": "RE multi-trader (Doggy/b27/twins/mo-money). Spec: docs/estrategias/nao-implementadas/pair-ladder-complete-set-v1.md"
+}

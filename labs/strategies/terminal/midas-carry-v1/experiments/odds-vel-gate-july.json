@@ -1,0 +1,142 @@
+{
+  "name": "odds-vel-gate-july",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-25",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 6,
+  "defaults": "../defaults.json",
+  "notes": "Filtro de ENTRADA por velocidade de odds (oppAsk sobe / favAsk cai no lookback). Evita whipsaw de exit. Baseline = aggressive dist40/tier2.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "baseline-aggressive",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30
+        }
+      },
+      {
+        "id": "ov-d08",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsVelGateEnabled": true,
+          "oddsVelMaxDelta": 0.08
+        }
+      },
+      {
+        "id": "ov-d10",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsVelGateEnabled": true,
+          "oddsVelMaxDelta": 0.10
+        }
+      },
+      {
+        "id": "ov-d12",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsVelGateEnabled": true,
+          "oddsVelMaxDelta": 0.12
+        }
+      },
+      {
+        "id": "ov-d15",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsVelGateEnabled": true,
+          "oddsVelMaxDelta": 0.15
+        }
+      },
+      {
+        "id": "ov-d20",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsVelGateEnabled": true,
+          "oddsVelMaxDelta": 0.20
+        }
+      },
+      {
+        "id": "ov-d12-lb3",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsVelGateEnabled": true,
+          "oddsVelLookbackSec": 3,
+          "oddsVelMaxDelta": 0.12
+        }
+      },
+      {
+        "id": "ov-d12-lb1",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsVelGateEnabled": true,
+          "oddsVelLookbackSec": 1,
+          "oddsVelMaxDelta": 0.12
+        }
+      },
+      {
+        "id": "ov-d12-ms10",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsVelGateEnabled": true,
+          "oddsVelMaxDelta": 0.12,
+          "minSecondsLeft": 10
+        }
+      },
+      {
+        "id": "ms10-ref",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "minSecondsLeft": 10
+        }
+      }
+    ]
+  }
+}

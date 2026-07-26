@@ -1,0 +1,2025 @@
+{
+  "generatedAt": "2026-07-26T03:40:21.584Z",
+  "window": {
+    "from": "2026-07-01",
+    "to": "2026-07-26"
+  },
+  "eventCounts": {
+    "stable": 5351,
+    "high_odds_velocity": 805,
+    "violent_odds_cross": 244,
+    "settlement_surprise": 126,
+    "soft_odds_cross": 64
+  },
+  "midas": {
+    "overall": {
+      "n": 2362,
+      "pnl": 2416.38,
+      "losses": 442,
+      "wins": 1920,
+      "lossPnl": -4316.7,
+      "wr": 0.813
+    },
+    "flipTrades": {
+      "n": 963,
+      "pnl": -1266.44,
+      "losses": 388,
+      "wins": 575,
+      "lossPnl": -3892.98,
+      "wr": 0.597
+    },
+    "flipLosses": {
+      "n": 388,
+      "pnl": -3892.98,
+      "losses": 388,
+      "wins": 0,
+      "lossPnl": -3892.98,
+      "wr": 0
+    },
+    "nonFlip": {
+      "n": 1399,
+      "pnl": 3682.83,
+      "losses": 54,
+      "wins": 1345,
+      "lossPnl": -423.72,
+      "wr": 0.961
+    },
+    "byTradeLabel": {
+      "stable": {
+        "n": 1399,
+        "pnl": 3682.83,
+        "losses": 54,
+        "wins": 1345,
+        "lossPnl": -423.72,
+        "wr": 0.961
+      },
+      "high_odds_velocity": {
+        "n": 636,
+        "pnl": 529.9,
+        "losses": 150,
+        "wins": 486,
+        "lossPnl": -1373.34,
+        "wr": 0.764
+      },
+      "violent_odds_cross": {
+        "n": 205,
+        "pnl": -1546.04,
+        "losses": 163,
+        "wins": 42,
+        "lossPnl": -1747.8,
+        "wr": 0.205
+      },
+      "settlement_surprise": {
+        "n": 70,
+        "pnl": -155.3,
+        "losses": 48,
+        "wins": 22,
+        "lossPnl": -549.18,
+        "wr": 0.314
+      },
+      "soft_odds_cross": {
+        "n": 52,
+        "pnl": -95.01,
+        "losses": 27,
+        "wins": 25,
+        "lossPnl": -222.66,
+        "wr": 0.481
+      }
+    },
+    "flipLossShareOfLossPnl": 0.902
+  },
+  "imageCandidates": [
+    {
+      "conditionId": "0x629f7dba26",
+      "conditionIdFull": "0x629f7dba269e137b3e06c70333c21ac830cb56fa1772606363b0e0b7c8d6e181",
+      "eventStart": "2026-07-25T18:05:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64303.63634497,
+      "nPoints": 599,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.4451111111111111,
+        "down": 0.5548888888888889,
+        "n": 180,
+        "dominant": "DOWN",
+        "edge": 0.10977777777777775
+      },
+      "latePhase": {
+        "up": 0.05374999999999998,
+        "down": 0.9462500000000007,
+        "n": 60,
+        "dominant": "DOWN",
+        "edge": 0.8925000000000007
+      },
+      "finalPhase": {
+        "up": 0.009375000000000001,
+        "down": 0.9906249999999996,
+        "n": 16,
+        "dominant": "DOWN",
+        "edge": 0.9812499999999996
+      },
+      "oddsDelta": -0.044,
+      "oppRise": -0.044,
+      "maxOddsVel": 0.02,
+      "maxOddsVelSecs": 7.57,
+      "spotWinner": "DOWN",
+      "lateDominant": "DOWN",
+      "finalDominant": "DOWN",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x5cd661ba90",
+      "conditionIdFull": "0x5cd661ba908f55aaa31aa75166d039890d2839ba98a85f7ec0fe85fd3d5cdbd1",
+      "eventStart": "2026-07-25T18:20:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64310.88118908,
+      "nPoints": 597,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.2976111111111113,
+        "down": 0.7023888888888891,
+        "n": 180,
+        "dominant": "DOWN",
+        "edge": 0.40477777777777774
+      },
+      "latePhase": {
+        "up": 0.22941666666666663,
+        "down": 0.7705833333333328,
+        "n": 60,
+        "dominant": "DOWN",
+        "edge": 0.5411666666666662
+      },
+      "finalPhase": {
+        "up": 0.015937500000000004,
+        "down": 0.9840624999999998,
+        "n": 16,
+        "dominant": "DOWN",
+        "edge": 0.9681249999999998
+      },
+      "oddsDelta": -0.213,
+      "oppRise": -0.213,
+      "maxOddsVel": 0.05,
+      "maxOddsVelSecs": 17.56,
+      "spotWinner": "DOWN",
+      "lateDominant": "DOWN",
+      "finalDominant": "DOWN",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0xd152d309dc",
+      "conditionIdFull": "0xd152d309dcac047c5fe9483b64c6edbe7d1d98d11a10f10b19b865d38f298454",
+      "eventStart": "2026-07-25T18:25:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64305.05043326,
+      "nPoints": 597,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.8764999999999997,
+        "down": 0.12349999999999985,
+        "n": 180,
+        "dominant": "UP",
+        "edge": 0.7529999999999999
+      },
+      "latePhase": {
+        "up": 0.9874999999999988,
+        "down": 0.01250000000000001,
+        "n": 60,
+        "dominant": "UP",
+        "edge": 0.9749999999999989
+      },
+      "finalPhase": {
+        "up": 0.9949999999999997,
+        "down": 0.005,
+        "n": 16,
+        "dominant": "UP",
+        "edge": 0.9899999999999997
+      },
+      "oddsDelta": -0.008,
+      "oppRise": -0.008,
+      "maxOddsVel": 0,
+      "maxOddsVelSecs": null,
+      "spotWinner": "UP",
+      "lateDominant": "UP",
+      "finalDominant": "UP",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0xc4159b0d41",
+      "conditionIdFull": "0xc4159b0d411a53e87788ae5115a97866875b5a34fb70072c2d922f640ae9f27e",
+      "eventStart": "2026-07-25T18:30:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64356.81691649,
+      "nPoints": 597,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.21949999999999992,
+        "down": 0.7805277777777776,
+        "n": 180,
+        "dominant": "DOWN",
+        "edge": 0.5610277777777777
+      },
+      "latePhase": {
+        "up": 0.8439166666666663,
+        "down": 0.15608333333333338,
+        "n": 60,
+        "dominant": "UP",
+        "edge": 0.687833333333333
+      },
+      "finalPhase": {
+        "up": 0.9871874999999998,
+        "down": 0.012812500000000004,
+        "n": 16,
+        "dominant": "UP",
+        "edge": 0.9743749999999998
+      },
+      "oddsDelta": -0.143,
+      "oppRise": -0.143,
+      "maxOddsVel": 0.1,
+      "maxOddsVelSecs": 8.56,
+      "spotWinner": "UP",
+      "lateDominant": "UP",
+      "finalDominant": "UP",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x1d6270192e",
+      "conditionIdFull": "0x1d6270192ee47344110e8eb8cacc541a316c7ef8a788e7ad8b58bd6f6ab387e9",
+      "eventStart": "2026-07-25T18:35:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64367.86530176,
+      "nPoints": 598,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.04011111111111121,
+        "down": 0.9598888888888892,
+        "n": 180,
+        "dominant": "DOWN",
+        "edge": 0.919777777777778
+      },
+      "latePhase": {
+        "up": 0.01568333333333334,
+        "down": 0.9843166666666663,
+        "n": 60,
+        "dominant": "DOWN",
+        "edge": 0.9686333333333329
+      },
+      "finalPhase": {
+        "up": 0.0022500000000000003,
+        "down": 0.9977499999999997,
+        "n": 16,
+        "dominant": "DOWN",
+        "edge": 0.9954999999999997
+      },
+      "oddsDelta": -0.013,
+      "oppRise": -0.013,
+      "maxOddsVel": 0.016,
+      "maxOddsVelSecs": 10.06,
+      "spotWinner": "DOWN",
+      "lateDominant": "DOWN",
+      "finalDominant": "DOWN",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0xa401881938",
+      "conditionIdFull": "0xa401881938611584a681b869b93b7634b02c9e510a830e8a7c4108ce30e62fd4",
+      "eventStart": "2026-07-25T18:40:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64329.87944519,
+      "nPoints": 597,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.33352777777777826,
+        "down": 0.6664722222222224,
+        "n": 180,
+        "dominant": "DOWN",
+        "edge": 0.3329444444444441
+      },
+      "latePhase": {
+        "up": 0.9290833333333335,
+        "down": 0.07091666666666667,
+        "n": 60,
+        "dominant": "UP",
+        "edge": 0.8581666666666669
+      },
+      "finalPhase": {
+        "up": 0.9646874999999999,
+        "down": 0.035312500000000004,
+        "n": 16,
+        "dominant": "UP",
+        "edge": 0.929375
+      },
+      "oddsDelta": -0.036,
+      "oppRise": -0.036,
+      "maxOddsVel": 0.13,
+      "maxOddsVelSecs": 4.06,
+      "spotWinner": "UP",
+      "lateDominant": "UP",
+      "finalDominant": "UP",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0xe3fca562c9",
+      "conditionIdFull": "0xe3fca562c986099b4d66056e54ad5b2bdd5778e475595d95e1c16975219a5a12",
+      "eventStart": "2026-07-25T18:45:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64335.01482114,
+      "nPoints": 599,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.9319444444444471,
+        "down": 0.06805555555555558,
+        "n": 180,
+        "dominant": "UP",
+        "edge": 0.8638888888888916
+      },
+      "latePhase": {
+        "up": 0.9829999999999998,
+        "down": 0.017000000000000008,
+        "n": 60,
+        "dominant": "UP",
+        "edge": 0.9659999999999997
+      },
+      "finalPhase": {
+        "up": 0.9931249999999997,
+        "down": 0.006875000000000002,
+        "n": 16,
+        "dominant": "UP",
+        "edge": 0.9862499999999997
+      },
+      "oddsDelta": -0.01,
+      "oppRise": -0.01,
+      "maxOddsVel": 0.02,
+      "maxOddsVelSecs": 6.06,
+      "spotWinner": "UP",
+      "lateDominant": "UP",
+      "finalDominant": "UP",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0xa003e63a96",
+      "conditionIdFull": "0xa003e63a9612793165fc0fcc4dff7925e73784aba05541f2e6c4fe57b30619e3",
+      "eventStart": "2026-07-25T18:50:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64355.30724499,
+      "nPoints": 598,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.5609166666666662,
+        "down": 0.43908333333333316,
+        "n": 180,
+        "dominant": "UP",
+        "edge": 0.12183333333333302
+      },
+      "latePhase": {
+        "up": 0.021416666666666646,
+        "down": 0.9785833333333332,
+        "n": 60,
+        "dominant": "DOWN",
+        "edge": 0.9571666666666666
+      },
+      "finalPhase": {
+        "up": 0.005,
+        "down": 0.9949999999999997,
+        "n": 16,
+        "dominant": "DOWN",
+        "edge": 0.9899999999999997
+      },
+      "oddsDelta": -0.016,
+      "oppRise": -0.016,
+      "maxOddsVel": 0.02,
+      "maxOddsVelSecs": 9.56,
+      "spotWinner": "DOWN",
+      "lateDominant": "DOWN",
+      "finalDominant": "DOWN",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0xbb1e53d58b",
+      "conditionIdFull": "0xbb1e53d58b9d9fe20baad3c125f788eadee59657ea2828a96e86dabdb1909f85",
+      "eventStart": "2026-07-25T18:55:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64331.68476026,
+      "nPoints": 598,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.9692222222222254,
+        "down": 0.030777777777777737,
+        "n": 180,
+        "dominant": "UP",
+        "edge": 0.9384444444444477
+      },
+      "latePhase": {
+        "up": 0.9754250000000007,
+        "down": 0.024574999999999996,
+        "n": 60,
+        "dominant": "UP",
+        "edge": 0.9508500000000006
+      },
+      "finalPhase": {
+        "up": 0.9940312499999997,
+        "down": 0.005968750000000001,
+        "n": 16,
+        "dominant": "UP",
+        "edge": 0.9880624999999997
+      },
+      "oddsDelta": -0.019,
+      "oppRise": -0.019,
+      "maxOddsVel": 0.04,
+      "maxOddsVelSecs": 12.56,
+      "spotWinner": "UP",
+      "lateDominant": "UP",
+      "finalDominant": "UP",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x747f861ab1",
+      "conditionIdFull": "0x747f861ab1d3d5bef29256347f396d57ba46deb794d0777622b1149ce51bda99",
+      "eventStart": "2026-07-25T19:00:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64357.06207262,
+      "nPoints": 597,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.7622777777777774,
+        "down": 0.23772222222222225,
+        "n": 180,
+        "dominant": "UP",
+        "edge": 0.5245555555555551
+      },
+      "latePhase": {
+        "up": 0.979,
+        "down": 0.020999999999999994,
+        "n": 60,
+        "dominant": "UP",
+        "edge": 0.958
+      },
+      "finalPhase": {
+        "up": 0.9918749999999996,
+        "down": 0.008125000000000002,
+        "n": 16,
+        "dominant": "UP",
+        "edge": 0.9837499999999996
+      },
+      "oddsDelta": -0.013,
+      "oppRise": -0.013,
+      "maxOddsVel": 0.04,
+      "maxOddsVelSecs": 18.56,
+      "spotWinner": "UP",
+      "lateDominant": "UP",
+      "finalDominant": "UP",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0xfd826af482",
+      "conditionIdFull": "0xfd826af48227940e26832bcaa60217da0b3086adc8d40f0832d7b886e252d760",
+      "eventStart": "2026-07-25T19:05:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64377.258502,
+      "nPoints": 597,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.07747222222222207,
+        "down": 0.9225277777777774,
+        "n": 180,
+        "dominant": "DOWN",
+        "edge": 0.8450555555555553
+      },
+      "latePhase": {
+        "up": 0.051500000000000004,
+        "down": 0.9485000000000005,
+        "n": 60,
+        "dominant": "DOWN",
+        "edge": 0.8970000000000005
+      },
+      "finalPhase": {
+        "up": 0.010625000000000002,
+        "down": 0.9893749999999997,
+        "n": 16,
+        "dominant": "DOWN",
+        "edge": 0.9787499999999997
+      },
+      "oddsDelta": -0.041,
+      "oppRise": -0.041,
+      "maxOddsVel": 0.02,
+      "maxOddsVelSecs": 3.06,
+      "spotWinner": "DOWN",
+      "lateDominant": "DOWN",
+      "finalDominant": "DOWN",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0xf78ad84fe4",
+      "conditionIdFull": "0xf78ad84fe422525cda85bb4931020d51f00c14d5437f48ddb5f5b3cc4b4e061a",
+      "eventStart": "2026-07-25T19:10:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64363.619,
+      "nPoints": 599,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.8328055555555554,
+        "down": 0.16719444444444445,
+        "n": 180,
+        "dominant": "UP",
+        "edge": 0.6656111111111109
+      },
+      "latePhase": {
+        "up": 0.9376666666666672,
+        "down": 0.06233333333333335,
+        "n": 60,
+        "dominant": "UP",
+        "edge": 0.8753333333333339
+      },
+      "finalPhase": {
+        "up": 0.9899999999999997,
+        "down": 0.010000000000000002,
+        "n": 16,
+        "dominant": "UP",
+        "edge": 0.9799999999999996
+      },
+      "oddsDelta": -0.052,
+      "oppRise": -0.052,
+      "maxOddsVel": 0.06,
+      "maxOddsVelSecs": 11.56,
+      "spotWinner": "UP",
+      "lateDominant": "UP",
+      "finalDominant": "UP",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x7ae1b6314a",
+      "conditionIdFull": "0x7ae1b6314aa7e81b883559e0df9ffcddcd5302c221cfae88bfe26c784bb749ce",
+      "eventStart": "2026-07-25T19:15:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64374.29192446,
+      "nPoints": 598,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.033888888888888864,
+        "down": 0.9661111111111143,
+        "n": 180,
+        "dominant": "DOWN",
+        "edge": 0.9322222222222254
+      },
+      "latePhase": {
+        "up": 0.005000000000000003,
+        "down": 0.994999999999999,
+        "n": 60,
+        "dominant": "DOWN",
+        "edge": 0.989999999999999
+      },
+      "finalPhase": {
+        "up": 0.0005000000000000002,
+        "down": 0.9994999999999998,
+        "n": 16,
+        "dominant": "DOWN",
+        "edge": 0.9989999999999999
+      },
+      "oddsDelta": -0.005,
+      "oppRise": -0.005,
+      "maxOddsVel": 0.009,
+      "maxOddsVelSecs": 14.06,
+      "spotWinner": "DOWN",
+      "lateDominant": "DOWN",
+      "finalDominant": "DOWN",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x81d2f1129d",
+      "conditionIdFull": "0x81d2f1129dc462abc94aafbc57a320e6e43b92fc897bdd5d8a0eaa00e4928191",
+      "eventStart": "2026-07-25T19:20:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64350.27315189,
+      "nPoints": 597,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.8654166666666675,
+        "down": 0.13458333333333353,
+        "n": 180,
+        "dominant": "UP",
+        "edge": 0.730833333333334
+      },
+      "latePhase": {
+        "up": 0.9649166666666675,
+        "down": 0.03508333333333331,
+        "n": 60,
+        "dominant": "UP",
+        "edge": 0.9298333333333342
+      },
+      "finalPhase": {
+        "up": 0.9906249999999996,
+        "down": 0.009375000000000001,
+        "n": 16,
+        "dominant": "UP",
+        "edge": 0.9812499999999996
+      },
+      "oddsDelta": -0.026,
+      "oppRise": -0.026,
+      "maxOddsVel": 0.02,
+      "maxOddsVelSecs": 16.06,
+      "spotWinner": "UP",
+      "lateDominant": "UP",
+      "finalDominant": "UP",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x576e4bc7d8",
+      "conditionIdFull": "0x576e4bc7d86145dd0b199c6ae9c33dbf74d200e9291de32308fc0d9da66477a3",
+      "eventStart": "2026-07-25T19:25:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64358.06514087,
+      "nPoints": 598,
+      "label": "high_odds_velocity",
+      "midPhase": {
+        "up": 0.5521111111111121,
+        "down": 0.44788888888888906,
+        "n": 180,
+        "dominant": "UP",
+        "edge": 0.10422222222222305
+      },
+      "latePhase": {
+        "up": 0.40041666666666675,
+        "down": 0.5995833333333334,
+        "n": 60,
+        "dominant": "DOWN",
+        "edge": 0.1991666666666666
+      },
+      "finalPhase": {
+        "up": 0.07437499999999997,
+        "down": 0.9256249999999999,
+        "n": 16,
+        "dominant": "DOWN",
+        "edge": 0.85125
+      },
+      "oddsDelta": -0.326,
+      "oppRise": -0.326,
+      "maxOddsVel": 0.28,
+      "maxOddsVelSecs": 5.56,
+      "spotWinner": "DOWN",
+      "lateDominant": "DOWN",
+      "finalDominant": "DOWN",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0xf85bceb94d",
+      "conditionIdFull": "0xf85bceb94d4a020dbd34b4faa44738bf33745ba7990191d20a035e9ac71c0465",
+      "eventStart": "2026-07-25T19:30:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64350.63381594,
+      "nPoints": 598,
+      "label": "high_odds_velocity",
+      "midPhase": {
+        "up": 0.7208888888888888,
+        "down": 0.27911111111111164,
+        "n": 180,
+        "dominant": "UP",
+        "edge": 0.44177777777777716
+      },
+      "latePhase": {
+        "up": 0.7519166666666663,
+        "down": 0.24808333333333338,
+        "n": 60,
+        "dominant": "UP",
+        "edge": 0.5038333333333329
+      },
+      "finalPhase": {
+        "up": 0.574375,
+        "down": 0.425625,
+        "n": 16,
+        "dominant": "UP",
+        "edge": 0.14875
+      },
+      "oddsDelta": 0.178,
+      "oppRise": 0.178,
+      "maxOddsVel": 0.471,
+      "maxOddsVelSecs": 2.06,
+      "spotWinner": "UP",
+      "lateDominant": "UP",
+      "finalDominant": "UP",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x171d5596d6",
+      "conditionIdFull": "0x171d5596d62355b2ec480a50bc4c019b9dd14d430ea5229fed78b14f846c825a",
+      "eventStart": "2026-07-25T19:35:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64352.25177403,
+      "nPoints": 598,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.5493333333333335,
+        "down": 0.45066666666666655,
+        "n": 180,
+        "dominant": "UP",
+        "edge": 0.0986666666666669
+      },
+      "latePhase": {
+        "up": 0.07758333333333335,
+        "down": 0.9224166666666669,
+        "n": 60,
+        "dominant": "DOWN",
+        "edge": 0.8448333333333335
+      },
+      "finalPhase": {
+        "up": 0.05093750000000001,
+        "down": 0.9490624999999999,
+        "n": 16,
+        "dominant": "DOWN",
+        "edge": 0.898125
+      },
+      "oddsDelta": -0.027,
+      "oppRise": -0.027,
+      "maxOddsVel": 0.06,
+      "maxOddsVelSecs": 13.56,
+      "spotWinner": "DOWN",
+      "lateDominant": "DOWN",
+      "finalDominant": "DOWN",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x70b9983a22",
+      "conditionIdFull": "0x70b9983a223866ca1342ff24039f48eb4a7557740eff284605a68c12dfc3ba6f",
+      "eventStart": "2026-07-25T19:40:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64337.97228611,
+      "nPoints": 598,
+      "label": "violent_odds_cross",
+      "midPhase": {
+        "up": 0.4908333333333331,
+        "down": 0.5091666666666667,
+        "n": 180,
+        "dominant": "DOWN",
+        "edge": 0.018333333333333535
+      },
+      "latePhase": {
+        "up": 0.7882500000000001,
+        "down": 0.21175000000000002,
+        "n": 60,
+        "dominant": "UP",
+        "edge": 0.5765000000000001
+      },
+      "finalPhase": {
+        "up": 0.3475,
+        "down": 0.6525,
+        "n": 16,
+        "dominant": "DOWN",
+        "edge": 0.305
+      },
+      "oddsDelta": 0.441,
+      "oppRise": 0.441,
+      "maxOddsVel": 0.768,
+      "maxOddsVelSecs": 0.56,
+      "spotWinner": "DOWN",
+      "lateDominant": "UP",
+      "finalDominant": "DOWN",
+      "violentCross": true,
+      "softCross": true,
+      "settlementSurprise": true
+    },
+    {
+      "conditionId": "0xa851a3e0ad",
+      "conditionIdFull": "0xa851a3e0ad1b00d9838f9c3c99702e3b7c2896590565e713af8bb2741c84aae3",
+      "eventStart": "2026-07-25T19:45:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64333.34689923,
+      "nPoints": 599,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.5331111111111118,
+        "down": 0.4668888888888882,
+        "n": 180,
+        "dominant": "UP",
+        "edge": 0.06622222222222357
+      },
+      "latePhase": {
+        "up": 0.8220000000000002,
+        "down": 0.1779166666666667,
+        "n": 60,
+        "dominant": "UP",
+        "edge": 0.6440833333333335
+      },
+      "finalPhase": {
+        "up": 0.9290625,
+        "down": 0.0709375,
+        "n": 16,
+        "dominant": "UP",
+        "edge": 0.858125
+      },
+      "oddsDelta": -0.107,
+      "oppRise": -0.107,
+      "maxOddsVel": 0.15,
+      "maxOddsVelSecs": 7.06,
+      "spotWinner": "UP",
+      "lateDominant": "UP",
+      "finalDominant": "UP",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x32ffe1d78f",
+      "conditionIdFull": "0x32ffe1d78fb06be388bf2dc046715b63deadb5d80fc6823dacd0cdcd74c90701",
+      "eventStart": "2026-07-25T19:50:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64339.43113371,
+      "nPoints": 599,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.8973888888888888,
+        "down": 0.10261111111111128,
+        "n": 180,
+        "dominant": "UP",
+        "edge": 0.7947777777777775
+      },
+      "latePhase": {
+        "up": 0.9610833333333334,
+        "down": 0.038916666666666676,
+        "n": 60,
+        "dominant": "UP",
+        "edge": 0.9221666666666667
+      },
+      "finalPhase": {
+        "up": 0.9912499999999996,
+        "down": 0.008750000000000003,
+        "n": 16,
+        "dominant": "UP",
+        "edge": 0.9824999999999996
+      },
+      "oddsDelta": -0.03,
+      "oppRise": -0.03,
+      "maxOddsVel": 0.02,
+      "maxOddsVelSecs": 4.56,
+      "spotWinner": "UP",
+      "lateDominant": "UP",
+      "finalDominant": "UP",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x3e28e6595e",
+      "conditionIdFull": "0x3e28e6595e1b543c62622dcbd11f2b66abe905128213af703ffd27aa41a238e6",
+      "eventStart": "2026-07-25T19:55:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64361.65730192,
+      "nPoints": 598,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.20683333333333315,
+        "down": 0.7931666666666662,
+        "n": 180,
+        "dominant": "DOWN",
+        "edge": 0.5863333333333332
+      },
+      "latePhase": {
+        "up": 0.02074999999999998,
+        "down": 0.9792499999999994,
+        "n": 60,
+        "dominant": "DOWN",
+        "edge": 0.9584999999999995
+      },
+      "finalPhase": {
+        "up": 0.005,
+        "down": 0.9949999999999997,
+        "n": 16,
+        "dominant": "DOWN",
+        "edge": 0.9899999999999997
+      },
+      "oddsDelta": -0.016,
+      "oppRise": -0.016,
+      "maxOddsVel": 0.02,
+      "maxOddsVelSecs": 18.06,
+      "spotWinner": "DOWN",
+      "lateDominant": "DOWN",
+      "finalDominant": "DOWN",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x94a7e3fb48",
+      "conditionIdFull": "0x94a7e3fb488687b04847cf863051a5ce03c88481324e1959921196c0fdddc76c",
+      "eventStart": "2026-07-25T20:00:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64330.10658884,
+      "nPoints": 598,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.14094444444444434,
+        "down": 0.8590555555555569,
+        "n": 180,
+        "dominant": "DOWN",
+        "edge": 0.7181111111111126
+      },
+      "latePhase": {
+        "up": 0.026833333333333296,
+        "down": 0.9731666666666668,
+        "n": 60,
+        "dominant": "DOWN",
+        "edge": 0.9463333333333336
+      },
+      "finalPhase": {
+        "up": 0.006875000000000002,
+        "down": 0.9931249999999997,
+        "n": 16,
+        "dominant": "DOWN",
+        "edge": 0.9862499999999997
+      },
+      "oddsDelta": -0.02,
+      "oppRise": -0.02,
+      "maxOddsVel": 0.02,
+      "maxOddsVelSecs": 6.06,
+      "spotWinner": "DOWN",
+      "lateDominant": "DOWN",
+      "finalDominant": "DOWN",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0xa601161c4d",
+      "conditionIdFull": "0xa601161c4d57fddb78949ea1aa7298df4b07bb2df0a9b2fc27ed883ac218d615",
+      "eventStart": "2026-07-25T20:05:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64301.95730535,
+      "nPoints": 598,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.26950000000000024,
+        "down": 0.7305,
+        "n": 180,
+        "dominant": "DOWN",
+        "edge": 0.4609999999999998
+      },
+      "latePhase": {
+        "up": 0.021666666666666647,
+        "down": 0.9783333333333332,
+        "n": 60,
+        "dominant": "DOWN",
+        "edge": 0.9566666666666666
+      },
+      "finalPhase": {
+        "up": 0.006250000000000001,
+        "down": 0.9937499999999997,
+        "n": 16,
+        "dominant": "DOWN",
+        "edge": 0.9874999999999997
+      },
+      "oddsDelta": -0.015,
+      "oppRise": -0.015,
+      "maxOddsVel": 0.02,
+      "maxOddsVelSecs": 6.56,
+      "spotWinner": "DOWN",
+      "lateDominant": "DOWN",
+      "finalDominant": "DOWN",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x2d30997c1a",
+      "conditionIdFull": "0x2d30997c1aef7381cd98e8725c2644983f729dfba03fda9637f4a7f59621b64c",
+      "eventStart": "2026-07-25T20:15:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64314.1098526,
+      "nPoints": 599,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.2930277777777775,
+        "down": 0.706916666666667,
+        "n": 180,
+        "dominant": "DOWN",
+        "edge": 0.4138888888888895
+      },
+      "latePhase": {
+        "up": 0.5189999999999998,
+        "down": 0.48100000000000015,
+        "n": 60,
+        "dominant": "UP",
+        "edge": 0.037999999999999645
+      },
+      "finalPhase": {
+        "up": 0.6990625000000001,
+        "down": 0.3009375,
+        "n": 16,
+        "dominant": "UP",
+        "edge": 0.3981250000000001
+      },
+      "oddsDelta": -0.18,
+      "oppRise": -0.18,
+      "maxOddsVel": 0.24,
+      "maxOddsVelSecs": 2.56,
+      "spotWinner": "DOWN",
+      "lateDominant": "UP",
+      "finalDominant": "UP",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x60848b9ce4",
+      "conditionIdFull": "0x60848b9ce42ff423cf8f1fc692c3cb92a2be75c69249cadb6c760f8464a177f7",
+      "eventStart": "2026-07-25T20:20:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64315.73912323,
+      "nPoints": 598,
+      "label": "high_odds_velocity",
+      "midPhase": {
+        "up": 0.4725833333333336,
+        "down": 0.5273333333333333,
+        "n": 180,
+        "dominant": "DOWN",
+        "edge": 0.05474999999999974
+      },
+      "latePhase": {
+        "up": 0.44691666666666674,
+        "down": 0.5530833333333331,
+        "n": 60,
+        "dominant": "DOWN",
+        "edge": 0.10616666666666641
+      },
+      "finalPhase": {
+        "up": 0.135625,
+        "down": 0.8643749999999998,
+        "n": 16,
+        "dominant": "DOWN",
+        "edge": 0.7287499999999998
+      },
+      "oddsDelta": -0.311,
+      "oppRise": -0.311,
+      "maxOddsVel": 0.3,
+      "maxOddsVelSecs": 4.06,
+      "spotWinner": "DOWN",
+      "lateDominant": "DOWN",
+      "finalDominant": "DOWN",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0xa4c9042327",
+      "conditionIdFull": "0xa4c90423279fb7295d7d9a4bed4ed2e27ef43c7860d8ea277738b1bb54616f77",
+      "eventStart": "2026-07-25T20:25:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64303.305,
+      "nPoints": 598,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.6539166666666669,
+        "down": 0.3460833333333334,
+        "n": 180,
+        "dominant": "UP",
+        "edge": 0.3078333333333335
+      },
+      "latePhase": {
+        "up": 0.8972500000000002,
+        "down": 0.10275000000000005,
+        "n": 60,
+        "dominant": "UP",
+        "edge": 0.7945000000000002
+      },
+      "finalPhase": {
+        "up": 0.9740624999999997,
+        "down": 0.02593750000000001,
+        "n": 16,
+        "dominant": "UP",
+        "edge": 0.9481249999999997
+      },
+      "oddsDelta": -0.077,
+      "oppRise": -0.077,
+      "maxOddsVel": 0.03,
+      "maxOddsVelSecs": 16.06,
+      "spotWinner": "UP",
+      "lateDominant": "UP",
+      "finalDominant": "UP",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x8da2e3bfe8",
+      "conditionIdFull": "0x8da2e3bfe8b998f6a2645ba5c06d61eb86247db9fcc8bc61d993286d4ce351d8",
+      "eventStart": "2026-07-25T20:30:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64308.35506237,
+      "nPoints": 598,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.06575000000000006,
+        "down": 0.9342500000000017,
+        "n": 180,
+        "dominant": "DOWN",
+        "edge": 0.8685000000000016
+      },
+      "latePhase": {
+        "up": 0.020833333333333315,
+        "down": 0.9791666666666666,
+        "n": 60,
+        "dominant": "DOWN",
+        "edge": 0.9583333333333333
+      },
+      "finalPhase": {
+        "up": 0.005,
+        "down": 0.9949999999999997,
+        "n": 16,
+        "dominant": "DOWN",
+        "edge": 0.9899999999999997
+      },
+      "oddsDelta": -0.016,
+      "oppRise": -0.016,
+      "maxOddsVel": 0.02,
+      "maxOddsVelSecs": 15.56,
+      "spotWinner": "DOWN",
+      "lateDominant": "DOWN",
+      "finalDominant": "DOWN",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0xa320ae60d0",
+      "conditionIdFull": "0xa320ae60d03905c9a16e5a9b2035e344394b7eeac65296204a5765d9c35cf6df",
+      "eventStart": "2026-07-25T22:40:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64340.77791141,
+      "nPoints": 599,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.4155555555555562,
+        "down": 0.584416666666666,
+        "n": 180,
+        "dominant": "DOWN",
+        "edge": 0.16886111111110985
+      },
+      "latePhase": {
+        "up": 0.7008333333333335,
+        "down": 0.2991666666666669,
+        "n": 60,
+        "dominant": "UP",
+        "edge": 0.4016666666666666
+      },
+      "finalPhase": {
+        "up": 0.9374999999999998,
+        "down": 0.06250000000000001,
+        "n": 16,
+        "dominant": "UP",
+        "edge": 0.8749999999999998
+      },
+      "oddsDelta": -0.237,
+      "oppRise": -0.237,
+      "maxOddsVel": 0.12,
+      "maxOddsVelSecs": 4.56,
+      "spotWinner": "UP",
+      "lateDominant": "UP",
+      "finalDominant": "UP",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x5135dd54e1",
+      "conditionIdFull": "0x5135dd54e1112d86ed7143f3c85973c1718214e257975bdaaeac4a71ce2b3889",
+      "eventStart": "2026-07-25T22:45:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64345.15780247,
+      "nPoints": 598,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.5074722222222222,
+        "down": 0.4925277777777778,
+        "n": 180,
+        "dominant": "UP",
+        "edge": 0.014944444444444427
+      },
+      "latePhase": {
+        "up": 0.6864999999999998,
+        "down": 0.3135000000000001,
+        "n": 60,
+        "dominant": "UP",
+        "edge": 0.37299999999999967
+      },
+      "finalPhase": {
+        "up": 0.9715624999999997,
+        "down": 0.028437500000000004,
+        "n": 16,
+        "dominant": "UP",
+        "edge": 0.9431249999999997
+      },
+      "oddsDelta": -0.285,
+      "oppRise": -0.285,
+      "maxOddsVel": 0.11,
+      "maxOddsVelSecs": 11.06,
+      "spotWinner": "UP",
+      "lateDominant": "UP",
+      "finalDominant": "UP",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x92f4d0c6be",
+      "conditionIdFull": "0x92f4d0c6be309bb111dab40dc6ba8c6bef39aba1e8ab2926941441d893584e73",
+      "eventStart": "2026-07-25T22:50:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64351.21369013,
+      "nPoints": 598,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.358527777777778,
+        "down": 0.6414722222222217,
+        "n": 180,
+        "dominant": "DOWN",
+        "edge": 0.28294444444444367
+      },
+      "latePhase": {
+        "up": 0.21250000000000002,
+        "down": 0.7875000000000002,
+        "n": 60,
+        "dominant": "DOWN",
+        "edge": 0.5750000000000002
+      },
+      "finalPhase": {
+        "up": 0.030312500000000013,
+        "down": 0.9696874999999997,
+        "n": 16,
+        "dominant": "DOWN",
+        "edge": 0.9393749999999997
+      },
+      "oddsDelta": -0.182,
+      "oppRise": -0.182,
+      "maxOddsVel": 0.04,
+      "maxOddsVelSecs": 11.06,
+      "spotWinner": "DOWN",
+      "lateDominant": "DOWN",
+      "finalDominant": "DOWN",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x5812b1d901",
+      "conditionIdFull": "0x5812b1d901a0fb739030f3e153c53261e28a5ca0f1ca2d7d0d87d1e7e64351ef",
+      "eventStart": "2026-07-25T22:55:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64345.33651298,
+      "nPoints": 599,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.5274722222222222,
+        "down": 0.47252777777777805,
+        "n": 180,
+        "dominant": "UP",
+        "edge": 0.054944444444444185
+      },
+      "latePhase": {
+        "up": 0.5888333333333334,
+        "down": 0.41116666666666657,
+        "n": 60,
+        "dominant": "UP",
+        "edge": 0.17766666666666686
+      },
+      "finalPhase": {
+        "up": 0.9503124999999999,
+        "down": 0.049687500000000016,
+        "n": 16,
+        "dominant": "UP",
+        "edge": 0.9006249999999999
+      },
+      "oddsDelta": -0.361,
+      "oppRise": -0.361,
+      "maxOddsVel": 0.13,
+      "maxOddsVelSecs": 16.56,
+      "spotWinner": "UP",
+      "lateDominant": "UP",
+      "finalDominant": "UP",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0xecb04392bf",
+      "conditionIdFull": "0xecb04392bffbc9ca5687114313039e1078fe9f4d8c0176e95d0d1a3b5af8f6bf",
+      "eventStart": "2026-07-25T23:00:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64351.95552556,
+      "nPoints": 598,
+      "label": "high_odds_velocity",
+      "midPhase": {
+        "up": 0.322111111111111,
+        "down": 0.6778888888888895,
+        "n": 180,
+        "dominant": "DOWN",
+        "edge": 0.3557777777777785
+      },
+      "latePhase": {
+        "up": 0.30250000000000005,
+        "down": 0.6975833333333331,
+        "n": 60,
+        "dominant": "DOWN",
+        "edge": 0.39508333333333306
+      },
+      "finalPhase": {
+        "up": 0.045000000000000005,
+        "down": 0.9549999999999998,
+        "n": 16,
+        "dominant": "DOWN",
+        "edge": 0.9099999999999998
+      },
+      "oddsDelta": -0.257,
+      "oppRise": -0.258,
+      "maxOddsVel": 0.42,
+      "maxOddsVelSecs": 8.56,
+      "spotWinner": "DOWN",
+      "lateDominant": "DOWN",
+      "finalDominant": "DOWN",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x4eafcb0673",
+      "conditionIdFull": "0x4eafcb0673e07ab2914de19cfb386e56a3bd8c717fa1469840812fe3e9b27ba2",
+      "eventStart": "2026-07-25T23:05:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64346.01589737,
+      "nPoints": 599,
+      "label": "soft_odds_cross",
+      "midPhase": {
+        "up": 0.4468333333333332,
+        "down": 0.5531666666666669,
+        "n": 180,
+        "dominant": "DOWN",
+        "edge": 0.10633333333333372
+      },
+      "latePhase": {
+        "up": 0.39908333333333335,
+        "down": 0.6009166666666668,
+        "n": 60,
+        "dominant": "DOWN",
+        "edge": 0.20183333333333342
+      },
+      "finalPhase": {
+        "up": 0.9612499999999997,
+        "down": 0.03875000000000001,
+        "n": 16,
+        "dominant": "UP",
+        "edge": 0.9224999999999997
+      },
+      "oddsDelta": 0.562,
+      "oppRise": 0.562,
+      "maxOddsVel": 0.23,
+      "maxOddsVelSecs": 18.56,
+      "spotWinner": "UP",
+      "lateDominant": "DOWN",
+      "finalDominant": "UP",
+      "violentCross": false,
+      "softCross": true,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x866d56db4e",
+      "conditionIdFull": "0x866d56db4e5ab4b6521db274bad437ae9413adf1e263311d6690d9fcde3afe32",
+      "eventStart": "2026-07-25T23:10:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64351.32671597,
+      "nPoints": 599,
+      "label": "high_odds_velocity",
+      "midPhase": {
+        "up": 0.47091666666666654,
+        "down": 0.5290833333333333,
+        "n": 180,
+        "dominant": "DOWN",
+        "edge": 0.05816666666666681
+      },
+      "latePhase": {
+        "up": 0.4072499999999997,
+        "down": 0.5927500000000002,
+        "n": 60,
+        "dominant": "DOWN",
+        "edge": 0.1855000000000005
+      },
+      "finalPhase": {
+        "up": 0.0234375,
+        "down": 0.9765624999999997,
+        "n": 16,
+        "dominant": "DOWN",
+        "edge": 0.9531249999999997
+      },
+      "oddsDelta": -0.384,
+      "oppRise": -0.384,
+      "maxOddsVel": 0.739,
+      "maxOddsVelSecs": 9.06,
+      "spotWinner": "DOWN",
+      "lateDominant": "DOWN",
+      "finalDominant": "DOWN",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x825ec94cb5",
+      "conditionIdFull": "0x825ec94cb5a232e10c0f34cae10e0fdd32a99b04dd5dfb96d6683783acbd0f55",
+      "eventStart": "2026-07-25T23:15:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64347.223,
+      "nPoints": 598,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.306833333333333,
+        "down": 0.6931666666666656,
+        "n": 180,
+        "dominant": "DOWN",
+        "edge": 0.3863333333333326
+      },
+      "latePhase": {
+        "up": 0.27758333333333346,
+        "down": 0.7224166666666668,
+        "n": 60,
+        "dominant": "DOWN",
+        "edge": 0.44483333333333336
+      },
+      "finalPhase": {
+        "up": 0.18500000000000003,
+        "down": 0.815,
+        "n": 16,
+        "dominant": "DOWN",
+        "edge": 0.6299999999999999
+      },
+      "oddsDelta": -0.093,
+      "oppRise": -0.093,
+      "maxOddsVel": 0.18,
+      "maxOddsVelSecs": 15.56,
+      "spotWinner": "DOWN",
+      "lateDominant": "DOWN",
+      "finalDominant": "DOWN",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0xff816def4c",
+      "conditionIdFull": "0xff816def4c83190f8fa2a13e30cd0c0091f2f12f7342e0594da7dc3919072760",
+      "eventStart": "2026-07-25T23:20:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64341.04304148,
+      "nPoints": 599,
+      "label": "high_odds_velocity",
+      "midPhase": {
+        "up": 0.3151944444444448,
+        "down": 0.684805555555556,
+        "n": 180,
+        "dominant": "DOWN",
+        "edge": 0.3696111111111112
+      },
+      "latePhase": {
+        "up": 0.5464166666666664,
+        "down": 0.45358333333333356,
+        "n": 60,
+        "dominant": "UP",
+        "edge": 0.09283333333333288
+      },
+      "finalPhase": {
+        "up": 0.8318749999999999,
+        "down": 0.16812500000000002,
+        "n": 16,
+        "dominant": "UP",
+        "edge": 0.6637499999999998
+      },
+      "oddsDelta": -0.285,
+      "oppRise": -0.285,
+      "maxOddsVel": 0.39,
+      "maxOddsVelSecs": 4.56,
+      "spotWinner": "UP",
+      "lateDominant": "UP",
+      "finalDominant": "UP",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x07f6314cd4",
+      "conditionIdFull": "0x07f6314cd4d1350f7556b0941d00fcbc9527c8c0c706d0a426008b2d314ca9f1",
+      "eventStart": "2026-07-25T23:25:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64347.75921436,
+      "nPoints": 598,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.3946388888888891,
+        "down": 0.6053611111111121,
+        "n": 180,
+        "dominant": "DOWN",
+        "edge": 0.21072222222222303
+      },
+      "latePhase": {
+        "up": 0.5449999999999999,
+        "down": 0.45500000000000007,
+        "n": 60,
+        "dominant": "UP",
+        "edge": 0.08999999999999986
+      },
+      "finalPhase": {
+        "up": 0.11562499999999998,
+        "down": 0.884375,
+        "n": 16,
+        "dominant": "DOWN",
+        "edge": 0.76875
+      },
+      "oddsDelta": 0.429,
+      "oppRise": 0.429,
+      "maxOddsVel": 0.11,
+      "maxOddsVelSecs": 3.06,
+      "spotWinner": "DOWN",
+      "lateDominant": "UP",
+      "finalDominant": "DOWN",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x136da5537a",
+      "conditionIdFull": "0x136da5537abbfab521aae9275bf4ade65b8247f72771597432c62cfb89ac35cb",
+      "eventStart": "2026-07-25T23:30:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64343.25,
+      "nPoints": 599,
+      "label": "high_odds_velocity",
+      "midPhase": {
+        "up": 0.5495555555555549,
+        "down": 0.4504444444444448,
+        "n": 180,
+        "dominant": "UP",
+        "edge": 0.0991111111111101
+      },
+      "latePhase": {
+        "up": 0.3240833333333334,
+        "down": 0.6762500000000002,
+        "n": 60,
+        "dominant": "DOWN",
+        "edge": 0.35216666666666685
+      },
+      "finalPhase": {
+        "up": 0.23343750000000002,
+        "down": 0.7665625,
+        "n": 16,
+        "dominant": "DOWN",
+        "edge": 0.5331250000000001
+      },
+      "oddsDelta": -0.09,
+      "oppRise": -0.091,
+      "maxOddsVel": 0.27,
+      "maxOddsVelSecs": 0.56,
+      "spotWinner": "DOWN",
+      "lateDominant": "DOWN",
+      "finalDominant": "DOWN",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x21d4d30b0e",
+      "conditionIdFull": "0x21d4d30b0eaf3bcf17bb6a3ee950a0974a4970ea45b42086a24fa283e929ee7b",
+      "eventStart": "2026-07-25T23:35:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64342.85475965,
+      "nPoints": 555,
+      "label": "high_odds_velocity",
+      "midPhase": {
+        "up": 0.543361111111111,
+        "down": 0.4566388888888889,
+        "n": 180,
+        "dominant": "UP",
+        "edge": 0.08672222222222203
+      },
+      "latePhase": {
+        "up": 0.5247500000000002,
+        "down": 0.4752499999999999,
+        "n": 60,
+        "dominant": "UP",
+        "edge": 0.049500000000000266
+      },
+      "finalPhase": {
+        "up": 0.4296874999999999,
+        "down": 0.5703124999999999,
+        "n": 16,
+        "dominant": "DOWN",
+        "edge": 0.140625
+      },
+      "oddsDelta": 0.095,
+      "oppRise": 0.095,
+      "maxOddsVel": 0.704,
+      "maxOddsVelSecs": 1.06,
+      "spotWinner": "DOWN",
+      "lateDominant": "UP",
+      "finalDominant": "DOWN",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x6455c0699a",
+      "conditionIdFull": "0x6455c0699a557ea3030182bee7b938fb6d26bc8c26d02739910e19107014853f",
+      "eventStart": "2026-07-25T23:40:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64335.12598238,
+      "nPoints": 598,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.48513888888888856,
+        "down": 0.514861111111111,
+        "n": 180,
+        "dominant": "DOWN",
+        "edge": 0.029722222222222427
+      },
+      "latePhase": {
+        "up": 0.37291666666666656,
+        "down": 0.6270833333333335,
+        "n": 60,
+        "dominant": "DOWN",
+        "edge": 0.254166666666667
+      },
+      "finalPhase": {
+        "up": 0.06312499999999999,
+        "down": 0.9368749999999999,
+        "n": 16,
+        "dominant": "DOWN",
+        "edge": 0.8737499999999999
+      },
+      "oddsDelta": -0.31,
+      "oppRise": -0.31,
+      "maxOddsVel": 0.1,
+      "maxOddsVelSecs": 3.55,
+      "spotWinner": "DOWN",
+      "lateDominant": "DOWN",
+      "finalDominant": "DOWN",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0xc1f0f56e65",
+      "conditionIdFull": "0xc1f0f56e65266df986e1c58f8321f3ccc4615715be6c8e1009a719cf9ca1fcc2",
+      "eventStart": "2026-07-25T23:45:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64328.67396272,
+      "nPoints": 599,
+      "label": "violent_odds_cross",
+      "midPhase": {
+        "up": 0.6446111111111114,
+        "down": 0.35538888888888925,
+        "n": 180,
+        "dominant": "UP",
+        "edge": 0.2892222222222221
+      },
+      "latePhase": {
+        "up": 0.8040833333333332,
+        "down": 0.19591666666666666,
+        "n": 60,
+        "dominant": "UP",
+        "edge": 0.6081666666666665
+      },
+      "finalPhase": {
+        "up": 0.3590625,
+        "down": 0.64125,
+        "n": 16,
+        "dominant": "DOWN",
+        "edge": 0.2821875
+      },
+      "oddsDelta": 0.445,
+      "oppRise": 0.445,
+      "maxOddsVel": 0.311,
+      "maxOddsVelSecs": 3.06,
+      "spotWinner": "UP",
+      "lateDominant": "UP",
+      "finalDominant": "DOWN",
+      "violentCross": true,
+      "softCross": true,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x39ede9bf83",
+      "conditionIdFull": "0x39ede9bf8393d10ce4af746d8802734e3a7f437cca61794d0d21e677456e4ed9",
+      "eventStart": "2026-07-25T23:50:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64326.68597861,
+      "nPoints": 597,
+      "label": "stable",
+      "midPhase": {
+        "up": 0.5774444444444443,
+        "down": 0.42255555555555574,
+        "n": 180,
+        "dominant": "UP",
+        "edge": 0.15488888888888858
+      },
+      "latePhase": {
+        "up": 0.22774999999999995,
+        "down": 0.77225,
+        "n": 60,
+        "dominant": "DOWN",
+        "edge": 0.5445
+      },
+      "finalPhase": {
+        "up": 0.012812500000000004,
+        "down": 0.9871874999999997,
+        "n": 16,
+        "dominant": "DOWN",
+        "edge": 0.9743749999999997
+      },
+      "oddsDelta": -0.215,
+      "oppRise": -0.215,
+      "maxOddsVel": 0.12,
+      "maxOddsVelSecs": 13.06,
+      "spotWinner": "DOWN",
+      "lateDominant": "DOWN",
+      "finalDominant": "DOWN",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0xdea84ab5fe",
+      "conditionIdFull": "0xdea84ab5fe9883ddbd842d0859ad1ca6fe2509e7bd4f49a7fb75f51685bd3361",
+      "eventStart": "2026-07-25T23:55:00.000Z",
+      "dt": "2026-07-25",
+      "ptb": 64305.36309321,
+      "nPoints": 597,
+      "label": "high_odds_velocity",
+      "midPhase": {
+        "up": 0.5433888888888889,
+        "down": 0.4566111111111116,
+        "n": 180,
+        "dominant": "UP",
+        "edge": 0.08677777777777734
+      },
+      "latePhase": {
+        "up": 0.5159166666666668,
+        "down": 0.48408333333333314,
+        "n": 60,
+        "dominant": "UP",
+        "edge": 0.03183333333333366
+      },
+      "finalPhase": {
+        "up": 0.6121875,
+        "down": 0.38593749999999993,
+        "n": 16,
+        "dominant": "UP",
+        "edge": 0.22625000000000006
+      },
+      "oddsDelta": -0.096,
+      "oppRise": -0.098,
+      "maxOddsVel": 0.55,
+      "maxOddsVelSecs": 0.56,
+      "spotWinner": "UP",
+      "lateDominant": "UP",
+      "finalDominant": "UP",
+      "violentCross": false,
+      "softCross": false,
+      "settlementSurprise": false
+    }
+  ],
+  "topFlipLosses": [
+    {
+      "conditionId": "0x92481fc142",
+      "dt": "2026-07-19",
+      "finalPnl": -36.60188,
+      "side": "UP",
+      "ask": 0.88,
+      "label": "violent_odds_cross",
+      "oddsDelta": 0.387,
+      "maxOddsVel": 0.968,
+      "lateDominant": "DOWN",
+      "spotWinner": "DOWN",
+      "violentCross": true,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0xb4e5afded2",
+      "dt": "2026-07-14",
+      "finalPnl": -35.833549999999995,
+      "side": "UP",
+      "ask": 0.94,
+      "label": "high_odds_velocity",
+      "oddsDelta": 0.354,
+      "maxOddsVel": 0.976,
+      "lateDominant": "DOWN",
+      "spotWinner": "DOWN",
+      "violentCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x27b2e3e930",
+      "dt": "2026-07-03",
+      "finalPnl": -35.06973000000001,
+      "side": "DOWN",
+      "ask": 0.87,
+      "label": "high_odds_velocity",
+      "oddsDelta": 0.19,
+      "maxOddsVel": 0.281,
+      "lateDominant": "UP",
+      "spotWinner": "UP",
+      "violentCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0xcc29320471",
+      "dt": "2026-07-07",
+      "finalPnl": -32.25896,
+      "side": "DOWN",
+      "ask": 0.89,
+      "label": "high_odds_velocity",
+      "oddsDelta": 0.035,
+      "maxOddsVel": 0.388,
+      "lateDominant": "UP",
+      "spotWinner": "UP",
+      "violentCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x0c955207ae",
+      "dt": "2026-07-06",
+      "finalPnl": -30.725750000000005,
+      "side": "DOWN",
+      "ask": 0.82,
+      "label": "violent_odds_cross",
+      "oddsDelta": 0.363,
+      "maxOddsVel": 0.721,
+      "lateDominant": "UP",
+      "spotWinner": "UP",
+      "violentCross": true,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x349340f5e7",
+      "dt": "2026-07-10",
+      "finalPnl": -21.864820000000005,
+      "side": "DOWN",
+      "ask": 0.88,
+      "label": "high_odds_velocity",
+      "oddsDelta": -0.038,
+      "maxOddsVel": 0.261,
+      "lateDominant": "UP",
+      "spotWinner": "UP",
+      "violentCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x5c3a2bffdd",
+      "dt": "2026-07-23",
+      "finalPnl": -21.656370000000006,
+      "side": "DOWN",
+      "ask": 0.87,
+      "label": "high_odds_velocity",
+      "oddsDelta": -0.116,
+      "maxOddsVel": 1.245,
+      "lateDominant": "UP",
+      "spotWinner": "UP",
+      "violentCross": false,
+      "settlementSurprise": false
+    },
+    {
+      "conditionId": "0x4c0ff6ca3b",
+      "dt": "2026-07-19",
+      "finalPnl": -19.775959999999998,
+      "side": "UP",
+      "ask": 0.93,
+      "label": "violent_odds_cross",
+      "oddsDelta": 0.84,
+      "maxOddsVel": 0.589,
+      "lateDominant": "UP",
+      "spotWinner": "DOWN",
+      "violentCross": true,
+      "settlementSurprise": true
+    },
+    {
+      "conditionId": "0xd6dd8d7142",
+      "dt": "2026-07-21",
+      "finalPnl": -19.647859999999998,
+      "side": "DOWN",
+      "ask": 0.93,
+      "label": "violent_odds_cross",
+      "oddsDelta": 0.511,
+      "maxOddsVel": 0.579,
+      "lateDominant": "DOWN",
+      "spotWinner": "UP",
+      "violentCross": true,
+      "settlementSurprise": true
+    },
+    {
+      "conditionId": "0xd49d820541",
+      "dt": "2026-07-18",
+      "finalPnl": -19.61204,
+      "side": "DOWN",
+      "ask": 0.84,
+      "label": "settlement_surprise",
+      "oddsDelta": -0.024,
+      "maxOddsVel": 0.191,
+      "lateDominant": "DOWN",
+      "spotWinner": "UP",
+      "violentCross": false,
+      "settlementSurprise": true
+    },
+    {
+      "conditionId": "0xaef0995172",
+      "dt": "2026-07-12",
+      "finalPnl": -19.56494,
+      "side": "UP",
+      "ask": 0.84,
+      "label": "violent_odds_cross",
+      "oddsDelta": 0.644,
+      "maxOddsVel": 1.02,
+      "lateDominant": "UP",
+      "spotWinner": "DOWN",
+      "violentCross": true,
+      "settlementSurprise": true
+    },
+    {
+      "conditionId": "0x85d93a7318",
+      "dt": "2026-07-03",
+      "finalPnl": -19.564870000000003,
+      "side": "DOWN",
+      "ask": 0.83,
+      "label": "violent_odds_cross",
+      "oddsDelta": 0.577,
+      "maxOddsVel": 0.852,
+      "lateDominant": "DOWN",
+      "spotWinner": "UP",
+      "violentCross": true,
+      "settlementSurprise": true
+    },
+    {
+      "conditionId": "0xfbe60a3f44",
+      "dt": "2026-07-06",
+      "finalPnl": -19.56378,
+      "side": "UP",
+      "ask": 0.88,
+      "label": "settlement_surprise",
+      "oddsDelta": 0.446,
+      "maxOddsVel": 1.155,
+      "lateDominant": "UP",
+      "spotWinner": "DOWN",
+      "violentCross": false,
+      "settlementSurprise": true
+    },
+    {
+      "conditionId": "0x4f0500e021",
+      "dt": "2026-07-05",
+      "finalPnl": -19.53638,
+      "side": "UP",
+      "ask": 0.84,
+      "label": "violent_odds_cross",
+      "oddsDelta": 0.587,
+      "maxOddsVel": 0.521,
+      "lateDominant": "UP",
+      "spotWinner": "DOWN",
+      "violentCross": true,
+      "settlementSurprise": true
+    },
+    {
+      "conditionId": "0x89c74522b2",
+      "dt": "2026-07-15",
+      "finalPnl": -19.53638,
+      "side": "DOWN",
+      "ask": 0.84,
+      "label": "settlement_surprise",
+      "oddsDelta": 0.264,
+      "maxOddsVel": 0.559,
+      "lateDominant": "DOWN",
+      "spotWinner": "UP",
+      "violentCross": false,
+      "settlementSurprise": true
+    }
+  ]
+}

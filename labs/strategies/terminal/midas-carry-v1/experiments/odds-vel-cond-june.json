@@ -1,0 +1,103 @@
+{
+  "name": "odds-vel-cond-june",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-06-01",
+  "to": "2026-07-01",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 6,
+  "defaults": "../defaults.json",
+  "notes": "Stress junho (30d) das top condicionais — mais rápido que treino 59d completo.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "baseline",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30
+        }
+      },
+      {
+        "id": "ov-d10-all",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsVelGateEnabled": true,
+          "oddsVelMaxDelta": 0.10,
+          "oddsVelCondMode": 0
+        }
+      },
+      {
+        "id": "ov-d10-ask070-or-dist30",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsVelGateEnabled": true,
+          "oddsVelMaxDelta": 0.10,
+          "oddsVelCondMode": 2,
+          "oddsVelCondAskMax": 0.70,
+          "oddsVelCondDistMin": 30
+        }
+      },
+      {
+        "id": "ov-d10-dist30",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsVelGateEnabled": true,
+          "oddsVelMaxDelta": 0.10,
+          "oddsVelCondMode": 1,
+          "oddsVelCondDistMin": 30
+        }
+      },
+      {
+        "id": "ov-d10-ask070",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsVelGateEnabled": true,
+          "oddsVelMaxDelta": 0.10,
+          "oddsVelCondMode": 1,
+          "oddsVelCondAskMax": 0.70
+        }
+      },
+      {
+        "id": "ov-d15-ask070-or-dist30",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsVelGateEnabled": true,
+          "oddsVelMaxDelta": 0.15,
+          "oddsVelCondMode": 2,
+          "oddsVelCondAskMax": 0.70,
+          "oddsVelCondDistMin": 30
+        }
+      }
+    ]
+  }
+}

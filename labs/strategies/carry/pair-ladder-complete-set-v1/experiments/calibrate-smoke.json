@@ -1,0 +1,41 @@
+{
+  "name": "pair-ladder-complete-set-calibrate",
+  "strategyId": "pair-ladder-complete-set-v1",
+  "strategyFamily": "carry",
+  "description": "Calibração underweight-chase + cushion rebalance",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-20",
+  "to": "2026-07-21",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 2,
+  "defaults": "../defaults.json",
+  "feeOptions": { "category": "crypto" },
+  "searchSpace": {
+    "variants": [
+      { "id": "uw-chase", "params": {} },
+      {
+        "id": "small-notional",
+        "params": { "maxEventNotional": 160, "maxFillsPerEvent": 8, "clipShares": 50 }
+      },
+      {
+        "id": "deeper-chase",
+        "params": { "chaseMaxAsk": 0.45, "rebalanceCushionAsk": 0.92, "maxEventNotional": 320 }
+      },
+      {
+        "id": "spread0",
+        "params": { "spreadCents": 0 }
+      },
+      {
+        "id": "lock-tight",
+        "params": { "stopAvgSum": 0.93, "stopMinBalance": 0.95, "refuseAvgSum": 0.99 }
+      }
+    ]
+  },
+  "metrics": ["totalPnl", "entries", "winRate", "profitFactor", "maxDrawdown"]
+}

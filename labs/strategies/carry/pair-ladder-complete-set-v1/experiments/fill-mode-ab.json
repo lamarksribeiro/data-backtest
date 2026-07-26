@@ -1,0 +1,30 @@
+{
+  "name": "pair-ladder-fill-mode-ab",
+  "strategyId": "pair-ladder-complete-set-v1",
+  "strategyFamily": "carry",
+  "description": "Ablação fillMode taker vs mid vs optimistic_maker vs resting_maker + scaleOnlyTowardLock",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-20",
+  "to": "2026-07-21",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 2,
+  "defaults": "../defaults.json",
+  "feeOptions": { "category": "crypto" },
+  "searchSpace": {
+    "variants": [
+      { "id": "taker-lockgate", "params": { "fillMode": "taker", "scaleOnlyTowardLock": true } },
+      { "id": "taker-noscale", "params": { "fillMode": "taker", "scaleOnlyTowardLock": false } },
+      { "id": "mid-lockgate", "params": { "fillMode": "mid", "scaleOnlyTowardLock": true, "spreadCents": 0 } },
+      { "id": "optimistic-maker", "params": { "fillMode": "optimistic_maker", "scaleOnlyTowardLock": true, "spreadCents": 0 } },
+      { "id": "resting-maker", "params": { "fillMode": "resting_maker", "scaleOnlyTowardLock": true, "makerTimeoutSec": 25 } },
+      { "id": "mid-small", "params": { "fillMode": "mid", "scaleOnlyTowardLock": true, "spreadCents": 0, "maxEventNotional": 180, "maxFillsPerEvent": 8 } }
+    ]
+  },
+  "metrics": ["totalPnl", "entries", "winRate", "profitFactor", "maxDrawdown"]
+}

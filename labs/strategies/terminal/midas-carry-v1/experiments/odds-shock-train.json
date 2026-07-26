@@ -1,0 +1,192 @@
+{
+  "name": "odds-shock-train",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-04",
+  "to": "2026-07-01",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 6,
+  "defaults": "../defaults.json",
+  "notes": "Treino (maio–junho) das mesmas variantes oddsShock do holdout julho. Candidata só promove se melhorar (ou empatar) treino E holdout sem destruir PnL.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "baseline-aggressive",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30
+        }
+      },
+      {
+        "id": "os-exit-d12",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.12,
+          "oddsShockOwnAskDelta": 0.12,
+          "oddsShockMinOppAsk": 0.40
+        }
+      },
+      {
+        "id": "os-exit-d15",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.40
+        }
+      },
+      {
+        "id": "os-exit-d20",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.20,
+          "oddsShockOwnAskDelta": 0.20,
+          "oddsShockMinOppAsk": 0.45
+        }
+      },
+      {
+        "id": "os-exit-d15-late",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsShockEnabled": true,
+          "oddsShockStartSec": 12,
+          "oddsShockEndSec": 3,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.40
+        }
+      },
+      {
+        "id": "os-exit-d15-losing",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.40,
+          "oddsShockOnlyIfLosing": true
+        }
+      },
+      {
+        "id": "os-partial50-d15",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.40,
+          "oddsShockPartialPct": 0.5
+        }
+      },
+      {
+        "id": "os-partial70-d15",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.40,
+          "oddsShockPartialPct": 0.7
+        }
+      },
+      {
+        "id": "os-reverse-d15",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.40,
+          "oddsShockReverseEnabled": true
+        }
+      },
+      {
+        "id": "os-exit-d15-lb3",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsShockEnabled": true,
+          "oddsShockLookbackSec": 3,
+          "oddsShockOppAskDelta": 0.18,
+          "oddsShockOwnAskDelta": 0.18,
+          "oddsShockMinOppAsk": 0.40
+        }
+      },
+      {
+        "id": "os-exit-d15-minopp55",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.55
+        }
+      },
+      {
+        "id": "ew-045-ref",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "earlyWarnEnabled": true,
+          "earlyWarnOppAsk": 0.45,
+          "earlyWarnOnlyIfLosing": false
+        }
+      }
+    ]
+  }
+}

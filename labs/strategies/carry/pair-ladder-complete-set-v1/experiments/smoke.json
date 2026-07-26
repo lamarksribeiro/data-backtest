@@ -1,0 +1,49 @@
+{
+  "name": "pair-ladder-complete-set-smoke",
+  "strategyId": "pair-ladder-complete-set-v1",
+  "strategyFamily": "carry",
+  "description": "Smoke 2 dias: vacuum residual-only vs no-vacuum vs orphan-on (ablation)",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-20",
+  "to": "2026-07-21",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 2,
+  "defaults": "../defaults.json",
+  "feeOptions": {
+    "category": "crypto"
+  },
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "guarded-default",
+        "params": {}
+      },
+      {
+        "id": "no-vacuum",
+        "params": {
+          "lateMaxAsk": 0.01,
+          "lateUltraAsk": 0.01
+        }
+      },
+      {
+        "id": "orphan-vacuum-on",
+        "params": {
+          "lateOrphanAllowed": true
+        }
+      }
+    ]
+  },
+  "metrics": [
+    "totalPnl",
+    "entries",
+    "winRate",
+    "profitFactor",
+    "maxDrawdown"
+  ]
+}

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { applyPolymarketFeesToBacktestResult, calculatePolymarketTakerFee } from '../src/backtest/fees.js';
+import { applyPolymarketFeesToBacktestResult, calculatePolymarketTakerFee, DEFAULT_TAKER_REBATE_RATE_DIAMOND, POLYMARKET_TAKER_REBATE_TIERS } from '../src/backtest/fees.js';
 
 test('polymarket taker fee uses shares * rate * price * (1 - price)', () => {
   assert.equal(calculatePolymarketTakerFee({ shares: 10, price: 0.5, feeRate: 0.07 }), 0.175);
@@ -69,6 +69,45 @@ test('applyPolymarketFeesToBacktestResult adjusts pnl and summary metrics', () =
   assert.ok(result.equity.length);
   assert.equal(round(result.summary.maxDrawdown), 2.28);
   assert.equal(round(result.summary.recoveryFactor), 0.625);
+});
+
+test('takerRebateRate credits back a fraction of taker fees (research overlay)', () => {
+  const result = {
+    params: { walletSize: 100 },
+    events: [
+      {
+        eventId: 'a',
+        eventStart: '2026-06-01T00:00:00.000Z',
+        eventEnd: '2026-06-01T00:05:00.000Z',
+        closedAt: '2026-06-01T00:04:00.000Z',
+        positionType: 'UP',
+        quantity: 10,
+        cost: 3,
+        finalPnl: 4,
+        orders: [{ type: 'entry', side: 'UP', ts: '2026-06-01T00:01:00.000Z', shares: 10, avgPrice: 0.3, notional: 3 }],
+        exits: [],
+      },
+    ],
+    equity: [],
+    summary: { totalEvents: 1, totalEntries: 1 },
+    log: [],
+  };
+
+  applyPolymarketFeesToBacktestResult(result, { category: 'crypto', takerRebateRate: 0.5 });
+
+  assert.equal(result.events[0].fees.totalFee, 0.147);
+  assert.equal(result.events[0].fees.takerRebate, 0.0735);
+  assert.equal(result.events[0].finalPnlBeforeFees, 4);
+  assert.equal(result.events[0].finalPnl, 4 - 0.147 + 0.0735);
+  assert.equal(result.summary.takerRebate, 0.0735);
+  assert.equal(result.summary.netFeesAfterRebate, 0.0735);
+  assert.equal(result.feeModel.takerRebateRate, 0.5);
+});
+
+test('Diamond tier constant is 44% (Taker Rebate Program docs)', () => {
+  assert.equal(POLYMARKET_TAKER_REBATE_TIERS.diamond, 0.44);
+  assert.equal(POLYMARKET_TAKER_REBATE_TIERS.obsidian, 0.5);
+  assert.equal(DEFAULT_TAKER_REBATE_RATE_DIAMOND, 0.44);
 });
 
 function round(value) {

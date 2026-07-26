@@ -1,0 +1,144 @@
+{
+  "name": "odds-vel-size-june",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-06-01",
+  "to": "2026-06-30",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 6,
+  "defaults": "../defaults.json",
+  "notes": "Stress junho do size-halve (item 3). Mesmas variantes do julho enxuto.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "baseline",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30
+        }
+      },
+      {
+        "id": "blk-d10-all",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsVelGateEnabled": true,
+          "oddsVelMaxDelta": 0.10,
+          "oddsVelCondMode": 0,
+          "oddsVelBlockOnHit": true
+        }
+      },
+      {
+        "id": "blk-d10-or",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsVelGateEnabled": true,
+          "oddsVelMaxDelta": 0.10,
+          "oddsVelCondMode": 2,
+          "oddsVelCondAskMax": 0.70,
+          "oddsVelCondDistMin": 30,
+          "oddsVelBlockOnHit": true
+        }
+      },
+      {
+        "id": "half-d10-all",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsVelGateEnabled": true,
+          "oddsVelMaxDelta": 0.10,
+          "oddsVelCondMode": 0,
+          "oddsVelBlockOnHit": false,
+          "oddsVelSizeFactor": 0.5
+        }
+      },
+      {
+        "id": "half-d10-or",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsVelGateEnabled": true,
+          "oddsVelMaxDelta": 0.10,
+          "oddsVelCondMode": 2,
+          "oddsVelCondAskMax": 0.70,
+          "oddsVelCondDistMin": 30,
+          "oddsVelBlockOnHit": false,
+          "oddsVelSizeFactor": 0.5
+        }
+      },
+      {
+        "id": "half-d10-dist30",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsVelGateEnabled": true,
+          "oddsVelMaxDelta": 0.10,
+          "oddsVelCondMode": 1,
+          "oddsVelCondDistMin": 30,
+          "oddsVelBlockOnHit": false,
+          "oddsVelSizeFactor": 0.5
+        }
+      },
+      {
+        "id": "qtr-d10-or",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsVelGateEnabled": true,
+          "oddsVelMaxDelta": 0.10,
+          "oddsVelCondMode": 2,
+          "oddsVelCondAskMax": 0.70,
+          "oddsVelCondDistMin": 30,
+          "oddsVelBlockOnHit": false,
+          "oddsVelSizeFactor": 0.25
+        }
+      },
+      {
+        "id": "half-d15-or",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "oddsVelGateEnabled": true,
+          "oddsVelMaxDelta": 0.15,
+          "oddsVelCondMode": 2,
+          "oddsVelCondAskMax": 0.70,
+          "oddsVelCondDistMin": 30,
+          "oddsVelBlockOnHit": false,
+          "oddsVelSizeFactor": 0.5
+        }
+      }
+    ]
+  }
+}

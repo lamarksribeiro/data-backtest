@@ -1,0 +1,57 @@
+{
+  "name": "pair-ladder-complete-set-doggy-parity-rebate",
+  "strategyId": "pair-ladder-complete-set-v1",
+  "strategyFamily": "carry",
+  "description": "Etapa 3: path parity + overlay Diamond 44% (docs taker rebates)",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-20",
+  "to": "2026-07-21",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 2,
+  "defaults": "../defaults.json",
+  "feeOptions": { "category": "crypto", "takerRebateRate": 0.44 },
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "parity-rebate44-diamond",
+        "params": {
+          "fillMode": "taker",
+          "spreadCents": 0,
+          "clipShares": 100,
+          "openMaxAsk": 0.58,
+          "maxSecToOpen": 30,
+          "maxEventNotional": 800,
+          "maxFillsPerEvent": 20,
+          "maxResidualShares": 100,
+          "stopAvgSum": 0.98,
+          "refuseAvgSum": 1.02,
+          "scaleOnlyTowardLock": true
+        }
+      },
+      {
+        "id": "parity-no-rebate-control",
+        "params": {
+          "fillMode": "taker",
+          "spreadCents": 0,
+          "clipShares": 100,
+          "openMaxAsk": 0.58,
+          "maxSecToOpen": 30,
+          "maxEventNotional": 800,
+          "maxFillsPerEvent": 20,
+          "maxResidualShares": 100,
+          "stopAvgSum": 0.98,
+          "refuseAvgSum": 1.02,
+          "scaleOnlyTowardLock": true,
+          "takerRebateRate": 0
+        }
+      }
+    ]
+  },
+  "metrics": ["totalPnl", "entries", "winRate", "profitFactor", "maxDrawdown", "totalFees"]
+}

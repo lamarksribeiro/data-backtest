@@ -1,0 +1,87 @@
+{
+  "name": "odds-shock-booklead-july",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-25",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "notes": "Hipótese book-lead (imagem 26/07 04:40): odds lideram o spot em 10-20s. Agir no choque SEM exigir spot perdedor, mas só enquanto bid ainda salva (>= ratio*entry). minOppAsk 0.5 = book já votou no oposto.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "baseline",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2
+        }
+      },
+      {
+        "id": "os-lead-bid55",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55
+        }
+      },
+      {
+        "id": "os-lead-bid70",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.7
+        }
+      },
+      {
+        "id": "os-lead-bid55-opp60",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.6,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55
+        }
+      },
+      {
+        "id": "os-lead-bid55-partial50",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5
+        }
+      }
+    ]
+  }
+}

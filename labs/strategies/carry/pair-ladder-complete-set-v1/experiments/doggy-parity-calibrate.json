@@ -1,0 +1,91 @@
+{
+  "name": "pair-ladder-complete-set-doggy-parity",
+  "strategyId": "pair-ladder-complete-set-v1",
+  "strategyFamily": "carry",
+  "description": "Iteração F: async hedge Doggy (seedHedgeSameTick=false) + taker@ask + chase fix",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-20",
+  "to": "2026-07-21",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 2,
+  "defaults": "../defaults.json",
+  "feeOptions": { "category": "crypto" },
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "async-hedge",
+        "params": {
+          "fillMode": "taker",
+          "spreadCents": 0,
+          "seedHedgeSameTick": false,
+          "hedgeShares": 100,
+          "clipShares": 100,
+          "maxSecToHedge": 120,
+          "maxResidualShares": 150,
+          "maxEventNotional": 800,
+          "maxFillsPerEvent": 20,
+          "refuseAvgSum": 1.02,
+          "stopAvgSum": 0.98,
+          "scaleOnlyTowardLock": true
+        }
+      },
+      {
+        "id": "async-tight",
+        "params": {
+          "fillMode": "taker",
+          "spreadCents": 0,
+          "seedHedgeSameTick": false,
+          "hedgeShares": 100,
+          "clipShares": 100,
+          "maxSecToHedge": 90,
+          "hedgeTargetAvgSum": 0.99,
+          "maxResidualShares": 100,
+          "maxEventNotional": 500,
+          "maxFillsPerEvent": 14,
+          "refuseAvgSum": 0.99,
+          "stopAvgSum": 0.95,
+          "scaleOnlyTowardLock": true
+        }
+      },
+      {
+        "id": "same-tick-control",
+        "params": {
+          "fillMode": "taker",
+          "spreadCents": 0,
+          "seedHedgeSameTick": true,
+          "hedgeShares": 50,
+          "clipShares": 100,
+          "maxResidualShares": 150,
+          "maxEventNotional": 800,
+          "refuseAvgSum": 1.02,
+          "scaleOnlyTowardLock": true
+        }
+      },
+      {
+        "id": "async-rebate50",
+        "params": {
+          "fillMode": "taker",
+          "spreadCents": 0,
+          "seedHedgeSameTick": false,
+          "hedgeShares": 100,
+          "clipShares": 100,
+          "maxSecToHedge": 120,
+          "maxResidualShares": 150,
+          "maxEventNotional": 800,
+          "maxFillsPerEvent": 20,
+          "refuseAvgSum": 1.02,
+          "stopAvgSum": 0.98,
+          "scaleOnlyTowardLock": true,
+          "takerRebateRate": 0.44
+        }
+      }
+    ]
+  },
+  "metrics": ["totalPnl", "entries", "winRate", "profitFactor", "maxDrawdown", "totalFees"]
+}

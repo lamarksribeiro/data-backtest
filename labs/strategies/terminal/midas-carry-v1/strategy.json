@@ -23,5 +23,5 @@
       "classic": "labs/strategies/terminal/midas-carry-v1/strategy.gls"
     }
   },
-  "notes": "Núcleo TFC V7 + envelope high-ask (maxAsk 0.94) com orçamento em tier. Presets: btc-champion-v1 (dist 40, tier 1.5x), btc-aggressive-v1 (tier 2.0x), btc-robust-v1 (dist 30, tier 1.5x — melhor PnL/DD no lab de robustez 2026-07-21), btc-micro-robust-v1 ($2/$3), btc-micro-aggressive-v1 ($2/$4 — paridade canário data-robot). Mecanismos rejeitados ficam desativados: sigma sizing, scoop, danger contínuo, early-warn, minEntryZ. Doc: docs/estrategias/implementadas/midas-carry-v1.md."
+  "notes": "Núcleo TFC V7 + envelope high-ask (maxAsk 0.94) com orçamento em tier. Presets: btc-champion-v1 / aggressive / robust / micro. Mecanismos OFF: sigma, scoop, danger cont, early-warn, book-collapse, odds-shock exit, odds-vel entry (unrestricted). Candidata frágil lab 2026-07-26: oddsVelGate + cond OR ask<=0.70|dist>=30 (julho +90, junho −19). Doc: docs/estrategias/implementadas/midas-carry-v1.md."
 }

@@ -1,0 +1,29 @@
+{
+  "presets": [
+    {
+      "id": "btc-clip-ladder-guarded",
+      "file": "btc-clip-ladder-guarded.json",
+      "description": "Modo A: clip 50→100 + vacuum + gates (taker honesto)"
+    },
+    {
+      "id": "btc-doggy-parity-taker",
+      "file": "btc-doggy-parity-taker.json",
+      "description": "RE path G+8: taker, async hedge, size~Doggy, min_avg_sum"
+    },
+    {
+      "id": "btc-doggy-parity-momo",
+      "file": "btc-doggy-parity-momo.json",
+      "description": "RE Etapa 9: chase_momo (d15≥3¢) — research, ainda negativo"
+    },
+    {
+      "id": "btc-clip-ladder-no-vacuum",
+      "file": "btc-clip-ladder-no-vacuum.json",
+      "description": "Ablation: vacuum off (lateMaxAsk=0)"
+    },
+    {
+      "id": "btc-resting-maker-candidate",
+      "file": "btc-resting-maker-candidate.json",
+      "description": "Ablação only: resting_maker (≠ Doggy; Doggy=taker+fees+rebate — Iteração E)"
+    }
+  ]
+}

@@ -238,6 +238,19 @@
       "tier": "A",
       "promotedToStudio": true,
       "sourceDoc": "docs/estrategias/implementadas/escada-dupla-v1.md"
+    },
+    {
+      "id": "pair-ladder-complete-set-v1",
+      "family": "carry",
+      "name": "Pair Ladder Complete-Set V1",
+      "sourceFile": "pair-ladder-complete-set-runner.js",
+      "createFn": "createBacktestRunner",
+      "runnerSlug": "pair-ladder-complete-set-runner",
+      "strategyLabel": "PAIR_LADDER_COMPLETE_SET_V1",
+      "usesStopReverse": false,
+      "tier": "A",
+      "promotedToStudio": false,
+      "sourceDoc": "docs/estrategias/nao-implementadas/pair-ladder-complete-set-v1.md"
     }
   ],
   "portfolios": [
@@ -399,6 +412,15 @@
     }
   ],
   "backlog": [
+    {
+      "id": "pair-ladder-complete-set-v1",
+      "portStatus": "lab-research",
+      "tier": "A",
+      "priority": 0,
+      "sourceDoc": "docs/estrategias/nao-implementadas/pair-ladder-complete-set-v1.md",
+      "labPath": "labs/strategies/carry/pair-ladder-complete-set-v1",
+      "notes": "Lab + runner implementados (2026-07-26). Vacuum residual-only. Proibido Studio/conta real até holdout."
+    },
     {
       "id": "strike-boundary-repricing-inelasticity-v1",
       "portStatus": "ported-as-sbri-tight-v1",

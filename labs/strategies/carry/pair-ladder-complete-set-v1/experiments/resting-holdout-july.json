@@ -1,0 +1,40 @@
+{
+  "name": "pair-ladder-resting-holdout",
+  "strategyId": "pair-ladder-complete-set-v1",
+  "strategyFamily": "carry",
+  "description": "Holdout Jul 18-24: resting_maker vs taker vs mid (fees crypto)",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-18",
+  "to": "2026-07-24",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 2,
+  "defaults": "../defaults.json",
+  "feeOptions": { "category": "crypto" },
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "resting-maker",
+        "params": { "fillMode": "resting_maker", "scaleOnlyTowardLock": true, "makerTimeoutSec": 25 }
+      },
+      {
+        "id": "optimistic-ceiling",
+        "params": { "fillMode": "optimistic_maker", "scaleOnlyTowardLock": true, "spreadCents": 0 }
+      },
+      {
+        "id": "taker-baseline",
+        "params": { "fillMode": "taker", "scaleOnlyTowardLock": true }
+      },
+      {
+        "id": "mid",
+        "params": { "fillMode": "mid", "scaleOnlyTowardLock": true, "spreadCents": 0 }
+      }
+    ]
+  },
+  "metrics": ["totalPnl", "entries", "winRate", "profitFactor", "maxDrawdown"]
+}

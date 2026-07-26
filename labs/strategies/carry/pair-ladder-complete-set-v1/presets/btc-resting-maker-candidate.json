@@ -1,0 +1,16 @@
+{
+  "id": "btc-resting-maker-candidate",
+  "fillMode": "resting_maker",
+  "scaleOnlyTowardLock": true,
+  "makerTimeoutSec": 25,
+  "makerFillEpsilon": 0.01,
+  "seedHedgeSameTick": true,
+  "openShares": 50,
+  "hedgeShares": 50,
+  "clipShares": 50,
+  "stopAvgSum": 0.95,
+  "stopMinBalance": 0.95,
+  "refuseAvgSum": 1.0,
+  "maxEventNotional": 300,
+  "notes": "Ablação de teto de execução — NÃO é paridade Doggy (RE: taker+fee+rebate). Proibido conta real."
+}

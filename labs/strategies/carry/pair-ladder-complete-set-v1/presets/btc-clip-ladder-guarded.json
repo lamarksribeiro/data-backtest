@@ -1,0 +1,17 @@
+{
+  "id": "btc-clip-ladder-guarded",
+  "label": "BTC Clip Ladder Guarded",
+  "params": {
+    "mode": "clip_ladder",
+    "openShares": 50,
+    "clipShares": 100,
+    "stopAvgSum": 0.98,
+    "stopMinBalance": 0.95,
+    "blockAvgSum": 1.02,
+    "lateStartSec": 180,
+    "lateMaxAsk": 0.12,
+    "lateUltraAsk": 0.05,
+    "maxEventNotional": 250,
+    "applyPolymarketFees": true
+  }
+}
