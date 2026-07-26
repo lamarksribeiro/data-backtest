@@ -240,6 +240,19 @@
       "sourceDoc": "docs/estrategias/implementadas/escada-dupla-v1.md"
     },
     {
+      "id": "shotandgo-v1",
+      "family": "carry",
+      "name": "Shotandgo V1 (Phil Escada Dupla)",
+      "sourceFile": "shotandgo-runner.js",
+      "createFn": "createBacktestRunner",
+      "runnerSlug": "shotandgo-runner",
+      "strategyLabel": "SHOTANDGO_V1",
+      "usesStopReverse": true,
+      "tier": "A",
+      "promotedToStudio": false,
+      "sourceDoc": "docs/estrategias/nao-implementadas/shotandgo-v1.md"
+    },
+    {
       "id": "pair-ladder-complete-set-v1",
       "family": "carry",
       "name": "Pair Ladder Complete-Set V1",
@@ -413,22 +426,11 @@
   ],
   "backlog": [
     {
-      "id": "pair-ladder-complete-set-v1",
-      "portStatus": "lab-research",
-      "tier": "A",
-      "priority": 0,
-      "sourceDoc": "docs/estrategias/nao-implementadas/pair-ladder-complete-set-v1.md",
-      "labPath": "labs/strategies/carry/pair-ladder-complete-set-v1",
-      "notes": "Lab + runner implementados (2026-07-26). Vacuum residual-only. Proibido Studio/conta real até holdout."
-    },
-    {
       "id": "strike-boundary-repricing-inelasticity-v1",
-      "portStatus": "ported-as-sbri-tight-v1",
+      "portStatus": "backlog",
       "tier": "E",
       "priority": 1,
-      "sourceDoc": "docs/estrategias/nao-implementadas/strike-boundary-repricing-inelasticity-v1.md",
-      "labPath": "labs/strategies/microstructure/sbri-tight-v1",
-      "notes": "Implementada como sbri-tight-v1 (GLS + lab 2026-07-26). Doc: docs/estrategias/implementadas/sbri-tight-v1.md"
+      "sourceDoc": "docs/estrategias/nao-implementadas/strike-boundary-repricing-inelasticity-v1.md"
     },
     {
       "id": "stochastic-escape-barrier-theory-v1",

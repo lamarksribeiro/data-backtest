@@ -22,6 +22,8 @@ Inclui as 16 teorias transferidas do polymarket-test, mais:
 - [`implementadas/bs-lead-v1.md`](implementadas/bs-lead-v1.md) — BS-Lead (runner portado, Studio pendente)
 - [`implementadas/escada-dupla-v1.md`](implementadas/escada-dupla-v1.md) — Escada Dupla (library-runner, Studio)
   - Auditoria de realismo (2026-07-25): [`auditoria-escada-dupla-realismo-2026-07-25.md`](auditoria-escada-dupla-realismo-2026-07-25.md) — edge do campeão apontado como artefato de execução; plano de validação em 3 etapas
+  - Post-mortem `ascent_hedge`: [`../rejeitadas/escada-dupla-v1.md`](../rejeitadas/escada-dupla-v1.md) — **não cobre** Shotandgo Python
+- [`nao-implementadas/shotandgo-v1.md`](nao-implementadas/shotandgo-v1.md) — Shotandgo / Phil Escada Dupla (research reaberta; lab `shotandgo-v1`)
 
 Estudo de suporte: [`../analise-quantitativa/estudo-correlacao-binance-polymarket.md`](../analise-quantitativa/estudo-correlacao-binance-polymarket.md).
 
@@ -33,6 +35,7 @@ Prioridade e `sourceDoc` no catálogo de port:
 
 | Prioridade | Documento | ID |
 |---:|---|---|
+| 0 | [`nao-implementadas/shotandgo-v1.md`](nao-implementadas/shotandgo-v1.md) | Shotandgo / Phil Escada Dupla — **lab research** (`labs/strategies/carry/shotandgo-v1/`); post-mortem ascent_hedge não cobre |
 | 0 | [`nao-implementadas/pair-ladder-complete-set-v1.md`](nao-implementadas/pair-ladder-complete-set-v1.md) | Pair Ladder Complete-Set — **lab research** (`labs/strategies/carry/pair-ladder-complete-set-v1/`); smoke ainda negativo; proibido Studio |
 | 1 | `strike-boundary-repricing-inelasticity-v1.md` | SBRI (teoria; **lab GLS em `implementadas/sbri-tight-v1.md`**) |
 | 2 | `stochastic-escape-barrier-theory-v1.md` | SEBT |

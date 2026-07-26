@@ -1,0 +1,27 @@
+{
+  "name": "shotandgo-ablation-sizing-may-june",
+  "strategyId": "shotandgo-v1",
+  "strategyFamily": "carry",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-01",
+  "to": "2026-06-30",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "feeOptions": { "category": "crypto" },
+  "description": "Sweep de sizing + execução sobre a baseline Python live. honest vs optimistic × sizeScale 0.25/0.5/1.0.",
+  "searchSpace": {
+    "grid": {
+      "executionMode": ["honest", "optimistic"],
+      "sizeScale": [0.25, 0.5, 1.0],
+      "takerLatencyTicks": [0, 1]
+    }
+  },
+  "metrics": ["totalPnl", "entries", "winRate", "profitFactor", "maxDrawdown"]
+}

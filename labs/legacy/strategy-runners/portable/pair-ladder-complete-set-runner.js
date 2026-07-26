@@ -53,6 +53,8 @@ const DEFAULT_PARAMS = {
   momoMinRise: 0.02,
   momoMinAsk: 0.20,
   momoMaxAsk: 0.70,
+  // Etapa 12b: em chase_momo, bloqueia rebalance FADE mid (ask > chaseMaxAsk sem MOMO)
+  momoBlockFade: false,
 
   // soft lock: avgSum/bal ok não mata vacuum (Doggy continua após ≤0.95)
   softLockAllowVacuum: true,
@@ -157,6 +159,7 @@ function mergeParams(raw = {}) {
   if (params.momoMaxAsk < params.momoMinAsk) {
     [params.momoMaxAsk, params.momoMinAsk] = [params.momoMinAsk, params.momoMaxAsk];
   }
+  params.momoBlockFade = toBool(raw.momoBlockFade, DEFAULT_PARAMS.momoBlockFade);
   params.softLockAllowVacuum = toBool(raw.softLockAllowVacuum, DEFAULT_PARAMS.softLockAllowVacuum);
   params.softLockAllowBuild = toBool(raw.softLockAllowBuild, DEFAULT_PARAMS.softLockAllowBuild);
 
@@ -722,9 +725,13 @@ function pickBuildLeg(state, tick, params) {
       if (isMomo && (isUnder || isFlat) && proj.residual <= params.maxResidualShares + 1e-9) {
         if (proj.avgSum == null || proj.avgSum <= params.blockAvgSum + 1e-12) allowed = true;
       }
-      // Container: rebalance underweight só em pullback/FLAT (não chase REV barato como motor)
-      if (!allowed && isUnder && !isMomo && ask <= params.rebalanceMaxAsk + 1e-12) {
-        if (improvesAvg || (hasCushion && proj.avgSum != null && proj.avgSum <= params.refuseAvgSum + 1e-12)) {
+      // Container: rebalance underweight — com momoBlockFade só cheap chase (≤chaseMaxAsk),
+      // senão mid-band FADE/REV ainda entra via ask≤rebalanceMaxAsk (0.70).
+      if (!allowed && isUnder && !isMomo) {
+        const containerAskOk = params.momoBlockFade
+          ? ask <= params.chaseMaxAsk + 1e-12
+          : ask <= params.rebalanceMaxAsk + 1e-12;
+        if (containerAskOk && (improvesAvg || (hasCushion && proj.avgSum != null && proj.avgSum <= params.refuseAvgSum + 1e-12))) {
           allowed = true;
         }
       }

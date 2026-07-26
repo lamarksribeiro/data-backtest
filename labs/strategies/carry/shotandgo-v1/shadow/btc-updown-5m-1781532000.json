@@ -1,0 +1,7896 @@
+{
+  "schemaVersion": 1,
+  "kind": "shotandgo-shadow",
+  "slug": "btc-updown-5m-1781532000",
+  "conditionId": "synth-shotandgo-shadow-1",
+  "eventStart": "2026-06-15T14:00:00.000Z",
+  "capturedAt": "2026-07-26T19:49:51.121Z",
+  "finishedAt": "2026-07-26T19:49:51.121Z",
+  "source": "synth-optimistic-self",
+  "mode": {
+    "modoReal": true,
+    "dryRun": true,
+    "shadow": true
+  },
+  "replayHint": {
+    "executionMode": "optimistic",
+    "params": {
+      "executionMode": "optimistic",
+      "mult": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        6
+      ],
+      "contagio": "global",
+      "contagioMin": 5,
+      "eqPreco": 0.05,
+      "eqEncerra": true,
+      "eqLimiteAtivo": true,
+      "eqLimiteArmaC": 10,
+      "eqLimiteCancelaC": 40,
+      "eqLimiteReposta": true,
+      "stopAtivo": true,
+      "stopVirada": 4,
+      "stopLimiar": 1,
+      "pisoAtivo": true,
+      "pisoViradas": [
+        4,
+        5
+      ],
+      "pisoMargem": 0.2,
+      "maxViradasAtivo": true,
+      "maxViradas": 6,
+      "descModo": "gatilho",
+      "descVirada": 5,
+      "fokAtivo": true,
+      "fokPrecoTeto": 0.95,
+      "slippageCompra": 0.03,
+      "filterLo": 0.1,
+      "filterHi": 0.9,
+      "antiGlitch": true,
+      "somaMinValida": 85,
+      "somaMaxValida": 115,
+      "maxEventNotional": 500,
+      "maxSecondsLeftToStart": 280,
+      "applyPolymarketFees": false,
+      "subLevels": [
+        {
+          "tipo": "SUB",
+          "idx": 1,
+          "preco": 55,
+          "shares": 20
+        },
+        {
+          "tipo": "SUB",
+          "idx": 2,
+          "preco": 60,
+          "shares": 15
+        },
+        {
+          "tipo": "SUB",
+          "idx": 3,
+          "preco": 65,
+          "shares": 10
+        },
+        {
+          "tipo": "SUB",
+          "idx": 4,
+          "preco": 70,
+          "shares": 10
+        },
+        {
+          "tipo": "SUB",
+          "idx": 5,
+          "preco": 75,
+          "shares": 5
+        },
+        {
+          "tipo": "SUB",
+          "idx": 6,
+          "preco": 80,
+          "shares": 5
+        },
+        {
+          "tipo": "SUB",
+          "idx": 7,
+          "preco": 85,
+          "shares": 1
+        },
+        {
+          "tipo": "SUB",
+          "idx": 8,
+          "preco": 90,
+          "shares": 1
+        }
+      ],
+      "descLevels": [
+        {
+          "tipo": "DESC",
+          "idx": 1,
+          "preco": 45,
+          "shares": 5
+        },
+        {
+          "tipo": "DESC",
+          "idx": 2,
+          "preco": 40,
+          "shares": 5
+        },
+        {
+          "tipo": "DESC",
+          "idx": 3,
+          "preco": 35,
+          "shares": 5
+        },
+        {
+          "tipo": "DESC",
+          "idx": 4,
+          "preco": 30,
+          "shares": 5
+        },
+        {
+          "tipo": "DESC",
+          "idx": 5,
+          "preco": 25,
+          "shares": 5
+        },
+        {
+          "tipo": "DESC",
+          "idx": 6,
+          "preco": 20,
+          "shares": 5
+        },
+        {
+          "tipo": "DESC",
+          "idx": 7,
+          "preco": 15,
+          "shares": 5
+        },
+        {
+          "tipo": "DESC",
+          "idx": 8,
+          "preco": 10,
+          "shares": 5
+        }
+      ],
+      "takerLatencyTicks": 0,
+      "takerPriceMode": "taker_limit"
+    }
+  },
+  "config": {
+    "sub": [
+      55,
+      60,
+      65,
+      70,
+      75,
+      80,
+      85,
+      90
+    ],
+    "desc": [
+      45,
+      40,
+      35,
+      30,
+      25,
+      20,
+      15,
+      10
+    ],
+    "shares_sub": [
+      20,
+      15,
+      10,
+      10,
+      5,
+      5,
+      1,
+      1
+    ],
+    "shares_desc": [
+      5,
+      5,
+      5,
+      5,
+      5,
+      5,
+      5,
+      5
+    ],
+    "mult": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      6
+    ],
+    "contagio": "global",
+    "contagio_min": 5,
+    "eq_preco": 0.05,
+    "eq_encerra": true,
+    "eq_limite_ativo": true,
+    "eq_limite_arma_c": 10,
+    "eq_limite_cancela_c": 40,
+    "eq_limite_reposta": true,
+    "stop": [
+      true,
+      4,
+      1
+    ],
+    "max_viradas": [
+      true,
+      6
+    ],
+    "piso": [
+      true,
+      [
+        4,
+        5
+      ],
+      0.2
+    ],
+    "desc_modo": "gatilho",
+    "desc_virada": 5,
+    "anti_glitch": [
+      true,
+      85,
+      115
+    ],
+    "filtro": [
+      0.1,
+      0.9
+    ],
+    "fok_ativo": true,
+    "fok_preco_teto": 0.95,
+    "slippage_compra": 0.03,
+    "max_exposicao": 500,
+    "janela_monitoramento": 280,
+    "shadow_capture": true
+  },
+  "ticks": [
+    {
+      "ts": "2026-06-15T14:00:05.000Z",
+      "tau": 295,
+      "askUp": 0.5,
+      "askDown": 0.5,
+      "bidUp": 0.49,
+      "bidDown": 0.49,
+      "asksUp": [
+        {
+          "price": 0.5,
+          "size": 800
+        },
+        {
+          "price": 0.51,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.5,
+          "size": 800
+        },
+        {
+          "price": 0.51,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:06.000Z",
+      "tau": 294,
+      "askUp": 0.51,
+      "askDown": 0.49,
+      "bidUp": 0.5,
+      "bidDown": 0.48,
+      "asksUp": [
+        {
+          "price": 0.51,
+          "size": 800
+        },
+        {
+          "price": 0.52,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.49,
+          "size": 800
+        },
+        {
+          "price": 0.5,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:08.000Z",
+      "tau": 292,
+      "askUp": 0.52,
+      "askDown": 0.48,
+      "bidUp": 0.51,
+      "bidDown": 0.47,
+      "asksUp": [
+        {
+          "price": 0.52,
+          "size": 800
+        },
+        {
+          "price": 0.53,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.48,
+          "size": 800
+        },
+        {
+          "price": 0.49,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:09.000Z",
+      "tau": 291,
+      "askUp": 0.53,
+      "askDown": 0.47,
+      "bidUp": 0.52,
+      "bidDown": 0.45999999999999996,
+      "asksUp": [
+        {
+          "price": 0.53,
+          "size": 800
+        },
+        {
+          "price": 0.54,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.47,
+          "size": 800
+        },
+        {
+          "price": 0.48,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:11.000Z",
+      "tau": 289,
+      "askUp": 0.54,
+      "askDown": 0.46,
+      "bidUp": 0.53,
+      "bidDown": 0.45,
+      "asksUp": [
+        {
+          "price": 0.54,
+          "size": 800
+        },
+        {
+          "price": 0.55,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.46,
+          "size": 800
+        },
+        {
+          "price": 0.47000000000000003,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:12.000Z",
+      "tau": 288,
+      "askUp": 0.55,
+      "askDown": 0.45,
+      "bidUp": 0.54,
+      "bidDown": 0.44,
+      "asksUp": [
+        {
+          "price": 0.55,
+          "size": 800
+        },
+        {
+          "price": 0.56,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.45,
+          "size": 800
+        },
+        {
+          "price": 0.46,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:14.000Z",
+      "tau": 286,
+      "askUp": 0.56,
+      "askDown": 0.44,
+      "bidUp": 0.55,
+      "bidDown": 0.43,
+      "asksUp": [
+        {
+          "price": 0.56,
+          "size": 800
+        },
+        {
+          "price": 0.5700000000000001,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.44,
+          "size": 800
+        },
+        {
+          "price": 0.45,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:15.000Z",
+      "tau": 285,
+      "askUp": 0.57,
+      "askDown": 0.43,
+      "bidUp": 0.5599999999999999,
+      "bidDown": 0.42,
+      "asksUp": [
+        {
+          "price": 0.57,
+          "size": 800
+        },
+        {
+          "price": 0.58,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.43,
+          "size": 800
+        },
+        {
+          "price": 0.44,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:16.000Z",
+      "tau": 284,
+      "askUp": 0.58,
+      "askDown": 0.42,
+      "bidUp": 0.57,
+      "bidDown": 0.41,
+      "asksUp": [
+        {
+          "price": 0.58,
+          "size": 800
+        },
+        {
+          "price": 0.59,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.42,
+          "size": 800
+        },
+        {
+          "price": 0.43,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:18.000Z",
+      "tau": 282,
+      "askUp": 0.59,
+      "askDown": 0.41,
+      "bidUp": 0.58,
+      "bidDown": 0.39999999999999997,
+      "asksUp": [
+        {
+          "price": 0.59,
+          "size": 800
+        },
+        {
+          "price": 0.6,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.41,
+          "size": 800
+        },
+        {
+          "price": 0.42,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:19.000Z",
+      "tau": 281,
+      "askUp": 0.6,
+      "askDown": 0.4,
+      "bidUp": 0.59,
+      "bidDown": 0.39,
+      "asksUp": [
+        {
+          "price": 0.6,
+          "size": 800
+        },
+        {
+          "price": 0.61,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.4,
+          "size": 800
+        },
+        {
+          "price": 0.41000000000000003,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:21.000Z",
+      "tau": 279,
+      "askUp": 0.59,
+      "askDown": 0.41,
+      "bidUp": 0.58,
+      "bidDown": 0.39999999999999997,
+      "asksUp": [
+        {
+          "price": 0.59,
+          "size": 800
+        },
+        {
+          "price": 0.6,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.41,
+          "size": 800
+        },
+        {
+          "price": 0.42,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:22.000Z",
+      "tau": 278,
+      "askUp": 0.58,
+      "askDown": 0.42,
+      "bidUp": 0.57,
+      "bidDown": 0.41,
+      "asksUp": [
+        {
+          "price": 0.58,
+          "size": 800
+        },
+        {
+          "price": 0.59,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.42,
+          "size": 800
+        },
+        {
+          "price": 0.43,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:23.000Z",
+      "tau": 277,
+      "askUp": 0.57,
+      "askDown": 0.43,
+      "bidUp": 0.5599999999999999,
+      "bidDown": 0.42,
+      "asksUp": [
+        {
+          "price": 0.57,
+          "size": 800
+        },
+        {
+          "price": 0.58,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.43,
+          "size": 800
+        },
+        {
+          "price": 0.44,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:25.000Z",
+      "tau": 275,
+      "askUp": 0.56,
+      "askDown": 0.44,
+      "bidUp": 0.55,
+      "bidDown": 0.43,
+      "asksUp": [
+        {
+          "price": 0.56,
+          "size": 800
+        },
+        {
+          "price": 0.5700000000000001,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.44,
+          "size": 800
+        },
+        {
+          "price": 0.45,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:26.000Z",
+      "tau": 274,
+      "askUp": 0.55,
+      "askDown": 0.45,
+      "bidUp": 0.54,
+      "bidDown": 0.44,
+      "asksUp": [
+        {
+          "price": 0.55,
+          "size": 800
+        },
+        {
+          "price": 0.56,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.45,
+          "size": 800
+        },
+        {
+          "price": 0.46,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:28.000Z",
+      "tau": 272,
+      "askUp": 0.54,
+      "askDown": 0.46,
+      "bidUp": 0.53,
+      "bidDown": 0.45,
+      "asksUp": [
+        {
+          "price": 0.54,
+          "size": 800
+        },
+        {
+          "price": 0.55,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.46,
+          "size": 800
+        },
+        {
+          "price": 0.47000000000000003,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:29.000Z",
+      "tau": 271,
+      "askUp": 0.53,
+      "askDown": 0.47,
+      "bidUp": 0.52,
+      "bidDown": 0.45999999999999996,
+      "asksUp": [
+        {
+          "price": 0.53,
+          "size": 800
+        },
+        {
+          "price": 0.54,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.47,
+          "size": 800
+        },
+        {
+          "price": 0.48,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:31.000Z",
+      "tau": 269,
+      "askUp": 0.52,
+      "askDown": 0.48,
+      "bidUp": 0.51,
+      "bidDown": 0.47,
+      "asksUp": [
+        {
+          "price": 0.52,
+          "size": 800
+        },
+        {
+          "price": 0.53,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.48,
+          "size": 800
+        },
+        {
+          "price": 0.49,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:32.000Z",
+      "tau": 268,
+      "askUp": 0.51,
+      "askDown": 0.49,
+      "bidUp": 0.5,
+      "bidDown": 0.48,
+      "asksUp": [
+        {
+          "price": 0.51,
+          "size": 800
+        },
+        {
+          "price": 0.52,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.49,
+          "size": 800
+        },
+        {
+          "price": 0.5,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:33.000Z",
+      "tau": 267,
+      "askUp": 0.5,
+      "askDown": 0.5,
+      "bidUp": 0.49,
+      "bidDown": 0.49,
+      "asksUp": [
+        {
+          "price": 0.5,
+          "size": 800
+        },
+        {
+          "price": 0.51,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.5,
+          "size": 800
+        },
+        {
+          "price": 0.51,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:35.000Z",
+      "tau": 265,
+      "askUp": 0.49,
+      "askDown": 0.51,
+      "bidUp": 0.48,
+      "bidDown": 0.5,
+      "asksUp": [
+        {
+          "price": 0.49,
+          "size": 800
+        },
+        {
+          "price": 0.5,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.51,
+          "size": 800
+        },
+        {
+          "price": 0.52,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:36.000Z",
+      "tau": 264,
+      "askUp": 0.48,
+      "askDown": 0.52,
+      "bidUp": 0.47,
+      "bidDown": 0.51,
+      "asksUp": [
+        {
+          "price": 0.48,
+          "size": 800
+        },
+        {
+          "price": 0.49,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.52,
+          "size": 800
+        },
+        {
+          "price": 0.53,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:38.000Z",
+      "tau": 262,
+      "askUp": 0.47,
+      "askDown": 0.53,
+      "bidUp": 0.45999999999999996,
+      "bidDown": 0.52,
+      "asksUp": [
+        {
+          "price": 0.47,
+          "size": 800
+        },
+        {
+          "price": 0.48,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.53,
+          "size": 800
+        },
+        {
+          "price": 0.54,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:39.000Z",
+      "tau": 261,
+      "askUp": 0.46,
+      "askDown": 0.54,
+      "bidUp": 0.45,
+      "bidDown": 0.53,
+      "asksUp": [
+        {
+          "price": 0.46,
+          "size": 800
+        },
+        {
+          "price": 0.47000000000000003,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.54,
+          "size": 800
+        },
+        {
+          "price": 0.55,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:41.000Z",
+      "tau": 259,
+      "askUp": 0.45,
+      "askDown": 0.55,
+      "bidUp": 0.44,
+      "bidDown": 0.54,
+      "asksUp": [
+        {
+          "price": 0.45,
+          "size": 800
+        },
+        {
+          "price": 0.46,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.55,
+          "size": 800
+        },
+        {
+          "price": 0.56,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:42.000Z",
+      "tau": 258,
+      "askUp": 0.46,
+      "askDown": 0.54,
+      "bidUp": 0.45,
+      "bidDown": 0.53,
+      "asksUp": [
+        {
+          "price": 0.46,
+          "size": 800
+        },
+        {
+          "price": 0.47000000000000003,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.54,
+          "size": 800
+        },
+        {
+          "price": 0.55,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:43.000Z",
+      "tau": 257,
+      "askUp": 0.47,
+      "askDown": 0.53,
+      "bidUp": 0.45999999999999996,
+      "bidDown": 0.52,
+      "asksUp": [
+        {
+          "price": 0.47,
+          "size": 800
+        },
+        {
+          "price": 0.48,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.53,
+          "size": 800
+        },
+        {
+          "price": 0.54,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:45.000Z",
+      "tau": 255,
+      "askUp": 0.48,
+      "askDown": 0.52,
+      "bidUp": 0.47,
+      "bidDown": 0.51,
+      "asksUp": [
+        {
+          "price": 0.48,
+          "size": 800
+        },
+        {
+          "price": 0.49,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.52,
+          "size": 800
+        },
+        {
+          "price": 0.53,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:46.000Z",
+      "tau": 254,
+      "askUp": 0.49,
+      "askDown": 0.51,
+      "bidUp": 0.48,
+      "bidDown": 0.5,
+      "asksUp": [
+        {
+          "price": 0.49,
+          "size": 800
+        },
+        {
+          "price": 0.5,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.51,
+          "size": 800
+        },
+        {
+          "price": 0.52,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:48.000Z",
+      "tau": 252,
+      "askUp": 0.5,
+      "askDown": 0.5,
+      "bidUp": 0.49,
+      "bidDown": 0.49,
+      "asksUp": [
+        {
+          "price": 0.5,
+          "size": 800
+        },
+        {
+          "price": 0.51,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.5,
+          "size": 800
+        },
+        {
+          "price": 0.51,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:49.000Z",
+      "tau": 251,
+      "askUp": 0.51,
+      "askDown": 0.49,
+      "bidUp": 0.5,
+      "bidDown": 0.48,
+      "asksUp": [
+        {
+          "price": 0.51,
+          "size": 800
+        },
+        {
+          "price": 0.52,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.49,
+          "size": 800
+        },
+        {
+          "price": 0.5,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:50.000Z",
+      "tau": 250,
+      "askUp": 0.52,
+      "askDown": 0.48,
+      "bidUp": 0.51,
+      "bidDown": 0.47,
+      "asksUp": [
+        {
+          "price": 0.52,
+          "size": 800
+        },
+        {
+          "price": 0.53,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.48,
+          "size": 800
+        },
+        {
+          "price": 0.49,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:52.000Z",
+      "tau": 248,
+      "askUp": 0.53,
+      "askDown": 0.47,
+      "bidUp": 0.52,
+      "bidDown": 0.45999999999999996,
+      "asksUp": [
+        {
+          "price": 0.53,
+          "size": 800
+        },
+        {
+          "price": 0.54,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.47,
+          "size": 800
+        },
+        {
+          "price": 0.48,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:53.000Z",
+      "tau": 247,
+      "askUp": 0.54,
+      "askDown": 0.46,
+      "bidUp": 0.53,
+      "bidDown": 0.45,
+      "asksUp": [
+        {
+          "price": 0.54,
+          "size": 800
+        },
+        {
+          "price": 0.55,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.46,
+          "size": 800
+        },
+        {
+          "price": 0.47000000000000003,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:55.000Z",
+      "tau": 245,
+      "askUp": 0.55,
+      "askDown": 0.45,
+      "bidUp": 0.54,
+      "bidDown": 0.44,
+      "asksUp": [
+        {
+          "price": 0.55,
+          "size": 800
+        },
+        {
+          "price": 0.56,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.45,
+          "size": 800
+        },
+        {
+          "price": 0.46,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:56.000Z",
+      "tau": 244,
+      "askUp": 0.56,
+      "askDown": 0.44,
+      "bidUp": 0.55,
+      "bidDown": 0.43,
+      "asksUp": [
+        {
+          "price": 0.56,
+          "size": 800
+        },
+        {
+          "price": 0.5700000000000001,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.44,
+          "size": 800
+        },
+        {
+          "price": 0.45,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:58.000Z",
+      "tau": 242,
+      "askUp": 0.57,
+      "askDown": 0.43,
+      "bidUp": 0.5599999999999999,
+      "bidDown": 0.42,
+      "asksUp": [
+        {
+          "price": 0.57,
+          "size": 800
+        },
+        {
+          "price": 0.58,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.43,
+          "size": 800
+        },
+        {
+          "price": 0.44,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:00:59.000Z",
+      "tau": 241,
+      "askUp": 0.58,
+      "askDown": 0.42,
+      "bidUp": 0.57,
+      "bidDown": 0.41,
+      "asksUp": [
+        {
+          "price": 0.58,
+          "size": 800
+        },
+        {
+          "price": 0.59,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.42,
+          "size": 800
+        },
+        {
+          "price": 0.43,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:00.000Z",
+      "tau": 240,
+      "askUp": 0.59,
+      "askDown": 0.41,
+      "bidUp": 0.58,
+      "bidDown": 0.39999999999999997,
+      "asksUp": [
+        {
+          "price": 0.59,
+          "size": 800
+        },
+        {
+          "price": 0.6,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.41,
+          "size": 800
+        },
+        {
+          "price": 0.42,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:02.000Z",
+      "tau": 238,
+      "askUp": 0.6,
+      "askDown": 0.4,
+      "bidUp": 0.59,
+      "bidDown": 0.39,
+      "asksUp": [
+        {
+          "price": 0.6,
+          "size": 800
+        },
+        {
+          "price": 0.61,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.4,
+          "size": 800
+        },
+        {
+          "price": 0.41000000000000003,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:03.000Z",
+      "tau": 237,
+      "askUp": 0.61,
+      "askDown": 0.39,
+      "bidUp": 0.6,
+      "bidDown": 0.38,
+      "asksUp": [
+        {
+          "price": 0.61,
+          "size": 800
+        },
+        {
+          "price": 0.62,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.39,
+          "size": 800
+        },
+        {
+          "price": 0.4,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:05.000Z",
+      "tau": 235,
+      "askUp": 0.62,
+      "askDown": 0.38,
+      "bidUp": 0.61,
+      "bidDown": 0.37,
+      "asksUp": [
+        {
+          "price": 0.62,
+          "size": 800
+        },
+        {
+          "price": 0.63,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.38,
+          "size": 800
+        },
+        {
+          "price": 0.39,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:06.000Z",
+      "tau": 234,
+      "askUp": 0.63,
+      "askDown": 0.37,
+      "bidUp": 0.62,
+      "bidDown": 0.36,
+      "asksUp": [
+        {
+          "price": 0.63,
+          "size": 800
+        },
+        {
+          "price": 0.64,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.37,
+          "size": 800
+        },
+        {
+          "price": 0.38,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:08.000Z",
+      "tau": 232,
+      "askUp": 0.64,
+      "askDown": 0.36,
+      "bidUp": 0.63,
+      "bidDown": 0.35,
+      "asksUp": [
+        {
+          "price": 0.64,
+          "size": 800
+        },
+        {
+          "price": 0.65,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.36,
+          "size": 800
+        },
+        {
+          "price": 0.37,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:09.000Z",
+      "tau": 231,
+      "askUp": 0.65,
+      "askDown": 0.35,
+      "bidUp": 0.64,
+      "bidDown": 0.33999999999999997,
+      "asksUp": [
+        {
+          "price": 0.65,
+          "size": 800
+        },
+        {
+          "price": 0.66,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.35,
+          "size": 800
+        },
+        {
+          "price": 0.36,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:10.000Z",
+      "tau": 230,
+      "askUp": 0.66,
+      "askDown": 0.34,
+      "bidUp": 0.65,
+      "bidDown": 0.33,
+      "asksUp": [
+        {
+          "price": 0.66,
+          "size": 800
+        },
+        {
+          "price": 0.67,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.34,
+          "size": 800
+        },
+        {
+          "price": 0.35000000000000003,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:12.000Z",
+      "tau": 228,
+      "askUp": 0.67,
+      "askDown": 0.33,
+      "bidUp": 0.66,
+      "bidDown": 0.32,
+      "asksUp": [
+        {
+          "price": 0.67,
+          "size": 800
+        },
+        {
+          "price": 0.68,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.33,
+          "size": 800
+        },
+        {
+          "price": 0.34,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:13.000Z",
+      "tau": 227,
+      "askUp": 0.68,
+      "askDown": 0.32,
+      "bidUp": 0.67,
+      "bidDown": 0.31,
+      "asksUp": [
+        {
+          "price": 0.68,
+          "size": 800
+        },
+        {
+          "price": 0.6900000000000001,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.32,
+          "size": 800
+        },
+        {
+          "price": 0.33,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:15.000Z",
+      "tau": 225,
+      "askUp": 0.69,
+      "askDown": 0.31,
+      "bidUp": 0.6799999999999999,
+      "bidDown": 0.3,
+      "asksUp": [
+        {
+          "price": 0.69,
+          "size": 800
+        },
+        {
+          "price": 0.7,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.31,
+          "size": 800
+        },
+        {
+          "price": 0.32,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:16.000Z",
+      "tau": 224,
+      "askUp": 0.7,
+      "askDown": 0.3,
+      "bidUp": 0.69,
+      "bidDown": 0.29,
+      "asksUp": [
+        {
+          "price": 0.7,
+          "size": 800
+        },
+        {
+          "price": 0.71,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.3,
+          "size": 800
+        },
+        {
+          "price": 0.31,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:18.000Z",
+      "tau": 222,
+      "askUp": 0.69,
+      "askDown": 0.31,
+      "bidUp": 0.6799999999999999,
+      "bidDown": 0.3,
+      "asksUp": [
+        {
+          "price": 0.69,
+          "size": 800
+        },
+        {
+          "price": 0.7,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.31,
+          "size": 800
+        },
+        {
+          "price": 0.32,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:19.000Z",
+      "tau": 221,
+      "askUp": 0.68,
+      "askDown": 0.32,
+      "bidUp": 0.67,
+      "bidDown": 0.31,
+      "asksUp": [
+        {
+          "price": 0.68,
+          "size": 800
+        },
+        {
+          "price": 0.6900000000000001,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.32,
+          "size": 800
+        },
+        {
+          "price": 0.33,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:20.000Z",
+      "tau": 220,
+      "askUp": 0.67,
+      "askDown": 0.33,
+      "bidUp": 0.66,
+      "bidDown": 0.32,
+      "asksUp": [
+        {
+          "price": 0.67,
+          "size": 800
+        },
+        {
+          "price": 0.68,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.33,
+          "size": 800
+        },
+        {
+          "price": 0.34,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:22.000Z",
+      "tau": 218,
+      "askUp": 0.66,
+      "askDown": 0.34,
+      "bidUp": 0.65,
+      "bidDown": 0.33,
+      "asksUp": [
+        {
+          "price": 0.66,
+          "size": 800
+        },
+        {
+          "price": 0.67,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.34,
+          "size": 800
+        },
+        {
+          "price": 0.35000000000000003,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:23.000Z",
+      "tau": 217,
+      "askUp": 0.65,
+      "askDown": 0.35,
+      "bidUp": 0.64,
+      "bidDown": 0.33999999999999997,
+      "asksUp": [
+        {
+          "price": 0.65,
+          "size": 800
+        },
+        {
+          "price": 0.66,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.35,
+          "size": 800
+        },
+        {
+          "price": 0.36,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:25.000Z",
+      "tau": 215,
+      "askUp": 0.64,
+      "askDown": 0.36,
+      "bidUp": 0.63,
+      "bidDown": 0.35,
+      "asksUp": [
+        {
+          "price": 0.64,
+          "size": 800
+        },
+        {
+          "price": 0.65,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.36,
+          "size": 800
+        },
+        {
+          "price": 0.37,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:26.000Z",
+      "tau": 214,
+      "askUp": 0.63,
+      "askDown": 0.37,
+      "bidUp": 0.62,
+      "bidDown": 0.36,
+      "asksUp": [
+        {
+          "price": 0.63,
+          "size": 800
+        },
+        {
+          "price": 0.64,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.37,
+          "size": 800
+        },
+        {
+          "price": 0.38,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:27.000Z",
+      "tau": 213,
+      "askUp": 0.62,
+      "askDown": 0.38,
+      "bidUp": 0.61,
+      "bidDown": 0.37,
+      "asksUp": [
+        {
+          "price": 0.62,
+          "size": 800
+        },
+        {
+          "price": 0.63,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.38,
+          "size": 800
+        },
+        {
+          "price": 0.39,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:29.000Z",
+      "tau": 211,
+      "askUp": 0.61,
+      "askDown": 0.39,
+      "bidUp": 0.6,
+      "bidDown": 0.38,
+      "asksUp": [
+        {
+          "price": 0.61,
+          "size": 800
+        },
+        {
+          "price": 0.62,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.39,
+          "size": 800
+        },
+        {
+          "price": 0.4,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:30.000Z",
+      "tau": 210,
+      "askUp": 0.6,
+      "askDown": 0.4,
+      "bidUp": 0.59,
+      "bidDown": 0.39,
+      "asksUp": [
+        {
+          "price": 0.6,
+          "size": 800
+        },
+        {
+          "price": 0.61,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.4,
+          "size": 800
+        },
+        {
+          "price": 0.41000000000000003,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:32.000Z",
+      "tau": 208,
+      "askUp": 0.59,
+      "askDown": 0.41,
+      "bidUp": 0.58,
+      "bidDown": 0.39999999999999997,
+      "asksUp": [
+        {
+          "price": 0.59,
+          "size": 800
+        },
+        {
+          "price": 0.6,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.41,
+          "size": 800
+        },
+        {
+          "price": 0.42,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:33.000Z",
+      "tau": 207,
+      "askUp": 0.58,
+      "askDown": 0.42,
+      "bidUp": 0.57,
+      "bidDown": 0.41,
+      "asksUp": [
+        {
+          "price": 0.58,
+          "size": 800
+        },
+        {
+          "price": 0.59,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.42,
+          "size": 800
+        },
+        {
+          "price": 0.43,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:35.000Z",
+      "tau": 205,
+      "askUp": 0.57,
+      "askDown": 0.43,
+      "bidUp": 0.5599999999999999,
+      "bidDown": 0.42,
+      "asksUp": [
+        {
+          "price": 0.57,
+          "size": 800
+        },
+        {
+          "price": 0.58,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.43,
+          "size": 800
+        },
+        {
+          "price": 0.44,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:36.000Z",
+      "tau": 204,
+      "askUp": 0.56,
+      "askDown": 0.44,
+      "bidUp": 0.55,
+      "bidDown": 0.43,
+      "asksUp": [
+        {
+          "price": 0.56,
+          "size": 800
+        },
+        {
+          "price": 0.5700000000000001,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.44,
+          "size": 800
+        },
+        {
+          "price": 0.45,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:37.000Z",
+      "tau": 203,
+      "askUp": 0.55,
+      "askDown": 0.45,
+      "bidUp": 0.54,
+      "bidDown": 0.44,
+      "asksUp": [
+        {
+          "price": 0.55,
+          "size": 800
+        },
+        {
+          "price": 0.56,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.45,
+          "size": 800
+        },
+        {
+          "price": 0.46,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:39.000Z",
+      "tau": 201,
+      "askUp": 0.54,
+      "askDown": 0.46,
+      "bidUp": 0.53,
+      "bidDown": 0.45,
+      "asksUp": [
+        {
+          "price": 0.54,
+          "size": 800
+        },
+        {
+          "price": 0.55,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.46,
+          "size": 800
+        },
+        {
+          "price": 0.47000000000000003,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:40.000Z",
+      "tau": 200,
+      "askUp": 0.53,
+      "askDown": 0.47,
+      "bidUp": 0.52,
+      "bidDown": 0.45999999999999996,
+      "asksUp": [
+        {
+          "price": 0.53,
+          "size": 800
+        },
+        {
+          "price": 0.54,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.47,
+          "size": 800
+        },
+        {
+          "price": 0.48,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:42.000Z",
+      "tau": 198,
+      "askUp": 0.52,
+      "askDown": 0.48,
+      "bidUp": 0.51,
+      "bidDown": 0.47,
+      "asksUp": [
+        {
+          "price": 0.52,
+          "size": 800
+        },
+        {
+          "price": 0.53,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.48,
+          "size": 800
+        },
+        {
+          "price": 0.49,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:43.000Z",
+      "tau": 197,
+      "askUp": 0.51,
+      "askDown": 0.49,
+      "bidUp": 0.5,
+      "bidDown": 0.48,
+      "asksUp": [
+        {
+          "price": 0.51,
+          "size": 800
+        },
+        {
+          "price": 0.52,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.49,
+          "size": 800
+        },
+        {
+          "price": 0.5,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:45.000Z",
+      "tau": 195,
+      "askUp": 0.5,
+      "askDown": 0.5,
+      "bidUp": 0.49,
+      "bidDown": 0.49,
+      "asksUp": [
+        {
+          "price": 0.5,
+          "size": 800
+        },
+        {
+          "price": 0.51,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.5,
+          "size": 800
+        },
+        {
+          "price": 0.51,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:46.000Z",
+      "tau": 194,
+      "askUp": 0.49,
+      "askDown": 0.51,
+      "bidUp": 0.48,
+      "bidDown": 0.5,
+      "asksUp": [
+        {
+          "price": 0.49,
+          "size": 800
+        },
+        {
+          "price": 0.5,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.51,
+          "size": 800
+        },
+        {
+          "price": 0.52,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:47.000Z",
+      "tau": 193,
+      "askUp": 0.48,
+      "askDown": 0.52,
+      "bidUp": 0.47,
+      "bidDown": 0.51,
+      "asksUp": [
+        {
+          "price": 0.48,
+          "size": 800
+        },
+        {
+          "price": 0.49,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.52,
+          "size": 800
+        },
+        {
+          "price": 0.53,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:49.000Z",
+      "tau": 191,
+      "askUp": 0.47,
+      "askDown": 0.53,
+      "bidUp": 0.45999999999999996,
+      "bidDown": 0.52,
+      "asksUp": [
+        {
+          "price": 0.47,
+          "size": 800
+        },
+        {
+          "price": 0.48,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.53,
+          "size": 800
+        },
+        {
+          "price": 0.54,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:50.000Z",
+      "tau": 190,
+      "askUp": 0.46,
+      "askDown": 0.54,
+      "bidUp": 0.45,
+      "bidDown": 0.53,
+      "asksUp": [
+        {
+          "price": 0.46,
+          "size": 800
+        },
+        {
+          "price": 0.47000000000000003,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.54,
+          "size": 800
+        },
+        {
+          "price": 0.55,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:52.000Z",
+      "tau": 188,
+      "askUp": 0.45,
+      "askDown": 0.55,
+      "bidUp": 0.44,
+      "bidDown": 0.54,
+      "asksUp": [
+        {
+          "price": 0.45,
+          "size": 800
+        },
+        {
+          "price": 0.46,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.55,
+          "size": 800
+        },
+        {
+          "price": 0.56,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:53.000Z",
+      "tau": 187,
+      "askUp": 0.44,
+      "askDown": 0.56,
+      "bidUp": 0.43,
+      "bidDown": 0.55,
+      "asksUp": [
+        {
+          "price": 0.44,
+          "size": 800
+        },
+        {
+          "price": 0.45,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.56,
+          "size": 800
+        },
+        {
+          "price": 0.5700000000000001,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:54.000Z",
+      "tau": 186,
+      "askUp": 0.43,
+      "askDown": 0.57,
+      "bidUp": 0.42,
+      "bidDown": 0.5599999999999999,
+      "asksUp": [
+        {
+          "price": 0.43,
+          "size": 800
+        },
+        {
+          "price": 0.44,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.57,
+          "size": 800
+        },
+        {
+          "price": 0.58,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:56.000Z",
+      "tau": 184,
+      "askUp": 0.42,
+      "askDown": 0.58,
+      "bidUp": 0.41,
+      "bidDown": 0.57,
+      "asksUp": [
+        {
+          "price": 0.42,
+          "size": 800
+        },
+        {
+          "price": 0.43,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.58,
+          "size": 800
+        },
+        {
+          "price": 0.59,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:57.000Z",
+      "tau": 183,
+      "askUp": 0.41,
+      "askDown": 0.59,
+      "bidUp": 0.39999999999999997,
+      "bidDown": 0.58,
+      "asksUp": [
+        {
+          "price": 0.41,
+          "size": 800
+        },
+        {
+          "price": 0.42,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.59,
+          "size": 800
+        },
+        {
+          "price": 0.6,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:01:59.000Z",
+      "tau": 181,
+      "askUp": 0.4,
+      "askDown": 0.6,
+      "bidUp": 0.39,
+      "bidDown": 0.59,
+      "asksUp": [
+        {
+          "price": 0.4,
+          "size": 800
+        },
+        {
+          "price": 0.41000000000000003,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.6,
+          "size": 800
+        },
+        {
+          "price": 0.61,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:00.000Z",
+      "tau": 180,
+      "askUp": 0.41,
+      "askDown": 0.59,
+      "bidUp": 0.39999999999999997,
+      "bidDown": 0.58,
+      "asksUp": [
+        {
+          "price": 0.41,
+          "size": 800
+        },
+        {
+          "price": 0.42,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.59,
+          "size": 800
+        },
+        {
+          "price": 0.6,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:02.000Z",
+      "tau": 178,
+      "askUp": 0.42,
+      "askDown": 0.58,
+      "bidUp": 0.41,
+      "bidDown": 0.57,
+      "asksUp": [
+        {
+          "price": 0.42,
+          "size": 800
+        },
+        {
+          "price": 0.43,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.58,
+          "size": 800
+        },
+        {
+          "price": 0.59,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:03.000Z",
+      "tau": 177,
+      "askUp": 0.43,
+      "askDown": 0.57,
+      "bidUp": 0.42,
+      "bidDown": 0.5599999999999999,
+      "asksUp": [
+        {
+          "price": 0.43,
+          "size": 800
+        },
+        {
+          "price": 0.44,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.57,
+          "size": 800
+        },
+        {
+          "price": 0.58,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:04.000Z",
+      "tau": 176,
+      "askUp": 0.44,
+      "askDown": 0.56,
+      "bidUp": 0.43,
+      "bidDown": 0.55,
+      "asksUp": [
+        {
+          "price": 0.44,
+          "size": 800
+        },
+        {
+          "price": 0.45,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.56,
+          "size": 800
+        },
+        {
+          "price": 0.5700000000000001,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:06.000Z",
+      "tau": 174,
+      "askUp": 0.45,
+      "askDown": 0.55,
+      "bidUp": 0.44,
+      "bidDown": 0.54,
+      "asksUp": [
+        {
+          "price": 0.45,
+          "size": 800
+        },
+        {
+          "price": 0.46,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.55,
+          "size": 800
+        },
+        {
+          "price": 0.56,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:07.000Z",
+      "tau": 173,
+      "askUp": 0.46,
+      "askDown": 0.54,
+      "bidUp": 0.45,
+      "bidDown": 0.53,
+      "asksUp": [
+        {
+          "price": 0.46,
+          "size": 800
+        },
+        {
+          "price": 0.47000000000000003,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.54,
+          "size": 800
+        },
+        {
+          "price": 0.55,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:09.000Z",
+      "tau": 171,
+      "askUp": 0.47,
+      "askDown": 0.53,
+      "bidUp": 0.45999999999999996,
+      "bidDown": 0.52,
+      "asksUp": [
+        {
+          "price": 0.47,
+          "size": 800
+        },
+        {
+          "price": 0.48,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.53,
+          "size": 800
+        },
+        {
+          "price": 0.54,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:10.000Z",
+      "tau": 170,
+      "askUp": 0.48,
+      "askDown": 0.52,
+      "bidUp": 0.47,
+      "bidDown": 0.51,
+      "asksUp": [
+        {
+          "price": 0.48,
+          "size": 800
+        },
+        {
+          "price": 0.49,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.52,
+          "size": 800
+        },
+        {
+          "price": 0.53,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:12.000Z",
+      "tau": 168,
+      "askUp": 0.49,
+      "askDown": 0.51,
+      "bidUp": 0.48,
+      "bidDown": 0.5,
+      "asksUp": [
+        {
+          "price": 0.49,
+          "size": 800
+        },
+        {
+          "price": 0.5,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.51,
+          "size": 800
+        },
+        {
+          "price": 0.52,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:13.000Z",
+      "tau": 167,
+      "askUp": 0.5,
+      "askDown": 0.5,
+      "bidUp": 0.49,
+      "bidDown": 0.49,
+      "asksUp": [
+        {
+          "price": 0.5,
+          "size": 800
+        },
+        {
+          "price": 0.51,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.5,
+          "size": 800
+        },
+        {
+          "price": 0.51,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:14.000Z",
+      "tau": 166,
+      "askUp": 0.51,
+      "askDown": 0.49,
+      "bidUp": 0.5,
+      "bidDown": 0.48,
+      "asksUp": [
+        {
+          "price": 0.51,
+          "size": 800
+        },
+        {
+          "price": 0.52,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.49,
+          "size": 800
+        },
+        {
+          "price": 0.5,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:16.000Z",
+      "tau": 164,
+      "askUp": 0.52,
+      "askDown": 0.48,
+      "bidUp": 0.51,
+      "bidDown": 0.47,
+      "asksUp": [
+        {
+          "price": 0.52,
+          "size": 800
+        },
+        {
+          "price": 0.53,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.48,
+          "size": 800
+        },
+        {
+          "price": 0.49,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:17.000Z",
+      "tau": 163,
+      "askUp": 0.53,
+      "askDown": 0.47,
+      "bidUp": 0.52,
+      "bidDown": 0.45999999999999996,
+      "asksUp": [
+        {
+          "price": 0.53,
+          "size": 800
+        },
+        {
+          "price": 0.54,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.47,
+          "size": 800
+        },
+        {
+          "price": 0.48,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:19.000Z",
+      "tau": 161,
+      "askUp": 0.54,
+      "askDown": 0.46,
+      "bidUp": 0.53,
+      "bidDown": 0.45,
+      "asksUp": [
+        {
+          "price": 0.54,
+          "size": 800
+        },
+        {
+          "price": 0.55,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.46,
+          "size": 800
+        },
+        {
+          "price": 0.47000000000000003,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:20.000Z",
+      "tau": 160,
+      "askUp": 0.55,
+      "askDown": 0.45,
+      "bidUp": 0.54,
+      "bidDown": 0.44,
+      "asksUp": [
+        {
+          "price": 0.55,
+          "size": 800
+        },
+        {
+          "price": 0.56,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.45,
+          "size": 800
+        },
+        {
+          "price": 0.46,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:21.000Z",
+      "tau": 159,
+      "askUp": 0.56,
+      "askDown": 0.44,
+      "bidUp": 0.55,
+      "bidDown": 0.43,
+      "asksUp": [
+        {
+          "price": 0.56,
+          "size": 800
+        },
+        {
+          "price": 0.5700000000000001,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.44,
+          "size": 800
+        },
+        {
+          "price": 0.45,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:23.000Z",
+      "tau": 157,
+      "askUp": 0.57,
+      "askDown": 0.43,
+      "bidUp": 0.5599999999999999,
+      "bidDown": 0.42,
+      "asksUp": [
+        {
+          "price": 0.57,
+          "size": 800
+        },
+        {
+          "price": 0.58,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.43,
+          "size": 800
+        },
+        {
+          "price": 0.44,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:24.000Z",
+      "tau": 156,
+      "askUp": 0.58,
+      "askDown": 0.42,
+      "bidUp": 0.57,
+      "bidDown": 0.41,
+      "asksUp": [
+        {
+          "price": 0.58,
+          "size": 800
+        },
+        {
+          "price": 0.59,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.42,
+          "size": 800
+        },
+        {
+          "price": 0.43,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:26.000Z",
+      "tau": 154,
+      "askUp": 0.59,
+      "askDown": 0.41,
+      "bidUp": 0.58,
+      "bidDown": 0.39999999999999997,
+      "asksUp": [
+        {
+          "price": 0.59,
+          "size": 800
+        },
+        {
+          "price": 0.6,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.41,
+          "size": 800
+        },
+        {
+          "price": 0.42,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:27.000Z",
+      "tau": 153,
+      "askUp": 0.6,
+      "askDown": 0.4,
+      "bidUp": 0.59,
+      "bidDown": 0.39,
+      "asksUp": [
+        {
+          "price": 0.6,
+          "size": 800
+        },
+        {
+          "price": 0.61,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.4,
+          "size": 800
+        },
+        {
+          "price": 0.41000000000000003,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:29.000Z",
+      "tau": 151,
+      "askUp": 0.61,
+      "askDown": 0.39,
+      "bidUp": 0.6,
+      "bidDown": 0.38,
+      "asksUp": [
+        {
+          "price": 0.61,
+          "size": 800
+        },
+        {
+          "price": 0.62,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.39,
+          "size": 800
+        },
+        {
+          "price": 0.4,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:30.000Z",
+      "tau": 150,
+      "askUp": 0.62,
+      "askDown": 0.38,
+      "bidUp": 0.61,
+      "bidDown": 0.37,
+      "asksUp": [
+        {
+          "price": 0.62,
+          "size": 800
+        },
+        {
+          "price": 0.63,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.38,
+          "size": 800
+        },
+        {
+          "price": 0.39,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:31.000Z",
+      "tau": 149,
+      "askUp": 0.63,
+      "askDown": 0.37,
+      "bidUp": 0.62,
+      "bidDown": 0.36,
+      "asksUp": [
+        {
+          "price": 0.63,
+          "size": 800
+        },
+        {
+          "price": 0.64,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.37,
+          "size": 800
+        },
+        {
+          "price": 0.38,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:33.000Z",
+      "tau": 147,
+      "askUp": 0.64,
+      "askDown": 0.36,
+      "bidUp": 0.63,
+      "bidDown": 0.35,
+      "asksUp": [
+        {
+          "price": 0.64,
+          "size": 800
+        },
+        {
+          "price": 0.65,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.36,
+          "size": 800
+        },
+        {
+          "price": 0.37,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:34.000Z",
+      "tau": 146,
+      "askUp": 0.65,
+      "askDown": 0.35,
+      "bidUp": 0.64,
+      "bidDown": 0.33999999999999997,
+      "asksUp": [
+        {
+          "price": 0.65,
+          "size": 800
+        },
+        {
+          "price": 0.66,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.35,
+          "size": 800
+        },
+        {
+          "price": 0.36,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:36.000Z",
+      "tau": 144,
+      "askUp": 0.66,
+      "askDown": 0.34,
+      "bidUp": 0.65,
+      "bidDown": 0.33,
+      "asksUp": [
+        {
+          "price": 0.66,
+          "size": 800
+        },
+        {
+          "price": 0.67,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.34,
+          "size": 800
+        },
+        {
+          "price": 0.35000000000000003,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:37.000Z",
+      "tau": 143,
+      "askUp": 0.67,
+      "askDown": 0.33,
+      "bidUp": 0.66,
+      "bidDown": 0.32,
+      "asksUp": [
+        {
+          "price": 0.67,
+          "size": 800
+        },
+        {
+          "price": 0.68,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.33,
+          "size": 800
+        },
+        {
+          "price": 0.34,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:39.000Z",
+      "tau": 141,
+      "askUp": 0.68,
+      "askDown": 0.32,
+      "bidUp": 0.67,
+      "bidDown": 0.31,
+      "asksUp": [
+        {
+          "price": 0.68,
+          "size": 800
+        },
+        {
+          "price": 0.6900000000000001,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.32,
+          "size": 800
+        },
+        {
+          "price": 0.33,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:40.000Z",
+      "tau": 140,
+      "askUp": 0.69,
+      "askDown": 0.31,
+      "bidUp": 0.6799999999999999,
+      "bidDown": 0.3,
+      "asksUp": [
+        {
+          "price": 0.69,
+          "size": 800
+        },
+        {
+          "price": 0.7,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.31,
+          "size": 800
+        },
+        {
+          "price": 0.32,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:41.000Z",
+      "tau": 139,
+      "askUp": 0.7,
+      "askDown": 0.3,
+      "bidUp": 0.69,
+      "bidDown": 0.29,
+      "asksUp": [
+        {
+          "price": 0.7,
+          "size": 800
+        },
+        {
+          "price": 0.71,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.3,
+          "size": 800
+        },
+        {
+          "price": 0.31,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:43.000Z",
+      "tau": 137,
+      "askUp": 0.71,
+      "askDown": 0.29,
+      "bidUp": 0.7,
+      "bidDown": 0.27999999999999997,
+      "asksUp": [
+        {
+          "price": 0.71,
+          "size": 800
+        },
+        {
+          "price": 0.72,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.29,
+          "size": 800
+        },
+        {
+          "price": 0.3,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:44.000Z",
+      "tau": 136,
+      "askUp": 0.72,
+      "askDown": 0.28,
+      "bidUp": 0.71,
+      "bidDown": 0.27,
+      "asksUp": [
+        {
+          "price": 0.72,
+          "size": 800
+        },
+        {
+          "price": 0.73,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.28,
+          "size": 800
+        },
+        {
+          "price": 0.29000000000000004,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:46.000Z",
+      "tau": 134,
+      "askUp": 0.73,
+      "askDown": 0.27,
+      "bidUp": 0.72,
+      "bidDown": 0.26,
+      "asksUp": [
+        {
+          "price": 0.73,
+          "size": 800
+        },
+        {
+          "price": 0.74,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.27,
+          "size": 800
+        },
+        {
+          "price": 0.28,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:47.000Z",
+      "tau": 133,
+      "askUp": 0.74,
+      "askDown": 0.26,
+      "bidUp": 0.73,
+      "bidDown": 0.25,
+      "asksUp": [
+        {
+          "price": 0.74,
+          "size": 800
+        },
+        {
+          "price": 0.75,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.26,
+          "size": 800
+        },
+        {
+          "price": 0.27,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:49.000Z",
+      "tau": 131,
+      "askUp": 0.75,
+      "askDown": 0.25,
+      "bidUp": 0.74,
+      "bidDown": 0.24,
+      "asksUp": [
+        {
+          "price": 0.75,
+          "size": 800
+        },
+        {
+          "price": 0.76,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.25,
+          "size": 800
+        },
+        {
+          "price": 0.26,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:50.000Z",
+      "tau": 130,
+      "askUp": 0.76,
+      "askDown": 0.24,
+      "bidUp": 0.75,
+      "bidDown": 0.22999999999999998,
+      "asksUp": [
+        {
+          "price": 0.76,
+          "size": 800
+        },
+        {
+          "price": 0.77,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.24,
+          "size": 800
+        },
+        {
+          "price": 0.25,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:51.000Z",
+      "tau": 129,
+      "askUp": 0.77,
+      "askDown": 0.23,
+      "bidUp": 0.76,
+      "bidDown": 0.22,
+      "asksUp": [
+        {
+          "price": 0.77,
+          "size": 800
+        },
+        {
+          "price": 0.78,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.23,
+          "size": 800
+        },
+        {
+          "price": 0.24000000000000002,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:53.000Z",
+      "tau": 127,
+      "askUp": 0.78,
+      "askDown": 0.22,
+      "bidUp": 0.77,
+      "bidDown": 0.21,
+      "asksUp": [
+        {
+          "price": 0.78,
+          "size": 800
+        },
+        {
+          "price": 0.79,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.22,
+          "size": 800
+        },
+        {
+          "price": 0.23,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:54.000Z",
+      "tau": 126,
+      "askUp": 0.79,
+      "askDown": 0.21,
+      "bidUp": 0.78,
+      "bidDown": 0.19999999999999998,
+      "asksUp": [
+        {
+          "price": 0.79,
+          "size": 800
+        },
+        {
+          "price": 0.8,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.21,
+          "size": 800
+        },
+        {
+          "price": 0.22,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:56.000Z",
+      "tau": 124,
+      "askUp": 0.8,
+      "askDown": 0.2,
+      "bidUp": 0.79,
+      "bidDown": 0.19,
+      "asksUp": [
+        {
+          "price": 0.8,
+          "size": 800
+        },
+        {
+          "price": 0.81,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.2,
+          "size": 800
+        },
+        {
+          "price": 0.21000000000000002,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:57.000Z",
+      "tau": 123,
+      "askUp": 0.81,
+      "askDown": 0.19,
+      "bidUp": 0.8,
+      "bidDown": 0.18,
+      "asksUp": [
+        {
+          "price": 0.81,
+          "size": 800
+        },
+        {
+          "price": 0.8200000000000001,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.19,
+          "size": 800
+        },
+        {
+          "price": 0.2,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:02:58.000Z",
+      "tau": 122,
+      "askUp": 0.82,
+      "askDown": 0.18,
+      "bidUp": 0.8099999999999999,
+      "bidDown": 0.16999999999999998,
+      "asksUp": [
+        {
+          "price": 0.82,
+          "size": 800
+        },
+        {
+          "price": 0.83,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.18,
+          "size": 800
+        },
+        {
+          "price": 0.19,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:00.000Z",
+      "tau": 120,
+      "askUp": 0.83,
+      "askDown": 0.17,
+      "bidUp": 0.82,
+      "bidDown": 0.16,
+      "asksUp": [
+        {
+          "price": 0.83,
+          "size": 800
+        },
+        {
+          "price": 0.84,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.17,
+          "size": 800
+        },
+        {
+          "price": 0.18000000000000002,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:01.000Z",
+      "tau": 119,
+      "askUp": 0.84,
+      "askDown": 0.16,
+      "bidUp": 0.83,
+      "bidDown": 0.15,
+      "asksUp": [
+        {
+          "price": 0.84,
+          "size": 800
+        },
+        {
+          "price": 0.85,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.16,
+          "size": 800
+        },
+        {
+          "price": 0.17,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:03.000Z",
+      "tau": 117,
+      "askUp": 0.85,
+      "askDown": 0.15,
+      "bidUp": 0.84,
+      "bidDown": 0.13999999999999999,
+      "asksUp": [
+        {
+          "price": 0.85,
+          "size": 800
+        },
+        {
+          "price": 0.86,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.15,
+          "size": 800
+        },
+        {
+          "price": 0.16,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:04.000Z",
+      "tau": 116,
+      "askUp": 0.86,
+      "askDown": 0.14,
+      "bidUp": 0.85,
+      "bidDown": 0.13,
+      "asksUp": [
+        {
+          "price": 0.86,
+          "size": 800
+        },
+        {
+          "price": 0.87,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.14,
+          "size": 800
+        },
+        {
+          "price": 0.15000000000000002,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:06.000Z",
+      "tau": 114,
+      "askUp": 0.87,
+      "askDown": 0.13,
+      "bidUp": 0.86,
+      "bidDown": 0.12000000000000001,
+      "asksUp": [
+        {
+          "price": 0.87,
+          "size": 800
+        },
+        {
+          "price": 0.88,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.13,
+          "size": 800
+        },
+        {
+          "price": 0.14,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:07.000Z",
+      "tau": 113,
+      "askUp": 0.88,
+      "askDown": 0.12,
+      "bidUp": 0.87,
+      "bidDown": 0.11,
+      "asksUp": [
+        {
+          "price": 0.88,
+          "size": 800
+        },
+        {
+          "price": 0.89,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.12,
+          "size": 800
+        },
+        {
+          "price": 0.13,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:08.000Z",
+      "tau": 112,
+      "askUp": 0.89,
+      "askDown": 0.11,
+      "bidUp": 0.88,
+      "bidDown": 0.1,
+      "asksUp": [
+        {
+          "price": 0.89,
+          "size": 800
+        },
+        {
+          "price": 0.9,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.11,
+          "size": 800
+        },
+        {
+          "price": 0.12,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:10.000Z",
+      "tau": 110,
+      "askUp": 0.9,
+      "askDown": 0.1,
+      "bidUp": 0.89,
+      "bidDown": 0.09000000000000001,
+      "asksUp": [
+        {
+          "price": 0.9,
+          "size": 800
+        },
+        {
+          "price": 0.91,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.1,
+          "size": 800
+        },
+        {
+          "price": 0.11,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:11.000Z",
+      "tau": 109,
+      "askUp": 0.89,
+      "askDown": 0.11,
+      "bidUp": 0.88,
+      "bidDown": 0.1,
+      "asksUp": [
+        {
+          "price": 0.89,
+          "size": 800
+        },
+        {
+          "price": 0.9,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.11,
+          "size": 800
+        },
+        {
+          "price": 0.12,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:13.000Z",
+      "tau": 107,
+      "askUp": 0.88,
+      "askDown": 0.12,
+      "bidUp": 0.87,
+      "bidDown": 0.11,
+      "asksUp": [
+        {
+          "price": 0.88,
+          "size": 800
+        },
+        {
+          "price": 0.89,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.12,
+          "size": 800
+        },
+        {
+          "price": 0.13,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:14.000Z",
+      "tau": 106,
+      "askUp": 0.87,
+      "askDown": 0.13,
+      "bidUp": 0.86,
+      "bidDown": 0.12000000000000001,
+      "asksUp": [
+        {
+          "price": 0.87,
+          "size": 800
+        },
+        {
+          "price": 0.88,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.13,
+          "size": 800
+        },
+        {
+          "price": 0.14,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:16.000Z",
+      "tau": 104,
+      "askUp": 0.86,
+      "askDown": 0.14,
+      "bidUp": 0.85,
+      "bidDown": 0.13,
+      "asksUp": [
+        {
+          "price": 0.86,
+          "size": 800
+        },
+        {
+          "price": 0.87,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.14,
+          "size": 800
+        },
+        {
+          "price": 0.15000000000000002,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:17.000Z",
+      "tau": 103,
+      "askUp": 0.85,
+      "askDown": 0.15,
+      "bidUp": 0.84,
+      "bidDown": 0.13999999999999999,
+      "asksUp": [
+        {
+          "price": 0.85,
+          "size": 800
+        },
+        {
+          "price": 0.86,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.15,
+          "size": 800
+        },
+        {
+          "price": 0.16,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:18.000Z",
+      "tau": 102,
+      "askUp": 0.84,
+      "askDown": 0.16,
+      "bidUp": 0.83,
+      "bidDown": 0.15,
+      "asksUp": [
+        {
+          "price": 0.84,
+          "size": 800
+        },
+        {
+          "price": 0.85,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.16,
+          "size": 800
+        },
+        {
+          "price": 0.17,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:20.000Z",
+      "tau": 100,
+      "askUp": 0.83,
+      "askDown": 0.17,
+      "bidUp": 0.82,
+      "bidDown": 0.16,
+      "asksUp": [
+        {
+          "price": 0.83,
+          "size": 800
+        },
+        {
+          "price": 0.84,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.17,
+          "size": 800
+        },
+        {
+          "price": 0.18000000000000002,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:21.000Z",
+      "tau": 99,
+      "askUp": 0.82,
+      "askDown": 0.18,
+      "bidUp": 0.8099999999999999,
+      "bidDown": 0.16999999999999998,
+      "asksUp": [
+        {
+          "price": 0.82,
+          "size": 800
+        },
+        {
+          "price": 0.83,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.18,
+          "size": 800
+        },
+        {
+          "price": 0.19,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:23.000Z",
+      "tau": 97,
+      "askUp": 0.81,
+      "askDown": 0.19,
+      "bidUp": 0.8,
+      "bidDown": 0.18,
+      "asksUp": [
+        {
+          "price": 0.81,
+          "size": 800
+        },
+        {
+          "price": 0.8200000000000001,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.19,
+          "size": 800
+        },
+        {
+          "price": 0.2,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:24.000Z",
+      "tau": 96,
+      "askUp": 0.8,
+      "askDown": 0.2,
+      "bidUp": 0.79,
+      "bidDown": 0.19,
+      "asksUp": [
+        {
+          "price": 0.8,
+          "size": 800
+        },
+        {
+          "price": 0.81,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.2,
+          "size": 800
+        },
+        {
+          "price": 0.21000000000000002,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:25.000Z",
+      "tau": 95,
+      "askUp": 0.79,
+      "askDown": 0.21,
+      "bidUp": 0.78,
+      "bidDown": 0.19999999999999998,
+      "asksUp": [
+        {
+          "price": 0.79,
+          "size": 800
+        },
+        {
+          "price": 0.8,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.21,
+          "size": 800
+        },
+        {
+          "price": 0.22,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:27.000Z",
+      "tau": 93,
+      "askUp": 0.78,
+      "askDown": 0.22,
+      "bidUp": 0.77,
+      "bidDown": 0.21,
+      "asksUp": [
+        {
+          "price": 0.78,
+          "size": 800
+        },
+        {
+          "price": 0.79,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.22,
+          "size": 800
+        },
+        {
+          "price": 0.23,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:28.000Z",
+      "tau": 92,
+      "askUp": 0.77,
+      "askDown": 0.23,
+      "bidUp": 0.76,
+      "bidDown": 0.22,
+      "asksUp": [
+        {
+          "price": 0.77,
+          "size": 800
+        },
+        {
+          "price": 0.78,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.23,
+          "size": 800
+        },
+        {
+          "price": 0.24000000000000002,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:30.000Z",
+      "tau": 90,
+      "askUp": 0.76,
+      "askDown": 0.24,
+      "bidUp": 0.75,
+      "bidDown": 0.22999999999999998,
+      "asksUp": [
+        {
+          "price": 0.76,
+          "size": 800
+        },
+        {
+          "price": 0.77,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.24,
+          "size": 800
+        },
+        {
+          "price": 0.25,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:31.000Z",
+      "tau": 89,
+      "askUp": 0.75,
+      "askDown": 0.25,
+      "bidUp": 0.74,
+      "bidDown": 0.24,
+      "asksUp": [
+        {
+          "price": 0.75,
+          "size": 800
+        },
+        {
+          "price": 0.76,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.25,
+          "size": 800
+        },
+        {
+          "price": 0.26,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:33.000Z",
+      "tau": 87,
+      "askUp": 0.74,
+      "askDown": 0.26,
+      "bidUp": 0.73,
+      "bidDown": 0.25,
+      "asksUp": [
+        {
+          "price": 0.74,
+          "size": 800
+        },
+        {
+          "price": 0.75,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.26,
+          "size": 800
+        },
+        {
+          "price": 0.27,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:34.000Z",
+      "tau": 86,
+      "askUp": 0.73,
+      "askDown": 0.27,
+      "bidUp": 0.72,
+      "bidDown": 0.26,
+      "asksUp": [
+        {
+          "price": 0.73,
+          "size": 800
+        },
+        {
+          "price": 0.74,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.27,
+          "size": 800
+        },
+        {
+          "price": 0.28,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:35.000Z",
+      "tau": 85,
+      "askUp": 0.72,
+      "askDown": 0.28,
+      "bidUp": 0.71,
+      "bidDown": 0.27,
+      "asksUp": [
+        {
+          "price": 0.72,
+          "size": 800
+        },
+        {
+          "price": 0.73,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.28,
+          "size": 800
+        },
+        {
+          "price": 0.29000000000000004,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:37.000Z",
+      "tau": 83,
+      "askUp": 0.71,
+      "askDown": 0.29,
+      "bidUp": 0.7,
+      "bidDown": 0.27999999999999997,
+      "asksUp": [
+        {
+          "price": 0.71,
+          "size": 800
+        },
+        {
+          "price": 0.72,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.29,
+          "size": 800
+        },
+        {
+          "price": 0.3,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:38.000Z",
+      "tau": 82,
+      "askUp": 0.7,
+      "askDown": 0.3,
+      "bidUp": 0.69,
+      "bidDown": 0.29,
+      "asksUp": [
+        {
+          "price": 0.7,
+          "size": 800
+        },
+        {
+          "price": 0.71,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.3,
+          "size": 800
+        },
+        {
+          "price": 0.31,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:40.000Z",
+      "tau": 80,
+      "askUp": 0.69,
+      "askDown": 0.31,
+      "bidUp": 0.6799999999999999,
+      "bidDown": 0.3,
+      "asksUp": [
+        {
+          "price": 0.69,
+          "size": 800
+        },
+        {
+          "price": 0.7,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.31,
+          "size": 800
+        },
+        {
+          "price": 0.32,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:41.000Z",
+      "tau": 79,
+      "askUp": 0.68,
+      "askDown": 0.32,
+      "bidUp": 0.67,
+      "bidDown": 0.31,
+      "asksUp": [
+        {
+          "price": 0.68,
+          "size": 800
+        },
+        {
+          "price": 0.6900000000000001,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.32,
+          "size": 800
+        },
+        {
+          "price": 0.33,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:43.000Z",
+      "tau": 77,
+      "askUp": 0.67,
+      "askDown": 0.33,
+      "bidUp": 0.66,
+      "bidDown": 0.32,
+      "asksUp": [
+        {
+          "price": 0.67,
+          "size": 800
+        },
+        {
+          "price": 0.68,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.33,
+          "size": 800
+        },
+        {
+          "price": 0.34,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:44.000Z",
+      "tau": 76,
+      "askUp": 0.66,
+      "askDown": 0.34,
+      "bidUp": 0.65,
+      "bidDown": 0.33,
+      "asksUp": [
+        {
+          "price": 0.66,
+          "size": 800
+        },
+        {
+          "price": 0.67,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.34,
+          "size": 800
+        },
+        {
+          "price": 0.35000000000000003,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:45.000Z",
+      "tau": 75,
+      "askUp": 0.65,
+      "askDown": 0.35,
+      "bidUp": 0.64,
+      "bidDown": 0.33999999999999997,
+      "asksUp": [
+        {
+          "price": 0.65,
+          "size": 800
+        },
+        {
+          "price": 0.66,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.35,
+          "size": 800
+        },
+        {
+          "price": 0.36,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:47.000Z",
+      "tau": 73,
+      "askUp": 0.64,
+      "askDown": 0.36,
+      "bidUp": 0.63,
+      "bidDown": 0.35,
+      "asksUp": [
+        {
+          "price": 0.64,
+          "size": 800
+        },
+        {
+          "price": 0.65,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.36,
+          "size": 800
+        },
+        {
+          "price": 0.37,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:48.000Z",
+      "tau": 72,
+      "askUp": 0.63,
+      "askDown": 0.37,
+      "bidUp": 0.62,
+      "bidDown": 0.36,
+      "asksUp": [
+        {
+          "price": 0.63,
+          "size": 800
+        },
+        {
+          "price": 0.64,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.37,
+          "size": 800
+        },
+        {
+          "price": 0.38,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:50.000Z",
+      "tau": 70,
+      "askUp": 0.62,
+      "askDown": 0.38,
+      "bidUp": 0.61,
+      "bidDown": 0.37,
+      "asksUp": [
+        {
+          "price": 0.62,
+          "size": 800
+        },
+        {
+          "price": 0.63,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.38,
+          "size": 800
+        },
+        {
+          "price": 0.39,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:51.000Z",
+      "tau": 69,
+      "askUp": 0.61,
+      "askDown": 0.39,
+      "bidUp": 0.6,
+      "bidDown": 0.38,
+      "asksUp": [
+        {
+          "price": 0.61,
+          "size": 800
+        },
+        {
+          "price": 0.62,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.39,
+          "size": 800
+        },
+        {
+          "price": 0.4,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:52.000Z",
+      "tau": 68,
+      "askUp": 0.6,
+      "askDown": 0.4,
+      "bidUp": 0.59,
+      "bidDown": 0.39,
+      "asksUp": [
+        {
+          "price": 0.6,
+          "size": 800
+        },
+        {
+          "price": 0.61,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.4,
+          "size": 800
+        },
+        {
+          "price": 0.41000000000000003,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:54.000Z",
+      "tau": 66,
+      "askUp": 0.59,
+      "askDown": 0.41,
+      "bidUp": 0.58,
+      "bidDown": 0.39999999999999997,
+      "asksUp": [
+        {
+          "price": 0.59,
+          "size": 800
+        },
+        {
+          "price": 0.6,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.41,
+          "size": 800
+        },
+        {
+          "price": 0.42,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:55.000Z",
+      "tau": 65,
+      "askUp": 0.58,
+      "askDown": 0.42,
+      "bidUp": 0.57,
+      "bidDown": 0.41,
+      "asksUp": [
+        {
+          "price": 0.58,
+          "size": 800
+        },
+        {
+          "price": 0.59,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.42,
+          "size": 800
+        },
+        {
+          "price": 0.43,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:57.000Z",
+      "tau": 63,
+      "askUp": 0.57,
+      "askDown": 0.43,
+      "bidUp": 0.5599999999999999,
+      "bidDown": 0.42,
+      "asksUp": [
+        {
+          "price": 0.57,
+          "size": 800
+        },
+        {
+          "price": 0.58,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.43,
+          "size": 800
+        },
+        {
+          "price": 0.44,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:03:58.000Z",
+      "tau": 62,
+      "askUp": 0.56,
+      "askDown": 0.44,
+      "bidUp": 0.55,
+      "bidDown": 0.43,
+      "asksUp": [
+        {
+          "price": 0.56,
+          "size": 800
+        },
+        {
+          "price": 0.5700000000000001,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.44,
+          "size": 800
+        },
+        {
+          "price": 0.45,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:00.000Z",
+      "tau": 60,
+      "askUp": 0.55,
+      "askDown": 0.45,
+      "bidUp": 0.54,
+      "bidDown": 0.44,
+      "asksUp": [
+        {
+          "price": 0.55,
+          "size": 800
+        },
+        {
+          "price": 0.56,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.45,
+          "size": 800
+        },
+        {
+          "price": 0.46,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:01.000Z",
+      "tau": 59,
+      "askUp": 0.54,
+      "askDown": 0.46,
+      "bidUp": 0.53,
+      "bidDown": 0.45,
+      "asksUp": [
+        {
+          "price": 0.54,
+          "size": 800
+        },
+        {
+          "price": 0.55,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.46,
+          "size": 800
+        },
+        {
+          "price": 0.47000000000000003,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:02.000Z",
+      "tau": 58,
+      "askUp": 0.53,
+      "askDown": 0.47,
+      "bidUp": 0.52,
+      "bidDown": 0.45999999999999996,
+      "asksUp": [
+        {
+          "price": 0.53,
+          "size": 800
+        },
+        {
+          "price": 0.54,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.47,
+          "size": 800
+        },
+        {
+          "price": 0.48,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:04.000Z",
+      "tau": 56,
+      "askUp": 0.52,
+      "askDown": 0.48,
+      "bidUp": 0.51,
+      "bidDown": 0.47,
+      "asksUp": [
+        {
+          "price": 0.52,
+          "size": 800
+        },
+        {
+          "price": 0.53,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.48,
+          "size": 800
+        },
+        {
+          "price": 0.49,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:05.000Z",
+      "tau": 55,
+      "askUp": 0.51,
+      "askDown": 0.49,
+      "bidUp": 0.5,
+      "bidDown": 0.48,
+      "asksUp": [
+        {
+          "price": 0.51,
+          "size": 800
+        },
+        {
+          "price": 0.52,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.49,
+          "size": 800
+        },
+        {
+          "price": 0.5,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:07.000Z",
+      "tau": 53,
+      "askUp": 0.5,
+      "askDown": 0.5,
+      "bidUp": 0.49,
+      "bidDown": 0.49,
+      "asksUp": [
+        {
+          "price": 0.5,
+          "size": 800
+        },
+        {
+          "price": 0.51,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.5,
+          "size": 800
+        },
+        {
+          "price": 0.51,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:08.000Z",
+      "tau": 52,
+      "askUp": 0.49,
+      "askDown": 0.51,
+      "bidUp": 0.48,
+      "bidDown": 0.5,
+      "asksUp": [
+        {
+          "price": 0.49,
+          "size": 800
+        },
+        {
+          "price": 0.5,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.51,
+          "size": 800
+        },
+        {
+          "price": 0.52,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:10.000Z",
+      "tau": 50,
+      "askUp": 0.48,
+      "askDown": 0.52,
+      "bidUp": 0.47,
+      "bidDown": 0.51,
+      "asksUp": [
+        {
+          "price": 0.48,
+          "size": 800
+        },
+        {
+          "price": 0.49,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.52,
+          "size": 800
+        },
+        {
+          "price": 0.53,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:11.000Z",
+      "tau": 49,
+      "askUp": 0.47,
+      "askDown": 0.53,
+      "bidUp": 0.45999999999999996,
+      "bidDown": 0.52,
+      "asksUp": [
+        {
+          "price": 0.47,
+          "size": 800
+        },
+        {
+          "price": 0.48,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.53,
+          "size": 800
+        },
+        {
+          "price": 0.54,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:12.000Z",
+      "tau": 48,
+      "askUp": 0.46,
+      "askDown": 0.54,
+      "bidUp": 0.45,
+      "bidDown": 0.53,
+      "asksUp": [
+        {
+          "price": 0.46,
+          "size": 800
+        },
+        {
+          "price": 0.47000000000000003,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.54,
+          "size": 800
+        },
+        {
+          "price": 0.55,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:14.000Z",
+      "tau": 46,
+      "askUp": 0.45,
+      "askDown": 0.55,
+      "bidUp": 0.44,
+      "bidDown": 0.54,
+      "asksUp": [
+        {
+          "price": 0.45,
+          "size": 800
+        },
+        {
+          "price": 0.46,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.55,
+          "size": 800
+        },
+        {
+          "price": 0.56,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:15.000Z",
+      "tau": 45,
+      "askUp": 0.44,
+      "askDown": 0.56,
+      "bidUp": 0.43,
+      "bidDown": 0.55,
+      "asksUp": [
+        {
+          "price": 0.44,
+          "size": 800
+        },
+        {
+          "price": 0.45,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.56,
+          "size": 800
+        },
+        {
+          "price": 0.5700000000000001,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:17.000Z",
+      "tau": 43,
+      "askUp": 0.43,
+      "askDown": 0.57,
+      "bidUp": 0.42,
+      "bidDown": 0.5599999999999999,
+      "asksUp": [
+        {
+          "price": 0.43,
+          "size": 800
+        },
+        {
+          "price": 0.44,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.57,
+          "size": 800
+        },
+        {
+          "price": 0.58,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:18.000Z",
+      "tau": 42,
+      "askUp": 0.42,
+      "askDown": 0.58,
+      "bidUp": 0.41,
+      "bidDown": 0.57,
+      "asksUp": [
+        {
+          "price": 0.42,
+          "size": 800
+        },
+        {
+          "price": 0.43,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.58,
+          "size": 800
+        },
+        {
+          "price": 0.59,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:20.000Z",
+      "tau": 40,
+      "askUp": 0.41,
+      "askDown": 0.59,
+      "bidUp": 0.39999999999999997,
+      "bidDown": 0.58,
+      "asksUp": [
+        {
+          "price": 0.41,
+          "size": 800
+        },
+        {
+          "price": 0.42,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.59,
+          "size": 800
+        },
+        {
+          "price": 0.6,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:21.000Z",
+      "tau": 39,
+      "askUp": 0.4,
+      "askDown": 0.6,
+      "bidUp": 0.39,
+      "bidDown": 0.59,
+      "asksUp": [
+        {
+          "price": 0.4,
+          "size": 800
+        },
+        {
+          "price": 0.41000000000000003,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.6,
+          "size": 800
+        },
+        {
+          "price": 0.61,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:22.000Z",
+      "tau": 38,
+      "askUp": 0.39,
+      "askDown": 0.61,
+      "bidUp": 0.38,
+      "bidDown": 0.6,
+      "asksUp": [
+        {
+          "price": 0.39,
+          "size": 800
+        },
+        {
+          "price": 0.4,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.61,
+          "size": 800
+        },
+        {
+          "price": 0.62,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:24.000Z",
+      "tau": 36,
+      "askUp": 0.38,
+      "askDown": 0.62,
+      "bidUp": 0.37,
+      "bidDown": 0.61,
+      "asksUp": [
+        {
+          "price": 0.38,
+          "size": 800
+        },
+        {
+          "price": 0.39,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.62,
+          "size": 800
+        },
+        {
+          "price": 0.63,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:25.000Z",
+      "tau": 35,
+      "askUp": 0.37,
+      "askDown": 0.63,
+      "bidUp": 0.36,
+      "bidDown": 0.62,
+      "asksUp": [
+        {
+          "price": 0.37,
+          "size": 800
+        },
+        {
+          "price": 0.38,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.63,
+          "size": 800
+        },
+        {
+          "price": 0.64,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:27.000Z",
+      "tau": 33,
+      "askUp": 0.36,
+      "askDown": 0.64,
+      "bidUp": 0.35,
+      "bidDown": 0.63,
+      "asksUp": [
+        {
+          "price": 0.36,
+          "size": 800
+        },
+        {
+          "price": 0.37,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.64,
+          "size": 800
+        },
+        {
+          "price": 0.65,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:28.000Z",
+      "tau": 32,
+      "askUp": 0.35,
+      "askDown": 0.65,
+      "bidUp": 0.33999999999999997,
+      "bidDown": 0.64,
+      "asksUp": [
+        {
+          "price": 0.35,
+          "size": 800
+        },
+        {
+          "price": 0.36,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.65,
+          "size": 800
+        },
+        {
+          "price": 0.66,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:29.000Z",
+      "tau": 31,
+      "askUp": 0.34,
+      "askDown": 0.66,
+      "bidUp": 0.33,
+      "bidDown": 0.65,
+      "asksUp": [
+        {
+          "price": 0.34,
+          "size": 800
+        },
+        {
+          "price": 0.35000000000000003,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.66,
+          "size": 800
+        },
+        {
+          "price": 0.67,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:31.000Z",
+      "tau": 29,
+      "askUp": 0.33,
+      "askDown": 0.67,
+      "bidUp": 0.32,
+      "bidDown": 0.66,
+      "asksUp": [
+        {
+          "price": 0.33,
+          "size": 800
+        },
+        {
+          "price": 0.34,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.67,
+          "size": 800
+        },
+        {
+          "price": 0.68,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:32.000Z",
+      "tau": 28,
+      "askUp": 0.32,
+      "askDown": 0.68,
+      "bidUp": 0.31,
+      "bidDown": 0.67,
+      "asksUp": [
+        {
+          "price": 0.32,
+          "size": 800
+        },
+        {
+          "price": 0.33,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.68,
+          "size": 800
+        },
+        {
+          "price": 0.6900000000000001,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:34.000Z",
+      "tau": 26,
+      "askUp": 0.31,
+      "askDown": 0.69,
+      "bidUp": 0.3,
+      "bidDown": 0.6799999999999999,
+      "asksUp": [
+        {
+          "price": 0.31,
+          "size": 800
+        },
+        {
+          "price": 0.32,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.69,
+          "size": 800
+        },
+        {
+          "price": 0.7,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:35.000Z",
+      "tau": 25,
+      "askUp": 0.3,
+      "askDown": 0.7,
+      "bidUp": 0.29,
+      "bidDown": 0.69,
+      "asksUp": [
+        {
+          "price": 0.3,
+          "size": 800
+        },
+        {
+          "price": 0.31,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.7,
+          "size": 800
+        },
+        {
+          "price": 0.71,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:37.000Z",
+      "tau": 23,
+      "askUp": 0.29,
+      "askDown": 0.71,
+      "bidUp": 0.27999999999999997,
+      "bidDown": 0.7,
+      "asksUp": [
+        {
+          "price": 0.29,
+          "size": 800
+        },
+        {
+          "price": 0.3,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.71,
+          "size": 800
+        },
+        {
+          "price": 0.72,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:38.000Z",
+      "tau": 22,
+      "askUp": 0.28,
+      "askDown": 0.72,
+      "bidUp": 0.27,
+      "bidDown": 0.71,
+      "asksUp": [
+        {
+          "price": 0.28,
+          "size": 800
+        },
+        {
+          "price": 0.29000000000000004,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.72,
+          "size": 800
+        },
+        {
+          "price": 0.73,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:39.000Z",
+      "tau": 21,
+      "askUp": 0.27,
+      "askDown": 0.73,
+      "bidUp": 0.26,
+      "bidDown": 0.72,
+      "asksUp": [
+        {
+          "price": 0.27,
+          "size": 800
+        },
+        {
+          "price": 0.28,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.73,
+          "size": 800
+        },
+        {
+          "price": 0.74,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:41.000Z",
+      "tau": 19,
+      "askUp": 0.26,
+      "askDown": 0.74,
+      "bidUp": 0.25,
+      "bidDown": 0.73,
+      "asksUp": [
+        {
+          "price": 0.26,
+          "size": 800
+        },
+        {
+          "price": 0.27,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.74,
+          "size": 800
+        },
+        {
+          "price": 0.75,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:42.000Z",
+      "tau": 18,
+      "askUp": 0.25,
+      "askDown": 0.75,
+      "bidUp": 0.24,
+      "bidDown": 0.74,
+      "asksUp": [
+        {
+          "price": 0.25,
+          "size": 800
+        },
+        {
+          "price": 0.26,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.75,
+          "size": 800
+        },
+        {
+          "price": 0.76,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:44.000Z",
+      "tau": 16,
+      "askUp": 0.24,
+      "askDown": 0.76,
+      "bidUp": 0.22999999999999998,
+      "bidDown": 0.75,
+      "asksUp": [
+        {
+          "price": 0.24,
+          "size": 800
+        },
+        {
+          "price": 0.25,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.76,
+          "size": 800
+        },
+        {
+          "price": 0.77,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:45.000Z",
+      "tau": 15,
+      "askUp": 0.23,
+      "askDown": 0.77,
+      "bidUp": 0.22,
+      "bidDown": 0.76,
+      "asksUp": [
+        {
+          "price": 0.23,
+          "size": 800
+        },
+        {
+          "price": 0.24000000000000002,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.77,
+          "size": 800
+        },
+        {
+          "price": 0.78,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:47.000Z",
+      "tau": 13,
+      "askUp": 0.22,
+      "askDown": 0.78,
+      "bidUp": 0.21,
+      "bidDown": 0.77,
+      "asksUp": [
+        {
+          "price": 0.22,
+          "size": 800
+        },
+        {
+          "price": 0.23,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.78,
+          "size": 800
+        },
+        {
+          "price": 0.79,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:48.000Z",
+      "tau": 12,
+      "askUp": 0.21,
+      "askDown": 0.79,
+      "bidUp": 0.19999999999999998,
+      "bidDown": 0.78,
+      "asksUp": [
+        {
+          "price": 0.21,
+          "size": 800
+        },
+        {
+          "price": 0.22,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.79,
+          "size": 800
+        },
+        {
+          "price": 0.8,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:49.000Z",
+      "tau": 11,
+      "askUp": 0.2,
+      "askDown": 0.8,
+      "bidUp": 0.19,
+      "bidDown": 0.79,
+      "asksUp": [
+        {
+          "price": 0.2,
+          "size": 800
+        },
+        {
+          "price": 0.21000000000000002,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.8,
+          "size": 800
+        },
+        {
+          "price": 0.81,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:51.000Z",
+      "tau": 9,
+      "askUp": 0.19,
+      "askDown": 0.81,
+      "bidUp": 0.18,
+      "bidDown": 0.8,
+      "asksUp": [
+        {
+          "price": 0.19,
+          "size": 800
+        },
+        {
+          "price": 0.2,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.81,
+          "size": 800
+        },
+        {
+          "price": 0.8200000000000001,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:52.000Z",
+      "tau": 8,
+      "askUp": 0.18,
+      "askDown": 0.82,
+      "bidUp": 0.16999999999999998,
+      "bidDown": 0.8099999999999999,
+      "asksUp": [
+        {
+          "price": 0.18,
+          "size": 800
+        },
+        {
+          "price": 0.19,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.82,
+          "size": 800
+        },
+        {
+          "price": 0.83,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:54.000Z",
+      "tau": 6,
+      "askUp": 0.17,
+      "askDown": 0.83,
+      "bidUp": 0.16,
+      "bidDown": 0.82,
+      "asksUp": [
+        {
+          "price": 0.17,
+          "size": 800
+        },
+        {
+          "price": 0.18000000000000002,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.83,
+          "size": 800
+        },
+        {
+          "price": 0.84,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:55.000Z",
+      "tau": 5,
+      "askUp": 0.16,
+      "askDown": 0.84,
+      "bidUp": 0.15,
+      "bidDown": 0.83,
+      "asksUp": [
+        {
+          "price": 0.16,
+          "size": 800
+        },
+        {
+          "price": 0.17,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.84,
+          "size": 800
+        },
+        {
+          "price": 0.85,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:55.000Z",
+      "tau": 5,
+      "askUp": 0.15,
+      "askDown": 0.85,
+      "bidUp": 0.13999999999999999,
+      "bidDown": 0.84,
+      "asksUp": [
+        {
+          "price": 0.15,
+          "size": 800
+        },
+        {
+          "price": 0.16,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.85,
+          "size": 800
+        },
+        {
+          "price": 0.86,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:55.000Z",
+      "tau": 5,
+      "askUp": 0.14,
+      "askDown": 0.86,
+      "bidUp": 0.13,
+      "bidDown": 0.85,
+      "asksUp": [
+        {
+          "price": 0.14,
+          "size": 800
+        },
+        {
+          "price": 0.15000000000000002,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.86,
+          "size": 800
+        },
+        {
+          "price": 0.87,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:55.000Z",
+      "tau": 5,
+      "askUp": 0.13,
+      "askDown": 0.87,
+      "bidUp": 0.12000000000000001,
+      "bidDown": 0.86,
+      "asksUp": [
+        {
+          "price": 0.13,
+          "size": 800
+        },
+        {
+          "price": 0.14,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.87,
+          "size": 800
+        },
+        {
+          "price": 0.88,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:55.000Z",
+      "tau": 5,
+      "askUp": 0.12,
+      "askDown": 0.88,
+      "bidUp": 0.11,
+      "bidDown": 0.87,
+      "asksUp": [
+        {
+          "price": 0.12,
+          "size": 800
+        },
+        {
+          "price": 0.13,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.88,
+          "size": 800
+        },
+        {
+          "price": 0.89,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:55.000Z",
+      "tau": 5,
+      "askUp": 0.11,
+      "askDown": 0.89,
+      "bidUp": 0.1,
+      "bidDown": 0.88,
+      "asksUp": [
+        {
+          "price": 0.11,
+          "size": 800
+        },
+        {
+          "price": 0.12,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.89,
+          "size": 800
+        },
+        {
+          "price": 0.9,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    },
+    {
+      "ts": "2026-06-15T14:04:55.000Z",
+      "tau": 5,
+      "askUp": 0.1,
+      "askDown": 0.9,
+      "bidUp": 0.09000000000000001,
+      "bidDown": 0.89,
+      "asksUp": [
+        {
+          "price": 0.1,
+          "size": 800
+        },
+        {
+          "price": 0.11,
+          "size": 800
+        }
+      ],
+      "asksDown": [
+        {
+          "price": 0.9,
+          "size": 800
+        },
+        {
+          "price": 0.91,
+          "size": 800
+        }
+      ],
+      "btc": 100100,
+      "ptb": 100000,
+      "escadaArmada": true,
+      "viradas": 0,
+      "sharesUp": 0,
+      "sharesDown": 0,
+      "invested": 0
+    }
+  ],
+  "intents": [],
+  "fills": [
+    {
+      "ts": "2026-06-15T14:00:21.000Z",
+      "lado": "UP",
+      "side": "UP",
+      "tipo": "SUB-1",
+      "shares": 20,
+      "price": 0.59,
+      "fator": 1,
+      "liquidity": "taker",
+      "dry": true,
+      "status": "simulado"
+    },
+    {
+      "ts": "2026-06-15T14:00:21.000Z",
+      "lado": "DOWN",
+      "side": "DOWN",
+      "tipo": "DESC-1",
+      "shares": 5,
+      "price": 0.45,
+      "fator": 1,
+      "liquidity": "maker",
+      "dry": true,
+      "status": "simulado"
+    },
+    {
+      "ts": "2026-06-15T14:00:41.000Z",
+      "lado": "UP",
+      "side": "UP",
+      "tipo": "DESC-1",
+      "shares": 5,
+      "price": 0.45,
+      "fator": 1,
+      "liquidity": "maker",
+      "dry": true,
+      "status": "simulado"
+    },
+    {
+      "ts": "2026-06-15T14:00:41.000Z",
+      "lado": "DOWN",
+      "side": "DOWN",
+      "tipo": "SUB-1",
+      "shares": 40,
+      "price": 0.55,
+      "fator": 1,
+      "liquidity": "taker",
+      "dry": true,
+      "status": "simulado"
+    },
+    {
+      "ts": "2026-06-15T14:00:55.000Z",
+      "lado": "UP",
+      "side": "UP",
+      "tipo": "SUB-1",
+      "shares": 60,
+      "price": 0.55,
+      "fator": 1,
+      "liquidity": "taker",
+      "dry": true,
+      "status": "simulado"
+    },
+    {
+      "ts": "2026-06-15T14:00:55.000Z",
+      "lado": "DOWN",
+      "side": "DOWN",
+      "tipo": "DESC-1",
+      "shares": 5,
+      "price": 0.45,
+      "fator": 1,
+      "liquidity": "maker",
+      "dry": true,
+      "status": "simulado"
+    },
+    {
+      "ts": "2026-06-15T14:01:02.000Z",
+      "lado": "UP",
+      "side": "UP",
+      "tipo": "SUB-2",
+      "shares": 15,
+      "price": 0.6,
+      "fator": 1,
+      "liquidity": "taker",
+      "dry": true,
+      "status": "simulado"
+    },
+    {
+      "ts": "2026-06-15T14:01:02.000Z",
+      "lado": "DOWN",
+      "side": "DOWN",
+      "tipo": "DESC-2",
+      "shares": 5,
+      "price": 0.4,
+      "fator": 1,
+      "liquidity": "maker",
+      "dry": true,
+      "status": "simulado"
+    },
+    {
+      "ts": "2026-06-15T14:01:09.000Z",
+      "lado": "UP",
+      "side": "UP",
+      "tipo": "SUB-3",
+      "shares": 10,
+      "price": 0.65,
+      "fator": 1,
+      "liquidity": "taker",
+      "dry": true,
+      "status": "simulado"
+    },
+    {
+      "ts": "2026-06-15T14:01:09.000Z",
+      "lado": "DOWN",
+      "side": "DOWN",
+      "tipo": "DESC-3",
+      "shares": 5,
+      "price": 0.35,
+      "fator": 1,
+      "liquidity": "maker",
+      "dry": true,
+      "status": "simulado"
+    },
+    {
+      "ts": "2026-06-15T14:01:16.000Z",
+      "lado": "UP",
+      "side": "UP",
+      "tipo": "SUB-4",
+      "shares": 10,
+      "price": 0.7,
+      "fator": 1,
+      "liquidity": "taker",
+      "dry": true,
+      "status": "simulado"
+    },
+    {
+      "ts": "2026-06-15T14:01:16.000Z",
+      "lado": "DOWN",
+      "side": "DOWN",
+      "tipo": "DESC-4",
+      "shares": 5,
+      "price": 0.3,
+      "fator": 1,
+      "liquidity": "maker",
+      "dry": true,
+      "status": "simulado"
+    },
+    {
+      "ts": "2026-06-15T14:01:52.000Z",
+      "lado": "UP",
+      "side": "UP",
+      "tipo": "DESC-1",
+      "shares": 5,
+      "price": 0.45,
+      "fator": 1,
+      "liquidity": "maker",
+      "dry": true,
+      "status": "simulado"
+    },
+    {
+      "ts": "2026-06-15T14:01:52.000Z",
+      "lado": "DOWN",
+      "side": "DOWN",
+      "tipo": "SUB-1",
+      "shares": 80,
+      "price": 0.55,
+      "fator": 1,
+      "liquidity": "taker",
+      "dry": true,
+      "status": "simulado"
+    },
+    {
+      "ts": "2026-06-15T14:01:59.000Z",
+      "lado": "UP",
+      "side": "UP",
+      "tipo": "DESC-2",
+      "shares": 5,
+      "price": 0.4,
+      "fator": 1,
+      "liquidity": "maker",
+      "dry": true,
+      "status": "simulado"
+    },
+    {
+      "ts": "2026-06-15T14:01:59.000Z",
+      "lado": "DOWN",
+      "side": "DOWN",
+      "tipo": "SUB-2",
+      "shares": 30,
+      "price": 0.6,
+      "fator": 1,
+      "liquidity": "taker",
+      "dry": true,
+      "status": "simulado"
+    },
+    {
+      "ts": "2026-06-15T14:02:20.000Z",
+      "lado": "UP",
+      "side": "UP",
+      "tipo": "SUB-1",
+      "shares": 100,
+      "price": 0.55,
+      "fator": 1,
+      "liquidity": "taker",
+      "dry": true,
+      "status": "simulado"
+    },
+    {
+      "ts": "2026-06-15T14:02:27.000Z",
+      "lado": "UP",
+      "side": "UP",
+      "tipo": "SUB-2",
+      "shares": 75,
+      "price": 0.6,
+      "fator": 1,
+      "liquidity": "taker",
+      "dry": true,
+      "status": "simulado"
+    },
+    {
+      "ts": "2026-06-15T14:02:49.000Z",
+      "lado": "UP",
+      "side": "UP",
+      "tipo": "SUB-5",
+      "shares": 25,
+      "price": 0.75,
+      "fator": 1,
+      "liquidity": "taker",
+      "dry": true,
+      "status": "simulado"
+    }
+  ],
+  "blocks": [],
+  "end": {
+    "ts": "2026-07-26T19:49:51.121Z",
+    "winner": "DOWN",
+    "sharesUp": 0,
+    "sharesDown": 0,
+    "costUp": null,
+    "costDown": null,
+    "invested": 286.3,
+    "equalizou": false,
+    "vendeu": false,
+    "pnl": 1.4499999999999886,
+    "payout": 0,
+    "resultado": "EXPOSTO_SYNTH",
+    "viradas": 5,
+    "fonteResolucao": "odds"
+  },
+  "stats": {
+    "tickCount": 211,
+    "fillCount": 19,
+    "intentCount": 0,
+    "blockCount": 0
+  }
+}

@@ -1,0 +1,130 @@
+{
+  "name": "shotandgo-opt-exposure-may-june",
+  "strategyId": "shotandgo-v1",
+  "strategyFamily": "carry",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-01",
+  "to": "2026-06-30",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 6,
+  "defaults": "../defaults.json",
+  "feeOptions": { "category": "crypto" },
+  "description": "Otimização pós-smoke: smoke jul mostrou PF~0.26 até em optimistic. Hipótese: martingale+contagio+fees destroem o carry. Sweep foca reduzir exposição e agressividade mantendo honest.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "baseline-honest",
+        "label": "Python live honest",
+        "params": { "executionMode": "honest", "sizeScale": 1 }
+      },
+      {
+        "id": "micro-honest",
+        "label": "sizeScale 0.25 honest",
+        "params": { "executionMode": "honest", "sizeScale": 0.25 }
+      },
+      {
+        "id": "mult1-off-honest",
+        "label": "MULT=1 contagio off",
+        "params": {
+          "executionMode": "honest",
+          "mult": [1],
+          "contagio": "off",
+          "pisoAtivo": false,
+          "sizeScale": 0.5
+        }
+      },
+      {
+        "id": "early-freeze-honest",
+        "label": "MAX_VIRADAS=3 STOP=2 DESC gatilho@2",
+        "params": {
+          "executionMode": "honest",
+          "maxViradas": 3,
+          "stopVirada": 2,
+          "stopLimiar": 0.5,
+          "descVirada": 2,
+          "descModo": "gatilho",
+          "pisoAtivo": false,
+          "sizeScale": 0.5
+        }
+      },
+      {
+        "id": "tight-stop-honest",
+        "label": "STOP limiar 0 + virada 2",
+        "params": {
+          "executionMode": "honest",
+          "stopVirada": 2,
+          "stopLimiar": 0,
+          "sizeScale": 0.5
+        }
+      },
+      {
+        "id": "no-eq-limite-honest",
+        "label": "EQ taker only (sem limite)",
+        "params": {
+          "executionMode": "honest",
+          "eqLimiteAtivo": false,
+          "sizeScale": 0.5
+        }
+      },
+      {
+        "id": "sparse-sub-honest",
+        "label": "SUB só 55/65/80 + MULT fraco",
+        "params": {
+          "executionMode": "honest",
+          "subLevels": [[55, 10], [65, 8], [80, 5]],
+          "descLevels": [[45, 5], [35, 5], [20, 5]],
+          "mult": [1.5, 2],
+          "contagio": "off",
+          "pisoAtivo": false,
+          "maxViradas": 4,
+          "descVirada": 3,
+          "sizeScale": 0.5
+        }
+      },
+      {
+        "id": "makerish-desc-heavy",
+        "label": "SUB leve + DESC comprar + mult1",
+        "params": {
+          "executionMode": "honest",
+          "mult": [1],
+          "contagio": "off",
+          "pisoAtivo": false,
+          "descModo": "comprar",
+          "descVirada": 99,
+          "subLevels": [[55, 8], [70, 5], [85, 3]],
+          "descLevels": [[45, 8], [35, 8], [25, 8], [15, 8]],
+          "maxViradas": 4,
+          "sizeScale": 0.5
+        }
+      },
+      {
+        "id": "optimistic-micro-control",
+        "label": "Optimistic micro control",
+        "params": {
+          "executionMode": "optimistic",
+          "fokAtivo": false,
+          "sizeScale": 0.25
+        }
+      },
+      {
+        "id": "cap-notional-80",
+        "label": "maxEventNotional 80 + mult1",
+        "params": {
+          "executionMode": "honest",
+          "maxEventNotional": 80,
+          "mult": [1],
+          "contagio": "off",
+          "pisoAtivo": false,
+          "sizeScale": 1
+        }
+      }
+    ]
+  },
+  "metrics": ["totalPnl", "entries", "winRate", "profitFactor", "maxDrawdown"]
+}

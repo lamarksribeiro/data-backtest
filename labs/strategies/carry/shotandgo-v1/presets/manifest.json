@@ -1,0 +1,6 @@
+{
+  "presets": [
+    "btc-shotandgo-python-live",
+    "btc-shotandgo-optimistic-control"
+  ]
+}

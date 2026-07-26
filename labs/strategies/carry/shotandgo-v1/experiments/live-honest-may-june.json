@@ -1,0 +1,99 @@
+{
+  "name": "shotandgo-live-honest-may-june",
+  "strategyId": "shotandgo-v1",
+  "strategyFamily": "carry",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-01",
+  "to": "2026-06-30",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "feeOptions": { "category": "crypto" },
+  "description": "Experimento decisivo: config Phil_Hopper_Real.py em execução honesta na janela limpa mai–jun. Gate pré-declarado: PF ≥ 1,2 e PnL > 0. Julio permanece congelado.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "python-live-honest",
+        "label": "Python live honest (baseline)",
+        "params": {
+          "executionMode": "honest",
+          "takerLatencyTicks": 0,
+          "takerMissPolicy": "rearm",
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "python-live-honest-lat1",
+        "label": "Python live honest + latência 1 tick",
+        "params": {
+          "executionMode": "honest",
+          "takerLatencyTicks": 1,
+          "takerMissPolicy": "rearm",
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "python-live-optimistic-control",
+        "label": "Optimistic control (phantom)",
+        "params": {
+          "executionMode": "optimistic",
+          "fokAtivo": false,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "no-stop-honest",
+        "label": "Ablação: sem STOP",
+        "params": {
+          "executionMode": "honest",
+          "stopAtivo": false,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "no-piso-honest",
+        "label": "Ablação: sem PISO",
+        "params": {
+          "executionMode": "honest",
+          "pisoAtivo": false,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "desc-comprar-honest",
+        "label": "Ablação: DESC comprar (não gatilho)",
+        "params": {
+          "executionMode": "honest",
+          "descModo": "comprar",
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "contagio-off-honest",
+        "label": "Ablação: contagio off",
+        "params": {
+          "executionMode": "honest",
+          "contagio": "off",
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "mult-flat1-honest",
+        "label": "Ablação: MULT flat 1",
+        "params": {
+          "executionMode": "honest",
+          "mult": [1],
+          "contagio": "off",
+          "sizeScale": 1
+        }
+      }
+    ]
+  },
+  "metrics": ["totalPnl", "entries", "winRate", "profitFactor", "maxDrawdown"]
+}

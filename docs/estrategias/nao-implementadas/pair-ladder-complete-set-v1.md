@@ -624,6 +624,96 @@ Runner: `legChoice=min_avg_sum|chase_momo` (+ `momoLookbackSec/MinRise/MinAsk/Ma
 
 **Achado:** inverter o leg-choice para MOMO melhora **+$430** no cohort both e confirma a Etapa 7 em direção. Ainda **não fecha paridade** (Doggy both +$83; gap ~−$1,4k). O d15 no lake 1Hz é sinal fraco vs seleção Doggy (baseline mercado MOMO −1,3¢). Preset research: `btc-doggy-parity-momo`. **Não promover. Sem conta real.**
 
+**Etapa 10 — observer live local (2026-07-26):**
+
+Script: `labs/sandbox/doggy-live-observer.mjs`  
+Output: `.tmp/pair-ladder-re/live-observer/<runId>/` (`fills.jsonl`, `books.jsonl`, `summary.json`)
+
+```bash
+cd data-backtest
+node labs/sandbox/doggy-live-observer.mjs --minutes=45
+```
+
+Só-leitura (Gamma + CLOB WS/REST + Binance + activity wallet). Smoke 2,5 min: **8 fills**, med fill−ask **−1,0¢**, momoShare **38%**. WS rollover de evento estabilizado.
+
+**Fix pós-smoke:** warm da Data API podia falhar em silêncio e dump de backlog cross-slug contaminava fill−ask (run `2026-07-26T19-07-09-969Z` marcada `CONTAMINATED.md`). Observer agora: warm com retry + `liveGateAt` + só slug ativo + `bookMatched`/lag≤2,5s. Analisador: `doggy-live-analyze.mjs`. Lead no lake: `doggy-spot-lead.mjs`.
+
+Próximo: sessão limpa ≥30–45 min → analisar lead spot / fill−ask / dAsk (só `bookMatched`).
+
+**Etapa 11a — spot/lean lead no lake (2026-07-26):**
+
+Script: `labs/sandbox/doggy-spot-lead.mjs` → `.tmp/pair-ladder-re/doggy-spot-lead.json` (days 07-24/25, n=2798 fills).
+
+| Classe | n | hit | ev/share | med dAsk15 |
+|---|---:|---:|---:|---:|
+| **CHASE** (ask +≥2¢/15s) | 1499 | 0.61 | **+4,4¢** | +9¢ |
+| FADE (ask −≥2¢) | 828 | 0.36 | −2,6¢ | −9¢ |
+| FLAT | 407 | 0.44 | −2,2¢ | 0 |
+| LEAN (ask flat, lean implícito) | 64 | 0.34 | −4,5¢ | +2¢ |
+
+Mid band 20–70¢: CHASE ev **+5,2¢** vs FADE **−3,5¢**. Aceleração do ask (61% dos mid): ev +4,0¢ vs no-accel −2,5¢. LEAN (candidato a lead spot externo sem movimento no book) é **ruim** e raro.
+
+**Achado:** Doggy é chase do book já em movimento, não anticipação silenciosa. Gate acionável no lab = reforçar `chase_momo` / bloquear FADE mid-band — não inventar spot-lead gate sem evidência live. Live session ainda necessária para fill−ask e Δspot real. **Não promover.**
+
+**Etapa 11b — sessão live limpa 45 min (2026-07-26):**
+
+Run: `.tmp/pair-ladder-re/live-observer/2026-07-26T19-09-13-503Z/` (`analyze.json`)
+
+| Métrica | Valor |
+|---|---:|
+| fills / bookMatched | **58 / 58** |
+| med fill−ask | **−1,27¢** |
+| belowAskShare | 67% |
+| momoShare (dAsk15≥+2¢) | **57%** |
+| fadeShare | 29% |
+| spotLeadShare (Δspot5 a favor) | **14%** |
+| med Δspot5s | ≈0 |
+
+Confirma 11a ao vivo: fill tipicamente ≤ ask (−1¢), motor = chase do book, **não** lead de spot. Gate spot-lead descartado. Próximo = path fino (vacuum unlock + bloquear FADE mid). **Não promover.**
+
+**Etapa 12 — vacuum unlock + bloquear FADE mid (2026-07-26):**
+
+Script: `labs/sandbox/doggy-legchoice-ablation.mjs` → `.tmp/pair-ladder-re/doggy-legchoice-ablation.json`  
+Runner: `momoBlockFade` (container mid-band só se MOMO ou ask≤`chaseMaxAsk`).
+
+| Variante | both PnL | Δ vs chase_momo | vacuum both | medVac/ev | rebalance |
+|---|---:|---:|---:|---:|---:|
+| **chase_momo_vac_nofade** | **−$1.276** | **+$225** | 28 | 0 | **0** |
+| chase_momo_no_fade | −$1.309 | +$192 | 18 | 0 | **0** |
+| chase_momo | −$1.501 | 0 | 17 | 0 | 281 |
+| chase_momo_vac_unlock | −$1.568 | −$67 | 22 | 0 | 281 |
+| min_avg_sum | −$1.746 | — | 17 | 0 | 1097 |
+
+Doggy both Σ **+$83**. Critério de sucesso (≥+$700 e medVac≥1,0) **não atingido**. Vacuum unlock sozinho piora; `momoBlockFade` elimina rebalance FADE e recupera ~+$200, mas o lab ainda quase não vacuum (28 vs ~377 Doggy) — `late*` knobs não destravam o scoop no lake 1Hz.
+
+**Achado:** path fino no runner saturado. Gap residual ~**−$1,4k** no both é seleção/timing **intra-segundo** (fill ≤ ask, escolha de clip MOMO) não observável no book 1Hz. **Congelar RE de params 1Hz.** Preset research continua `btc-doggy-parity-momo` (+ `momoBlockFade` disponível). **Não promover. Sem conta real.**
+
+---
+
+## Estratégia canônica (RE Doggy — congelada 2026-07-26)
+
+Modelo operacional inferido (não é complete-set arb):
+
+```
+open 45–55¢ ≤30s (clip ~50)
+  → hedge async oposto ~3–18s (clip ~100, prefer ask≤50¢)
+  → BUILD chase MOMO (ask do lado +≥2¢/15s, banda 20–70¢)
+  → late vacuum dying side (≤15–20¢, clip ~50) + soft lock (avg≤0.95 sem hard exit)
+  → redeem + taker fee crypto − Diamond rebate 44%
+```
+
+| Peça | Evidência | Status lab |
+|---|---|---|
+| Taker + Diamond 44% | fees / activity | ok |
+| Open band / size / dual async | path parity Etapa 8 | ok estrutural |
+| Motor = chase MOMO | Etapas 7, 9, 11a/b | `legChoice=chase_momo` (+~$430) |
+| Bloquear FADE mid | Etapa 12 | `momoBlockFade` (+~$200) |
+| Late vacuum residual tilt | Etapas 2, 7, 12 | **não replicado** (medVac≈0) |
+| Fill ≤ ask / seleção intra-s | Etapas 4, 10–11b | proxy `slippageCents=-1`; gap PnL permanece |
+| Spot-lead gate | Etapas 11a/b | **descartado** (spotLead 14% live) |
+
+**Veredito:** a estratégia *descrita* está fechada. A *paridade de PnL* no lake 1Hz **não** — edge Doggy depende de qualidade de fill / escolha de momento abaixo da resolução do lake. Próximo trabalho útil (se houver): shadow live com book tick-by-tick próprio, não mais grid de params no Parquet 1Hz.
+
 ### Métricas por evento (obrigatórias)
 
 - `avgSum`, `balance`, `lockedEdge`, `residualSide`

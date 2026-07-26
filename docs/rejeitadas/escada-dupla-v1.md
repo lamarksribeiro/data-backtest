@@ -7,6 +7,10 @@ Auditoria de origem: [`../estrategias/auditoria-escada-dupla-realismo-2026-07-25
 Experimento decisivo: `labs/strategies/carry/escada-dupla-v1/experiments/taker-limit-may-june.json`
 Relatório: `reports/labs/escada-dupla-v1/2026-07-26T00-26-13-517Z-escada-dupla-taker-limit-may-june/`
 
+> **Escopo do veredito (2026-07-26, adendo):** este post-mortem invalida apenas o perfil **`ascent_hedge`** (`rearmMode=off`, `sideMultiplier=1`) e variantes honestas testadas nessa família. **Não cobre** a Escada Dupla live do `Phil_Hopper_Real.py` (Shotandgo: re-arme + MULT[] + contagio + STOP/PISO + EQ-limite). Essa variante foi reaberta como research em [`../estrategias/nao-implementadas/shotandgo-v1.md`](../estrategias/nao-implementadas/shotandgo-v1.md) / lab `labs/strategies/carry/shotandgo-v1/`.
+
+> **Bug de taxa no port Shotandgo (2026-07-26):** a 1ª rodada de lab do `shotandgo-runner` embutia fee no `cost` **e** o lab aplicava `applyPolymarketFeesToBacktestResult` de novo — taxa em dobro, com fórmula interna errada (`0.25·(p(1−p))²` em vez de `0.07·p·(1−p)`). Corrigido: runner só contabiliza notional; fees ficam no pós-processador (padrão `escada-dupla`). Relatórios anteriores a essa correção estão **invalidados**.
+
 ---
 
 ## 1. Veredito

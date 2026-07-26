@@ -1,0 +1,152 @@
+{
+  "name": "shotandgo-opt-failfilter-may-june",
+  "strategyId": "shotandgo-v1",
+  "strategyFamily": "carry",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-01",
+  "to": "2026-06-30",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 6,
+  "defaults": "../defaults.json",
+  "feeOptions": { "category": "crypto" },
+  "description": "Pós mai-jun: todas perdem; MULT=1 melhor (-90k PF0.44). Hipótese live: falhas/FOK/filtros reduziram exposição tóxica. Testa seletividade + fail-like + grade esparsa + teto baixo.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "mult1-cap80",
+        "label": "MULT1 + notional 80",
+        "params": {
+          "executionMode": "honest",
+          "mult": [1],
+          "contagio": "off",
+          "pisoAtivo": false,
+          "maxEventNotional": 80,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "mult1-sparse",
+        "label": "MULT1 grade esparsa",
+        "params": {
+          "executionMode": "honest",
+          "mult": [1],
+          "contagio": "off",
+          "pisoAtivo": false,
+          "subLevels": [[55, 10], [70, 8], [85, 4]],
+          "descLevels": [[40, 5], [25, 5], [10, 5]],
+          "maxViradas": 3,
+          "descVirada": 2,
+          "descModo": "gatilho",
+          "maxEventNotional": 80,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "fail-like-live",
+        "label": "Simula falhas live: FOK+skip+timeout curto+lat1",
+        "params": {
+          "executionMode": "honest",
+          "takerMissPolicy": "skip",
+          "takerLatencyTicks": 1,
+          "takerMaxExtraCents": 1,
+          "fokAtivo": true,
+          "fokPrecoTeto": 0.85,
+          "makerTimeoutSec": 8,
+          "mult": [1],
+          "contagio": "off",
+          "pisoAtivo": false,
+          "maxViradas": 4,
+          "descVirada": 2,
+          "maxEventNotional": 80,
+          "sizeScale": 0.5
+        }
+      },
+      {
+        "id": "selective-window",
+        "label": "Janela seletiva 90-180s + filtro 30-70",
+        "params": {
+          "executionMode": "honest",
+          "minSecondsLeftToStart": 90,
+          "maxSecondsLeftToStart": 180,
+          "filterLo": 0.30,
+          "filterHi": 0.70,
+          "mult": [1],
+          "contagio": "off",
+          "pisoAtivo": false,
+          "maxEventNotional": 80,
+          "sizeScale": 0.5
+        }
+      },
+      {
+        "id": "early-stop-freeze",
+        "label": "STOP@2 limiar0 + MAX_VIRADAS=2",
+        "params": {
+          "executionMode": "honest",
+          "mult": [1],
+          "contagio": "off",
+          "pisoAtivo": false,
+          "stopVirada": 2,
+          "stopLimiar": 0,
+          "maxViradas": 2,
+          "descVirada": 1,
+          "descModo": "gatilho",
+          "maxEventNotional": 60,
+          "sizeScale": 0.5
+        }
+      },
+      {
+        "id": "sub55-only-hedge",
+        "label": "Só SUB-55 + DESC hedge profundo",
+        "params": {
+          "executionMode": "honest",
+          "mult": [1],
+          "contagio": "off",
+          "pisoAtivo": false,
+          "subLevels": [[55, 15]],
+          "descLevels": [[40, 8], [25, 8], [10, 10]],
+          "maxViradas": 2,
+          "descModo": "comprar",
+          "descVirada": 99,
+          "stopVirada": 2,
+          "stopLimiar": 0.25,
+          "eqLimiteAtivo": true,
+          "maxEventNotional": 50,
+          "sizeScale": 1
+        }
+      },
+      {
+        "id": "fees-off-mult1",
+        "label": "Diagnóstico: MULT1 sem fees",
+        "params": {
+          "executionMode": "honest",
+          "mult": [1],
+          "contagio": "off",
+          "pisoAtivo": false,
+          "applyPolymarketFees": false,
+          "maxEventNotional": 80,
+          "sizeScale": 0.5
+        }
+      },
+      {
+        "id": "optimistic-mult1-cap80",
+        "label": "Optimistic MULT1 cap80 (controle)",
+        "params": {
+          "executionMode": "optimistic",
+          "fokAtivo": false,
+          "mult": [1],
+          "contagio": "off",
+          "pisoAtivo": false,
+          "maxEventNotional": 80,
+          "sizeScale": 1
+        }
+      }
+    ]
+  },
+  "metrics": ["totalPnl", "entries", "winRate", "profitFactor", "maxDrawdown"]
+}

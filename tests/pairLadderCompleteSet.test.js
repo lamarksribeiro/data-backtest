@@ -150,6 +150,61 @@ test('Etapa 9: chase_momo compra o lado cujo ask subiu (underweight)', () => {
   assert.ok(momo.every((f) => f.side === 'DOWN'), 'momo should chase rising Down ask');
 });
 
+test('Etapa 12b: momoBlockFade bloqueia rebalance FADE mid-band', () => {
+  const mk = (blockFade) => pair.createBacktestRunner({
+    spreadCents: 0,
+    slippageCents: 0,
+    seedHedgeSameTick: true,
+    openShares: 50,
+    hedgeShares: 50,
+    clipShares: 50,
+    legChoice: 'chase_momo',
+    momoBlockFade: blockFade,
+    momoLookbackSec: 15,
+    momoMinRise: 0.02,
+    momoMinAsk: 0.20,
+    momoMaxAsk: 0.70,
+    forbidOverweight: true,
+    maxResidualShares: 150,
+    maxFillsPerEvent: 20,
+    lateStartSec: 250,
+    rebalanceMaxAsk: 0.70,
+    chaseMaxAsk: 0.15,
+    stopAvgSum: 0.99,
+    stopMinBalance: 0.5,
+    softLockAllowBuild: true,
+    softLockAllowVacuum: false,
+  });
+
+  // Dual seed, then Down ask FALLS (FADE) while underweight on Down — mid ask ~0.45
+  function runPath(runner) {
+    runner.processTick(makeTick({ offsetMs: 2000, upAsk: 0.55, downAsk: 0.45 }));
+    runner.processTick(makeTick({ offsetMs: 5000, upAsk: 0.52, downAsk: 0.48 }));
+    runner.processTick(makeTick({ offsetMs: 10000, upAsk: 0.50, downAsk: 0.50 }));
+    // Down falling from 0.55→0.45 = FADE; Up rising — underweight depends on inventory
+    runner.processTick(makeTick({ offsetMs: 15000, upAsk: 0.58, downAsk: 0.42 }));
+    runner.processTick(makeTick({ offsetMs: 20000, upAsk: 0.60, downAsk: 0.40 }));
+    runner.processTick(makeTick({ offsetMs: 25000, upAsk: 0.62, downAsk: 0.38 }));
+    runner.processTick(makeTick({ offsetMs: 300000, upAsk: 0.2, downAsk: 0.8, btcPrice: 99 }));
+    return runner.finish().events.find((e) => e.reason !== 'no_entry');
+  }
+
+  const withBlock = runPath(mk(true));
+  const without = runPath(mk(false));
+  assert.ok(withBlock && without);
+  const rebalBlocked = (withBlock.fills || []).filter((f) => f.source === 'rebalance').length;
+  const rebalOpen = (without.fills || []).filter((f) => f.source === 'rebalance').length;
+  assert.ok(
+    rebalBlocked <= rebalOpen,
+    `momoBlockFade should not increase mid rebalance fills (${rebalBlocked} vs ${rebalOpen})`,
+  );
+  // With blockFade, mid FADE rebalances should be zero or only cheap chase
+  const midFadeRebal = (withBlock.fills || []).filter(
+    (f) => f.source === 'rebalance' && f.price > 0.15 && f.price <= 0.70,
+  );
+  assert.equal(midFadeRebal.length, 0, `expected no mid rebalance with momoBlockFade, got ${midFadeRebal.length}`);
+});
+
 test('Etapa 8: rebalance/build não completa hedge antes do dual', () => {
   const baseParams = {
     spreadCents: 0,

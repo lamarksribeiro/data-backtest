@@ -1,0 +1,26 @@
+{
+  "id": "btc-shotandgo-optimistic-control",
+  "name": "Shotandgo · Optimistic control",
+  "studioVersion": 1,
+  "studioName": "Shotandgo · Optimistic (controle)",
+  "role": "control",
+  "notes": "Mesma mecânica Python com fills otimistas (controle negativo — espelha HTML/phantom).",
+  "params": {
+    "mult": [2, 3, 4, 5, 6, 6],
+    "contagio": "global",
+    "contagioMin": 5,
+    "equalizar": true,
+    "eqLimiteAtivo": true,
+    "stopAtivo": true,
+    "pisoAtivo": true,
+    "maxViradasAtivo": true,
+    "maxViradas": 6,
+    "descModo": "gatilho",
+    "descVirada": 5,
+    "executionMode": "optimistic",
+    "fokAtivo": false,
+    "maxEventNotional": 500,
+    "applyPolymarketFees": true,
+    "polymarketFeeCategory": "crypto"
+  }
+}

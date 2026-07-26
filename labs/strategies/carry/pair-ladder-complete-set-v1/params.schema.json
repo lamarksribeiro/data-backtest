@@ -48,6 +48,7 @@
     "momoMinRise": { "type": "number", "minimum": 0.005, "maximum": 0.2 },
     "momoMinAsk": { "type": "number", "minimum": 0.01, "maximum": 0.99 },
     "momoMaxAsk": { "type": "number", "minimum": 0.01, "maximum": 0.99 },
+    "momoBlockFade": { "type": "boolean" },
     "maxEventNotional": { "type": "number", "minimum": 1 },
     "maxSharesPerSide": { "type": "integer", "minimum": 1 },
     "maxFillsPerEvent": { "type": "integer", "minimum": 1 },

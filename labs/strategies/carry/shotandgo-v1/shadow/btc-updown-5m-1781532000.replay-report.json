@@ -1,0 +1,818 @@
+{
+  "slug": "btc-updown-5m-1781532000",
+  "mode": "honest",
+  "pass": false,
+  "criterion": {
+    "seqMatch": false,
+    "fillDivergences": 18,
+    "pnl": {
+      "delta": 0.39999999999997726,
+      "tol": 14.315000000000001,
+      "pass": true
+    }
+  },
+  "shadow": {
+    "fillCount": 19,
+    "sharesUp": 0,
+    "sharesDown": 0,
+    "invested": 286.3,
+    "equalizou": false,
+    "viradas": 5,
+    "pnl": 1.4499999999999886,
+    "winner": "DOWN",
+    "resultado": "EXPOSTO_SYNTH"
+  },
+  "runner": {
+    "fillCount": 14,
+    "sharesUp": 0,
+    "sharesDown": 0,
+    "cost": 276.55,
+    "equalized": false,
+    "viradas": 5,
+    "pnl": 1.849999999999966,
+    "reason": "stop"
+  },
+  "sequence": {
+    "shadow": [
+      "UP|SUB-1",
+      "DOWN|DESC-1",
+      "UP|DESC-1",
+      "DOWN|SUB-1",
+      "UP|SUB-1",
+      "DOWN|DESC-1",
+      "UP|SUB-2",
+      "DOWN|DESC-2",
+      "UP|SUB-3",
+      "DOWN|DESC-3",
+      "UP|SUB-4",
+      "DOWN|DESC-4",
+      "UP|DESC-1",
+      "DOWN|SUB-1",
+      "UP|DESC-2",
+      "DOWN|SUB-2",
+      "UP|SUB-1",
+      "UP|SUB-2",
+      "UP|SUB-5"
+    ],
+    "runner": [
+      "UP|SUB-1",
+      "DOWN|SUB-1",
+      "UP|SUB-1",
+      "DOWN|DESC-1",
+      "UP|SUB-2",
+      "DOWN|DESC-2",
+      "UP|SUB-3",
+      "UP|SUB-4",
+      "DOWN|SUB-1",
+      "UP|DESC-1",
+      "DOWN|SUB-2",
+      "UP|SUB-1",
+      "UP|SUB-2",
+      "UP|SUB-5"
+    ]
+  },
+  "divergences": [
+    {
+      "kind": "mismatch",
+      "idx": 1,
+      "shadow": {
+        "key": "DOWN|DESC-1",
+        "side": "DOWN",
+        "tipo": "DESC-1",
+        "shares": 5,
+        "price": 0.45,
+        "liquidity": "maker"
+      },
+      "runner": {
+        "key": "DOWN|SUB-1",
+        "side": "DOWN",
+        "tipo": "SUB-1",
+        "shares": 40,
+        "price": 0.55,
+        "liquidity": "taker"
+      },
+      "ok": false,
+      "issues": [
+        "tipo/lado DOWN|DESC-1 vs DOWN|SUB-1",
+        "shares Δ=35.00",
+        "price Δ=10.0¢"
+      ]
+    },
+    {
+      "kind": "mismatch",
+      "idx": 2,
+      "shadow": {
+        "key": "UP|DESC-1",
+        "side": "UP",
+        "tipo": "DESC-1",
+        "shares": 5,
+        "price": 0.45,
+        "liquidity": "maker"
+      },
+      "runner": {
+        "key": "UP|SUB-1",
+        "side": "UP",
+        "tipo": "SUB-1",
+        "shares": 60,
+        "price": 0.55,
+        "liquidity": "taker"
+      },
+      "ok": false,
+      "issues": [
+        "tipo/lado UP|DESC-1 vs UP|SUB-1",
+        "shares Δ=55.00",
+        "price Δ=10.0¢"
+      ]
+    },
+    {
+      "kind": "mismatch",
+      "idx": 3,
+      "shadow": {
+        "key": "DOWN|SUB-1",
+        "side": "DOWN",
+        "tipo": "SUB-1",
+        "shares": 40,
+        "price": 0.55,
+        "liquidity": "taker"
+      },
+      "runner": {
+        "key": "DOWN|DESC-1",
+        "side": "DOWN",
+        "tipo": "DESC-1",
+        "shares": 5,
+        "price": 0.45,
+        "liquidity": "maker"
+      },
+      "ok": false,
+      "issues": [
+        "tipo/lado DOWN|SUB-1 vs DOWN|DESC-1",
+        "shares Δ=-35.00",
+        "price Δ=-10.0¢"
+      ]
+    },
+    {
+      "kind": "mismatch",
+      "idx": 4,
+      "shadow": {
+        "key": "UP|SUB-1",
+        "side": "UP",
+        "tipo": "SUB-1",
+        "shares": 60,
+        "price": 0.55,
+        "liquidity": "taker"
+      },
+      "runner": {
+        "key": "UP|SUB-2",
+        "side": "UP",
+        "tipo": "SUB-2",
+        "shares": 15,
+        "price": 0.6,
+        "liquidity": "taker"
+      },
+      "ok": false,
+      "issues": [
+        "tipo/lado UP|SUB-1 vs UP|SUB-2",
+        "shares Δ=-45.00",
+        "price Δ=5.0¢"
+      ]
+    },
+    {
+      "kind": "mismatch",
+      "idx": 5,
+      "shadow": {
+        "key": "DOWN|DESC-1",
+        "side": "DOWN",
+        "tipo": "DESC-1",
+        "shares": 5,
+        "price": 0.45,
+        "liquidity": "maker"
+      },
+      "runner": {
+        "key": "DOWN|DESC-2",
+        "side": "DOWN",
+        "tipo": "DESC-2",
+        "shares": 5,
+        "price": 0.4,
+        "liquidity": "maker"
+      },
+      "ok": false,
+      "issues": [
+        "tipo/lado DOWN|DESC-1 vs DOWN|DESC-2",
+        "price Δ=-5.0¢"
+      ]
+    },
+    {
+      "kind": "mismatch",
+      "idx": 6,
+      "shadow": {
+        "key": "UP|SUB-2",
+        "side": "UP",
+        "tipo": "SUB-2",
+        "shares": 15,
+        "price": 0.6,
+        "liquidity": "taker"
+      },
+      "runner": {
+        "key": "UP|SUB-3",
+        "side": "UP",
+        "tipo": "SUB-3",
+        "shares": 10,
+        "price": 0.65,
+        "liquidity": "taker"
+      },
+      "ok": false,
+      "issues": [
+        "tipo/lado UP|SUB-2 vs UP|SUB-3",
+        "shares Δ=-5.00",
+        "price Δ=5.0¢"
+      ]
+    },
+    {
+      "kind": "mismatch",
+      "idx": 7,
+      "shadow": {
+        "key": "DOWN|DESC-2",
+        "side": "DOWN",
+        "tipo": "DESC-2",
+        "shares": 5,
+        "price": 0.4,
+        "liquidity": "maker"
+      },
+      "runner": {
+        "key": "UP|SUB-4",
+        "side": "UP",
+        "tipo": "SUB-4",
+        "shares": 10,
+        "price": 0.7,
+        "liquidity": "taker"
+      },
+      "ok": false,
+      "issues": [
+        "tipo/lado DOWN|DESC-2 vs UP|SUB-4",
+        "shares Δ=5.00",
+        "price Δ=30.0¢"
+      ]
+    },
+    {
+      "kind": "mismatch",
+      "idx": 8,
+      "shadow": {
+        "key": "UP|SUB-3",
+        "side": "UP",
+        "tipo": "SUB-3",
+        "shares": 10,
+        "price": 0.65,
+        "liquidity": "taker"
+      },
+      "runner": {
+        "key": "DOWN|SUB-1",
+        "side": "DOWN",
+        "tipo": "SUB-1",
+        "shares": 80,
+        "price": 0.55,
+        "liquidity": "taker"
+      },
+      "ok": false,
+      "issues": [
+        "tipo/lado UP|SUB-3 vs DOWN|SUB-1",
+        "shares Δ=70.00",
+        "price Δ=-10.0¢"
+      ]
+    },
+    {
+      "kind": "mismatch",
+      "idx": 9,
+      "shadow": {
+        "key": "DOWN|DESC-3",
+        "side": "DOWN",
+        "tipo": "DESC-3",
+        "shares": 5,
+        "price": 0.35,
+        "liquidity": "maker"
+      },
+      "runner": {
+        "key": "UP|DESC-1",
+        "side": "UP",
+        "tipo": "DESC-1",
+        "shares": 5,
+        "price": 0.45,
+        "liquidity": "maker"
+      },
+      "ok": false,
+      "issues": [
+        "tipo/lado DOWN|DESC-3 vs UP|DESC-1",
+        "price Δ=10.0¢"
+      ]
+    },
+    {
+      "kind": "mismatch",
+      "idx": 10,
+      "shadow": {
+        "key": "UP|SUB-4",
+        "side": "UP",
+        "tipo": "SUB-4",
+        "shares": 10,
+        "price": 0.7,
+        "liquidity": "taker"
+      },
+      "runner": {
+        "key": "DOWN|SUB-2",
+        "side": "DOWN",
+        "tipo": "SUB-2",
+        "shares": 30,
+        "price": 0.6,
+        "liquidity": "taker"
+      },
+      "ok": false,
+      "issues": [
+        "tipo/lado UP|SUB-4 vs DOWN|SUB-2",
+        "shares Δ=20.00",
+        "price Δ=-10.0¢"
+      ]
+    },
+    {
+      "kind": "mismatch",
+      "idx": 11,
+      "shadow": {
+        "key": "DOWN|DESC-4",
+        "side": "DOWN",
+        "tipo": "DESC-4",
+        "shares": 5,
+        "price": 0.3,
+        "liquidity": "maker"
+      },
+      "runner": {
+        "key": "UP|SUB-1",
+        "side": "UP",
+        "tipo": "SUB-1",
+        "shares": 100,
+        "price": 0.55,
+        "liquidity": "taker"
+      },
+      "ok": false,
+      "issues": [
+        "tipo/lado DOWN|DESC-4 vs UP|SUB-1",
+        "shares Δ=95.00",
+        "price Δ=25.0¢"
+      ]
+    },
+    {
+      "kind": "mismatch",
+      "idx": 12,
+      "shadow": {
+        "key": "UP|DESC-1",
+        "side": "UP",
+        "tipo": "DESC-1",
+        "shares": 5,
+        "price": 0.45,
+        "liquidity": "maker"
+      },
+      "runner": {
+        "key": "UP|SUB-2",
+        "side": "UP",
+        "tipo": "SUB-2",
+        "shares": 75,
+        "price": 0.6,
+        "liquidity": "taker"
+      },
+      "ok": false,
+      "issues": [
+        "tipo/lado UP|DESC-1 vs UP|SUB-2",
+        "shares Δ=70.00",
+        "price Δ=15.0¢"
+      ]
+    },
+    {
+      "kind": "mismatch",
+      "idx": 13,
+      "shadow": {
+        "key": "DOWN|SUB-1",
+        "side": "DOWN",
+        "tipo": "SUB-1",
+        "shares": 80,
+        "price": 0.55,
+        "liquidity": "taker"
+      },
+      "runner": {
+        "key": "UP|SUB-5",
+        "side": "UP",
+        "tipo": "SUB-5",
+        "shares": 25,
+        "price": 0.75,
+        "liquidity": "taker"
+      },
+      "ok": false,
+      "issues": [
+        "tipo/lado DOWN|SUB-1 vs UP|SUB-5",
+        "shares Δ=-55.00",
+        "price Δ=20.0¢"
+      ]
+    },
+    {
+      "kind": "missing_runner",
+      "idx": 14,
+      "shadow": {
+        "key": "UP|DESC-2",
+        "side": "UP",
+        "tipo": "DESC-2",
+        "shares": 5,
+        "price": 0.4,
+        "liquidity": "maker"
+      }
+    },
+    {
+      "kind": "missing_runner",
+      "idx": 15,
+      "shadow": {
+        "key": "DOWN|SUB-2",
+        "side": "DOWN",
+        "tipo": "SUB-2",
+        "shares": 30,
+        "price": 0.6,
+        "liquidity": "taker"
+      }
+    },
+    {
+      "kind": "missing_runner",
+      "idx": 16,
+      "shadow": {
+        "key": "UP|SUB-1",
+        "side": "UP",
+        "tipo": "SUB-1",
+        "shares": 100,
+        "price": 0.55,
+        "liquidity": "taker"
+      }
+    },
+    {
+      "kind": "missing_runner",
+      "idx": 17,
+      "shadow": {
+        "key": "UP|SUB-2",
+        "side": "UP",
+        "tipo": "SUB-2",
+        "shares": 75,
+        "price": 0.6,
+        "liquidity": "taker"
+      }
+    },
+    {
+      "kind": "missing_runner",
+      "idx": 18,
+      "shadow": {
+        "key": "UP|SUB-5",
+        "side": "UP",
+        "tipo": "SUB-5",
+        "shares": 25,
+        "price": 0.75,
+        "liquidity": "taker"
+      }
+    }
+  ],
+  "pairedSample": [
+    {
+      "idx": 0,
+      "shadow": {
+        "key": "UP|SUB-1",
+        "side": "UP",
+        "tipo": "SUB-1",
+        "shares": 20,
+        "price": 0.59,
+        "liquidity": "taker"
+      },
+      "runner": {
+        "key": "UP|SUB-1",
+        "side": "UP",
+        "tipo": "SUB-1",
+        "shares": 20,
+        "price": 0.59,
+        "liquidity": "taker"
+      },
+      "ok": true,
+      "issues": []
+    },
+    {
+      "idx": 1,
+      "shadow": {
+        "key": "DOWN|DESC-1",
+        "side": "DOWN",
+        "tipo": "DESC-1",
+        "shares": 5,
+        "price": 0.45,
+        "liquidity": "maker"
+      },
+      "runner": {
+        "key": "DOWN|SUB-1",
+        "side": "DOWN",
+        "tipo": "SUB-1",
+        "shares": 40,
+        "price": 0.55,
+        "liquidity": "taker"
+      },
+      "ok": false,
+      "issues": [
+        "tipo/lado DOWN|DESC-1 vs DOWN|SUB-1",
+        "shares Δ=35.00",
+        "price Δ=10.0¢"
+      ]
+    },
+    {
+      "idx": 2,
+      "shadow": {
+        "key": "UP|DESC-1",
+        "side": "UP",
+        "tipo": "DESC-1",
+        "shares": 5,
+        "price": 0.45,
+        "liquidity": "maker"
+      },
+      "runner": {
+        "key": "UP|SUB-1",
+        "side": "UP",
+        "tipo": "SUB-1",
+        "shares": 60,
+        "price": 0.55,
+        "liquidity": "taker"
+      },
+      "ok": false,
+      "issues": [
+        "tipo/lado UP|DESC-1 vs UP|SUB-1",
+        "shares Δ=55.00",
+        "price Δ=10.0¢"
+      ]
+    },
+    {
+      "idx": 3,
+      "shadow": {
+        "key": "DOWN|SUB-1",
+        "side": "DOWN",
+        "tipo": "SUB-1",
+        "shares": 40,
+        "price": 0.55,
+        "liquidity": "taker"
+      },
+      "runner": {
+        "key": "DOWN|DESC-1",
+        "side": "DOWN",
+        "tipo": "DESC-1",
+        "shares": 5,
+        "price": 0.45,
+        "liquidity": "maker"
+      },
+      "ok": false,
+      "issues": [
+        "tipo/lado DOWN|SUB-1 vs DOWN|DESC-1",
+        "shares Δ=-35.00",
+        "price Δ=-10.0¢"
+      ]
+    },
+    {
+      "idx": 4,
+      "shadow": {
+        "key": "UP|SUB-1",
+        "side": "UP",
+        "tipo": "SUB-1",
+        "shares": 60,
+        "price": 0.55,
+        "liquidity": "taker"
+      },
+      "runner": {
+        "key": "UP|SUB-2",
+        "side": "UP",
+        "tipo": "SUB-2",
+        "shares": 15,
+        "price": 0.6,
+        "liquidity": "taker"
+      },
+      "ok": false,
+      "issues": [
+        "tipo/lado UP|SUB-1 vs UP|SUB-2",
+        "shares Δ=-45.00",
+        "price Δ=5.0¢"
+      ]
+    },
+    {
+      "idx": 5,
+      "shadow": {
+        "key": "DOWN|DESC-1",
+        "side": "DOWN",
+        "tipo": "DESC-1",
+        "shares": 5,
+        "price": 0.45,
+        "liquidity": "maker"
+      },
+      "runner": {
+        "key": "DOWN|DESC-2",
+        "side": "DOWN",
+        "tipo": "DESC-2",
+        "shares": 5,
+        "price": 0.4,
+        "liquidity": "maker"
+      },
+      "ok": false,
+      "issues": [
+        "tipo/lado DOWN|DESC-1 vs DOWN|DESC-2",
+        "price Δ=-5.0¢"
+      ]
+    },
+    {
+      "idx": 6,
+      "shadow": {
+        "key": "UP|SUB-2",
+        "side": "UP",
+        "tipo": "SUB-2",
+        "shares": 15,
+        "price": 0.6,
+        "liquidity": "taker"
+      },
+      "runner": {
+        "key": "UP|SUB-3",
+        "side": "UP",
+        "tipo": "SUB-3",
+        "shares": 10,
+        "price": 0.65,
+        "liquidity": "taker"
+      },
+      "ok": false,
+      "issues": [
+        "tipo/lado UP|SUB-2 vs UP|SUB-3",
+        "shares Δ=-5.00",
+        "price Δ=5.0¢"
+      ]
+    },
+    {
+      "idx": 7,
+      "shadow": {
+        "key": "DOWN|DESC-2",
+        "side": "DOWN",
+        "tipo": "DESC-2",
+        "shares": 5,
+        "price": 0.4,
+        "liquidity": "maker"
+      },
+      "runner": {
+        "key": "UP|SUB-4",
+        "side": "UP",
+        "tipo": "SUB-4",
+        "shares": 10,
+        "price": 0.7,
+        "liquidity": "taker"
+      },
+      "ok": false,
+      "issues": [
+        "tipo/lado DOWN|DESC-2 vs UP|SUB-4",
+        "shares Δ=5.00",
+        "price Δ=30.0¢"
+      ]
+    },
+    {
+      "idx": 8,
+      "shadow": {
+        "key": "UP|SUB-3",
+        "side": "UP",
+        "tipo": "SUB-3",
+        "shares": 10,
+        "price": 0.65,
+        "liquidity": "taker"
+      },
+      "runner": {
+        "key": "DOWN|SUB-1",
+        "side": "DOWN",
+        "tipo": "SUB-1",
+        "shares": 80,
+        "price": 0.55,
+        "liquidity": "taker"
+      },
+      "ok": false,
+      "issues": [
+        "tipo/lado UP|SUB-3 vs DOWN|SUB-1",
+        "shares Δ=70.00",
+        "price Δ=-10.0¢"
+      ]
+    },
+    {
+      "idx": 9,
+      "shadow": {
+        "key": "DOWN|DESC-3",
+        "side": "DOWN",
+        "tipo": "DESC-3",
+        "shares": 5,
+        "price": 0.35,
+        "liquidity": "maker"
+      },
+      "runner": {
+        "key": "UP|DESC-1",
+        "side": "UP",
+        "tipo": "DESC-1",
+        "shares": 5,
+        "price": 0.45,
+        "liquidity": "maker"
+      },
+      "ok": false,
+      "issues": [
+        "tipo/lado DOWN|DESC-3 vs UP|DESC-1",
+        "price Δ=10.0¢"
+      ]
+    },
+    {
+      "idx": 10,
+      "shadow": {
+        "key": "UP|SUB-4",
+        "side": "UP",
+        "tipo": "SUB-4",
+        "shares": 10,
+        "price": 0.7,
+        "liquidity": "taker"
+      },
+      "runner": {
+        "key": "DOWN|SUB-2",
+        "side": "DOWN",
+        "tipo": "SUB-2",
+        "shares": 30,
+        "price": 0.6,
+        "liquidity": "taker"
+      },
+      "ok": false,
+      "issues": [
+        "tipo/lado UP|SUB-4 vs DOWN|SUB-2",
+        "shares Δ=20.00",
+        "price Δ=-10.0¢"
+      ]
+    },
+    {
+      "idx": 11,
+      "shadow": {
+        "key": "DOWN|DESC-4",
+        "side": "DOWN",
+        "tipo": "DESC-4",
+        "shares": 5,
+        "price": 0.3,
+        "liquidity": "maker"
+      },
+      "runner": {
+        "key": "UP|SUB-1",
+        "side": "UP",
+        "tipo": "SUB-1",
+        "shares": 100,
+        "price": 0.55,
+        "liquidity": "taker"
+      },
+      "ok": false,
+      "issues": [
+        "tipo/lado DOWN|DESC-4 vs UP|SUB-1",
+        "shares Δ=95.00",
+        "price Δ=25.0¢"
+      ]
+    },
+    {
+      "idx": 12,
+      "shadow": {
+        "key": "UP|DESC-1",
+        "side": "UP",
+        "tipo": "DESC-1",
+        "shares": 5,
+        "price": 0.45,
+        "liquidity": "maker"
+      },
+      "runner": {
+        "key": "UP|SUB-2",
+        "side": "UP",
+        "tipo": "SUB-2",
+        "shares": 75,
+        "price": 0.6,
+        "liquidity": "taker"
+      },
+      "ok": false,
+      "issues": [
+        "tipo/lado UP|DESC-1 vs UP|SUB-2",
+        "shares Δ=70.00",
+        "price Δ=15.0¢"
+      ]
+    },
+    {
+      "idx": 13,
+      "shadow": {
+        "key": "DOWN|SUB-1",
+        "side": "DOWN",
+        "tipo": "SUB-1",
+        "shares": 80,
+        "price": 0.55,
+        "liquidity": "taker"
+      },
+      "runner": {
+        "key": "UP|SUB-5",
+        "side": "UP",
+        "tipo": "SUB-5",
+        "shares": 25,
+        "price": 0.75,
+        "liquidity": "taker"
+      },
+      "ok": false,
+      "issues": [
+        "tipo/lado DOWN|SUB-1 vs UP|SUB-5",
+        "shares Δ=-55.00",
+        "price Δ=20.0¢"
+      ]
+    }
+  ]
+}

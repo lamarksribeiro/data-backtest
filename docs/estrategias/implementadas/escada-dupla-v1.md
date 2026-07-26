@@ -11,7 +11,9 @@
 **Simulador de referência:** `Simulador_manual85.html`  
 **Data:** 2026-07-24 (promoção Studio 2026-07-25)
 
-> 🪦 **REJEITADA (2026-07-26):** a Etapa 1 da auditoria foi executada — modo honesto `taker_limit` + latência em janela limpa (mai–jun, 61 dias) → **todas as configs perdem** (PF 0,60–0,84, 0–9 dias positivos). O edge do campeão era artefato de preço fantasma. **Proibido conta real / data-robot.** Post-mortem: [`../../rejeitadas/escada-dupla-v1.md`](../../rejeitadas/escada-dupla-v1.md) · Auditoria: [`../auditoria-escada-dupla-realismo-2026-07-25.md`](../auditoria-escada-dupla-realismo-2026-07-25.md)
+> 🪦 **REJEITADA (2026-07-26):** a Etapa 1 da auditoria foi executada — modo honesto `taker_limit` + latência em janela limpa (mai–jun, 61 dias) → **todas as configs perdem** (PF 0,60–0,84, 0–9 dias positivos). O edge do campeão era artefato de preço fantasma. **Proibido conta real / data-robot** para este perfil `ascent_hedge`. Post-mortem: [`../../rejeitadas/escada-dupla-v1.md`](../../rejeitadas/escada-dupla-v1.md) · Auditoria: [`../auditoria-escada-dupla-realismo-2026-07-25.md`](../auditoria-escada-dupla-realismo-2026-07-25.md)
+>
+> **Adendo:** a variante live do `Phil_Hopper_Real.py` (Shotandgo com MULT/contagio/STOP/PISO) **não é este perfil** — research reaberta em [`../nao-implementadas/shotandgo-v1.md`](../nao-implementadas/shotandgo-v1.md).
 
 > Seed Studio: `npm run seed:ported-strategies` (ou reiniciar `src/server.js`).  
 > Não usar `lab:promote-to-studio` (só GLS).

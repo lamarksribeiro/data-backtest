@@ -1,0 +1,33 @@
+{
+  "id": "shotandgo-v1",
+  "name": "Shotandgo V1 (Phil Escada Dupla)",
+  "family": "carry",
+  "status": "research",
+  "kind": "library-runner",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "library-runner",
+    "runnerSlug": "shotandgo-runner",
+    "runnerVersion": 1
+  },
+  "portStatus": "ported",
+  "promotedToStudio": false,
+  "studioSlug": null,
+  "studio": {
+    "description": "Port fiel do Phil_Hopper_Real.py (Escada Dupla / Shotandgo): MULT[], contagio, STOP, PISO, DESC_MODO, EQ-limite, execução honest/optimistic. Research reaberta — post-mortem ascent_hedge não cobre esta variante.",
+    "tags": [
+      "shotandgo",
+      "escada-dupla",
+      "carry",
+      "dual-ladder",
+      "martingale",
+      "btc",
+      "research",
+      "python-parity"
+    ]
+  },
+  "notes": "Fonte: polymarket-fm/Phil_Hopper_Real.py. Runner: shotandgo-runner@1. Doc: docs/estrategias/nao-implementadas/shotandgo-v1.md"
+}

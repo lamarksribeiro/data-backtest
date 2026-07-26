@@ -396,3 +396,53 @@ Params GLS (`strategy.gls`, já implementados): `oddsShockEnabled: true, oddsSho
 **Custo/benefício honesto:** o filtro não aumenta o lucro médio; ele **compra seguro de cauda de graça** (paga −1% de PnL por −80% no pior dia de julho). Promover como A/B **depois** dos itens de execução (§6) e escala (§10.4). Porte para o robot: o `midasV1.js` precisa das séries `upAsk/downAsk` com lookback 2s (o snapshot loop hot de 50ms já as tem) e da ação de exit parcial (50% do qty) via GTC marketable.
 
 **Reprodução:** `experiments/odds-shock-bidfloor-{july,june}.json`, `odds-shock-booklead-{july,june}.json`; histórico negativo do exit puro em `odds-shock-{july,train,train-focus}.json` e contrafactuais `labs/sandbox/midas-odds-vel-cf-report.md`.
+
+---
+
+## 12. MIDAS-GOLD — a arquitetura final reformulada
+
+*(Consolidação de todas as rodadas. Este é o estado-da-arte da estratégia; supersede as recomendações parciais das §5/§9.)*
+
+### 12.1 Definição
+
+**MIDAS-GOLD = g3-os × {BTC, ETH} + compounding 2% da equity**, deployado na ordem da §12.4.
+
+O núcleo **g3-os** (aprovado em `labs/sandbox/midas-package-final-aprovacao.md`) é o envelope base + 3 mecanismos:
+
+| Camada | Config | Papel |
+|---|---|---|
+| Envelope | maxAsk 0,94 · dist 40 · tier 2,0 · minSecondsLeft 9 | Captura o carry terminal completo |
+| Guardian (tierMinZ 2,0) | favorito caro só com z ≥ 2 | Mata a cauda dos dias ruins |
+| Odds-shock partial50 (§11) | Δ0,15/2s · opp ≥ 0,50 · bid ≥ 0,55×entry · vende 50% | Seguro contra a virada brusca (book lidera o spot) |
+| Proteções V7 | lateFlip exit+reverse full · danger 4s | Valor comprovado (+$160/mês micro) |
+
+### 12.2 Números (execução honesta, micro $2/$4, julho 01–25 + junho stress)
+
+| Config | Jul PnL | Jul PF | Jul pior dia | Jun PnL | Jun PF | Pior caso (hold) |
+|---|--:|--:|--:|--:|--:|---|
+| BTC g3-os | 432,9 | 1,65 | **−0,22** | 112,5 | 1,67 | PF 1,33 jul / 1,19 jun |
+| **ETH g3-os (novo)** | **247,9** | 1,40 | −5,7 (24/25 dias+) | — | — | PF 1,20, +$142,7 |
+| SOL g3-os | 102,4 | 1,27 | — | — | — | **REPROVADO** (hold > protect: proteções BTC-calibradas custam na vol do SOL) |
+| BTC g3-os **eq2pct** (banca $100, single-pass) | **3.502,8** | **1,59** | — | — | — | compound preserva PF |
+| BTC g3-os eq3pct | 4.227,9 | 1,54 | — | — | — | rende mais, degrada PF — não usar |
+
+Portfólio micro BTC+ETH: ~$681/25d por $4–8 de exposição simultânea, com DDs de dias diferentes (diversificação real). Os gates z são adimensionais (dist/σ√τ auto-normaliza por ativo) — o mesmo preset portou para ETH sem recalibração; os gates em USD (maxDistAbs 40, maxAdverseSpotChange 8) são frouxos em ETH e irrelevantes nos testes (variantes dist-wide idênticas).
+
+### 12.3 Linhas exploradas e fechadas (não reabrir sem dado novo)
+
+Multi-zona (PF 0,4–0,6), probe-entry (−50% PnL), breakers de dia (pior dia piora), exit total no odds-shock (regime-dependente), earlyWarn/bookCollapse/reverse-no-choque, envelope reduzido (honest-v2, robust dist30/tier1.5), SOL sem recalibração própria.
+
+### 12.4 Ordem de deploy (imutável)
+
+```text
+1. data-robot: fix GTC per-leg + uptime 24/7        ← vale ~4× o lucro capturado hoje
+2. Porte guardian-v3: minSecondsLeft 9 + tierMinZ 2.0 (5 linhas em midasV1.js)
+3. Gates §6.2 por 72h no canário BTC $2/$4
+4. Escala 2× ($4/$8)  →  +72h de gates
+5. Ligar compounding: equityScalePct 0.02, teto por evento subindo 8→16→40 conforme gates
+6. A/B odds-shock partial50 (porte: séries ask lookback 2s + exit parcial 50% GTC)
+7. Canário ETH $2/$4 (preset eth-micro-gold-v1) — diversificação
+Teto por evento $40 (liquidez BTC); crescimento além disso = mais ativos, nunca mais budget
+```
+
+**Presets de paridade:** `btc-micro-guardian-v3-os.json` (Estúdio v9, campeão BTC) · `eth-micro-gold-v1.json` (Estúdio v10, candidato ETH). Experimentos desta seção: `gold-compound-july.json`, `gold-eth-july.json`, `gold-sol-july.json`.

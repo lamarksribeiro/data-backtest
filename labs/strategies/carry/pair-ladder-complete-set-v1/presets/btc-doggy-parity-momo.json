@@ -1,14 +1,15 @@
 {
   "id": "btc-doggy-parity-momo",
-  "label": "BTC Doggy Parity + chase_momo (RE Etapa 9)",
+  "label": "BTC Doggy Parity + chase_momo + noFade (RE Etapa 12 freeze)",
   "params": {
     "mode": "clip_ladder",
     "fillMode": "taker",
     "spreadCents": 0,
-    "slippageCents": 0,
+    "slippageCents": -1,
     "legChoice": "chase_momo",
+    "momoBlockFade": true,
     "momoLookbackSec": 15,
-    "momoMinRise": 0.03,
+    "momoMinRise": 0.02,
     "momoMinAsk": 0.20,
     "momoMaxAsk": 0.70,
     "openShares": 50,
@@ -42,5 +43,5 @@
     "applyPolymarketFees": true,
     "polymarketFeeCategory": "crypto"
   },
-  "notes": "RE Etapa 9: legChoice=chase_momo (rise≥3¢/15s). Melhor ablação both −$1,3k vs min_avg_sum −$1,8k — ainda longe do Doggy. Research only. Sem conta real."
+  "notes": "RE Etapa 12 freeze: chase_momo + momoBlockFade (+slippageCents=-1). Melhor lab both ≈−$1,3k vs Doggy +$83 — gap 1Hz não fecha. Research only. Sem conta real. Não promover."
 }

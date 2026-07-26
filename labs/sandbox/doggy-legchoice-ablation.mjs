@@ -1,5 +1,5 @@
 /**
- * Etapa 9: ablação A/B legChoice min_avg_sum vs chase_momo (both 24–25).
+ * Etapa 9 + 12: ablação legChoice / vacuum-unlock / no-fade (both 24–25).
  *
  * Usage:
  *   node labs/sandbox/doggy-legchoice-ablation.mjs
@@ -62,6 +62,9 @@ function utcDay(ts) {
 function eventStartFromSlug(slug) {
   const m = String(slug || '').match(/btc-updown-5m-(\d+)/i);
   return m ? Number(m[1]) : null;
+}
+function vacuumCount(sources) {
+  return (sources?.vacuum || 0) + (sources?.vacuum_ultra || 0);
 }
 
 function buildDoggy(activity) {
@@ -145,6 +148,7 @@ function runLab(ticks, params) {
       upShares: e.upShares ?? 0,
       downShares: e.downShares ?? 0,
       sources,
+      vacuumFills: vacuumCount(sources),
     });
   }
   return { summary: res.summary, bySlug };
@@ -163,8 +167,33 @@ async function main() {
     { name: 'min_avg_sum', params: { legChoice: 'min_avg_sum' } },
     { name: 'chase_momo', params: { legChoice: 'chase_momo' } },
     { name: 'chase_momo_rise3', params: { legChoice: 'chase_momo', momoMinRise: 0.03 } },
-    { name: 'chase_momo_band4055', params: { legChoice: 'chase_momo', momoMinAsk: 0.40, momoMaxAsk: 0.55 } },
-    { name: 'chase_momo_clip50', params: { legChoice: 'chase_momo', clipShares: 50 } },
+    {
+      name: 'chase_momo_vac_unlock',
+      params: {
+        legChoice: 'chase_momo',
+        lateStartSec: 120,
+        lateMaxAsk: 0.20,
+        lateClipShares: 100,
+        lateOnlyImprove: false,
+        maxFillsPerEvent: 16,
+      },
+    },
+    {
+      name: 'chase_momo_no_fade',
+      params: { legChoice: 'chase_momo', momoBlockFade: true },
+    },
+    {
+      name: 'chase_momo_vac_nofade',
+      params: {
+        legChoice: 'chase_momo',
+        momoBlockFade: true,
+        lateStartSec: 120,
+        lateMaxAsk: 0.20,
+        lateClipShares: 100,
+        lateOnlyImprove: false,
+        maxFillsPerEvent: 16,
+      },
+    },
   ];
 
   const results = [];
@@ -197,9 +226,12 @@ async function main() {
         labRes: lab.residual,
         labFills: lab.fills,
         momoFills: lab.sources?.momo || 0,
+        vacuumFills: lab.vacuumFills || 0,
+        rebalanceFills: lab.sources?.rebalance || 0,
       });
     }
 
+    const vacPer = both.map((r) => r.vacuumFills);
     results.push({
       name: v.name,
       params: v.params,
@@ -214,6 +246,10 @@ async function main() {
       medLabRes: q(both.map((r) => r.labRes).filter((x) => x != null), 0.5),
       medLabFills: q(both.map((r) => r.labFills), 0.5),
       momoFillTotal: both.reduce((s, r) => s + r.momoFills, 0),
+      vacuumFillTotal: both.reduce((s, r) => s + r.vacuumFills, 0),
+      rebalanceFillTotal: both.reduce((s, r) => s + r.rebalanceFills, 0),
+      medVacuumPerEvent: q(vacPer, 0.5),
+      meanVacuumPerEvent: mean(vacPer),
       sources: srcAll,
       wr: both.length ? both.filter((r) => r.labPnl > 0).length / both.length : null,
     });
@@ -221,16 +257,18 @@ async function main() {
 
   results.sort((a, b) => b.bothPnl - a.bothPnl);
   const base = results.find((r) => r.name === 'min_avg_sum');
+  const momo = results.find((r) => r.name === 'chase_momo');
   const best = results[0];
 
   const rules = [
-    `Baseline min_avg_sum bothPnL=${base?.bothPnl?.toFixed?.(0)} medΔ=${base?.medDelta?.toFixed?.(1)} avgSum med=${base?.medLabAvg?.toFixed?.(3)}.`,
-    `Melhor variante: ${best.name} bothPnL=${best.bothPnl.toFixed(0)} (Δ vs baseline ${(best.bothPnl - (base?.bothPnl || 0)).toFixed(0)}) medΔ=${best.medDelta?.toFixed?.(1)}.`,
-    `Doggy both Σ=${base?.doggyPnl?.toFixed?.(0)}. Gap restante best→Doggy=${(best.bothPnl - (base?.doggyPnl || 0)).toFixed(0)}.`,
-    `momo fills (best): ${best.momoFillTotal}. Sources best: ${JSON.stringify(best.sources)}.`,
-    best.bothPnl > (base?.bothPnl || -Infinity) + 100
-      ? 'chase_momo material vs min_avg_sum — candidata a preset research.'
-      : 'chase_momo não fechou gap material no lake 1Hz — seleção Doggy ainda acima do sinal público.',
+    `Baseline min_avg_sum bothPnL=${base?.bothPnl?.toFixed?.(0)} medΔ=${base?.medDelta?.toFixed?.(1)}.`,
+    `chase_momo bothPnL=${momo?.bothPnl?.toFixed?.(0)} vacuumTotal=${momo?.vacuumFillTotal} medVac/ev=${momo?.medVacuumPerEvent}.`,
+    `Melhor variante: ${best.name} bothPnL=${best.bothPnl.toFixed(0)} (Δ vs chase_momo ${(best.bothPnl - (momo?.bothPnl || 0)).toFixed(0)}) medΔ=${best.medDelta?.toFixed?.(1)} vacuumTotal=${best.vacuumFillTotal} medVac/ev=${best.medVacuumPerEvent}.`,
+    `Doggy both Σ=${base?.doggyPnl?.toFixed?.(0)}. Gap best→Doggy=${(best.bothPnl - (base?.doggyPnl || 0)).toFixed(0)}.`,
+    `Sources best: ${JSON.stringify(best.sources)}.`,
+    (best.bothPnl - (momo?.bothPnl || 0)) >= 700 && (best.medVacuumPerEvent ?? 0) >= 1
+      ? 'Etapa 12 sucesso: vacuum unlock / no-fade material (≥+$700 e medVac≥1).'
+      : 'Etapa 12: gap path ainda não fechado no lake 1Hz — edge Doggy provavelmente intra-segundo / seleção não replicável.',
   ];
 
   const summary = {
@@ -249,6 +287,9 @@ async function main() {
       medDelta: r.medDelta != null ? Math.round(r.medDelta * 10) / 10 : null,
       medLabAvg: r.medLabAvg != null ? Math.round(r.medLabAvg * 1000) / 1000 : null,
       momoFills: r.momoFillTotal,
+      vacuumFills: r.vacuumFillTotal,
+      rebalanceFills: r.rebalanceFillTotal,
+      medVacPerEv: r.medVacuumPerEvent,
       wr: r.wr != null ? Math.round(r.wr * 1000) / 10 : null,
       sources: r.sources,
     })),

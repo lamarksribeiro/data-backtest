@@ -1,0 +1,40 @@
+export default strategy({
+  name: "Shotandgo V1",
+
+  dependencies: {
+    runner: strategyLibrary("shotandgo-runner", 1),
+  },
+
+  params: {
+    walletSize: 100,
+    sizeScale: 1,
+    mult: [2, 3, 4, 5, 6, 6],
+    contagio: "global",
+    contagioMin: 5,
+    equalizar: true,
+    eqPreco: 0.05,
+    eqEncerra: true,
+    eqLimiteAtivo: true,
+    stopAtivo: true,
+    stopVirada: 4,
+    stopLimiar: 1.0,
+    pisoAtivo: true,
+    pisoViradas: [4, 5],
+    pisoMargem: 0.20,
+    maxViradasAtivo: true,
+    maxViradas: 6,
+    descModo: "gatilho",
+    descVirada: 5,
+    fokAtivo: true,
+    executionMode: "honest",
+    takerPriceMode: "taker_limit",
+    takerLatencyTicks: 0,
+    maxEventNotional: 500,
+    applyPolymarketFees: true,
+    polymarketFeeCategory: "crypto",
+  },
+
+  onEventStart() {},
+  onTick() {},
+  onEventEnd() {},
+});

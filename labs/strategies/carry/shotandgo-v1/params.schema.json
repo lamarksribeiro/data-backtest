@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "walletSize": { "type": "number", "minimum": 1 },
+    "sizeScale": { "type": "number", "minimum": 0.05, "maximum": 5 },
+    "mult": {
+      "type": "array",
+      "items": { "type": "number", "minimum": 0.1 },
+      "minItems": 1
+    },
+    "contagio": { "type": "string", "enum": ["off", "piso", "lado", "global"] },
+    "contagioMin": { "type": "number", "minimum": 1 },
+    "equalizar": { "type": "boolean" },
+    "eqPreco": { "type": "number", "minimum": 0.01, "maximum": 0.2 },
+    "eqEncerra": { "type": "boolean" },
+    "equalizaIgnoraTeto": { "type": "boolean" },
+    "eqLimiteAtivo": { "type": "boolean" },
+    "eqLimiteArmaC": { "type": "number", "minimum": 1, "maximum": 50 },
+    "eqLimiteCancelaC": { "type": "number", "minimum": 5, "maximum": 90 },
+    "eqLimiteReposta": { "type": "boolean" },
+    "eqLimiteResizeSh": { "type": "number", "minimum": 0 },
+    "stopAtivo": { "type": "boolean" },
+    "stopVirada": { "type": "integer", "minimum": 1 },
+    "stopLimiar": { "type": "number" },
+    "pisoAtivo": { "type": "boolean" },
+    "pisoViradas": {
+      "type": "array",
+      "items": { "type": "integer", "minimum": 1 }
+    },
+    "pisoMargem": { "type": "number", "minimum": 0, "maximum": 2 },
+    "maxViradasAtivo": { "type": "boolean" },
+    "maxViradas": { "type": "integer", "minimum": 1 },
+    "descModo": { "type": "string", "enum": ["comprar", "gatilho", "congela"] },
+    "descVirada": { "type": "integer", "minimum": 1 },
+    "saidaAtiva": { "type": "boolean" },
+    "saidaVirada": { "type": "integer", "minimum": 1 },
+    "saidaDelta": { "type": "number", "minimum": 1 },
+    "fokAtivo": { "type": "boolean" },
+    "fokPrecoTeto": { "type": "number", "minimum": 0.5, "maximum": 0.99 },
+    "slippageCompra": { "type": "number", "minimum": 0, "maximum": 0.2 },
+    "filterLo": { "type": "number", "minimum": 0, "maximum": 1 },
+    "filterHi": { "type": "number", "minimum": 0, "maximum": 1 },
+    "antiGlitch": { "type": "boolean" },
+    "somaMinValida": { "type": "number" },
+    "somaMaxValida": { "type": "number" },
+    "minSecondsLeftToStart": { "type": "number", "minimum": 0 },
+    "maxSecondsLeftToStart": { "type": "number", "minimum": 0 },
+    "maxEventNotional": { "type": "number", "minimum": 5 },
+    "makerFillEpsilon": { "type": "number", "minimum": 0 },
+    "makerTimeoutSec": { "type": "number", "minimum": 1 },
+    "takerMaxExtraCents": { "type": "number", "minimum": 0, "maximum": 20 },
+    "takerMissPolicy": { "type": "string", "enum": ["rearm", "skip"] },
+    "takerLatencyTicks": { "type": "integer", "minimum": 0, "maximum": 10 },
+    "takerPriceMode": {
+      "type": "string",
+      "enum": ["taker_limit", "walk", "formula", "capped", "auto"]
+    },
+    "executionMode": { "type": "string", "enum": ["honest", "optimistic"] },
+    "applyPolymarketFees": { "type": "boolean" },
+    "polymarketFeeCategory": {
+      "type": "string",
+      "enum": ["crypto", "sports", "politics", "other"]
+    }
+  }
+}
