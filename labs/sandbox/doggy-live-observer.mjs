@@ -183,6 +183,7 @@ const state = {
   seenActivity: new Set(),
   warmed: false,
   liveGateAt: 0,
+  bookReadyAt: 0, // ms — only join fills after book has warmed
   eventPath: null, // { slug, openedSide, hedged, fills }
   stats: {
     fills: 0,
@@ -272,6 +273,15 @@ function pushBookSample({ source = 'ws' } = {}) {
   if (snap.upBestAsk != null) state.askHist.Up.push(snap.t, snap.upBestAsk);
   if (snap.downBestAsk != null) state.askHist.Down.push(snap.t, snap.downBestAsk);
   state.stats.bookSamples += 1;
+  if (!state.bookReadyAt && (snap.upBestAsk != null || snap.downBestAsk != null)) {
+    state.bookReadyAt = snap.t;
+    // Don't join fills whose activity ts is before we had a book.
+    const readySec = Math.floor(snap.t / 1000) + 2;
+    if (!state.liveGateAt || readySec > state.liveGateAt) {
+      state.liveGateAt = readySec;
+      log('book ready — liveGateAt=', state.liveGateAt);
+    }
+  }
 
   // Downsample 1 Hz for books.jsonl
   if (state._lastBookWrite == null || snap.t - state._lastBookWrite >= bookSampleSec * 1000) {
@@ -408,6 +418,10 @@ async function ensureMarket() {
   resetEventPath(m.slug);
   state.stats.marketRollover += 1;
   state._lastTickKey = null;
+  state.bookReadyAt = 0;
+  // Fresh ring for new market — avoid cross-slug join.
+  state.bookHist = new Ring(120_000);
+  state.askHist = { Up: new Ring(120_000), Down: new Ring(120_000) };
   log('market', m.slug, m.title);
   await refreshRestBook();
   connectWs();

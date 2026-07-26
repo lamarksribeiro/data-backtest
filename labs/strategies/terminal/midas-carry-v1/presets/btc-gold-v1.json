@@ -5,7 +5,7 @@
   "studioSlug": "midas-carry-btc-gold-v1",
   "studioName": "MIDAS Carry V1 · BTC Gold V1",
   "role": "champion",
-  "description": "MIDAS-GOLD produção BTC: g3-os (minSec9 + tierMinZ 2.0 + odds-shock partial50) em sizing real $10/$30 (não micro). Execução honesta settle 0.995. Política de ordem (robot): entrada FAK (não resting adversa), saída protetora GTC (late-flip/danger/odds-shock/REVERSE EXIT) — FAK na saída matou proteção no live. Lab: package-final + profit-scale; teto liquidez ~$40/evento.",
+  "description": "MIDAS-GOLD produção BTC: g3-os (minSec9 + tierMinZ 2.0 + odds-shock partial50) em sizing real $10/$30, tier high-ask 1.5× (~$15). Execução honesta settle 0.995. Robot: entry FAK · exit GTC. Lab tier-cap: −5.6% PnL / −18% DD vs tier 2.0.",
   "tags": [
     "champion",
     "depth25",
@@ -23,18 +23,19 @@
     "to": "2026-07-25"
   },
   "labSummary": {
-    "julyPnl": 2047.71,
-    "julyEntries": 2123,
-    "julyWinRate": 78.71,
-    "julyProfitFactor": 1.57,
-    "julyMaxDrawdown": 67.72,
-    "julyWorstDay": -3.89,
-    "holdJulyPnl": 1308.34,
-    "holdJulyProfitFactor": 1.33,
-    "microJulyPnl": 432.9,
-    "microJulyProfitFactor": 1.65,
+    "julyPnl": 1933.56,
+    "julyEntries": 2126,
+    "julyWinRate": 78.69,
+    "julyProfitFactor": 1.58,
+    "julyMaxDrawdown": 55.28,
+    "julyWorstDay": -2.04,
+    "juneStressPnl": 541.31,
+    "juneStressProfitFactor": 1.58,
+    "tierAskBudgetFactor": 1.5,
+    "vsTier20JulyPnlDeltaPct": -5.6,
+    "vsTier20JulyDdDeltaPct": -18.4,
     "orderPolicy": "entry FAK · exit GTC (robot)",
-    "source": "labs gold-size-july 2026-07-26 · RELATORIO §10–12"
+    "source": "labs gold-tier-cap-july/june 2026-07-26 · gold-size-july ref tier2.0"
   },
   "params": {
     "walletSize": 100,
@@ -54,7 +55,7 @@
     "minObi": 0.0,
     "obiLevels": 5,
     "tierAskThreshold": 0.82,
-    "tierAskBudgetFactor": 2.0,
+    "tierAskBudgetFactor": 1.5,
     "tierMinZ": 2.0,
     "minEntryZ": 0.0,
     "sigmaSizingEnabled": false,

@@ -5,7 +5,7 @@
   "studioSlug": "midas-carry-eth-gold-v1",
   "studioName": "MIDAS Carry V1 · ETH Gold V1",
   "role": "candidate",
-  "description": "MIDAS-GOLD produção ETH: mesmo pacote g3-os do BTC Gold ($10/$30, settle 0.995). Gates z adimensionais portam sem recalibração. Micro ETH ($2/$4) deu PnL 247.9 / PF 1.40 em jul; sizing real escala notional. Robot: entrada FAK, saída GTC.",
+  "description": "MIDAS-GOLD produção ETH: g3-os $10/$30, tier high-ask 1.5× (lab eth tier-cap: −7.6% PnL / pior dia −31→−22). Gates z portam sem recalibração. Robot: entry FAK · exit GTC.",
   "tags": [
     "candidate",
     "depth25",
@@ -23,18 +23,19 @@
     "to": "2026-07-25"
   },
   "labSummary": {
-    "julyPnl": 944.04,
-    "julyEntries": 1860,
-    "julyWinRate": 74.78,
-    "julyProfitFactor": 1.27,
-    "julyMaxDrawdown": 65.55,
-    "julyWorstDay": -31.15,
-    "holdJulyPnl": 594.07,
-    "holdJulyProfitFactor": 1.16,
+    "julyPnl": 872.32,
+    "julyEntries": 1864,
+    "julyWinRate": 74.89,
+    "julyProfitFactor": 1.26,
+    "julyMaxDrawdown": 59.05,
+    "julyWorstDay": -22.29,
+    "tierAskBudgetFactor": 1.5,
+    "vsTier20JulyPnlDeltaPct": -7.6,
+    "vsTier20JulyWorstDay": "-31.15 → -22.29",
     "microJulyPnl": 247.94,
     "microJulyProfitFactor": 1.4,
     "orderPolicy": "entry FAK · exit GTC (robot)",
-    "source": "labs gold-size-eth-july 2026-07-26 · RELATORIO §12"
+    "source": "labs gold-tier-cap-eth-july 2026-07-26"
   },
   "params": {
     "walletSize": 100,
@@ -54,7 +55,7 @@
     "minObi": 0,
     "obiLevels": 5,
     "tierAskThreshold": 0.82,
-    "tierAskBudgetFactor": 2,
+    "tierAskBudgetFactor": 1.5,
     "tierMinZ": 2,
     "minEntryZ": 0,
     "sigmaSizingEnabled": false,

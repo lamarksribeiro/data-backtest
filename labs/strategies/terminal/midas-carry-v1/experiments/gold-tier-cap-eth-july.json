@@ -1,0 +1,106 @@
+{
+  "name": "gold-tier-cap-eth-july",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "ETH",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-25",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "notes": "Hipótese 2 em ETH: Gold g3-os $10/$30, reduzir tierAskBudgetFactor high-ask (2.0→1.5→1.0→0.75).",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "gold-tier-20",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskThreshold": 0.82,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2.0,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5
+        }
+      },
+      {
+        "id": "gold-tier-15",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskThreshold": 0.82,
+          "tierAskBudgetFactor": 1.5,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2.0,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5
+        }
+      },
+      {
+        "id": "gold-tier-10",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskThreshold": 0.82,
+          "tierAskBudgetFactor": 1.0,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2.0,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5
+        }
+      },
+      {
+        "id": "gold-tier-075",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskThreshold": 0.82,
+          "tierAskBudgetFactor": 0.75,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2.0,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5
+        }
+      }
+    ]
+  }
+}
