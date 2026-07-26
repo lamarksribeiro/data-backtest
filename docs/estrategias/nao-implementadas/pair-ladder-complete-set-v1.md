@@ -688,6 +688,44 @@ Doggy both Σ **+$83**. Critério de sucesso (≥+$700 e medVac≥1,0) **não at
 
 **Achado:** path fino no runner saturado. Gap residual ~**−$1,4k** no both é seleção/timing **intra-segundo** (fill ≤ ask, escolha de clip MOMO) não observável no book 1Hz. **Congelar RE de params 1Hz.** Preset research continua `btc-doggy-parity-momo` (+ `momoBlockFade` disponível). **Não promover. Sem conta real.**
 
+**Etapa 13 — shadow CLOB live tick (2026-07-26):**
+
+Caminho escolhido: **CLOB WS direto** no data-backtest (não subir Hz no Brutus). Colector já persiste **2 Hz** sem tape raw — não resolve intra-tick.
+
+Scripts: `labs/sandbox/doggy-live-observer.mjs` (journal `books-tick.jsonl` + join minAsk±500ms/1s + `phase`) · `doggy-live-analyze.mjs`  
+Run: `.tmp/pair-ladder-re/live-observer/2026-07-26T20-08-02-978Z/` (45 min)
+
+| Métrica | Valor |
+|---|---:|
+| fills / matched | **50 / 50** |
+| bookTicks (best changes) | **7.894** |
+| med fill−ask | **−1,75¢** |
+| med fill−minAsk±500ms | **−1,00¢** |
+| belowMinAsk500Share | 60% |
+| momoShare / fadeShare | **52%** / 34% |
+| vacuumShare | **12%** (6 fills) |
+| spotLeadShare | 14% |
+| phases | open 10 · hedge 9 · build_momo 15 · build_fade 6 · vacuum 6 · flat 4 |
+
+**Achado:** o −1¢ vs ask **não** é só artefato do clock de 1s — fill ainda fica **−1¢ vs minAsk±500ms** (p10 −9¢). Edge live = **(c) fill quality + seleção MOMO**; vacuum aparece ao vivo (12%). Lake/colector 2 Hz continua cego a isso. Shadow-lab offline com journal local vale mais que subir `collection_hz` no Brutus. Activity API ainda é segundo (±0,5–1s). **Não promover. Sem conta real.**
+
+**Etapa 14 — shadow-lab offline no journal tick (2026-07-26):**
+
+Script: `labs/sandbox/doggy-shadow-lab.mjs` → `…/2026-07-26T20-08-02-978Z/shadow-lab.json`  
+Replay dos 50 fills Doggy contra `books-tick.jsonl` (7.894 ticks).
+
+| Métrica | Valor |
+|---|---:|
+| Edge Doggy vs ask (Σ (ask−px)·size) | **+$170,83** |
+| vs ask−1¢ (proxy lab) | **+$128,33** |
+| vs minAsk±500ms | **+$132,33** |
+| med fill−ask / −min500 | −2,0¢ / **−1,35¢** |
+| mid-band passa chase_momo | **50%** |
+| build/hedge passa momo | 32% |
+| build_momo phase edge vs ask | +$98 |
+
+**Achado:** fill quality é **material** mesmo no journal fino — `slippageCents=-1` no lab ainda deixa ~$128 na mesa nesta janela. Gate MOMO mid-band 50% é útil mas não exclusivo (open/hedge/vacuum também). Continuar shadow-lab + mais sessões live; **não** subir Hz no Brutus. **Não promover.**
+
 ---
 
 ## Estratégia canônica (RE Doggy — congelada 2026-07-26)
@@ -709,10 +747,11 @@ open 45–55¢ ≤30s (clip ~50)
 | Motor = chase MOMO | Etapas 7, 9, 11a/b | `legChoice=chase_momo` (+~$430) |
 | Bloquear FADE mid | Etapa 12 | `momoBlockFade` (+~$200) |
 | Late vacuum residual tilt | Etapas 2, 7, 12 | **não replicado** (medVac≈0) |
-| Fill ≤ ask / seleção intra-s | Etapas 4, 10–11b | proxy `slippageCents=-1`; gap PnL permanece |
-| Spot-lead gate | Etapas 11a/b | **descartado** (spotLead 14% live) |
+| Fill ≤ ask / seleção intra-s | Etapas 4, 10–11b, **13** | live: −1¢ vs minAsk±500ms + momo 52%; gap PnL lake permanece |
+| Spot-lead gate | Etapas 11a/b, 13 | **descartado** (spotLead 14% live) |
+| Vacuum live | Etapa 13 | presente (12% fills); lab 1Hz ainda não replica |
 
-**Veredito:** a estratégia *descrita* está fechada. A *paridade de PnL* no lake 1Hz **não** — edge Doggy depende de qualidade de fill / escolha de momento abaixo da resolução do lake. Próximo trabalho útil (se houver): shadow live com book tick-by-tick próprio, não mais grid de params no Parquet 1Hz.
+**Veredito:** a estratégia *descrita* está fechada. A *paridade de PnL* no lake 2 Hz **não**. Edge Doggy = fill quality sub-s + seleção MOMO (Etapas 13–14: +$132 vs minAsk±500ms na sessão 45 min). Próximo útil: mais sessões live + shadow-lab offline — **não** grid no Parquet nem subir Hz no colector/Brutus.
 
 ### Métricas por evento (obrigatórias)
 

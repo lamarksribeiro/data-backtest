@@ -1,0 +1,504 @@
+{
+  "slug": "btc-updown-5m-1785098100",
+  "mode": "honest",
+  "pass": true,
+  "criterion": {
+    "seqMatch": true,
+    "fillDivergences": 0,
+    "pnl": {
+      "delta": 0.060000000000021814,
+      "tol": 6.56086,
+      "pass": true
+    }
+  },
+  "shadow": {
+    "fillCount": 20,
+    "sharesUp": 142,
+    "sharesDown": 147,
+    "invested": 131.2172,
+    "equalizou": true,
+    "viradas": 2,
+    "pnl": 10.7828,
+    "winner": "UP",
+    "resultado": "EQUALIZADO_VITORIA_UP"
+  },
+  "runner": {
+    "fillCount": 20,
+    "sharesUp": 142,
+    "sharesDown": 147,
+    "cost": 131.27720000000002,
+    "equalized": true,
+    "viradas": 2,
+    "pnl": 10.722799999999978,
+    "reason": "equalized"
+  },
+  "sequence": {
+    "shadow": [
+      "DOWN|SUB-1",
+      "UP|DESC-1",
+      "DOWN|SUB-2",
+      "DOWN|SUB-3",
+      "UP|DESC-2",
+      "UP|DESC-3",
+      "DOWN|SUB-4",
+      "UP|DESC-4",
+      "UP|SUB-1",
+      "UP|SUB-2",
+      "UP|SUB-3",
+      "UP|SUB-4",
+      "DOWN|DESC-4",
+      "UP|SUB-5",
+      "UP|SUB-6",
+      "DOWN|DESC-6",
+      "UP|SUB-7",
+      "UP|SUB-8",
+      "DOWN|DESC-8",
+      "DOWN|EQUALIZA"
+    ],
+    "runner": [
+      "DOWN|SUB-1",
+      "UP|DESC-1",
+      "DOWN|SUB-2",
+      "DOWN|SUB-3",
+      "UP|DESC-2",
+      "UP|DESC-3",
+      "DOWN|SUB-4",
+      "UP|DESC-4",
+      "UP|SUB-1",
+      "UP|SUB-2",
+      "UP|SUB-3",
+      "UP|SUB-4",
+      "DOWN|DESC-4",
+      "UP|SUB-5",
+      "UP|SUB-6",
+      "DOWN|DESC-6",
+      "UP|SUB-7",
+      "UP|SUB-8",
+      "DOWN|DESC-8",
+      "DOWN|EQUALIZA"
+    ]
+  },
+  "divergences": [],
+  "pairedSample": [
+    {
+      "idx": 0,
+      "shadow": {
+        "key": "DOWN|SUB-1",
+        "side": "DOWN",
+        "tipo": "SUB-1",
+        "shares": 20,
+        "price": 0.55,
+        "liquidity": "taker"
+      },
+      "runner": {
+        "key": "DOWN|SUB-1",
+        "side": "DOWN",
+        "tipo": "SUB-1",
+        "shares": 20,
+        "price": 0.55,
+        "liquidity": "taker"
+      },
+      "ok": true,
+      "issues": []
+    },
+    {
+      "idx": 1,
+      "shadow": {
+        "key": "UP|DESC-1",
+        "side": "UP",
+        "tipo": "DESC-1",
+        "shares": 5,
+        "price": 0.45,
+        "liquidity": "maker"
+      },
+      "runner": {
+        "key": "UP|DESC-1",
+        "side": "UP",
+        "tipo": "DESC-1",
+        "shares": 5,
+        "price": 0.45,
+        "liquidity": "maker"
+      },
+      "ok": true,
+      "issues": []
+    },
+    {
+      "idx": 2,
+      "shadow": {
+        "key": "DOWN|SUB-2",
+        "side": "DOWN",
+        "tipo": "SUB-2",
+        "shares": 15,
+        "price": 0.6298,
+        "liquidity": "taker"
+      },
+      "runner": {
+        "key": "DOWN|SUB-2",
+        "side": "DOWN",
+        "tipo": "SUB-2",
+        "shares": 15,
+        "price": 0.6297866666666666,
+        "liquidity": "taker"
+      },
+      "ok": true,
+      "issues": []
+    },
+    {
+      "idx": 3,
+      "shadow": {
+        "key": "DOWN|SUB-3",
+        "side": "DOWN",
+        "tipo": "SUB-3",
+        "shares": 10,
+        "price": 0.65,
+        "liquidity": "taker"
+      },
+      "runner": {
+        "key": "DOWN|SUB-3",
+        "side": "DOWN",
+        "tipo": "SUB-3",
+        "shares": 10,
+        "price": 0.65,
+        "liquidity": "taker"
+      },
+      "ok": true,
+      "issues": []
+    },
+    {
+      "idx": 4,
+      "shadow": {
+        "key": "UP|DESC-2",
+        "side": "UP",
+        "tipo": "DESC-2",
+        "shares": 5,
+        "price": 0.4,
+        "liquidity": "maker"
+      },
+      "runner": {
+        "key": "UP|DESC-2",
+        "side": "UP",
+        "tipo": "DESC-2",
+        "shares": 5,
+        "price": 0.4,
+        "liquidity": "maker"
+      },
+      "ok": true,
+      "issues": []
+    },
+    {
+      "idx": 5,
+      "shadow": {
+        "key": "UP|DESC-3",
+        "side": "UP",
+        "tipo": "DESC-3",
+        "shares": 5,
+        "price": 0.35,
+        "liquidity": "maker"
+      },
+      "runner": {
+        "key": "UP|DESC-3",
+        "side": "UP",
+        "tipo": "DESC-3",
+        "shares": 5,
+        "price": 0.35,
+        "liquidity": "maker"
+      },
+      "ok": true,
+      "issues": []
+    },
+    {
+      "idx": 6,
+      "shadow": {
+        "key": "DOWN|SUB-4",
+        "side": "DOWN",
+        "tipo": "SUB-4",
+        "shares": 10,
+        "price": 0.695,
+        "liquidity": "taker"
+      },
+      "runner": {
+        "key": "DOWN|SUB-4",
+        "side": "DOWN",
+        "tipo": "SUB-4",
+        "shares": 10,
+        "price": 0.7,
+        "liquidity": "taker"
+      },
+      "ok": true,
+      "issues": []
+    },
+    {
+      "idx": 7,
+      "shadow": {
+        "key": "UP|DESC-4",
+        "side": "UP",
+        "tipo": "DESC-4",
+        "shares": 5,
+        "price": 0.3,
+        "liquidity": "maker"
+      },
+      "runner": {
+        "key": "UP|DESC-4",
+        "side": "UP",
+        "tipo": "DESC-4",
+        "shares": 5,
+        "price": 0.3,
+        "liquidity": "maker"
+      },
+      "ok": true,
+      "issues": []
+    },
+    {
+      "idx": 8,
+      "shadow": {
+        "key": "UP|SUB-1",
+        "side": "UP",
+        "tipo": "SUB-1",
+        "shares": 40,
+        "price": 0.6496,
+        "liquidity": "taker"
+      },
+      "runner": {
+        "key": "UP|SUB-1",
+        "side": "UP",
+        "tipo": "SUB-1",
+        "shares": 40,
+        "price": 0.64963,
+        "liquidity": "taker"
+      },
+      "ok": true,
+      "issues": []
+    },
+    {
+      "idx": 9,
+      "shadow": {
+        "key": "UP|SUB-2",
+        "side": "UP",
+        "tipo": "SUB-2",
+        "shares": 30,
+        "price": 0.6495,
+        "liquidity": "taker"
+      },
+      "runner": {
+        "key": "UP|SUB-2",
+        "side": "UP",
+        "tipo": "SUB-2",
+        "shares": 30,
+        "price": 0.6495066666666667,
+        "liquidity": "taker"
+      },
+      "ok": true,
+      "issues": []
+    },
+    {
+      "idx": 10,
+      "shadow": {
+        "key": "UP|SUB-3",
+        "side": "UP",
+        "tipo": "SUB-3",
+        "shares": 20,
+        "price": 0.7,
+        "liquidity": "taker"
+      },
+      "runner": {
+        "key": "UP|SUB-3",
+        "side": "UP",
+        "tipo": "SUB-3",
+        "shares": 20,
+        "price": 0.7,
+        "liquidity": "taker"
+      },
+      "ok": true,
+      "issues": []
+    },
+    {
+      "idx": 11,
+      "shadow": {
+        "key": "UP|SUB-4",
+        "side": "UP",
+        "tipo": "SUB-4",
+        "shares": 20,
+        "price": 0.7,
+        "liquidity": "taker"
+      },
+      "runner": {
+        "key": "UP|SUB-4",
+        "side": "UP",
+        "tipo": "SUB-4",
+        "shares": 20,
+        "price": 0.7,
+        "liquidity": "taker"
+      },
+      "ok": true,
+      "issues": []
+    },
+    {
+      "idx": 12,
+      "shadow": {
+        "key": "DOWN|DESC-4",
+        "side": "DOWN",
+        "tipo": "DESC-4",
+        "shares": 5,
+        "price": 0.3,
+        "liquidity": "maker"
+      },
+      "runner": {
+        "key": "DOWN|DESC-4",
+        "side": "DOWN",
+        "tipo": "DESC-4",
+        "shares": 5,
+        "price": 0.3,
+        "liquidity": "maker"
+      },
+      "ok": true,
+      "issues": []
+    },
+    {
+      "idx": 13,
+      "shadow": {
+        "key": "UP|SUB-5",
+        "side": "UP",
+        "tipo": "SUB-5",
+        "shares": 5,
+        "price": 0.75,
+        "liquidity": "taker"
+      },
+      "runner": {
+        "key": "UP|SUB-5",
+        "side": "UP",
+        "tipo": "SUB-5",
+        "shares": 5,
+        "price": 0.75,
+        "liquidity": "taker"
+      },
+      "ok": true,
+      "issues": []
+    },
+    {
+      "idx": 14,
+      "shadow": {
+        "key": "UP|SUB-6",
+        "side": "UP",
+        "tipo": "SUB-6",
+        "shares": 5,
+        "price": 0.8,
+        "liquidity": "taker"
+      },
+      "runner": {
+        "key": "UP|SUB-6",
+        "side": "UP",
+        "tipo": "SUB-6",
+        "shares": 5,
+        "price": 0.8,
+        "liquidity": "taker"
+      },
+      "ok": true,
+      "issues": []
+    },
+    {
+      "idx": 15,
+      "shadow": {
+        "key": "DOWN|DESC-6",
+        "side": "DOWN",
+        "tipo": "DESC-6",
+        "shares": 5,
+        "price": 0.2,
+        "liquidity": "maker"
+      },
+      "runner": {
+        "key": "DOWN|DESC-6",
+        "side": "DOWN",
+        "tipo": "DESC-6",
+        "shares": 5,
+        "price": 0.2,
+        "liquidity": "maker"
+      },
+      "ok": true,
+      "issues": []
+    },
+    {
+      "idx": 16,
+      "shadow": {
+        "key": "UP|SUB-7",
+        "side": "UP",
+        "tipo": "SUB-7",
+        "shares": 1,
+        "price": 0.86,
+        "liquidity": "taker"
+      },
+      "runner": {
+        "key": "UP|SUB-7",
+        "side": "UP",
+        "tipo": "SUB-7",
+        "shares": 1,
+        "price": 0.86,
+        "liquidity": "taker"
+      },
+      "ok": true,
+      "issues": []
+    },
+    {
+      "idx": 17,
+      "shadow": {
+        "key": "UP|SUB-8",
+        "side": "UP",
+        "tipo": "SUB-8",
+        "shares": 1,
+        "price": 0.89,
+        "liquidity": "taker"
+      },
+      "runner": {
+        "key": "UP|SUB-8",
+        "side": "UP",
+        "tipo": "SUB-8",
+        "shares": 1,
+        "price": 0.9,
+        "liquidity": "taker"
+      },
+      "ok": true,
+      "issues": []
+    },
+    {
+      "idx": 18,
+      "shadow": {
+        "key": "DOWN|DESC-8",
+        "side": "DOWN",
+        "tipo": "DESC-8",
+        "shares": 5,
+        "price": 0.1,
+        "liquidity": "maker"
+      },
+      "runner": {
+        "key": "DOWN|DESC-8",
+        "side": "DOWN",
+        "tipo": "DESC-8",
+        "shares": 5,
+        "price": 0.1,
+        "liquidity": "maker"
+      },
+      "ok": true,
+      "issues": []
+    },
+    {
+      "idx": 19,
+      "shadow": {
+        "key": "DOWN|EQUALIZA",
+        "side": "DOWN",
+        "tipo": "EQUALIZA",
+        "shares": 77,
+        "price": 0.05,
+        "liquidity": "taker"
+      },
+      "runner": {
+        "key": "DOWN|EQUALIZA",
+        "side": "DOWN",
+        "tipo": "EQUALIZA",
+        "shares": 77,
+        "price": 0.05,
+        "liquidity": "maker"
+      },
+      "ok": true,
+      "issues": []
+    }
+  ]
+}

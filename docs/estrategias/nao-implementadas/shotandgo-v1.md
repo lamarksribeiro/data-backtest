@@ -84,14 +84,15 @@ Critério “bateu”: mesma sequência `(lado, tipo)` (±1 tick de latência ac
 Relatório: [`labs/strategies/carry/shotandgo-v1/shadow/PARITY-REPORT.md`](../../../labs/strategies/carry/shotandgo-v1/shadow/PARITY-REPORT.md).
 
 **Status 2026-07-26:**
-- `btc-updown-5m-1785096300` (DESC dry otimista legado) → `optimistic` PASS; `honest` FAIL (DESC).
-- Após `DESC_DRY_RESTING`: novo evento deve replay em `honest` — ver PARITY-REPORT.
+- Legado `1785096300` (DESC otimista) → `optimistic` PASS; `honest` FAIL.
+- **Gate:** `1785098100` com `DESC_DRY_RESTING` + stride=1 → runner **`honest` PASS** (20 fills, 142/147 sh, |ΔPnL|=$0.06).
+- Pacotes com `SHADOW_TICK_STRIDE>1` são inválidos para paridade fill-a-fill.
 
 ### 3. Próximos gates
 
-1. ≥1 evento shadow com DESC resting → PASS em `honest`
-2. Micro-real (`DRY_RUN=False`, teto baixo) se o conector estiver disponível
-3. Só então lab mai–jun em `honest`
+1. ≥1 evento shadow com DESC resting → PASS em `honest` ✅ (`1785098100`)
+2. Lab mai–jun `honest` com gate PF≥1,2 e PnL>0 → **FALHOU** (baseline −134k, PF 0,43). Ver [`LAB-MAY-JUNE-REPORT.md`](../../../labs/strategies/carry/shotandgo-v1/LAB-MAY-JUNE-REPORT.md)
+3. Micro-real / port data-robot **adiados** até existir variante com edge no lab
 
 ## Experimentos
 

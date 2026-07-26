@@ -23,7 +23,7 @@ test('listPromotedGlsStrategies discovers GLS lab strategies', () => {
   assert.ok(ids.includes('tfc'));
   assert.equal(promoted.find((item) => item.id === 'gamma-ladder').studioSlug, 'gamma-ladder');
   assert.equal(promoted.find((item) => item.id === 'apex-triad-v1').status, 'candidate');
-  assert.equal(promoted.find((item) => item.id === 'midas-carry-v1').studio?.defaultVersion, 9);
+  assert.equal(promoted.find((item) => item.id === 'midas-carry-v1').studio?.defaultVersion, 11);
 });
 
 test('listPromotedLibraryStrategies discovers ported library runners', () => {
@@ -114,16 +114,16 @@ test('seedPromotedStrategies seeds versions from lab manifests', () => {
       WHERE strategy_id = ?
       ORDER BY version ASC
     `).all(midas.strategy.id);
-    assert.equal(midasVersions.length, 10);
-    assert.equal(midasVersions.at(-1).version, 10);
-    assert.match(midasVersions.at(-1).notes, /ETH Micro Gold/);
+    assert.equal(midasVersions.length, 12);
+    assert.equal(midasVersions.at(-1).version, 12);
+    assert.match(midasVersions.at(-1).notes, /ETH Gold/);
     const midasDefault = db.prepare(`
       SELECT sv.version
       FROM strategy_definitions sd
       JOIN strategy_versions sv ON sv.id = sd.default_version_id
       WHERE sd.id = ?
     `).get(midas.strategy.id);
-    assert.equal(midasDefault.version, 9);
+    assert.equal(midasDefault.version, 11);
 
     const staleDefault = tfcVersions.find((row) => row.version === 2);
     db.prepare('UPDATE strategy_definitions SET default_version_id = ? WHERE id = ?').run(staleDefault.id, tfc.strategy.id);
@@ -191,19 +191,29 @@ test('loadPreset resolves tfc v6 hybrid stop params', () => {
   assert.equal(params.hedgeLimitEnabled, false);
 });
 
-test('midas-carry-v1 presets have unique studioVersion (Estúdio v1..v10)', () => {
+test('midas-carry-v1 presets have unique studioVersion (Estúdio v1..v12)', () => {
   const presets = listPresets({ strategyId: 'midas-carry-v1', strategyFamily: 'terminal', includeAliases: false });
   const versions = presets.map((item) => Number(item.studioVersion));
-  assert.equal(presets.length, 10);
-  assert.deepEqual([...new Set(versions)].sort((a, b) => a - b), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  assert.equal(presets.length, 12);
+  assert.deepEqual(
+    [...new Set(versions)].sort((a, b) => a - b),
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+  );
   assert.equal(versions.length, new Set(versions).size, 'studioVersion deve ser único');
   const microAggressive = presets.find((item) => item.id === 'btc-micro-aggressive-v1');
   assert.equal(microAggressive.studioVersion, 5);
   assert.equal(microAggressive.params?.entryBudget ?? loadPreset('btc-micro-aggressive-v1', { strategyId: 'midas-carry-v1', strategyFamily: 'terminal' }).params.entryBudget, 2);
-  const champion = presets.find((item) => item.id === 'btc-micro-guardian-v3-os');
-  assert.equal(champion.studioVersion, 9);
+  const microGold = presets.find((item) => item.id === 'btc-micro-guardian-v3-os');
+  assert.equal(microGold.studioVersion, 9);
+  assert.equal(microGold.role, 'canary');
+  const champion = presets.find((item) => item.id === 'btc-gold-v1');
+  assert.equal(champion.studioVersion, 11);
   assert.equal(champion.role, 'champion');
-  const { params } = loadPreset('btc-micro-guardian-v3-os', { strategyId: 'midas-carry-v1', strategyFamily: 'terminal' });
+  const ethGold = presets.find((item) => item.id === 'eth-gold-v1');
+  assert.equal(ethGold.studioVersion, 12);
+  const { params } = loadPreset('btc-gold-v1', { strategyId: 'midas-carry-v1', strategyFamily: 'terminal' });
+  assert.equal(params.entryBudget, 10);
+  assert.equal(params.maxEntryBudget, 30);
   assert.equal(params.oddsShockEnabled, true);
   assert.equal(params.oddsShockPartialPct, 0.5);
   assert.equal(params.tierMinZ, 2.0);

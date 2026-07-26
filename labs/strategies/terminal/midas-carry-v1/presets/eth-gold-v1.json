@@ -1,47 +1,45 @@
 {
-  "id": "eth-micro-gold-v1",
-  "studioVersion": 10,
-  "name": "MIDAS Carry V1 — ETH Micro Gold V1 ($2/$4)",
-  "studioSlug": "midas-carry-eth-micro-gold-v1",
-  "studioName": "MIDAS Carry V1 · ETH Micro Gold V1",
-  "role": "historical",
-  "description": "MICRO ETH ($2/$4). Produção: eth-gold-v1 ($10/$30, Estúdio v12). Mesmo pacote g3-os.",
+  "id": "eth-gold-v1",
+  "studioVersion": 12,
+  "name": "MIDAS Carry V1 — ETH Gold V1 ($10/$30)",
+  "studioSlug": "midas-carry-eth-gold-v1",
+  "studioName": "MIDAS Carry V1 · ETH Gold V1",
+  "role": "candidate",
+  "description": "MIDAS-GOLD produção ETH: mesmo pacote g3-os do BTC Gold ($10/$30, settle 0.995). Gates z adimensionais portam sem recalibração. Micro ETH ($2/$4) deu PnL 247.9 / PF 1.40 em jul; sizing real escala notional. Robot: entrada FAK, saída GTC.",
   "tags": [
-    "historical",
+    "candidate",
     "depth25",
     "midas",
-    "honest-exec",
     "gold",
-    "micro",
-    "executable",
-    "eth"
+    "honest-exec",
+    "tier-z-gate",
+    "odds-shock",
+    "production-size",
+    "eth",
+    "executable"
   ],
   "window": {
     "from": "2026-07-01",
     "to": "2026-07-25"
   },
   "labSummary": {
-    "julyPnl": 247.9,
-    "julyEntries": null,
-    "julyWinRate": null,
-    "julyProfitFactor": 1.4,
-    "julyMaxDrawdown": 11.3,
-    "julyWorstDay": -5.7,
-    "juneStressPnl": null,
-    "juneStressProfitFactor": null,
-    "juneStressMaxDrawdown": null,
-    "juneStressWorstDay": null,
-    "holdJulyPnl": 142.7,
-    "holdJunePnl": null,
-    "holdJulyProfitFactor": 1.2,
-    "positiveDays": "24/25",
-    "source": "labs gold-eth-july (2026-07-26). Relatório: scratch/live-vs-backtest/RELATORIO-MIDAS-PLANO-LUCRATIVIDADE-CONTA-REAL.md §12",
-    "rejected": "SOL g3-os: PF 1.27 e hold>protect — não promover sem recalibração"
+    "julyPnl": 944.04,
+    "julyEntries": 1860,
+    "julyWinRate": 74.78,
+    "julyProfitFactor": 1.27,
+    "julyMaxDrawdown": 65.55,
+    "julyWorstDay": -31.15,
+    "holdJulyPnl": 594.07,
+    "holdJulyProfitFactor": 1.16,
+    "microJulyPnl": 247.94,
+    "microJulyProfitFactor": 1.4,
+    "orderPolicy": "entry FAK · exit GTC (robot)",
+    "source": "labs gold-size-eth-july 2026-07-26 · RELATORIO §12"
   },
   "params": {
     "walletSize": 100,
-    "entryBudget": 2,
-    "maxEntryBudget": 4,
+    "entryBudget": 10,
+    "maxEntryBudget": 30,
     "settleWinnerPrice": 0.995,
     "minSecondsLeft": 9,
     "maxSecondsLeft": 30,
@@ -65,6 +63,7 @@
     "earlyWarnEnabled": false,
     "bookCollapseEnabled": false,
     "equityScaleEnabled": false,
+    "equityScalePct": 0.02,
     "dailyStopLoss": 0,
     "lossStreakPauseCount": 0,
     "lossStreakPauseEvents": 3,
@@ -92,5 +91,10 @@
     "oddsShockPartialPct": 0.5,
     "oddsShockReverseEnabled": false
   },
-  "underlying": "ETH"
+  "underlying": "ETH",
+  "executionNotes": {
+    "entryOrderType": "FAK",
+    "exitOrderType": "GTC",
+    "why": "Mesma política do BTC Gold: FAK na entrada, GTC na proteção."
+  }
 }

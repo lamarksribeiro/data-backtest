@@ -1,42 +1,45 @@
 # Relatório de paridade — shadow → runner Shotandgo
 
-**Data:** 2026-07-26  
-**Pacote Phil live:** `polymarket-fm/logs/shadow/btc-updown-5m-1785096300.json`  
-**Fonte:** `Phil_Hopper_Real.py` simulação (sem conector; DRY walk-the-book) · evento BTC 5m 2026-07-26 16:05–16:10 ET  
-**Replay:** `node labs/sandbox/shotandgo-shadow-replay.mjs --shadow ..\polymarket-fm\logs\shadow\btc-updown-5m-1785096300.json`
+**Atualizado:** 2026-07-26
 
-## Resultado — Phil live vs runner `optimistic`
+## Protocolo atual
 
-| Métrica | Shadow (Phil) | Runner | |
-|---|---|---|---|
-| Fills | 17 | 17 | OK |
-| Seq (lado\|tipo) | idêntica | idêntica | PASS |
-| Shares UP/DOWN | 67/67 | 67/67 | OK |
-| Equalizou | true | true | OK |
-| Viradas | 1 | 1 | OK |
-| PnL | $2.51 | $2.50 | Δ=$0.01 |
+- Phil: `DESC_DRY_RESTING=True` + `SHADOW_TICK_STRIDE=1` + `SHADOW_EXIT_AFTER=1`
+- Replay: `config.desc_dry_resting` → `executionMode=honest`
+- Critério: seq `(lado|tipo)` idêntica; |ΔPnL| &lt; max($0,50, 5% notional)
 
-**Veredito:** PASS (critério do plano: mesma sequência; |ΔPnL| ≪ $0,50).
+## Evento C — gate (DESC resting + stride=1) ✅
 
-`executionMode=optimistic` alinha ao dry do Phil (DESC preenche no nível na hora; SUB usa book do tick).
+| | |
+|---|---|
+| Pacote | `polymarket-fm/logs/shadow/btc-updown-5m-1785098100.json` |
+| Ticks / fills | 2935 / 20 |
+| Modo | **honest** |
+| Seq | idêntica |
+| Shares | 142/147 = 142/147 |
+| Equalizou / viradas | true / 2 |
+| PnL | $10.78 vs $10.72 (Δ **$0.06**) |
+| **Veredito** | **PASS** |
 
-## Runner `honest` no mesmo pacote
+## Evento A — legado (DESC otimista)
 
-FAIL esperado: 17 vs 14 fills, sequência DESC diverge (resting vs fill imediato dry), |ΔPnL|≈$3,99. Confirma que lab em massa em `honest` **não** é o mesmo modo do dry shadow — próximo passo é micro-real ou calibrar DESC resting no Phil.
+| | |
+|---|---|
+| Pacote | `btc-updown-5m-1785096300.json` |
+| `optimistic` | PASS (Δ $0.01) |
+| `honest` | FAIL (DESC imediato ≠ resting) |
 
-## Plumbing (lake / synth)
+## Evento B — inválido (stride=5)
 
-| Pacote | Modo | Resultado |
-|---|---|---|
-| `btc-updown-5m-1780272600` lake-bootstrap | optimistic | PASS self-check |
-| `btc-updown-5m-1781532000` synth | optimistic | PASS self-check |
+`btc-updown-5m-1785097500.json` — FAIL. Stride&gt;1 omite ticks de decisão; não usar como gate.
 
-## Comandos
+## Próximos passos
+
+1. Opcional: 2º evento stride=1 confirmando PASS
+2. Micro-real (`DRY_RUN=False`) quando houver conector + `.env`
+3. Lab mai–jun em `honest`
 
 ```powershell
-cd d:\Projetos\projeto-goldenlens\polymarket-fm
-python Phil_Hopper_Real.py   # SHADOW_CAPTURE + SHADOW_EXIT_AFTER=1
-
 cd d:\Projetos\projeto-goldenlens\data-backtest
-node labs/sandbox/shotandgo-shadow-replay.mjs --shadow ..\polymarket-fm\logs\shadow\btc-updown-5m-1785096300.json
+node labs/sandbox/shotandgo-shadow-replay.mjs --shadow ..\polymarket-fm\logs\shadow\btc-updown-5m-1785098100.json
 ```

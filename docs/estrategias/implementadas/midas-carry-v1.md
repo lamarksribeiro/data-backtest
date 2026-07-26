@@ -1,6 +1,6 @@
 # MIDAS Carry V1 — Tiered High-Ask Terminal Carry
 
-**Status:** campeã Estúdio **v9** (`btc-micro-guardian-v3-os`) · **Lab:** `labs/strategies/terminal/midas-carry-v1/` · **Studio slug:** `midas-carry-v1` · **Atualizado:** 2026-07-26
+**Status:** campeã Estúdio **v11** (`btc-gold-v1` · **$10/$30**) · canário micro v9 · ETH Gold **v12** · **Lab:** `labs/strategies/terminal/midas-carry-v1/` · **Studio slug:** `midas-carry-v1` · **Atualizado:** 2026-07-26
 
 ## Tese
 
@@ -22,34 +22,46 @@ O núcleo de execução é idêntico à TFC V7 Danger Floor (late flip reverse 8
 
 Budget base US$ 10; entradas com ask ≥ 0,82 usam 15 (champion/robust) ou 20 (aggressive).
 
-### Presets micro (paridade data-robot)
+### Presets Gold (produção) e micro (canário)
 
 | Preset | Base / teto | Envelope | Uso |
 |---|---|---|---|
-| `btc-micro-robust-v1` | US$ 2 / US$ 3 | Robust (dist 30, tier 1.5×) | Estúdio **v4** · canário conservador |
-| `btc-micro-aggressive-v1` | US$ 2 / US$ 4 | Aggressive (dist 40, tier 2.0×) | Estúdio **v5** · canário live atual |
-| `btc-micro-guardian-v3` | US$ 2 / US$ 4 | Aggressive + minSec9 + tierMinZ 2.0 | Estúdio **v7** · candidata |
-| **`btc-micro-guardian-v3-os`** | US$ 2 / US$ 4 | **v7 + odds-shock 50%** · settle 0.995 | Estúdio **v9** · **campeão BTC** |
-| `eth-micro-gold-v1` | US$ 2 / US$ 4 | mesmo pacote g3-os em ETH 5m | Estúdio **v10** · candidato |
+| **`btc-gold-v1`** | **US$ 10 / US$ 30** | g3-os · settle 0.995 | Estúdio **v11** · **campeão BTC produção** |
+| **`eth-gold-v1`** | **US$ 10 / US$ 30** | mesmo pacote | Estúdio **v12** · candidato ETH |
+| `btc-micro-guardian-v3-os` | US$ 2 / US$ 4 | g3-os idêntico | Estúdio **v9** · canário micro |
+| `eth-micro-gold-v1` | US$ 2 / US$ 4 | g3-os | Estúdio **v10** · micro ETH |
+| `btc-micro-aggressive-v1` | US$ 2 / US$ 4 | Aggressive (sem OS) | Estúdio **v5** · histórico |
 
-#### Campeão v9 — o que muda vs canário live (v5)
+#### Política de ordem (data-robot) — FAK vs GTC
 
-| Peça | Canário v5 | Campeão v9 |
+| Perna | Tipo | Motivo |
 |---|---|---|
+| Entrada | **FAK** | Evita ordem resting adversa (fill tarde contra o gate). Não usar GTC na entrada sem lab novo. |
+| Saída protetora / REVERSE EXIT / odds-shock | **GTC** | Book fino aos 3–8s: FAK exit morria sem retry (`REVERSE_EXIT_INCOMPLETE`). GTC marketable + retry preenche. |
+
+Lab simula entrada taker (depth 25 ≈ FAK). Saída GTC é política só do robot.
+
+#### Campeão v11 — o que muda vs canário live (v5)
+
+| Peça | Canário v5 | Campeão v11 (Gold) |
+|---|---|---|
+| `entryBudget` / `maxEntryBudget` | 2 / 4 | **10 / 30** |
 | `minSecondsLeft` | 5 | **9** |
 | `tierMinZ` | 0 | **2.0** |
 | `oddsShock*` | off | **on** (Δ0,15/2s, opp≥0,50, bid≥0,55×entry, vende 50%) |
 | `settleWinnerPrice` | 1.0 (legado) | **0.995** (honesto) |
 | dist / tier | 40 / 2.0 | **igual** |
+| Ordem (robot) | FAK / GTC | **FAK / GTC** (igual; sizing sobe) |
 
-Lab package-final (jul 01–25 / jun 01–08): PnL 433 / 112 · PF 1,65 / 1,67 · pior dia −0,22 / −6,22. Envelope robust 30/1.5 rejeitado. Relatório: `labs/sandbox/midas-package-final-aprovacao.md`.
+Micro package-final (jul 01–25 / jun 01–08): PnL 433 / 112 · PF 1,65 / 1,67 · pior dia −0,22 / −6,22. Escala $10/$30: sweet spot (PF estável até ~2–4×; teto liquidez ~$40/evento). Relatório: `labs/sandbox/midas-package-final-aprovacao.md` · plano §10–12.
 
 ```powershell
-npm run lab:run-preset -- --preset btc-micro-guardian-v3-os --strategy midas-carry-v1 --strategy-family terminal --from 2026-07-01 --to 2026-07-25 --daily-metrics
+npm run lab:run -- --experiment labs/strategies/terminal/midas-carry-v1/experiments/gold-size-july.json
+npm run lab:run-preset -- --preset btc-gold-v1 --strategy midas-carry-v1 --strategy-family terminal --from 2026-07-01 --to 2026-07-25 --daily-metrics
 npm run lab:seed-presets
 ```
 
-No Estúdio: estratégia `midas-carry-v1` → versão **v9** (default).
+No Estúdio: estratégia `midas-carry-v1` → versão **v11** (default).
 
 ```powershell
 npm run lab:run-preset -- --preset btc-micro-aggressive-v1 --strategy midas-carry-v1 --strategy-family terminal --from 2026-07-01 --to 2026-07-07 --daily-metrics
