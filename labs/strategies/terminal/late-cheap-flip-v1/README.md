@@ -54,5 +54,5 @@ Relatórios:
 
 ## Status
 
-- **candidate** — holdout positivo; `promotedToStudio: false` até seed de preset se desejado.
+- **candidate** — holdout positivo; `promotedToStudio: true` (seed via `npm run lab:promote-to-studio`).
 - Não confundir com MIDAS/TFC (compram favorito caro) nem com SBRI mid-window (mode 2 é a prima terminal).

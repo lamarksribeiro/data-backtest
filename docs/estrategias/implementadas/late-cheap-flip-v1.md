@@ -37,7 +37,7 @@ Três modos foram testados no mesmo harness; a campeã é **mode 3 (`late_surpri
 1. WR train→holdout caiu de ~53% para ~31%; o edge depende do ask barato (assimetría payoff).
 2. MaxDD holdout ≈ wallet US$ 100 — em produção preferir micro-budget ou preset `btc-post-flip-stable`.
 3. Mode 1 (apostar no azarão antes do flip) destrói capital — não usar.
-4. Ainda não seedado no Studio (`promotedToStudio: false`).
+4. Promovida ao Studio (`promotedToStudio: true`) — slug `late-cheap-flip-v1`, v1 campeã / v2 post-flip estável.
 
 ## Reproduzir
 

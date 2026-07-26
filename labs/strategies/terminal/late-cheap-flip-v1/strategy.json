@@ -12,11 +12,11 @@
     "type": "file",
     "path": "src/backtestStudio/gls/strategies/LateCheapFlipV1.gls"
   },
-  "promotedToStudio": false,
+  "promotedToStudio": true,
   "studioSlug": "late-cheap-flip-v1",
   "studio": {
     "description": "Virada barata no fim: campeã late_surprise (mode 3, ask≤0.35). Alternativa estável post_flip (mode 2). Hold to settlement.",
-    "tags": ["terminal", "btc", "flip", "cheap", "candidate", "late-surprise"],
+    "tags": ["terminal", "btc", "flip", "cheap", "candidate", "late-surprise", "lab-strategy"],
     "defaultVersion": 1,
     "defaultGlsSource": "classic",
     "glsSources": {
