@@ -29,7 +29,8 @@ Budget base US$ 10; entradas com ask ≥ 0,82 usam 15 (champion/robust) ou 20 (a
 | `btc-micro-robust-v1` | US$ 2 / US$ 3 | Robust (dist 30, tier 1.5×) | Estúdio **v4** · canário conservador |
 | `btc-micro-aggressive-v1` | US$ 2 / US$ 4 | Aggressive (dist 40, tier 2.0×) | Estúdio **v5** · canário live atual |
 | `btc-micro-guardian-v3` | US$ 2 / US$ 4 | Aggressive + minSec9 + tierMinZ 2.0 | Estúdio **v7** · candidata |
-| **`btc-micro-guardian-v3-os`** | US$ 2 / US$ 4 | **v7 + odds-shock 50%** · settle 0.995 | Estúdio **v9** · **campeão** |
+| **`btc-micro-guardian-v3-os`** | US$ 2 / US$ 4 | **v7 + odds-shock 50%** · settle 0.995 | Estúdio **v9** · **campeão BTC** |
+| `eth-micro-gold-v1` | US$ 2 / US$ 4 | mesmo pacote g3-os em ETH 5m | Estúdio **v10** · candidato |
 
 #### Campeão v9 — o que muda vs canário live (v5)
 

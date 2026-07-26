@@ -114,9 +114,9 @@ test('seedPromotedStrategies seeds versions from lab manifests', () => {
       WHERE strategy_id = ?
       ORDER BY version ASC
     `).all(midas.strategy.id);
-    assert.equal(midasVersions.length, 9);
-    assert.equal(midasVersions.at(-1).version, 9);
-    assert.match(midasVersions.at(-1).notes, /Guardian V3 \+ OddsShock/);
+    assert.equal(midasVersions.length, 10);
+    assert.equal(midasVersions.at(-1).version, 10);
+    assert.match(midasVersions.at(-1).notes, /ETH Micro Gold/);
     const midasDefault = db.prepare(`
       SELECT sv.version
       FROM strategy_definitions sd
@@ -191,11 +191,11 @@ test('loadPreset resolves tfc v6 hybrid stop params', () => {
   assert.equal(params.hedgeLimitEnabled, false);
 });
 
-test('midas-carry-v1 presets have unique studioVersion (Estúdio v1..v9)', () => {
+test('midas-carry-v1 presets have unique studioVersion (Estúdio v1..v10)', () => {
   const presets = listPresets({ strategyId: 'midas-carry-v1', strategyFamily: 'terminal', includeAliases: false });
   const versions = presets.map((item) => Number(item.studioVersion));
-  assert.equal(presets.length, 9);
-  assert.deepEqual([...new Set(versions)].sort((a, b) => a - b), [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  assert.equal(presets.length, 10);
+  assert.deepEqual([...new Set(versions)].sort((a, b) => a - b), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
   assert.equal(versions.length, new Set(versions).size, 'studioVersion deve ser único');
   const microAggressive = presets.find((item) => item.id === 'btc-micro-aggressive-v1');
   assert.equal(microAggressive.studioVersion, 5);
