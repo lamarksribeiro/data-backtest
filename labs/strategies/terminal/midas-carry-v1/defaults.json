@@ -2,6 +2,7 @@
   "walletSize": 100,
   "entryBudget": 10,
   "minShares": 1,
+  "settleWinnerPrice": 1,
   "entrySlippageMax": 0.02,
   "minLiquidityRatio": 0.6,
   "minSecondsLeft": 5,
@@ -87,7 +88,18 @@
   "oddsVelSizeFactor": 1.0,
   "tierAskThreshold": 0.82,
   "tierAskBudgetFactor": 1.0,
+  "tierMinZ": 0.0,
+  "tierMinDistAbs": 0.0,
+  "maxLossUsd": 0.0,
+  "cushionDecayEnabled": false,
+  "cushionDecayStartSec": 20,
+  "cushionDecayEndSec": 4,
+  "cushionDecayMinDist": 0.0,
+  "cushionDecayMinBidRatio": 0.55,
   "equityScaleEnabled": false,
   "equityScalePct": 0.10,
-  "maxEntryBudget": 30
+  "maxEntryBudget": 30,
+  "dailyStopLoss": 0,
+  "lossStreakPauseCount": 0,
+  "lossStreakPauseEvents": 3
 }

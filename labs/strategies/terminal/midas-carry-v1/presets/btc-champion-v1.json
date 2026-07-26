@@ -4,8 +4,8 @@
   "name": "MIDAS Carry V1 — Tiered High-Ask (equilibrado)",
   "studioSlug": "midas-carry-btc-champion-v1",
   "studioName": "MIDAS Carry V1 · Champion (tier 1.5x)",
-  "role": "champion",
-  "description": "Núcleo TFC V7 Danger Floor com envelope estendido: teto de ask 0.94 (vs 0.82), distância máxima 40 (vs 20) e orçamento 1.5x na banda de favorito caro (ask >= 0.82, fee 0.07*p*(1-p) até 3x menor, WR ~92% no cubo). Mecanismos testados e rejeitados: sigma sizing por z (não monotônico), scoop convexo ask<0.55 (regime-dependente, alfa de latência), danger exit contínuo e early-warn exit (pioram PnL/DD), minEntryZ (corta PnL no holdout).",
+  "role": "historical",
+  "description": "Histórico lab $10 (Estúdio v1). Campeão atual micro: btc-micro-guardian-v3-os (v9). Núcleo TFC V7 Danger Floor com envelope estendido: teto de ask 0.94 (vs 0.82), distância máxima 40 (vs 20) e orçamento 1.5x na banda de favorito caro (ask >= 0.82, fee 0.07*p*(1-p) até 3x menor, WR ~92% no cubo). Mecanismos testados e rejeitados: sigma sizing por z (não monotônico), scoop convexo ask<0.55 (regime-dependente, alfa de latência), danger exit contínuo e early-warn exit (pioram PnL/DD), minEntryZ (corta PnL no holdout).",
   "tags": ["candidate", "depth25", "midas", "high-ask-tier", "executable"],
   "window": {
     "from": "2026-05-04",

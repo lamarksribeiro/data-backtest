@@ -1,0 +1,173 @@
+{
+  "name": "eps-shield-july",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-22",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "notes": "Edge-Parity Shield: ablação das camadas (maxAsk 0.85, maxLossUsd 1.5, tierMinDistAbs 12, cushionDecay) vs canário aggressive micro. Honest settleWinnerPrice 0.995. Hold = proteções OFF (pior caso live).",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "base-protect",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995
+        }
+      },
+      {
+        "id": "base-hold",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "lateFlipExitEnabled": false,
+          "lateFlipReverseEnabled": false,
+          "dangerExitEnabled": false
+        }
+      },
+      {
+        "id": "eps-full",
+        "params": {
+          "maxAsk": 0.85,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "maxLossUsd": 1.5,
+          "tierMinDistAbs": 12,
+          "cushionDecayEnabled": true,
+          "cushionDecayStartSec": 20,
+          "cushionDecayEndSec": 4,
+          "cushionDecayMinDist": 0,
+          "cushionDecayMinBidRatio": 0.55
+        }
+      },
+      {
+        "id": "eps-hold",
+        "params": {
+          "maxAsk": 0.85,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "maxLossUsd": 1.5,
+          "tierMinDistAbs": 12,
+          "cushionDecayEnabled": false,
+          "lateFlipExitEnabled": false,
+          "lateFlipReverseEnabled": false,
+          "dangerExitEnabled": false
+        }
+      },
+      {
+        "id": "eps-entry-only",
+        "params": {
+          "maxAsk": 0.85,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "maxLossUsd": 1.5,
+          "tierMinDistAbs": 12,
+          "cushionDecayEnabled": false
+        }
+      },
+      {
+        "id": "abl-maxask085",
+        "params": {
+          "maxAsk": 0.85,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995
+        }
+      },
+      {
+        "id": "abl-maxloss15",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "maxLossUsd": 1.5
+        }
+      },
+      {
+        "id": "abl-tierdist12",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "tierMinDistAbs": 12
+        }
+      },
+      {
+        "id": "abl-cushion",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "cushionDecayEnabled": true,
+          "cushionDecayStartSec": 20,
+          "cushionDecayEndSec": 4,
+          "cushionDecayMinDist": 0,
+          "cushionDecayMinBidRatio": 0.55
+        }
+      },
+      {
+        "id": "abl-tier1",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995
+        }
+      },
+      {
+        "id": "abl-ms9",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9
+        }
+      }
+    ]
+  }
+}

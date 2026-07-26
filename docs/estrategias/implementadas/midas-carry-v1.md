@@ -1,6 +1,6 @@
 # MIDAS Carry V1 — Tiered High-Ask Terminal Carry
 
-**Status:** candidata promovida ao Studio · **Lab:** `labs/strategies/terminal/midas-carry-v1/` · **Studio slug:** `midas-carry-v1` · **Data:** 2026-07-19
+**Status:** campeã Estúdio **v9** (`btc-micro-guardian-v3-os`) · **Lab:** `labs/strategies/terminal/midas-carry-v1/` · **Studio slug:** `midas-carry-v1` · **Atualizado:** 2026-07-26
 
 ## Tese
 
@@ -27,9 +27,28 @@ Budget base US$ 10; entradas com ask ≥ 0,82 usam 15 (champion/robust) ou 20 (a
 | Preset | Base / teto | Envelope | Uso |
 |---|---|---|---|
 | `btc-micro-robust-v1` | US$ 2 / US$ 3 | Robust (dist 30, tier 1.5×) | Estúdio **v4** · canário conservador |
-| `btc-micro-aggressive-v1` | US$ 2 / US$ 4 | Aggressive (dist 40, tier 2.0×) | Estúdio **v5** · **igual ao canário do data-robot** |
+| `btc-micro-aggressive-v1` | US$ 2 / US$ 4 | Aggressive (dist 40, tier 2.0×) | Estúdio **v5** · canário live atual |
+| `btc-micro-guardian-v3` | US$ 2 / US$ 4 | Aggressive + minSec9 + tierMinZ 2.0 | Estúdio **v7** · candidata |
+| **`btc-micro-guardian-v3-os`** | US$ 2 / US$ 4 | **v7 + odds-shock 50%** · settle 0.995 | Estúdio **v9** · **campeão** |
 
-Núcleo vencedor nos dois micros: late flip exit/reverse + danger exit no piso 4s + gates TFC (velocity, OBI, odds-sum, spread). Mecanismos rejeitados permanecem **OFF** (sigma sizing, scoop, danger contínuo, early-warn, `minEntryZ`, equity scale).
+#### Campeão v9 — o que muda vs canário live (v5)
+
+| Peça | Canário v5 | Campeão v9 |
+|---|---|---|
+| `minSecondsLeft` | 5 | **9** |
+| `tierMinZ` | 0 | **2.0** |
+| `oddsShock*` | off | **on** (Δ0,15/2s, opp≥0,50, bid≥0,55×entry, vende 50%) |
+| `settleWinnerPrice` | 1.0 (legado) | **0.995** (honesto) |
+| dist / tier | 40 / 2.0 | **igual** |
+
+Lab package-final (jul 01–25 / jun 01–08): PnL 433 / 112 · PF 1,65 / 1,67 · pior dia −0,22 / −6,22. Envelope robust 30/1.5 rejeitado. Relatório: `labs/sandbox/midas-package-final-aprovacao.md`.
+
+```powershell
+npm run lab:run-preset -- --preset btc-micro-guardian-v3-os --strategy midas-carry-v1 --strategy-family terminal --from 2026-07-01 --to 2026-07-25 --daily-metrics
+npm run lab:seed-presets
+```
+
+No Estúdio: estratégia `midas-carry-v1` → versão **v9** (default).
 
 ```powershell
 npm run lab:run-preset -- --preset btc-micro-aggressive-v1 --strategy midas-carry-v1 --strategy-family terminal --from 2026-07-01 --to 2026-07-07 --daily-metrics

@@ -1,0 +1,52 @@
+{
+  "name": "eps-shield-smoke",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-20",
+  "to": "2026-07-22",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 2,
+  "defaults": "../defaults.json",
+  "notes": "Smoke 3d: compila GLS EPS (maxLossUsd, tierMinDistAbs, cushionDecay) antes do sweep completo.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "base-protect",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995
+        }
+      },
+      {
+        "id": "eps-full",
+        "params": {
+          "maxAsk": 0.85,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "maxLossUsd": 1.5,
+          "tierMinDistAbs": 12,
+          "cushionDecayEnabled": true,
+          "cushionDecayStartSec": 20,
+          "cushionDecayEndSec": 4,
+          "cushionDecayMinDist": 0,
+          "cushionDecayMinBidRatio": 0.55
+        }
+      }
+    ]
+  }
+}

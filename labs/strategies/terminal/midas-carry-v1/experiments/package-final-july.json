@@ -1,0 +1,160 @@
+{
+  "name": "package-final-july",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-25",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 6,
+  "defaults": "../defaults.json",
+  "notes": "Pacote final de melhoria (aprovação). Tudo honest settleWinnerPrice 0.995, micro $2/$4. Compara: canário base × guardian-v3 × g3+oddsShock (pacote) × ablations × hold (pior caso). Critério: pacote PnL ≈ g3 (±3%), PF≥g3 ou ≈, pior dia e DD ≤ g3, hold>0 nas duas janelas.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "base",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995
+        }
+      },
+      {
+        "id": "g3",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2.0
+        }
+      },
+      {
+        "id": "g3-os",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2.0,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5
+        }
+      },
+      {
+        "id": "base-os",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5
+        }
+      },
+      {
+        "id": "g3-hold",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2.0,
+          "lateFlipExitEnabled": false,
+          "lateFlipReverseEnabled": false,
+          "dangerExitEnabled": false
+        }
+      },
+      {
+        "id": "g3-os-hold",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2.0,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5,
+          "lateFlipExitEnabled": false,
+          "lateFlipReverseEnabled": false,
+          "dangerExitEnabled": false
+        }
+      },
+      {
+        "id": "g3-os-2x",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 4,
+          "maxEntryBudget": 8,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2.0,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5
+        }
+      },
+      {
+        "id": "g3-alloff",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2.0,
+          "lateFlipExitEnabled": false,
+          "lateFlipReverseEnabled": false,
+          "dangerExitEnabled": false,
+          "oddsShockEnabled": false
+        }
+      }
+    ]
+  }
+}

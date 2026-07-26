@@ -15,13 +15,13 @@
   "promotedToStudio": true,
   "studioSlug": "midas-carry-v1",
   "studio": {
-    "description": "MIDAS Carry V1 — núcleo TFC V7 + envelope high-ask com orçamento em tier (ask >= 0.82). Versões: v1 Champion (dist 40, tier 1.5x) · v2 Aggressive (tier 2.0x) · v3 Robust (dist 30, tier 1.5x) · micro canários ($2/$3 robust, $2/$4 aggressive = robot).",
-    "tags": ["terminal", "midas", "high-ask-tier", "btc", "candidate"],
-    "defaultVersion": 1,
+    "description": "MIDAS Carry V1 — núcleo TFC V7 + envelope high-ask. Default v9 = Micro Guardian V3 + OddsShock ($2/$4, settle 0.995): minSec9 + tierMinZ 2.0 + odds-shock 50%. Histórico: v1–v3 lab $10 · v4–v5 micro canários · v6 honest-v2 · v7 guardian-v3 · v8 eps (rejeitado).",
+    "tags": ["terminal", "midas", "high-ask-tier", "btc", "champion", "odds-shock"],
+    "defaultVersion": 9,
     "defaultGlsSource": "classic",
     "glsSources": {
       "classic": "labs/strategies/terminal/midas-carry-v1/strategy.gls"
     }
   },
-  "notes": "Núcleo TFC V7 + envelope high-ask (maxAsk 0.94) com orçamento em tier. Presets: btc-champion-v1 / aggressive / robust / micro. Mecanismos OFF: sigma, scoop, danger cont, early-warn, book-collapse, odds-shock exit, odds-vel entry (unrestricted). Candidata frágil lab 2026-07-26: oddsVelGate + cond OR ask<=0.70|dist>=30 (julho +90, junho −19). Doc: docs/estrategias/implementadas/midas-carry-v1.md."
+  "notes": "Campeão Estúdio v9: btc-micro-guardian-v3-os (package-final 2026-07-26). Envelope aggressive dist40/tier2.0 + guardian-v3 + odds-shock partial50. Robust 30/1.5 rejeitado. Relatório: labs/sandbox/midas-package-final-aprovacao.md. Doc: docs/estrategias/implementadas/midas-carry-v1.md."
 }

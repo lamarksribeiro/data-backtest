@@ -1,0 +1,160 @@
+{
+  "name": "package-final-robust-july",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-25",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 6,
+  "defaults": "../defaults.json",
+  "notes": "Extensão do pacote final: envelope robust (maxDistAbs 30 + tierAskBudgetFactor 1.5) sozinho e combinado com guardian-v3 + odds-shock. Compara vs base aggressive e vs g3-os aprovado. Honest settle 0.995, micro $2/$4.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "base",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995
+        }
+      },
+      {
+        "id": "g3-os",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2.0,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5
+        }
+      },
+      {
+        "id": "r30",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 30,
+          "tierAskBudgetFactor": 1.5,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995
+        }
+      },
+      {
+        "id": "r30-g3",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 30,
+          "tierAskBudgetFactor": 1.5,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2.0
+        }
+      },
+      {
+        "id": "r30-g3-os",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 30,
+          "tierAskBudgetFactor": 1.5,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2.0,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5
+        }
+      },
+      {
+        "id": "r30-g3-os-hold",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 30,
+          "tierAskBudgetFactor": 1.5,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2.0,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5,
+          "lateFlipExitEnabled": false,
+          "lateFlipReverseEnabled": false,
+          "dangerExitEnabled": false
+        }
+      },
+      {
+        "id": "d30-t20-g3-os",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 30,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2.0,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5
+        }
+      },
+      {
+        "id": "d40-t15-g3-os",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.5,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2.0,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5
+        }
+      }
+    ]
+  }
+}

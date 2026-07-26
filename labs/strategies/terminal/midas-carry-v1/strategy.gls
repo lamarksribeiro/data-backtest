@@ -13,6 +13,10 @@ strategy "MIDAS Carry V1" {
   param minShares = 1
   param entrySlippageMax = 0.02
   param minLiquidityRatio = 0.60
+  // Execução honesta (runtime): payout do vencedor no settlement.
+  // Live Polymarket liquida ~0.995; 1.0 = lab otimista legado.
+  // Não entra na lógica de decisão — só no PnL do simulador.
+  param settleWinnerPrice = 1
 
   // Envelope terminal (idêntico à TFC V7 campeã)
   param minSecondsLeft = 5
@@ -141,6 +145,23 @@ strategy "MIDAS Carry V1" {
   // Motivação: taxonomia de losses — os piores trades são entradas 0.82-0.95
   // com dist/z fraco que viram no fim (breakeven WR >= 90% não tolera chop).
   param tierMinZ = 0.0
+  // Gate de distância absoluta no tier (0 = off). Diferente de tierMinZ: não
+  // depende de σ (que explode z em vol baixa). Live 24–26/07: wipeouts high-ask
+  // com |spot−PTB| frágil (~1–8) que tierMinZ deixaria passar.
+  param tierMinDistAbs = 0.0
+
+  // Teto de perda em dólar por entrada (0 = off). Em binário settle≈0, budget≈maxLoss.
+  // Corta a cauda do tier 2x (live: losses −$2.5…−$2.7 com qty 3 @ 0.86–0.92).
+  param maxLossUsd = 0.0
+
+  // Cushion Decay Exit (EPS): sai quando o colchão signedDistance some ainda com
+  // bid salvável — antes da janela late-flip de 8s. Diferente de bookCollapse
+  // (bid ratio com spot ainda a favor) e de earlyWarn (nível estático de oppAsk).
+  param cushionDecayEnabled = false
+  param cushionDecayStartSec = 20
+  param cushionDecayEndSec = 4
+  param cushionDecayMinDist = 0.0
+  param cushionDecayMinBidRatio = 0.55
 
   // Equity scale — orçamento proporcional à banca corrente (compound opcional)
   param equityScaleEnabled = false
@@ -251,6 +272,21 @@ strategy "MIDAS Carry V1" {
           if (ewOut) {
             state.closed = ewOut.closed
             mark("exit", { reason: "early_warn_exit", price: bid, oppAsk: ewOppAsk, secsLeft: secsLeft })
+          }
+        }
+      }
+
+      // Cushion Decay: colchão físico sumiu (signedDistance <= floor) com bid ainda
+      // salvável — EXIT antes do wipeout binário / late-flip tardio.
+      let cushionOn = params.cushionDecayEnabled == true || params.cushionDecayEnabled == 1
+      if (cushionOn && !state.closed && !state.reversed && secsLeft <= params.cushionDecayStartSec && secsLeft >= params.cushionDecayEndSec && bid >= params.stopMinBid) {
+        let cdEntry = position.avgPrice
+        let cdBidOk = params.cushionDecayMinBidRatio <= 0 || (cdEntry > 0 && bid >= (cdEntry * params.cushionDecayMinBidRatio))
+        if (cdBidOk && state.signedDistance <= params.cushionDecayMinDist) {
+          let cdOut = exit({ price: bid, reason: "cushion_decay_exit" })
+          if (cdOut) {
+            state.closed = cdOut.closed
+            mark("exit", { reason: "cushion_decay_exit", price: bid, dist: state.signedDistance, entry: cdEntry, secsLeft: secsLeft })
           }
         }
       }
@@ -521,7 +557,11 @@ strategy "MIDAS Carry V1" {
         if (params.tierMinZ > 0 && ask >= params.tierAskThreshold && state.z < params.tierMinZ) {
           state.tierZOk = false
         }
-        if (state.tierZOk && !state.entryBlocked && !state.isAdverseMove && !state.oddsVelBlocked && state.z >= params.minEntryZ && secsLeft >= params.minSecondsLeft && secsLeft < params.maxSecondsLeft && dist < params.maxDistAbs && ask >= params.minAsk && ask <= params.maxAsk && spread <= params.maxSpread) {
+        state.tierDistOk = true
+        if (params.tierMinDistAbs > 0 && ask >= params.tierAskThreshold && dist < params.tierMinDistAbs) {
+          state.tierDistOk = false
+        }
+        if (state.tierZOk && state.tierDistOk && !state.entryBlocked && !state.isAdverseMove && !state.oddsVelBlocked && state.z >= params.minEntryZ && secsLeft >= params.minSecondsLeft && secsLeft < params.maxSecondsLeft && dist < params.maxDistAbs && ask >= params.minAsk && ask <= params.maxAsk && spread <= params.maxSpread) {
           let upAsk = book.ask("UP", tick)
           let downAsk = book.ask("DOWN", tick)
           let oddsSum = upAsk + downAsk
@@ -555,7 +595,11 @@ strategy "MIDAS Carry V1" {
               if (ask >= params.tierAskThreshold) {
                 state.budgetFactor = state.budgetFactor * params.tierAskBudgetFactor
               }
-              let budget = math.min(state.equityRawBudget * state.budgetFactor * state.oddsVelSizeMul, params.maxEntryBudget, equity)
+              state.lossCap = 999999.0
+              if (params.maxLossUsd > 0) {
+                state.lossCap = params.maxLossUsd
+              }
+              let budget = math.min(state.equityRawBudget * state.budgetFactor * state.oddsVelSizeMul, params.maxEntryBudget, equity, state.lossCap)
               let maxPrice = ask + params.entrySlippageMax
               let bought = enter(fav, { price: ask, maxPrice: maxPrice, budget: budget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "midas_core_entry" })
               if (bought) {
@@ -576,7 +620,11 @@ strategy "MIDAS Carry V1" {
           let scoopDownAsk = book.ask("DOWN", tick)
           let scoopOddsSum = scoopUpAsk + scoopDownAsk
           if (scoopOddsSum >= params.scoopMinOddsSum && scoopOddsSum <= params.scoopMaxOddsSum) {
-          let scoopBudget = math.min(state.equityRawBudget * params.scoopBudgetFactor * state.oddsVelSizeMul, params.maxEntryBudget, equity)
+          state.lossCap = 999999.0
+          if (params.maxLossUsd > 0) {
+            state.lossCap = params.maxLossUsd
+          }
+          let scoopBudget = math.min(state.equityRawBudget * params.scoopBudgetFactor * state.oddsVelSizeMul, params.maxEntryBudget, equity, state.lossCap)
           let scoopMaxPrice = ask + params.entrySlippageMax
           let scooped = enter(fav, { price: ask, maxPrice: scoopMaxPrice, budget: scoopBudget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "midas_scoop_entry" })
           if (scooped) {

@@ -1,0 +1,112 @@
+{
+  "name": "eps-lite-july",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-22",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "notes": "Pós-ablation EPS: cushion rejeitado. Testa pacote leve (ms9+tier1) e maxLoss suave (2.0/2.5/3.0) sem cushion/maxAsk085.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "base-protect",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995
+        }
+      },
+      {
+        "id": "ms9-tier1",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9
+        }
+      },
+      {
+        "id": "ms9-tier1-loss20",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "maxLossUsd": 2.0
+        }
+      },
+      {
+        "id": "ms9-tier1-loss25",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "maxLossUsd": 2.5
+        }
+      },
+      {
+        "id": "ms9-tier1-loss30",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "maxLossUsd": 3.0
+        }
+      },
+      {
+        "id": "ms9-tier1-hold",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 1.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "lateFlipExitEnabled": false,
+          "lateFlipReverseEnabled": false,
+          "dangerExitEnabled": false
+        }
+      },
+      {
+        "id": "guardian-v3",
+        "params": {
+          "maxAsk": 0.94,
+          "maxDistAbs": 40,
+          "tierAskBudgetFactor": 2.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2.0
+        }
+      }
+    ]
+  }
+}
