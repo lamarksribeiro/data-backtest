@@ -87,7 +87,22 @@ Três motores no mesmo book: classic | v4 | **v4-gates** (`refuseAvgSum=1.02`, M
 
 Path **bom** (avgSum&lt;1): classic ganhou; gates absolutas **atrasaram** scoops (Δ gates−v4 = −$0,78). Ajuste: refuse só se `proj` **não melhora** e fica &gt;1,02 (já no código).
 
-Lição Doggy transferida: gate de avgSum ajuda em path ruim; em path bom o sizing clássico + DESC barato pode ganhar — não misturar sem o refine.
+### Refuse refinado + DESC honest `…1785107400` (`*.live-pair-desc.json`)
+
+| | classic | v4 | v4-gates | v4-gates-honest |
+|---|---|---|---|---|
+| Investido | $56,61 | $45,72 | $36,90 | $46,51 |
+| avgSum | **84,5¢** | 97,3¢ | 100,6¢ | **95,3¢** |
+| Exit | EQ | EQ | aberto 39/36 | aberto 57/47 |
+| PnL | **+$10,39** | +$1,28 | ~$0 (sem EQ) | (odds; Δ vs gates ≈0) |
+| DESC | opt | opt | opt | placed 8 · fill 6 · miss 1 · TO 1 |
+| REFUSE | — | — | ×148 | ×11 |
+
+Achados:
+1. Em path bom (1 virada, DESC barato), **classic sizing ainda vence** no Lego optimistic.
+2. Refuse refinado ainda corta demais no optimistic-gates (148×) e impede EQ.
+3. DESC honest: 6/8 fills reais por atravessamento — avgSum **melhor** que optimistic-gates (95 vs 101), mas residual aberto (sem EQ).
+4. Próximo lab deve usar `executionMode=honest` no DESC; optimistic infla edge em paths bons.
 
 ## Smoke 2 dias (jun 15–16) — classic vs v4
 
@@ -106,9 +121,34 @@ Lição Doggy transferida: gate de avgSum ajuda em path ruim; em path bom o sizi
 
 Achado: no sizing v4, **tirar MULT/contagio corta ~$1,5k de prejuízo** em 7d (ainda negativo). Flat no classic quebrado continua pior em PnL absoluto. Gate PF≥1,2 / PnL>0: **FAIL** nas três.
 
+## Lab curto v4 + honest (jun 14–16)
+
+Experimento `v4-honest-short.json` — sizing v4 + freios + DESC honest; ± MULT flat.
+
+| Rank | Variante | PnL | PF | Win% | DD |
+|---|---|---|---|---|---|
+| 1 | **v4-honest-flat** | −$1 237 | 0,51 | 55% | $466 |
+| 2 | classic-honest-flat | −$1 556 | 0,73 | 50% | $782 |
+| 3 | v4-honest-mult | −$1 743 | 0,48 | 60% | $678 |
+
+Mesma ordem da ablação anterior: v4+flat melhor, MULT piora, classic flat no meio. **Ainda negativo** sob honest+fees — gate FAIL. Desc honest sozinho não fecha o gap live.
+
+## Fill quality Phil shadow vs Doggy
+
+Script: `labs/sandbox/shotandgo-fill-quality.mjs` → `shadow/FILL-QUALITY.json`  
+Fonte: 5 shadows Phil DRY (122 fills), join fill×tick (lag med 0ms).
+
+| Cohort | med fill−ask | ≤ask | ≤ask−1¢ | walk >1¢ | Σ edge vs ask |
+|---|---:|---:|---:|---:|---:|
+| **Doggy live** (benchmark) | **−0,7¢** | ~high | 46% | 25% | +$ |
+| Phil SUB (dry) | **0,0¢** | 79% | 5% | 15% | −$14 |
+| Phil DESC (dry optimistic) | **+1,0¢** | 40% | 6% | **59%** | −$6 |
+| Phil all | 0,0¢ | 62% | 5% | 34% | −$19 |
+
+Leitura: no dry, SUB cola no ask (sem melhoria Doggy); DESC optimistic **preenche no nível** mesmo com ask já abaixo → paga caro vs book. Isso **infla perda** no Lego optimistic e **não** explica o +$100 live do colega (que seria DESC maker real + talvez fill≤ask). Precisa shadow **real** (wallet do colega / `DRY_RUN=False` mínimo) para fechar.
+
 ## Próximos tijolos
 
-1. ~~Live-pair + freios + gates Doggy~~ (feitos; refuse refinado).
-2. Re-captura 1 evento com refuse “só se piora”.
-3. DESC: fill maker live vs resting honest.
-4. Lab curto v4 + freios + gates refinados.
+1. ~~Fill quality dry~~.
+2. Shadow live real: wallet do Phil/colega (activity×book) ou 1 evento `DRY_RUN=False` mínimo.
+3. Calibrar refuse/vacuum só depois do fill real.

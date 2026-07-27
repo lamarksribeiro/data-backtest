@@ -1,0 +1,90 @@
+{
+  "name": "shotandgo-v4-honest-short",
+  "strategyId": "shotandgo-v1",
+  "strategyFamily": "carry",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-06-14",
+  "to": "2026-06-16",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 3,
+  "defaults": "../defaults.json",
+  "feeOptions": { "category": "crypto" },
+  "description": "Lab curto pós-Lego: v4 sizing + freios + DESC honest. ± MULT flat. Sem gates Doggy.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "v4-honest-mult",
+        "label": "v4 + honest + MULT full",
+        "params": {
+          "executionMode": "honest",
+          "sizeScale": 1,
+          "maxEventNotional": 250,
+          "subLevels": [
+            { "preco": 55, "shares": 4 }, { "preco": 60, "shares": 4 },
+            { "preco": 65, "shares": 4 }, { "preco": 70, "shares": 5 },
+            { "preco": 75, "shares": 5 }, { "preco": 80, "shares": 6 },
+            { "preco": 85, "shares": 8 }, { "preco": 90, "shares": 11 }
+          ],
+          "descLevels": [
+            { "preco": 45, "shares": 3 }, { "preco": 40, "shares": 3 },
+            { "preco": 35, "shares": 3 }, { "preco": 30, "shares": 4 },
+            { "preco": 25, "shares": 4 }, { "preco": 20, "shares": 5 },
+            { "preco": 15, "shares": 7 }, { "preco": 10, "shares": 10 }
+          ]
+        }
+      },
+      {
+        "id": "v4-honest-flat",
+        "label": "v4 + honest + MULT=1 contagio off",
+        "params": {
+          "executionMode": "honest",
+          "sizeScale": 1,
+          "maxEventNotional": 250,
+          "mult": [1],
+          "contagio": "off",
+          "subLevels": [
+            { "preco": 55, "shares": 4 }, { "preco": 60, "shares": 4 },
+            { "preco": 65, "shares": 4 }, { "preco": 70, "shares": 5 },
+            { "preco": 75, "shares": 5 }, { "preco": 80, "shares": 6 },
+            { "preco": 85, "shares": 8 }, { "preco": 90, "shares": 11 }
+          ],
+          "descLevels": [
+            { "preco": 45, "shares": 3 }, { "preco": 40, "shares": 3 },
+            { "preco": 35, "shares": 3 }, { "preco": 30, "shares": 4 },
+            { "preco": 25, "shares": 4 }, { "preco": 20, "shares": 5 },
+            { "preco": 15, "shares": 7 }, { "preco": 10, "shares": 10 }
+          ]
+        }
+      },
+      {
+        "id": "classic-honest-flat",
+        "label": "classic + honest + MULT flat (controle)",
+        "params": {
+          "executionMode": "honest",
+          "sizeScale": 1,
+          "mult": [1],
+          "contagio": "off",
+          "subLevels": [
+            { "preco": 55, "shares": 20 }, { "preco": 60, "shares": 15 },
+            { "preco": 65, "shares": 10 }, { "preco": 70, "shares": 10 },
+            { "preco": 75, "shares": 5 }, { "preco": 80, "shares": 5 },
+            { "preco": 85, "shares": 1 }, { "preco": 90, "shares": 1 }
+          ],
+          "descLevels": [
+            { "preco": 45, "shares": 5 }, { "preco": 40, "shares": 5 },
+            { "preco": 35, "shares": 5 }, { "preco": 30, "shares": 5 },
+            { "preco": 25, "shares": 5 }, { "preco": 20, "shares": 5 },
+            { "preco": 15, "shares": 5 }, { "preco": 10, "shares": 5 }
+          ]
+        }
+      }
+    ]
+  },
+  "metrics": ["totalPnl", "entries", "winRate", "profitFactor", "maxDrawdown"]
+}

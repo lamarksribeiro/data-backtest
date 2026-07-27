@@ -37,6 +37,7 @@ Prioridade e `sourceDoc` no catálogo de port:
 |---:|---|---|
 | 0 | [`nao-implementadas/shotandgo-v1.md`](nao-implementadas/shotandgo-v1.md) | Shotandgo / Phil Escada Dupla — **lab research** (`labs/strategies/carry/shotandgo-v1/`); post-mortem ascent_hedge não cobre |
 | 0 | [`nao-implementadas/pair-ladder-complete-set-v1.md`](nao-implementadas/pair-ladder-complete-set-v1.md) | Pair Ladder Complete-Set — **lab research** (`labs/strategies/carry/pair-ladder-complete-set-v1/`); smoke ainda negativo; proibido Studio |
+| 0 | [`nao-implementadas/doggy-momentum-pair-ladder-canonico.md`](nao-implementadas/doggy-momentum-pair-ladder-canonico.md) | **Doggy canônico** — passo a passo + configs + desempenho (RE 2026-07-26); proibido conta real |
 | 1 | `strike-boundary-repricing-inelasticity-v1.md` | SBRI (teoria; **lab GLS em `implementadas/sbri-tight-v1.md`**) |
 | 2 | `stochastic-escape-barrier-theory-v1.md` | SEBT |
 | 2 | `transition-acceleration-threshold-v1.md` | TAT |

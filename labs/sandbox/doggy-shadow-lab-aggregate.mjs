@@ -114,9 +114,11 @@ agg.verdict = [
   `med fill−ask ${agg.medians.medFillAskC?.toFixed?.(2) ?? 'n/a'}¢ · med fill−min500 ${agg.medians.medFillMin500C?.toFixed?.(2) ?? 'n/a'}¢ · momo med ${agg.medians.momoShare != null ? (agg.medians.momoShare * 100).toFixed(0) + '%' : 'n/a'}.`,
   agg.totals.edgeVsMin500Usd > 50 && agg.runsN >= 2
     ? 'Fill quality consistente entre sessões — manter shadow live; lab 2Hz continua insuficiente.'
-    : agg.runsN < 2
-      ? 'Amostra ainda de 1 sessão — acumular ≥2–3 sessões ≥45min.'
-      : 'Amostra ainda pequena/fraca — acumular ≥3 sessões ≥45min.',
+    : agg.runsN >= 3 && (agg.medians.momoShare ?? 0) >= 0.4
+      ? '≥3 sessões: padrão estável = MOMO mid +EV / FADE −EV; fill≤ask regime-dependent. RE descritivo completo.'
+      : agg.runsN < 2
+        ? 'Amostra ainda de 1 sessão — acumular ≥2–3 sessões ≥45min.'
+        : 'Amostra ainda pequena/fraca — acumular ≥3 sessões ≥45min.',
 ];
 
 fs.writeFileSync(OUT, JSON.stringify(agg, null, 2));

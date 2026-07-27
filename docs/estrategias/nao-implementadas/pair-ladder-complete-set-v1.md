@@ -7,14 +7,15 @@
 **Data:** 2026-07-26  
 **Artefatos RE:** `data-backtest/.tmp/pair-ladder-re/` · canvas `pair-ladder-complete-set`  
 
-> Este documento substitui e absorve `clip-ladder-doggy-v1.md` como spec canônica da estratégia.
-> Origem: engenharia reversa cruzada de 5 traders lucrativos observados ao vivo.
+> **Documentação operacional canônica (passo a passo + configs + desempenho):**  
+> [`doggy-momentum-pair-ladder-canonico.md`](doggy-momentum-pair-ladder-canonico.md)  
+> Este arquivo permanece como **log de RE** (Etapas 1–17) e spec histórica.
 
 ---
 
 ## 0. Veredito em uma frase
 
-Lucro = **montar um conjunto completo (UP+DOWN) cujo custo médio somado fica abaixo de US$ 1**, com shares quase iguais, **segurando até o redeem** — construído ao longo do path do evento, não por arb atômico de um único tick.
+Lucro do Doggy **não** é arb atômico de complete-set. É **momentum-taker + hedge estrutural + vacuum late + Diamond 44%**, com inventário dual como container. Ver doc canônico.
 
 \[
 q \cdot (1 - (\bar p_{UP} + \bar p_{DOWN})) > 0
@@ -726,6 +727,69 @@ Replay dos 50 fills Doggy contra `books-tick.jsonl` (7.894 ticks).
 
 **Achado:** fill quality é **material** mesmo no journal fino — `slippageCents=-1` no lab ainda deixa ~$128 na mesa nesta janela. Gate MOMO mid-band 50% é útil mas não exclusivo (open/hedge/vacuum também). Continuar shadow-lab + mais sessões live; **não** subir Hz no Brutus. **Não promover.**
 
+**Etapa 15 — 2ª sessão live 60 min + agregação (2026-07-26):**
+
+Run: `2026-07-26T21-53-51-015Z` (284 matched, 13.179 ticks) · agregador: `doggy-shadow-lab-aggregate.mjs`
+
+| | Sessão 1 (45m) | Sessão 2 (60m) | Σ |
+|---|---:|---:|---:|
+| fills matched | 50 | 284 | 334 |
+| med fill−ask | −1,75¢ | **0¢** | — |
+| med fill−min500 | −1,0¢ | **+0,8¢** | — |
+| edge vs ask $ | +171 | +42 | +213 |
+| edge vs minAsk±500ms $ | +132 | **−241** | −109 |
+| momoShare | 52% | 43% | — |
+| build_momo edge vs ask | +98 | **+115** | — |
+| build_fade edge vs ask | +20 | **−130** | — |
+| vacuum fills | 6 (12%) | 27 (10%) | — |
+
+**Achado (revisão):** o −1¢ sistemático da sessão 1 **não se replica**. Na sessão densa, fill ≈ ask (med 0¢) e Doggy até piora vs minAsk±500ms no agregado — mas **build_momo** continua +EV vs ask e **build_fade** sangra (−$130). O edge dominante é **seleção de clip (MOMO vs FADE)**, não fill quality universal. Agregar ≥3 sessões antes de cravar proxy de slippage no lab. Fix observer: `liveGateAt` sobe após book ready (evita fills unmatched no boot). **Não promover.**
+
+**Etapa 16a — taxonomia FADE (2026-07-26):**
+
+Script: `labs/sandbox/doggy-fade-taxonomy.mjs` · S2 (`21-53-51`): 109/285 fades (38%).
+
+| Classe | n | edge vs ask |
+|---|---:|---:|
+| **residual_hedge** (underweight) | **60** | **−$93** |
+| pre_vacuum (≤25¢ late) | 21 | −$15 |
+| early_open | 16 | −$41 |
+| mid_error | 10 | +$9 |
+| rich_chase | 2 | −$16 |
+
+**Achado:** o sangramento FADE não é “mid_error” raro — é sobretudo **rebalance underweight no ask que cai** (−$93). `momoBlockFade` no lab (bloqueia mid sem MOMO) ataca parte disso, mas Doggy *escolhe* esse custo de container. Completar entendimento = quando residual_hedge é obrigatório vs skippável. 3ª sessão live em andamento. Canvas: `doggy-re-status.canvas.tsx`.
+
+**Etapa 16b — regra residual_hedge (2026-07-26):**
+
+Script: `doggy-residual-hedge-rules.mjs` · S2: 79 residual FADE.
+
+| Regra proposta | n | edge vs ask |
+|---|---:|---:|
+| keep (improvesAvg / must / cushion / cheap≤40¢) | 52 | −$42 |
+| **skip** (não melhora avg, ask mid/rich) | **27** | **−$88** |
+
+skip_candidate medPx **66¢**. `momoBlockFade` (só cheap ≤`chaseMaxAsk`) já bloqueia esse bucket no lab — confirma Etapa 12. Keep ainda tem custo de fill, mas é o container que Doggy paga quando melhora avg.
+
+**Etapa 16c — vacuum shadow (2026-07-26):**
+
+Script: `doggy-vacuum-shadow.mjs` · S2: 28 vac / 285 (10%); medPx **12¢**; firstVac ~**174s**; residual 150→0 em **89%** dos eventos com vacuum. S1: 14% vac, residual reduce só 33%. Vacuum = equalizador late real ao vivo.
+
+**Etapa 17 — 3ª sessão live 60 min (2026-07-26):**
+
+Run: `2026-07-26T22-58-20-331Z` · 271 matched · 13.711 ticks
+
+| | S1 | S2 | S3 | med/padrão |
+|---|---:|---:|---:|---|
+| fills | 50 | 284 | 271 | — |
+| med fill−ask | −1,8¢ | 0¢ | **−1¢** | ~−1¢ instável |
+| build_momo $ vs ask | +98 | +115 | **+300** | **sempre +** |
+| build_fade $ vs ask | +20 | −130 | **−193** | **S2/S3 −** |
+| momoShare | 52% | 43% | **48%** | ~45–50% |
+| vacuumShare | 12% | 10% | **8%** | ~10% |
+| residual skip $ | — | −88 | **−163** | skip mid caro |
+
+Σ 3 sessões: 607 fills · build_momo domina · FADE residual skippável é o sangramento. **Estratégia entendida o suficiente para RE:** motor MOMO + container seletivo + vacuum late; lab com `chase_momo`+`momoBlockFade` é a melhor aproximação 2Hz. Paridade PnL continua aberta (seleção/timing). **Não promover.**
+
 ---
 
 ## Estratégia canônica (RE Doggy — congelada 2026-07-26)
@@ -747,11 +811,11 @@ open 45–55¢ ≤30s (clip ~50)
 | Motor = chase MOMO | Etapas 7, 9, 11a/b | `legChoice=chase_momo` (+~$430) |
 | Bloquear FADE mid | Etapa 12 | `momoBlockFade` (+~$200) |
 | Late vacuum residual tilt | Etapas 2, 7, 12 | **não replicado** (medVac≈0) |
-| Fill ≤ ask / seleção intra-s | Etapas 4, 10–11b, **13** | live: −1¢ vs minAsk±500ms + momo 52%; gap PnL lake permanece |
-| Spot-lead gate | Etapas 11a/b, 13 | **descartado** (spotLead 14% live) |
-| Vacuum live | Etapa 13 | presente (12% fills); lab 1Hz ainda não replica |
+| Fill ≤ ask / seleção intra-s | Etapas 4, 13–15 | **regime-dependent** (S1 −1¢; S2 ≈0¢); edge estável = MOMO vs FADE |
+| Spot-lead gate | Etapas 11a/b, 13 | **descartado** |
+| Vacuum live | Etapas 13–15 | presente (~10% fills); lab 2Hz ainda não replica |
 
-**Veredito:** a estratégia *descrita* está fechada. A *paridade de PnL* no lake 2 Hz **não**. Edge Doggy = fill quality sub-s + seleção MOMO (Etapas 13–14: +$132 vs minAsk±500ms na sessão 45 min). Próximo útil: mais sessões live + shadow-lab offline — **não** grid no Parquet nem subir Hz no colector/Brutus.
+**Veredito:** RE **suficiente para descrever** a estratégia. Paridade PnL no lake 2Hz **não**. Com 3 sessões live (607 fills): motor = MOMO mid; sangramento = FADE residual mid/rich skippável; vacuum ~10% equaliza late. Lab research = `chase_momo` + `momoBlockFade`. Próximo só se quiser shadow contínuo — **não** Hz Brutus / promoção / conta real.
 
 ### Métricas por evento (obrigatórias)
 

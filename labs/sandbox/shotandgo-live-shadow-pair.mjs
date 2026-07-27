@@ -32,10 +32,13 @@ const BRAKES = {
 
 /** Gates herdados da RE Doggy (não estão no Phil live). */
 const DOGGY_GATES = {
-  refuseAvgSum: 1.02,       // bloquear compra se projected avgSum > isto (ambos lados já abertos)
+  refuseAvgSum: 1.02,       // bloquear compra se projected avgSum > isto E não melhora
   multOnlyUnderweight: true, // MULT/contagio só no lado com menos shares
-  lateVacuumAsk: 0.15,       // opcional: scoop residual ≤15¢ se melhora avgSum
-  lateVacuumAtivo: false,    // off no baseline; liga no engine gated
+  lateVacuumAsk: 0.15,       // scoop residual ≤15¢ se melhora avgSum
+  lateVacuumAtivo: true,
+  descMode: 'optimistic',    // fill DESC no nível (proxy maker live)
+  makerFillEpsilon: 0.01,
+  makerTimeoutSec: 45,
 };
 
 const CLASSIC = {
@@ -50,6 +53,7 @@ const CLASSIC = {
   refuseAvgSum: null,
   multOnlyUnderweight: false,
   lateVacuumAtivo: false,
+  descMode: 'optimistic',
 };
 const V4 = {
   id: 'v4',
@@ -63,12 +67,17 @@ const V4 = {
   refuseAvgSum: null,
   multOnlyUnderweight: false,
   lateVacuumAtivo: false,
+  descMode: 'optimistic',
 };
 const V4_GATES = {
   ...V4,
   id: 'v4-gates',
   ...DOGGY_GATES,
-  lateVacuumAtivo: true,
+};
+const V4_GATES_HONEST = {
+  ...V4_GATES,
+  id: 'v4-gates-honest',
+  descMode: 'honest', // DESC só preenche se ask atravessar o nível (lab honest)
 };
 
 function argNum(flag, fb) {
@@ -88,6 +97,12 @@ function buildLadder(cfg) {
   return { UP: levels.map((n) => ({ ...n })), DOWN: levels.map((n) => ({ ...n })) };
 }
 
+function shouldFillRestingBuy(prevAsk, currAsk, limitPrice, epsilon = 0.01) {
+  if (prevAsk == null || currAsk == null || limitPrice == null) return false;
+  const thr = limitPrice - epsilon;
+  return prevAsk > thr + 1e-12 && currAsk <= thr + 1e-12;
+}
+
 function createEngine(cfg) {
   const ladder = buildLadder(cfg);
   const histSub = [];
@@ -97,14 +112,16 @@ function createEngine(cfg) {
   const fills = [];
   const blocks = [];
   const blockCountsInline = {};
+  const resting = []; // DESC honest
   let viradas = 0;
   let equalized = false;
   let encerrado = false;
-  let exitReason = null; // equalized | stop | max_viradas | null
+  let exitReason = null;
   let realizedPnl = null;
   let escadaArmada = false;
   let congeladaLogged = false;
   const ticks = [];
+  let lastAsks = { UP: null, DOWN: null };
 
   function invested() {
     return cost.UP + cost.DOWN;
@@ -124,7 +141,7 @@ function createEngine(cfg) {
     const newSh = shares[lado] + sh;
     const newAvg = (cost[lado] + sh * px) / newSh;
     const other = lado === 'UP' ? 'DOWN' : 'UP';
-    if (shares[other] <= 0) return null; // ainda single-leg: não gateia
+    if (shares[other] <= 0) return null;
     return newAvg + avgOf(other);
   }
 
@@ -160,7 +177,6 @@ function createEngine(cfg) {
     if (!ignoraRefuse && cfg.refuseAvgSum != null) {
       const proj = projectedAvgSum(lado, px, sh);
       const cur = avgSumNow();
-      // Só bloqueia se piora (ou mantém) e fica acima do teto — permite scoop que melhora mesmo se ainda > teto
       if (proj != null && proj > cfg.refuseAvgSum && (cur == null || proj >= cur - 1e-9)) {
         blockCountsInline.REFUSE_AVGSUM = (blockCountsInline.REFUSE_AVGSUM || 0) + 1;
         if ((blockCountsInline.REFUSE_AVGSUM || 0) <= 8) {
@@ -207,8 +223,59 @@ function createEngine(cfg) {
       pnl: realizedPnl,
     });
     shares = { UP: 0, DOWN: 0 };
+    resting.length = 0;
     encerrado = true;
     exitReason = reason;
+  }
+
+  function rearmPair(lado, tipo, idx) {
+    const comp = tipo === 'SUB' ? 'DESC' : 'SUB';
+    for (const c of ladder[lado]) {
+      if (c.tipo === comp && c.idx === idx) c.armado = true;
+    }
+  }
+
+  function placeDescResting(lado, n, sh) {
+    const key = `${lado}|DESC-${n.idx}`;
+    if (resting.some((o) => o.key === key)) return;
+    resting.push({
+      key,
+      lado,
+      idx: n.idx,
+      price: n.preco / 100,
+      sh,
+      placedAt: Date.now(),
+      lastAsk: lastAsks[lado],
+    });
+    blockCountsInline.DESC_RESTING_PLACED = (blockCountsInline.DESC_RESTING_PLACED || 0) + 1;
+    n.armado = false;
+    rearmPair(lado, 'DESC', n.idx);
+  }
+
+  function checkResting(asks) {
+    const now = Date.now();
+    const timeoutMs = (cfg.makerTimeoutSec ?? 45) * 1000;
+    const eps = cfg.makerFillEpsilon ?? 0.01;
+    for (let i = resting.length - 1; i >= 0; i--) {
+      const o = resting[i];
+      if (now - o.placedAt >= timeoutMs) {
+        blockCountsInline.DESC_TIMEOUT = (blockCountsInline.DESC_TIMEOUT || 0) + 1;
+        resting.splice(i, 1);
+        continue;
+      }
+      const currAsk = asks[o.lado];
+      if (currAsk == null) continue;
+      const crossed = shouldFillRestingBuy(o.lastAsk, currAsk, o.price, eps);
+      o.lastAsk = currAsk;
+      if (!crossed) continue;
+      const filled = buy(o.lado, 'DESC', o.idx, o.price, o.sh, 1);
+      if (filled > 0) {
+        blockCountsInline.DESC_HONEST_FILL = (blockCountsInline.DESC_HONEST_FILL || 0) + 1;
+      } else {
+        blockCountsInline.DESC_HONEST_MISS = (blockCountsInline.DESC_HONEST_MISS || 0) + 1;
+      }
+      resting.splice(i, 1);
+    }
   }
 
   function tryLateVacuum(asks) {
@@ -219,7 +286,6 @@ function createEngine(cfg) {
     const ask = asks[menor];
     if (ask == null || ask > (cfg.lateVacuumAsk ?? 0.15) + 1e-9) return;
     const dif = Math.abs(shares.UP - shares.DOWN);
-    // clip pequeno estilo Doggy late
     const sh = Math.min(dif, 20);
     const before = avgSumNow();
     const proj = projectedAvgSum(menor, ask, sh);
@@ -242,7 +308,11 @@ function createEngine(cfg) {
       else return;
     }
 
-    // STOP (MTM a bid) — Phil v4
+    const asks = { UP: askUp, DOWN: askDn };
+
+    // DESC honest: processar resting antes de novos níveis
+    if (cfg.descMode === 'honest') checkResting(asks);
+
     if (cfg.stopAtivo && viradas >= cfg.stopVirada && shares.UP + shares.DOWN > 0) {
       const saldo = shares.UP * (bidUp ?? 0) + shares.DOWN * (bidDn ?? 0) - invested();
       if (saldo >= cfg.stopLimiar) {
@@ -258,7 +328,6 @@ function createEngine(cfg) {
       exitReason = exitReason ?? 'max_viradas';
     }
 
-    const asks = { UP: askUp, DOWN: askDn };
     if (!congelado) {
       for (const lado of ['UP', 'DOWN']) {
         const askC = asks[lado] * 100;
@@ -273,7 +342,6 @@ function createEngine(cfg) {
           if (hitSub) {
             f = fator(n.idx, lado);
             sh = Math.round(n.shares * f * 100) / 100;
-            // PISO só faz sentido no underweight (recuperar o lado menor)
             if (cfg.pisoAtivo && n.idx === 1 && (!cfg.multOnlyUnderweight || isUnderweight(lado))) {
               const prox = viradas + 1;
               if (cfg.pisoViradas.includes(prox)) {
@@ -287,27 +355,26 @@ function createEngine(cfg) {
               }
             }
           }
-          // DESC optimistic fill (live maker approx)
-          const px = hitDesc ? n.preco / 100 : asks[lado];
-          const filled = buy(lado, n.tipo, n.idx, px, sh, f);
-          if (filled <= 0) {
-            // teto / refuse: não desarma (retry)
+
+          if (hitDesc && cfg.descMode === 'honest') {
+            placeDescResting(lado, n, sh);
             continue;
           }
+
+          const px = hitDesc ? n.preco / 100 : asks[lado];
+          const filled = buy(lado, n.tipo, n.idx, px, sh, f);
+          if (filled <= 0) continue;
           if (hitSub) {
             histSub.push({ lado, idx: n.idx });
             if (n.idx === 1) viradas += 1;
           }
           n.armado = false;
-          const comp = n.tipo === 'SUB' ? 'DESC' : 'SUB';
-          for (const c of ladder[lado]) {
-            if (c.tipo === comp && c.idx === n.idx) c.armado = true;
-          }
+          rearmPair(lado, n.tipo, n.idx);
         }
       }
     }
 
-    // Late vacuum (Doggy/b27) — residual barato melhorando avgSum
+    lastAsks = { ...asks };
     tryLateVacuum(asks);
 
     if (!equalized && Math.abs(shares.UP - shares.DOWN) > 1e-9) {
@@ -323,6 +390,7 @@ function createEngine(cfg) {
           encerrado = true;
           exitReason = 'equalized';
           realizedPnl = Math.min(shares.UP, shares.DOWN) - invested();
+          resting.length = 0;
         }
       }
     }
@@ -340,7 +408,7 @@ function createEngine(cfg) {
     const pnlEq = equalized ? sh - inv : null;
     const blockCounts = { ...blockCountsInline };
     for (const b of blocks) {
-      if (b.reason === 'REFUSE_AVGSUM') continue; // já contado inline
+      if (b.reason === 'REFUSE_AVGSUM') continue;
       blockCounts[b.reason] = (blockCounts[b.reason] || 0) + 1;
     }
     return {
@@ -350,9 +418,11 @@ function createEngine(cfg) {
         refuseAvgSum: cfg.refuseAvgSum,
         multOnlyUnderweight: !!cfg.multOnlyUnderweight,
         lateVacuumAtivo: !!cfg.lateVacuumAtivo,
+        descMode: cfg.descMode ?? 'optimistic',
       },
       ticks: ticks.length,
       fills: fills.length,
+      restingOpen: resting.length,
       shares: { ...shares },
       invested: inv,
       avgUp,
@@ -457,7 +527,7 @@ function printSnap(label, s, askUp, askDn, tau) {
   const exit = s.exitReason ? ` exit=${s.exitReason}` : '';
   process.stdout.write(
     `\r[${label}] τ=${tau.toFixed(0)}s UP ${(askUp * 100)?.toFixed?.(0) ?? '?'}c DN ${(askDn * 100)?.toFixed?.(0) ?? '?'}c (${soma}c) | `
-    + `gates f=${s.fills} ${s.shares.UP.toFixed(0)}/${s.shares.DOWN.toFixed(0)} `
+    + `hon f=${s.fills} r=${s.restingOpen ?? 0} ${s.shares.UP.toFixed(0)}/${s.shares.DOWN.toFixed(0)} `
     + `vir=${s.viradas} $${s.invested.toFixed(0)} sum=${(s.sum * 100).toFixed(0)}c${exit}   `,
   );
 }
@@ -481,12 +551,13 @@ async function main() {
   const fullEvent = hasFlag('--full-event');
   const maxSec = argNum('--seconds', fullEvent ? 320 : 280);
   const janela = argNum('--janela', 280);
-  console.log('Live shadow pair — classic | v4 | v4-gates (Doggy)');
+  console.log('Live shadow pair — classic | v4 | v4-gates | v4-gates-honest');
   console.log(fullEvent
     ? 'Modo: EVENTO INTEIRO (espera tau alto + opera ≤ janela)'
     : `Modo: até ${maxSec}s / fim do evento\n`);
   console.log(`Freios: teto $500/$250 | MAX_VIR=${BRAKES.maxViradas} | STOP@${BRAKES.stopVirada} | PISO@${BRAKES.pisoViradas.join(',')}`);
-  console.log(`Gates (v4-gates): refuseAvgSum=${DOGGY_GATES.refuseAvgSum} | multOnlyUW | lateVacuum≤${DOGGY_GATES.lateVacuumAsk}`);
+  console.log(`Gates: refuseAvgSum=${DOGGY_GATES.refuseAvgSum} (só se piora) | multOnlyUW | lateVacuum≤${DOGGY_GATES.lateVacuumAsk}`);
+  console.log('DESC: optimistic vs honest (atravessamento ask)');
 
   const minTau = argNum('--min-tau', 240);
   const mkt = fullEvent
@@ -503,7 +574,8 @@ async function main() {
   const classic = createEngine(CLASSIC);
   const v4 = createEngine(V4);
   const v4g = createEngine(V4_GATES);
-  const engines = [classic, v4, v4g];
+  const v4h = createEngine(V4_GATES_HONEST);
+  const engines = [classic, v4, v4g, v4h];
   const started = Date.now();
   let stopped = false;
   let lastAsk = { up: null, dn: null };
@@ -526,7 +598,7 @@ async function main() {
       const meta = { tau, bidUp: bookUp.bid, bidDn: bookDn.bid };
       for (const eng of engines) eng.onTick(bookUp.ask, bookDn.ask, meta);
     }
-    printSnap(new Date().toISOString().slice(11, 19), v4g.snapshot(), bookUp.ask, bookDn.ask, tau);
+    printSnap(new Date().toISOString().slice(11, 19), v4h.snapshot(), bookUp.ask, bookDn.ask, tau);
 
     if (engines.every((e) => e.snapshot().encerrado) && !fullEvent) {
       console.log('\n\nTodos encerraram — early exit.');
@@ -544,7 +616,7 @@ async function main() {
   if (finalUp.ask != null) lastAsk.up = finalUp.ask;
   if (finalDn.ask != null) lastAsk.dn = finalDn.ask;
 
-  console.log('\n\n=== RESULTADO PAREADO (freios + gates Doggy) ===');
+  console.log('\n\n=== RESULTADO (refuse refinado + DESC honest) ===');
   const results = {};
   for (const eng of engines) {
     const s = eng.snapshot();
@@ -552,7 +624,7 @@ async function main() {
     results[s.cfg] = { ...s, final: fin, finalAsk: lastAsk };
     console.log(`\n${s.cfg}:`);
     console.log(`  gates=${JSON.stringify(s.gates)}`);
-    console.log(`  ticks=${s.ticks} fills=${s.fills} viradas=${s.viradas} exit=${s.exitReason ?? '—'}`);
+    console.log(`  ticks=${s.ticks} fills=${s.fills} resting=${s.restingOpen} viradas=${s.viradas} exit=${s.exitReason ?? '—'}`);
     console.log(`  shares UP/DN=${s.shares.UP}/${s.shares.DOWN} investido=$${s.invested.toFixed(2)} (teto $${s.maxEventNotional})`);
     console.log(`  médias ${(s.avgUp * 100).toFixed(1)}c + ${(s.avgDn * 100).toFixed(1)}c = ${(s.sum * 100).toFixed(1)}c`);
     console.log(`  blocks=${JSON.stringify(s.blockCounts)}`);
@@ -566,9 +638,11 @@ async function main() {
   }
 
   const dGates = (results['v4-gates'].final.pnl ?? 0) - (results.v4.final.pnl ?? 0);
+  const dHonest = (results['v4-gates-honest'].final.pnl ?? 0) - (results['v4-gates'].final.pnl ?? 0);
   const dV4 = (results.v4.final.pnl ?? 0) - (results.classic.final.pnl ?? 0);
   console.log(`\nΔ PnL (v4 − classic) = $${dV4.toFixed(2)}`);
   console.log(`Δ PnL (v4-gates − v4) = $${dGates.toFixed(2)}`);
+  console.log(`Δ PnL (honest − optimistic gates) = $${dHonest.toFixed(2)}`);
 
   const outDir = path.resolve(ROOT, 'labs/strategies/carry/shotandgo-v1/shadow');
   fs.mkdirSync(outDir, { recursive: true });
@@ -576,23 +650,25 @@ async function main() {
     kind: 'shotandgo-live-shadow-pair',
     brakes: true,
     doggyGates: true,
+    refuseRefined: true,
+    descHonestAblation: true,
     fullEvent,
     slug: mkt.slug,
     capturedAt: new Date().toISOString(),
     classic: results.classic,
     v4: results.v4,
     'v4-gates': results['v4-gates'],
+    'v4-gates-honest': results['v4-gates-honest'],
     deltaPnlV4MinusClassic: dV4,
     deltaPnlGatesMinusV4: dGates,
+    deltaPnlHonestMinusOptimistic: dHonest,
     classicFills: classic.fills(),
     v4Fills: v4.fills(),
     v4GatesFills: v4g.fills(),
-    classicBlocks: classic.blocks().slice(-40),
-    v4Blocks: v4.blocks().slice(-40),
-    v4GatesBlocks: v4g.blocks().slice(-40),
-    ticksSample: v4g.ticks().filter((_, i, a) => i % 5 === 0 || i > a.length - 20),
+    v4HonestFills: v4h.fills(),
+    ticksSample: v4h.ticks().filter((_, i, a) => i % 5 === 0 || i > a.length - 20),
   };
-  const outPath = path.join(outDir, `${mkt.slug}.live-pair-gates.json`);
+  const outPath = path.join(outDir, `${mkt.slug}.live-pair-desc.json`);
   fs.writeFileSync(outPath, `${JSON.stringify(out, null, 2)}\n`);
   console.log(`\nsalvo: ${outPath}`);
 }

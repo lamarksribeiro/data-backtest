@@ -1,0 +1,126 @@
+{
+  "kind": "shotandgo-fill-quality",
+  "doggyBenchmark": {
+    "medFillMinusAskC": -0.7,
+    "note": "Doggy tick-replay Etapa 1"
+  },
+  "files": [
+    {
+      "file": "btc-updown-5m-1785096300.json",
+      "slug": "btc-updown-5m-1785096300",
+      "fills": 17,
+      "ticks": 2500
+    },
+    {
+      "file": "btc-updown-5m-1785097500.json",
+      "slug": "btc-updown-5m-1785097500",
+      "fills": 28,
+      "ticks": 586
+    },
+    {
+      "file": "btc-updown-5m-1785098100.json",
+      "slug": "btc-updown-5m-1785098100",
+      "fills": 20,
+      "ticks": 2935
+    },
+    {
+      "file": "btc-updown-5m-1780272600.json",
+      "slug": "btc-updown-5m-1780272600",
+      "fills": 38,
+      "ticks": 599
+    },
+    {
+      "file": "btc-updown-5m-1781532000.json",
+      "slug": "btc-updown-5m-1781532000",
+      "fills": 19,
+      "ticks": 211
+    }
+  ],
+  "overall": {
+    "label": "all",
+    "n": 122,
+    "medFillMinusAskC": 0,
+    "meanFillMinusAskC": 1.42,
+    "pctAtOrBelowAsk": 62.295081967213115,
+    "pctCheaperThanAsk1c": 4.918032786885246,
+    "pctWalkAsk": 33.60655737704918,
+    "edgeVsAskUsd": -18.52,
+    "medAbsLagMs": 0,
+    "buckets": {
+      "AT_ASK": 85,
+      "WALK_ASK": 29,
+      "BETWEEN_MID_ASK": 4,
+      "AT_BID": 2,
+      "BELOW_BID": 2
+    }
+  },
+  "takerLike": {
+    "label": "taker/SUB/EQ",
+    "n": 69,
+    "medFillMinusAskC": 0,
+    "meanFillMinusAskC": 0.82,
+    "pctAtOrBelowAsk": 79.71014492753623,
+    "pctCheaperThanAsk1c": 4.3478260869565215,
+    "pctWalkAsk": 14.492753623188406,
+    "edgeVsAskUsd": -12.67,
+    "medAbsLagMs": 0,
+    "buckets": {
+      "AT_ASK": 56,
+      "BETWEEN_MID_ASK": 4,
+      "WALK_ASK": 8,
+      "BELOW_BID": 1
+    }
+  },
+  "makerLike": {
+    "label": "maker/DESC",
+    "n": 54,
+    "medFillMinusAskC": 1,
+    "meanFillMinusAskC": 2.17,
+    "pctAtOrBelowAsk": 40.74074074074074,
+    "pctCheaperThanAsk1c": 5.555555555555555,
+    "pctWalkAsk": 57.407407407407405,
+    "edgeVsAskUsd": -5.85,
+    "medAbsLagMs": 0,
+    "buckets": {
+      "WALK_ASK": 21,
+      "AT_ASK": 30,
+      "AT_BID": 2,
+      "BELOW_BID": 1
+    }
+  },
+  "subOnly": {
+    "label": "SUB",
+    "n": 65,
+    "medFillMinusAskC": 0,
+    "meanFillMinusAskC": 0.88,
+    "pctAtOrBelowAsk": 78.46153846153847,
+    "pctCheaperThanAsk1c": 4.615384615384615,
+    "pctWalkAsk": 15.384615384615385,
+    "edgeVsAskUsd": -13.89,
+    "medAbsLagMs": 0,
+    "buckets": {
+      "AT_ASK": 53,
+      "BETWEEN_MID_ASK": 3,
+      "WALK_ASK": 8,
+      "BELOW_BID": 1
+    }
+  },
+  "descOnly": {
+    "label": "DESC",
+    "n": 53,
+    "medFillMinusAskC": 1,
+    "meanFillMinusAskC": 2.21,
+    "pctAtOrBelowAsk": 39.62264150943396,
+    "pctCheaperThanAsk1c": 5.660377358490566,
+    "pctWalkAsk": 58.490566037735846,
+    "edgeVsAskUsd": -5.85,
+    "medAbsLagMs": 0,
+    "buckets": {
+      "WALK_ASK": 21,
+      "AT_ASK": 29,
+      "AT_BID": 2,
+      "BELOW_BID": 1
+    }
+  },
+  "note": "Shadows atuais são DRY (simulado). SUB dry usa preço de execução Phil; DESC dry = nível (optimistic) ou resting. Comparar com Doggy live só como referência de método."
+}
