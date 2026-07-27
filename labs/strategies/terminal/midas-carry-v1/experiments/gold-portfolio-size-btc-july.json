@@ -1,0 +1,116 @@
+{
+  "name": "gold-portfolio-size-btc-july",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-25",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "notes": "Live portfolio sizing .5/ · g3-os · tier 1.5 · FAK/GTC. Comparar protect vs hold. Aprovar se protect>=hold e PF>=1.15.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "portfolio",
+        "params": {
+          "maxAsk": 0.94,
+          "tierAskThreshold": 0.82,
+          "tierAskBudgetFactor": 1.5,
+          "entryBudget": 2.5,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5,
+          "maxDistAbs": 40,
+          "maxAdverseSpotChange": 8
+        }
+      },
+      {
+        "id": "portfolio-hold",
+        "params": {
+          "maxAsk": 0.94,
+          "tierAskThreshold": 0.82,
+          "tierAskBudgetFactor": 1.5,
+          "entryBudget": 2.5,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5,
+          "maxDistAbs": 40,
+          "maxAdverseSpotChange": 8,
+          "lateFlipExitEnabled": false,
+          "lateFlipReverseEnabled": false,
+          "dangerExitEnabled": false
+        }
+      },
+      {
+        "id": "gold-10-30",
+        "params": {
+          "maxAsk": 0.94,
+          "tierAskThreshold": 0.82,
+          "tierAskBudgetFactor": 1.5,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5,
+          "maxDistAbs": 40,
+          "maxAdverseSpotChange": 8
+        }
+      },
+      {
+        "id": "gold-10-30-hold",
+        "params": {
+          "maxAsk": 0.94,
+          "tierAskThreshold": 0.82,
+          "tierAskBudgetFactor": 1.5,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5,
+          "maxDistAbs": 40,
+          "maxAdverseSpotChange": 8,
+          "lateFlipExitEnabled": false,
+          "lateFlipReverseEnabled": false,
+          "dangerExitEnabled": false
+        }
+      }
+    ]
+  }
+}

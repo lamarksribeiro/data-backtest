@@ -1,0 +1,54 @@
+{
+  "name": "desk-recovery-holdout-week",
+  "strategyId": "desk-recovery-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-07",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "recovery-live",
+        "params": {
+          "enableMisprice": 1,
+          "enableLock": 1,
+          "enableSnipe": 1,
+          "enableExits": 1,
+          "minCushion": 40,
+          "maxAsk": 0.55,
+          "entryBudget": 2.2
+        }
+      },
+      {
+        "id": "recovery-hold",
+        "params": {
+          "enableMisprice": 1,
+          "enableLock": 1,
+          "enableSnipe": 1,
+          "enableExits": 0,
+          "minCushion": 40,
+          "maxAsk": 0.55,
+          "entryBudget": 2.2
+        }
+      },
+      {
+        "id": "lock-only",
+        "params": {
+          "enableMisprice": 0,
+          "enableLock": 1,
+          "enableSnipe": 0,
+          "enableExits": 0,
+          "entryBudget": 2.2
+        }
+      }
+    ]
+  }
+}

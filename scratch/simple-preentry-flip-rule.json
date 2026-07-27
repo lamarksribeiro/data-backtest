@@ -1,0 +1,193 @@
+{
+  "generatedAt": "2026-07-27T07:29:17.924808+00:00",
+  "input": "scratch\\flip-features-canonical.csv",
+  "selectionWindow": "2026-04-27..2026-06-21",
+  "testWindow": "2026-06-22..2026-07-26",
+  "selectionCriterion": "maximize development pnlDelta with at least 40 signals and 45% precision",
+  "candidatesTested": 64,
+  "selectedRule": {
+    "minDrop15": -0.05,
+    "maxZ": 0.5,
+    "maxAsk": 0.68,
+    "blocked": 125,
+    "precision": 0.464,
+    "pnlDelta": 186.51627407257678
+  },
+  "results": {
+    "development": {
+      "entries": 4501,
+      "baseFlipRate": 0.20373250388802489,
+      "basePnl": -647.2608422316791,
+      "baseMaxDrawdown": 705.9643298577503,
+      "blocked": 125,
+      "blockRate": 0.027771606309708954,
+      "precision": 0.464,
+      "pnlDelta": 186.51627407257678,
+      "newPnl": -460.7445681591023,
+      "newMaxDrawdown": 516.1867140551583,
+      "positiveDays": 31,
+      "negativeDays": 20,
+      "bootstrapCi95Total": [
+        26.9998704895776,
+        354.951862922615
+      ],
+      "bootstrapProbabilityPositive": 0.98956,
+      "signalMedians": {
+        "favAsk": 0.61,
+        "z": 0.317,
+        "dMid15": -0.16
+      }
+    },
+    "test": {
+      "entries": 2801,
+      "baseFlipRate": 0.1867190289182435,
+      "basePnl": 51.38460149463576,
+      "baseMaxDrawdown": 214.28524398412037,
+      "blocked": 60,
+      "blockRate": 0.021420921099607283,
+      "precision": 0.45,
+      "pnlDelta": 64.64627573235572,
+      "newPnl": 116.03087722699146,
+      "newMaxDrawdown": 194.28106901814564,
+      "positiveDays": 16,
+      "negativeDays": 12,
+      "bootstrapCi95Total": [
+        -59.06314631888681,
+        193.92902028175286
+      ],
+      "bootstrapProbabilityPositive": 0.8449,
+      "signalMedians": {
+        "favAsk": 0.58,
+        "z": 0.301,
+        "dMid15": -0.155
+      }
+    },
+    "all": {
+      "entries": 7302,
+      "baseFlipRate": 0.1972062448644207,
+      "basePnl": -595.8762407370436,
+      "baseMaxDrawdown": 757.4430996033942,
+      "blocked": 185,
+      "blockRate": 0.025335524513831826,
+      "precision": 0.4594594594594595,
+      "pnlDelta": 251.16254980493247,
+      "newPnl": -344.7136909321109,
+      "newMaxDrawdown": 532.9071188461326,
+      "positiveDays": 47,
+      "negativeDays": 32,
+      "bootstrapCi95Total": [
+        45.93281432840438,
+        461.47353107384043
+      ],
+      "bootstrapProbabilityPositive": 0.99218,
+      "signalMedians": {
+        "favAsk": 0.6,
+        "z": 0.312,
+        "dMid15": -0.16
+      }
+    }
+  },
+  "controls": {
+    "withoutPhysicalZConfirmation": {
+      "development": {
+        "entries": 4501,
+        "baseFlipRate": 0.20373250388802489,
+        "basePnl": -647.2608422316791,
+        "baseMaxDrawdown": 705.9643298577503,
+        "blocked": 354,
+        "blockRate": 0.07864918906909575,
+        "precision": 0.403954802259887,
+        "pnlDelta": 215.82136745972437,
+        "newPnl": -431.4394747719548,
+        "newMaxDrawdown": 506.84454539936485,
+        "positiveDays": 33,
+        "negativeDays": 23,
+        "bootstrapCi95Total": [
+          -55.69460550971648,
+          490.0823688954662
+        ],
+        "bootstrapProbabilityPositive": 0.94002,
+        "signalMedians": {
+          "favAsk": 0.61,
+          "z": 0.708,
+          "dMid15": -0.15
+        }
+      },
+      "test": {
+        "entries": 2801,
+        "baseFlipRate": 0.1867190289182435,
+        "basePnl": 51.38460149463576,
+        "baseMaxDrawdown": 214.28524398412037,
+        "blocked": 198,
+        "blockRate": 0.07068903962870403,
+        "precision": 0.398989898989899,
+        "pnlDelta": 96.12339554295058,
+        "newPnl": 147.50799703758636,
+        "newMaxDrawdown": 188.92743567315026,
+        "positiveDays": 18,
+        "negativeDays": 17,
+        "bootstrapCi95Total": [
+          -131.73223567296648,
+          332.092935250828
+        ],
+        "bootstrapProbabilityPositive": 0.7881,
+        "signalMedians": {
+          "favAsk": 0.61,
+          "z": 0.869,
+          "dMid15": -0.14
+        }
+      }
+    },
+    "bookDropOnly": {
+      "development": {
+        "entries": 4501,
+        "baseFlipRate": 0.20373250388802489,
+        "basePnl": -647.2608422316791,
+        "baseMaxDrawdown": 705.9643298577503,
+        "blocked": 904,
+        "blockRate": 0.20084425683181514,
+        "precision": 0.2643805309734513,
+        "pnlDelta": 114.0125340216685,
+        "newPnl": -533.2483082100106,
+        "newMaxDrawdown": 595.7838376220652,
+        "positiveDays": 29,
+        "negativeDays": 27,
+        "bootstrapCi95Total": [
+          -202.13719436032426,
+          430.2750177681803
+        ],
+        "bootstrapProbabilityPositive": 0.76276,
+        "signalMedians": {
+          "favAsk": 0.72,
+          "z": 1.2635,
+          "dMid15": -0.1
+        }
+      },
+      "test": {
+        "entries": 2801,
+        "baseFlipRate": 0.1867190289182435,
+        "basePnl": 51.38460149463576,
+        "baseMaxDrawdown": 214.28524398412037,
+        "blocked": 516,
+        "blockRate": 0.18421992145662264,
+        "precision": 0.25387596899224807,
+        "pnlDelta": 18.00371842047707,
+        "newPnl": 69.38831991511276,
+        "newMaxDrawdown": 222.4879790134773,
+        "positiveDays": 15,
+        "negativeDays": 20,
+        "bootstrapCi95Total": [
+          -296.733295881912,
+          341.1029629074608
+        ],
+        "bootstrapProbabilityPositive": 0.54234,
+        "signalMedians": {
+          "favAsk": 0.72,
+          "z": 1.5005000000000002,
+          "dMid15": -0.1
+        }
+      }
+    }
+  },
+  "warning": "Exploratory analyst holdout: the calendar was used by earlier anti-flip work, although this exact rule was selected without its outcomes."
+}

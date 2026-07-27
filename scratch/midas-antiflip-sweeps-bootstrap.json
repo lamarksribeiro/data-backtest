@@ -1,0 +1,649 @@
+{
+  "generatedAt": "2026-07-27T07:46:29",
+  "method": "paired daily nonparametric bootstrap",
+  "bootstraps": 50000,
+  "seed": 20260727,
+  "windows": [
+    {
+      "window": "blind",
+      "results": "reports\\labs\\midas-carry-v1\\2026-07-27T07-45-54-544Z-antiflip-levers-blind\\results.json"
+    },
+    {
+      "window": "june",
+      "results": "reports\\labs\\midas-carry-v1\\2026-07-27T07-13-59-287Z-antiflip-levers-june\\results.json"
+    },
+    {
+      "window": "july",
+      "results": "reports\\labs\\midas-carry-v1\\2026-07-27T06-50-49-168Z-antiflip-levers-july\\results.json"
+    }
+  ],
+  "variants": [
+    {
+      "variant": "rev-078",
+      "pooled": {
+        "days": 90,
+        "deltaPnl": -140.6082699999996,
+        "meanDeltaPerDay": -1.5623141111111067,
+        "positiveDays": 25,
+        "negativeDays": 65,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -281.94524024999987,
+          8.259605750000494
+        ],
+        "bootstrapProbabilityPositive": 0.03168
+      },
+      "byWindow": {
+        "blind": {
+          "days": 35,
+          "deltaPnl": 12.603460000000318,
+          "meanDeltaPerDay": 0.3600988571428662,
+          "positiveDays": 14,
+          "negativeDays": 21,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -88.22868224999982,
+            118.43845800000028
+          ],
+          "bootstrapProbabilityPositive": 0.58726
+        },
+        "june": {
+          "days": 30,
+          "deltaPnl": -118.67417999999998,
+          "meanDeltaPerDay": -3.9558059999999995,
+          "positiveDays": 7,
+          "negativeDays": 23,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -173.92930150000007,
+            -63.58257649999989
+          ],
+          "bootstrapProbabilityPositive": 2e-05
+        },
+        "july": {
+          "days": 25,
+          "deltaPnl": -34.53754999999995,
+          "meanDeltaPerDay": -1.3815019999999982,
+          "positiveDays": 4,
+          "negativeDays": 21,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -105.41839999999993,
+            51.475758000000184
+          ],
+          "bootstrapProbabilityPositive": 0.19142
+        }
+      }
+    },
+    {
+      "variant": "rev-070",
+      "pooled": {
+        "days": 90,
+        "deltaPnl": -269.8901799999996,
+        "meanDeltaPerDay": -2.998779777777773,
+        "positiveDays": 28,
+        "negativeDays": 62,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -432.19587324999935,
+          -100.59667874999889
+        ],
+        "bootstrapProbabilityPositive": 0.00112
+      },
+      "byWindow": {
+        "blind": {
+          "days": 35,
+          "deltaPnl": -13.478779999999613,
+          "meanDeltaPerDay": -0.38510799999998896,
+          "positiveDays": 19,
+          "negativeDays": 16,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -128.6343057499993,
+            104.18172150000039
+          ],
+          "bootstrapProbabilityPositive": 0.4034
+        },
+        "june": {
+          "days": 30,
+          "deltaPnl": -177.17285999999996,
+          "meanDeltaPerDay": -5.905761999999998,
+          "positiveDays": 5,
+          "negativeDays": 25,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -247.88656025000006,
+            -104.95607774999975
+          ],
+          "bootstrapProbabilityPositive": 0.0
+        },
+        "july": {
+          "days": 25,
+          "deltaPnl": -79.23853999999999,
+          "meanDeltaPerDay": -3.1695415999999996,
+          "positiveDays": 4,
+          "negativeDays": 21,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -155.94330725,
+            10.991025749999999
+          ],
+          "bootstrapProbabilityPositive": 0.04068
+        }
+      }
+    },
+    {
+      "variant": "lf-sec15",
+      "pooled": {
+        "days": 90,
+        "deltaPnl": -1242.6413099999988,
+        "meanDeltaPerDay": -13.807125666666654,
+        "positiveDays": 45,
+        "negativeDays": 45,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -3487.7183739999964,
+          123.78903450000033
+        ],
+        "bootstrapProbabilityPositive": 0.0567
+      },
+      "byWindow": {
+        "blind": {
+          "days": 35,
+          "deltaPnl": -1003.8130399999993,
+          "meanDeltaPerDay": -28.680372571428553,
+          "positiveDays": 20,
+          "negativeDays": 15,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -3093.834769499997,
+            187.9159359999999
+          ],
+          "bootstrapProbabilityPositive": 0.14424
+        },
+        "june": {
+          "days": 30,
+          "deltaPnl": -140.47385999999955,
+          "meanDeltaPerDay": -4.682461999999985,
+          "positiveDays": 15,
+          "negativeDays": 15,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -482.25097449999924,
+            168.2211202500004
+          ],
+          "bootstrapProbabilityPositive": 0.19792
+        },
+        "july": {
+          "days": 25,
+          "deltaPnl": -98.35441000000007,
+          "meanDeltaPerDay": -3.934176400000003,
+          "positiveDays": 10,
+          "negativeDays": 15,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -414.46067425,
+            199.74370475000003
+          ],
+          "bootstrapProbabilityPositive": 0.27274
+        }
+      }
+    },
+    {
+      "variant": "lf-sec20",
+      "pooled": {
+        "days": 90,
+        "deltaPnl": -1343.971569999999,
+        "meanDeltaPerDay": -14.933017444444433,
+        "positiveDays": 39,
+        "negativeDays": 51,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -3772.642104499997,
+          164.49087425000036
+        ],
+        "bootstrapProbabilityPositive": 0.05912
+      },
+      "byWindow": {
+        "blind": {
+          "days": 35,
+          "deltaPnl": -1025.5854899999993,
+          "meanDeltaPerDay": -29.30244257142855,
+          "positiveDays": 15,
+          "negativeDays": 20,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -3251.211056249997,
+            266.50448125000014
+          ],
+          "bootstrapProbabilityPositive": 0.17162
+        },
+        "june": {
+          "days": 30,
+          "deltaPnl": -307.56809999999973,
+          "meanDeltaPerDay": -10.25226999999999,
+          "positiveDays": 12,
+          "negativeDays": 18,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -690.8779937499999,
+            58.22767800000048
+          ],
+          "bootstrapProbabilityPositive": 0.05148
+        },
+        "july": {
+          "days": 25,
+          "deltaPnl": -10.817979999999935,
+          "meanDeltaPerDay": -0.43271919999999736,
+          "positiveDays": 12,
+          "negativeDays": 13,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -385.2151092500002,
+            361.4334137500003
+          ],
+          "bootstrapProbabilityPositive": 0.48066
+        }
+      }
+    },
+    {
+      "variant": "lf-sec30",
+      "pooled": {
+        "days": 90,
+        "deltaPnl": -1585.694599999999,
+        "meanDeltaPerDay": -17.618828888888878,
+        "positiveDays": 37,
+        "negativeDays": 53,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -4008.7402634999976,
+          -50.727666499998975
+        ],
+        "bootstrapProbabilityPositive": 0.01822
+      },
+      "byWindow": {
+        "blind": {
+          "days": 35,
+          "deltaPnl": -1080.2352099999994,
+          "meanDeltaPerDay": -30.863863142857124,
+          "positiveDays": 15,
+          "negativeDays": 20,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -3362.8282459999973,
+            249.4357342499996
+          ],
+          "bootstrapProbabilityPositive": 0.13826
+        },
+        "june": {
+          "days": 30,
+          "deltaPnl": -439.28306999999984,
+          "meanDeltaPerDay": -14.642768999999994,
+          "positiveDays": 11,
+          "negativeDays": 19,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -841.6371690000002,
+            -62.063362499999776
+          ],
+          "bootstrapProbabilityPositive": 0.01074
+        },
+        "july": {
+          "days": 25,
+          "deltaPnl": -66.17631999999989,
+          "meanDeltaPerDay": -2.6470527999999955,
+          "positiveDays": 11,
+          "negativeDays": 14,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -447.9458552499996,
+            321.9382162500009
+          ],
+          "bootstrapProbabilityPositive": 0.36694
+        }
+      }
+    },
+    {
+      "variant": "w20-bid40",
+      "pooled": {
+        "days": 90,
+        "deltaPnl": -2046.2843599999987,
+        "meanDeltaPerDay": -22.736492888888876,
+        "positiveDays": 38,
+        "negativeDays": 52,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -4696.477248999996,
+          -392.4824604999998
+        ],
+        "bootstrapProbabilityPositive": 0.00178
+      },
+      "byWindow": {
+        "blind": {
+          "days": 35,
+          "deltaPnl": -1559.7938999999994,
+          "meanDeltaPerDay": -44.565539999999984,
+          "positiveDays": 12,
+          "negativeDays": 23,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -4008.680105749997,
+            -131.38680675000037
+          ],
+          "bootstrapProbabilityPositive": 0.00708
+        },
+        "june": {
+          "days": 30,
+          "deltaPnl": -234.97015999999985,
+          "meanDeltaPerDay": -7.8323386666666615,
+          "positiveDays": 16,
+          "negativeDays": 14,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -673.7816394999999,
+            168.00852975000032
+          ],
+          "bootstrapProbabilityPositive": 0.13484
+        },
+        "july": {
+          "days": 25,
+          "deltaPnl": -251.5202999999998,
+          "meanDeltaPerDay": -10.060811999999991,
+          "positiveDays": 10,
+          "negativeDays": 15,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -658.6387924999998,
+            136.45051150000018
+          ],
+          "bootstrapProbabilityPositive": 0.1075
+        }
+      }
+    },
+    {
+      "variant": "w30-bid40",
+      "pooled": {
+        "days": 90,
+        "deltaPnl": -2048.0504899999987,
+        "meanDeltaPerDay": -22.75611655555554,
+        "positiveDays": 39,
+        "negativeDays": 51,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -4716.484158499999,
+          -402.9447587499999
+        ],
+        "bootstrapProbabilityPositive": 0.00156
+      },
+      "byWindow": {
+        "blind": {
+          "days": 35,
+          "deltaPnl": -1520.1496999999993,
+          "meanDeltaPerDay": -43.43284857142855,
+          "positiveDays": 12,
+          "negativeDays": 23,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -3981.723503749997,
+            -96.5164645
+          ],
+          "bootstrapProbabilityPositive": 0.0101
+        },
+        "june": {
+          "days": 30,
+          "deltaPnl": -294.33009999999985,
+          "meanDeltaPerDay": -9.811003333333328,
+          "positiveDays": 16,
+          "negativeDays": 14,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -718.8284102499998,
+            98.56546425000029
+          ],
+          "bootstrapProbabilityPositive": 0.07648
+        },
+        "july": {
+          "days": 25,
+          "deltaPnl": -233.57068999999981,
+          "meanDeltaPerDay": -9.342827599999993,
+          "positiveDays": 11,
+          "negativeDays": 14,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -640.7032834999999,
+            171.16635074999988
+          ],
+          "bootstrapProbabilityPositive": 0.1315
+        }
+      }
+    },
+    {
+      "variant": "lf-bid45",
+      "pooled": {
+        "days": 90,
+        "deltaPnl": -2104.9038799999994,
+        "meanDeltaPerDay": -23.387820888888882,
+        "positiveDays": 39,
+        "negativeDays": 49,
+        "zeroDays": 2,
+        "bootstrapCi95Total": [
+          -4664.502637499997,
+          -517.4129720000001
+        ],
+        "bootstrapProbabilityPositive": 0.00024
+      },
+      "byWindow": {
+        "blind": {
+          "days": 35,
+          "deltaPnl": -1602.089169999999,
+          "meanDeltaPerDay": -45.77397628571426,
+          "positiveDays": 13,
+          "negativeDays": 21,
+          "zeroDays": 1,
+          "bootstrapCi95Total": [
+            -3976.4445947499976,
+            -234.27736199999973
+          ],
+          "bootstrapProbabilityPositive": 0.00076
+        },
+        "june": {
+          "days": 30,
+          "deltaPnl": -96.92385999999985,
+          "meanDeltaPerDay": -3.230795333333328,
+          "positiveDays": 17,
+          "negativeDays": 12,
+          "zeroDays": 1,
+          "bootstrapCi95Total": [
+            -488.9934022499995,
+            238.67480175
+          ],
+          "bootstrapProbabilityPositive": 0.31916
+        },
+        "july": {
+          "days": 25,
+          "deltaPnl": -405.8908499999998,
+          "meanDeltaPerDay": -16.23563399999999,
+          "positiveDays": 9,
+          "negativeDays": 16,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -812.1852752499996,
+            -23.12775674999989
+          ],
+          "bootstrapProbabilityPositive": 0.01912
+        }
+      }
+    },
+    {
+      "variant": "lf-bid40",
+      "pooled": {
+        "days": 90,
+        "deltaPnl": -2270.2536299999992,
+        "meanDeltaPerDay": -25.225040333333325,
+        "positiveDays": 38,
+        "negativeDays": 50,
+        "zeroDays": 2,
+        "bootstrapCi95Total": [
+          -4887.597426749997,
+          -659.0847362500002
+        ],
+        "bootstrapProbabilityPositive": 8e-05
+      },
+      "byWindow": {
+        "blind": {
+          "days": 35,
+          "deltaPnl": -1733.0507599999992,
+          "meanDeltaPerDay": -49.515735999999976,
+          "positiveDays": 11,
+          "negativeDays": 23,
+          "zeroDays": 1,
+          "bootstrapCi95Total": [
+            -4130.501741999998,
+            -366.2893062499999
+          ],
+          "bootstrapProbabilityPositive": 6e-05
+        },
+        "june": {
+          "days": 30,
+          "deltaPnl": -120.02082999999982,
+          "meanDeltaPerDay": -4.000694333333327,
+          "positiveDays": 18,
+          "negativeDays": 11,
+          "zeroDays": 1,
+          "bootstrapCi95Total": [
+            -564.1420207499997,
+            243.47369850000004
+          ],
+          "bootstrapProbabilityPositive": 0.29574
+        },
+        "july": {
+          "days": 25,
+          "deltaPnl": -417.1820399999998,
+          "meanDeltaPerDay": -16.68728159999999,
+          "positiveDays": 9,
+          "negativeDays": 16,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -820.2603834999994,
+            -34.842100500000086
+          ],
+          "bootstrapProbabilityPositive": 0.01564
+        }
+      }
+    },
+    {
+      "variant": "full-w30-bid40-rev070",
+      "pooled": {
+        "days": 90,
+        "deltaPnl": -2312.359539999999,
+        "meanDeltaPerDay": -25.692883777777766,
+        "positiveDays": 35,
+        "negativeDays": 55,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -4927.492204249997,
+          -676.0097644999989
+        ],
+        "bootstrapProbabilityPositive": 6e-05
+      },
+      "byWindow": {
+        "blind": {
+          "days": 35,
+          "deltaPnl": -1631.125019999999,
+          "meanDeltaPerDay": -46.60357199999997,
+          "positiveDays": 11,
+          "negativeDays": 24,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -4042.111031499998,
+            -220.4509642500002
+          ],
+          "bootstrapProbabilityPositive": 0.0018
+        },
+        "june": {
+          "days": 30,
+          "deltaPnl": -327.7288699999998,
+          "meanDeltaPerDay": -10.92429566666666,
+          "positiveDays": 14,
+          "negativeDays": 16,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -762.7548395,
+            67.10901950000027
+          ],
+          "bootstrapProbabilityPositive": 0.05462
+        },
+        "july": {
+          "days": 25,
+          "deltaPnl": -353.50564999999983,
+          "meanDeltaPerDay": -14.140225999999993,
+          "positiveDays": 10,
+          "negativeDays": 15,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -766.6118212499997,
+            49.30737725000007
+          ],
+          "bootstrapProbabilityPositive": 0.0424
+        }
+      }
+    },
+    {
+      "variant": "full-w20-bid40-rev070",
+      "pooled": {
+        "days": 90,
+        "deltaPnl": -2390.907059999999,
+        "meanDeltaPerDay": -26.56563399999999,
+        "positiveDays": 28,
+        "negativeDays": 62,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -4967.514573499997,
+          -748.6050909999998
+        ],
+        "bootstrapProbabilityPositive": 2e-05
+      },
+      "byWindow": {
+        "blind": {
+          "days": 35,
+          "deltaPnl": -1670.815859999999,
+          "meanDeltaPerDay": -47.737595999999975,
+          "positiveDays": 8,
+          "negativeDays": 27,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -4090.926268499997,
+            -240.72988225000014
+          ],
+          "bootstrapProbabilityPositive": 0.00176
+        },
+        "june": {
+          "days": 30,
+          "deltaPnl": -336.52758,
+          "meanDeltaPerDay": -11.217586,
+          "positiveDays": 11,
+          "negativeDays": 19,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -770.48170575,
+            59.24788350000011
+          ],
+          "bootstrapProbabilityPositive": 0.05006
+        },
+        "july": {
+          "days": 25,
+          "deltaPnl": -383.5636199999998,
+          "meanDeltaPerDay": -15.342544799999992,
+          "positiveDays": 9,
+          "negativeDays": 16,
+          "zeroDays": 0,
+          "bootstrapCi95Total": [
+            -801.4024609999999,
+            8.42277699999994
+          ],
+          "bootstrapProbabilityPositive": 0.0273
+        }
+      }
+    }
+  ]
+}

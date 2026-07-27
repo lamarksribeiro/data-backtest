@@ -1,0 +1,403 @@
+{
+  "generatedAt": "2026-07-27T05:12:16.531Z",
+  "label": "Gamma resolved outcome",
+  "finalBookConsensusFilter": false,
+  "eventRange": {
+    "first": "2026-04-23",
+    "last": "2026-07-26"
+  },
+  "canonicalEventsAvailable": 26060,
+  "trades": 8602,
+  "summary": [
+    {
+      "variant": "hold",
+      "threshold": null,
+      "delaySeconds": null,
+      "n": 8602,
+      "signals": 0,
+      "exits": 0,
+      "missed": 0,
+      "pnl": -683.376364515285,
+      "maxDrawdown": 821.7177389576888,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -305.19917209398074,
+          "maxDrawdown": 343.9253013489539
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -220.8489499913535,
+          "maxDrawdown": 347.61889925758396
+        },
+        "holdout": {
+          "n": 2359,
+          "pnl": -157.32824242996332,
+          "maxDrawdown": 494.0271075618655
+        }
+      },
+      "deltaVsHold": 0,
+      "drawdownDeltaVsHold": 0
+    },
+    {
+      "variant": "lead_bid45_delay0",
+      "threshold": 0.45,
+      "delaySeconds": 0,
+      "n": 8602,
+      "signals": 1917,
+      "exits": 1687,
+      "missed": 230,
+      "pnl": 4.778235010210325,
+      "maxDrawdown": 399.23586309800004,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": 53.43247123033709,
+          "maxDrawdown": 202.49844250614368
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -205.2495404972767,
+          "maxDrawdown": 320.4701847736354
+        },
+        "holdout": {
+          "n": 2359,
+          "pnl": 156.5953042771496,
+          "maxDrawdown": 246.91653441295924
+        }
+      },
+      "deltaVsHold": 688.1545995254953,
+      "drawdownDeltaVsHold": -422.4818758596887
+    },
+    {
+      "variant": "lead_bid45_delay0p5",
+      "threshold": 0.45,
+      "delaySeconds": 0.5,
+      "n": 8602,
+      "signals": 1917,
+      "exits": 1599,
+      "missed": 238,
+      "pnl": -307.5290743218468,
+      "maxDrawdown": 548.6020148769943,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -72.61746414927829,
+          "maxDrawdown": 242.1696203276062
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -281.814551415117,
+          "maxDrawdown": 399.84344665086644
+        },
+        "holdout": {
+          "n": 2359,
+          "pnl": 46.90294124253728,
+          "maxDrawdown": 285.54996444915537
+        }
+      },
+      "deltaVsHold": 375.8472901934382,
+      "drawdownDeltaVsHold": -273.11572408069446
+    },
+    {
+      "variant": "lead_bid45_delay1",
+      "threshold": 0.45,
+      "delaySeconds": 1,
+      "n": 8602,
+      "signals": 1917,
+      "exits": 1533,
+      "missed": 249,
+      "pnl": -422.37858486924824,
+      "maxDrawdown": 646.351882575119,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -117.35098406946383,
+          "maxDrawdown": 261.72092992090165
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -332.9586698031786,
+          "maxDrawdown": 448.3749402726412
+        },
+        "holdout": {
+          "n": 2359,
+          "pnl": 27.93106900338306,
+          "maxDrawdown": 295.5652576625345
+        }
+      },
+      "deltaVsHold": 260.99777964603675,
+      "drawdownDeltaVsHold": -175.36585638256975
+    },
+    {
+      "variant": "lead_bid45_delay2",
+      "threshold": 0.45,
+      "delaySeconds": 2,
+      "n": 8602,
+      "signals": 1917,
+      "exits": 1458,
+      "missed": 226,
+      "pnl": -491.84725080492075,
+      "maxDrawdown": 684.7143875143121,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -153.8995790425821,
+          "maxDrawdown": 280.09400057940445
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -317.842571956052,
+          "maxDrawdown": 437.98207011271995
+        },
+        "holdout": {
+          "n": 2359,
+          "pnl": -20.10509980629623,
+          "maxDrawdown": 324.3679255945862
+        }
+      },
+      "deltaVsHold": 191.52911371036424,
+      "drawdownDeltaVsHold": -137.0033514433767
+    },
+    {
+      "variant": "lead_bid45_delay3",
+      "threshold": 0.45,
+      "delaySeconds": 3,
+      "n": 8602,
+      "signals": 1917,
+      "exits": 1356,
+      "missed": 197,
+      "pnl": -575.7713653134474,
+      "maxDrawdown": 755.5040931103107,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -183.06239379401262,
+          "maxDrawdown": 326.5058120427451
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -323.9061614508306,
+          "maxDrawdown": 433.5899311283438
+        },
+        "holdout": {
+          "n": 2359,
+          "pnl": -68.80281006861411,
+          "maxDrawdown": 358.34420241224643
+        }
+      },
+      "deltaVsHold": 107.60499920183759,
+      "drawdownDeltaVsHold": -66.21364584737807
+    },
+    {
+      "variant": "lead_bid45_delay5",
+      "threshold": 0.45,
+      "delaySeconds": 5,
+      "n": 8602,
+      "signals": 1917,
+      "exits": 1201,
+      "missed": 171,
+      "pnl": -546.5383409568814,
+      "maxDrawdown": 746.4023740029434,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -127.76919205597957,
+          "maxDrawdown": 296.9541754639051
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -295.7875905786157,
+          "maxDrawdown": 410.6971228263485
+        },
+        "holdout": {
+          "n": 2359,
+          "pnl": -122.98155832229556,
+          "maxDrawdown": 400.1412676480801
+        }
+      },
+      "deltaVsHold": 136.83802355840362,
+      "drawdownDeltaVsHold": -75.3153649547454
+    },
+    {
+      "variant": "lead_bid40_delay0",
+      "threshold": 0.4,
+      "delaySeconds": 0,
+      "n": 8602,
+      "signals": 1866,
+      "exits": 1622,
+      "missed": 244,
+      "pnl": 27.851444987931927,
+      "maxDrawdown": 349.3331069889447,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": 30.42566795047423,
+          "maxDrawdown": 200.14290504543766
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -200.66216613331946,
+          "maxDrawdown": 305.8960336485187
+        },
+        "holdout": {
+          "n": 2359,
+          "pnl": 198.08794317077687,
+          "maxDrawdown": 251.42591934470943
+        }
+      },
+      "deltaVsHold": 711.2278095032169,
+      "drawdownDeltaVsHold": -472.3846319687441
+    },
+    {
+      "variant": "lead_bid40_delay0p5",
+      "threshold": 0.4,
+      "delaySeconds": 0.5,
+      "n": 8602,
+      "signals": 1866,
+      "exits": 1530,
+      "missed": 250,
+      "pnl": -307.69486271977155,
+      "maxDrawdown": 503.9813325717788,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -106.02654093313886,
+          "maxDrawdown": 237.00035277255583
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -274.5199842347793,
+          "maxDrawdown": 388.2479567795051
+        },
+        "holdout": {
+          "n": 2359,
+          "pnl": 72.851662448135,
+          "maxDrawdown": 289.0205262606268
+        }
+      },
+      "deltaVsHold": 375.68150179551344,
+      "drawdownDeltaVsHold": -317.73640638590996
+    },
+    {
+      "variant": "lead_bid40_delay1",
+      "threshold": 0.4,
+      "delaySeconds": 1,
+      "n": 8602,
+      "signals": 1866,
+      "exits": 1470,
+      "missed": 254,
+      "pnl": -383.05414101501907,
+      "maxDrawdown": 573.8947786657387,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -113.3631438342058,
+          "maxDrawdown": 230.53812442800887
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -313.5751576010588,
+          "maxDrawdown": 429.9998539020427
+        },
+        "holdout": {
+          "n": 2359,
+          "pnl": 43.88416042023407,
+          "maxDrawdown": 307.66720589640437
+        }
+      },
+      "deltaVsHold": 300.3222235002659,
+      "drawdownDeltaVsHold": -247.82296029195004
+    },
+    {
+      "variant": "lead_bid40_delay2",
+      "threshold": 0.4,
+      "delaySeconds": 2,
+      "n": 8602,
+      "signals": 1866,
+      "exits": 1392,
+      "missed": 227,
+      "pnl": -439.7956820786161,
+      "maxDrawdown": 637.9466687703137,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -146.0826402359137,
+          "maxDrawdown": 272.8347769061748
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -293.4099007484,
+          "maxDrawdown": 413.34929805817836
+        },
+        "holdout": {
+          "n": 2359,
+          "pnl": -0.30314109431480407,
+          "maxDrawdown": 332.6462212753862
+        }
+      },
+      "deltaVsHold": 243.5806824366689,
+      "drawdownDeltaVsHold": -183.77107018737502
+    },
+    {
+      "variant": "lead_bid40_delay3",
+      "threshold": 0.4,
+      "delaySeconds": 3,
+      "n": 8602,
+      "signals": 1866,
+      "exits": 1284,
+      "missed": 204,
+      "pnl": -568.1928988573504,
+      "maxDrawdown": 755.1352753009037,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -189.87794019657855,
+          "maxDrawdown": 314.22485167254644
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -305.5117909688181,
+          "maxDrawdown": 418.7020157601829
+        },
+        "holdout": {
+          "n": 2359,
+          "pnl": -72.80316769196544,
+          "maxDrawdown": 388.6410287605886
+        }
+      },
+      "deltaVsHold": 115.18346565793456,
+      "drawdownDeltaVsHold": -66.58246365678508
+    },
+    {
+      "variant": "lead_bid40_delay5",
+      "threshold": 0.4,
+      "delaySeconds": 5,
+      "n": 8602,
+      "signals": 1866,
+      "exits": 1127,
+      "missed": 175,
+      "pnl": -510.7313444688121,
+      "maxDrawdown": 703.0418615257773,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -144.76565885996072,
+          "maxDrawdown": 273.5386695982003
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -293.7458027225761,
+          "maxDrawdown": 405.3107918133398
+        },
+        "holdout": {
+          "n": 2359,
+          "pnl": -72.21988288628525,
+          "maxDrawdown": 382.1270076565596
+        }
+      },
+      "deltaVsHold": 172.6450200464729,
+      "drawdownDeltaVsHold": -118.67587743191143
+    }
+  ]
+}

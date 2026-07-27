@@ -1,0 +1,821 @@
+{
+  "generatedAt": "2026-07-27T08:04:00.423Z",
+  "label": "Gamma resolved outcome",
+  "finalBookConsensusFilter": false,
+  "execution": "depth 25 at first tick after configured delay",
+  "canonicalEventsAvailable": 26060,
+  "trades": 8601,
+  "summary": [
+    {
+      "variant": "hold",
+      "delaySeconds": null,
+      "maxOppositeAsk": null,
+      "n": 8601,
+      "reversals": 0,
+      "pnl": -841.8174261496096,
+      "maxDrawdown": 972.5107297499633,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -422.7060403311715,
+          "maxDrawdown": 451.93606710705177
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -232.8740792492043,
+          "maxDrawdown": 357.4118668395719
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": -186.23730656924002,
+          "maxDrawdown": 519.9049499935505
+        }
+      },
+      "deltaVsHold": 0
+    },
+    {
+      "variant": "exit_delay0",
+      "delaySeconds": 0,
+      "maxOppositeAsk": null,
+      "n": 8601,
+      "reversals": 0,
+      "pnl": -168.49142270779086,
+      "maxDrawdown": 410.34720684246173,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -105.41199112376381,
+          "maxDrawdown": 217.02911436511744
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -221.0221299391094,
+          "maxDrawdown": 324.8627857079051
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": 157.94269835507566,
+          "maxDrawdown": 262.6091024790192
+        }
+      },
+      "deltaVsExit": 0,
+      "deltaVsHold": 673.3260034418187
+    },
+    {
+      "variant": "reverse65_delay0",
+      "delaySeconds": 0,
+      "maxOppositeAsk": 0.65,
+      "n": 8601,
+      "reversals": 305,
+      "pnl": 72.45234857175738,
+      "maxDrawdown": 354.73927053546714,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": 72.05331755578602,
+          "maxDrawdown": 201.75792636279158
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -194.0011562047121,
+          "maxDrawdown": 317.88318447706996
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": 194.40018722068345,
+          "maxDrawdown": 252.7436693615516
+        }
+      },
+      "deltaVsExit": 240.94377127954823,
+      "deltaVsHold": 914.269774721367
+    },
+    {
+      "variant": "reverse68_delay0",
+      "delaySeconds": 0,
+      "maxOppositeAsk": 0.68,
+      "n": 8601,
+      "reversals": 472,
+      "pnl": 244.57763423061616,
+      "maxDrawdown": 328.362943516793,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": 173.1142988889301,
+          "maxDrawdown": 203.0687644615112
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -168.8816193426501,
+          "maxDrawdown": 304.58861918717696
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": 240.34495468433576,
+          "maxDrawdown": 237.02830186626664
+        }
+      },
+      "deltaVsExit": 413.069056938407,
+      "deltaVsHold": 1086.3950603802257
+    },
+    {
+      "variant": "reverse70_delay0",
+      "delaySeconds": 0,
+      "maxOppositeAsk": 0.7,
+      "n": 8601,
+      "reversals": 551,
+      "pnl": 265.0064331069698,
+      "maxDrawdown": 328.8168947138342,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": 188.12444472042506,
+          "maxDrawdown": 201.4600979737674
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -174.5349517775505,
+          "maxDrawdown": 300.1948181555847
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": 251.4169401640947,
+          "maxDrawdown": 235.58947235254524
+        }
+      },
+      "deltaVsExit": 433.49785581476067,
+      "deltaVsHold": 1106.8238592565795
+    },
+    {
+      "variant": "reverse72_delay0",
+      "delaySeconds": 0,
+      "maxOppositeAsk": 0.72,
+      "n": 8601,
+      "reversals": 644,
+      "pnl": 249.35241157173607,
+      "maxDrawdown": 340.37268749337807,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": 177.9175649975992,
+          "maxDrawdown": 203.83662487712303
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -190.41833242183978,
+          "maxDrawdown": 315.02912909708357
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": 261.8531789959763,
+          "maxDrawdown": 233.2979619696402
+        }
+      },
+      "deltaVsExit": 417.84383427952696,
+      "deltaVsHold": 1091.1698377213456
+    },
+    {
+      "variant": "reverse78_delay0",
+      "delaySeconds": 0,
+      "maxOppositeAsk": 0.78,
+      "n": 8601,
+      "reversals": 857,
+      "pnl": 159.11730541000097,
+      "maxDrawdown": 378.8389011759347,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": 121.38647911742946,
+          "maxDrawdown": 209.0737395294185
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -215.95307010839946,
+          "maxDrawdown": 336.21243644142436
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": 253.68389640097098,
+          "maxDrawdown": 247.31645159246227
+        }
+      },
+      "deltaVsExit": 327.6087281177918,
+      "deltaVsHold": 1000.9347315596106
+    },
+    {
+      "variant": "reverse101_delay0",
+      "delaySeconds": 0,
+      "maxOppositeAsk": 1.01,
+      "n": 8601,
+      "reversals": 1482,
+      "pnl": 182.97657824767663,
+      "maxDrawdown": 368.62570761055355,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": 109.35262266172982,
+          "maxDrawdown": 208.8457959117064
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -210.37027918320086,
+          "maxDrawdown": 329.7298786764137
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": 283.99423476914745,
+          "maxDrawdown": 245.77822669668245
+        }
+      },
+      "deltaVsExit": 351.46800095546746,
+      "deltaVsHold": 1024.7940043972862
+    },
+    {
+      "variant": "exit_delay0p5",
+      "delaySeconds": 0.5,
+      "maxOppositeAsk": null,
+      "n": 8601,
+      "reversals": 0,
+      "pnl": -510.59285659842186,
+      "maxDrawdown": 671.1162743168015,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -255.6491863204715,
+          "maxDrawdown": 353.722582628432
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -292.62560324224387,
+          "maxDrawdown": 404.43376319274375
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": 37.681932964284016,
+          "maxDrawdown": 308.9350843688923
+        }
+      },
+      "deltaVsExit": 0,
+      "deltaVsHold": 331.2245695511877
+    },
+    {
+      "variant": "reverse65_delay0p5",
+      "delaySeconds": 0.5,
+      "maxOppositeAsk": 0.65,
+      "n": 8601,
+      "reversals": 242,
+      "pnl": -554.0170909108665,
+      "maxDrawdown": 698.6250814925988,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -296.1380188250325,
+          "maxDrawdown": 400.807036981639
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -291.12771025232047,
+          "maxDrawdown": 400.62599830009236
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": 33.2486381664781,
+          "maxDrawdown": 296.4542674934577
+        }
+      },
+      "deltaVsExit": -43.42423431244464,
+      "deltaVsHold": 287.80033523874306
+    },
+    {
+      "variant": "reverse68_delay0p5",
+      "delaySeconds": 0.5,
+      "maxOppositeAsk": 0.68,
+      "n": 8601,
+      "reversals": 372,
+      "pnl": -445.65236478804997,
+      "maxDrawdown": 614.8436892827801,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -248.27755959172495,
+          "maxDrawdown": 372.6582374747742
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -274.02842160922273,
+          "maxDrawdown": 390.6829231430248
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": 76.65361641288536,
+          "maxDrawdown": 282.0450841194667
+        }
+      },
+      "deltaVsExit": 64.9404918103719,
+      "deltaVsHold": 396.1650613615596
+    },
+    {
+      "variant": "reverse70_delay0p5",
+      "delaySeconds": 0.5,
+      "maxOppositeAsk": 0.7,
+      "n": 8601,
+      "reversals": 454,
+      "pnl": -426.28238365187633,
+      "maxDrawdown": 596.8221895765881,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -215.72883246423518,
+          "maxDrawdown": 346.0856434785976
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -287.1706194714477,
+          "maxDrawdown": 404.1480315239618
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": 76.61706828379457,
+          "maxDrawdown": 277.36819000181964
+        }
+      },
+      "deltaVsExit": 84.31047294654553,
+      "deltaVsHold": 415.53504249773323
+    },
+    {
+      "variant": "reverse72_delay0p5",
+      "delaySeconds": 0.5,
+      "maxOppositeAsk": 0.72,
+      "n": 8601,
+      "reversals": 530,
+      "pnl": -414.05033744840034,
+      "maxDrawdown": 600.1969751170473,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -206.54006383386596,
+          "maxDrawdown": 344.8508572231668
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -289.1747888182007,
+          "maxDrawdown": 406.15220087071475
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": 81.66451520365459,
+          "maxDrawdown": 283.48844439111184
+        }
+      },
+      "deltaVsExit": 96.54251915002152,
+      "deltaVsHold": 427.7670887012092
+    },
+    {
+      "variant": "reverse78_delay0p5",
+      "delaySeconds": 0.5,
+      "maxOppositeAsk": 0.78,
+      "n": 8601,
+      "reversals": 750,
+      "pnl": -430.81733455223355,
+      "maxDrawdown": 621.6150478663121,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -205.8141343155754,
+          "maxDrawdown": 348.064256823239
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -298.7067003688416,
+          "maxDrawdown": 411.95498899038614
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": 73.70350013217147,
+          "maxDrawdown": 296.6274010541864
+        }
+      },
+      "deltaVsExit": 79.77552204618831,
+      "deltaVsHold": 411.000091597376
+    },
+    {
+      "variant": "reverse101_delay0p5",
+      "delaySeconds": 0.5,
+      "maxOppositeAsk": 1.01,
+      "n": 8601,
+      "reversals": 1376,
+      "pnl": -429.22399056353294,
+      "maxDrawdown": 648.1078790270798,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -211.49320136761057,
+          "maxDrawdown": 353.4613910687422
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -315.52017920132954,
+          "maxDrawdown": 428.6571506107667
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": 97.78939000539634,
+          "maxDrawdown": 296.5060723920332
+        }
+      },
+      "deltaVsExit": 81.36886603488892,
+      "deltaVsHold": 412.5934355860766
+    },
+    {
+      "variant": "exit_delay1",
+      "delaySeconds": 1,
+      "maxOppositeAsk": null,
+      "n": 8601,
+      "reversals": 0,
+      "pnl": -601.9368301906437,
+      "maxDrawdown": 759.5244194913541,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -277.0477642561946,
+          "maxDrawdown": 361.5781410770605
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -333.0496034606155,
+          "maxDrawdown": 447.7561025601208
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": 8.160537526161031,
+          "maxDrawdown": 329.81799325953983
+        }
+      },
+      "deltaVsExit": 0,
+      "deltaVsHold": 239.88059595896584
+    },
+    {
+      "variant": "reverse65_delay1",
+      "delaySeconds": 1,
+      "maxOppositeAsk": 0.65,
+      "n": 8601,
+      "reversals": 237,
+      "pnl": -684.5900029022914,
+      "maxDrawdown": 823.592038472929,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -347.68094753065037,
+          "maxDrawdown": 447.34777700479094
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -329.70816821728505,
+          "maxDrawdown": 448.9732064690852
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": -7.2008871543615145,
+          "maxDrawdown": 315.45967735423733
+        }
+      },
+      "deltaVsExit": -82.6531727116477,
+      "deltaVsHold": 157.22742324731814
+    },
+    {
+      "variant": "reverse68_delay1",
+      "delaySeconds": 1,
+      "maxOppositeAsk": 0.68,
+      "n": 8601,
+      "reversals": 351,
+      "pnl": -600.4133384884238,
+      "maxDrawdown": 739.4153740590614,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -281.3105475314077,
+          "maxDrawdown": 393.3879410508845
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -323.86604090799597,
+          "maxDrawdown": 443.1310791597962
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": 4.763249950973272,
+          "maxDrawdown": 307.2478407580966
+        }
+      },
+      "deltaVsExit": 1.5234917022198715,
+      "deltaVsHold": 241.4040876611857
+    },
+    {
+      "variant": "reverse70_delay1",
+      "delaySeconds": 1,
+      "maxOppositeAsk": 0.7,
+      "n": 8601,
+      "reversals": 418,
+      "pnl": -614.2185687088078,
+      "maxDrawdown": 760.6505975427781,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -285.814304946035,
+          "maxDrawdown": 399.40683783187524
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -334.23768744485056,
+          "maxDrawdown": 458.2808724516401
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": 5.833423682073034,
+          "maxDrawdown": 304.6675996811108
+        }
+      },
+      "deltaVsExit": -12.281738518164047,
+      "deltaVsHold": 227.5988574408018
+    },
+    {
+      "variant": "reverse72_delay1",
+      "delaySeconds": 1,
+      "maxOppositeAsk": 0.72,
+      "n": 8601,
+      "reversals": 491,
+      "pnl": -578.252217300328,
+      "maxDrawdown": 735.9047981546912,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -260.56029647451885,
+          "maxDrawdown": 386.2082022012572
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -331.21595192006816,
+          "maxDrawdown": 455.25913692685776
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": 13.52403109425402,
+          "maxDrawdown": 308.2454038947158
+        }
+      },
+      "deltaVsExit": 23.684612890315748,
+      "deltaVsHold": 263.5652088492816
+    },
+    {
+      "variant": "reverse78_delay1",
+      "delaySeconds": 1,
+      "maxOppositeAsk": 0.78,
+      "n": 8601,
+      "reversals": 708,
+      "pnl": -567.4532527266008,
+      "maxDrawdown": 746.7958100181235,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -250.08333561427804,
+          "maxDrawdown": 386.0688414323955
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -349.41221725729594,
+          "maxDrawdown": 465.1789598466658
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": 32.042300144967975,
+          "maxDrawdown": 312.8909332006368
+        }
+      },
+      "deltaVsExit": 34.483577464042924,
+      "deltaVsHold": 274.36417342300876
+    },
+    {
+      "variant": "reverse101_delay1",
+      "delaySeconds": 1,
+      "maxOppositeAsk": 1.01,
+      "n": 8601,
+      "reversals": 1334,
+      "pnl": -601.2723428678777,
+      "maxDrawdown": 796.1252610920262,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -271.58227508931276,
+          "maxDrawdown": 403.63055594790063
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -371.71378527875316,
+          "maxDrawdown": 486.57354132636465
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": 42.023717500182954,
+          "maxDrawdown": 315.13099258324536
+        }
+      },
+      "deltaVsExit": 0.6644873227660355,
+      "deltaVsHold": 240.54508328173188
+    },
+    {
+      "variant": "exit_delay2",
+      "delaySeconds": 2,
+      "maxOppositeAsk": null,
+      "n": 8601,
+      "reversals": 0,
+      "pnl": -643.8787359562709,
+      "maxDrawdown": 783.090304695631,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -290.8452721074498,
+          "maxDrawdown": 361.2829529172742
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -313.0945274917454,
+          "maxDrawdown": 431.21805731493237
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": -39.93893635708206,
+          "maxDrawdown": 357.9724439484079
+        }
+      },
+      "deltaVsExit": 0,
+      "deltaVsHold": 197.93869019333863
+    },
+    {
+      "variant": "reverse65_delay2",
+      "delaySeconds": 2,
+      "maxOppositeAsk": 0.65,
+      "n": 8601,
+      "reversals": 247,
+      "pnl": -771.2487702942857,
+      "maxDrawdown": 910.4603390336457,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -366.58315303336985,
+          "maxDrawdown": 460.74828990374914
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -284.93911979009334,
+          "maxDrawdown": 462.2055277042876
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": -119.72649747082785,
+          "maxDrawdown": 423.84913937806647
+        }
+      },
+      "deltaVsExit": -127.37003433801476,
+      "deltaVsHold": 70.56865585532387
+    },
+    {
+      "variant": "reverse68_delay2",
+      "delaySeconds": 2,
+      "maxOppositeAsk": 0.68,
+      "n": 8601,
+      "reversals": 324,
+      "pnl": -741.2877647877566,
+      "maxDrawdown": 882.9182123149955,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -355.1234466718355,
+          "maxDrawdown": 456.76635623676356
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -287.48768996335065,
+          "maxDrawdown": 456.86057231078206
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": -98.67662815257543,
+          "maxDrawdown": 406.59461628664167
+        }
+      },
+      "deltaVsExit": -97.40902883148567,
+      "deltaVsHold": 100.52966136185296
+    },
+    {
+      "variant": "reverse70_delay2",
+      "delaySeconds": 2,
+      "maxOppositeAsk": 0.7,
+      "n": 8601,
+      "reversals": 377,
+      "pnl": -717.0613359733592,
+      "maxDrawdown": 858.691783500598,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -343.67937885895867,
+          "maxDrawdown": 447.57006403103327
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -285.6159285144647,
+          "maxDrawdown": 459.52794326262983
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": -87.76602859994136,
+          "maxDrawdown": 393.31629039825475
+        }
+      },
+      "deltaVsExit": -73.18260001708825,
+      "deltaVsHold": 124.75609017625038
+    },
+    {
+      "variant": "reverse72_delay2",
+      "delaySeconds": 2,
+      "maxOppositeAsk": 0.72,
+      "n": 8601,
+      "reversals": 442,
+      "pnl": -701.4512034193617,
+      "maxDrawdown": 844.6833652323148,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -318.37998136304657,
+          "maxDrawdown": 430.13368339520946
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -289.93578865929146,
+          "maxDrawdown": 461.7269179104337
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": -93.13543339702815,
+          "maxDrawdown": 394.68722222236863
+        }
+      },
+      "deltaVsExit": -57.57246746309079,
+      "deltaVsHold": 140.36622273024784
+    },
+    {
+      "variant": "reverse78_delay2",
+      "delaySeconds": 2,
+      "maxOppositeAsk": 0.78,
+      "n": 8601,
+      "reversals": 635,
+      "pnl": -694.8207633524006,
+      "maxDrawdown": 838.0529251653537,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -325.2282421722267,
+          "maxDrawdown": 448.841069385825
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -287.65142140462183,
+          "maxDrawdown": 459.8830733507111
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": -81.94109977555723,
+          "maxDrawdown": 383.6634791935353
+        }
+      },
+      "deltaVsExit": -50.942027396129674,
+      "deltaVsHold": 146.99666279720896
+    },
+    {
+      "variant": "reverse101_delay2",
+      "delaySeconds": 2,
+      "maxOppositeAsk": 1.01,
+      "n": 8601,
+      "reversals": 1240,
+      "pnl": -704.0823557404896,
+      "maxDrawdown": 848.5967101288963,
+      "split": {
+        "train": {
+          "n": 4637,
+          "pnl": -331.3969812381886,
+          "maxDrawdown": 451.9637181934014
+        },
+        "validation": {
+          "n": 1606,
+          "pnl": -308.84754805725197,
+          "maxDrawdown": 473.18200955498514
+        },
+        "holdout": {
+          "n": 2358,
+          "pnl": -63.837826445053565,
+          "maxDrawdown": 363.5025425555548
+        }
+      },
+      "deltaVsExit": -60.20361978421863,
+      "deltaVsHold": 137.73507040912
+    }
+  ]
+}

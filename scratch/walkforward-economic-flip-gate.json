@@ -1,0 +1,810 @@
+{
+  "generatedAt": "2026-07-27T07:27:41.973840+00:00",
+  "method": "expanding weekly walk-forward; 21 initial training days; 7-day tests",
+  "label": "Gamma resolved outcome; no final-book-consensus filter",
+  "input": "scratch\\flip-features-canonical.csv",
+  "folds": [
+    {
+      "trainFrom": "2026-04-27",
+      "trainToExclusive": "2026-05-18",
+      "testFrom": "2026-05-18",
+      "testToExclusive": "2026-05-25",
+      "trainRows": 5872,
+      "testRows": 1989
+    },
+    {
+      "trainFrom": "2026-04-27",
+      "trainToExclusive": "2026-05-25",
+      "testFrom": "2026-05-25",
+      "testToExclusive": "2026-06-01",
+      "trainRows": 7861,
+      "testRows": 1825
+    },
+    {
+      "trainFrom": "2026-04-27",
+      "trainToExclusive": "2026-06-01",
+      "testFrom": "2026-06-01",
+      "testToExclusive": "2026-06-08",
+      "trainRows": 9686,
+      "testRows": 1986
+    },
+    {
+      "trainFrom": "2026-04-27",
+      "trainToExclusive": "2026-06-08",
+      "testFrom": "2026-06-08",
+      "testToExclusive": "2026-06-15",
+      "trainRows": 11672,
+      "testRows": 1735
+    },
+    {
+      "trainFrom": "2026-04-27",
+      "trainToExclusive": "2026-06-15",
+      "testFrom": "2026-06-15",
+      "testToExclusive": "2026-06-22",
+      "trainRows": 13407,
+      "testRows": 1992
+    },
+    {
+      "trainFrom": "2026-04-27",
+      "trainToExclusive": "2026-06-22",
+      "testFrom": "2026-06-22",
+      "testToExclusive": "2026-06-29",
+      "trainRows": 15399,
+      "testRows": 1855
+    },
+    {
+      "trainFrom": "2026-04-27",
+      "trainToExclusive": "2026-06-29",
+      "testFrom": "2026-06-29",
+      "testToExclusive": "2026-07-06",
+      "trainRows": 17254,
+      "testRows": 1959
+    },
+    {
+      "trainFrom": "2026-04-27",
+      "trainToExclusive": "2026-07-06",
+      "testFrom": "2026-07-06",
+      "testToExclusive": "2026-07-13",
+      "trainRows": 19213,
+      "testRows": 1821
+    },
+    {
+      "trainFrom": "2026-04-27",
+      "trainToExclusive": "2026-07-13",
+      "testFrom": "2026-07-13",
+      "testToExclusive": "2026-07-20",
+      "trainRows": 21034,
+      "testRows": 1870
+    },
+    {
+      "trainFrom": "2026-04-27",
+      "trainToExclusive": "2026-07-20",
+      "testFrom": "2026-07-20",
+      "testToExclusive": "2026-07-27",
+      "trainRows": 22904,
+      "testRows": 1694
+    }
+  ],
+  "oosFrom": "2026-05-18",
+  "oosTo": "2026-07-26",
+  "baseline": {
+    "entries": 5625,
+    "pnl": -341.43161209838166,
+    "maxDrawdown": 505.46556646287246
+  },
+  "matchedControlThresholds": {
+    "marketEvUsdPer10": -0.2057006086376493,
+    "marketRisk": 0.43500000000000005
+  },
+  "results": {
+    "combined_ev_le_0": {
+      "blocked": 3674,
+      "blockRate": 0.6531555555555556,
+      "flipsAvoided": 601,
+      "precision": 0.16358192705498095,
+      "pnlDelta": 608.7299200090188,
+      "newPnl": 267.298307910637,
+      "newMaxDrawdown": 195.88538302522355,
+      "positiveDays": 42,
+      "negativeDays": 28,
+      "days": 70,
+      "positiveWeeks": 9,
+      "negativeWeeks": 2,
+      "weeks": 11,
+      "bootstrapCi95Total": [
+        65.22300939227974,
+        1152.4130157408779
+      ],
+      "bootstrapProbabilityPositive": 0.98658
+    },
+    "combined_ev_le_minus_0p5": {
+      "blocked": 574,
+      "blockRate": 0.10204444444444444,
+      "flipsAvoided": 139,
+      "precision": 0.2421602787456446,
+      "pnlDelta": 177.8238080515237,
+      "newPnl": -163.60780404685804,
+      "newMaxDrawdown": 415.9800255419851,
+      "positiveDays": 40,
+      "negativeDays": 30,
+      "days": 70,
+      "positiveWeeks": 8,
+      "negativeWeeks": 3,
+      "weeks": 11,
+      "bootstrapCi95Total": [
+        -59.48760136917581,
+        425.73878282288916
+      ],
+      "bootstrapProbabilityPositive": 0.926
+    },
+    "combined_pflip_ge_0p40": {
+      "blocked": 185,
+      "blockRate": 0.03288888888888889,
+      "flipsAvoided": 85,
+      "precision": 0.4594594594594595,
+      "pnlDelta": 190.91347033860214,
+      "newPnl": -150.51814175977952,
+      "newMaxDrawdown": 368.7450319953352,
+      "positiveDays": 35,
+      "negativeDays": 30,
+      "days": 70,
+      "positiveWeeks": 7,
+      "negativeWeeks": 4,
+      "weeks": 11,
+      "bootstrapCi95Total": [
+        -5.407204831761233,
+        395.93025778291224
+      ],
+      "bootstrapProbabilityPositive": 0.97176
+    },
+    "combined_pflip_ge_0p45": {
+      "blocked": 32,
+      "blockRate": 0.005688888888888889,
+      "flipsAvoided": 16,
+      "precision": 0.5,
+      "pnlDelta": 46.21785710637043,
+      "newPnl": -295.2137549920112,
+      "newMaxDrawdown": 499.2684875009231,
+      "positiveDays": 15,
+      "negativeDays": 12,
+      "days": 70,
+      "positiveWeeks": 8,
+      "negativeWeeks": 3,
+      "weeks": 11,
+      "bootstrapCi95Total": [
+        -50.28143259672076,
+        142.36860586858134
+      ],
+      "bootstrapProbabilityPositive": 0.82814
+    },
+    "combined_pflip_ge_0p50": {
+      "blocked": 3,
+      "blockRate": 0.0005333333333333334,
+      "flipsAvoided": 2,
+      "precision": 0.6666666666666666,
+      "pnlDelta": 12.847090909090909,
+      "newPnl": -328.5845211892906,
+      "newMaxDrawdown": 495.1505664628725,
+      "positiveDays": 2,
+      "negativeDays": 1,
+      "days": 70,
+      "positiveWeeks": 2,
+      "negativeWeeks": 1,
+      "weeks": 11,
+      "bootstrapCi95Total": [
+        -15.551818181818179,
+        51.547
+      ],
+      "bootstrapProbabilityPositive": 0.77116
+    },
+    "market_only_calibrated_ev_le_0": {
+      "blocked": 3779,
+      "blockRate": 0.6718222222222222,
+      "flipsAvoided": 493,
+      "precision": 0.13045779306694893,
+      "pnlDelta": 249.42217125659644,
+      "newPnl": -92.00944084178528,
+      "newMaxDrawdown": 373.7732104155122,
+      "positiveDays": 37,
+      "negativeDays": 33,
+      "days": 70,
+      "positiveWeeks": 8,
+      "negativeWeeks": 3,
+      "weeks": 11,
+      "bootstrapCi95Total": [
+        -242.90624974520873,
+        744.879651624914
+      ],
+      "bootstrapProbabilityPositive": 0.83776
+    },
+    "market_only_calibrated_pflip_ge_0p40": {
+      "blocked": 0,
+      "blockRate": 0.0,
+      "flipsAvoided": 0,
+      "precision": null,
+      "pnlDelta": -0.0,
+      "newPnl": -341.43161209838166,
+      "newMaxDrawdown": 505.46556646287246,
+      "positiveDays": 0,
+      "negativeDays": 0,
+      "days": 70,
+      "positiveWeeks": 0,
+      "negativeWeeks": 0,
+      "weeks": 11,
+      "bootstrapCi95Total": [
+        0.0,
+        0.0
+      ],
+      "bootstrapProbabilityPositive": 0.0
+    },
+    "market_ev_coverage_matched": {
+      "blocked": 3674,
+      "blockRate": 0.6531555555555556,
+      "flipsAvoided": 927,
+      "precision": 0.25231355470876426,
+      "pnlDelta": 192.15714359317104,
+      "newPnl": -149.27446850521082,
+      "newMaxDrawdown": 235.9261630336257,
+      "positiveDays": 39,
+      "negativeDays": 31,
+      "days": 70,
+      "positiveWeeks": 7,
+      "negativeWeeks": 4,
+      "weeks": 11,
+      "bootstrapCi95Total": [
+        -581.8482726947116,
+        951.1843986951758
+      ],
+      "bootstrapProbabilityPositive": 0.68862
+    },
+    "market_risk_coverage_matched": {
+      "blocked": 216,
+      "blockRate": 0.0384,
+      "flipsAvoided": 87,
+      "precision": 0.4027777777777778,
+      "pnlDelta": -63.8557144507035,
+      "newPnl": -405.28732654908526,
+      "newMaxDrawdown": 567.2767208854046,
+      "positiveDays": 32,
+      "negativeDays": 36,
+      "days": 70,
+      "positiveWeeks": 6,
+      "negativeWeeks": 5,
+      "weeks": 11,
+      "bootstrapCi95Total": [
+        -314.9102184163386,
+        189.83583104921405
+      ],
+      "bootstrapProbabilityPositive": 0.31346
+    },
+    "market_ev_le_0": {
+      "blocked": 5625,
+      "blockRate": 1.0,
+      "flipsAvoided": 1098,
+      "precision": 0.1952,
+      "pnlDelta": 341.43161209838166,
+      "newPnl": 0.0,
+      "newMaxDrawdown": 0.0,
+      "positiveDays": 42,
+      "negativeDays": 28,
+      "days": 70,
+      "positiveWeeks": 8,
+      "negativeWeeks": 3,
+      "weeks": 11,
+      "bootstrapCi95Total": [
+        -427.61858648400823,
+        1104.4122963652753
+      ],
+      "bootstrapProbabilityPositive": 0.80844
+    }
+  },
+  "comparisons": {
+    "combined_ev0_vs_market_only_ev0": {
+      "left": "combined_ev_le_0",
+      "right": "market_only_calibrated_ev_le_0",
+      "deltaPnlDifference": 359.30774875242224,
+      "positiveDays": 42,
+      "negativeDays": 28,
+      "bootstrapCi95Total": [
+        -142.65943891569208,
+        856.5073963694704
+      ],
+      "bootstrapProbabilityPositive": 0.91806
+    },
+    "combined_p40_vs_market_risk_matched": {
+      "left": "combined_pflip_ge_0p40",
+      "right": "market_risk_coverage_matched",
+      "deltaPnlDifference": 254.76918478930563,
+      "positiveDays": 42,
+      "negativeDays": 23,
+      "bootstrapCi95Total": [
+        27.979122783949357,
+        490.2022096039894
+      ],
+      "bootstrapProbabilityPositive": 0.98638
+    }
+  },
+  "foldResults": [
+    {
+      "testFrom": "2026-05-18",
+      "testToExclusive": "2026-05-25",
+      "entries": 569,
+      "baselinePnl": -28.905809546784162,
+      "gates": {
+        "combined_ev_le_0": {
+          "blocked": 411,
+          "pnlDelta": 26.733225456388645
+        },
+        "combined_ev_le_minus_0p5": {
+          "blocked": 69,
+          "pnlDelta": -21.951693188755925
+        },
+        "combined_pflip_ge_0p40": {
+          "blocked": 19,
+          "pnlDelta": -8.764961670550546
+        },
+        "combined_pflip_ge_0p45": {
+          "blocked": 5,
+          "pnlDelta": 16.286918495297805
+        },
+        "combined_pflip_ge_0p50": {
+          "blocked": 0,
+          "pnlDelta": 0.0
+        },
+        "market_only_calibrated_ev_le_0": {
+          "blocked": 426,
+          "pnlDelta": -6.0849587558438145
+        },
+        "market_only_calibrated_pflip_ge_0p40": {
+          "blocked": 0,
+          "pnlDelta": 0.0
+        },
+        "market_ev_coverage_matched": {
+          "blocked": 371,
+          "pnlDelta": 3.0494299025478426
+        },
+        "market_risk_coverage_matched": {
+          "blocked": 17,
+          "pnlDelta": -3.410732740943267
+        },
+        "market_ev_le_0": {
+          "blocked": 569,
+          "pnlDelta": 28.905809546784162
+        }
+      }
+    },
+    {
+      "testFrom": "2026-05-25",
+      "testToExclusive": "2026-06-01",
+      "entries": 563,
+      "baselinePnl": -154.5930214331985,
+      "gates": {
+        "combined_ev_le_0": {
+          "blocked": 374,
+          "pnlDelta": 41.27426673109554
+        },
+        "combined_ev_le_minus_0p5": {
+          "blocked": 61,
+          "pnlDelta": -22.306582472757192
+        },
+        "combined_pflip_ge_0p40": {
+          "blocked": 15,
+          "pnlDelta": -14.141653067672571
+        },
+        "combined_pflip_ge_0p45": {
+          "blocked": 2,
+          "pnlDelta": 2.5110909090909113
+        },
+        "combined_pflip_ge_0p50": {
+          "blocked": 0,
+          "pnlDelta": 0.0
+        },
+        "market_only_calibrated_ev_le_0": {
+          "blocked": 399,
+          "pnlDelta": 9.848663376472707
+        },
+        "market_only_calibrated_pflip_ge_0p40": {
+          "blocked": 0,
+          "pnlDelta": 0.0
+        },
+        "market_ev_coverage_matched": {
+          "blocked": 344,
+          "pnlDelta": 99.14374983399767
+        },
+        "market_risk_coverage_matched": {
+          "blocked": 20,
+          "pnlDelta": -23.93066279334699
+        },
+        "market_ev_le_0": {
+          "blocked": 563,
+          "pnlDelta": 154.5930214331985
+        }
+      }
+    },
+    {
+      "testFrom": "2026-06-01",
+      "testToExclusive": "2026-06-08",
+      "entries": 468,
+      "baselinePnl": -164.3416162424748,
+      "gates": {
+        "combined_ev_le_0": {
+          "blocked": 325,
+          "pnlDelta": 162.4237097575886
+        },
+        "combined_ev_le_minus_0p5": {
+          "blocked": 62,
+          "pnlDelta": 53.909392562934684
+        },
+        "combined_pflip_ge_0p40": {
+          "blocked": 23,
+          "pnlDelta": 66.4735616919775
+        },
+        "combined_pflip_ge_0p45": {
+          "blocked": 1,
+          "pnlDelta": 10.301
+        },
+        "combined_pflip_ge_0p50": {
+          "blocked": 0,
+          "pnlDelta": 0.0
+        },
+        "market_only_calibrated_ev_le_0": {
+          "blocked": 294,
+          "pnlDelta": 52.34510234359564
+        },
+        "market_only_calibrated_pflip_ge_0p40": {
+          "blocked": 0,
+          "pnlDelta": 0.0
+        },
+        "market_ev_coverage_matched": {
+          "blocked": 328,
+          "pnlDelta": 149.15097685111044
+        },
+        "market_risk_coverage_matched": {
+          "blocked": 19,
+          "pnlDelta": 18.139423103212593
+        },
+        "market_ev_le_0": {
+          "blocked": 468,
+          "pnlDelta": 164.3416162424748
+        }
+      }
+    },
+    {
+      "testFrom": "2026-06-08",
+      "testToExclusive": "2026-06-15",
+      "entries": 556,
+      "baselinePnl": -31.72785142672059,
+      "gates": {
+        "combined_ev_le_0": {
+          "blocked": 338,
+          "pnlDelta": 95.51340360357611
+        },
+        "combined_ev_le_minus_0p5": {
+          "blocked": 44,
+          "pnlDelta": 64.54763363264614
+        },
+        "combined_pflip_ge_0p40": {
+          "blocked": 13,
+          "pnlDelta": 45.32672559673452
+        },
+        "combined_pflip_ge_0p45": {
+          "blocked": 3,
+          "pnlDelta": -4.038315870570107
+        },
+        "combined_pflip_ge_0p50": {
+          "blocked": 1,
+          "pnlDelta": 10.315
+        },
+        "market_only_calibrated_ev_le_0": {
+          "blocked": 344,
+          "pnlDelta": 79.49765731228851
+        },
+        "market_only_calibrated_pflip_ge_0p40": {
+          "blocked": 0,
+          "pnlDelta": 0.0
+        },
+        "market_ev_coverage_matched": {
+          "blocked": 375,
+          "pnlDelta": 37.5090828235685
+        },
+        "market_risk_coverage_matched": {
+          "blocked": 23,
+          "pnlDelta": -10.790190248348141
+        },
+        "market_ev_le_0": {
+          "blocked": 556,
+          "pnlDelta": 31.72785142672059
+        }
+      }
+    },
+    {
+      "testFrom": "2026-06-15",
+      "testToExclusive": "2026-06-22",
+      "entries": 668,
+      "baselinePnl": -13.247914943839376,
+      "gates": {
+        "combined_ev_le_0": {
+          "blocked": 420,
+          "pnlDelta": 93.80653644581487
+        },
+        "combined_ev_le_minus_0p5": {
+          "blocked": 62,
+          "pnlDelta": -26.14560945655192
+        },
+        "combined_pflip_ge_0p40": {
+          "blocked": 29,
+          "pnlDelta": 13.328862478599438
+        },
+        "combined_pflip_ge_0p45": {
+          "blocked": 3,
+          "pnlDelta": 12.847090909090909
+        },
+        "combined_pflip_ge_0p50": {
+          "blocked": 0,
+          "pnlDelta": 0.0
+        },
+        "market_only_calibrated_ev_le_0": {
+          "blocked": 426,
+          "pnlDelta": 95.35469808846268
+        },
+        "market_only_calibrated_pflip_ge_0p40": {
+          "blocked": 0,
+          "pnlDelta": 0.0
+        },
+        "market_ev_coverage_matched": {
+          "blocked": 446,
+          "pnlDelta": -54.91907205410216
+        },
+        "market_risk_coverage_matched": {
+          "blocked": 26,
+          "pnlDelta": 19.8527578035999
+        },
+        "market_ev_le_0": {
+          "blocked": 668,
+          "pnlDelta": 13.247914943839376
+        }
+      }
+    },
+    {
+      "testFrom": "2026-06-22",
+      "testToExclusive": "2026-06-29",
+      "entries": 548,
+      "baselinePnl": -65.717622842342,
+      "gates": {
+        "combined_ev_le_0": {
+          "blocked": 328,
+          "pnlDelta": -58.50366286503967
+        },
+        "combined_ev_le_minus_0p5": {
+          "blocked": 58,
+          "pnlDelta": 29.87373673271083
+        },
+        "combined_pflip_ge_0p40": {
+          "blocked": 24,
+          "pnlDelta": 23.49666427366549
+        },
+        "combined_pflip_ge_0p45": {
+          "blocked": 5,
+          "pnlDelta": -19.000030156284385
+        },
+        "combined_pflip_ge_0p50": {
+          "blocked": 0,
+          "pnlDelta": 0.0
+        },
+        "market_only_calibrated_ev_le_0": {
+          "blocked": 339,
+          "pnlDelta": -42.89547852913685
+        },
+        "market_only_calibrated_pflip_ge_0p40": {
+          "blocked": 0,
+          "pnlDelta": 0.0
+        },
+        "market_ev_coverage_matched": {
+          "blocked": 370,
+          "pnlDelta": 53.79978179527204
+        },
+        "market_risk_coverage_matched": {
+          "blocked": 33,
+          "pnlDelta": -68.2740084301663
+        },
+        "market_ev_le_0": {
+          "blocked": 548,
+          "pnlDelta": 65.717622842342
+        }
+      }
+    },
+    {
+      "testFrom": "2026-06-29",
+      "testToExclusive": "2026-07-06",
+      "entries": 626,
+      "baselinePnl": 29.8826277424357,
+      "gates": {
+        "combined_ev_le_0": {
+          "blocked": 374,
+          "pnlDelta": -13.152642984920362
+        },
+        "combined_ev_le_minus_0p5": {
+          "blocked": 56,
+          "pnlDelta": 9.254144023257268
+        },
+        "combined_pflip_ge_0p40": {
+          "blocked": 19,
+          "pnlDelta": 22.878838384223954
+        },
+        "combined_pflip_ge_0p45": {
+          "blocked": 4,
+          "pnlDelta": 5.978918495297808
+        },
+        "combined_pflip_ge_0p50": {
+          "blocked": 0,
+          "pnlDelta": 0.0
+        },
+        "market_only_calibrated_ev_le_0": {
+          "blocked": 388,
+          "pnlDelta": 3.2588921423818817
+        },
+        "market_only_calibrated_pflip_ge_0p40": {
+          "blocked": 0,
+          "pnlDelta": 0.0
+        },
+        "market_ev_coverage_matched": {
+          "blocked": 445,
+          "pnlDelta": 43.264553931921675
+        },
+        "market_risk_coverage_matched": {
+          "blocked": 26,
+          "pnlDelta": 38.2253051437371
+        },
+        "market_ev_le_0": {
+          "blocked": 626,
+          "pnlDelta": -29.8826277424357
+        }
+      }
+    },
+    {
+      "testFrom": "2026-07-06",
+      "testToExclusive": "2026-07-13",
+      "entries": 520,
+      "baselinePnl": -10.109522407307509,
+      "gates": {
+        "combined_ev_le_0": {
+          "blocked": 331,
+          "pnlDelta": 72.9876817280301
+        },
+        "combined_ev_le_minus_0p5": {
+          "blocked": 45,
+          "pnlDelta": 1.2456550212806512
+        },
+        "combined_pflip_ge_0p40": {
+          "blocked": 14,
+          "pnlDelta": 23.495947992116776
+        },
+        "combined_pflip_ge_0p45": {
+          "blocked": 3,
+          "pnlDelta": -4.920766233766228
+        },
+        "combined_pflip_ge_0p50": {
+          "blocked": 0,
+          "pnlDelta": 0.0
+        },
+        "market_only_calibrated_ev_le_0": {
+          "blocked": 355,
+          "pnlDelta": 73.53705428615207
+        },
+        "market_only_calibrated_pflip_ge_0p40": {
+          "blocked": 0,
+          "pnlDelta": 0.0
+        },
+        "market_ev_coverage_matched": {
+          "blocked": 331,
+          "pnlDelta": -6.7896171687227564
+        },
+        "market_risk_coverage_matched": {
+          "blocked": 18,
+          "pnlDelta": 8.426856687172478
+        },
+        "market_ev_le_0": {
+          "blocked": 520,
+          "pnlDelta": 10.109522407307509
+        }
+      }
+    },
+    {
+      "testFrom": "2026-07-13",
+      "testToExclusive": "2026-07-20",
+      "entries": 587,
+      "baselinePnl": 171.68967496826394,
+      "gates": {
+        "combined_ev_le_0": {
+          "blocked": 387,
+          "pnlDelta": 81.21955996788411
+        },
+        "combined_ev_le_minus_0p5": {
+          "blocked": 48,
+          "pnlDelta": 13.565326137085634
+        },
+        "combined_pflip_ge_0p40": {
+          "blocked": 14,
+          "pnlDelta": 21.711368015126645
+        },
+        "combined_pflip_ge_0p45": {
+          "blocked": 1,
+          "pnlDelta": 10.294
+        },
+        "combined_pflip_ge_0p50": {
+          "blocked": 0,
+          "pnlDelta": 0.0
+        },
+        "market_only_calibrated_ev_le_0": {
+          "blocked": 418,
+          "pnlDelta": -95.35260264597493
+        },
+        "market_only_calibrated_pflip_ge_0p40": {
+          "blocked": 0,
+          "pnlDelta": 0.0
+        },
+        "market_ev_coverage_matched": {
+          "blocked": 353,
+          "pnlDelta": -142.56249486696692
+        },
+        "market_risk_coverage_matched": {
+          "blocked": 20,
+          "pnlDelta": -43.60449646844383
+        },
+        "market_ev_le_0": {
+          "blocked": 587,
+          "pnlDelta": -171.68967496826394
+        }
+      }
+    },
+    {
+      "testFrom": "2026-07-20",
+      "testToExclusive": "2026-07-27",
+      "entries": 520,
+      "baselinePnl": -74.36055596641444,
+      "gates": {
+        "combined_ev_le_0": {
+          "blocked": 386,
+          "pnlDelta": 106.42784216860075
+        },
+        "combined_ev_le_minus_0p5": {
+          "blocked": 69,
+          "pnlDelta": 75.83180505967354
+        },
+        "combined_pflip_ge_0p40": {
+          "blocked": 15,
+          "pnlDelta": -2.891883355619062
+        },
+        "combined_pflip_ge_0p45": {
+          "blocked": 5,
+          "pnlDelta": 15.957950558213717
+        },
+        "combined_pflip_ge_0p50": {
+          "blocked": 2,
+          "pnlDelta": 2.5320909090909103
+        },
+        "market_only_calibrated_ev_le_0": {
+          "blocked": 390,
+          "pnlDelta": 79.91314363819848
+        },
+        "market_only_calibrated_pflip_ge_0p40": {
+          "blocked": 0,
+          "pnlDelta": 0.0
+        },
+        "market_ev_coverage_matched": {
+          "blocked": 311,
+          "pnlDelta": 10.51075254454463
+        },
+        "market_risk_coverage_matched": {
+          "blocked": 14,
+          "pnlDelta": 1.5100334928229628
+        },
+        "market_ev_le_0": {
+          "blocked": 520,
+          "pnlDelta": 74.36055596641444
+        }
+      }
+    }
+  ],
+  "warning": "Execution is an entry counterfactual at best ask, without latency or fill guarantee. This evaluates a skip gate, not the full MIDAS engine."
+}

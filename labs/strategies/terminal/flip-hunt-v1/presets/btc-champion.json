@@ -1,0 +1,50 @@
+{
+  "id": "btc-champion",
+  "studioVersion": 1,
+  "name": "BTC Flip Hunt Champion (H2 robust)",
+  "studioSlug": "flip-hunt-v1-btc-champion",
+  "studioName": "Flip Hunt · BTC Champion H2",
+  "role": "alt",
+  "description": "H2 robusta do miner: τ 8–40s, edge≥0.03, spread≤0.05. Lab holdout +335 PF 1.63 (2º lugar vs tight-spread).",
+  "tags": ["alt", "depth25", "post-cross", "h2", "terminal", "lab-validated"],
+  "window": {
+    "from": "2026-05-28",
+    "to": "2026-07-26"
+  },
+  "labSummary": {
+    "trainPnl": 281.63,
+    "trainEntries": 480,
+    "trainWinRate": 67.9,
+    "trainProfitFactor": 1.191,
+    "trainMaxDrawdown": 70.0,
+    "trainPositiveDays": "20/34",
+    "holdoutPnl": 334.94,
+    "holdoutEntries": 205,
+    "holdoutWinRate": 72.7,
+    "holdoutProfitFactor": 1.627,
+    "holdoutMaxDrawdown": 42.5,
+    "holdoutPositiveDays": "18/26",
+    "combinedPnlApprox": 616.6,
+    "source": "GLS compiled-soa depth25 · train 2026-07-27T04-59-09 · holdout 2026-07-27T05-02-31 · variant champion-h2"
+  },
+  "params": {
+    "walletSize": 100,
+    "entryBudget": 10,
+    "minShares": 1,
+    "minSecondsLeft": 8,
+    "maxSecondsLeft": 40,
+    "maxSecsSinceFlip": 15,
+    "minFlipsInWindow": 1,
+    "minDistAbs": 8,
+    "maxDistAbs": 200,
+    "minEdge": 0.03,
+    "volStepSecs": 30,
+    "minAsk": 0.20,
+    "maxAsk": 0.78,
+    "maxSpread": 0.05,
+    "minOddsSum": 0.96,
+    "maxOddsSum": 1.08,
+    "entrySlippageMax": 0.02,
+    "minLiquidityRatio": 0.55
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "id": "btc-tight-spread",
+  "studioVersion": 1,
+  "name": "BTC Flip Hunt Tight Spread",
+  "studioSlug": "flip-hunt-v1-btc-tight-spread",
+  "studioName": "Flip Hunt · BTC Tight Spread",
+  "role": "champion",
+  "description": "Lab campeã H2: spread≤0.02, edge≥0.05, τ 10–50s. Holdout GLS +459 PF 1.74 WR 72.7%.",
+  "tags": ["champion", "depth25", "post-cross", "h2", "tight-spread", "lab-validated"],
+  "window": {
+    "from": "2026-05-28",
+    "to": "2026-07-26"
+  },
+  "labSummary": {
+    "trainPnl": 287.79,
+    "trainEntries": 559,
+    "trainWinRate": 65.7,
+    "trainProfitFactor": 1.156,
+    "trainMaxDrawdown": 64.4,
+    "trainPositiveDays": "20/34",
+    "holdoutPnl": 459.01,
+    "holdoutEntries": 238,
+    "holdoutWinRate": 72.7,
+    "holdoutProfitFactor": 1.736,
+    "holdoutMaxDrawdown": 38.7,
+    "holdoutPositiveDays": "19/26",
+    "combinedPnlApprox": 746.8,
+    "source": "GLS compiled-soa depth25 · train 2026-07-27T04-59-09 · holdout 2026-07-27T05-02-31 · variant tight-spread"
+  },
+  "params": {
+    "walletSize": 100,
+    "entryBudget": 10,
+    "minShares": 1,
+    "minSecondsLeft": 10,
+    "maxSecondsLeft": 50,
+    "maxSecsSinceFlip": 15,
+    "minFlipsInWindow": 1,
+    "minDistAbs": 8,
+    "maxDistAbs": 200,
+    "minEdge": 0.05,
+    "volStepSecs": 30,
+    "minAsk": 0.20,
+    "maxAsk": 0.78,
+    "maxSpread": 0.02,
+    "minOddsSum": 0.96,
+    "maxOddsSum": 1.08,
+    "entrySlippageMax": 0.02,
+    "minLiquidityRatio": 0.55
+  }
+}

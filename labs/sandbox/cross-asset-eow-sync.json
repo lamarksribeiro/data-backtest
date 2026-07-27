@@ -1,0 +1,677 @@
+{
+  "meta": {
+    "from": "2026-05-24",
+    "to": "2026-07-25",
+    "lateSecs": 15,
+    "assets": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "XRP"
+    ],
+    "interval": "5m",
+    "daysRequested": 63,
+    "daysOk": 63,
+    "skipped": 0,
+    "completeSlots": 15187,
+    "generatedAt": "2026-07-27T04:19:27.353Z"
+  },
+  "directionAgreement": {
+    "BTC_ETH": {
+      "same": 13546,
+      "n": 16273,
+      "pct": 83.2
+    },
+    "BTC_SOL": {
+      "same": 13067,
+      "n": 16169,
+      "pct": 80.8
+    },
+    "BTC_XRP": {
+      "same": 12674,
+      "n": 16142,
+      "pct": 78.5
+    },
+    "ETH_SOL": {
+      "same": 13471,
+      "n": 16306,
+      "pct": 82.6
+    },
+    "ETH_XRP": {
+      "same": 12897,
+      "n": 16270,
+      "pct": 79.3
+    },
+    "SOL_XRP": {
+      "same": 13014,
+      "n": 16191,
+      "pct": 80.4
+    },
+    "all4": {
+      "same": 9932,
+      "n": 15187,
+      "pct": 65.4
+    },
+    "atLeast3": {
+      "same": 13584,
+      "n": 15187,
+      "pct": 89.4
+    }
+  },
+  "lateSpotFlips": {
+    "byAsset": {
+      "BTC": 1671,
+      "ETH": 1355,
+      "SOL": 1298,
+      "XRP": 1272
+    },
+    "slotsWithAnyFlip": 4152,
+    "multiAssetFlip": 1138,
+    "triplePlusFlip": 259,
+    "all4Flip": 47,
+    "sameDirectionMulti": 947,
+    "oppositeDirectionMulti": 191,
+    "pairCoFlip": {
+      "BTC_ETH": 394,
+      "BTC_SOL": 318,
+      "BTC_XRP": 296,
+      "ETH_SOL": 271,
+      "ETH_XRP": 246,
+      "SOL_XRP": 272
+    },
+    "syncWindows": {
+      "within1s": 353,
+      "within3s": 625,
+      "within5s": 806
+    },
+    "multiOfAnyPct": 27.4,
+    "syncOfMulti": {
+      "within1sPct": 31,
+      "within3sPct": 54.9,
+      "within5sPct": 70.8
+    },
+    "sameDirOfMultiPct": 83.2
+  },
+  "lateOddsFlips": {
+    "byAsset": {
+      "BTC": 968,
+      "ETH": 900,
+      "SOL": 881,
+      "XRP": 844
+    },
+    "slots": 2813,
+    "multiAsset": 624,
+    "triplePlus": 131,
+    "all4": 25,
+    "multiOfOddsPct": 22.2
+  },
+  "daily": [
+    {
+      "day": "2026-05-24",
+      "completeSlots": 54,
+      "agreeAll4Pct": 66.7,
+      "agree3Pct": 94.4,
+      "multiFlip": 3,
+      "tripleFlip": 0,
+      "oddsMulti": 3
+    },
+    {
+      "day": "2026-05-25",
+      "completeSlots": 287,
+      "agreeAll4Pct": 61,
+      "agree3Pct": 88.5,
+      "multiFlip": 25,
+      "tripleFlip": 8,
+      "oddsMulti": 10
+    },
+    {
+      "day": "2026-05-26",
+      "completeSlots": 284,
+      "agreeAll4Pct": 70.4,
+      "agree3Pct": 90.5,
+      "multiFlip": 14,
+      "tripleFlip": 3,
+      "oddsMulti": 8
+    },
+    {
+      "day": "2026-05-27",
+      "completeSlots": 275,
+      "agreeAll4Pct": 69.1,
+      "agree3Pct": 89.1,
+      "multiFlip": 17,
+      "tripleFlip": 4,
+      "oddsMulti": 11
+    },
+    {
+      "day": "2026-05-28",
+      "completeSlots": 277,
+      "agreeAll4Pct": 69.7,
+      "agree3Pct": 90.6,
+      "multiFlip": 12,
+      "tripleFlip": 3,
+      "oddsMulti": 6
+    },
+    {
+      "day": "2026-05-29",
+      "completeSlots": 284,
+      "agreeAll4Pct": 63,
+      "agree3Pct": 85.9,
+      "multiFlip": 22,
+      "tripleFlip": 7,
+      "oddsMulti": 19
+    },
+    {
+      "day": "2026-05-30",
+      "completeSlots": 246,
+      "agreeAll4Pct": 55.3,
+      "agree3Pct": 85.4,
+      "multiFlip": 21,
+      "tripleFlip": 3,
+      "oddsMulti": 8
+    },
+    {
+      "day": "2026-05-31",
+      "completeSlots": 268,
+      "agreeAll4Pct": 62.7,
+      "agree3Pct": 88.8,
+      "multiFlip": 19,
+      "tripleFlip": 4,
+      "oddsMulti": 6
+    },
+    {
+      "day": "2026-06-01",
+      "completeSlots": 275,
+      "agreeAll4Pct": 68.7,
+      "agree3Pct": 90.9,
+      "multiFlip": 13,
+      "tripleFlip": 5,
+      "oddsMulti": 7
+    },
+    {
+      "day": "2026-06-02",
+      "completeSlots": 269,
+      "agreeAll4Pct": 75.1,
+      "agree3Pct": 91.8,
+      "multiFlip": 19,
+      "tripleFlip": 3,
+      "oddsMulti": 11
+    },
+    {
+      "day": "2026-06-03",
+      "completeSlots": 259,
+      "agreeAll4Pct": 66.4,
+      "agree3Pct": 91.9,
+      "multiFlip": 12,
+      "tripleFlip": 1,
+      "oddsMulti": 3
+    },
+    {
+      "day": "2026-06-04",
+      "completeSlots": 288,
+      "agreeAll4Pct": 76,
+      "agree3Pct": 93.4,
+      "multiFlip": 18,
+      "tripleFlip": 1,
+      "oddsMulti": 11
+    },
+    {
+      "day": "2026-06-05",
+      "completeSlots": 283,
+      "agreeAll4Pct": 75.3,
+      "agree3Pct": 92.9,
+      "multiFlip": 18,
+      "tripleFlip": 3,
+      "oddsMulti": 10
+    },
+    {
+      "day": "2026-06-06",
+      "completeSlots": 276,
+      "agreeAll4Pct": 72.8,
+      "agree3Pct": 95.3,
+      "multiFlip": 26,
+      "tripleFlip": 9,
+      "oddsMulti": 15
+    },
+    {
+      "day": "2026-06-07",
+      "completeSlots": 268,
+      "agreeAll4Pct": 69.4,
+      "agree3Pct": 87.7,
+      "multiFlip": 21,
+      "tripleFlip": 10,
+      "oddsMulti": 12
+    },
+    {
+      "day": "2026-06-08",
+      "completeSlots": 270,
+      "agreeAll4Pct": 72.2,
+      "agree3Pct": 92.6,
+      "multiFlip": 14,
+      "tripleFlip": 3,
+      "oddsMulti": 8
+    },
+    {
+      "day": "2026-06-09",
+      "completeSlots": 288,
+      "agreeAll4Pct": 70.1,
+      "agree3Pct": 88.9,
+      "multiFlip": 27,
+      "tripleFlip": 8,
+      "oddsMulti": 14
+    },
+    {
+      "day": "2026-06-10",
+      "completeSlots": 155,
+      "agreeAll4Pct": 78.1,
+      "agree3Pct": 95.5,
+      "multiFlip": 16,
+      "tripleFlip": 3,
+      "oddsMulti": 13
+    },
+    {
+      "day": "2026-06-11",
+      "completeSlots": 123,
+      "agreeAll4Pct": 65,
+      "agree3Pct": 94.3,
+      "multiFlip": 14,
+      "tripleFlip": 6,
+      "oddsMulti": 4
+    },
+    {
+      "day": "2026-06-12",
+      "completeSlots": 261,
+      "agreeAll4Pct": 68.2,
+      "agree3Pct": 90.8,
+      "multiFlip": 26,
+      "tripleFlip": 6,
+      "oddsMulti": 12
+    },
+    {
+      "day": "2026-06-13",
+      "completeSlots": 275,
+      "agreeAll4Pct": 57.8,
+      "agree3Pct": 84.7,
+      "multiFlip": 27,
+      "tripleFlip": 9,
+      "oddsMulti": 14
+    },
+    {
+      "day": "2026-06-14",
+      "completeSlots": 264,
+      "agreeAll4Pct": 61.7,
+      "agree3Pct": 88.6,
+      "multiFlip": 21,
+      "tripleFlip": 5,
+      "oddsMulti": 13
+    },
+    {
+      "day": "2026-06-15",
+      "completeSlots": 288,
+      "agreeAll4Pct": 59.4,
+      "agree3Pct": 87.2,
+      "multiFlip": 18,
+      "tripleFlip": 2,
+      "oddsMulti": 10
+    },
+    {
+      "day": "2026-06-16",
+      "completeSlots": 288,
+      "agreeAll4Pct": 65.3,
+      "agree3Pct": 90.6,
+      "multiFlip": 12,
+      "tripleFlip": 3,
+      "oddsMulti": 11
+    },
+    {
+      "day": "2026-06-17",
+      "completeSlots": 275,
+      "agreeAll4Pct": 68.7,
+      "agree3Pct": 88.7,
+      "multiFlip": 24,
+      "tripleFlip": 6,
+      "oddsMulti": 16
+    },
+    {
+      "day": "2026-06-18",
+      "completeSlots": 284,
+      "agreeAll4Pct": 70.1,
+      "agree3Pct": 91.2,
+      "multiFlip": 22,
+      "tripleFlip": 6,
+      "oddsMulti": 10
+    },
+    {
+      "day": "2026-06-19",
+      "completeSlots": 240,
+      "agreeAll4Pct": 69.2,
+      "agree3Pct": 92.5,
+      "multiFlip": 16,
+      "tripleFlip": 4,
+      "oddsMulti": 9
+    },
+    {
+      "day": "2026-06-20",
+      "completeSlots": 283,
+      "agreeAll4Pct": 62.5,
+      "agree3Pct": 89.4,
+      "multiFlip": 25,
+      "tripleFlip": 9,
+      "oddsMulti": 15
+    },
+    {
+      "day": "2026-06-21",
+      "completeSlots": 284,
+      "agreeAll4Pct": 58.8,
+      "agree3Pct": 89.1,
+      "multiFlip": 18,
+      "tripleFlip": 4,
+      "oddsMulti": 10
+    },
+    {
+      "day": "2026-06-22",
+      "completeSlots": 248,
+      "agreeAll4Pct": 69,
+      "agree3Pct": 89.9,
+      "multiFlip": 19,
+      "tripleFlip": 5,
+      "oddsMulti": 15
+    },
+    {
+      "day": "2026-06-23",
+      "completeSlots": 176,
+      "agreeAll4Pct": 65.9,
+      "agree3Pct": 91.5,
+      "multiFlip": 14,
+      "tripleFlip": 2,
+      "oddsMulti": 14
+    },
+    {
+      "day": "2026-06-24",
+      "completeSlots": 265,
+      "agreeAll4Pct": 64.5,
+      "agree3Pct": 90.6,
+      "multiFlip": 32,
+      "tripleFlip": 8,
+      "oddsMulti": 16
+    },
+    {
+      "day": "2026-06-25",
+      "completeSlots": 287,
+      "agreeAll4Pct": 68.3,
+      "agree3Pct": 91.3,
+      "multiFlip": 23,
+      "tripleFlip": 5,
+      "oddsMulti": 13
+    },
+    {
+      "day": "2026-06-26",
+      "completeSlots": 288,
+      "agreeAll4Pct": 68.4,
+      "agree3Pct": 89.9,
+      "multiFlip": 20,
+      "tripleFlip": 6,
+      "oddsMulti": 12
+    },
+    {
+      "day": "2026-06-27",
+      "completeSlots": 266,
+      "agreeAll4Pct": 59.8,
+      "agree3Pct": 88.3,
+      "multiFlip": 20,
+      "tripleFlip": 3,
+      "oddsMulti": 9
+    },
+    {
+      "day": "2026-06-28",
+      "completeSlots": 251,
+      "agreeAll4Pct": 65.3,
+      "agree3Pct": 87.6,
+      "multiFlip": 11,
+      "tripleFlip": 3,
+      "oddsMulti": 7
+    },
+    {
+      "day": "2026-06-29",
+      "completeSlots": 286,
+      "agreeAll4Pct": 68.5,
+      "agree3Pct": 89.9,
+      "multiFlip": 18,
+      "tripleFlip": 4,
+      "oddsMulti": 10
+    },
+    {
+      "day": "2026-06-30",
+      "completeSlots": 274,
+      "agreeAll4Pct": 70.8,
+      "agree3Pct": 92,
+      "multiFlip": 19,
+      "tripleFlip": 6,
+      "oddsMulti": 10
+    },
+    {
+      "day": "2026-07-01",
+      "completeSlots": 256,
+      "agreeAll4Pct": 68,
+      "agree3Pct": 92.2,
+      "multiFlip": 13,
+      "tripleFlip": 2,
+      "oddsMulti": 5
+    },
+    {
+      "day": "2026-07-02",
+      "completeSlots": 247,
+      "agreeAll4Pct": 57.9,
+      "agree3Pct": 83,
+      "multiFlip": 16,
+      "tripleFlip": 2,
+      "oddsMulti": 9
+    },
+    {
+      "day": "2026-07-03",
+      "completeSlots": 285,
+      "agreeAll4Pct": 59.3,
+      "agree3Pct": 85.6,
+      "multiFlip": 18,
+      "tripleFlip": 2,
+      "oddsMulti": 10
+    },
+    {
+      "day": "2026-07-04",
+      "completeSlots": 254,
+      "agreeAll4Pct": 53.9,
+      "agree3Pct": 84.6,
+      "multiFlip": 28,
+      "tripleFlip": 3,
+      "oddsMulti": 9
+    },
+    {
+      "day": "2026-07-05",
+      "completeSlots": 280,
+      "agreeAll4Pct": 56.4,
+      "agree3Pct": 83.9,
+      "multiFlip": 21,
+      "tripleFlip": 6,
+      "oddsMulti": 14
+    },
+    {
+      "day": "2026-07-06",
+      "completeSlots": 272,
+      "agreeAll4Pct": 60.7,
+      "agree3Pct": 86.8,
+      "multiFlip": 14,
+      "tripleFlip": 1,
+      "oddsMulti": 8
+    },
+    {
+      "day": "2026-07-07",
+      "completeSlots": 210,
+      "agreeAll4Pct": 72.4,
+      "agree3Pct": 93.3,
+      "multiFlip": 16,
+      "tripleFlip": 0,
+      "oddsMulti": 8
+    },
+    {
+      "day": "2026-07-08",
+      "completeSlots": 278,
+      "agreeAll4Pct": 68,
+      "agree3Pct": 93.9,
+      "multiFlip": 18,
+      "tripleFlip": 5,
+      "oddsMulti": 9
+    },
+    {
+      "day": "2026-07-09",
+      "completeSlots": 191,
+      "agreeAll4Pct": 69.1,
+      "agree3Pct": 87.4,
+      "multiFlip": 14,
+      "tripleFlip": 1,
+      "oddsMulti": 9
+    },
+    {
+      "day": "2026-07-10",
+      "completeSlots": 203,
+      "agreeAll4Pct": 67,
+      "agree3Pct": 92.1,
+      "multiFlip": 19,
+      "tripleFlip": 5,
+      "oddsMulti": 12
+    },
+    {
+      "day": "2026-07-11",
+      "completeSlots": 229,
+      "agreeAll4Pct": 58.5,
+      "agree3Pct": 88.2,
+      "multiFlip": 26,
+      "tripleFlip": 8,
+      "oddsMulti": 8
+    },
+    {
+      "day": "2026-07-12",
+      "completeSlots": 147,
+      "agreeAll4Pct": 61.9,
+      "agree3Pct": 85.7,
+      "multiFlip": 17,
+      "tripleFlip": 3,
+      "oddsMulti": 8
+    },
+    {
+      "day": "2026-07-13",
+      "completeSlots": 214,
+      "agreeAll4Pct": 69.2,
+      "agree3Pct": 91.6,
+      "multiFlip": 15,
+      "tripleFlip": 2,
+      "oddsMulti": 9
+    },
+    {
+      "day": "2026-07-14",
+      "completeSlots": 203,
+      "agreeAll4Pct": 65,
+      "agree3Pct": 91.1,
+      "multiFlip": 15,
+      "tripleFlip": 3,
+      "oddsMulti": 10
+    },
+    {
+      "day": "2026-07-15",
+      "completeSlots": 185,
+      "agreeAll4Pct": 63.8,
+      "agree3Pct": 89.2,
+      "multiFlip": 16,
+      "tripleFlip": 5,
+      "oddsMulti": 6
+    },
+    {
+      "day": "2026-07-16",
+      "completeSlots": 210,
+      "agreeAll4Pct": 65.2,
+      "agree3Pct": 87.1,
+      "multiFlip": 18,
+      "tripleFlip": 3,
+      "oddsMulti": 11
+    },
+    {
+      "day": "2026-07-17",
+      "completeSlots": 171,
+      "agreeAll4Pct": 64.9,
+      "agree3Pct": 89.5,
+      "multiFlip": 14,
+      "tripleFlip": 3,
+      "oddsMulti": 8
+    },
+    {
+      "day": "2026-07-18",
+      "completeSlots": 216,
+      "agreeAll4Pct": 52.8,
+      "agree3Pct": 85.2,
+      "multiFlip": 22,
+      "tripleFlip": 5,
+      "oddsMulti": 7
+    },
+    {
+      "day": "2026-07-19",
+      "completeSlots": 205,
+      "agreeAll4Pct": 56.1,
+      "agree3Pct": 85.9,
+      "multiFlip": 8,
+      "tripleFlip": 1,
+      "oddsMulti": 7
+    },
+    {
+      "day": "2026-07-20",
+      "completeSlots": 241,
+      "agreeAll4Pct": 66.4,
+      "agree3Pct": 92.5,
+      "multiFlip": 14,
+      "tripleFlip": 3,
+      "oddsMulti": 10
+    },
+    {
+      "day": "2026-07-21",
+      "completeSlots": 148,
+      "agreeAll4Pct": 54.1,
+      "agree3Pct": 84.5,
+      "multiFlip": 11,
+      "tripleFlip": 2,
+      "oddsMulti": 6
+    },
+    {
+      "day": "2026-07-22",
+      "completeSlots": 210,
+      "agreeAll4Pct": 67.6,
+      "agree3Pct": 87.1,
+      "multiFlip": 15,
+      "tripleFlip": 1,
+      "oddsMulti": 12
+    },
+    {
+      "day": "2026-07-23",
+      "completeSlots": 188,
+      "agreeAll4Pct": 61.7,
+      "agree3Pct": 89.4,
+      "multiFlip": 17,
+      "tripleFlip": 3,
+      "oddsMulti": 9
+    },
+    {
+      "day": "2026-07-24",
+      "completeSlots": 172,
+      "agreeAll4Pct": 70.3,
+      "agree3Pct": 90.7,
+      "multiFlip": 16,
+      "tripleFlip": 6,
+      "oddsMulti": 9
+    },
+    {
+      "day": "2026-07-25",
+      "completeSlots": 160,
+      "agreeAll4Pct": 50,
+      "agree3Pct": 85,
+      "multiFlip": 21,
+      "tripleFlip": 4,
+      "oddsMulti": 6
+    }
+  ]
+}

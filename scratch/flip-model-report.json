@@ -1,0 +1,1086 @@
+{
+  "generatedAt": "2026-07-27T04:52:34.801Z",
+  "input": "D:\\Projetos\\projeto-goldenlens\\data-backtest\\scratch\\flip-features.csv",
+  "methodology": {
+    "train": "day < 2026-06-15",
+    "validation": "2026-06-15 <= day < 2026-07-01",
+    "holdout": "day >= 2026-07-01",
+    "label": "leader at checkpoint differs from final spot winner, with final book consensus"
+  },
+  "dataset": {
+    "rows": 95304,
+    "events": 23829,
+    "firstDay": "2026-04-27",
+    "lastDay": "2026-07-26"
+  },
+  "baseRates": [
+    {
+      "tau": 60,
+      "n": 23827,
+      "flips": 3714,
+      "rate": 0.155874
+    },
+    {
+      "tau": 30,
+      "n": 23827,
+      "flips": 2645,
+      "rate": 0.111009
+    },
+    {
+      "tau": 20,
+      "n": 23828,
+      "flips": 2171,
+      "rate": 0.091111
+    },
+    {
+      "tau": 10,
+      "n": 23822,
+      "flips": 1654,
+      "rate": 0.069432
+    }
+  ],
+  "byTau": {
+    "10": {
+      "rows": {
+        "train": 12863,
+        "validation": 4351,
+        "holdout": 6608
+      },
+      "validationMetrics": {
+        "market_raw": {
+          "n": 4351,
+          "flips": 282,
+          "prevalence": 0.064813,
+          "auc": 0.954489,
+          "averagePrecision": 0.670717,
+          "brier": 0.0342,
+          "logLoss": 0.121124
+        },
+        "brownian_raw": {
+          "n": 4351,
+          "flips": 282,
+          "prevalence": 0.064813,
+          "auc": 0.746178,
+          "averagePrecision": 0.238726,
+          "brier": 0.056486,
+          "logLoss": 0.281938
+        },
+        "market_only": {
+          "n": 4351,
+          "flips": 282,
+          "prevalence": 0.064813,
+          "auc": 0.954489,
+          "averagePrecision": 0.670717,
+          "brier": 0.036753,
+          "logLoss": 0.126587
+        },
+        "physics_only": {
+          "n": 4351,
+          "flips": 282,
+          "prevalence": 0.064813,
+          "auc": 0.790934,
+          "averagePrecision": 0.271925,
+          "brier": 0.053457,
+          "logLoss": 0.200285
+        },
+        "combined": {
+          "n": 4351,
+          "flips": 282,
+          "prevalence": 0.064813,
+          "auc": 0.949124,
+          "averagePrecision": 0.626566,
+          "brier": 0.037296,
+          "logLoss": 0.128029
+        }
+      },
+      "holdoutMetrics": {
+        "market_raw": {
+          "n": 6608,
+          "flips": 477,
+          "prevalence": 0.072185,
+          "auc": 0.961029,
+          "averagePrecision": 0.756574,
+          "brier": 0.031817,
+          "logLoss": 0.115548
+        },
+        "brownian_raw": {
+          "n": 6608,
+          "flips": 477,
+          "prevalence": 0.072185,
+          "auc": 0.708006,
+          "averagePrecision": 0.228424,
+          "brier": 0.063912,
+          "logLoss": 0.334518
+        },
+        "market_only": {
+          "n": 6608,
+          "flips": 477,
+          "prevalence": 0.072185,
+          "auc": 0.961029,
+          "averagePrecision": 0.756574,
+          "brier": 0.03528,
+          "logLoss": 0.12325
+        },
+        "physics_only": {
+          "n": 6608,
+          "flips": 477,
+          "prevalence": 0.072185,
+          "auc": 0.750281,
+          "averagePrecision": 0.24159,
+          "brier": 0.060874,
+          "logLoss": 0.228448
+        },
+        "combined": {
+          "n": 6608,
+          "flips": 477,
+          "prevalence": 0.072185,
+          "auc": 0.954572,
+          "averagePrecision": 0.684349,
+          "brier": 0.038036,
+          "logLoss": 0.129065
+        }
+      },
+      "thresholds": [
+        {
+          "threshold": 0.15,
+          "flagged": 787,
+          "flagRate": 0.119098,
+          "truePositive": 396,
+          "precision": 0.503177,
+          "precision95": [
+            0.468314,
+            0.538009
+          ],
+          "recall": 0.830189,
+          "kept": 5821,
+          "keptFlipRate": 0.013915
+        },
+        {
+          "threshold": 0.2,
+          "flagged": 635,
+          "flagRate": 0.096096,
+          "truePositive": 361,
+          "precision": 0.568504,
+          "precision95": [
+            0.529682,
+            0.606502
+          ],
+          "recall": 0.756813,
+          "kept": 5973,
+          "keptFlipRate": 0.019421
+        },
+        {
+          "threshold": 0.25,
+          "flagged": 531,
+          "flagRate": 0.080357,
+          "truePositive": 333,
+          "precision": 0.627119,
+          "precision95": [
+            0.585212,
+            0.667199
+          ],
+          "recall": 0.698113,
+          "kept": 6077,
+          "keptFlipRate": 0.023696
+        },
+        {
+          "threshold": 0.3,
+          "flagged": 447,
+          "flagRate": 0.067645,
+          "truePositive": 298,
+          "precision": 0.666667,
+          "precision95": [
+            0.621708,
+            0.708785
+          ],
+          "recall": 0.624738,
+          "kept": 6161,
+          "keptFlipRate": 0.029054
+        },
+        {
+          "threshold": 0.4,
+          "flagged": 287,
+          "flagRate": 0.043432,
+          "truePositive": 214,
+          "precision": 0.745645,
+          "precision95": [
+            0.692244,
+            0.792556
+          ],
+          "recall": 0.448637,
+          "kept": 6321,
+          "keptFlipRate": 0.041607
+        },
+        {
+          "threshold": 0.5,
+          "flagged": 178,
+          "flagRate": 0.026937,
+          "truePositive": 153,
+          "precision": 0.859551,
+          "precision95": [
+            0.800885,
+            0.903024
+          ],
+          "recall": 0.320755,
+          "kept": 6430,
+          "keptFlipRate": 0.050389
+        }
+      ],
+      "coefficients": [
+        {
+          "name": "book_risk_logit",
+          "standardized": 1.357853
+        },
+        {
+          "name": "log_z",
+          "standardized": -0.177093
+        },
+        {
+          "name": "odds_sum_dev",
+          "standardized": -0.126804
+        },
+        {
+          "name": "book_fall15",
+          "standardized": 0.11929
+        },
+        {
+          "name": "brown_risk_logit",
+          "standardized": 0.117169
+        },
+        {
+          "name": "mom30_z",
+          "standardized": -0.1122
+        },
+        {
+          "name": "spread",
+          "standardized": 0.104512
+        },
+        {
+          "name": "mom10_z",
+          "standardized": -0.092528
+        },
+        {
+          "name": "cross_fresh",
+          "standardized": 0.085809
+        },
+        {
+          "name": "stale_s",
+          "standardized": -0.07907
+        },
+        {
+          "name": "range_z",
+          "standardized": -0.055456
+        },
+        {
+          "name": "crosses60",
+          "standardized": -0.037317
+        }
+      ]
+    },
+    "20": {
+      "rows": {
+        "train": 12869,
+        "validation": 4351,
+        "holdout": 6608
+      },
+      "validationMetrics": {
+        "market_raw": {
+          "n": 4351,
+          "flips": 407,
+          "prevalence": 0.093542,
+          "auc": 0.918567,
+          "averagePrecision": 0.570423,
+          "brier": 0.056291,
+          "logLoss": 0.187358
+        },
+        "brownian_raw": {
+          "n": 4351,
+          "flips": 407,
+          "prevalence": 0.093542,
+          "auc": 0.776152,
+          "averagePrecision": 0.3292,
+          "brier": 0.075969,
+          "logLoss": 0.34928
+        },
+        "market_only": {
+          "n": 4351,
+          "flips": 407,
+          "prevalence": 0.093542,
+          "auc": 0.918567,
+          "averagePrecision": 0.570423,
+          "brier": 0.058192,
+          "logLoss": 0.192845
+        },
+        "physics_only": {
+          "n": 4351,
+          "flips": 407,
+          "prevalence": 0.093542,
+          "auc": 0.796443,
+          "averagePrecision": 0.33771,
+          "brier": 0.073062,
+          "logLoss": 0.25742
+        },
+        "combined": {
+          "n": 4351,
+          "flips": 407,
+          "prevalence": 0.093542,
+          "auc": 0.914904,
+          "averagePrecision": 0.562267,
+          "brier": 0.05811,
+          "logLoss": 0.194002
+        }
+      },
+      "holdoutMetrics": {
+        "market_raw": {
+          "n": 6608,
+          "flips": 608,
+          "prevalence": 0.09201,
+          "auc": 0.930818,
+          "averagePrecision": 0.639398,
+          "brier": 0.050146,
+          "logLoss": 0.172843
+        },
+        "brownian_raw": {
+          "n": 6608,
+          "flips": 608,
+          "prevalence": 0.09201,
+          "auc": 0.725708,
+          "averagePrecision": 0.263733,
+          "brier": 0.078975,
+          "logLoss": 0.385951
+        },
+        "market_only": {
+          "n": 6608,
+          "flips": 608,
+          "prevalence": 0.09201,
+          "auc": 0.930818,
+          "averagePrecision": 0.639398,
+          "brier": 0.051673,
+          "logLoss": 0.1773
+        },
+        "physics_only": {
+          "n": 6608,
+          "flips": 608,
+          "prevalence": 0.09201,
+          "auc": 0.761107,
+          "averagePrecision": 0.278987,
+          "brier": 0.075133,
+          "logLoss": 0.267589
+        },
+        "combined": {
+          "n": 6608,
+          "flips": 608,
+          "prevalence": 0.09201,
+          "auc": 0.92836,
+          "averagePrecision": 0.616829,
+          "brier": 0.052383,
+          "logLoss": 0.17881
+        }
+      },
+      "thresholds": [
+        {
+          "threshold": 0.15,
+          "flagged": 1159,
+          "flagRate": 0.175393,
+          "truePositive": 482,
+          "precision": 0.415876,
+          "precision95": [
+            0.387823,
+            0.444484
+          ],
+          "recall": 0.792763,
+          "kept": 5449,
+          "keptFlipRate": 0.023124
+        },
+        {
+          "threshold": 0.2,
+          "flagged": 910,
+          "flagRate": 0.137712,
+          "truePositive": 442,
+          "precision": 0.485714,
+          "precision95": [
+            0.453369,
+            0.518179
+          ],
+          "recall": 0.726974,
+          "kept": 5698,
+          "keptFlipRate": 0.029133
+        },
+        {
+          "threshold": 0.25,
+          "flagged": 731,
+          "flagRate": 0.110623,
+          "truePositive": 409,
+          "precision": 0.559508,
+          "precision95": [
+            0.5233,
+            0.595093
+          ],
+          "recall": 0.672697,
+          "kept": 5877,
+          "keptFlipRate": 0.033861
+        },
+        {
+          "threshold": 0.3,
+          "flagged": 591,
+          "flagRate": 0.089437,
+          "truePositive": 368,
+          "precision": 0.622673,
+          "precision95": [
+            0.58292,
+            0.660843
+          ],
+          "recall": 0.605263,
+          "kept": 6017,
+          "keptFlipRate": 0.039887
+        },
+        {
+          "threshold": 0.4,
+          "flagged": 405,
+          "flagRate": 0.061289,
+          "truePositive": 284,
+          "precision": 0.701235,
+          "precision95": [
+            0.654935,
+            0.743753
+          ],
+          "recall": 0.467105,
+          "kept": 6203,
+          "keptFlipRate": 0.052233
+        },
+        {
+          "threshold": 0.5,
+          "flagged": 257,
+          "flagRate": 0.038892,
+          "truePositive": 192,
+          "precision": 0.747082,
+          "precision95": [
+            0.690565,
+            0.79632
+          ],
+          "recall": 0.315789,
+          "kept": 6351,
+          "keptFlipRate": 0.065501
+        }
+      ],
+      "coefficients": [
+        {
+          "name": "book_risk_logit",
+          "standardized": 1.410698
+        },
+        {
+          "name": "book_fall15",
+          "standardized": 0.170136
+        },
+        {
+          "name": "log_z",
+          "standardized": -0.09064
+        },
+        {
+          "name": "spread",
+          "standardized": 0.078703
+        },
+        {
+          "name": "brown_risk_logit",
+          "standardized": 0.062138
+        },
+        {
+          "name": "mom30_z",
+          "standardized": -0.045567
+        },
+        {
+          "name": "mom10_z",
+          "standardized": 0.042395
+        },
+        {
+          "name": "range_z",
+          "standardized": -0.041133
+        },
+        {
+          "name": "odds_sum_dev",
+          "standardized": -0.034828
+        },
+        {
+          "name": "stale_s",
+          "standardized": -0.026164
+        },
+        {
+          "name": "cross_fresh",
+          "standardized": 0.016562
+        },
+        {
+          "name": "crosses60",
+          "standardized": -0.00257
+        }
+      ]
+    },
+    "30": {
+      "rows": {
+        "train": 12868,
+        "validation": 4351,
+        "holdout": 6608
+      },
+      "validationMetrics": {
+        "market_raw": {
+          "n": 4351,
+          "flips": 475,
+          "prevalence": 0.10917,
+          "auc": 0.897829,
+          "averagePrecision": 0.509817,
+          "brier": 0.069764,
+          "logLoss": 0.22609
+        },
+        "brownian_raw": {
+          "n": 4351,
+          "flips": 475,
+          "prevalence": 0.10917,
+          "auc": 0.772684,
+          "averagePrecision": 0.31911,
+          "brier": 0.088363,
+          "logLoss": 0.386442
+        },
+        "market_only": {
+          "n": 4351,
+          "flips": 475,
+          "prevalence": 0.10917,
+          "auc": 0.897829,
+          "averagePrecision": 0.509817,
+          "brier": 0.071022,
+          "logLoss": 0.231059
+        },
+        "physics_only": {
+          "n": 4351,
+          "flips": 475,
+          "prevalence": 0.10917,
+          "auc": 0.786755,
+          "averagePrecision": 0.334693,
+          "brier": 0.08409,
+          "logLoss": 0.289
+        },
+        "combined": {
+          "n": 4351,
+          "flips": 475,
+          "prevalence": 0.10917,
+          "auc": 0.893741,
+          "averagePrecision": 0.49796,
+          "brier": 0.071239,
+          "logLoss": 0.231995
+        }
+      },
+      "holdoutMetrics": {
+        "market_raw": {
+          "n": 6608,
+          "flips": 747,
+          "prevalence": 0.113045,
+          "auc": 0.91079,
+          "averagePrecision": 0.619053,
+          "brier": 0.064418,
+          "logLoss": 0.215722
+        },
+        "brownian_raw": {
+          "n": 6608,
+          "flips": 747,
+          "prevalence": 0.113045,
+          "auc": 0.751442,
+          "averagePrecision": 0.326239,
+          "brier": 0.092016,
+          "logLoss": 0.421533
+        },
+        "market_only": {
+          "n": 6608,
+          "flips": 747,
+          "prevalence": 0.113045,
+          "auc": 0.91079,
+          "averagePrecision": 0.619053,
+          "brier": 0.066017,
+          "logLoss": 0.221412
+        },
+        "physics_only": {
+          "n": 6608,
+          "flips": 747,
+          "prevalence": 0.113045,
+          "auc": 0.776198,
+          "averagePrecision": 0.346675,
+          "brier": 0.087167,
+          "logLoss": 0.299554
+        },
+        "combined": {
+          "n": 6608,
+          "flips": 747,
+          "prevalence": 0.113045,
+          "auc": 0.908911,
+          "averagePrecision": 0.598129,
+          "brier": 0.06639,
+          "logLoss": 0.221708
+        }
+      },
+      "thresholds": [
+        {
+          "threshold": 0.15,
+          "flagged": 1619,
+          "flagRate": 0.245006,
+          "truePositive": 617,
+          "precision": 0.381099,
+          "precision95": [
+            0.35775,
+            0.405012
+          ],
+          "recall": 0.825971,
+          "kept": 4989,
+          "keptFlipRate": 0.026057
+        },
+        {
+          "threshold": 0.2,
+          "flagged": 1254,
+          "flagRate": 0.18977,
+          "truePositive": 561,
+          "precision": 0.447368,
+          "precision95": [
+            0.42005,
+            0.475008
+          ],
+          "recall": 0.751004,
+          "kept": 5354,
+          "keptFlipRate": 0.03474
+        },
+        {
+          "threshold": 0.25,
+          "flagged": 987,
+          "flagRate": 0.149364,
+          "truePositive": 499,
+          "precision": 0.505572,
+          "precision95": [
+            0.47442,
+            0.536682
+          ],
+          "recall": 0.668005,
+          "kept": 5621,
+          "keptFlipRate": 0.04412
+        },
+        {
+          "threshold": 0.3,
+          "flagged": 791,
+          "flagRate": 0.119703,
+          "truePositive": 439,
+          "precision": 0.554994,
+          "precision95": [
+            0.520177,
+            0.589278
+          ],
+          "recall": 0.587684,
+          "kept": 5817,
+          "keptFlipRate": 0.052948
+        },
+        {
+          "threshold": 0.4,
+          "flagged": 482,
+          "flagRate": 0.072942,
+          "truePositive": 319,
+          "precision": 0.661826,
+          "precision95": [
+            0.618459,
+            0.702634
+          ],
+          "recall": 0.427041,
+          "kept": 6126,
+          "keptFlipRate": 0.069866
+        },
+        {
+          "threshold": 0.5,
+          "flagged": 267,
+          "flagRate": 0.040406,
+          "truePositive": 204,
+          "precision": 0.764045,
+          "precision95": [
+            0.709594,
+            0.811006
+          ],
+          "recall": 0.273092,
+          "kept": 6341,
+          "keptFlipRate": 0.085633
+        }
+      ],
+      "coefficients": [
+        {
+          "name": "book_risk_logit",
+          "standardized": 1.382942
+        },
+        {
+          "name": "book_fall15",
+          "standardized": 0.14086
+        },
+        {
+          "name": "log_z",
+          "standardized": -0.095087
+        },
+        {
+          "name": "brown_risk_logit",
+          "standardized": 0.085056
+        },
+        {
+          "name": "mom30_z",
+          "standardized": -0.038751
+        },
+        {
+          "name": "cross_fresh",
+          "standardized": 0.03838
+        },
+        {
+          "name": "spread",
+          "standardized": 0.03556
+        },
+        {
+          "name": "odds_sum_dev",
+          "standardized": -0.032746
+        },
+        {
+          "name": "crosses60",
+          "standardized": -0.02312
+        },
+        {
+          "name": "stale_s",
+          "standardized": -0.023022
+        },
+        {
+          "name": "range_z",
+          "standardized": -0.009635
+        },
+        {
+          "name": "mom10_z",
+          "standardized": -0.003911
+        }
+      ]
+    },
+    "60": {
+      "rows": {
+        "train": 12868,
+        "validation": 4351,
+        "holdout": 6608
+      },
+      "validationMetrics": {
+        "market_raw": {
+          "n": 4351,
+          "flips": 648,
+          "prevalence": 0.148931,
+          "auc": 0.843104,
+          "averagePrecision": 0.452837,
+          "brier": 0.100005,
+          "logLoss": 0.315996
+        },
+        "brownian_raw": {
+          "n": 4351,
+          "flips": 648,
+          "prevalence": 0.148931,
+          "auc": 0.765054,
+          "averagePrecision": 0.356943,
+          "brier": 0.115309,
+          "logLoss": 0.454544
+        },
+        "market_only": {
+          "n": 4351,
+          "flips": 648,
+          "prevalence": 0.148931,
+          "auc": 0.843104,
+          "averagePrecision": 0.452837,
+          "brier": 0.100684,
+          "logLoss": 0.320024
+        },
+        "physics_only": {
+          "n": 4351,
+          "flips": 648,
+          "prevalence": 0.148931,
+          "auc": 0.768226,
+          "averagePrecision": 0.347441,
+          "brier": 0.110746,
+          "logLoss": 0.362231
+        },
+        "combined": {
+          "n": 4351,
+          "flips": 648,
+          "prevalence": 0.148931,
+          "auc": 0.839191,
+          "averagePrecision": 0.441849,
+          "brier": 0.101054,
+          "logLoss": 0.320833
+        }
+      },
+      "holdoutMetrics": {
+        "market_raw": {
+          "n": 6608,
+          "flips": 1043,
+          "prevalence": 0.157839,
+          "auc": 0.85229,
+          "averagePrecision": 0.512477,
+          "brier": 0.100484,
+          "logLoss": 0.318539
+        },
+        "brownian_raw": {
+          "n": 6608,
+          "flips": 1043,
+          "prevalence": 0.157839,
+          "auc": 0.751434,
+          "averagePrecision": 0.358616,
+          "brier": 0.124188,
+          "logLoss": 0.506294
+        },
+        "market_only": {
+          "n": 6608,
+          "flips": 1043,
+          "prevalence": 0.157839,
+          "auc": 0.85229,
+          "averagePrecision": 0.512477,
+          "brier": 0.101467,
+          "logLoss": 0.323202
+        },
+        "physics_only": {
+          "n": 6608,
+          "flips": 1043,
+          "prevalence": 0.157839,
+          "auc": 0.757135,
+          "averagePrecision": 0.349206,
+          "brier": 0.11721,
+          "logLoss": 0.37966
+        },
+        "combined": {
+          "n": 6608,
+          "flips": 1043,
+          "prevalence": 0.157839,
+          "auc": 0.849862,
+          "averagePrecision": 0.49771,
+          "brier": 0.102037,
+          "logLoss": 0.323625
+        }
+      },
+      "thresholds": [
+        {
+          "threshold": 0.15,
+          "flagged": 2642,
+          "flagRate": 0.399818,
+          "truePositive": 896,
+          "precision": 0.339137,
+          "precision95": [
+            0.32133,
+            0.357411
+          ],
+          "recall": 0.85906,
+          "kept": 3966,
+          "keptFlipRate": 0.037065
+        },
+        {
+          "threshold": 0.2,
+          "flagged": 2094,
+          "flagRate": 0.316889,
+          "truePositive": 797,
+          "precision": 0.380611,
+          "precision95": [
+            0.360051,
+            0.401608
+          ],
+          "recall": 0.764142,
+          "kept": 4514,
+          "keptFlipRate": 0.054497
+        },
+        {
+          "threshold": 0.25,
+          "flagged": 1608,
+          "flagRate": 0.243341,
+          "truePositive": 682,
+          "precision": 0.424129,
+          "precision95": [
+            0.400182,
+            0.448438
+          ],
+          "recall": 0.653883,
+          "kept": 5000,
+          "keptFlipRate": 0.0722
+        },
+        {
+          "threshold": 0.3,
+          "flagged": 1266,
+          "flagRate": 0.191586,
+          "truePositive": 575,
+          "precision": 0.454186,
+          "precision95": [
+            0.426939,
+            0.481711
+          ],
+          "recall": 0.551294,
+          "kept": 5342,
+          "keptFlipRate": 0.087608
+        },
+        {
+          "threshold": 0.4,
+          "flagged": 662,
+          "flagRate": 0.100182,
+          "truePositive": 361,
+          "precision": 0.545317,
+          "precision95": [
+            0.507232,
+            0.582879
+          ],
+          "recall": 0.346117,
+          "kept": 5946,
+          "keptFlipRate": 0.114699
+        },
+        {
+          "threshold": 0.5,
+          "flagged": 263,
+          "flagRate": 0.0398,
+          "truePositive": 168,
+          "precision": 0.638783,
+          "precision95": [
+            0.579115,
+            0.694455
+          ],
+          "recall": 0.161074,
+          "kept": 6345,
+          "keptFlipRate": 0.137904
+        }
+      ],
+      "coefficients": [
+        {
+          "name": "book_risk_logit",
+          "standardized": 1.249746
+        },
+        {
+          "name": "brown_risk_logit",
+          "standardized": 0.088209
+        },
+        {
+          "name": "book_fall15",
+          "standardized": 0.083849
+        },
+        {
+          "name": "log_z",
+          "standardized": -0.083138
+        },
+        {
+          "name": "spread",
+          "standardized": 0.061141
+        },
+        {
+          "name": "odds_sum_dev",
+          "standardized": -0.046894
+        },
+        {
+          "name": "range_z",
+          "standardized": -0.039631
+        },
+        {
+          "name": "mom10_z",
+          "standardized": -0.033864
+        },
+        {
+          "name": "crosses60",
+          "standardized": 0.029094
+        },
+        {
+          "name": "cross_fresh",
+          "standardized": 0.022565
+        },
+        {
+          "name": "mom30_z",
+          "standardized": 0.019716
+        },
+        {
+          "name": "stale_s",
+          "standardized": 0.00969
+        }
+      ]
+    }
+  },
+  "simpleRule": {
+    "description": "bookRisk>=0.30 AND z<=4",
+    "params": {
+      "bookRiskMin": 0.3,
+      "zMax": 4,
+      "mom10zMax": null,
+      "crossMin": 0,
+      "bookFallMin": null
+    },
+    "train": {
+      "n": 1753,
+      "truePositive": 822,
+      "precision": 0.46891,
+      "recall": 0.577653,
+      "flagRate": 0.136229
+    },
+    "validation": {
+      "n": 597,
+      "truePositive": 266,
+      "precision": 0.445561,
+      "recall": 0.56,
+      "flagRate": 0.13721
+    },
+    "holdout": {
+      "n": 890,
+      "truePositive": 437,
+      "precision": 0.491011,
+      "recall": 0.585007,
+      "flagRate": 0.134685
+    }
+  },
+  "midasLikePopulation": {
+    "n": 2014,
+    "flips": 312
+  },
+  "midasLikePnl": {
+    "baseline": {
+      "trades": 2014,
+      "wins": 1702,
+      "pnl": 678.237733,
+      "maxDrawdown": 105.13311,
+      "winRate": 0.845084
+    },
+    "variants": [
+      {
+        "threshold": 0.2,
+        "trades": 1355,
+        "skipped": 659,
+        "skippedFlipPrecision": 0.277693,
+        "flipsAvoided": 183,
+        "flipRecall": 0.586538,
+        "pnl": 396.56248,
+        "pnlDelta": -281.675253,
+        "maxDrawdown": 61.407019,
+        "winRate": 0.904797
+      },
+      {
+        "threshold": 0.3,
+        "trades": 1788,
+        "skipped": 226,
+        "skippedFlipPrecision": 0.314159,
+        "flipsAvoided": 71,
+        "flipRecall": 0.227564,
+        "pnl": 484.238915,
+        "pnlDelta": -193.998819,
+        "maxDrawdown": 106.713189,
+        "winRate": 0.865213
+      },
+      {
+        "threshold": 0.4,
+        "trades": 1977,
+        "skipped": 37,
+        "skippedFlipPrecision": 0.486486,
+        "flipsAvoided": 18,
+        "flipRecall": 0.057692,
+        "pnl": 727.253151,
+        "pnlDelta": 49.015418,
+        "maxDrawdown": 105.13311,
+        "winRate": 0.85129
+      },
+      {
+        "threshold": 0.5,
+        "trades": 2012,
+        "skipped": 2,
+        "skippedFlipPrecision": 0.5,
+        "flipsAvoided": 1,
+        "flipRecall": 0.003205,
+        "pnl": 680.769824,
+        "pnlDelta": 2.532091,
+        "maxDrawdown": 105.13311,
+        "winRate": 0.845427
+      }
+    ]
+  }
+}

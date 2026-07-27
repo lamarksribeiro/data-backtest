@@ -1,0 +1,27 @@
+{
+  "id": "flip-hunt-v1",
+  "name": "Flip Hunt V1",
+  "family": "terminal",
+  "status": "candidate",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "src/backtestStudio/gls/strategies/FlipHuntV1.gls"
+  },
+  "promotedToStudio": false,
+  "studioSlug": "flip-hunt-v1",
+  "studio": {
+    "description": "Caça pós-cruzamento do PTB: compra o novo líder com edge físico enquanto o book atrasa. Hold-to-settlement. Tese H2 do miner flip-hunt.",
+    "tags": ["terminal", "btc", "flip", "post-cross", "hunt", "candidate", "lab-strategy"],
+    "defaultVersion": 1,
+    "defaultGlsSource": "classic",
+    "glsSources": {
+      "classic": "src/backtestStudio/gls/strategies/FlipHuntV1.gls"
+    }
+  },
+  "notes": "Lab GLS 2026-07-27: tight-spread holdout +459 PF1.74 WR72.7% (train +288). champion-h2 holdout +335 PF1.63. H1/H4 rejeitados no miner. Prima terminal do SBRI Tight."
+}

@@ -69,6 +69,11 @@ strategy "MIDAS Carry V1" {
   param lateFlipExitSec = 8
   param lateFlipExitCrossDist = 0
   param lateFlipMinSec = 4
+  // Confirmação de book no gatilho de late flip (1.0 = off, comportamento legado).
+  // Só age se o bid próprio já caiu abaixo do teto — o cruzamento físico sozinho
+  // dispara em whipsaw; exigir que o book concorde corta o falso alarme.
+  // Lab anti-flip 2026-07-27: lead+bid<0.40 rende +$302 sobre lead puro em 91d.
+  param lateFlipExitMaxBid = 1.0
   param lateFlipReverseEnabled = true
   param lateFlipReverseMaxAsk = 0.95
   param lateFlipReverseMinAsk = 0.0
@@ -427,7 +432,7 @@ strategy "MIDAS Carry V1" {
 
       // Late flip exit/reverse 8s -> piso 4s
       let lateFlipExitOn = params.lateFlipExitEnabled == true || params.lateFlipExitEnabled == 1
-      if (!state.closed && lateFlipExitOn && secsLeft <= params.lateFlipExitSec && secsLeft >= params.lateFlipMinSec && state.signedDistance <= params.lateFlipExitCrossDist && bid >= params.stopMinBid) {
+      if (!state.closed && lateFlipExitOn && secsLeft <= params.lateFlipExitSec && secsLeft >= params.lateFlipMinSec && state.signedDistance <= params.lateFlipExitCrossDist && bid >= params.stopMinBid && bid < params.lateFlipExitMaxBid) {
         let lateFlipReverseOn = params.lateFlipReverseEnabled == true || params.lateFlipReverseEnabled == 1
         if (lateFlipReverseOn && !state.reversed) {
           let oppSide = prices.oppositeSide(side)

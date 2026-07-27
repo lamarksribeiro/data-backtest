@@ -1,0 +1,27 @@
+{
+  "id": "desk-recovery-v1",
+  "name": "Desk Recovery V1",
+  "family": "terminal",
+  "status": "experimental",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "labs/strategies/terminal/desk-recovery-v1/strategy.gls"
+  },
+  "promotedToStudio": false,
+  "studioSlug": "desk-recovery-v1",
+  "studio": {
+    "description": "Port do desk live recovery (data-robot): misprice mid-window (cushion≥$40 + ask≤55¢) + LOCK/SNIPE terminal + exits ativos (TP/cushion/vel/book).",
+    "tags": ["terminal", "btc", "desk", "recovery", "misprice", "experimental", "lab-strategy"],
+    "defaultVersion": 1,
+    "defaultGlsSource": "classic",
+    "glsSources": {
+      "classic": "labs/strategies/terminal/desk-recovery-v1/strategy.gls"
+    }
+  },
+  "notes": "Criado 2026-07-27 a partir de data-robot/scripts/desk/live-session.js (modo RECOVERY). Objetivo: medir se a tese live é lucrativa no lake BTC 5m."
+}

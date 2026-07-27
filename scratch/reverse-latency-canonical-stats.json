@@ -1,0 +1,728 @@
+{
+  "generatedAt": "2026-07-27T08:05:13.152434+00:00",
+  "input": "scratch\\reverse-latency-canonical.csv",
+  "method": "paired nonparametric bootstrap over daily PnL differences",
+  "bootstraps": 50000,
+  "rows": [
+    {
+      "delaySeconds": 0.0,
+      "maxAsk": 0.65,
+      "vsExit": {
+        "left": "reverse65_delay0",
+        "right": "exit_delay0",
+        "deltaPnl": 240.94439999999997,
+        "positiveDays": 61,
+        "negativeDays": 26,
+        "zeroDays": 4,
+        "bootstrapCi95Total": [
+          114.47336249999998,
+          364.92456000000004
+        ],
+        "bootstrapProbabilityPositive": 0.9998
+      },
+      "vsNaive": {
+        "left": "reverse65_delay0",
+        "right": "reverse101_delay0",
+        "deltaPnl": -110.52519999999998,
+        "positiveDays": 40,
+        "negativeDays": 51,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -248.60952999999998,
+          30.62585750000005
+        ],
+        "bootstrapProbabilityPositive": 0.06138
+      }
+    },
+    {
+      "delaySeconds": 0.0,
+      "maxAsk": 0.68,
+      "vsExit": {
+        "left": "reverse68_delay0",
+        "right": "exit_delay0",
+        "deltaPnl": 413.0698000000001,
+        "positiveDays": 67,
+        "negativeDays": 23,
+        "zeroDays": 1,
+        "bootstrapCi95Total": [
+          263.5339375,
+          559.9827700000001
+        ],
+        "bootstrapProbabilityPositive": 1.0
+      },
+      "vsNaive": {
+        "left": "reverse68_delay0",
+        "right": "reverse101_delay0",
+        "deltaPnl": 61.60020000000003,
+        "positiveDays": 46,
+        "negativeDays": 45,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -58.48623499999995,
+          182.6027325000001
+        ],
+        "bootstrapProbabilityPositive": 0.84074
+      }
+    },
+    {
+      "delaySeconds": 0.0,
+      "maxAsk": 0.7,
+      "vsExit": {
+        "left": "reverse70_delay0",
+        "right": "exit_delay0",
+        "deltaPnl": 433.499,
+        "positiveDays": 69,
+        "negativeDays": 22,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          283.95107999999993,
+          581.2691224999999
+        ],
+        "bootstrapProbabilityPositive": 1.0
+      },
+      "vsNaive": {
+        "left": "reverse70_delay0",
+        "right": "reverse101_delay0",
+        "deltaPnl": 82.02940000000004,
+        "positiveDays": 48,
+        "negativeDays": 43,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -15.774217500000008,
+          180.83476250000004
+        ],
+        "bootstrapProbabilityPositive": 0.94996
+      }
+    },
+    {
+      "delaySeconds": 0.0,
+      "maxAsk": 0.72,
+      "vsExit": {
+        "left": "reverse72_delay0",
+        "right": "exit_delay0",
+        "deltaPnl": 417.8457,
+        "positiveDays": 66,
+        "negativeDays": 25,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          255.88367750000003,
+          578.2040125
+        ],
+        "bootstrapProbabilityPositive": 1.0
+      },
+      "vsNaive": {
+        "left": "reverse72_delay0",
+        "right": "reverse101_delay0",
+        "deltaPnl": 66.37610000000002,
+        "positiveDays": 47,
+        "negativeDays": 44,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -25.697332499999995,
+          160.77552000000003
+        ],
+        "bootstrapProbabilityPositive": 0.91922
+      }
+    },
+    {
+      "delaySeconds": 0.0,
+      "maxAsk": 0.78,
+      "vsExit": {
+        "left": "reverse78_delay0",
+        "right": "exit_delay0",
+        "deltaPnl": 327.6102000000001,
+        "positiveDays": 64,
+        "negativeDays": 27,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          147.20721500000005,
+          504.93000249999994
+        ],
+        "bootstrapProbabilityPositive": 0.99978
+      },
+      "vsNaive": {
+        "left": "reverse78_delay0",
+        "right": "reverse101_delay0",
+        "deltaPnl": -23.85939999999998,
+        "positiveDays": 31,
+        "negativeDays": 60,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -72.315305,
+          27.727862500000015
+        ],
+        "bootstrapProbabilityPositive": 0.17658
+      }
+    },
+    {
+      "delaySeconds": 0.0,
+      "maxAsk": 1.01,
+      "vsExit": {
+        "left": "reverse101_delay0",
+        "right": "exit_delay0",
+        "deltaPnl": 351.46959999999996,
+        "positiveDays": 66,
+        "negativeDays": 25,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          169.70267500000003,
+          531.38675
+        ],
+        "bootstrapProbabilityPositive": 0.99996
+      },
+      "vsNaive": {
+        "left": "reverse101_delay0",
+        "right": "reverse101_delay0",
+        "deltaPnl": 0.0,
+        "positiveDays": 0,
+        "negativeDays": 0,
+        "zeroDays": 91,
+        "bootstrapCi95Total": [
+          0.0,
+          0.0
+        ],
+        "bootstrapProbabilityPositive": 0.0
+      }
+    },
+    {
+      "delaySeconds": 0.5,
+      "maxAsk": 0.65,
+      "vsExit": {
+        "left": "reverse65_delay0p5",
+        "right": "exit_delay0p5",
+        "deltaPnl": -43.42410000000002,
+        "positiveDays": 43,
+        "negativeDays": 39,
+        "zeroDays": 9,
+        "bootstrapCi95Total": [
+          -162.0780925,
+          71.92279000000002
+        ],
+        "bootstrapProbabilityPositive": 0.23712
+      },
+      "vsNaive": {
+        "left": "reverse65_delay0p5",
+        "right": "reverse101_delay0p5",
+        "deltaPnl": -124.79330000000002,
+        "positiveDays": 43,
+        "negativeDays": 48,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -260.20058500000005,
+          10.043072500000042
+        ],
+        "bootstrapProbabilityPositive": 0.03516
+      }
+    },
+    {
+      "delaySeconds": 0.5,
+      "maxAsk": 0.68,
+      "vsExit": {
+        "left": "reverse68_delay0p5",
+        "right": "exit_delay0p5",
+        "deltaPnl": 64.94159999999998,
+        "positiveDays": 50,
+        "negativeDays": 37,
+        "zeroDays": 4,
+        "bootstrapCi95Total": [
+          -81.86451499999998,
+          207.93937000000005
+        ],
+        "bootstrapProbabilityPositive": 0.81058
+      },
+      "vsNaive": {
+        "left": "reverse68_delay0p5",
+        "right": "reverse101_delay0p5",
+        "deltaPnl": -16.427600000000012,
+        "positiveDays": 41,
+        "negativeDays": 50,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -129.25687750000003,
+          96.34405249999999
+        ],
+        "bootstrapProbabilityPositive": 0.385
+      }
+    },
+    {
+      "delaySeconds": 0.5,
+      "maxAsk": 0.7,
+      "vsExit": {
+        "left": "reverse70_delay0p5",
+        "right": "exit_delay0p5",
+        "deltaPnl": 84.31109999999998,
+        "positiveDays": 52,
+        "negativeDays": 37,
+        "zeroDays": 2,
+        "bootstrapCi95Total": [
+          -71.03953750000001,
+          236.60008500000004
+        ],
+        "bootstrapProbabilityPositive": 0.85958
+      },
+      "vsNaive": {
+        "left": "reverse70_delay0p5",
+        "right": "reverse101_delay0p5",
+        "deltaPnl": 2.9418999999999933,
+        "positiveDays": 40,
+        "negativeDays": 51,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -96.01774500000002,
+          103.83371250000005
+        ],
+        "bootstrapProbabilityPositive": 0.51806
+      }
+    },
+    {
+      "delaySeconds": 0.5,
+      "maxAsk": 0.72,
+      "vsExit": {
+        "left": "reverse72_delay0p5",
+        "right": "exit_delay0p5",
+        "deltaPnl": 96.54339999999999,
+        "positiveDays": 55,
+        "negativeDays": 35,
+        "zeroDays": 1,
+        "bootstrapCi95Total": [
+          -58.5743425,
+          250.8977925000001
+        ],
+        "bootstrapProbabilityPositive": 0.88516
+      },
+      "vsNaive": {
+        "left": "reverse72_delay0p5",
+        "right": "reverse101_delay0p5",
+        "deltaPnl": 15.174199999999992,
+        "positiveDays": 47,
+        "negativeDays": 44,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -69.83045,
+          102.06548500000002
+        ],
+        "bootstrapProbabilityPositive": 0.63562
+      }
+    },
+    {
+      "delaySeconds": 0.5,
+      "maxAsk": 0.78,
+      "vsExit": {
+        "left": "reverse78_delay0p5",
+        "right": "exit_delay0p5",
+        "deltaPnl": 79.7764,
+        "positiveDays": 51,
+        "negativeDays": 40,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -99.95080249999998,
+          255.41054500000004
+        ],
+        "bootstrapProbabilityPositive": 0.8112
+      },
+      "vsNaive": {
+        "left": "reverse78_delay0p5",
+        "right": "reverse101_delay0p5",
+        "deltaPnl": -1.5927999999999987,
+        "positiveDays": 35,
+        "negativeDays": 55,
+        "zeroDays": 1,
+        "bootstrapCi95Total": [
+          -57.86505249999998,
+          55.581825
+        ],
+        "bootstrapProbabilityPositive": 0.47026
+      }
+    },
+    {
+      "delaySeconds": 0.5,
+      "maxAsk": 1.01,
+      "vsExit": {
+        "left": "reverse101_delay0p5",
+        "right": "exit_delay0p5",
+        "deltaPnl": 81.3692,
+        "positiveDays": 49,
+        "negativeDays": 42,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -102.561705,
+          266.30910500000005
+        ],
+        "bootstrapProbabilityPositive": 0.80594
+      },
+      "vsNaive": {
+        "left": "reverse101_delay0p5",
+        "right": "reverse101_delay0p5",
+        "deltaPnl": 0.0,
+        "positiveDays": 0,
+        "negativeDays": 0,
+        "zeroDays": 91,
+        "bootstrapCi95Total": [
+          0.0,
+          0.0
+        ],
+        "bootstrapProbabilityPositive": 0.0
+      }
+    },
+    {
+      "delaySeconds": 1.0,
+      "maxAsk": 0.65,
+      "vsExit": {
+        "left": "reverse65_delay1",
+        "right": "exit_delay1",
+        "deltaPnl": -82.65339999999999,
+        "positiveDays": 41,
+        "negativeDays": 38,
+        "zeroDays": 12,
+        "bootstrapCi95Total": [
+          -232.18175499999998,
+          64.53854750000004
+        ],
+        "bootstrapProbabilityPositive": 0.1373
+      },
+      "vsNaive": {
+        "left": "reverse65_delay1",
+        "right": "reverse101_delay1",
+        "deltaPnl": -83.31759999999998,
+        "positiveDays": 38,
+        "negativeDays": 53,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -211.11405499999995,
+          46.410197500000116
+        ],
+        "bootstrapProbabilityPositive": 0.10328
+      }
+    },
+    {
+      "delaySeconds": 1.0,
+      "maxAsk": 0.68,
+      "vsExit": {
+        "left": "reverse68_delay1",
+        "right": "exit_delay1",
+        "deltaPnl": 1.5234999999999879,
+        "positiveDays": 47,
+        "negativeDays": 39,
+        "zeroDays": 5,
+        "bootstrapCi95Total": [
+          -160.5013775,
+          160.46727750000002
+        ],
+        "bootstrapProbabilityPositive": 0.50922
+      },
+      "vsNaive": {
+        "left": "reverse68_delay1",
+        "right": "reverse101_delay1",
+        "deltaPnl": 0.8593000000000117,
+        "positiveDays": 44,
+        "negativeDays": 47,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -116.63767249999994,
+          121.01639500000002
+        ],
+        "bootstrapProbabilityPositive": 0.50302
+      }
+    },
+    {
+      "delaySeconds": 1.0,
+      "maxAsk": 0.7,
+      "vsExit": {
+        "left": "reverse70_delay1",
+        "right": "exit_delay1",
+        "deltaPnl": -12.2817,
+        "positiveDays": 44,
+        "negativeDays": 45,
+        "zeroDays": 2,
+        "bootstrapCi95Total": [
+          -177.63668250000003,
+          148.68790249999998
+        ],
+        "bootstrapProbabilityPositive": 0.44148
+      },
+      "vsNaive": {
+        "left": "reverse70_delay1",
+        "right": "reverse101_delay1",
+        "deltaPnl": -12.945899999999972,
+        "positiveDays": 46,
+        "negativeDays": 45,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -115.87757749999993,
+          92.40252500000004
+        ],
+        "bootstrapProbabilityPositive": 0.39862
+      }
+    },
+    {
+      "delaySeconds": 1.0,
+      "maxAsk": 0.72,
+      "vsExit": {
+        "left": "reverse72_delay1",
+        "right": "exit_delay1",
+        "deltaPnl": 23.684800000000013,
+        "positiveDays": 46,
+        "negativeDays": 44,
+        "zeroDays": 1,
+        "bootstrapCi95Total": [
+          -150.0368175,
+          195.5094525000001
+        ],
+        "bootstrapProbabilityPositive": 0.60836
+      },
+      "vsNaive": {
+        "left": "reverse72_delay1",
+        "right": "reverse101_delay1",
+        "deltaPnl": 23.020600000000027,
+        "positiveDays": 46,
+        "negativeDays": 45,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -68.41541249999996,
+          115.51508250000009
+        ],
+        "bootstrapProbabilityPositive": 0.68802
+      }
+    },
+    {
+      "delaySeconds": 1.0,
+      "maxAsk": 0.78,
+      "vsExit": {
+        "left": "reverse78_delay1",
+        "right": "exit_delay1",
+        "deltaPnl": 34.48450000000004,
+        "positiveDays": 44,
+        "negativeDays": 47,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -150.79024499999997,
+          217.93446250000008
+        ],
+        "bootstrapProbabilityPositive": 0.64446
+      },
+      "vsNaive": {
+        "left": "reverse78_delay1",
+        "right": "reverse101_delay1",
+        "deltaPnl": 33.82030000000003,
+        "positiveDays": 42,
+        "negativeDays": 49,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -25.878647499999975,
+          95.15961750000002
+        ],
+        "bootstrapProbabilityPositive": 0.86728
+      }
+    },
+    {
+      "delaySeconds": 1.0,
+      "maxAsk": 1.01,
+      "vsExit": {
+        "left": "reverse101_delay1",
+        "right": "exit_delay1",
+        "deltaPnl": 0.6641999999999655,
+        "positiveDays": 45,
+        "negativeDays": 46,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -190.9985575,
+          191.86043
+        ],
+        "bootstrapProbabilityPositive": 0.50468
+      },
+      "vsNaive": {
+        "left": "reverse101_delay1",
+        "right": "reverse101_delay1",
+        "deltaPnl": 0.0,
+        "positiveDays": 0,
+        "negativeDays": 0,
+        "zeroDays": 91,
+        "bootstrapCi95Total": [
+          0.0,
+          0.0
+        ],
+        "bootstrapProbabilityPositive": 0.0
+      }
+    },
+    {
+      "delaySeconds": 2.0,
+      "maxAsk": 0.65,
+      "vsExit": {
+        "left": "reverse65_delay2",
+        "right": "exit_delay2",
+        "deltaPnl": -127.3694,
+        "positiveDays": 36,
+        "negativeDays": 45,
+        "zeroDays": 10,
+        "bootstrapCi95Total": [
+          -323.8030225,
+          78.4771075
+        ],
+        "bootstrapProbabilityPositive": 0.10894
+      },
+      "vsNaive": {
+        "left": "reverse65_delay2",
+        "right": "reverse101_delay2",
+        "deltaPnl": -67.16610000000003,
+        "positiveDays": 38,
+        "negativeDays": 53,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -182.466685,
+          48.689997500000025
+        ],
+        "bootstrapProbabilityPositive": 0.12874
+      }
+    },
+    {
+      "delaySeconds": 2.0,
+      "maxAsk": 0.68,
+      "vsExit": {
+        "left": "reverse68_delay2",
+        "right": "exit_delay2",
+        "deltaPnl": -97.4077,
+        "positiveDays": 42,
+        "negativeDays": 43,
+        "zeroDays": 6,
+        "bootstrapCi95Total": [
+          -307.6210625,
+          115.20362250000017
+        ],
+        "bootstrapProbabilityPositive": 0.18502
+      },
+      "vsNaive": {
+        "left": "reverse68_delay2",
+        "right": "reverse101_delay2",
+        "deltaPnl": -37.20440000000002,
+        "positiveDays": 38,
+        "negativeDays": 53,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -134.40203000000008,
+          64.60381749999996
+        ],
+        "bootstrapProbabilityPositive": 0.23032
+      }
+    },
+    {
+      "delaySeconds": 2.0,
+      "maxAsk": 0.7,
+      "vsExit": {
+        "left": "reverse70_delay2",
+        "right": "exit_delay2",
+        "deltaPnl": -73.18080000000002,
+        "positiveDays": 45,
+        "negativeDays": 42,
+        "zeroDays": 4,
+        "bootstrapCi95Total": [
+          -286.3123875,
+          147.098675
+        ],
+        "bootstrapProbabilityPositive": 0.25312
+      },
+      "vsNaive": {
+        "left": "reverse70_delay2",
+        "right": "reverse101_delay2",
+        "deltaPnl": -12.977500000000024,
+        "positiveDays": 40,
+        "negativeDays": 50,
+        "zeroDays": 1,
+        "bootstrapCi95Total": [
+          -101.56500000000001,
+          79.08523999999994
+        ],
+        "bootstrapProbabilityPositive": 0.3827
+      }
+    },
+    {
+      "delaySeconds": 2.0,
+      "maxAsk": 0.72,
+      "vsExit": {
+        "left": "reverse72_delay2",
+        "right": "exit_delay2",
+        "deltaPnl": -57.57010000000001,
+        "positiveDays": 43,
+        "negativeDays": 45,
+        "zeroDays": 3,
+        "bootstrapCi95Total": [
+          -268.89989499999996,
+          156.21884499999996
+        ],
+        "bootstrapProbabilityPositive": 0.29226
+      },
+      "vsNaive": {
+        "left": "reverse72_delay2",
+        "right": "reverse101_delay2",
+        "deltaPnl": 2.6331999999999844,
+        "positiveDays": 35,
+        "negativeDays": 55,
+        "zeroDays": 1,
+        "bootstrapCi95Total": [
+          -75.16906750000001,
+          83.68320250000002
+        ],
+        "bootstrapProbabilityPositive": 0.52172
+      }
+    },
+    {
+      "delaySeconds": 2.0,
+      "maxAsk": 0.78,
+      "vsExit": {
+        "left": "reverse78_delay2",
+        "right": "exit_delay2",
+        "deltaPnl": -50.93940000000002,
+        "positiveDays": 42,
+        "negativeDays": 49,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -275.25755749999996,
+          176.43022750000006
+        ],
+        "bootstrapProbabilityPositive": 0.32584
+      },
+      "vsNaive": {
+        "left": "reverse78_delay2",
+        "right": "reverse101_delay2",
+        "deltaPnl": 9.263899999999987,
+        "positiveDays": 40,
+        "negativeDays": 50,
+        "zeroDays": 1,
+        "bootstrapCi95Total": [
+          -32.38607250000004,
+          52.167185
+        ],
+        "bootstrapProbabilityPositive": 0.66342
+      }
+    },
+    {
+      "delaySeconds": 2.0,
+      "maxAsk": 1.01,
+      "vsExit": {
+        "left": "reverse101_delay2",
+        "right": "exit_delay2",
+        "deltaPnl": -60.20329999999997,
+        "positiveDays": 44,
+        "negativeDays": 47,
+        "zeroDays": 0,
+        "bootstrapCi95Total": [
+          -289.42620249999993,
+          171.67783000000009
+        ],
+        "bootstrapProbabilityPositive": 0.3036
+      },
+      "vsNaive": {
+        "left": "reverse101_delay2",
+        "right": "reverse101_delay2",
+        "deltaPnl": 0.0,
+        "positiveDays": 0,
+        "negativeDays": 0,
+        "zeroDays": 91,
+        "bootstrapCi95Total": [
+          0.0,
+          0.0
+        ],
+        "bootstrapProbabilityPositive": 0.0
+      }
+    }
+  ]
+}

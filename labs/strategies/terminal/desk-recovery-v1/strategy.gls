@@ -1,0 +1,238 @@
+strategy "Desk Recovery V1" {
+  // Port do desk live (data-robot/scripts/desk/live-session.js) — modo recovery.
+  // Compra favorito BTC vs PTB quando cushion forte e ask ainda barato (misprice),
+  // ou LOCK/SNIPE nos últimos segundos. Gestão ativa opcional (exit por cushion/TP/book).
+
+  param walletSize = 100
+  param entryBudget = 2.2
+  param minShares = 5
+  param entrySlippageMax = 0.02
+  param minLiquidityRatio = 0.60
+
+  // Janela mid-event (misprice)
+  param minSecondsLeft = 45
+  param maxSecondsLeft = 240
+  param minCushion = 40
+  param maxAsk = 0.55
+  param convictionCushion = 55
+  param convictionMaxAsk = 0.58
+  param minVelAbs = 0
+  param velLookbackSecs = 2
+  param requireVelAligned = 1
+
+  // Terminal LOCK / SNIPE
+  param enableLock = 1
+  param enableSnipe = 1
+  param enableMisprice = 1
+  param snipeSecsMax = 25
+  param exitSecsFloor = 8
+  param snipeMinDelta = 40
+  param lockMinAsk = 0.85
+  param lockMaxAsk = 0.96
+  param snipeMaxAsk = 0.25
+
+  // Gestão
+  param enableExits = 1
+  param exitCushion = 18
+  param takeProfitTicks = 0.10
+  param adverseVelAbs = 8
+  param oppositeAskExit = 0.48
+  param cutBeforeSettleSecs = 45
+
+  onEventStart(event) {
+    state.entered = false
+    state.closed = false
+    state.entryMode = ""
+    state.entryAsk = 0
+    state.entryDelta = 0
+  }
+
+  onTick(tick, event) {
+    let secsLeft = time.secondsUntil(event.end, tick.ts)
+    let btc = tick.underlyingPrice
+    let ptb = event.priceToBeat
+    let delta = btc - ptb
+    let dist = math.abs(delta)
+    let fav = market.sideFromPrice(btc, ptb)
+    let ask = book.ask(fav, tick)
+    let bid = book.bid(fav, tick)
+    let upAsk = book.ask("UP", tick)
+    let downAsk = book.ask("DOWN", tick)
+    let btcPast = signals.underlyingAgo(samples, params.velLookbackSecs)
+    state.vel = 0
+    if (btcPast) {
+      state.vel = btc - btcPast
+    }
+
+    // ===== Gestão de posição =====
+    if (position.open && !state.closed) {
+      let exitsOn = params.enableExits == true || params.enableExits == 1
+      let isLock = state.entryMode == "lock" || state.entryMode == "snipe"
+      let holdFloor = isLock && secsLeft <= params.exitSecsFloor
+
+      if (exitsOn && !holdFloor) {
+        let side = position.side
+        let sideBid = book.bid(side, tick)
+        state.signedNow = delta
+        if (side == "DOWN") {
+          state.signedNow = 0 - delta
+        }
+
+        // Take profit
+        if (sideBid > 0 && sideBid >= position.avgEntryPrice + params.takeProfitTicks) {
+          let tp = exit({ price: sideBid, reason: "take_profit" })
+          if (tp) {
+            state.closed = tp.closed
+            mark("exit", { reason: "take_profit", bid: sideBid, entry: position.avgEntryPrice })
+          }
+        }
+
+        // Cushion erodiu
+        if (!state.closed && state.signedNow < params.exitCushion) {
+          let cx = exit({ price: sideBid, reason: "cushion_eroded" })
+          if (cx) {
+            state.closed = cx.closed
+            mark("exit", { reason: "cushion_eroded", delta: delta, bid: sideBid })
+          }
+        }
+
+        // Velocidade adversa
+        if (!state.closed) {
+          state.adverse = false
+          if (side == "UP" && state.vel <= 0 - params.adverseVelAbs) {
+            state.adverse = true
+          }
+          if (side == "DOWN" && state.vel >= params.adverseVelAbs) {
+            state.adverse = true
+          }
+          if (state.adverse) {
+            let vx = exit({ price: sideBid, reason: "adverse_vel" })
+            if (vx) {
+              state.closed = vx.closed
+              mark("exit", { reason: "adverse_vel", vel: state.vel, bid: sideBid })
+            }
+          }
+        }
+
+        // Book precifica reversão
+        if (!state.closed && dist < params.minCushion) {
+          state.oppAsk = downAsk
+          if (side == "DOWN") {
+            state.oppAsk = upAsk
+          }
+          if (state.oppAsk >= params.oppositeAskExit) {
+            let bx = exit({ price: sideBid, reason: "opposite_ask" })
+            if (bx) {
+              state.closed = bx.closed
+              mark("exit", { reason: "opposite_ask", oppAsk: state.oppAsk, bid: sideBid })
+            }
+          }
+        }
+
+        // Corta antes do settle se não é lock/snipe
+        if (!state.closed && !isLock && secsLeft <= params.cutBeforeSettleSecs) {
+          if (sideBid >= position.avgEntryPrice || state.signedNow < params.exitCushion) {
+            let sx = exit({ price: sideBid, reason: "pre_settle_cut" })
+            if (sx) {
+              state.closed = sx.closed
+              mark("exit", { reason: "pre_settle_cut", bid: sideBid, secsLeft: secsLeft })
+            }
+          }
+        }
+      }
+    }
+
+    // ===== Entradas =====
+    if (!state.entered && !position.open) {
+      let budget = math.min(params.entryBudget, params.walletSize + runState.totalPnl)
+      let maxPrice = ask + params.entrySlippageMax
+
+      // LOCK: últimos segundos, favorito caro mas delta forte
+      let lockOn = params.enableLock == true || params.enableLock == 1
+      if (lockOn && secsLeft <= params.snipeSecsMax && secsLeft > params.exitSecsFloor) {
+        if (dist >= params.snipeMinDelta && ask >= params.lockMinAsk && ask <= params.lockMaxAsk) {
+          let boughtLock = enter(fav, {
+            price: ask,
+            maxPrice: maxPrice,
+            budget: budget,
+            minShares: params.minShares,
+            minLiquidityRatio: params.minLiquidityRatio,
+            tick: tick,
+            reason: "desk_lock"
+          })
+          if (boughtLock) {
+            state.entered = true
+            state.entryMode = "lock"
+            state.entryAsk = ask
+            state.entryDelta = delta
+            mark("enter", { mode: "lock", side: fav, ask: ask, delta: delta, secsLeft: secsLeft })
+          }
+        }
+      }
+
+      // SNIPE: últimos segundos, ask barato + delta forte
+      let snipeOn = params.enableSnipe == true || params.enableSnipe == 1
+      if (!state.entered && snipeOn && secsLeft <= params.snipeSecsMax && secsLeft > params.exitSecsFloor) {
+        if (dist >= params.snipeMinDelta && ask > 0 && ask <= params.snipeMaxAsk) {
+          let boughtSnipe = enter(fav, {
+            price: ask,
+            maxPrice: maxPrice,
+            budget: budget,
+            minShares: params.minShares,
+            minLiquidityRatio: params.minLiquidityRatio,
+            tick: tick,
+            reason: "desk_snipe"
+          })
+          if (boughtSnipe) {
+            state.entered = true
+            state.entryMode = "snipe"
+            state.entryAsk = ask
+            state.entryDelta = delta
+            mark("enter", { mode: "snipe", side: fav, ask: ask, delta: delta, secsLeft: secsLeft })
+          }
+        }
+      }
+
+      // MISPRICE: mid-window, cushion forte + ask barato
+      let misOn = params.enableMisprice == true || params.enableMisprice == 1
+      if (!state.entered && misOn && secsLeft >= params.minSecondsLeft && secsLeft <= params.maxSecondsLeft) {
+        state.fairCap = params.maxAsk
+        if (dist >= params.convictionCushion) {
+          state.fairCap = params.convictionMaxAsk
+        }
+        state.velOk = true
+        let needVel = params.requireVelAligned == true || params.requireVelAligned == 1
+        if (needVel) {
+          state.velOk = false
+          if (fav == "UP" && state.vel >= params.minVelAbs) {
+            state.velOk = true
+          }
+          if (fav == "DOWN" && state.vel <= 0 - params.minVelAbs) {
+            state.velOk = true
+          }
+        }
+        if (dist >= params.minCushion && ask > 0 && ask <= state.fairCap && state.velOk) {
+          let bought = enter(fav, {
+            price: ask,
+            maxPrice: ask + params.entrySlippageMax,
+            budget: budget,
+            minShares: params.minShares,
+            minLiquidityRatio: params.minLiquidityRatio,
+            tick: tick,
+            reason: "desk_misprice"
+          })
+          if (bought) {
+            state.entered = true
+            state.entryMode = "misprice"
+            state.entryAsk = ask
+            state.entryDelta = delta
+            mark("enter", { mode: "misprice", side: fav, ask: ask, delta: delta, vel: state.vel, secsLeft: secsLeft, fairCap: state.fairCap })
+          }
+        }
+      }
+    }
+  }
+
+  onEventEnd(event) {
+  }
+}

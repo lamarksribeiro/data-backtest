@@ -1,0 +1,523 @@
+{
+  "generatedAt": "2026-07-27T04:46:20.521Z",
+  "sampleDays": {
+    "first": "2026-06-27",
+    "last": "2026-07-26",
+    "n": 30
+  },
+  "totalEvents": 7921,
+  "labeled": 7739,
+  "definition": "flip = leader(spot vs PTB) at checkpoint tau != winner at settlement; label requires book mid consensus last 5s",
+  "byTau": {
+    "5": {
+      "n": 7739,
+      "flips": 372,
+      "flipRate": 0.0481,
+      "avgAbsDist": 45.11,
+      "avgZ": 13.839,
+      "avgPphys": 0.978,
+      "calibGap": 0.0261
+    },
+    "10": {
+      "n": 7739,
+      "flips": 563,
+      "flipRate": 0.0727,
+      "avgAbsDist": 44.74,
+      "avgZ": 9.783,
+      "avgPphys": 0.9705,
+      "calibGap": 0.0432
+    },
+    "15": {
+      "n": 7739,
+      "flips": 646,
+      "flipRate": 0.0835,
+      "avgAbsDist": 44.25,
+      "avgZ": 8.103,
+      "avgPphys": 0.9644,
+      "calibGap": 0.0478
+    },
+    "20": {
+      "n": 7739,
+      "flips": 716,
+      "flipRate": 0.0925,
+      "avgAbsDist": 43.94,
+      "avgZ": 6.851,
+      "avgPphys": 0.9594,
+      "calibGap": 0.0519
+    },
+    "30": {
+      "n": 7739,
+      "flips": 881,
+      "flipRate": 0.1138,
+      "avgAbsDist": 43.27,
+      "avgZ": 5.471,
+      "avgPphys": 0.9472,
+      "calibGap": 0.061
+    },
+    "45": {
+      "n": 7739,
+      "flips": 1050,
+      "flipRate": 0.1357,
+      "avgAbsDist": 42.25,
+      "avgZ": 4.215,
+      "avgPphys": 0.9333,
+      "calibGap": 0.069
+    },
+    "60": {
+      "n": 7739,
+      "flips": 1222,
+      "flipRate": 0.1579,
+      "avgAbsDist": 41.26,
+      "avgZ": 3.468,
+      "avgPphys": 0.9195,
+      "calibGap": 0.0774
+    },
+    "90": {
+      "n": 7739,
+      "flips": 1455,
+      "flipRate": 0.188,
+      "avgAbsDist": 38.66,
+      "avgZ": 2.606,
+      "avgPphys": 0.8931,
+      "calibGap": 0.0811
+    },
+    "120": {
+      "n": 7739,
+      "flips": 1709,
+      "flipRate": 0.2208,
+      "avgAbsDist": 35.98,
+      "avgZ": 2.045,
+      "avgPphys": 0.868,
+      "calibGap": 0.0888
+    }
+  },
+  "byZ": {
+    "tau30": {
+      "0-0.5": {
+        "n": 522,
+        "flipRate": 0.4579,
+        "flips": 239
+      },
+      "0.5-1": {
+        "n": 497,
+        "flipRate": 0.2616,
+        "flips": 130
+      },
+      "1-1.5": {
+        "n": 524,
+        "flipRate": 0.1756,
+        "flips": 92
+      },
+      "1.5-2": {
+        "n": 484,
+        "flipRate": 0.1839,
+        "flips": 89
+      },
+      "2-3": {
+        "n": 1035,
+        "flipRate": 0.1092,
+        "flips": 113
+      },
+      "3+": {
+        "n": 4677,
+        "flipRate": 0.0466,
+        "flips": 218
+      }
+    },
+    "tau15": {
+      "0-0.5": {
+        "n": 345,
+        "flipRate": 0.3507,
+        "flips": 121
+      },
+      "0.5-1": {
+        "n": 329,
+        "flipRate": 0.2584,
+        "flips": 85
+      },
+      "1-1.5": {
+        "n": 365,
+        "flipRate": 0.1945,
+        "flips": 71
+      },
+      "1.5-2": {
+        "n": 390,
+        "flipRate": 0.1487,
+        "flips": 58
+      },
+      "2-3": {
+        "n": 697,
+        "flipRate": 0.1062,
+        "flips": 74
+      },
+      "3+": {
+        "n": 5613,
+        "flipRate": 0.0422,
+        "flips": 237
+      }
+    },
+    "tau10": {
+      "0-0.5": {
+        "n": 286,
+        "flipRate": 0.3601,
+        "flips": 103
+      },
+      "0.5-1": {
+        "n": 281,
+        "flipRate": 0.242,
+        "flips": 68
+      },
+      "1-1.5": {
+        "n": 281,
+        "flipRate": 0.1744,
+        "flips": 49
+      },
+      "1.5-2": {
+        "n": 299,
+        "flipRate": 0.1639,
+        "flips": 49
+      },
+      "2-3": {
+        "n": 584,
+        "flipRate": 0.1062,
+        "flips": 62
+      },
+      "3+": {
+        "n": 6008,
+        "flipRate": 0.0386,
+        "flips": 232
+      }
+    },
+    "tau5": {
+      "0-0.5": {
+        "n": 202,
+        "flipRate": 0.3069,
+        "flips": 62
+      },
+      "0.5-1": {
+        "n": 213,
+        "flipRate": 0.2347,
+        "flips": 50
+      },
+      "1-1.5": {
+        "n": 241,
+        "flipRate": 0.1535,
+        "flips": 37
+      },
+      "1.5-2": {
+        "n": 212,
+        "flipRate": 0.1226,
+        "flips": 26
+      },
+      "2-3": {
+        "n": 408,
+        "flipRate": 0.0956,
+        "flips": 39
+      },
+      "3+": {
+        "n": 6463,
+        "flipRate": 0.0244,
+        "flips": 158
+      }
+    }
+  },
+  "byDist": {
+    "tau30": {
+      "0-5": {
+        "n": 814,
+        "flipRate": 0.4005,
+        "flips": 326
+      },
+      "5-15": {
+        "n": 1391,
+        "flipRate": 0.2178,
+        "flips": 303
+      },
+      "15-30": {
+        "n": 1707,
+        "flipRate": 0.1107,
+        "flips": 189
+      },
+      "30-50": {
+        "n": 1527,
+        "flipRate": 0.0321,
+        "flips": 49
+      },
+      "50-100": {
+        "n": 1586,
+        "flipRate": 0.0088,
+        "flips": 14
+      },
+      "100+": {
+        "n": 714,
+        "flipRate": 0,
+        "flips": 0
+      }
+    },
+    "tau15": {
+      "0-5": {
+        "n": 770,
+        "flipRate": 0.2974,
+        "flips": 229
+      },
+      "5-15": {
+        "n": 1406,
+        "flipRate": 0.1785,
+        "flips": 251
+      },
+      "15-30": {
+        "n": 1685,
+        "flipRate": 0.0766,
+        "flips": 129
+      },
+      "30-50": {
+        "n": 1497,
+        "flipRate": 0.0227,
+        "flips": 34
+      },
+      "50-100": {
+        "n": 1622,
+        "flipRate": 0.0018,
+        "flips": 3
+      },
+      "100+": {
+        "n": 759,
+        "flipRate": 0,
+        "flips": 0
+      }
+    },
+    "tau10": {
+      "0-5": {
+        "n": 772,
+        "flipRate": 0.2759,
+        "flips": 213
+      },
+      "5-15": {
+        "n": 1412,
+        "flipRate": 0.1487,
+        "flips": 210
+      },
+      "15-30": {
+        "n": 1637,
+        "flipRate": 0.0623,
+        "flips": 102
+      },
+      "30-50": {
+        "n": 1513,
+        "flipRate": 0.0238,
+        "flips": 36
+      },
+      "50-100": {
+        "n": 1644,
+        "flipRate": 0.0012,
+        "flips": 2
+      },
+      "100+": {
+        "n": 761,
+        "flipRate": 0,
+        "flips": 0
+      }
+    },
+    "tau5": {
+      "0-5": {
+        "n": 814,
+        "flipRate": 0.2224,
+        "flips": 181
+      },
+      "5-15": {
+        "n": 1380,
+        "flipRate": 0.0862,
+        "flips": 119
+      },
+      "15-30": {
+        "n": 1607,
+        "flipRate": 0.0348,
+        "flips": 56
+      },
+      "30-50": {
+        "n": 1508,
+        "flipRate": 0.0106,
+        "flips": 16
+      },
+      "50-100": {
+        "n": 1654,
+        "flipRate": 0,
+        "flips": 0
+      },
+      "100+": {
+        "n": 776,
+        "flipRate": 0,
+        "flips": 0
+      }
+    }
+  },
+  "byFavAsk": {
+    "tau30": {
+      "<0.55": {
+        "n": 658,
+        "flipRate": 0.6489,
+        "flips": 427
+      },
+      "0.55-0.65": {
+        "n": 297,
+        "flipRate": 0.3704,
+        "flips": 110
+      },
+      "0.65-0.75": {
+        "n": 423,
+        "flipRate": 0.253,
+        "flips": 107
+      },
+      "0.75-0.85": {
+        "n": 663,
+        "flipRate": 0.1508,
+        "flips": 100
+      },
+      "0.85+": {
+        "n": 5698,
+        "flipRate": 0.024,
+        "flips": 137
+      }
+    },
+    "tau15": {
+      "<0.55": {
+        "n": 554,
+        "flipRate": 0.6913,
+        "flips": 383
+      },
+      "0.55-0.65": {
+        "n": 189,
+        "flipRate": 0.3439,
+        "flips": 65
+      },
+      "0.65-0.75": {
+        "n": 244,
+        "flipRate": 0.2459,
+        "flips": 60
+      },
+      "0.75-0.85": {
+        "n": 454,
+        "flipRate": 0.1366,
+        "flips": 62
+      },
+      "0.85+": {
+        "n": 6298,
+        "flipRate": 0.0121,
+        "flips": 76
+      }
+    },
+    "tau10": {
+      "<0.55": {
+        "n": 519,
+        "flipRate": 0.7225,
+        "flips": 375
+      },
+      "0.55-0.65": {
+        "n": 129,
+        "flipRate": 0.3488,
+        "flips": 45
+      },
+      "0.65-0.75": {
+        "n": 181,
+        "flipRate": 0.2265,
+        "flips": 41
+      },
+      "0.75-0.85": {
+        "n": 316,
+        "flipRate": 0.1361,
+        "flips": 43
+      },
+      "0.85+": {
+        "n": 6594,
+        "flipRate": 0.0089,
+        "flips": 59
+      }
+    }
+  },
+  "byCross60": {
+    "tau30": {
+      "0": {
+        "n": 6340,
+        "flipRate": 0.0913,
+        "flips": 579
+      },
+      "1": {
+        "n": 719,
+        "flipRate": 0.1822,
+        "flips": 131
+      },
+      "2": {
+        "n": 319,
+        "flipRate": 0.2445,
+        "flips": 78
+      },
+      "3+": {
+        "n": 361,
+        "flipRate": 0.2576,
+        "flips": 93
+      }
+    },
+    "tau15": {
+      "0": {
+        "n": 6372,
+        "flipRate": 0.067,
+        "flips": 427
+      },
+      "1": {
+        "n": 723,
+        "flipRate": 0.1438,
+        "flips": 104
+      },
+      "2": {
+        "n": 293,
+        "flipRate": 0.157,
+        "flips": 46
+      },
+      "3+": {
+        "n": 351,
+        "flipRate": 0.1966,
+        "flips": 69
+      }
+    },
+    "tau10": {
+      "0": {
+        "n": 6379,
+        "flipRate": 0.0588,
+        "flips": 375
+      },
+      "1": {
+        "n": 736,
+        "flipRate": 0.125,
+        "flips": 92
+      },
+      "2": {
+        "n": 274,
+        "flipRate": 0.1168,
+        "flips": 32
+      },
+      "3+": {
+        "n": 350,
+        "flipRate": 0.1829,
+        "flips": 64
+      }
+    }
+  },
+  "lastCrossTau_allEvents": {
+    "n": 7416,
+    "p10": 15,
+    "p25": 77,
+    "p50": 198,
+    "p75": 281,
+    "p90": 296,
+    "mean": 175.92
+  },
+  "lastCrossTau_flippedAfterT30": {
+    "n": 881,
+    "p10": 1,
+    "p25": 3,
+    "p50": 6.5,
+    "p75": 18.5,
+    "p90": 25.5,
+    "mean": 10.71
+  }
+}

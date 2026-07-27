@@ -1,0 +1,1607 @@
+{
+  "generatedAt": "2026-07-27T04:54:08.694Z",
+  "events": 16046,
+  "days": {
+    "first": "2026-05-28",
+    "last": "2026-07-26",
+    "n": 60
+  },
+  "holdoutFrom": "2026-07-01",
+  "survivors": 10027,
+  "championRobust": {
+    "id": "ca15_a0.78_e0.03_t8-40_d8_s0.05",
+    "params": {
+      "maxCrossAge": 15,
+      "maxAsk": 0.78,
+      "minEdge": 0.03,
+      "minTau": 8,
+      "maxTau": 40,
+      "minDist": 8,
+      "maxSpread": 0.05
+    },
+    "train": {
+      "n": 547,
+      "wr": 0.713,
+      "pnl": 405.9,
+      "exp": 0.742,
+      "pf": 1.251
+    },
+    "hold": {
+      "n": 227,
+      "wr": 0.7753,
+      "pnl": 375.61,
+      "exp": 1.6547,
+      "pf": 1.718
+    },
+    "score": 488.293,
+    "ok": true,
+    "robust": 375.61,
+    "total": 781.51
+  },
+  "championHoldPnl": {
+    "id": "ca15_a0.78_e0.05_t10-50_d8_s0.02",
+    "params": {
+      "maxCrossAge": 15,
+      "maxAsk": 0.78,
+      "minEdge": 0.05,
+      "minTau": 10,
+      "maxTau": 50,
+      "minDist": 8,
+      "maxSpread": 0.02
+    },
+    "train": {
+      "n": 659,
+      "wr": 0.6859,
+      "pnl": 322.55,
+      "exp": 0.4895,
+      "pf": 1.152
+    },
+    "hold": {
+      "n": 284,
+      "wr": 0.7606,
+      "pnl": 436.37,
+      "exp": 1.5365,
+      "pf": 1.625
+    },
+    "score": 419.315,
+    "ok": true,
+    "robust": 322.55,
+    "total": 758.9200000000001
+  },
+  "championHoldPf": {
+    "id": "ca10_a0.78_e0_t5-30_d12_s0.05",
+    "params": {
+      "maxCrossAge": 10,
+      "maxAsk": 0.78,
+      "minEdge": 0,
+      "minTau": 5,
+      "maxTau": 30,
+      "minDist": 12,
+      "maxSpread": 0.05
+    },
+    "train": {
+      "n": 190,
+      "wr": 0.7526,
+      "pnl": 162.22,
+      "exp": 0.8538,
+      "pf": 1.336
+    },
+    "hold": {
+      "n": 54,
+      "wr": 0.8519,
+      "pnl": 132.66,
+      "exp": 2.4566,
+      "pf": 2.615
+    },
+    "score": 172.458,
+    "ok": true,
+    "robust": 132.66,
+    "total": 294.88
+  },
+  "topRobust": [
+    {
+      "id": "ca15_a0.78_e0.03_t8-40_d8_s0.05",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.78,
+        "minEdge": 0.03,
+        "minTau": 8,
+        "maxTau": 40,
+        "minDist": 8,
+        "maxSpread": 0.05
+      },
+      "train": {
+        "n": 547,
+        "wr": 0.713,
+        "pnl": 405.9,
+        "exp": 0.742,
+        "pf": 1.251
+      },
+      "hold": {
+        "n": 227,
+        "wr": 0.7753,
+        "pnl": 375.61,
+        "exp": 1.6547,
+        "pf": 1.718
+      },
+      "score": 488.293,
+      "ok": true,
+      "robust": 375.61,
+      "total": 781.51
+    },
+    {
+      "id": "ca15_a0.78_e0_t8-40_d5_s0.05",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.78,
+        "minEdge": 0,
+        "minTau": 8,
+        "maxTau": 40,
+        "minDist": 5,
+        "maxSpread": 0.05
+      },
+      "train": {
+        "n": 746,
+        "wr": 0.6984,
+        "pnl": 587.47,
+        "exp": 0.7875,
+        "pf": 1.254
+      },
+      "hold": {
+        "n": 339,
+        "wr": 0.7257,
+        "pnl": 370,
+        "exp": 1.0914,
+        "pf": 1.387
+      },
+      "score": 481,
+      "ok": true,
+      "robust": 370,
+      "total": 957.47
+    },
+    {
+      "id": "ca15_a0.78_e0.03_t8-40_d8_s0.04",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.78,
+        "minEdge": 0.03,
+        "minTau": 8,
+        "maxTau": 40,
+        "minDist": 8,
+        "maxSpread": 0.04
+      },
+      "train": {
+        "n": 545,
+        "wr": 0.7156,
+        "pnl": 427.24,
+        "exp": 0.7839,
+        "pf": 1.268
+      },
+      "hold": {
+        "n": 224,
+        "wr": 0.7723,
+        "pnl": 369.35,
+        "exp": 1.6489,
+        "pf": 1.705
+      },
+      "score": 480.15500000000003,
+      "ok": true,
+      "robust": 369.35,
+      "total": 796.59
+    },
+    {
+      "id": "ca15_a0.78_e0.03_t8-40_d5_s0.05",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.78,
+        "minEdge": 0.03,
+        "minTau": 8,
+        "maxTau": 40,
+        "minDist": 5,
+        "maxSpread": 0.05
+      },
+      "train": {
+        "n": 715,
+        "wr": 0.6909,
+        "pnl": 578.39,
+        "exp": 0.8089,
+        "pf": 1.254
+      },
+      "hold": {
+        "n": 328,
+        "wr": 0.7256,
+        "pnl": 368.62,
+        "exp": 1.1238,
+        "pf": 1.398
+      },
+      "score": 479.206,
+      "ok": true,
+      "robust": 368.62,
+      "total": 947.01
+    },
+    {
+      "id": "ca15_a0.78_e0_t8-40_d5_s0.03",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.78,
+        "minEdge": 0,
+        "minTau": 8,
+        "maxTau": 40,
+        "minDist": 5,
+        "maxSpread": 0.03
+      },
+      "train": {
+        "n": 741,
+        "wr": 0.7045,
+        "pnl": 648.64,
+        "exp": 0.8754,
+        "pf": 1.288
+      },
+      "hold": {
+        "n": 333,
+        "wr": 0.7237,
+        "pnl": 366.34,
+        "exp": 1.1001,
+        "pf": 1.387
+      },
+      "score": 476.24199999999996,
+      "ok": true,
+      "robust": 366.34,
+      "total": 1014.98
+    },
+    {
+      "id": "ca15_a0.78_e0.03_t8-40_d5_s0.03",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.78,
+        "minEdge": 0.03,
+        "minTau": 8,
+        "maxTau": 40,
+        "minDist": 5,
+        "maxSpread": 0.03
+      },
+      "train": {
+        "n": 709,
+        "wr": 0.6968,
+        "pnl": 641.18,
+        "exp": 0.9043,
+        "pf": 1.29
+      },
+      "hold": {
+        "n": 322,
+        "wr": 0.7236,
+        "pnl": 364.96,
+        "exp": 1.1334,
+        "pf": 1.398
+      },
+      "score": 474.448,
+      "ok": true,
+      "robust": 364.96,
+      "total": 1006.1399999999999
+    },
+    {
+      "id": "ca15_a0.78_e0_t8-40_d5_s0.04",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.78,
+        "minEdge": 0,
+        "minTau": 8,
+        "maxTau": 40,
+        "minDist": 5,
+        "maxSpread": 0.04
+      },
+      "train": {
+        "n": 743,
+        "wr": 0.6999,
+        "pnl": 602.32,
+        "exp": 0.8107,
+        "pf": 1.263
+      },
+      "hold": {
+        "n": 336,
+        "wr": 0.7232,
+        "pnl": 364.02,
+        "exp": 1.0834,
+        "pf": 1.38
+      },
+      "score": 473.226,
+      "ok": true,
+      "robust": 364.02,
+      "total": 966.34
+    },
+    {
+      "id": "ca15_a0.78_e0.03_t8-40_d5_s0.04",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.78,
+        "minEdge": 0.03,
+        "minTau": 8,
+        "maxTau": 40,
+        "minDist": 5,
+        "maxSpread": 0.04
+      },
+      "train": {
+        "n": 712,
+        "wr": 0.6924,
+        "pnl": 590.26,
+        "exp": 0.829,
+        "pf": 1.262
+      },
+      "hold": {
+        "n": 325,
+        "wr": 0.7231,
+        "pnl": 362.64,
+        "exp": 1.1158,
+        "pf": 1.391
+      },
+      "score": 471.43199999999996,
+      "ok": true,
+      "robust": 362.64,
+      "total": 952.9
+    },
+    {
+      "id": "ca15_a0.68_e0.05_t10-60_d8_s0.05",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.68,
+        "minEdge": 0.05,
+        "minTau": 10,
+        "maxTau": 60,
+        "minDist": 8,
+        "maxSpread": 0.05
+      },
+      "train": {
+        "n": 632,
+        "wr": 0.6392,
+        "pnl": 422.24,
+        "exp": 0.6681,
+        "pf": 1.18
+      },
+      "hold": {
+        "n": 244,
+        "wr": 0.6844,
+        "pnl": 361.3,
+        "exp": 1.4808,
+        "pf": 1.455
+      },
+      "score": 469.69,
+      "ok": true,
+      "robust": 361.3,
+      "total": 783.54
+    },
+    {
+      "id": "ca15_a0.78_e0.08_t8-40_d8_s0.05",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.78,
+        "minEdge": 0.08,
+        "minTau": 8,
+        "maxTau": 40,
+        "minDist": 8,
+        "maxSpread": 0.05
+      },
+      "train": {
+        "n": 488,
+        "wr": 0.707,
+        "pnl": 422.57,
+        "exp": 0.8659,
+        "pf": 1.287
+      },
+      "hold": {
+        "n": 198,
+        "wr": 0.7677,
+        "pnl": 360.64,
+        "exp": 1.8214,
+        "pf": 1.762
+      },
+      "score": 468.832,
+      "ok": true,
+      "robust": 360.64,
+      "total": 783.21
+    },
+    {
+      "id": "ca15_a0.68_e0.05_t10-60_d8_s0.04",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.68,
+        "minEdge": 0.05,
+        "minTau": 10,
+        "maxTau": 60,
+        "minDist": 8,
+        "maxSpread": 0.04
+      },
+      "train": {
+        "n": 623,
+        "wr": 0.6421,
+        "pnl": 457.9,
+        "exp": 0.735,
+        "pf": 1.199
+      },
+      "hold": {
+        "n": 244,
+        "wr": 0.6844,
+        "pnl": 359.9,
+        "exp": 1.475,
+        "pf": 1.454
+      },
+      "score": 467.86999999999995,
+      "ok": true,
+      "robust": 359.9,
+      "total": 817.8
+    },
+    {
+      "id": "ca15_a0.78_e0.05_t8-40_d8_s0.05",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.78,
+        "minEdge": 0.05,
+        "minTau": 8,
+        "maxTau": 40,
+        "minDist": 8,
+        "maxSpread": 0.05
+      },
+      "train": {
+        "n": 528,
+        "wr": 0.7083,
+        "pnl": 398.71,
+        "exp": 0.7551,
+        "pf": 1.252
+      },
+      "hold": {
+        "n": 222,
+        "wr": 0.7703,
+        "pnl": 359.47,
+        "exp": 1.6192,
+        "pf": 1.686
+      },
+      "score": 467.31100000000004,
+      "ok": true,
+      "robust": 359.47,
+      "total": 758.1800000000001
+    },
+    {
+      "id": "ca12_a0.78_e0.03_t10-60_d5_s0.05",
+      "params": {
+        "maxCrossAge": 12,
+        "maxAsk": 0.78,
+        "minEdge": 0.03,
+        "minTau": 10,
+        "maxTau": 60,
+        "minDist": 5,
+        "maxSpread": 0.05
+      },
+      "train": {
+        "n": 966,
+        "wr": 0.6729,
+        "pnl": 581.75,
+        "exp": 0.6022,
+        "pf": 1.179
+      },
+      "hold": {
+        "n": 474,
+        "wr": 0.692,
+        "pnl": 357.66,
+        "exp": 0.7546,
+        "pf": 1.238
+      },
+      "score": 464.958,
+      "ok": true,
+      "robust": 357.66,
+      "total": 939.4100000000001
+    },
+    {
+      "id": "ca15_a0.78_e0.03_t8-40_d8_s0.03",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.78,
+        "minEdge": 0.03,
+        "minTau": 8,
+        "maxTau": 40,
+        "minDist": 8,
+        "maxSpread": 0.03
+      },
+      "train": {
+        "n": 544,
+        "wr": 0.7169,
+        "pnl": 442.06,
+        "exp": 0.8126,
+        "pf": 1.279
+      },
+      "hold": {
+        "n": 221,
+        "wr": 0.7692,
+        "pnl": 357.6,
+        "exp": 1.6181,
+        "pf": 1.683
+      },
+      "score": 464.88,
+      "ok": true,
+      "robust": 357.6,
+      "total": 799.6600000000001
+    },
+    {
+      "id": "ca15_a0.78_e0_t8-40_d5_s0.02",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.78,
+        "minEdge": 0,
+        "minTau": 8,
+        "maxTau": 40,
+        "minDist": 5,
+        "maxSpread": 0.02
+      },
+      "train": {
+        "n": 730,
+        "wr": 0.7014,
+        "pnl": 618.75,
+        "exp": 0.8476,
+        "pf": 1.276
+      },
+      "hold": {
+        "n": 326,
+        "wr": 0.7209,
+        "pnl": 357.42,
+        "exp": 1.0964,
+        "pf": 1.381
+      },
+      "score": 464.646,
+      "ok": true,
+      "robust": 357.42,
+      "total": 976.1700000000001
+    },
+    {
+      "id": "ca12_a0.78_e0.05_t10-60_d8_s0.02",
+      "params": {
+        "maxCrossAge": 12,
+        "maxAsk": 0.78,
+        "minEdge": 0.05,
+        "minTau": 10,
+        "maxTau": 60,
+        "minDist": 8,
+        "maxSpread": 0.02
+      },
+      "train": {
+        "n": 720,
+        "wr": 0.6819,
+        "pnl": 356.47,
+        "exp": 0.4951,
+        "pf": 1.151
+      },
+      "hold": {
+        "n": 303,
+        "wr": 0.736,
+        "pnl": 357.84,
+        "exp": 1.181,
+        "pf": 1.435
+      },
+      "score": 463.41100000000006,
+      "ok": true,
+      "robust": 356.47,
+      "total": 714.31
+    },
+    {
+      "id": "ca15_a0.65_e0.05_t10-60_d8_s0.04",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.65,
+        "minEdge": 0.05,
+        "minTau": 10,
+        "maxTau": 60,
+        "minDist": 8,
+        "maxSpread": 0.04
+      },
+      "train": {
+        "n": 550,
+        "wr": 0.6273,
+        "pnl": 441.38,
+        "exp": 0.8025,
+        "pf": 1.209
+      },
+      "hold": {
+        "n": 209,
+        "wr": 0.6699,
+        "pnl": 355.32,
+        "exp": 1.7001,
+        "pf": 1.499
+      },
+      "score": 461.916,
+      "ok": true,
+      "robust": 355.32,
+      "total": 796.7
+    },
+    {
+      "id": "ca15_a0.78_e0.05_t8-40_d8_s0.04",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.78,
+        "minEdge": 0.05,
+        "minTau": 8,
+        "maxTau": 40,
+        "minDist": 8,
+        "maxSpread": 0.04
+      },
+      "train": {
+        "n": 525,
+        "wr": 0.7105,
+        "pnl": 414.49,
+        "exp": 0.7895,
+        "pf": 1.265
+      },
+      "hold": {
+        "n": 219,
+        "wr": 0.7671,
+        "pnl": 353.21,
+        "exp": 1.6128,
+        "pf": 1.674
+      },
+      "score": 459.173,
+      "ok": true,
+      "robust": 353.21,
+      "total": 767.7
+    },
+    {
+      "id": "ca15_a0.65_e0.05_t10-60_d8_s0.05",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.65,
+        "minEdge": 0.05,
+        "minTau": 10,
+        "maxTau": 60,
+        "minDist": 8,
+        "maxSpread": 0.05
+      },
+      "train": {
+        "n": 558,
+        "wr": 0.6219,
+        "pnl": 387.71,
+        "exp": 0.6948,
+        "pf": 1.178
+      },
+      "hold": {
+        "n": 209,
+        "wr": 0.6699,
+        "pnl": 352.72,
+        "exp": 1.6877,
+        "pf": 1.495
+      },
+      "score": 458.53600000000006,
+      "ok": true,
+      "robust": 352.72,
+      "total": 740.4300000000001
+    },
+    {
+      "id": "ca15_a0.78_e0.08_t8-40_d8_s0.04",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.78,
+        "minEdge": 0.08,
+        "minTau": 8,
+        "maxTau": 40,
+        "minDist": 8,
+        "maxSpread": 0.04
+      },
+      "train": {
+        "n": 484,
+        "wr": 0.7107,
+        "pnl": 449.32,
+        "exp": 0.9283,
+        "pf": 1.312
+      },
+      "hold": {
+        "n": 195,
+        "wr": 0.7641,
+        "pnl": 352.52,
+        "exp": 1.8078,
+        "pf": 1.745
+      },
+      "score": 458.27599999999995,
+      "ok": true,
+      "robust": 352.52,
+      "total": 801.8399999999999
+    }
+  ],
+  "topHoldPnl": [
+    {
+      "id": "ca15_a0.78_e0.05_t10-50_d8_s0.02",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.78,
+        "minEdge": 0.05,
+        "minTau": 10,
+        "maxTau": 50,
+        "minDist": 8,
+        "maxSpread": 0.02
+      },
+      "train": {
+        "n": 659,
+        "wr": 0.6859,
+        "pnl": 322.55,
+        "exp": 0.4895,
+        "pf": 1.152
+      },
+      "hold": {
+        "n": 284,
+        "wr": 0.7606,
+        "pnl": 436.37,
+        "exp": 1.5365,
+        "pf": 1.625
+      },
+      "score": 419.315,
+      "ok": true,
+      "robust": 322.55,
+      "total": 758.9200000000001
+    },
+    {
+      "id": "ca15_a0.78_e0.08_t10-50_d8_s0.02",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.78,
+        "minEdge": 0.08,
+        "minTau": 10,
+        "maxTau": 50,
+        "minDist": 8,
+        "maxSpread": 0.02
+      },
+      "train": {
+        "n": 593,
+        "wr": 0.683,
+        "pnl": 323.73,
+        "exp": 0.5459,
+        "pf": 1.167
+      },
+      "hold": {
+        "n": 249,
+        "wr": 0.755,
+        "pnl": 417.32,
+        "exp": 1.676,
+        "pf": 1.665
+      },
+      "score": 420.84900000000005,
+      "ok": true,
+      "robust": 323.73,
+      "total": 741.05
+    },
+    {
+      "id": "ca15_a0.78_e0.03_t8-40_d8_s0.05",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.78,
+        "minEdge": 0.03,
+        "minTau": 8,
+        "maxTau": 40,
+        "minDist": 8,
+        "maxSpread": 0.05
+      },
+      "train": {
+        "n": 547,
+        "wr": 0.713,
+        "pnl": 405.9,
+        "exp": 0.742,
+        "pf": 1.251
+      },
+      "hold": {
+        "n": 227,
+        "wr": 0.7753,
+        "pnl": 375.61,
+        "exp": 1.6547,
+        "pf": 1.718
+      },
+      "score": 488.293,
+      "ok": true,
+      "robust": 375.61,
+      "total": 781.51
+    },
+    {
+      "id": "ca15_a0.78_e0_t8-40_d5_s0.05",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.78,
+        "minEdge": 0,
+        "minTau": 8,
+        "maxTau": 40,
+        "minDist": 5,
+        "maxSpread": 0.05
+      },
+      "train": {
+        "n": 746,
+        "wr": 0.6984,
+        "pnl": 587.47,
+        "exp": 0.7875,
+        "pf": 1.254
+      },
+      "hold": {
+        "n": 339,
+        "wr": 0.7257,
+        "pnl": 370,
+        "exp": 1.0914,
+        "pf": 1.387
+      },
+      "score": 481,
+      "ok": true,
+      "robust": 370,
+      "total": 957.47
+    },
+    {
+      "id": "ca15_a0.65_e0.05_t10-50_d8_s0.04",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.65,
+        "minEdge": 0.05,
+        "minTau": 10,
+        "maxTau": 50,
+        "minDist": 8,
+        "maxSpread": 0.04
+      },
+      "train": {
+        "n": 432,
+        "wr": 0.6181,
+        "pnl": 282.93,
+        "exp": 0.6549,
+        "pf": 1.166
+      },
+      "hold": {
+        "n": 162,
+        "wr": 0.6914,
+        "pnl": 369.87,
+        "exp": 2.2832,
+        "pf": 1.716
+      },
+      "score": 367.809,
+      "ok": true,
+      "robust": 282.93,
+      "total": 652.8
+    },
+    {
+      "id": "ca15_a0.78_e0.03_t8-40_d8_s0.04",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.78,
+        "minEdge": 0.03,
+        "minTau": 8,
+        "maxTau": 40,
+        "minDist": 8,
+        "maxSpread": 0.04
+      },
+      "train": {
+        "n": 545,
+        "wr": 0.7156,
+        "pnl": 427.24,
+        "exp": 0.7839,
+        "pf": 1.268
+      },
+      "hold": {
+        "n": 224,
+        "wr": 0.7723,
+        "pnl": 369.35,
+        "exp": 1.6489,
+        "pf": 1.705
+      },
+      "score": 480.15500000000003,
+      "ok": true,
+      "robust": 369.35,
+      "total": 796.59
+    },
+    {
+      "id": "ca15_a0.78_e0.03_t8-40_d5_s0.05",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.78,
+        "minEdge": 0.03,
+        "minTau": 8,
+        "maxTau": 40,
+        "minDist": 5,
+        "maxSpread": 0.05
+      },
+      "train": {
+        "n": 715,
+        "wr": 0.6909,
+        "pnl": 578.39,
+        "exp": 0.8089,
+        "pf": 1.254
+      },
+      "hold": {
+        "n": 328,
+        "wr": 0.7256,
+        "pnl": 368.62,
+        "exp": 1.1238,
+        "pf": 1.398
+      },
+      "score": 479.206,
+      "ok": true,
+      "robust": 368.62,
+      "total": 947.01
+    },
+    {
+      "id": "ca15_a0.68_e0.08_t10-50_d8_s0.04",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.68,
+        "minEdge": 0.08,
+        "minTau": 10,
+        "maxTau": 50,
+        "minDist": 8,
+        "maxSpread": 0.04
+      },
+      "train": {
+        "n": 446,
+        "wr": 0.6323,
+        "pnl": 285.25,
+        "exp": 0.6396,
+        "pf": 1.169
+      },
+      "hold": {
+        "n": 168,
+        "wr": 0.6964,
+        "pnl": 368.33,
+        "exp": 2.1925,
+        "pf": 1.7
+      },
+      "score": 370.825,
+      "ok": true,
+      "robust": 285.25,
+      "total": 653.5799999999999
+    },
+    {
+      "id": "ca15_a0.68_e0.05_t10-50_d8_s0.04",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.68,
+        "minEdge": 0.05,
+        "minTau": 10,
+        "maxTau": 50,
+        "minDist": 8,
+        "maxSpread": 0.04
+      },
+      "train": {
+        "n": 488,
+        "wr": 0.6393,
+        "pnl": 324.1,
+        "exp": 0.6641,
+        "pf": 1.179
+      },
+      "hold": {
+        "n": 185,
+        "wr": 0.6973,
+        "pnl": 367.91,
+        "exp": 1.9887,
+        "pf": 1.637
+      },
+      "score": 421.33000000000004,
+      "ok": true,
+      "robust": 324.1,
+      "total": 692.01
+    },
+    {
+      "id": "ca15_a0.68_e0.03_t10-50_d8_s0.04",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.68,
+        "minEdge": 0.03,
+        "minTau": 10,
+        "maxTau": 50,
+        "minDist": 8,
+        "maxSpread": 0.04
+      },
+      "train": {
+        "n": 503,
+        "wr": 0.6441,
+        "pnl": 316.96,
+        "exp": 0.6301,
+        "pf": 1.172
+      },
+      "hold": {
+        "n": 189,
+        "wr": 0.6984,
+        "pnl": 367.82,
+        "exp": 1.9462,
+        "pf": 1.626
+      },
+      "score": 412.048,
+      "ok": true,
+      "robust": 316.96,
+      "total": 684.78
+    },
+    {
+      "id": "ca15_a0.78_e0.12_t10-50_d8_s0.02",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.78,
+        "minEdge": 0.12,
+        "minTau": 10,
+        "maxTau": 50,
+        "minDist": 8,
+        "maxSpread": 0.02
+      },
+      "train": {
+        "n": 501,
+        "wr": 0.6647,
+        "pnl": 272.74,
+        "exp": 0.5444,
+        "pf": 1.158
+      },
+      "hold": {
+        "n": 197,
+        "wr": 0.7462,
+        "pnl": 367.14,
+        "exp": 1.8637,
+        "pf": 1.712
+      },
+      "score": 354.562,
+      "ok": true,
+      "robust": 272.74,
+      "total": 639.88
+    },
+    {
+      "id": "ca15_a0.68_e0.05_t10-50_d8_s0.05",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.68,
+        "minEdge": 0.05,
+        "minTau": 10,
+        "maxTau": 50,
+        "minDist": 8,
+        "maxSpread": 0.05
+      },
+      "train": {
+        "n": 497,
+        "wr": 0.6378,
+        "pnl": 303.13,
+        "exp": 0.6099,
+        "pf": 1.163
+      },
+      "hold": {
+        "n": 185,
+        "wr": 0.6973,
+        "pnl": 366.88,
+        "exp": 1.9832,
+        "pf": 1.635
+      },
+      "score": 394.06899999999996,
+      "ok": true,
+      "robust": 303.13,
+      "total": 670.01
+    },
+    {
+      "id": "ca15_a0.68_e0.03_t10-50_d8_s0.05",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.68,
+        "minEdge": 0.03,
+        "minTau": 10,
+        "maxTau": 50,
+        "minDist": 8,
+        "maxSpread": 0.05
+      },
+      "train": {
+        "n": 511,
+        "wr": 0.6419,
+        "pnl": 290.48,
+        "exp": 0.5685,
+        "pf": 1.154
+      },
+      "hold": {
+        "n": 189,
+        "wr": 0.6984,
+        "pnl": 366.8,
+        "exp": 1.9407,
+        "pf": 1.624
+      },
+      "score": 377.624,
+      "ok": true,
+      "robust": 290.48,
+      "total": 657.28
+    },
+    {
+      "id": "ca15_a0.78_e0_t8-40_d5_s0.03",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.78,
+        "minEdge": 0,
+        "minTau": 8,
+        "maxTau": 40,
+        "minDist": 5,
+        "maxSpread": 0.03
+      },
+      "train": {
+        "n": 741,
+        "wr": 0.7045,
+        "pnl": 648.64,
+        "exp": 0.8754,
+        "pf": 1.288
+      },
+      "hold": {
+        "n": 333,
+        "wr": 0.7237,
+        "pnl": 366.34,
+        "exp": 1.1001,
+        "pf": 1.387
+      },
+      "score": 476.24199999999996,
+      "ok": true,
+      "robust": 366.34,
+      "total": 1014.98
+    },
+    {
+      "id": "ca15_a0.78_e0.03_t8-40_d5_s0.03",
+      "params": {
+        "maxCrossAge": 15,
+        "maxAsk": 0.78,
+        "minEdge": 0.03,
+        "minTau": 8,
+        "maxTau": 40,
+        "minDist": 5,
+        "maxSpread": 0.03
+      },
+      "train": {
+        "n": 709,
+        "wr": 0.6968,
+        "pnl": 641.18,
+        "exp": 0.9043,
+        "pf": 1.29
+      },
+      "hold": {
+        "n": 322,
+        "wr": 0.7236,
+        "pnl": 364.96,
+        "exp": 1.1334,
+        "pf": 1.398
+      },
+      "score": 474.448,
+      "ok": true,
+      "robust": 364.96,
+      "total": 1006.1399999999999
+    }
+  ],
+  "topHoldPf": [
+    {
+      "id": "ca10_a0.78_e0_t5-30_d12_s0.05",
+      "params": {
+        "maxCrossAge": 10,
+        "maxAsk": 0.78,
+        "minEdge": 0,
+        "minTau": 5,
+        "maxTau": 30,
+        "minDist": 12,
+        "maxSpread": 0.05
+      },
+      "train": {
+        "n": 190,
+        "wr": 0.7526,
+        "pnl": 162.22,
+        "exp": 0.8538,
+        "pf": 1.336
+      },
+      "hold": {
+        "n": 54,
+        "wr": 0.8519,
+        "pnl": 132.66,
+        "exp": 2.4566,
+        "pf": 2.615
+      },
+      "score": 172.458,
+      "ok": true,
+      "robust": 132.66,
+      "total": 294.88
+    },
+    {
+      "id": "ca12_a0.78_e0_t5-30_d12_s0.05",
+      "params": {
+        "maxCrossAge": 12,
+        "maxAsk": 0.78,
+        "minEdge": 0,
+        "minTau": 5,
+        "maxTau": 30,
+        "minDist": 12,
+        "maxSpread": 0.05
+      },
+      "train": {
+        "n": 210,
+        "wr": 0.7381,
+        "pnl": 130.32,
+        "exp": 0.6206,
+        "pf": 1.231
+      },
+      "hold": {
+        "n": 67,
+        "wr": 0.8507,
+        "pnl": 164.73,
+        "exp": 2.4586,
+        "pf": 2.605
+      },
+      "score": 169.416,
+      "ok": true,
+      "robust": 130.32,
+      "total": 295.04999999999995
+    },
+    {
+      "id": "ca10_a0.78_e0_t5-30_d12_s0.04",
+      "params": {
+        "maxCrossAge": 10,
+        "maxAsk": 0.78,
+        "minEdge": 0,
+        "minTau": 5,
+        "maxTau": 30,
+        "minDist": 12,
+        "maxSpread": 0.04
+      },
+      "train": {
+        "n": 185,
+        "wr": 0.7514,
+        "pnl": 143.55,
+        "exp": 0.7759,
+        "pf": 1.304
+      },
+      "hold": {
+        "n": 53,
+        "wr": 0.8491,
+        "pnl": 129.86,
+        "exp": 2.4502,
+        "pf": 2.577
+      },
+      "score": 168.818,
+      "ok": true,
+      "robust": 129.86,
+      "total": 273.41
+    },
+    {
+      "id": "ca12_a0.78_e0_t5-30_d12_s0.04",
+      "params": {
+        "maxCrossAge": 12,
+        "maxAsk": 0.78,
+        "minEdge": 0,
+        "minTau": 5,
+        "maxTau": 30,
+        "minDist": 12,
+        "maxSpread": 0.04
+      },
+      "train": {
+        "n": 205,
+        "wr": 0.7415,
+        "pnl": 129.06,
+        "exp": 0.6296,
+        "pf": 1.237
+      },
+      "hold": {
+        "n": 66,
+        "wr": 0.8485,
+        "pnl": 161.93,
+        "exp": 2.4535,
+        "pf": 2.574
+      },
+      "score": 167.778,
+      "ok": true,
+      "robust": 129.06,
+      "total": 290.99
+    },
+    {
+      "id": "ca12_a0.78_e0.08_t10-50_d15_s0.04",
+      "params": {
+        "maxCrossAge": 12,
+        "maxAsk": 0.78,
+        "minEdge": 0.08,
+        "minTau": 10,
+        "maxTau": 50,
+        "minDist": 15,
+        "maxSpread": 0.04
+      },
+      "train": {
+        "n": 263,
+        "wr": 0.7376,
+        "pnl": 222.69,
+        "exp": 0.8467,
+        "pf": 1.315
+      },
+      "hold": {
+        "n": 85,
+        "wr": 0.8588,
+        "pnl": 186.49,
+        "exp": 2.194,
+        "pf": 2.517
+      },
+      "score": 242.437,
+      "ok": true,
+      "robust": 186.49,
+      "total": 409.18
+    },
+    {
+      "id": "ca12_a0.78_e0.08_t10-50_d15_s0.05",
+      "params": {
+        "maxCrossAge": 12,
+        "maxAsk": 0.78,
+        "minEdge": 0.08,
+        "minTau": 10,
+        "maxTau": 50,
+        "minDist": 15,
+        "maxSpread": 0.05
+      },
+      "train": {
+        "n": 268,
+        "wr": 0.7313,
+        "pnl": 201.54,
+        "exp": 0.752,
+        "pf": 1.273
+      },
+      "hold": {
+        "n": 85,
+        "wr": 0.8588,
+        "pnl": 186.49,
+        "exp": 2.194,
+        "pf": 2.517
+      },
+      "score": 242.437,
+      "ok": true,
+      "robust": 186.49,
+      "total": 388.03
+    },
+    {
+      "id": "ca12_a0.78_e0.08_t10-50_d15_s0.03",
+      "params": {
+        "maxCrossAge": 12,
+        "maxAsk": 0.78,
+        "minEdge": 0.08,
+        "minTau": 10,
+        "maxTau": 50,
+        "minDist": 15,
+        "maxSpread": 0.03
+      },
+      "train": {
+        "n": 258,
+        "wr": 0.7403,
+        "pnl": 237.2,
+        "exp": 0.9194,
+        "pf": 1.345
+      },
+      "hold": {
+        "n": 84,
+        "wr": 0.8571,
+        "pnl": 183.35,
+        "exp": 2.1828,
+        "pf": 2.491
+      },
+      "score": 238.355,
+      "ok": true,
+      "robust": 183.35,
+      "total": 420.54999999999995
+    },
+    {
+      "id": "ca12_a0.78_e0.12_t8-40_d12_s0.05",
+      "params": {
+        "maxCrossAge": 12,
+        "maxAsk": 0.78,
+        "minEdge": 0.12,
+        "minTau": 8,
+        "maxTau": 40,
+        "minDist": 12,
+        "maxSpread": 0.05
+      },
+      "train": {
+        "n": 219,
+        "wr": 0.7215,
+        "pnl": 255.24,
+        "exp": 1.1655,
+        "pf": 1.407
+      },
+      "hold": {
+        "n": 70,
+        "wr": 0.8286,
+        "pnl": 182.71,
+        "exp": 2.6102,
+        "pf": 2.483
+      },
+      "score": 237.52300000000002,
+      "ok": true,
+      "robust": 182.71,
+      "total": 437.95000000000005
+    },
+    {
+      "id": "ca12_a0.78_e0.12_t5-30_d12_s0.05",
+      "params": {
+        "maxCrossAge": 12,
+        "maxAsk": 0.78,
+        "minEdge": 0.12,
+        "minTau": 5,
+        "maxTau": 30,
+        "minDist": 12,
+        "maxSpread": 0.05
+      },
+      "train": {
+        "n": 159,
+        "wr": 0.6918,
+        "pnl": 95.09,
+        "exp": 0.598,
+        "pf": 1.189
+      },
+      "hold": {
+        "n": 51,
+        "wr": 0.8235,
+        "pnl": 137.11,
+        "exp": 2.6885,
+        "pf": 2.481
+      },
+      "score": 123.617,
+      "ok": true,
+      "robust": 95.09,
+      "total": 232.20000000000002
+    },
+    {
+      "id": "ca4_a0.78_e0.03_t5-30_d8_s0.04",
+      "params": {
+        "maxCrossAge": 4,
+        "maxAsk": 0.78,
+        "minEdge": 0.03,
+        "minTau": 5,
+        "maxTau": 30,
+        "minDist": 8,
+        "maxSpread": 0.04
+      },
+      "train": {
+        "n": 154,
+        "wr": 0.7208,
+        "pnl": 157.62,
+        "exp": 1.0235,
+        "pf": 1.356
+      },
+      "hold": {
+        "n": 59,
+        "wr": 0.8305,
+        "pnl": 152.3,
+        "exp": 2.5814,
+        "pf": 2.476
+      },
+      "score": 197.99,
+      "ok": true,
+      "robust": 152.3,
+      "total": 309.92
+    },
+    {
+      "id": "ca12_a0.78_e0.1_t5-30_d12_s0.05",
+      "params": {
+        "maxCrossAge": 12,
+        "maxAsk": 0.78,
+        "minEdge": 0.1,
+        "minTau": 5,
+        "maxTau": 30,
+        "minDist": 12,
+        "maxSpread": 0.05
+      },
+      "train": {
+        "n": 169,
+        "wr": 0.7041,
+        "pnl": 94,
+        "exp": 0.5562,
+        "pf": 1.183
+      },
+      "hold": {
+        "n": 53,
+        "wr": 0.8302,
+        "pnl": 135.36,
+        "exp": 2.5541,
+        "pf": 2.462
+      },
+      "score": 122.2,
+      "ok": true,
+      "robust": 94,
+      "total": 229.36
+    },
+    {
+      "id": "ca12_a0.78_e0_t5-30_d12_s0.03",
+      "params": {
+        "maxCrossAge": 12,
+        "maxAsk": 0.78,
+        "minEdge": 0,
+        "minTau": 5,
+        "maxTau": 30,
+        "minDist": 12,
+        "maxSpread": 0.03
+      },
+      "train": {
+        "n": 202,
+        "wr": 0.7376,
+        "pnl": 120.74,
+        "exp": 0.5977,
+        "pf": 1.222
+      },
+      "hold": {
+        "n": 64,
+        "wr": 0.8438,
+        "pnl": 150.12,
+        "exp": 2.3456,
+        "pf": 2.46
+      },
+      "score": 156.962,
+      "ok": true,
+      "robust": 120.74,
+      "total": 270.86
+    },
+    {
+      "id": "ca12_a0.78_e0.12_t8-40_d12_s0.04",
+      "params": {
+        "maxCrossAge": 12,
+        "maxAsk": 0.78,
+        "minEdge": 0.12,
+        "minTau": 8,
+        "maxTau": 40,
+        "minDist": 12,
+        "maxSpread": 0.04
+      },
+      "train": {
+        "n": 213,
+        "wr": 0.723,
+        "pnl": 249.18,
+        "exp": 1.1699,
+        "pf": 1.411
+      },
+      "hold": {
+        "n": 69,
+        "wr": 0.8261,
+        "pnl": 179.91,
+        "exp": 2.6074,
+        "pf": 2.458
+      },
+      "score": 233.88299999999998,
+      "ok": true,
+      "robust": 179.91,
+      "total": 429.09000000000003
+    },
+    {
+      "id": "ca12_a0.78_e0.12_t5-30_d12_s0.04",
+      "params": {
+        "maxCrossAge": 12,
+        "maxAsk": 0.78,
+        "minEdge": 0.12,
+        "minTau": 5,
+        "maxTau": 30,
+        "minDist": 12,
+        "maxSpread": 0.04
+      },
+      "train": {
+        "n": 153,
+        "wr": 0.6928,
+        "pnl": 80.5,
+        "exp": 0.5262,
+        "pf": 1.167
+      },
+      "hold": {
+        "n": 50,
+        "wr": 0.82,
+        "pnl": 134.32,
+        "exp": 2.6863,
+        "pf": 2.447
+      },
+      "score": 104.65,
+      "ok": true,
+      "robust": 80.5,
+      "total": 214.82
+    },
+    {
+      "id": "ca4_a0.78_e0.03_t5-30_d8_s0.03",
+      "params": {
+        "maxCrossAge": 4,
+        "maxAsk": 0.78,
+        "minEdge": 0.03,
+        "minTau": 5,
+        "maxTau": 30,
+        "minDist": 8,
+        "maxSpread": 0.03
+      },
+      "train": {
+        "n": 150,
+        "wr": 0.72,
+        "pnl": 157.11,
+        "exp": 1.0474,
+        "pf": 1.363
+      },
+      "hold": {
+        "n": 58,
+        "wr": 0.8276,
+        "pnl": 148.86,
+        "exp": 2.5666,
+        "pf": 2.442
+      },
+      "score": 193.51800000000003,
+      "ok": true,
+      "robust": 148.86,
+      "total": 305.97
+    }
+  ]
+}

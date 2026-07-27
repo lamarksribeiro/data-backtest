@@ -1,0 +1,20 @@
+{
+  "walletSize": 100,
+  "entryBudget": 10,
+  "minShares": 1,
+  "minSecondsLeft": 10,
+  "maxSecondsLeft": 50,
+  "maxSecsSinceFlip": 15,
+  "minFlipsInWindow": 1,
+  "minDistAbs": 8,
+  "maxDistAbs": 200,
+  "minEdge": 0.05,
+  "volStepSecs": 30,
+  "minAsk": 0.20,
+  "maxAsk": 0.78,
+  "maxSpread": 0.02,
+  "minOddsSum": 0.96,
+  "maxOddsSum": 1.08,
+  "entrySlippageMax": 0.02,
+  "minLiquidityRatio": 0.55
+}

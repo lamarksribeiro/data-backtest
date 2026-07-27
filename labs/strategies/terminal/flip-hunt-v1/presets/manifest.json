@@ -1,0 +1,8 @@
+{
+  "strategyId": "flip-hunt-v1",
+  "presets": [
+    "btc-champion.json",
+    "btc-tight-spread.json"
+  ],
+  "default": "btc-tight-spread.json"
+}

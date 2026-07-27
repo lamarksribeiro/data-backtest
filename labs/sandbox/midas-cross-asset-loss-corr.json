@@ -1,0 +1,268 @@
+{
+  "meta": {
+    "from": "2026-07-01",
+    "to": "2026-07-25",
+    "presets": {
+      "BTC": "btc-gold-v1",
+      "ETH": "eth-gold-v1",
+      "SOL": "sol-gold-v1",
+      "XRP": "xrp-gold-v1"
+    },
+    "generatedAt": "2026-07-27T04:46:27.039Z"
+  },
+  "perAsset": {
+    "BTC": {
+      "trades": 2045,
+      "pnl": 1859.25,
+      "losses": 439,
+      "lossRate": 21.5
+    },
+    "ETH": {
+      "trades": 1799,
+      "pnl": 849.31,
+      "losses": 453,
+      "lossRate": 25.2
+    },
+    "SOL": {
+      "trades": 974,
+      "pnl": 498.86,
+      "losses": 257,
+      "lossRate": 26.4
+    },
+    "XRP": {
+      "trades": 701,
+      "pnl": 336.5,
+      "losses": 185,
+      "lossRate": 26.4
+    }
+  },
+  "analysis": {
+    "lossRate": {
+      "BTC": 21.5,
+      "ETH": 25.2,
+      "SOL": 26.4,
+      "XRP": 26.4
+    },
+    "pairCond": {
+      "BTC_ETH": {
+        "bothTraded": 894,
+        "aLossGivenBoth": 215,
+        "bothLoss": 86,
+        "pBLossGivenALoss": 40,
+        "unconditionalLossRateA": null,
+        "bothWin": 523,
+        "aLossBWin": 129,
+        "sameSideBothLoss": 54,
+        "oppSideBothLoss": 32,
+        "avgJointLossPnl": -14.42,
+        "unconditionalLossRateB": 25.2,
+        "liftVsIndep": 1.59
+      },
+      "BTC_SOL": {
+        "bothTraded": 475,
+        "aLossGivenBoth": 121,
+        "bothLoss": 42,
+        "pBLossGivenALoss": 34.7,
+        "unconditionalLossRateA": null,
+        "bothWin": 254,
+        "aLossBWin": 79,
+        "sameSideBothLoss": 23,
+        "oppSideBothLoss": 19,
+        "avgJointLossPnl": -14.3,
+        "unconditionalLossRateB": 26.4,
+        "liftVsIndep": 1.31
+      },
+      "BTC_XRP": {
+        "bothTraded": 308,
+        "aLossGivenBoth": 69,
+        "bothLoss": 22,
+        "pBLossGivenALoss": 31.9,
+        "unconditionalLossRateA": null,
+        "bothWin": 182,
+        "aLossBWin": 47,
+        "sameSideBothLoss": 15,
+        "oppSideBothLoss": 7,
+        "avgJointLossPnl": -15.99,
+        "unconditionalLossRateB": 26.4,
+        "liftVsIndep": 1.21
+      },
+      "ETH_SOL": {
+        "bothTraded": 462,
+        "aLossGivenBoth": 114,
+        "bothLoss": 36,
+        "pBLossGivenALoss": 31.6,
+        "unconditionalLossRateA": null,
+        "bothWin": 243,
+        "aLossBWin": 78,
+        "sameSideBothLoss": 23,
+        "oppSideBothLoss": 13,
+        "avgJointLossPnl": -16.22,
+        "unconditionalLossRateB": 26.4,
+        "liftVsIndep": 1.2
+      },
+      "ETH_XRP": {
+        "bothTraded": 293,
+        "aLossGivenBoth": 74,
+        "bothLoss": 25,
+        "pBLossGivenALoss": 33.8,
+        "unconditionalLossRateA": null,
+        "bothWin": 154,
+        "aLossBWin": 49,
+        "sameSideBothLoss": 14,
+        "oppSideBothLoss": 11,
+        "avgJointLossPnl": -16.73,
+        "unconditionalLossRateB": 26.4,
+        "liftVsIndep": 1.28
+      },
+      "SOL_XRP": {
+        "bothTraded": 200,
+        "aLossGivenBoth": 57,
+        "bothLoss": 19,
+        "pBLossGivenALoss": 33.3,
+        "unconditionalLossRateA": null,
+        "bothWin": 102,
+        "aLossBWin": 38,
+        "sameSideBothLoss": 9,
+        "oppSideBothLoss": 10,
+        "avgJointLossPnl": -14.66,
+        "unconditionalLossRateB": 26.4,
+        "liftVsIndep": 1.26
+      }
+    },
+    "multiLoss": {
+      "1": 913,
+      "2": 191,
+      "3": 13,
+      "4": 0
+    },
+    "multiTrade": {
+      "1": 1919,
+      "2": 1102,
+      "3": 376,
+      "4": 67
+    },
+    "slotsWithAnyTrade": 3464,
+    "slotsWithAnyLoss": 1117,
+    "multiLossShareOfLossSlots": 18.3,
+    "fourTraded": 67,
+    "fourGe2Loss": 23,
+    "fourGe3Loss": 4,
+    "fourAllLoss": 0,
+    "fourGe2Pct": 34.3,
+    "fourGe3Pct": 6,
+    "fourAllPct": 0,
+    "expectedAll4Indep": 0.25,
+    "givenBtcLoss": {
+      "n": 439,
+      "with1plus": 141,
+      "with2plus": 9,
+      "with3": 0,
+      "avgOthersLosing": 0.34,
+      "pctWith1plus": 32.1,
+      "pctWith2plus": 2.1
+    },
+    "worstSlot": {
+      "slot": "2026-07-09T22:00:00.000Z",
+      "jointPnl": -45.11,
+      "losers": [
+        "BTC",
+        "ETH",
+        "SOL"
+      ],
+      "sides": [
+        "DOWN",
+        "DOWN",
+        "DOWN"
+      ],
+      "details": {
+        "BTC": {
+          "pnl": -9.75,
+          "side": "DOWN"
+        },
+        "ETH": {
+          "pnl": -18.06,
+          "side": "DOWN"
+        },
+        "SOL": {
+          "pnl": -17.29,
+          "side": "DOWN"
+        }
+      }
+    },
+    "portfolio": {
+      "totalPnl": 3543.92,
+      "maxDrawdown": 118.91,
+      "worstDay": 0,
+      "singleDd": {
+        "BTC": 64.36,
+        "ETH": 59.05,
+        "SOL": 76.34,
+        "XRP": 74.72
+      },
+      "sumSingleDd": 274.47,
+      "ddVsSumSinglePct": 43.3
+    },
+    "dailyJoint": [
+      {
+        "day": "2026-07-09",
+        "worstJoint": -45.11,
+        "multiLossSlots": 11,
+        "lossSlots": 46
+      },
+      {
+        "day": "2026-07-06",
+        "worstJoint": -35.41,
+        "multiLossSlots": 11,
+        "lossSlots": 57
+      },
+      {
+        "day": "2026-07-08",
+        "worstJoint": -34.01,
+        "multiLossSlots": 8,
+        "lossSlots": 53
+      },
+      {
+        "day": "2026-07-07",
+        "worstJoint": -32.33,
+        "multiLossSlots": 8,
+        "lossSlots": 36
+      },
+      {
+        "day": "2026-07-02",
+        "worstJoint": -28.63,
+        "multiLossSlots": 15,
+        "lossSlots": 57
+      },
+      {
+        "day": "2026-07-14",
+        "worstJoint": -26.88,
+        "multiLossSlots": 11,
+        "lossSlots": 54
+      },
+      {
+        "day": "2026-07-13",
+        "worstJoint": -26.86,
+        "multiLossSlots": 5,
+        "lossSlots": 48
+      },
+      {
+        "day": "2026-07-19",
+        "worstJoint": -26.86,
+        "multiLossSlots": 0,
+        "lossSlots": 21
+      },
+      {
+        "day": "2026-07-03",
+        "worstJoint": -25.95,
+        "multiLossSlots": 10,
+        "lossSlots": 67
+      },
+      {
+        "day": "2026-07-05",
+        "worstJoint": -25.32,
+        "multiLossSlots": 19,
+        "lossSlots": 58
+      }
+    ]
+  }
+}

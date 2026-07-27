@@ -1,0 +1,967 @@
+{
+  "generatedAt": "2026-07-27T07:23:41.048903+00:00",
+  "input": "scratch\\flip-features-canonical.csv",
+  "model": "scratch\\flip-model-canonical-report.json",
+  "selection": {
+    "uses": [
+      "train",
+      "validation"
+    ],
+    "criterion": "maximize minimum pnlDelta per baseline entry",
+    "selectedEvFloorUsdPer10": 0.0
+  },
+  "baseline": {
+    "train": {
+      "entries": 3833,
+      "pnl": -634.0129272878398,
+      "maxDrawdown": 662.6004002002143
+    },
+    "validation": {
+      "entries": 1386,
+      "pnl": -85.19934143981216,
+      "maxDrawdown": 200.9353746889728
+    },
+    "holdout": {
+      "entries": 2083,
+      "pnl": 123.33602799060851,
+      "maxDrawdown": 201.5975308494799
+    }
+  },
+  "candidates": [
+    {
+      "evFloor": -4.0,
+      "splits": {
+        "train": {
+          "entries": 3833,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": -634.0129272878398,
+          "newMaxDrawdown": 662.6004002002143
+        },
+        "validation": {
+          "entries": 1386,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": -85.19934143981216,
+          "newMaxDrawdown": 200.9353746889728
+        },
+        "holdout": {
+          "entries": 2083,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": 123.33602799060851,
+          "newMaxDrawdown": 201.5975308494799
+        }
+      }
+    },
+    {
+      "evFloor": -3.0,
+      "splits": {
+        "train": {
+          "entries": 3833,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": -634.0129272878398,
+          "newMaxDrawdown": 662.6004002002143
+        },
+        "validation": {
+          "entries": 1386,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": -85.19934143981216,
+          "newMaxDrawdown": 200.9353746889728
+        },
+        "holdout": {
+          "entries": 2083,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": 123.33602799060851,
+          "newMaxDrawdown": 201.5975308494799
+        }
+      }
+    },
+    {
+      "evFloor": -2.5,
+      "splits": {
+        "train": {
+          "entries": 3833,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": -634.0129272878398,
+          "newMaxDrawdown": 662.6004002002143
+        },
+        "validation": {
+          "entries": 1386,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": -85.19934143981216,
+          "newMaxDrawdown": 200.9353746889728
+        },
+        "holdout": {
+          "entries": 2083,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": 123.33602799060851,
+          "newMaxDrawdown": 201.5975308494799
+        }
+      }
+    },
+    {
+      "evFloor": -2.0,
+      "splits": {
+        "train": {
+          "entries": 3833,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": -634.0129272878398,
+          "newMaxDrawdown": 662.6004002002143
+        },
+        "validation": {
+          "entries": 1386,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": -85.19934143981216,
+          "newMaxDrawdown": 200.9353746889728
+        },
+        "holdout": {
+          "entries": 2083,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": 123.33602799060851,
+          "newMaxDrawdown": 201.5975308494799
+        }
+      }
+    },
+    {
+      "evFloor": -1.5,
+      "splits": {
+        "train": {
+          "entries": 3833,
+          "blocked": 5,
+          "blockRate": 0.0013044612575006521,
+          "flipsAvoided": 1,
+          "precision": 0.2,
+          "pnlDelta": -16.96564101526949,
+          "newPnl": -650.9785683031092,
+          "newMaxDrawdown": 689.8810412154843
+        },
+        "validation": {
+          "entries": 1386,
+          "blocked": 1,
+          "blockRate": 0.0007215007215007215,
+          "flipsAvoided": 1,
+          "precision": 1.0,
+          "pnlDelta": 10.301,
+          "newPnl": -74.8983414398122,
+          "newMaxDrawdown": 190.6343746889728
+        },
+        "holdout": {
+          "entries": 2083,
+          "blocked": 3,
+          "blockRate": 0.0014402304368698992,
+          "flipsAvoided": 2,
+          "precision": 0.6666666666666666,
+          "pnlDelta": 12.812090909090909,
+          "newPnl": 136.14811889969945,
+          "newMaxDrawdown": 201.5975308494799
+        }
+      }
+    },
+    {
+      "evFloor": -1.0,
+      "splits": {
+        "train": {
+          "entries": 3833,
+          "blocked": 57,
+          "blockRate": 0.014870858335507435,
+          "flipsAvoided": 18,
+          "precision": 0.3157894736842105,
+          "pnlDelta": 6.094595975846158,
+          "newPnl": -627.9183313119938,
+          "newMaxDrawdown": 667.9639055694342
+        },
+        "validation": {
+          "entries": 1386,
+          "blocked": 21,
+          "blockRate": 0.015151515151515152,
+          "flipsAvoided": 7,
+          "precision": 0.3333333333333333,
+          "pnlDelta": 4.881534480475074,
+          "newPnl": -80.31780695933705,
+          "newMaxDrawdown": 206.2358402084976
+        },
+        "holdout": {
+          "entries": 2083,
+          "blocked": 15,
+          "blockRate": 0.007201152184349496,
+          "flipsAvoided": 8,
+          "precision": 0.5333333333333333,
+          "pnlDelta": 39.31696306526848,
+          "newPnl": 162.65299105587698,
+          "newMaxDrawdown": 215.39207389798074
+        }
+      }
+    },
+    {
+      "evFloor": -0.75,
+      "splits": {
+        "train": {
+          "entries": 3833,
+          "blocked": 147,
+          "blockRate": 0.038351160970519174,
+          "flipsAvoided": 42,
+          "precision": 0.2857142857142857,
+          "pnlDelta": 25.222757015941593,
+          "newPnl": -608.7901702718983,
+          "newMaxDrawdown": 651.805103165005
+        },
+        "validation": {
+          "entries": 1386,
+          "blocked": 48,
+          "blockRate": 0.03463203463203463,
+          "flipsAvoided": 15,
+          "precision": 0.3125,
+          "pnlDelta": 16.18812763220695,
+          "newPnl": -69.01121380760529,
+          "newMaxDrawdown": 187.69254565531307
+        },
+        "holdout": {
+          "entries": 2083,
+          "blocked": 40,
+          "blockRate": 0.019203072491598656,
+          "flipsAvoided": 16,
+          "precision": 0.4,
+          "pnlDelta": 63.73840020819633,
+          "newPnl": 187.07442819880487,
+          "newMaxDrawdown": 204.05104815306942
+        }
+      }
+    },
+    {
+      "evFloor": -0.5,
+      "splits": {
+        "train": {
+          "entries": 3833,
+          "blocked": 509,
+          "blockRate": 0.1327941560135664,
+          "flipsAvoided": 119,
+          "precision": 0.2337917485265226,
+          "pnlDelta": 133.0159463965141,
+          "newPnl": -500.9969808913256,
+          "newMaxDrawdown": 625.1042089463555
+        },
+        "validation": {
+          "entries": 1386,
+          "blocked": 136,
+          "blockRate": 0.09812409812409813,
+          "flipsAvoided": 35,
+          "precision": 0.25735294117647056,
+          "pnlDelta": 16.537285661290646,
+          "newPnl": -68.66205577852156,
+          "newMaxDrawdown": 160.2738563987345
+        },
+        "holdout": {
+          "entries": 2083,
+          "blocked": 200,
+          "blockRate": 0.09601536245799328,
+          "flipsAvoided": 46,
+          "precision": 0.23,
+          "pnlDelta": 92.23542566086905,
+          "newPnl": 215.57145365147764,
+          "newMaxDrawdown": 198.5848389042205
+        }
+      }
+    },
+    {
+      "evFloor": -0.25,
+      "splits": {
+        "train": {
+          "entries": 3833,
+          "blocked": 1406,
+          "blockRate": 0.3668145056091834,
+          "flipsAvoided": 257,
+          "precision": 0.18278805120910385,
+          "pnlDelta": 379.0361286773404,
+          "newPnl": -254.97679861049934,
+          "newMaxDrawdown": 453.443274250611
+        },
+        "validation": {
+          "entries": 1386,
+          "blocked": 449,
+          "blockRate": 0.32395382395382394,
+          "flipsAvoided": 74,
+          "precision": 0.16481069042316257,
+          "pnlDelta": -80.42754971501687,
+          "newPnl": -165.6268911548291,
+          "newMaxDrawdown": 265.11586964402215
+        },
+        "holdout": {
+          "entries": 2083,
+          "blocked": 717,
+          "blockRate": 0.3442150744119059,
+          "flipsAvoided": 120,
+          "precision": 0.16736401673640167,
+          "pnlDelta": 179.59759565881268,
+          "newPnl": 302.93362364942124,
+          "newMaxDrawdown": 166.5277197229123
+        }
+      }
+    },
+    {
+      "evFloor": 0.0,
+      "splits": {
+        "train": {
+          "entries": 3833,
+          "blocked": 2514,
+          "blockRate": 0.6558831202713279,
+          "flipsAvoided": 432,
+          "precision": 0.1718377088305489,
+          "pnlDelta": 589.3648925601666,
+          "newPnl": -44.648034727673036,
+          "newMaxDrawdown": 241.58118804880544
+        },
+        "validation": {
+          "entries": 1386,
+          "blocked": 863,
+          "blockRate": 0.6226551226551227,
+          "flipsAvoided": 146,
+          "precision": 0.16917728852838934,
+          "pnlDelta": 74.92242108071945,
+          "newPnl": -10.276920359092728,
+          "newMaxDrawdown": 166.62005131993863
+        },
+        "holdout": {
+          "entries": 2083,
+          "blocked": 1368,
+          "blockRate": 0.656745079212674,
+          "flipsAvoided": 210,
+          "precision": 0.15350877192982457,
+          "pnlDelta": 191.25412907978733,
+          "newPnl": 314.5901570703959,
+          "newMaxDrawdown": 133.4358918150093
+        }
+      }
+    }
+  ],
+  "marketRawCandidates": [
+    {
+      "evFloor": -4.0,
+      "splits": {
+        "train": {
+          "entries": 3833,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": -634.0129272878398,
+          "newMaxDrawdown": 662.6004002002143
+        },
+        "validation": {
+          "entries": 1386,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": -85.19934143981216,
+          "newMaxDrawdown": 200.9353746889728
+        },
+        "holdout": {
+          "entries": 2083,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": 123.33602799060851,
+          "newMaxDrawdown": 201.5975308494799
+        }
+      }
+    },
+    {
+      "evFloor": -3.0,
+      "splits": {
+        "train": {
+          "entries": 3833,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": -634.0129272878398,
+          "newMaxDrawdown": 662.6004002002143
+        },
+        "validation": {
+          "entries": 1386,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": -85.19934143981216,
+          "newMaxDrawdown": 200.9353746889728
+        },
+        "holdout": {
+          "entries": 2083,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": 123.33602799060851,
+          "newMaxDrawdown": 201.5975308494799
+        }
+      }
+    },
+    {
+      "evFloor": -2.5,
+      "splits": {
+        "train": {
+          "entries": 3833,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": -634.0129272878398,
+          "newMaxDrawdown": 662.6004002002143
+        },
+        "validation": {
+          "entries": 1386,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": -85.19934143981216,
+          "newMaxDrawdown": 200.9353746889728
+        },
+        "holdout": {
+          "entries": 2083,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": 123.33602799060851,
+          "newMaxDrawdown": 201.5975308494799
+        }
+      }
+    },
+    {
+      "evFloor": -2.0,
+      "splits": {
+        "train": {
+          "entries": 3833,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": -634.0129272878398,
+          "newMaxDrawdown": 662.6004002002143
+        },
+        "validation": {
+          "entries": 1386,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": -85.19934143981216,
+          "newMaxDrawdown": 200.9353746889728
+        },
+        "holdout": {
+          "entries": 2083,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": 123.33602799060851,
+          "newMaxDrawdown": 201.5975308494799
+        }
+      }
+    },
+    {
+      "evFloor": -1.5,
+      "splits": {
+        "train": {
+          "entries": 3833,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": -634.0129272878398,
+          "newMaxDrawdown": 662.6004002002143
+        },
+        "validation": {
+          "entries": 1386,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": -85.19934143981216,
+          "newMaxDrawdown": 200.9353746889728
+        },
+        "holdout": {
+          "entries": 2083,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": 123.33602799060851,
+          "newMaxDrawdown": 201.5975308494799
+        }
+      }
+    },
+    {
+      "evFloor": -1.0,
+      "splits": {
+        "train": {
+          "entries": 3833,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": -634.0129272878398,
+          "newMaxDrawdown": 662.6004002002143
+        },
+        "validation": {
+          "entries": 1386,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": -85.19934143981216,
+          "newMaxDrawdown": 200.9353746889728
+        },
+        "holdout": {
+          "entries": 2083,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": 123.33602799060851,
+          "newMaxDrawdown": 201.5975308494799
+        }
+      }
+    },
+    {
+      "evFloor": -0.75,
+      "splits": {
+        "train": {
+          "entries": 3833,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": -634.0129272878398,
+          "newMaxDrawdown": 662.6004002002143
+        },
+        "validation": {
+          "entries": 1386,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": -85.19934143981216,
+          "newMaxDrawdown": 200.9353746889728
+        },
+        "holdout": {
+          "entries": 2083,
+          "blocked": 0,
+          "blockRate": 0.0,
+          "flipsAvoided": 0,
+          "precision": null,
+          "pnlDelta": -0.0,
+          "newPnl": 123.33602799060851,
+          "newMaxDrawdown": 201.5975308494799
+        }
+      }
+    },
+    {
+      "evFloor": -0.5,
+      "splits": {
+        "train": {
+          "entries": 3833,
+          "blocked": 36,
+          "blockRate": 0.009392121054004696,
+          "flipsAvoided": 9,
+          "precision": 0.25,
+          "pnlDelta": -79.39540256643404,
+          "newPnl": -713.4083298542738,
+          "newMaxDrawdown": 726.8337329975062
+        },
+        "validation": {
+          "entries": 1386,
+          "blocked": 13,
+          "blockRate": 0.00937950937950938,
+          "flipsAvoided": 5,
+          "precision": 0.38461538461538464,
+          "pnlDelta": -1.6972938735480287,
+          "newPnl": -86.8966353133602,
+          "newMaxDrawdown": 209.08012880675267
+        },
+        "holdout": {
+          "entries": 2083,
+          "blocked": 6,
+          "blockRate": 0.0028804608737397984,
+          "flipsAvoided": 1,
+          "precision": 0.16666666666666666,
+          "pnlDelta": -22.18749100597248,
+          "newPnl": 101.14853698463605,
+          "newMaxDrawdown": 205.31284361415015
+        }
+      }
+    },
+    {
+      "evFloor": -0.25,
+      "splits": {
+        "train": {
+          "entries": 3833,
+          "blocked": 1873,
+          "blockRate": 0.4886511870597443,
+          "flipsAvoided": 552,
+          "precision": 0.2947143619861185,
+          "pnlDelta": 302.6871854441482,
+          "newPnl": -331.32574184369156,
+          "newMaxDrawdown": 362.0391667350759
+        },
+        "validation": {
+          "entries": 1386,
+          "blocked": 716,
+          "blockRate": 0.5165945165945166,
+          "flipsAvoided": 206,
+          "precision": 0.2877094972067039,
+          "pnlDelta": -5.614201934702237,
+          "newPnl": -90.81354337451438,
+          "newMaxDrawdown": 175.58286040792842
+        },
+        "holdout": {
+          "entries": 2083,
+          "blocked": 932,
+          "blockRate": 0.4474315890542487,
+          "flipsAvoided": 259,
+          "precision": 0.2778969957081545,
+          "pnlDelta": -90.43871467679851,
+          "newPnl": 32.89731331380999,
+          "newMaxDrawdown": 105.90599717981789
+        }
+      }
+    },
+    {
+      "evFloor": 0.0,
+      "splits": {
+        "train": {
+          "entries": 3833,
+          "blocked": 3833,
+          "blockRate": 1.0,
+          "flipsAvoided": 781,
+          "precision": 0.20375684842160188,
+          "pnlDelta": 634.0129272878398,
+          "newPnl": 0.0,
+          "newMaxDrawdown": 0.0
+        },
+        "validation": {
+          "entries": 1386,
+          "blocked": 1386,
+          "blockRate": 1.0,
+          "flipsAvoided": 285,
+          "precision": 0.20562770562770563,
+          "pnlDelta": 85.19934143981216,
+          "newPnl": 0.0,
+          "newMaxDrawdown": 0.0
+        },
+        "holdout": {
+          "entries": 2083,
+          "blocked": 2083,
+          "blockRate": 1.0,
+          "flipsAvoided": 374,
+          "precision": 0.17954872779644743,
+          "pnlDelta": -123.33602799060851,
+          "newPnl": 0.0,
+          "newMaxDrawdown": 0.0
+        }
+      }
+    }
+  ],
+  "selected": {
+    "evFloor": 0.0,
+    "splits": {
+      "train": {
+        "entries": 3833,
+        "blocked": 2514,
+        "blockRate": 0.6558831202713279,
+        "flipsAvoided": 432,
+        "precision": 0.1718377088305489,
+        "pnlDelta": 589.3648925601666,
+        "newPnl": -44.648034727673036,
+        "newMaxDrawdown": 241.58118804880544
+      },
+      "validation": {
+        "entries": 1386,
+        "blocked": 863,
+        "blockRate": 0.6226551226551227,
+        "flipsAvoided": 146,
+        "precision": 0.16917728852838934,
+        "pnlDelta": 74.92242108071945,
+        "newPnl": -10.276920359092728,
+        "newMaxDrawdown": 166.62005131993863
+      },
+      "holdout": {
+        "entries": 2083,
+        "blocked": 1368,
+        "blockRate": 0.656745079212674,
+        "flipsAvoided": 210,
+        "precision": 0.15350877192982457,
+        "pnlDelta": 191.25412907978733,
+        "newPnl": 314.5901570703959,
+        "newMaxDrawdown": 133.4358918150093
+      }
+    }
+  },
+  "selectedBootstrap": {
+    "train": {
+      "days": 49,
+      "positiveDays": 31,
+      "negativeDays": 18,
+      "ci95Total": [
+        191.92571704378193,
+        990.727979856494
+      ],
+      "probabilityPositive": 0.99858
+    },
+    "validation": {
+      "days": 16,
+      "positiveDays": 9,
+      "negativeDays": 7,
+      "ci95Total": [
+        -220.5028054875267,
+        373.9177550810135
+      ],
+      "probabilityPositive": 0.68618
+    },
+    "holdout": {
+      "days": 26,
+      "positiveDays": 16,
+      "negativeDays": 10,
+      "ci95Total": [
+        -121.4553751448625,
+        515.1568378457074
+      ],
+      "probabilityPositive": 0.87996
+    },
+    "all": {
+      "days": 91,
+      "positiveDays": 56,
+      "negativeDays": 35,
+      "ci95Total": [
+        261.57376831689714,
+        1448.285364611861
+      ],
+      "probabilityPositive": 0.99768
+    }
+  },
+  "boundedSelection": {
+    "criterion": "same score with maximum 15% block rate in train and validation",
+    "selectedEvFloorUsdPer10": -0.5,
+    "result": {
+      "evFloor": -0.5,
+      "splits": {
+        "train": {
+          "entries": 3833,
+          "blocked": 509,
+          "blockRate": 0.1327941560135664,
+          "flipsAvoided": 119,
+          "precision": 0.2337917485265226,
+          "pnlDelta": 133.0159463965141,
+          "newPnl": -500.9969808913256,
+          "newMaxDrawdown": 625.1042089463555
+        },
+        "validation": {
+          "entries": 1386,
+          "blocked": 136,
+          "blockRate": 0.09812409812409813,
+          "flipsAvoided": 35,
+          "precision": 0.25735294117647056,
+          "pnlDelta": 16.537285661290646,
+          "newPnl": -68.66205577852156,
+          "newMaxDrawdown": 160.2738563987345
+        },
+        "holdout": {
+          "entries": 2083,
+          "blocked": 200,
+          "blockRate": 0.09601536245799328,
+          "flipsAvoided": 46,
+          "precision": 0.23,
+          "pnlDelta": 92.23542566086905,
+          "newPnl": 215.57145365147764,
+          "newMaxDrawdown": 198.5848389042205
+        }
+      }
+    },
+    "bootstrap": {
+      "train": {
+        "days": 49,
+        "positiveDays": 32,
+        "negativeDays": 17,
+        "ci95Total": [
+          -81.93181550143115,
+          349.6023758726613
+        ],
+        "probabilityPositive": 0.88686
+      },
+      "validation": {
+        "days": 16,
+        "positiveDays": 8,
+        "negativeDays": 8,
+        "ci95Total": [
+          -100.457307738302,
+          132.45510638581302
+        ],
+        "probabilityPositive": 0.60592
+      },
+      "holdout": {
+        "days": 26,
+        "positiveDays": 15,
+        "negativeDays": 11,
+        "ci95Total": [
+          -33.82305699905838,
+          239.50330464632438
+        ],
+        "probabilityPositive": 0.91212
+      },
+      "all": {
+        "days": 91,
+        "positiveDays": 55,
+        "negativeDays": 36,
+        "ci95Total": [
+          -37.71470345009808,
+          526.6207793239819
+        ],
+        "probabilityPositive": 0.95594
+      }
+    }
+  },
+  "fixedPFlip40Reference": {
+    "train": {
+      "entries": 3833,
+      "blocked": 136,
+      "blockRate": 0.035481346204017744,
+      "flipsAvoided": 63,
+      "precision": 0.4632352941176471,
+      "pnlDelta": 150.9609132059993,
+      "newPnl": -483.05201408184064,
+      "newMaxDrawdown": 553.866869602175
+    },
+    "validation": {
+      "entries": 1386,
+      "blocked": 61,
+      "blockRate": 0.04401154401154401,
+      "flipsAvoided": 27,
+      "precision": 0.4426229508196721,
+      "pnlDelta": 50.45385706198497,
+      "newPnl": -34.7454843778272,
+      "newMaxDrawdown": 162.8314897655166
+    },
+    "holdout": {
+      "entries": 2083,
+      "blocked": 51,
+      "blockRate": 0.024483917426788286,
+      "flipsAvoided": 25,
+      "precision": 0.49019607843137253,
+      "pnlDelta": 72.27308886088824,
+      "newPnl": 195.60911685149676,
+      "newMaxDrawdown": 157.3907882165817
+    }
+  },
+  "fixedPFlip40Bootstrap": {
+    "train": {
+      "days": 49,
+      "positiveDays": 31,
+      "negativeDays": 17,
+      "ci95Total": [
+        -21.2268742126242,
+        327.0661189303864
+      ],
+      "probabilityPositive": 0.95678
+    },
+    "validation": {
+      "days": 16,
+      "positiveDays": 10,
+      "negativeDays": 6,
+      "ci95Total": [
+        -43.301573811908206,
+        140.7343153119247
+      ],
+      "probabilityPositive": 0.85736
+    },
+    "holdout": {
+      "days": 26,
+      "positiveDays": 11,
+      "negativeDays": 10,
+      "ci95Total": [
+        -42.98280142179009,
+        202.10804398508068
+      ],
+      "probabilityPositive": 0.87822
+    },
+    "all": {
+      "days": 91,
+      "positiveDays": 52,
+      "negativeDays": 33,
+      "ci95Total": [
+        46.2132962663038,
+        507.164486156636
+      ],
+      "probabilityPositive": 0.991
+    }
+  },
+  "warning": "July remains temporally out-of-sample for model fitting and floor selection, but is not an untouched analyst holdout after prior anti-flip research."
+}

@@ -1,0 +1,1808 @@
+{
+  "generatedAt": "2026-07-27T05:11:03.398Z",
+  "source": "https://gamma-api.polymarket.com/events/keyset",
+  "range": {
+    "minEventStart": "2026-04-27T03:50:00Z",
+    "maxEventStart": "2026-07-26T16:00:00Z"
+  },
+  "gammaEventsFetched": 26060,
+  "targetEvents": 23829,
+  "canonicalOutcomesInRange": 26060,
+  "targetCanonicalOutcomes": 23829,
+  "featureValidation": {
+    "localEvents": 23829,
+    "matchedEvents": 23829,
+    "localWinnerMismatches": 236,
+    "mismatchRate": 0.009903898610936254,
+    "mismatches": [
+      {
+        "eventStart": "2026-04-27T15:40:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 2.3588400000007823
+      },
+      {
+        "eventStart": "2026-04-27T18:35:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -1.5954366800287971
+      },
+      {
+        "eventStart": "2026-04-28T04:30:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 4.123270669093472
+      },
+      {
+        "eventStart": "2026-04-29T07:05:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -9.019489876212901
+      },
+      {
+        "eventStart": "2026-04-29T12:05:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -1.2991044626542134
+      },
+      {
+        "eventStart": "2026-04-29T17:10:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -1.2139734356460394
+      },
+      {
+        "eventStart": "2026-05-01T07:35:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 2.676062167112832
+      },
+      {
+        "eventStart": "2026-05-01T18:25:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 26.435165683622472
+      },
+      {
+        "eventStart": "2026-05-02T07:10:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -1.5600211240380304
+      },
+      {
+        "eventStart": "2026-05-02T09:10:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 6.628959461202612
+      },
+      {
+        "eventStart": "2026-05-02T11:05:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 6.544964586239075
+      },
+      {
+        "eventStart": "2026-05-02T17:10:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -1.5992286312830402
+      },
+      {
+        "eventStart": "2026-05-03T05:20:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.1381600000022445
+      },
+      {
+        "eventStart": "2026-05-04T12:25:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": null
+      },
+      {
+        "eventStart": "2026-05-04T13:45:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": null
+      },
+      {
+        "eventStart": "2026-05-04T17:35:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.6801167385419831
+      },
+      {
+        "eventStart": "2026-05-05T15:05:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -11.67545185952622
+      },
+      {
+        "eventStart": "2026-05-06T12:40:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.3748331796232378
+      },
+      {
+        "eventStart": "2026-05-06T16:45:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.382136564629036
+      },
+      {
+        "eventStart": "2026-05-06T22:35:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.9241253981308546
+      },
+      {
+        "eventStart": "2026-05-07T02:25:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 3.398910000003525
+      },
+      {
+        "eventStart": "2026-05-07T19:25:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 1.703754079193459
+      },
+      {
+        "eventStart": "2026-05-08T02:40:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.9571353499195538
+      },
+      {
+        "eventStart": "2026-05-08T21:25:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 1.663701765355654
+      },
+      {
+        "eventStart": "2026-05-08T22:20:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 9.89842547266744
+      },
+      {
+        "eventStart": "2026-05-09T19:10:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.793082430420327
+      },
+      {
+        "eventStart": "2026-05-10T08:35:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.34084404091117904
+      },
+      {
+        "eventStart": "2026-05-10T11:45:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -6.729347942746244
+      },
+      {
+        "eventStart": "2026-05-10T18:00:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.5792598209663993
+      },
+      {
+        "eventStart": "2026-05-11T02:40:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.15394116891548038
+      },
+      {
+        "eventStart": "2026-05-11T03:55:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -2.485999999989872
+      },
+      {
+        "eventStart": "2026-05-11T23:50:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.24394091173599008
+      },
+      {
+        "eventStart": "2026-05-12T20:20:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -1.8220520251052221
+      },
+      {
+        "eventStart": "2026-05-13T07:50:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 7.920607053893036
+      },
+      {
+        "eventStart": "2026-05-13T17:20:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -1.7258333319914527
+      },
+      {
+        "eventStart": "2026-05-13T19:10:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.3272957316803513
+      },
+      {
+        "eventStart": "2026-05-14T05:00:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -1.5015335080970544
+      },
+      {
+        "eventStart": "2026-05-15T04:35:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 3.123774201158085
+      },
+      {
+        "eventStart": "2026-05-15T06:55:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 2.874985517410096
+      },
+      {
+        "eventStart": "2026-05-16T00:10:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 1.5243659596308134
+      },
+      {
+        "eventStart": "2026-05-16T01:00:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.3313679205457447
+      },
+      {
+        "eventStart": "2026-05-16T05:50:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.26503312411659863
+      },
+      {
+        "eventStart": "2026-05-17T07:05:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -2.6751862777164206
+      },
+      {
+        "eventStart": "2026-05-17T09:20:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -1.5380642036325298
+      },
+      {
+        "eventStart": "2026-05-18T05:25:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 1.9132700349437073
+      },
+      {
+        "eventStart": "2026-05-19T03:00:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.7121939812495839
+      },
+      {
+        "eventStart": "2026-05-19T12:15:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 1.1966447357553989
+      },
+      {
+        "eventStart": "2026-05-19T21:15:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.13899999999557622
+      },
+      {
+        "eventStart": "2026-05-20T05:55:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -3.354493494669441
+      },
+      {
+        "eventStart": "2026-05-20T10:30:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 20.22066297454876
+      },
+      {
+        "eventStart": "2026-05-20T18:25:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.220069933187915
+      },
+      {
+        "eventStart": "2026-05-21T06:50:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.8526906725019217
+      },
+      {
+        "eventStart": "2026-05-21T16:45:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -3.245654075915809
+      },
+      {
+        "eventStart": "2026-05-21T17:45:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 3.745317718392471
+      },
+      {
+        "eventStart": "2026-05-22T15:55:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": null
+      },
+      {
+        "eventStart": "2026-05-22T22:35:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -8.542504324723268
+      },
+      {
+        "eventStart": "2026-05-23T18:20:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 5.954616902570706
+      },
+      {
+        "eventStart": "2026-05-24T03:55:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -42.14779636882304
+      },
+      {
+        "eventStart": "2026-05-24T07:30:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 7.154181862191763
+      },
+      {
+        "eventStart": "2026-05-24T12:25:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -1.4984742720262147
+      },
+      {
+        "eventStart": "2026-05-24T21:45:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 3.8339500632573618
+      },
+      {
+        "eventStart": "2026-05-25T03:00:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -23.68982759017672
+      },
+      {
+        "eventStart": "2026-05-25T03:50:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.11760807971586473
+      },
+      {
+        "eventStart": "2026-05-25T08:00:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 5.662583259749226
+      },
+      {
+        "eventStart": "2026-05-25T13:30:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -5.305845869661425
+      },
+      {
+        "eventStart": "2026-05-25T17:05:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -1.110417583520757
+      },
+      {
+        "eventStart": "2026-05-26T02:35:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -5.730941263347631
+      },
+      {
+        "eventStart": "2026-05-26T13:30:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.3942154313699575
+      },
+      {
+        "eventStart": "2026-05-27T11:55:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 3.0228642558213323
+      },
+      {
+        "eventStart": "2026-05-27T18:45:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.2763036837714026
+      },
+      {
+        "eventStart": "2026-05-28T11:00:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 1.2560243769548833
+      },
+      {
+        "eventStart": "2026-05-30T01:10:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -1.0601905850780895
+      },
+      {
+        "eventStart": "2026-05-30T09:30:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -10.784534204547526
+      },
+      {
+        "eventStart": "2026-05-30T11:50:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 6.621737845503958
+      },
+      {
+        "eventStart": "2026-05-30T12:45:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -10.807685734820552
+      },
+      {
+        "eventStart": "2026-05-30T18:05:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.31322708567313384
+      },
+      {
+        "eventStart": "2026-05-30T21:55:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 12.475391567364568
+      },
+      {
+        "eventStart": "2026-05-30T22:25:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 9.909788883131114
+      },
+      {
+        "eventStart": "2026-05-31T05:25:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -2.9726551838830346
+      },
+      {
+        "eventStart": "2026-05-31T09:10:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -14.121651691573788
+      },
+      {
+        "eventStart": "2026-05-31T09:40:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 12.365338879448245
+      },
+      {
+        "eventStart": "2026-05-31T10:40:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 7.286691332148621
+      },
+      {
+        "eventStart": "2026-05-31T13:20:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 1.2348114927735878
+      },
+      {
+        "eventStart": "2026-05-31T14:35:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -3.2790856094215997
+      },
+      {
+        "eventStart": "2026-06-01T02:55:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -1.9108041910803877
+      },
+      {
+        "eventStart": "2026-06-01T07:15:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.6973489698139019
+      },
+      {
+        "eventStart": "2026-06-01T16:10:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -11.347804615346831
+      },
+      {
+        "eventStart": "2026-06-01T20:20:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -2.346524329346721
+      },
+      {
+        "eventStart": "2026-06-01T20:45:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.10173519820091315
+      },
+      {
+        "eventStart": "2026-06-01T23:40:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 1.8704620915814303
+      },
+      {
+        "eventStart": "2026-06-02T23:25:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 2.086951869277982
+      },
+      {
+        "eventStart": "2026-06-02T23:35:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 1.2581736739666667
+      },
+      {
+        "eventStart": "2026-06-05T19:00:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 14.761855436321639
+      },
+      {
+        "eventStart": "2026-06-06T17:50:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -10.967330704450433
+      },
+      {
+        "eventStart": "2026-06-06T18:00:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.26456745395989856
+      },
+      {
+        "eventStart": "2026-06-07T18:00:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -2.3868403207234223
+      },
+      {
+        "eventStart": "2026-06-08T01:35:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 4.56078193441499
+      },
+      {
+        "eventStart": "2026-06-08T03:55:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.474395619945426
+      },
+      {
+        "eventStart": "2026-06-08T13:35:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -8.650668090791442
+      },
+      {
+        "eventStart": "2026-06-08T15:00:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -3.137665071284573
+      },
+      {
+        "eventStart": "2026-06-08T17:05:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 4.052803185099037
+      },
+      {
+        "eventStart": "2026-06-09T00:15:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -1.3636694556844304
+      },
+      {
+        "eventStart": "2026-06-09T01:05:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 5.082667424729152
+      },
+      {
+        "eventStart": "2026-06-09T12:10:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 20.249629999998433
+      },
+      {
+        "eventStart": "2026-06-10T15:10:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -3.164715191691357
+      },
+      {
+        "eventStart": "2026-06-11T01:40:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -1.909392541354464
+      },
+      {
+        "eventStart": "2026-06-12T01:05:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.5880500783387106
+      },
+      {
+        "eventStart": "2026-06-12T22:45:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -8.515821480250452
+      },
+      {
+        "eventStart": "2026-06-13T00:10:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 10.48037180313986
+      },
+      {
+        "eventStart": "2026-06-13T01:30:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -8.34678499999427
+      },
+      {
+        "eventStart": "2026-06-13T05:35:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 2.845365288652829
+      },
+      {
+        "eventStart": "2026-06-13T06:35:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.0832163138766191
+      },
+      {
+        "eventStart": "2026-06-13T07:55:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.38125325088913087
+      },
+      {
+        "eventStart": "2026-06-13T11:10:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 9.686954064643942
+      },
+      {
+        "eventStart": "2026-06-14T01:25:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.07408281418611296
+      },
+      {
+        "eventStart": "2026-06-14T12:00:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 1.3025564235722413
+      },
+      {
+        "eventStart": "2026-06-14T16:05:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.5764859822884318
+      },
+      {
+        "eventStart": "2026-06-14T22:50:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -2.1993815913665458
+      },
+      {
+        "eventStart": "2026-06-15T06:05:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.14002835399878677
+      },
+      {
+        "eventStart": "2026-06-15T15:30:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.1653417400229955
+      },
+      {
+        "eventStart": "2026-06-16T16:50:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -5.545537231009803
+      },
+      {
+        "eventStart": "2026-06-16T17:15:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 1.7175587932142662
+      },
+      {
+        "eventStart": "2026-06-16T17:20:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 9.494108169717947
+      },
+      {
+        "eventStart": "2026-06-17T04:05:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 3.614430000001448
+      },
+      {
+        "eventStart": "2026-06-18T11:40:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 1.3235566150033264
+      },
+      {
+        "eventStart": "2026-06-18T22:25:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 1.2758256448214524
+      },
+      {
+        "eventStart": "2026-06-19T02:45:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 2.3648094095260603
+      },
+      {
+        "eventStart": "2026-06-19T12:20:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -3.28917750200344
+      },
+      {
+        "eventStart": "2026-06-19T23:40:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 1.3121537199767772
+      },
+      {
+        "eventStart": "2026-06-20T11:05:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 6.2730872779211495
+      },
+      {
+        "eventStart": "2026-06-20T15:20:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -4.93490116069006
+      },
+      {
+        "eventStart": "2026-06-20T19:10:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.3336902511000517
+      },
+      {
+        "eventStart": "2026-06-20T19:15:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.9425142025356763
+      },
+      {
+        "eventStart": "2026-06-20T19:50:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -6.034143831304391
+      },
+      {
+        "eventStart": "2026-06-20T23:20:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.5125914792515687
+      },
+      {
+        "eventStart": "2026-06-21T01:50:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 1.0698009651969187
+      },
+      {
+        "eventStart": "2026-06-21T04:05:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -1.6638373826572206
+      },
+      {
+        "eventStart": "2026-06-21T06:55:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.31661347332556034
+      },
+      {
+        "eventStart": "2026-06-21T12:30:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -3.147875815324369
+      },
+      {
+        "eventStart": "2026-06-22T01:40:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -1.9546658679537359
+      },
+      {
+        "eventStart": "2026-06-22T04:35:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.4091233256549458
+      },
+      {
+        "eventStart": "2026-06-22T20:40:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -4.085608381414204
+      },
+      {
+        "eventStart": "2026-06-23T02:20:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 3.422586030064849
+      },
+      {
+        "eventStart": "2026-06-23T15:20:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 3.7486900484218495
+      },
+      {
+        "eventStart": "2026-06-25T01:10:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 3.988416046333441
+      },
+      {
+        "eventStart": "2026-06-25T14:45:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 6.535606683406513
+      },
+      {
+        "eventStart": "2026-06-25T16:00:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -1.7249105783412233
+      },
+      {
+        "eventStart": "2026-06-25T22:15:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -3.0712738574147807
+      },
+      {
+        "eventStart": "2026-06-26T10:15:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -1.1423082367982715
+      },
+      {
+        "eventStart": "2026-06-27T15:20:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 7.957420667851693
+      },
+      {
+        "eventStart": "2026-06-27T22:10:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -1.682575479375373
+      },
+      {
+        "eventStart": "2026-06-28T03:45:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.29986945493146777
+      },
+      {
+        "eventStart": "2026-06-28T14:25:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 1.191472704485932
+      },
+      {
+        "eventStart": "2026-06-28T17:45:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -5.248169232450891
+      },
+      {
+        "eventStart": "2026-06-28T21:10:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.12870141505118227
+      },
+      {
+        "eventStart": "2026-06-28T21:50:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.23539347114274278
+      },
+      {
+        "eventStart": "2026-06-30T03:35:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.4866596802166896
+      },
+      {
+        "eventStart": "2026-06-30T03:55:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -1.824944446219888
+      },
+      {
+        "eventStart": "2026-06-30T07:10:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 4.349522735195933
+      },
+      {
+        "eventStart": "2026-07-01T09:45:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 19.117842542080325
+      },
+      {
+        "eventStart": "2026-07-01T20:25:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.1479416650981875
+      },
+      {
+        "eventStart": "2026-07-01T21:35:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.6502033550859778
+      },
+      {
+        "eventStart": "2026-07-02T14:05:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -1.159053081428283
+      },
+      {
+        "eventStart": "2026-07-02T15:50:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.7485625882909517
+      },
+      {
+        "eventStart": "2026-07-03T07:30:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 3.4548256134658004
+      },
+      {
+        "eventStart": "2026-07-03T16:05:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.3835365850973176
+      },
+      {
+        "eventStart": "2026-07-03T22:10:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.029335242790693883
+      },
+      {
+        "eventStart": "2026-07-03T23:55:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -13.136848218549858
+      },
+      {
+        "eventStart": "2026-07-04T01:30:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -1.7522111121361377
+      },
+      {
+        "eventStart": "2026-07-04T04:55:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.3062861486687325
+      },
+      {
+        "eventStart": "2026-07-04T13:35:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -7.190785121194494
+      },
+      {
+        "eventStart": "2026-07-04T14:15:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.4197036709956592
+      },
+      {
+        "eventStart": "2026-07-04T21:00:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.8726431004033657
+      },
+      {
+        "eventStart": "2026-07-05T00:50:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 2.8807331672214787
+      },
+      {
+        "eventStart": "2026-07-05T05:55:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -7.026520651234023
+      },
+      {
+        "eventStart": "2026-07-05T08:30:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": null
+      },
+      {
+        "eventStart": "2026-07-05T11:40:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -1.8328321348817553
+      },
+      {
+        "eventStart": "2026-07-05T12:05:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": null
+      },
+      {
+        "eventStart": "2026-07-05T13:20:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -3.501388573371514
+      },
+      {
+        "eventStart": "2026-07-05T16:20:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.8744239492734778
+      },
+      {
+        "eventStart": "2026-07-05T16:50:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": null
+      },
+      {
+        "eventStart": "2026-07-05T17:30:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 5.555352333831252
+      },
+      {
+        "eventStart": "2026-07-05T19:15:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": null
+      },
+      {
+        "eventStart": "2026-07-06T17:25:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.499370958757936
+      },
+      {
+        "eventStart": "2026-07-07T04:10:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.6061925893227453
+      },
+      {
+        "eventStart": "2026-07-07T17:55:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.7142124364327174
+      },
+      {
+        "eventStart": "2026-07-08T00:25:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 5.6108513203434995
+      },
+      {
+        "eventStart": "2026-07-08T05:30:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 2.8206700000009732
+      },
+      {
+        "eventStart": "2026-07-08T12:35:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -1.227965662299539
+      },
+      {
+        "eventStart": "2026-07-08T16:00:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 1.4546716134718736
+      },
+      {
+        "eventStart": "2026-07-09T07:00:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -6.377346566565393
+      },
+      {
+        "eventStart": "2026-07-09T08:00:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -3.7791939104281482
+      },
+      {
+        "eventStart": "2026-07-09T14:10:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -2.6722571430073003
+      },
+      {
+        "eventStart": "2026-07-09T22:05:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.26110505788528826
+      },
+      {
+        "eventStart": "2026-07-10T10:35:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 29.21836077929038
+      },
+      {
+        "eventStart": "2026-07-10T15:55:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 18.452944028307684
+      },
+      {
+        "eventStart": "2026-07-11T00:05:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -3.081850000002305
+      },
+      {
+        "eventStart": "2026-07-11T01:40:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.18810355565801729
+      },
+      {
+        "eventStart": "2026-07-11T07:25:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 2.088131120101025
+      },
+      {
+        "eventStart": "2026-07-12T02:40:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.7364221170355449
+      },
+      {
+        "eventStart": "2026-07-15T02:00:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.07667578256223351
+      },
+      {
+        "eventStart": "2026-07-15T12:10:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 27.15082940681168
+      },
+      {
+        "eventStart": "2026-07-16T04:55:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.10426229290169431
+      },
+      {
+        "eventStart": "2026-07-17T02:25:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -5.905992637221061
+      },
+      {
+        "eventStart": "2026-07-17T06:10:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 3.038053359290643
+      },
+      {
+        "eventStart": "2026-07-17T06:35:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.706473649617692
+      },
+      {
+        "eventStart": "2026-07-17T20:10:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -3.1295423862102325
+      },
+      {
+        "eventStart": "2026-07-17T21:10:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.22383901062130462
+      },
+      {
+        "eventStart": "2026-07-17T23:50:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -1.2652185112528969
+      },
+      {
+        "eventStart": "2026-07-18T02:50:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": null
+      },
+      {
+        "eventStart": "2026-07-18T07:55:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -3.055974622729991
+      },
+      {
+        "eventStart": "2026-07-18T09:55:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.476332086014736
+      },
+      {
+        "eventStart": "2026-07-18T17:45:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.7426924085375504
+      },
+      {
+        "eventStart": "2026-07-19T01:20:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 1.3358642541716108
+      },
+      {
+        "eventStart": "2026-07-19T07:55:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": null
+      },
+      {
+        "eventStart": "2026-07-20T02:05:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.2103672392986482
+      },
+      {
+        "eventStart": "2026-07-20T15:25:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 1.3502161721407901
+      },
+      {
+        "eventStart": "2026-07-21T01:50:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.48125832855293993
+      },
+      {
+        "eventStart": "2026-07-21T06:50:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.11561493786575738
+      },
+      {
+        "eventStart": "2026-07-21T12:20:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 1.2521342284308048
+      },
+      {
+        "eventStart": "2026-07-22T11:50:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": null
+      },
+      {
+        "eventStart": "2026-07-22T20:15:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.8873844515183009
+      },
+      {
+        "eventStart": "2026-07-23T04:55:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 6.054001201948267
+      },
+      {
+        "eventStart": "2026-07-24T01:35:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.3143419080224703
+      },
+      {
+        "eventStart": "2026-07-24T04:55:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.09219869921798818
+      },
+      {
+        "eventStart": "2026-07-24T10:25:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.03521320560685126
+      },
+      {
+        "eventStart": "2026-07-24T11:55:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.9749728736278485
+      },
+      {
+        "eventStart": "2026-07-24T15:50:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 6.159591136412928
+      },
+      {
+        "eventStart": "2026-07-24T18:30:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.522013726469595
+      },
+      {
+        "eventStart": "2026-07-24T21:25:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 1.319134086574195
+      },
+      {
+        "eventStart": "2026-07-24T21:45:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 8.469234301206598
+      },
+      {
+        "eventStart": "2026-07-25T00:10:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 0.23647555816569366
+      },
+      {
+        "eventStart": "2026-07-25T02:20:00.000Z",
+        "localWinner": 1,
+        "gammaWinner": -1,
+        "chainlinkMargin": -0.07523585235321661
+      },
+      {
+        "eventStart": "2026-07-25T07:15:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": 1.9213466029978008
+      },
+      {
+        "eventStart": "2026-07-26T03:25:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": null
+      },
+      {
+        "eventStart": "2026-07-26T07:55:00.000Z",
+        "localWinner": -1,
+        "gammaWinner": 1,
+        "chainlinkMargin": null
+      }
+    ],
+    "byTau": [
+      {
+        "tau": 60,
+        "n": 23827,
+        "localFlips": 3714,
+        "localRate": 0.1558735887858312,
+        "canonicalFlips": 3760,
+        "canonicalRate": 0.15780417173794434,
+        "canonicalMarketAuc": 0.8457075247389331
+      },
+      {
+        "tau": 30,
+        "n": 23827,
+        "localFlips": 2645,
+        "localRate": 0.11100851974650607,
+        "canonicalFlips": 2709,
+        "canonicalRate": 0.11369454820162,
+        "canonicalMarketAuc": 0.9025658474585544
+      },
+      {
+        "tau": 20,
+        "n": 23828,
+        "localFlips": 2171,
+        "localRate": 0.09111129763303677,
+        "canonicalFlips": 2241,
+        "canonicalRate": 0.09404901796206144,
+        "canonicalMarketAuc": 0.9233428414687662
+      },
+      {
+        "tau": 10,
+        "n": 23822,
+        "localFlips": 1654,
+        "localRate": 0.0694316178322559,
+        "canonicalFlips": 1752,
+        "canonicalRate": 0.07354546217781882,
+        "canonicalMarketAuc": 0.9492869176116673
+      }
+    ],
+    "holdoutSimpleRuleTau30": {
+      "n": 6608,
+      "signals": 890,
+      "trueSignals": 444,
+      "flips": 778,
+      "precision": 0.49887640449438203,
+      "recall": 0.570694087403599,
+      "coverage": 0.13468523002421307
+    }
+  },
+  "tickExitValidation": {
+    "localTrades": 8252,
+    "matchedTrades": 8252,
+    "variants": [
+      {
+        "variant": "hold",
+        "n": 8252,
+        "exits": 0,
+        "exitRate": 0,
+        "localPnl": 1212.8732999999775,
+        "canonicalPnl": 398.535569301505,
+        "canonicalMaxDrawdown": 274.1298500176026,
+        "split": {
+          "train": {
+            "n": 4411,
+            "localPnl": 797.9328999999956,
+            "canonicalPnl": 287.35060523737496,
+            "exits": 0
+          },
+          "validation": {
+            "n": 1562,
+            "localPnl": -92.45259999999969,
+            "canonicalPnl": -67.60839964346302,
+            "exits": 0
+          },
+          "holdout": {
+            "n": 2279,
+            "localPnl": 507.3930000000059,
+            "canonicalPnl": 178.79336370758065,
+            "exits": 0
+          }
+        }
+      },
+      {
+        "variant": "lead",
+        "n": 8252,
+        "exits": 1829,
+        "exitRate": 0.2216432380029084,
+        "localPnl": 2426.0131999999226,
+        "canonicalPnl": 1395.738196366558,
+        "canonicalMaxDrawdown": 202.14965063176726,
+        "split": {
+          "train": {
+            "n": 4411,
+            "localPnl": 1428.1542999999795,
+            "canonicalPnl": 843.2847724583087,
+            "exits": 991
+          },
+          "validation": {
+            "n": 1562,
+            "localPnl": 110.11630000000052,
+            "canonicalPnl": 15.48934913291468,
+            "exits": 375
+          },
+          "holdout": {
+            "n": 2279,
+            "localPnl": 887.7426000000021,
+            "canonicalPnl": 536.9640747753305,
+            "exits": 463
+          }
+        }
+      },
+      {
+        "variant": "lead_bid45",
+        "n": 8252,
+        "exits": 1607,
+        "exitRate": 0.19474066892874456,
+        "localPnl": 2702.7062999999234,
+        "canonicalPnl": 1417.0767596982412,
+        "canonicalMaxDrawdown": 213.14273802299488,
+        "split": {
+          "train": {
+            "n": 4411,
+            "localPnl": 1539.683299999977,
+            "canonicalPnl": 888.4146200315515,
+            "exits": 867
+          },
+          "validation": {
+            "n": 1562,
+            "localPnl": 136.5049000000008,
+            "canonicalPnl": -34.4581881765371,
+            "exits": 336
+          },
+          "holdout": {
+            "n": 2279,
+            "localPnl": 1026.5181000000011,
+            "canonicalPnl": 563.1203278432215,
+            "exits": 404
+          }
+        }
+      },
+      {
+        "variant": "lead_bid40",
+        "n": 8252,
+        "exits": 1553,
+        "exitRate": 0.18819680077556955,
+        "localPnl": 2727.821899999927,
+        "canonicalPnl": 1408.5387098974068,
+        "canonicalMaxDrawdown": 207.08831812835285,
+        "split": {
+          "train": {
+            "n": 4411,
+            "localPnl": 1532.6123999999766,
+            "canonicalPnl": 858.2752245660885,
+            "exits": 840
+          },
+          "validation": {
+            "n": 1562,
+            "localPnl": 151.67700000000085,
+            "canonicalPnl": -29.871226252642764,
+            "exits": 326
+          },
+          "holdout": {
+            "n": 2279,
+            "localPnl": 1043.5325000000016,
+            "canonicalPnl": 580.1347115839544,
+            "exits": 387
+          }
+        }
+      },
+      {
+        "variant": "bid35",
+        "n": 8252,
+        "exits": 2196,
+        "exitRate": 0.26611730489578284,
+        "localPnl": -451.32360000009606,
+        "canonicalPnl": -1516.007455409179,
+        "canonicalMaxDrawdown": 2670.820580722976,
+        "split": {
+          "train": {
+            "n": 4411,
+            "localPnl": -1706.1793000000548,
+            "canonicalPnl": -2221.125261311584,
+            "exits": 1312
+          },
+          "validation": {
+            "n": 1562,
+            "localPnl": 231.49110000000158,
+            "canonicalPnl": 97.7205999947638,
+            "exits": 403
+          },
+          "holdout": {
+            "n": 2279,
+            "localPnl": 1023.3646000000005,
+            "canonicalPnl": 607.3972059076425,
+            "exits": 481
+          }
+        }
+      },
+      {
+        "variant": "bid45",
+        "n": 8252,
+        "exits": 2511,
+        "exitRate": 0.30428986912263695,
+        "localPnl": -342.84350000009266,
+        "canonicalPnl": -1216.3630714985004,
+        "canonicalMaxDrawdown": 2521.8567902200916,
+        "split": {
+          "train": {
+            "n": 4411,
+            "localPnl": -1624.1771000000583,
+            "canonicalPnl": -2073.362765994422,
+            "exits": 1483
+          },
+          "validation": {
+            "n": 1562,
+            "localPnl": 201.6706000000009,
+            "canonicalPnl": 133.95267684622553,
+            "exits": 472
+          },
+          "holdout": {
+            "n": 2279,
+            "localPnl": 1079.6629999999989,
+            "canonicalPnl": 723.0470176496847,
+            "exits": 556
+          }
+        }
+      },
+      {
+        "variant": "shock",
+        "n": 8252,
+        "exits": 3605,
+        "exitRate": 0.4368637905962191,
+        "localPnl": -1755.9846000000766,
+        "canonicalPnl": -2153.039710344666,
+        "canonicalMaxDrawdown": 2551.1340001451367,
+        "split": {
+          "train": {
+            "n": 4411,
+            "localPnl": -2030.3272000000347,
+            "canonicalPnl": -2262.397893286356,
+            "exits": 2061
+          },
+          "validation": {
+            "n": 1562,
+            "localPnl": -222.64119999999832,
+            "canonicalPnl": -222.64323078761035,
+            "exits": 698
+          },
+          "holdout": {
+            "n": 2279,
+            "localPnl": 496.98380000000395,
+            "canonicalPnl": 332.0014137293196,
+            "exits": 846
+          }
+        }
+      },
+      {
+        "variant": "lead_or_bid35",
+        "n": 8252,
+        "exits": 2447,
+        "exitRate": 0.2965341735336888,
+        "localPnl": -463.6486000000903,
+        "canonicalPnl": -1258.4456716451036,
+        "canonicalMaxDrawdown": 2462.9158709992184,
+        "split": {
+          "train": {
+            "n": 4411,
+            "localPnl": -1570.610200000052,
+            "canonicalPnl": -2008.2950841861107,
+            "exits": 1441
+          },
+          "validation": {
+            "n": 1562,
+            "localPnl": 194.8768000000008,
+            "canonicalPnl": 148.02764639866868,
+            "exits": 454
+          },
+          "holdout": {
+            "n": 2279,
+            "localPnl": 912.0848000000016,
+            "canonicalPnl": 601.821766142322,
+            "exits": 552
+          }
+        }
+      },
+      {
+        "variant": "zexit40",
+        "n": 8252,
+        "exits": 1615,
+        "exitRate": 0.19571013087736305,
+        "localPnl": 2634.43499999992,
+        "canonicalPnl": 1556.627851957841,
+        "canonicalMaxDrawdown": 205.1391348067682,
+        "split": {
+          "train": {
+            "n": 4411,
+            "localPnl": 1644.396199999972,
+            "canonicalPnl": 1053.4840568510447,
+            "exits": 877
+          },
+          "validation": {
+            "n": 1562,
+            "localPnl": 114.09350000000053,
+            "canonicalPnl": 1.4468173970677536,
+            "exits": 332
+          },
+          "holdout": {
+            "n": 2279,
+            "localPnl": 875.9453000000034,
+            "canonicalPnl": 501.6969777097146,
+            "exits": 406
+          }
+        }
+      },
+      {
+        "variant": "zexit30",
+        "n": 8252,
+        "exits": 1452,
+        "exitRate": 0.17595734367426077,
+        "localPnl": 2602.6085999999177,
+        "canonicalPnl": 1479.5722811611995,
+        "canonicalMaxDrawdown": 246.26581015095724,
+        "split": {
+          "train": {
+            "n": 4411,
+            "localPnl": 1660.1113999999684,
+            "canonicalPnl": 1041.449821149388,
+            "exits": 789
+          },
+          "validation": {
+            "n": 1562,
+            "localPnl": 89.9330000000004,
+            "canonicalPnl": -42.6741734060989,
+            "exits": 303
+          },
+          "holdout": {
+            "n": 2279,
+            "localPnl": 852.5642000000023,
+            "canonicalPnl": 480.79663341789916,
+            "exits": 360
+          }
+        }
+      },
+      {
+        "variant": "lead_and_z",
+        "n": 8252,
+        "exits": 1615,
+        "exitRate": 0.19571013087736305,
+        "localPnl": 2634.43499999992,
+        "canonicalPnl": 1556.627851957841,
+        "canonicalMaxDrawdown": 205.1391348067682,
+        "split": {
+          "train": {
+            "n": 4411,
+            "localPnl": 1644.396199999972,
+            "canonicalPnl": 1053.4840568510447,
+            "exits": 877
+          },
+          "validation": {
+            "n": 1562,
+            "localPnl": 114.09350000000053,
+            "canonicalPnl": 1.4468173970677536,
+            "exits": 332
+          },
+          "holdout": {
+            "n": 2279,
+            "localPnl": 875.9453000000034,
+            "canonicalPnl": 501.6969777097146,
+            "exits": 406
+          }
+        }
+      }
+    ]
+  }
+}

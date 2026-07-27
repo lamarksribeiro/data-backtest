@@ -1,0 +1,2849 @@
+{
+  "generatedAt": "2026-07-27T04:52:44.762Z",
+  "sampleDays": {
+    "first": "2026-05-28",
+    "last": "2026-07-26",
+    "n": 60
+  },
+  "holdoutFrom": "2026-07-01",
+  "events": 16046,
+  "variantCount": 1680,
+  "survivorsStrict": 290,
+  "championsByThesis": {
+    "H2_post_cross_lead": {
+      "id": "H2_post_cross_lead|fa0.72|da1|t10-60|D200|d5|e0.05|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0.05,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 834,
+        "wins": 533,
+        "wr": 0.6391,
+        "pnl": 519.41,
+        "exp": 0.6228,
+        "pf": 1.167
+      },
+      "hold": {
+        "n": 379,
+        "wins": 250,
+        "wr": 0.6596,
+        "pnl": 343.22,
+        "exp": 0.9056,
+        "pf": 1.258
+      }
+    }
+  },
+  "topHoldoutStrict": [
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t10-60|D200|d5|e0.05|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0.05,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 834,
+        "wins": 533,
+        "wr": 0.6391,
+        "pnl": 519.41,
+        "exp": 0.6228,
+        "pf": 1.167
+      },
+      "hold": {
+        "n": 379,
+        "wins": 250,
+        "wr": 0.6596,
+        "pnl": 343.22,
+        "exp": 0.9056,
+        "pf": 1.258
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t8-40|D200|d5|e0|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 8,
+        "maxTau": 40,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 574,
+        "wins": 376,
+        "wr": 0.6551,
+        "pnl": 397.93,
+        "exp": 0.6933,
+        "pf": 1.195
+      },
+      "hold": {
+        "n": 247,
+        "wins": 169,
+        "wr": 0.6842,
+        "pnl": 301.21,
+        "exp": 1.2195,
+        "pf": 1.374
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t10-60|D200|d5|e0.08|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0.08,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 758,
+        "wins": 474,
+        "wr": 0.6253,
+        "pnl": 508.45,
+        "exp": 0.6708,
+        "pf": 1.174
+      },
+      "hold": {
+        "n": 345,
+        "wins": 222,
+        "wr": 0.6435,
+        "pnl": 291.4,
+        "exp": 0.8446,
+        "pf": 1.229
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.65|da1|t10-60|D200|d5|e0.05|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.65,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0.05,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 676,
+        "wins": 414,
+        "wr": 0.6124,
+        "pnl": 617.46,
+        "exp": 0.9134,
+        "pf": 1.228
+      },
+      "hold": {
+        "n": 301,
+        "wins": 186,
+        "wr": 0.6179,
+        "pnl": 285.82,
+        "exp": 0.9496,
+        "pf": 1.24
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.65|da1|t10-60|D200|d8|e0.05|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.65,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 8,
+        "minEdge": 0.05,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 493,
+        "wins": 305,
+        "wr": 0.6187,
+        "pnl": 348.15,
+        "exp": 0.7062,
+        "pf": 1.179
+      },
+      "hold": {
+        "n": 179,
+        "wins": 119,
+        "wr": 0.6648,
+        "pnl": 282.04,
+        "exp": 1.5757,
+        "pf": 1.455
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.65|da1|t10-60|D200|d5|e0|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.65,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 737,
+        "wins": 453,
+        "wr": 0.6147,
+        "pnl": 508.04,
+        "exp": 0.6893,
+        "pf": 1.173
+      },
+      "hold": {
+        "n": 326,
+        "wins": 202,
+        "wr": 0.6196,
+        "pnl": 266.85,
+        "exp": 0.8185,
+        "pf": 1.208
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.6|da1|t10-60|D200|d5|e0.08|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.6,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0.08,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 521,
+        "wins": 288,
+        "wr": 0.5528,
+        "pnl": 402.12,
+        "exp": 0.7718,
+        "pf": 1.167
+      },
+      "hold": {
+        "n": 233,
+        "wins": 136,
+        "wr": 0.5837,
+        "pnl": 264.84,
+        "exp": 1.1367,
+        "pf": 1.263
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.6|da1|t10-60|D200|d5|e0|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.6,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 597,
+        "wins": 342,
+        "wr": 0.5729,
+        "pnl": 424.62,
+        "exp": 0.7113,
+        "pf": 1.161
+      },
+      "hold": {
+        "n": 256,
+        "wins": 151,
+        "wr": 0.5898,
+        "pnl": 260.03,
+        "exp": 1.0157,
+        "pf": 1.239
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.6|da1|t10-60|D200|d5|e0.05|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.6,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0.05,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 561,
+        "wins": 321,
+        "wr": 0.5722,
+        "pnl": 496.3,
+        "exp": 0.8847,
+        "pf": 1.2
+      },
+      "hold": {
+        "n": 243,
+        "wins": 142,
+        "wr": 0.5844,
+        "pnl": 256.76,
+        "exp": 1.0566,
+        "pf": 1.245
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.65|da1|t10-60|D200|d8|e0|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.65,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 8,
+        "minEdge": 0,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 524,
+        "wins": 328,
+        "wr": 0.626,
+        "pnl": 347.03,
+        "exp": 0.6623,
+        "pf": 1.172
+      },
+      "hold": {
+        "n": 190,
+        "wins": 125,
+        "wr": 0.6579,
+        "pnl": 255.04,
+        "exp": 1.3423,
+        "pf": 1.38
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.65|da1|t10-60|D200|d5|e0.08|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.65,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0.08,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 617,
+        "wins": 365,
+        "wr": 0.5916,
+        "pnl": 521.3,
+        "exp": 0.8449,
+        "pf": 1.2
+      },
+      "hold": {
+        "n": 282,
+        "wins": 170,
+        "wr": 0.6028,
+        "pnl": 245.65,
+        "exp": 0.8711,
+        "pf": 1.212
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t8-40|D200|d5|e0.05|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 8,
+        "maxTau": 40,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0.05,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 526,
+        "wins": 342,
+        "wr": 0.6502,
+        "pnl": 458.48,
+        "exp": 0.8716,
+        "pf": 1.242
+      },
+      "hold": {
+        "n": 224,
+        "wins": 149,
+        "wr": 0.6652,
+        "pnl": 243.11,
+        "exp": 1.0853,
+        "pf": 1.314
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t8-40|D200|d8|e0|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 8,
+        "maxTau": 40,
+        "maxDist": 200,
+        "minDist": 8,
+        "minEdge": 0,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 423,
+        "wins": 287,
+        "wr": 0.6785,
+        "pnl": 297.29,
+        "exp": 0.7028,
+        "pf": 1.212
+      },
+      "hold": {
+        "n": 141,
+        "wins": 102,
+        "wr": 0.7234,
+        "pnl": 235.5,
+        "exp": 1.6702,
+        "pf": 1.586
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t8-40|D200|d8|e0.08|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 8,
+        "maxTau": 40,
+        "maxDist": 200,
+        "minDist": 8,
+        "minEdge": 0.08,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 361,
+        "wins": 243,
+        "wr": 0.6731,
+        "pnl": 351.63,
+        "exp": 0.974,
+        "pf": 1.289
+      },
+      "hold": {
+        "n": 121,
+        "wins": 87,
+        "wr": 0.719,
+        "pnl": 233.05,
+        "exp": 1.926,
+        "pf": 1.664
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.6|da1|t10-60|D200|d8|e0|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.6,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 8,
+        "minEdge": 0,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 398,
+        "wins": 233,
+        "wr": 0.5854,
+        "pnl": 270.65,
+        "exp": 0.68,
+        "pf": 1.159
+      },
+      "hold": {
+        "n": 142,
+        "wins": 89,
+        "wr": 0.6268,
+        "pnl": 233.02,
+        "exp": 1.641,
+        "pf": 1.425
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.6|da1|t10-60|D200|d8|e0.05|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.6,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 8,
+        "minEdge": 0.05,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 381,
+        "wins": 222,
+        "wr": 0.5827,
+        "pnl": 276.78,
+        "exp": 0.7265,
+        "pf": 1.168
+      },
+      "hold": {
+        "n": 138,
+        "wins": 86,
+        "wr": 0.6232,
+        "pnl": 230.01,
+        "exp": 1.6667,
+        "pf": 1.428
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t8-40|D200|d8|e0.12|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 8,
+        "maxTau": 40,
+        "maxDist": 200,
+        "minDist": 8,
+        "minEdge": 0.12,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 301,
+        "wins": 197,
+        "wr": 0.6545,
+        "pnl": 290.25,
+        "exp": 0.9643,
+        "pf": 1.27
+      },
+      "hold": {
+        "n": 105,
+        "wins": 75,
+        "wr": 0.7143,
+        "pnl": 227.72,
+        "exp": 2.1687,
+        "pf": 1.734
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t8-40|D200|d8|e0.05|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 8,
+        "maxTau": 40,
+        "maxDist": 200,
+        "minDist": 8,
+        "minEdge": 0.05,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 386,
+        "wins": 259,
+        "wr": 0.671,
+        "pnl": 308.56,
+        "exp": 0.7994,
+        "pf": 1.236
+      },
+      "hold": {
+        "n": 130,
+        "wins": 93,
+        "wr": 0.7154,
+        "pnl": 218.99,
+        "exp": 1.6845,
+        "pf": 1.574
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t10-60|D200|d5|e0.12|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0.12,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 645,
+        "wins": 398,
+        "wr": 0.6171,
+        "pnl": 546.37,
+        "exp": 0.8471,
+        "pf": 1.214
+      },
+      "hold": {
+        "n": 296,
+        "wins": 183,
+        "wr": 0.6182,
+        "pnl": 209.43,
+        "exp": 0.7075,
+        "pf": 1.179
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t8-40|D200|d5|e0.08|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 8,
+        "maxTau": 40,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0.08,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 492,
+        "wins": 321,
+        "wr": 0.6524,
+        "pnl": 570.87,
+        "exp": 1.1603,
+        "pf": 1.323
+      },
+      "hold": {
+        "n": 204,
+        "wins": 132,
+        "wr": 0.6471,
+        "pnl": 202.62,
+        "exp": 0.9932,
+        "pf": 1.272
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.65|da1|t8-40|D200|d5|e0|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.65,
+        "maxDogAsk": 1,
+        "minTau": 8,
+        "maxTau": 40,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 438,
+        "wins": 270,
+        "wr": 0.6164,
+        "pnl": 423.44,
+        "exp": 0.9667,
+        "pf": 1.244
+      },
+      "hold": {
+        "n": 183,
+        "wins": 112,
+        "wr": 0.612,
+        "pnl": 194.12,
+        "exp": 1.0608,
+        "pf": 1.264
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t10-60|D200|d5|e0.05|ca8|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0.05,
+        "maxCrossAge": 8,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 668,
+        "wins": 421,
+        "wr": 0.6302,
+        "pnl": 413.69,
+        "exp": 0.6193,
+        "pf": 1.162
+      },
+      "hold": {
+        "n": 304,
+        "wins": 195,
+        "wr": 0.6414,
+        "pnl": 188.89,
+        "exp": 0.6214,
+        "pf": 1.168
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.65|da1|t10-60|D200|d5|e0.12|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.65,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0.12,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 535,
+        "wins": 310,
+        "wr": 0.5794,
+        "pnl": 476.26,
+        "exp": 0.8902,
+        "pf": 1.204
+      },
+      "hold": {
+        "n": 249,
+        "wins": 145,
+        "wr": 0.5823,
+        "pnl": 188.29,
+        "exp": 0.7562,
+        "pf": 1.175
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t8-40|D200|d5|e0.12|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 8,
+        "maxTau": 40,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0.12,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 423,
+        "wins": 269,
+        "wr": 0.6359,
+        "pnl": 504.9,
+        "exp": 1.1936,
+        "pf": 1.317
+      },
+      "hold": {
+        "n": 176,
+        "wins": 110,
+        "wr": 0.625,
+        "pnl": 182.44,
+        "exp": 1.0366,
+        "pf": 1.267
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t5-25|D200|d5|e0|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 5,
+        "maxTau": 25,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 336,
+        "wins": 220,
+        "wr": 0.6548,
+        "pnl": 316.92,
+        "exp": 0.9432,
+        "pf": 1.265
+      },
+      "hold": {
+        "n": 136,
+        "wins": 94,
+        "wr": 0.6912,
+        "pnl": 181.82,
+        "exp": 1.3369,
+        "pf": 1.419
+      }
+    }
+  ],
+  "topHoldoutLoose": [
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t15-90|D200|d8|e0.08|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 15,
+        "maxTau": 90,
+        "maxDist": 200,
+        "minDist": 8,
+        "minEdge": 0.08,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 876,
+        "wins": 537,
+        "wr": 0.613,
+        "pnl": 179,
+        "exp": 0.2043,
+        "pf": 1.051
+      },
+      "hold": {
+        "n": 350,
+        "wins": 237,
+        "wr": 0.6771,
+        "pnl": 368.24,
+        "exp": 1.0521,
+        "pf": 1.316
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t10-60|D200|d8|e0.05|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 8,
+        "minEdge": 0.05,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 644,
+        "wins": 418,
+        "wr": 0.6491,
+        "pnl": 291.1,
+        "exp": 0.452,
+        "pf": 1.125
+      },
+      "hold": {
+        "n": 239,
+        "wins": 171,
+        "wr": 0.7155,
+        "pnl": 367.67,
+        "exp": 1.5384,
+        "pf": 1.525
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t10-60|D200|d5|e0.05|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0.05,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 834,
+        "wins": 533,
+        "wr": 0.6391,
+        "pnl": 519.41,
+        "exp": 0.6228,
+        "pf": 1.167
+      },
+      "hold": {
+        "n": 379,
+        "wins": 250,
+        "wr": 0.6596,
+        "pnl": 343.22,
+        "exp": 0.9056,
+        "pf": 1.258
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t15-90|D200|d8|e0.05|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 15,
+        "maxTau": 90,
+        "maxDist": 200,
+        "minDist": 8,
+        "minEdge": 0.05,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 994,
+        "wins": 618,
+        "wr": 0.6217,
+        "pnl": 189.06,
+        "exp": 0.1902,
+        "pf": 1.049
+      },
+      "hold": {
+        "n": 411,
+        "wins": 277,
+        "wr": 0.674,
+        "pnl": 330.88,
+        "exp": 0.8051,
+        "pf": 1.24
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t10-60|D200|d8|e0.08|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 8,
+        "minEdge": 0.08,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 578,
+        "wins": 370,
+        "wr": 0.6401,
+        "pnl": 277.97,
+        "exp": 0.4809,
+        "pf": 1.13
+      },
+      "hold": {
+        "n": 218,
+        "wins": 153,
+        "wr": 0.7018,
+        "pnl": 325.32,
+        "exp": 1.4923,
+        "pf": 1.485
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t8-40|D200|d5|e0|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 8,
+        "maxTau": 40,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 574,
+        "wins": 376,
+        "wr": 0.6551,
+        "pnl": 397.93,
+        "exp": 0.6933,
+        "pf": 1.195
+      },
+      "hold": {
+        "n": 247,
+        "wins": 169,
+        "wr": 0.6842,
+        "pnl": 301.21,
+        "exp": 1.2195,
+        "pf": 1.374
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t10-60|D200|d8|e0.12|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 8,
+        "minEdge": 0.12,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 477,
+        "wins": 295,
+        "wr": 0.6184,
+        "pnl": 189.33,
+        "exp": 0.3969,
+        "pf": 1.101
+      },
+      "hold": {
+        "n": 184,
+        "wins": 127,
+        "wr": 0.6902,
+        "pnl": 293.17,
+        "exp": 1.5933,
+        "pf": 1.498
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t10-60|D200|d5|e0.08|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0.08,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 758,
+        "wins": 474,
+        "wr": 0.6253,
+        "pnl": 508.45,
+        "exp": 0.6708,
+        "pf": 1.174
+      },
+      "hold": {
+        "n": 345,
+        "wins": 222,
+        "wr": 0.6435,
+        "pnl": 291.4,
+        "exp": 0.8446,
+        "pf": 1.229
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.65|da1|t10-60|D200|d5|e0.05|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.65,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0.05,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 676,
+        "wins": 414,
+        "wr": 0.6124,
+        "pnl": 617.46,
+        "exp": 0.9134,
+        "pf": 1.228
+      },
+      "hold": {
+        "n": 301,
+        "wins": 186,
+        "wr": 0.6179,
+        "pnl": 285.82,
+        "exp": 0.9496,
+        "pf": 1.24
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.65|da1|t10-60|D200|d8|e0.05|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.65,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 8,
+        "minEdge": 0.05,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 493,
+        "wins": 305,
+        "wr": 0.6187,
+        "pnl": 348.15,
+        "exp": 0.7062,
+        "pf": 1.179
+      },
+      "hold": {
+        "n": 179,
+        "wins": 119,
+        "wr": 0.6648,
+        "pnl": 282.04,
+        "exp": 1.5757,
+        "pf": 1.455
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t10-60|D200|d5|e0|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 918,
+        "wins": 593,
+        "wr": 0.646,
+        "pnl": 435.7,
+        "exp": 0.4746,
+        "pf": 1.13
+      },
+      "hold": {
+        "n": 418,
+        "wins": 275,
+        "wr": 0.6579,
+        "pnl": 281.54,
+        "exp": 0.6735,
+        "pf": 1.191
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t10-60|D200|d8|e0|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 8,
+        "minEdge": 0,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 696,
+        "wins": 460,
+        "wr": 0.6609,
+        "pnl": 314.65,
+        "exp": 0.4521,
+        "pf": 1.13
+      },
+      "hold": {
+        "n": 259,
+        "wins": 180,
+        "wr": 0.695,
+        "pnl": 277.65,
+        "exp": 1.072,
+        "pf": 1.342
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.65|da1|t10-60|D200|d5|e0|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.65,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 737,
+        "wins": 453,
+        "wr": 0.6147,
+        "pnl": 508.04,
+        "exp": 0.6893,
+        "pf": 1.173
+      },
+      "hold": {
+        "n": 326,
+        "wins": 202,
+        "wr": 0.6196,
+        "pnl": 266.85,
+        "exp": 0.8185,
+        "pf": 1.208
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.6|da1|t10-60|D200|d5|e0.08|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.6,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0.08,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 521,
+        "wins": 288,
+        "wr": 0.5528,
+        "pnl": 402.12,
+        "exp": 0.7718,
+        "pf": 1.167
+      },
+      "hold": {
+        "n": 233,
+        "wins": 136,
+        "wr": 0.5837,
+        "pnl": 264.84,
+        "exp": 1.1367,
+        "pf": 1.263
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.65|da1|t15-90|D200|d8|e0.08|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.65,
+        "maxDogAsk": 1,
+        "minTau": 15,
+        "maxTau": 90,
+        "maxDist": 200,
+        "minDist": 8,
+        "minEdge": 0.08,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 694,
+        "wins": 392,
+        "wr": 0.5648,
+        "pnl": 76.81,
+        "exp": 0.1107,
+        "pf": 1.025
+      },
+      "hold": {
+        "n": 273,
+        "wins": 172,
+        "wr": 0.63,
+        "pnl": 263.27,
+        "exp": 0.9644,
+        "pf": 1.253
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.6|da1|t10-60|D200|d5|e0|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.6,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 597,
+        "wins": 342,
+        "wr": 0.5729,
+        "pnl": 424.62,
+        "exp": 0.7113,
+        "pf": 1.161
+      },
+      "hold": {
+        "n": 256,
+        "wins": 151,
+        "wr": 0.5898,
+        "pnl": 260.03,
+        "exp": 1.0157,
+        "pf": 1.239
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t10-60|D200|d8|e0.05|ca8|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 8,
+        "minEdge": 0.05,
+        "maxCrossAge": 8,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 488,
+        "wins": 312,
+        "wr": 0.6393,
+        "pnl": 202.73,
+        "exp": 0.4154,
+        "pf": 1.112
+      },
+      "hold": {
+        "n": 184,
+        "wins": 129,
+        "wr": 0.7011,
+        "pnl": 258.9,
+        "exp": 1.4071,
+        "pf": 1.457
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t15-90|D200|d5|e0.08|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 15,
+        "maxTau": 90,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0.08,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 1101,
+        "wins": 662,
+        "wr": 0.6013,
+        "pnl": 359.73,
+        "exp": 0.3267,
+        "pf": 1.079
+      },
+      "hold": {
+        "n": 554,
+        "wins": 342,
+        "wr": 0.6173,
+        "pnl": 256.94,
+        "exp": 0.4638,
+        "pf": 1.117
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.6|da1|t10-60|D200|d5|e0.05|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.6,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0.05,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 561,
+        "wins": 321,
+        "wr": 0.5722,
+        "pnl": 496.3,
+        "exp": 0.8847,
+        "pf": 1.2
+      },
+      "hold": {
+        "n": 243,
+        "wins": 142,
+        "wr": 0.5844,
+        "pnl": 256.76,
+        "exp": 1.0566,
+        "pf": 1.245
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.65|da1|t10-60|D200|d8|e0|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.65,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 8,
+        "minEdge": 0,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 524,
+        "wins": 328,
+        "wr": 0.626,
+        "pnl": 347.03,
+        "exp": 0.6623,
+        "pf": 1.172
+      },
+      "hold": {
+        "n": 190,
+        "wins": 125,
+        "wr": 0.6579,
+        "pnl": 255.04,
+        "exp": 1.3423,
+        "pf": 1.38
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t15-90|D200|d8|e0.12|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 15,
+        "maxTau": 90,
+        "maxDist": 200,
+        "minDist": 8,
+        "minEdge": 0.12,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 696,
+        "wins": 421,
+        "wr": 0.6049,
+        "pnl": 300.28,
+        "exp": 0.4314,
+        "pf": 1.106
+      },
+      "hold": {
+        "n": 270,
+        "wins": 175,
+        "wr": 0.6481,
+        "pnl": 251.16,
+        "exp": 0.9302,
+        "pf": 1.256
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.65|da1|t10-60|D200|d5|e0.08|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.65,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0.08,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 617,
+        "wins": 365,
+        "wr": 0.5916,
+        "pnl": 521.3,
+        "exp": 0.8449,
+        "pf": 1.2
+      },
+      "hold": {
+        "n": 282,
+        "wins": 170,
+        "wr": 0.6028,
+        "pnl": 245.65,
+        "exp": 0.8711,
+        "pf": 1.212
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t8-40|D200|d5|e0.05|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 8,
+        "maxTau": 40,
+        "maxDist": 200,
+        "minDist": 5,
+        "minEdge": 0.05,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 526,
+        "wins": 342,
+        "wr": 0.6502,
+        "pnl": 458.48,
+        "exp": 0.8716,
+        "pf": 1.242
+      },
+      "hold": {
+        "n": 224,
+        "wins": 149,
+        "wr": 0.6652,
+        "pnl": 243.11,
+        "exp": 1.0853,
+        "pf": 1.314
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t15-90|D200|d8|e0.05|ca8|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 15,
+        "maxTau": 90,
+        "maxDist": 200,
+        "minDist": 8,
+        "minEdge": 0.05,
+        "maxCrossAge": 8,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 770,
+        "wins": 469,
+        "wr": 0.6091,
+        "pnl": 122.56,
+        "exp": 0.1592,
+        "pf": 1.04
+      },
+      "hold": {
+        "n": 319,
+        "wins": 212,
+        "wr": 0.6646,
+        "pnl": 243.08,
+        "exp": 0.762,
+        "pf": 1.221
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.65|da1|t15-90|D200|d8|e0.05|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.65,
+        "maxDogAsk": 1,
+        "minTau": 15,
+        "maxTau": 90,
+        "maxDist": 200,
+        "minDist": 8,
+        "minEdge": 0.05,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 783,
+        "wins": 458,
+        "wr": 0.5849,
+        "pnl": 210,
+        "exp": 0.2682,
+        "pf": 1.063
+      },
+      "hold": {
+        "n": 311,
+        "wins": 196,
+        "wr": 0.6302,
+        "pnl": 241.99,
+        "exp": 0.7781,
+        "pf": 1.204
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t15-90|D200|d8|e0|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 15,
+        "maxTau": 90,
+        "maxDist": 200,
+        "minDist": 8,
+        "minEdge": 0,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 1116,
+        "wins": 709,
+        "wr": 0.6353,
+        "pnl": 209.32,
+        "exp": 0.1876,
+        "pf": 1.05
+      },
+      "hold": {
+        "n": 464,
+        "wins": 311,
+        "wr": 0.6703,
+        "pnl": 241.6,
+        "exp": 0.5207,
+        "pf": 1.154
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.65|da1|t10-60|D200|d8|e0.08|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.65,
+        "maxDogAsk": 1,
+        "minTau": 10,
+        "maxTau": 60,
+        "maxDist": 200,
+        "minDist": 8,
+        "minEdge": 0.08,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 450,
+        "wins": 270,
+        "wr": 0.6,
+        "pnl": 265.26,
+        "exp": 0.5895,
+        "pf": 1.143
+      },
+      "hold": {
+        "n": 170,
+        "wins": 110,
+        "wr": 0.6471,
+        "pnl": 236.8,
+        "exp": 1.3929,
+        "pf": 1.382
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t8-40|D200|d8|e0|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 8,
+        "maxTau": 40,
+        "maxDist": 200,
+        "minDist": 8,
+        "minEdge": 0,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 423,
+        "wins": 287,
+        "wr": 0.6785,
+        "pnl": 297.29,
+        "exp": 0.7028,
+        "pf": 1.212
+      },
+      "hold": {
+        "n": 141,
+        "wins": 102,
+        "wr": 0.7234,
+        "pnl": 235.5,
+        "exp": 1.6702,
+        "pf": 1.586
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t15-90|D200|d8|e0.08|ca8|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 15,
+        "maxTau": 90,
+        "maxDist": 200,
+        "minDist": 8,
+        "minEdge": 0.08,
+        "maxCrossAge": 8,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 632,
+        "wins": 376,
+        "wr": 0.5949,
+        "pnl": 116.96,
+        "exp": 0.1851,
+        "pf": 1.044
+      },
+      "hold": {
+        "n": 260,
+        "wins": 171,
+        "wr": 0.6577,
+        "pnl": 234.47,
+        "exp": 0.9018,
+        "pf": 1.256
+      }
+    },
+    {
+      "id": "H2_post_cross_lead|fa0.72|da1|t8-40|D200|d8|e0.08|ca12|m0",
+      "thesis": "H2_post_cross_lead",
+      "params": {
+        "maxFavAsk": 0.72,
+        "maxDogAsk": 1,
+        "minTau": 8,
+        "maxTau": 40,
+        "maxDist": 200,
+        "minDist": 8,
+        "minEdge": 0.08,
+        "maxCrossAge": 12,
+        "momMin": 0,
+        "minZ": 0
+      },
+      "train": {
+        "n": 361,
+        "wins": 243,
+        "wr": 0.6731,
+        "pnl": 351.63,
+        "exp": 0.974,
+        "pf": 1.289
+      },
+      "hold": {
+        "n": 121,
+        "wins": 87,
+        "wr": 0.719,
+        "pnl": 233.05,
+        "exp": 1.926,
+        "pf": 1.664
+      }
+    }
+  ],
+  "perThesisTop": {
+    "H1_fake_leader_dog": [
+      {
+        "id": "H1_fake_leader_dog|fa0.52|da0.52|t8-30|D40|d0|e-1|ca999|m0",
+        "thesis": "H1_fake_leader_dog",
+        "params": {
+          "maxFavAsk": 0.52,
+          "maxDogAsk": 0.52,
+          "minTau": 8,
+          "maxTau": 30,
+          "maxDist": 40,
+          "minDist": 0,
+          "minEdge": -1,
+          "maxCrossAge": 999,
+          "momMin": 0,
+          "minZ": 0
+        },
+        "train": {
+          "n": 643,
+          "wins": 321,
+          "wr": 0.4992,
+          "pnl": -313.23,
+          "exp": -0.4871,
+          "pf": 0.906
+        },
+        "hold": {
+          "n": 430,
+          "wins": 227,
+          "wr": 0.5279,
+          "pnl": 33.89,
+          "exp": 0.0788,
+          "pf": 1.016
+        }
+      },
+      {
+        "id": "H1_fake_leader_dog|fa0.52|da0.52|t8-30|D80|d0|e-1|ca999|m0",
+        "thesis": "H1_fake_leader_dog",
+        "params": {
+          "maxFavAsk": 0.52,
+          "maxDogAsk": 0.52,
+          "minTau": 8,
+          "maxTau": 30,
+          "maxDist": 80,
+          "minDist": 0,
+          "minEdge": -1,
+          "maxCrossAge": 999,
+          "momMin": 0,
+          "minZ": 0
+        },
+        "train": {
+          "n": 651,
+          "wins": 326,
+          "wr": 0.5008,
+          "pnl": -297.26,
+          "exp": -0.4566,
+          "pf": 0.912
+        },
+        "hold": {
+          "n": 432,
+          "wins": 228,
+          "wr": 0.5278,
+          "pnl": 32.72,
+          "exp": 0.0758,
+          "pf": 1.016
+        }
+      },
+      {
+        "id": "H1_fake_leader_dog|fa0.52|da0.52|t5-20|D40|d0|e-1|ca999|m0",
+        "thesis": "H1_fake_leader_dog",
+        "params": {
+          "maxFavAsk": 0.52,
+          "maxDogAsk": 0.52,
+          "minTau": 5,
+          "maxTau": 20,
+          "maxDist": 40,
+          "minDist": 0,
+          "minEdge": -1,
+          "maxCrossAge": 999,
+          "momMin": 0,
+          "minZ": 0
+        },
+        "train": {
+          "n": 400,
+          "wins": 191,
+          "wr": 0.4775,
+          "pnl": -377.97,
+          "exp": -0.9449,
+          "pf": 0.825
+        },
+        "hold": {
+          "n": 254,
+          "wins": 134,
+          "wr": 0.5276,
+          "pnl": 11.7,
+          "exp": 0.046,
+          "pf": 1.009
+        }
+      },
+      {
+        "id": "H1_fake_leader_dog|fa0.52|da0.52|t5-20|D80|d0|e-1|ca999|m0",
+        "thesis": "H1_fake_leader_dog",
+        "params": {
+          "maxFavAsk": 0.52,
+          "maxDogAsk": 0.52,
+          "minTau": 5,
+          "maxTau": 20,
+          "maxDist": 80,
+          "minDist": 0,
+          "minEdge": -1,
+          "maxCrossAge": 999,
+          "momMin": 0,
+          "minZ": 0
+        },
+        "train": {
+          "n": 406,
+          "wins": 194,
+          "wr": 0.4778,
+          "pnl": -381.86,
+          "exp": -0.9405,
+          "pf": 0.826
+        },
+        "hold": {
+          "n": 254,
+          "wins": 134,
+          "wr": 0.5276,
+          "pnl": 11.7,
+          "exp": 0.046,
+          "pf": 1.009
+        }
+      },
+      {
+        "id": "H1_fake_leader_dog|fa0.52|da0.52|t8-30|D25|d0|e-1|ca999|m0",
+        "thesis": "H1_fake_leader_dog",
+        "params": {
+          "maxFavAsk": 0.52,
+          "maxDogAsk": 0.52,
+          "minTau": 8,
+          "maxTau": 30,
+          "maxDist": 25,
+          "minDist": 0,
+          "minEdge": -1,
+          "maxCrossAge": 999,
+          "momMin": 0,
+          "minZ": 0
+        },
+        "train": {
+          "n": 619,
+          "wins": 308,
+          "wr": 0.4976,
+          "pnl": -325.22,
+          "exp": -0.5254,
+          "pf": 0.899
+        },
+        "hold": {
+          "n": 407,
+          "wins": 213,
+          "wr": 0.5233,
+          "pnl": -2.16,
+          "exp": -0.0053,
+          "pf": 0.999
+        }
+      },
+      {
+        "id": "H1_fake_leader_dog|fa0.52|da0.52|t5-20|D25|d0|e-1|ca999|m0",
+        "thesis": "H1_fake_leader_dog",
+        "params": {
+          "maxFavAsk": 0.52,
+          "maxDogAsk": 0.52,
+          "minTau": 5,
+          "maxTau": 20,
+          "maxDist": 25,
+          "minDist": 0,
+          "minEdge": -1,
+          "maxCrossAge": 999,
+          "momMin": 0,
+          "minZ": 0
+        },
+        "train": {
+          "n": 383,
+          "wins": 183,
+          "wr": 0.4778,
+          "pnl": -362.5,
+          "exp": -0.9465,
+          "pf": 0.825
+        },
+        "hold": {
+          "n": 237,
+          "wins": 123,
+          "wr": 0.519,
+          "pnl": -27.47,
+          "exp": -0.1159,
+          "pf": 0.977
+        }
+      },
+      {
+        "id": "H1_fake_leader_dog|fa0.52|da0.6|t5-20|D40|d0|e-1|ca999|m0",
+        "thesis": "H1_fake_leader_dog",
+        "params": {
+          "maxFavAsk": 0.52,
+          "maxDogAsk": 0.6,
+          "minTau": 5,
+          "maxTau": 20,
+          "maxDist": 40,
+          "minDist": 0,
+          "minEdge": -1,
+          "maxCrossAge": 999,
+          "momMin": 0,
+          "minZ": 0
+        },
+        "train": {
+          "n": 733,
+          "wins": 404,
+          "wr": 0.5512,
+          "pnl": -168.17,
+          "exp": -0.2294,
+          "pf": 0.95
+        },
+        "hold": {
+          "n": 458,
+          "wins": 255,
+          "wr": 0.5568,
+          "pnl": -58.85,
+          "exp": -0.1285,
+          "pf": 0.972
+        }
+      },
+      {
+        "id": "H1_fake_leader_dog|fa0.52|da0.6|t5-20|D25|d0|e-1|ca999|m0",
+        "thesis": "H1_fake_leader_dog",
+        "params": {
+          "maxFavAsk": 0.52,
+          "maxDogAsk": 0.6,
+          "minTau": 5,
+          "maxTau": 20,
+          "maxDist": 25,
+          "minDist": 0,
+          "minEdge": -1,
+          "maxCrossAge": 999,
+          "momMin": 0,
+          "minZ": 0
+        },
+        "train": {
+          "n": 697,
+          "wins": 381,
+          "wr": 0.5466,
+          "pnl": -217.56,
+          "exp": -0.3121,
+          "pf": 0.933
+        },
+        "hold": {
+          "n": 427,
+          "wins": 236,
+          "wr": 0.5527,
+          "pnl": -76.1,
+          "exp": -0.1782,
+          "pf": 0.961
+        }
+      }
+    ],
+    "H2_post_cross_lead": [
+      {
+        "id": "H2_post_cross_lead|fa0.72|da1|t15-90|D200|d8|e0.08|ca12|m0",
+        "thesis": "H2_post_cross_lead",
+        "params": {
+          "maxFavAsk": 0.72,
+          "maxDogAsk": 1,
+          "minTau": 15,
+          "maxTau": 90,
+          "maxDist": 200,
+          "minDist": 8,
+          "minEdge": 0.08,
+          "maxCrossAge": 12,
+          "momMin": 0,
+          "minZ": 0
+        },
+        "train": {
+          "n": 876,
+          "wins": 537,
+          "wr": 0.613,
+          "pnl": 179,
+          "exp": 0.2043,
+          "pf": 1.051
+        },
+        "hold": {
+          "n": 350,
+          "wins": 237,
+          "wr": 0.6771,
+          "pnl": 368.24,
+          "exp": 1.0521,
+          "pf": 1.316
+        }
+      },
+      {
+        "id": "H2_post_cross_lead|fa0.72|da1|t10-60|D200|d8|e0.05|ca12|m0",
+        "thesis": "H2_post_cross_lead",
+        "params": {
+          "maxFavAsk": 0.72,
+          "maxDogAsk": 1,
+          "minTau": 10,
+          "maxTau": 60,
+          "maxDist": 200,
+          "minDist": 8,
+          "minEdge": 0.05,
+          "maxCrossAge": 12,
+          "momMin": 0,
+          "minZ": 0
+        },
+        "train": {
+          "n": 644,
+          "wins": 418,
+          "wr": 0.6491,
+          "pnl": 291.1,
+          "exp": 0.452,
+          "pf": 1.125
+        },
+        "hold": {
+          "n": 239,
+          "wins": 171,
+          "wr": 0.7155,
+          "pnl": 367.67,
+          "exp": 1.5384,
+          "pf": 1.525
+        }
+      },
+      {
+        "id": "H2_post_cross_lead|fa0.72|da1|t10-60|D200|d5|e0.05|ca12|m0",
+        "thesis": "H2_post_cross_lead",
+        "params": {
+          "maxFavAsk": 0.72,
+          "maxDogAsk": 1,
+          "minTau": 10,
+          "maxTau": 60,
+          "maxDist": 200,
+          "minDist": 5,
+          "minEdge": 0.05,
+          "maxCrossAge": 12,
+          "momMin": 0,
+          "minZ": 0
+        },
+        "train": {
+          "n": 834,
+          "wins": 533,
+          "wr": 0.6391,
+          "pnl": 519.41,
+          "exp": 0.6228,
+          "pf": 1.167
+        },
+        "hold": {
+          "n": 379,
+          "wins": 250,
+          "wr": 0.6596,
+          "pnl": 343.22,
+          "exp": 0.9056,
+          "pf": 1.258
+        }
+      },
+      {
+        "id": "H2_post_cross_lead|fa0.72|da1|t15-90|D200|d8|e0.05|ca12|m0",
+        "thesis": "H2_post_cross_lead",
+        "params": {
+          "maxFavAsk": 0.72,
+          "maxDogAsk": 1,
+          "minTau": 15,
+          "maxTau": 90,
+          "maxDist": 200,
+          "minDist": 8,
+          "minEdge": 0.05,
+          "maxCrossAge": 12,
+          "momMin": 0,
+          "minZ": 0
+        },
+        "train": {
+          "n": 994,
+          "wins": 618,
+          "wr": 0.6217,
+          "pnl": 189.06,
+          "exp": 0.1902,
+          "pf": 1.049
+        },
+        "hold": {
+          "n": 411,
+          "wins": 277,
+          "wr": 0.674,
+          "pnl": 330.88,
+          "exp": 0.8051,
+          "pf": 1.24
+        }
+      },
+      {
+        "id": "H2_post_cross_lead|fa0.72|da1|t10-60|D200|d8|e0.08|ca12|m0",
+        "thesis": "H2_post_cross_lead",
+        "params": {
+          "maxFavAsk": 0.72,
+          "maxDogAsk": 1,
+          "minTau": 10,
+          "maxTau": 60,
+          "maxDist": 200,
+          "minDist": 8,
+          "minEdge": 0.08,
+          "maxCrossAge": 12,
+          "momMin": 0,
+          "minZ": 0
+        },
+        "train": {
+          "n": 578,
+          "wins": 370,
+          "wr": 0.6401,
+          "pnl": 277.97,
+          "exp": 0.4809,
+          "pf": 1.13
+        },
+        "hold": {
+          "n": 218,
+          "wins": 153,
+          "wr": 0.7018,
+          "pnl": 325.32,
+          "exp": 1.4923,
+          "pf": 1.485
+        }
+      },
+      {
+        "id": "H2_post_cross_lead|fa0.72|da1|t8-40|D200|d5|e0|ca12|m0",
+        "thesis": "H2_post_cross_lead",
+        "params": {
+          "maxFavAsk": 0.72,
+          "maxDogAsk": 1,
+          "minTau": 8,
+          "maxTau": 40,
+          "maxDist": 200,
+          "minDist": 5,
+          "minEdge": 0,
+          "maxCrossAge": 12,
+          "momMin": 0,
+          "minZ": 0
+        },
+        "train": {
+          "n": 574,
+          "wins": 376,
+          "wr": 0.6551,
+          "pnl": 397.93,
+          "exp": 0.6933,
+          "pf": 1.195
+        },
+        "hold": {
+          "n": 247,
+          "wins": 169,
+          "wr": 0.6842,
+          "pnl": 301.21,
+          "exp": 1.2195,
+          "pf": 1.374
+        }
+      },
+      {
+        "id": "H2_post_cross_lead|fa0.72|da1|t10-60|D200|d8|e0.12|ca12|m0",
+        "thesis": "H2_post_cross_lead",
+        "params": {
+          "maxFavAsk": 0.72,
+          "maxDogAsk": 1,
+          "minTau": 10,
+          "maxTau": 60,
+          "maxDist": 200,
+          "minDist": 8,
+          "minEdge": 0.12,
+          "maxCrossAge": 12,
+          "momMin": 0,
+          "minZ": 0
+        },
+        "train": {
+          "n": 477,
+          "wins": 295,
+          "wr": 0.6184,
+          "pnl": 189.33,
+          "exp": 0.3969,
+          "pf": 1.101
+        },
+        "hold": {
+          "n": 184,
+          "wins": 127,
+          "wr": 0.6902,
+          "pnl": 293.17,
+          "exp": 1.5933,
+          "pf": 1.498
+        }
+      },
+      {
+        "id": "H2_post_cross_lead|fa0.72|da1|t10-60|D200|d5|e0.08|ca12|m0",
+        "thesis": "H2_post_cross_lead",
+        "params": {
+          "maxFavAsk": 0.72,
+          "maxDogAsk": 1,
+          "minTau": 10,
+          "maxTau": 60,
+          "maxDist": 200,
+          "minDist": 5,
+          "minEdge": 0.08,
+          "maxCrossAge": 12,
+          "momMin": 0,
+          "minZ": 0
+        },
+        "train": {
+          "n": 758,
+          "wins": 474,
+          "wr": 0.6253,
+          "pnl": 508.45,
+          "exp": 0.6708,
+          "pf": 1.174
+        },
+        "hold": {
+          "n": 345,
+          "wins": 222,
+          "wr": 0.6435,
+          "pnl": 291.4,
+          "exp": 0.8446,
+          "pf": 1.229
+        }
+      }
+    ],
+    "H3_late_phys_cheap": [
+      {
+        "id": "H3_late_phys_cheap|fa0.3|da1|t8-25|D80|d20|e0.08|ca999|m0",
+        "thesis": "H3_late_phys_cheap",
+        "params": {
+          "maxFavAsk": 0.3,
+          "maxDogAsk": 1,
+          "minTau": 8,
+          "maxTau": 25,
+          "maxDist": 80,
+          "minDist": 20,
+          "minEdge": 0.08,
+          "maxCrossAge": 999,
+          "momMin": 0,
+          "minZ": 0.5
+        },
+        "train": {
+          "n": 85,
+          "wins": 23,
+          "wr": 0.2706,
+          "pnl": 273.11,
+          "exp": 3.2131,
+          "pf": 1.418
+        },
+        "hold": {
+          "n": 63,
+          "wins": 16,
+          "wr": 0.254,
+          "pnl": -14.91,
+          "exp": -0.2367,
+          "pf": 0.97
+        }
+      },
+      {
+        "id": "H3_late_phys_cheap|fa0.3|da1|t8-25|D80|d20|e0.12|ca999|m0",
+        "thesis": "H3_late_phys_cheap",
+        "params": {
+          "maxFavAsk": 0.3,
+          "maxDogAsk": 1,
+          "minTau": 8,
+          "maxTau": 25,
+          "maxDist": 80,
+          "minDist": 20,
+          "minEdge": 0.12,
+          "maxCrossAge": 999,
+          "momMin": 0,
+          "minZ": 0.5
+        },
+        "train": {
+          "n": 85,
+          "wins": 23,
+          "wr": 0.2706,
+          "pnl": 273.11,
+          "exp": 3.2131,
+          "pf": 1.418
+        },
+        "hold": {
+          "n": 63,
+          "wins": 16,
+          "wr": 0.254,
+          "pnl": -14.91,
+          "exp": -0.2367,
+          "pf": 0.97
+        }
+      },
+      {
+        "id": "H3_late_phys_cheap|fa0.3|da1|t8-25|D80|d20|e0.15|ca999|m0",
+        "thesis": "H3_late_phys_cheap",
+        "params": {
+          "maxFavAsk": 0.3,
+          "maxDogAsk": 1,
+          "minTau": 8,
+          "maxTau": 25,
+          "maxDist": 80,
+          "minDist": 20,
+          "minEdge": 0.15,
+          "maxCrossAge": 999,
+          "momMin": 0,
+          "minZ": 0.5
+        },
+        "train": {
+          "n": 85,
+          "wins": 23,
+          "wr": 0.2706,
+          "pnl": 273.11,
+          "exp": 3.2131,
+          "pf": 1.418
+        },
+        "hold": {
+          "n": 63,
+          "wins": 16,
+          "wr": 0.254,
+          "pnl": -14.91,
+          "exp": -0.2367,
+          "pf": 0.97
+        }
+      },
+      {
+        "id": "H3_late_phys_cheap|fa0.3|da1|t8-25|D80|d20|e0.2|ca999|m0",
+        "thesis": "H3_late_phys_cheap",
+        "params": {
+          "maxFavAsk": 0.3,
+          "maxDogAsk": 1,
+          "minTau": 8,
+          "maxTau": 25,
+          "maxDist": 80,
+          "minDist": 20,
+          "minEdge": 0.2,
+          "maxCrossAge": 999,
+          "momMin": 0,
+          "minZ": 0.5
+        },
+        "train": {
+          "n": 85,
+          "wins": 23,
+          "wr": 0.2706,
+          "pnl": 273.11,
+          "exp": 3.2131,
+          "pf": 1.418
+        },
+        "hold": {
+          "n": 63,
+          "wins": 16,
+          "wr": 0.254,
+          "pnl": -14.91,
+          "exp": -0.2367,
+          "pf": 0.97
+        }
+      },
+      {
+        "id": "H3_late_phys_cheap|fa0.3|da1|t8-25|D80|d12|e0.08|ca999|m0",
+        "thesis": "H3_late_phys_cheap",
+        "params": {
+          "maxFavAsk": 0.3,
+          "maxDogAsk": 1,
+          "minTau": 8,
+          "maxTau": 25,
+          "maxDist": 80,
+          "minDist": 12,
+          "minEdge": 0.08,
+          "maxCrossAge": 999,
+          "momMin": 0,
+          "minZ": 0.5
+        },
+        "train": {
+          "n": 181,
+          "wins": 36,
+          "wr": 0.1989,
+          "pnl": -232.96,
+          "exp": -1.2871,
+          "pf": 0.848
+        },
+        "hold": {
+          "n": 151,
+          "wins": 38,
+          "wr": 0.2517,
+          "pnl": -71.41,
+          "exp": -0.4729,
+          "pf": 0.94
+        }
+      },
+      {
+        "id": "H3_late_phys_cheap|fa0.3|da1|t8-25|D80|d12|e0.12|ca999|m0",
+        "thesis": "H3_late_phys_cheap",
+        "params": {
+          "maxFavAsk": 0.3,
+          "maxDogAsk": 1,
+          "minTau": 8,
+          "maxTau": 25,
+          "maxDist": 80,
+          "minDist": 12,
+          "minEdge": 0.12,
+          "maxCrossAge": 999,
+          "momMin": 0,
+          "minZ": 0.5
+        },
+        "train": {
+          "n": 181,
+          "wins": 36,
+          "wr": 0.1989,
+          "pnl": -232.96,
+          "exp": -1.2871,
+          "pf": 0.848
+        },
+        "hold": {
+          "n": 151,
+          "wins": 38,
+          "wr": 0.2517,
+          "pnl": -71.41,
+          "exp": -0.4729,
+          "pf": 0.94
+        }
+      },
+      {
+        "id": "H3_late_phys_cheap|fa0.3|da1|t8-25|D80|d12|e0.15|ca999|m0",
+        "thesis": "H3_late_phys_cheap",
+        "params": {
+          "maxFavAsk": 0.3,
+          "maxDogAsk": 1,
+          "minTau": 8,
+          "maxTau": 25,
+          "maxDist": 80,
+          "minDist": 12,
+          "minEdge": 0.15,
+          "maxCrossAge": 999,
+          "momMin": 0,
+          "minZ": 0.5
+        },
+        "train": {
+          "n": 181,
+          "wins": 36,
+          "wr": 0.1989,
+          "pnl": -232.96,
+          "exp": -1.2871,
+          "pf": 0.848
+        },
+        "hold": {
+          "n": 151,
+          "wins": 38,
+          "wr": 0.2517,
+          "pnl": -71.41,
+          "exp": -0.4729,
+          "pf": 0.94
+        }
+      },
+      {
+        "id": "H3_late_phys_cheap|fa0.3|da1|t8-25|D80|d12|e0.2|ca999|m0",
+        "thesis": "H3_late_phys_cheap",
+        "params": {
+          "maxFavAsk": 0.3,
+          "maxDogAsk": 1,
+          "minTau": 8,
+          "maxTau": 25,
+          "maxDist": 80,
+          "minDist": 12,
+          "minEdge": 0.2,
+          "maxCrossAge": 999,
+          "momMin": 0,
+          "minZ": 0.5
+        },
+        "train": {
+          "n": 181,
+          "wins": 36,
+          "wr": 0.1989,
+          "pnl": -232.96,
+          "exp": -1.2871,
+          "pf": 0.848
+        },
+        "hold": {
+          "n": 151,
+          "wins": 38,
+          "wr": 0.2517,
+          "pnl": -71.41,
+          "exp": -0.4729,
+          "pf": 0.94
+        }
+      }
+    ],
+    "H4_cross_mom": [
+      {
+        "id": "H4_cross_mom|fa0.48|da0.48|t8-30|D8|d0|e-1|ca999|m12",
+        "thesis": "H4_cross_mom",
+        "params": {
+          "maxFavAsk": 0.48,
+          "maxDogAsk": 0.48,
+          "minTau": 8,
+          "maxTau": 30,
+          "maxDist": 8,
+          "minDist": 0,
+          "minEdge": -1,
+          "maxCrossAge": 999,
+          "momMin": 12,
+          "minZ": 0
+        },
+        "train": {
+          "n": 340,
+          "wins": 131,
+          "wr": 0.3853,
+          "pnl": -172.89,
+          "exp": -0.5085,
+          "pf": 0.921
+        },
+        "hold": {
+          "n": 167,
+          "wins": 56,
+          "wr": 0.3353,
+          "pnl": -149.55,
+          "exp": -0.8955,
+          "pf": 0.871
+        }
+      },
+      {
+        "id": "H4_cross_mom|fa0.52|da0.52|t8-30|D8|d0|e-1|ca999|m12",
+        "thesis": "H4_cross_mom",
+        "params": {
+          "maxFavAsk": 0.52,
+          "maxDogAsk": 0.52,
+          "minTau": 8,
+          "maxTau": 30,
+          "maxDist": 8,
+          "minDist": 0,
+          "minEdge": -1,
+          "maxCrossAge": 999,
+          "momMin": 12,
+          "minZ": 0
+        },
+        "train": {
+          "n": 378,
+          "wins": 158,
+          "wr": 0.418,
+          "pnl": -130.43,
+          "exp": -0.345,
+          "pf": 0.943
+        },
+        "hold": {
+          "n": 179,
+          "wins": 64,
+          "wr": 0.3575,
+          "pnl": -159.64,
+          "exp": -0.8918,
+          "pf": 0.867
+        }
+      },
+      {
+        "id": "H4_cross_mom|fa0.52|da0.52|t10-45|D8|d0|e-1|ca999|m12",
+        "thesis": "H4_cross_mom",
+        "params": {
+          "maxFavAsk": 0.52,
+          "maxDogAsk": 0.52,
+          "minTau": 10,
+          "maxTau": 45,
+          "maxDist": 8,
+          "minDist": 0,
+          "minEdge": -1,
+          "maxCrossAge": 999,
+          "momMin": 12,
+          "minZ": 0
+        },
+        "train": {
+          "n": 583,
+          "wins": 267,
+          "wr": 0.458,
+          "pnl": 156.02,
+          "exp": 0.2676,
+          "pf": 1.047
+        },
+        "hold": {
+          "n": 297,
+          "wins": 116,
+          "wr": 0.3906,
+          "pnl": -160.51,
+          "exp": -0.5404,
+          "pf": 0.915
+        }
+      },
+      {
+        "id": "H4_cross_mom|fa0.55|da0.55|t10-45|D8|d0|e-1|ca999|m12",
+        "thesis": "H4_cross_mom",
+        "params": {
+          "maxFavAsk": 0.55,
+          "maxDogAsk": 0.55,
+          "minTau": 10,
+          "maxTau": 45,
+          "maxDist": 8,
+          "minDist": 0,
+          "minEdge": -1,
+          "maxCrossAge": 999,
+          "momMin": 12,
+          "minZ": 0
+        },
+        "train": {
+          "n": 629,
+          "wins": 295,
+          "wr": 0.469,
+          "pnl": 120.04,
+          "exp": 0.1908,
+          "pf": 1.035
+        },
+        "hold": {
+          "n": 317,
+          "wins": 129,
+          "wr": 0.4069,
+          "pnl": -176.69,
+          "exp": -0.5574,
+          "pf": 0.91
+        }
+      },
+      {
+        "id": "H4_cross_mom|fa0.48|da0.48|t10-45|D8|d0|e-1|ca999|m12",
+        "thesis": "H4_cross_mom",
+        "params": {
+          "maxFavAsk": 0.48,
+          "maxDogAsk": 0.48,
+          "minTau": 10,
+          "maxTau": 45,
+          "maxDist": 8,
+          "minDist": 0,
+          "minEdge": -1,
+          "maxCrossAge": 999,
+          "momMin": 12,
+          "minZ": 0
+        },
+        "train": {
+          "n": 515,
+          "wins": 218,
+          "wr": 0.4233,
+          "pnl": 56.3,
+          "exp": 0.1093,
+          "pf": 1.018
+        },
+        "hold": {
+          "n": 269,
+          "wins": 96,
+          "wr": 0.3569,
+          "pnl": -179.59,
+          "exp": -0.6676,
+          "pf": 0.901
+        }
+      },
+      {
+        "id": "H4_cross_mom|fa0.6|da0.6|t10-45|D8|d0|e-1|ca999|m12",
+        "thesis": "H4_cross_mom",
+        "params": {
+          "maxFavAsk": 0.6,
+          "maxDogAsk": 0.6,
+          "minTau": 10,
+          "maxTau": 45,
+          "maxDist": 8,
+          "minDist": 0,
+          "minEdge": -1,
+          "maxCrossAge": 999,
+          "momMin": 12,
+          "minZ": 0
+        },
+        "train": {
+          "n": 704,
+          "wins": 345,
+          "wr": 0.4901,
+          "pnl": 88.55,
+          "exp": 0.1258,
+          "pf": 1.024
+        },
+        "hold": {
+          "n": 356,
+          "wins": 155,
+          "wr": 0.4354,
+          "pnl": -185.45,
+          "exp": -0.5209,
+          "pf": 0.911
+        }
+      },
+      {
+        "id": "H4_cross_mom|fa0.6|da0.6|t8-30|D8|d0|e-1|ca999|m12",
+        "thesis": "H4_cross_mom",
+        "params": {
+          "maxFavAsk": 0.6,
+          "maxDogAsk": 0.6,
+          "minTau": 8,
+          "maxTau": 30,
+          "maxDist": 8,
+          "minDist": 0,
+          "minEdge": -1,
+          "maxCrossAge": 999,
+          "momMin": 12,
+          "minZ": 0
+        },
+        "train": {
+          "n": 451,
+          "wins": 206,
+          "wr": 0.4568,
+          "pnl": -121.24,
+          "exp": -0.2688,
+          "pf": 0.952
+        },
+        "hold": {
+          "n": 213,
+          "wins": 85,
+          "wr": 0.3991,
+          "pnl": -198.01,
+          "exp": -0.9296,
+          "pf": 0.851
+        }
+      },
+      {
+        "id": "H4_cross_mom|fa0.48|da0.48|t10-45|D8|d0|e-1|ca999|m8",
+        "thesis": "H4_cross_mom",
+        "params": {
+          "maxFavAsk": 0.48,
+          "maxDogAsk": 0.48,
+          "minTau": 10,
+          "maxTau": 45,
+          "maxDist": 8,
+          "minDist": 0,
+          "minEdge": -1,
+          "maxCrossAge": 999,
+          "momMin": 8,
+          "minZ": 0
+        },
+        "train": {
+          "n": 739,
+          "wins": 297,
+          "wr": 0.4019,
+          "pnl": -193.89,
+          "exp": -0.2624,
+          "pf": 0.958
+        },
+        "hold": {
+          "n": 437,
+          "wins": 158,
+          "wr": 0.3616,
+          "pnl": -219.83,
+          "exp": -0.503,
+          "pf": 0.925
+        }
+      }
+    ]
+  },
+  "activity": {
+    "trainWithTrades": 1664,
+    "holdWithTrades": 1624,
+    "bothPositiveExp": 671
+  }
+}
