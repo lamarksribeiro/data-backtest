@@ -28,6 +28,11 @@ Budget base US$ 10; entradas com ask ≥ 0,82 usam 15 (champion/robust) ou 20 (a
 |---|---|---|---|
 | **`btc-gold-v1`** | **US$ 10 / US$ 30** | g3-os · tier high-ask **1.5×** · settle 0.995 | Estúdio **v11** · **campeão BTC produção** |
 | **`eth-gold-v1`** | **US$ 10 / US$ 30** | mesmo pacote | Estúdio **v12** · candidato ETH |
+| **`sol-gold-v1`** | **US$ 10 / US$ 30** | mesmo pacote | Estúdio **v13** |
+| **`xrp-gold-v1`** | **US$ 10 / US$ 30** | mesmo pacote | Estúdio **v14** |
+| **`doge-gold-v1`** | **US$ 10 / US$ 30** | mesmo pacote | Estúdio **v15** |
+| **`hype-gold-v1`** | **US$ 10 / US$ 30** | mesmo pacote | Estúdio **v16** |
+| BNB | — | g3-os jul | **reprovado** (PnL−95) |
 | `btc-micro-guardian-v3-os` | US$ 2 / US$ 4 | g3-os idêntico | Estúdio **v9** · canário micro |
 | `eth-micro-gold-v1` | US$ 2 / US$ 4 | g3-os | Estúdio **v10** · micro ETH |
 | `btc-micro-aggressive-v1` | US$ 2 / US$ 4 | Aggressive (sem OS) | Estúdio **v5** · histórico |

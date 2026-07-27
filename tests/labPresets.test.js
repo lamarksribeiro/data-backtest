@@ -114,9 +114,9 @@ test('seedPromotedStrategies seeds versions from lab manifests', () => {
       WHERE strategy_id = ?
       ORDER BY version ASC
     `).all(midas.strategy.id);
-    assert.equal(midasVersions.length, 12);
-    assert.equal(midasVersions.at(-1).version, 12);
-    assert.match(midasVersions.at(-1).notes, /ETH Gold/);
+    assert.equal(midasVersions.length, 16);
+    assert.equal(midasVersions.at(-1).version, 16);
+    assert.match(midasVersions.at(-1).notes, /HYPE Gold/);
     const midasDefault = db.prepare(`
       SELECT sv.version
       FROM strategy_definitions sd
@@ -191,13 +191,13 @@ test('loadPreset resolves tfc v6 hybrid stop params', () => {
   assert.equal(params.hedgeLimitEnabled, false);
 });
 
-test('midas-carry-v1 presets have unique studioVersion (Estúdio v1..v12)', () => {
+test('midas-carry-v1 presets have unique studioVersion (Estúdio v1..v16)', () => {
   const presets = listPresets({ strategyId: 'midas-carry-v1', strategyFamily: 'terminal', includeAliases: false });
   const versions = presets.map((item) => Number(item.studioVersion));
-  assert.equal(presets.length, 12);
+  assert.equal(presets.length, 16);
   assert.deepEqual(
     [...new Set(versions)].sort((a, b) => a - b),
-    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
   );
   assert.equal(versions.length, new Set(versions).size, 'studioVersion deve ser único');
   const microAggressive = presets.find((item) => item.id === 'btc-micro-aggressive-v1');
@@ -211,6 +211,10 @@ test('midas-carry-v1 presets have unique studioVersion (Estúdio v1..v12)', () =
   assert.equal(champion.role, 'champion');
   const ethGold = presets.find((item) => item.id === 'eth-gold-v1');
   assert.equal(ethGold.studioVersion, 12);
+  const solGold = presets.find((item) => item.id === 'sol-gold-v1');
+  assert.equal(solGold.studioVersion, 13);
+  const hypeGold = presets.find((item) => item.id === 'hype-gold-v1');
+  assert.equal(hypeGold.studioVersion, 16);
   const { params } = loadPreset('btc-gold-v1', { strategyId: 'midas-carry-v1', strategyFamily: 'terminal' });
   assert.equal(params.entryBudget, 10);
   assert.equal(params.maxEntryBudget, 30);
@@ -219,6 +223,7 @@ test('midas-carry-v1 presets have unique studioVersion (Estúdio v1..v12)', () =
   assert.equal(params.tierMinZ, 2.0);
   assert.equal(params.minSecondsLeft, 9);
   assert.equal(params.settleWinnerPrice, 0.995);
+  assert.equal(params.tierAskBudgetFactor, 1.5);
 });
 
 test('renderPresetGls patches param defaults in source', () => {

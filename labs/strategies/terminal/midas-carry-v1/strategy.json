@@ -4,7 +4,7 @@
   "family": "terminal",
   "status": "candidate",
   "kind": "gls",
-  "assets": ["BTC", "ETH"],
+  "assets": ["BTC", "ETH", "SOL", "XRP", "DOGE", "HYPE", "BNB"],
   "intervals": ["5m"],
   "requiresBook": true,
   "defaultBookDepth": 25,
@@ -15,13 +15,13 @@
   "promotedToStudio": true,
   "studioSlug": "midas-carry-v1",
   "studio": {
-    "description": "MIDAS Carry V1 — núcleo TFC V7 + envelope high-ask. Default v11 = BTC Gold ($10/$30, g3-os). v9 = micro canário $2/$4. v12 = ETH Gold $10/$30. v10 = ETH micro. Histórico: v1–v8 lab/canários intermediários.",
-    "tags": ["terminal", "midas", "high-ask-tier", "btc", "eth", "champion", "odds-shock", "gold", "production-size"],
+    "description": "MIDAS Carry V1 — default v11 BTC Gold ($10/$30 tier1.5). ETH v12. SOL/XRP/DOGE/HYPE Gold v13–v16. BNB jul reprovado. Micro canário v9.",
+    "tags": ["terminal", "midas", "high-ask-tier", "btc", "eth", "sol", "xrp", "doge", "hype", "champion", "odds-shock", "gold", "production-size"],
     "defaultVersion": 11,
     "defaultGlsSource": "classic",
     "glsSources": {
       "classic": "labs/strategies/terminal/midas-carry-v1/strategy.gls"
     }
   },
-  "notes": "Campeão Estúdio v11: btc-gold-v1 ($10/$30 g3-os). Canário v9 micro $2/$4. ETH: v12 gold $10/$30 · v10 micro. Robot: entry FAK + exit GTC. Relatórios: midas-package-final-aprovacao.md · midas-gold-revalidacao-2026-07-26.md."
+  "notes": "Campeão v11 btc-gold-v1. Multi-ativo Gold (mesmo núcleo g3-os $10/$30 tier1.5): ETH v12 · SOL v13 · XRP v14 · DOGE v15 · HYPE v16. BNB rejeitado (jul PnL−95, protect≪hold). Labs: gold-calibrate-*-july + midas-gold-multi-asset-2026-07-26.md."
 }
