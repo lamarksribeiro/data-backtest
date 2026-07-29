@@ -1,0 +1,9 @@
+{
+  "name": "skew-set-v0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test engine.test.mjs",
+    "lake": "node --max-old-space-size=4096 lake-replay.mjs"
+  }
+}

@@ -220,6 +220,32 @@ export const INDIVIDUAL_RUNNERS = [
     promotedToStudio: false,
     sourceDoc: 'docs/estrategias/nao-implementadas/pair-ladder-complete-set-v1.md',
   },
+  {
+    id: 'pair-path-v0',
+    family: 'carry',
+    name: 'Pair-Path V0',
+    sourceFile: 'pair-path-runner.js',
+    createFn: 'createBacktestRunner',
+    runnerSlug: 'pair-path-runner',
+    strategyLabel: 'PAIR_PATH_V0',
+    usesStopReverse: false,
+    tier: 'A',
+    promotedToStudio: true,
+    sourceDoc: 'docs/estrategias/implementadas/pair-path-v0.md',
+  },
+  {
+    id: 'clip-path-v1',
+    family: 'carry',
+    name: 'Clip-Path V1',
+    sourceFile: 'pair-path-runner.js',
+    createFn: 'createBacktestRunner',
+    runnerSlug: 'pair-path-runner',
+    strategyLabel: 'CLIP_PATH_V1',
+    usesStopReverse: false,
+    tier: 'A',
+    promotedToStudio: true,
+    sourceDoc: 'docs/estrategias/implementadas/clip-path-v1.md',
+  },
 ];
 
 export const PORTFOLIO_RUNNERS = [

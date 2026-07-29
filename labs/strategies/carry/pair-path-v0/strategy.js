@@ -1,0 +1,43 @@
+export default strategy({
+  name: "Pair-Path V0",
+
+  dependencies: {
+    runner: strategyLibrary("pair-path-runner", 1),
+  },
+
+  params: {
+    walletSize: 100,
+    openShares: 20,
+    openAskLo: 0.52,
+    openAskHi: 0.62,
+    openTriggerCents: 55,
+    openCapCents: 2,
+    avgSumMax: 0.96,
+    eqAvgSumMax: 0.96,
+    hedgeAskMax: 0.42,
+    tauOpenMin: 40,
+    tauOpenMax: 240,
+    tauHedgeMin: 15,
+    tauEqMin: 8,
+    eqAskMax: 0.05,
+    legChoice: "chase",
+    hedgeCapCents: 1,
+    maxOpenAttempts: 3,
+    maxHedgeAttempts: 2,
+    makerTimeoutSec: 30,
+    feeRate: 0.07,
+    maxEventNotional: 27,
+    hedgeLevels: null,
+    restingFillModel: "none",
+    confirmationTicks: 2,
+    maxClipsPerTick: 1,
+    applyPolymarketFees: true,
+    polymarketFeeCategory: "crypto",
+    requireQuality: true,
+    minCoverage: 0.99,
+  },
+
+  onEventStart() {},
+  onTick() {},
+  onEventEnd() {},
+});

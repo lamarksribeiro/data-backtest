@@ -263,6 +263,9 @@ Se > 0, PnL depende do vencedor (risco direcional). Escape existe para **hedgear
 |---|---|
 | `data-backtest/labs/sandbox/pair-path-v0/engine.mjs` | Engine offline (open/hedge/clips/escape) |
 | `.../mechanics-sweep.mjs` | Sweep amplo 148 variantes |
+| `.../compensation-path-lab.mjs` | Regimes TOP/BOTTOM + políticas |
+| `.../compensation-study2.mjs` | Labels de path + M1/M2/patient + MC |
+| `.../MACHINE-COMPENSATION-V1.md` | Contrato M1–M5 compensação |
 | `.../presets/clip-path-v1.json` | Preset ops deep3 |
 | `.../presets/clip-path-v1-deep4.json` | Preset lab deep4 |
 | `.../presets/size-fee-v0-cap2.json` | Base V0 calibrada |

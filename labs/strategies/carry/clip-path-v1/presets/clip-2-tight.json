@@ -1,0 +1,31 @@
+{
+  "id": "clip-2-tight",
+  "name": "Clip-2 tight (40/36 + escape)",
+  "studioVersion": 2,
+  "studioName": "Clip-Path · clip-2-tight",
+  "role": "historical-ab-winner",
+  "notes": "14-event in-sample A/B pick; not a live GO.",
+  "params": {
+    "openShares": 10,
+    "openCapCents": 2,
+    "avgSumMax": 0.95,
+    "hedgeAskMax": 0.4,
+    "maxHedgeAttempts": 6,
+    "maxEventNotional": 16,
+    "restingFillModel": "none",
+    "confirmationTicks": 2,
+    "maxClipsPerTick": 1,
+    "hedgeLevels": [
+      { "askMax": 0.4, "frac": 0.5 },
+      { "askMax": 0.36, "frac": 0.5 }
+    ],
+    "tauHedgeEscape": 20,
+    "hedgeEscapeAskMax": 0.42,
+    "escapeAvgSumMax": 0.98,
+    "tauHedgeEscape2": null,
+    "hedgeEscapeAskMax2": null,
+    "escapeAvgSumMax2": null,
+    "escapeMinLockedPnlPerShare": null,
+    "escapeMinLockedPnlPerShare2": null
+  }
+}

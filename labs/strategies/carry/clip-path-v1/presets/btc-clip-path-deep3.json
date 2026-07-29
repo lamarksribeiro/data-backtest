@@ -1,0 +1,32 @@
+{
+  "id": "btc-clip-path-deep3",
+  "name": "Clip-Path · deep3 + escape",
+  "studioVersion": 1,
+  "studioName": "Clip-Path V1 · deep3",
+  "role": "baseline",
+  "notes": "Historical deep3 calibration fixture. Research/HOLD — not live GO.",
+  "params": {
+    "openShares": 10,
+    "openCapCents": 2,
+    "avgSumMax": 0.94,
+    "hedgeAskMax": 0.4,
+    "maxHedgeAttempts": 8,
+    "maxEventNotional": 16,
+    "restingFillModel": "none",
+    "confirmationTicks": 2,
+    "maxClipsPerTick": 1,
+    "hedgeLevels": [
+      { "askMax": 0.4, "frac": 0.4 },
+      { "askMax": 0.36, "frac": 0.3 },
+      { "askMax": 0.32, "frac": 0.3 }
+    ],
+    "tauHedgeEscape": 20,
+    "hedgeEscapeAskMax": 0.42,
+    "escapeAvgSumMax": 0.98,
+    "escapeMinLockedPnlPerShare": -0.02,
+    "tauHedgeEscape2": 12,
+    "hedgeEscapeAskMax2": 0.45,
+    "escapeAvgSumMax2": 1.0,
+    "escapeMinLockedPnlPerShare2": -0.04
+  }
+}

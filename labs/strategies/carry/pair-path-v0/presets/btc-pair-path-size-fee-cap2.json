@@ -1,0 +1,19 @@
+{
+  "id": "btc-pair-path-size-fee-cap2",
+  "name": "Pair-Path · size-fee cap+2¢",
+  "studioVersion": 1,
+  "studioName": "Pair-Path V0 · size-fee cap2",
+  "role": "baseline",
+  "notes": "size-fee-v0 + openCapCents 2. Fill honesto (restingFillModel none).",
+  "params": {
+    "openShares": 20,
+    "openCapCents": 2,
+    "avgSumMax": 0.96,
+    "hedgeAskMax": 0.42,
+    "maxEventNotional": 27,
+    "hedgeLevels": null,
+    "restingFillModel": "none",
+    "confirmationTicks": 2,
+    "maxClipsPerTick": 1
+  }
+}

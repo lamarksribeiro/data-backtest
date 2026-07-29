@@ -1,0 +1,33 @@
+{
+  "id": "pair-path-v0",
+  "name": "Pair-Path V0",
+  "family": "carry",
+  "status": "research",
+  "kind": "library-runner",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "library-runner",
+    "runnerSlug": "pair-path-runner",
+    "runnerVersion": 1
+  },
+  "portStatus": "ported",
+  "promotedToStudio": true,
+  "studioSlug": "pair-path-v0",
+  "studio": {
+    "description": "Complete-set curto: 1 open (favorito 52–62¢) + 1 hedge no oposto se avgSum < gate. Research / HOLD — path real validado; automação ampla ainda em parity gap. Sem MULT/re-arme.",
+    "tags": [
+      "pair-path",
+      "complete-set",
+      "carry",
+      "dual-side",
+      "research",
+      "btc",
+      "clip"
+    ],
+    "defaultVersion": 1
+  },
+  "notes": "Fonte: labs/sandbox/pair-path-v0 (MACHINE-V0.md). Runner: pair-path-runner@1. Preset: size-fee-v0 + cap2. Doc: docs/estrategias/implementadas/pair-path-v0.md"
+}

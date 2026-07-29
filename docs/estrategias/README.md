@@ -23,6 +23,8 @@ Inclui as 16 teorias transferidas do polymarket-test, mais:
 - [`implementadas/escada-dupla-v1.md`](implementadas/escada-dupla-v1.md) — Escada Dupla (library-runner, Studio)
   - Auditoria de realismo (2026-07-25): [`auditoria-escada-dupla-realismo-2026-07-25.md`](auditoria-escada-dupla-realismo-2026-07-25.md) — edge do campeão apontado como artefato de execução; plano de validação em 3 etapas
   - Post-mortem `ascent_hedge`: [`../rejeitadas/escada-dupla-v1.md`](../rejeitadas/escada-dupla-v1.md) — **não cobre** Shotandgo Python
+- [`implementadas/pair-path-v0.md`](implementadas/pair-path-v0.md) — Pair-Path V0 (library-runner, Studio; research/HOLD)
+- [`implementadas/clip-path-v1.md`](implementadas/clip-path-v1.md) — Clip-Path V1 (mesmo runner; hedgeLevels; HOLD/parity gap)
 - [`nao-implementadas/shotandgo-v1.md`](nao-implementadas/shotandgo-v1.md) — Shotandgo / Phil Escada Dupla (research reaberta; lab `shotandgo-v1`)
 
 Estudo de suporte: [`../analise-quantitativa/estudo-correlacao-binance-polymarket.md`](../analise-quantitativa/estudo-correlacao-binance-polymarket.md).
