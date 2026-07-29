@@ -1,0 +1,118 @@
+{
+  "name": "tail-help-ab-btc-july",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-26",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "notes": "A/B da protecao de cauda: sem ajuda (live $2.5/$4 + reverse) vs so budget $2 vs com ajuda (budget $2 + reverse off, proxy do R_event sem segunda exposicao).",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "sem-ajuda-live",
+        "params": {
+          "maxAsk": 0.94,
+          "tierAskThreshold": 0.82,
+          "tierAskBudgetFactor": 1.5,
+          "entryBudget": 2.5,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5,
+          "maxDistAbs": 40,
+          "maxAdverseSpotChange": 8,
+          "lateFlipReverseEnabled": true,
+          "oddsShockReverseEnabled": false
+        }
+      },
+      {
+        "id": "so-budget-2",
+        "params": {
+          "maxAsk": 0.94,
+          "tierAskThreshold": 0.82,
+          "tierAskBudgetFactor": 1.5,
+          "entryBudget": 2,
+          "maxEntryBudget": 2,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5,
+          "maxDistAbs": 40,
+          "maxAdverseSpotChange": 8,
+          "lateFlipReverseEnabled": true,
+          "oddsShockReverseEnabled": false
+        }
+      },
+      {
+        "id": "com-ajuda-budget2-norev",
+        "params": {
+          "maxAsk": 0.94,
+          "tierAskThreshold": 0.82,
+          "tierAskBudgetFactor": 1.0,
+          "entryBudget": 2,
+          "maxEntryBudget": 2,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5,
+          "maxDistAbs": 40,
+          "maxAdverseSpotChange": 8,
+          "lateFlipReverseEnabled": false,
+          "oddsShockReverseEnabled": false
+        }
+      },
+      {
+        "id": "com-ajuda-r205-norev",
+        "params": {
+          "maxAsk": 0.94,
+          "tierAskThreshold": 0.82,
+          "tierAskBudgetFactor": 1.0,
+          "entryBudget": 2.05,
+          "maxEntryBudget": 2.05,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5,
+          "maxDistAbs": 40,
+          "maxAdverseSpotChange": 8,
+          "lateFlipReverseEnabled": false,
+          "oddsShockReverseEnabled": false
+        }
+      }
+    ]
+  }
+}

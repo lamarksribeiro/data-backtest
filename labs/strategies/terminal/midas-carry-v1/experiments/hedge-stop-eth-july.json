@@ -1,0 +1,78 @@
+{
+  "name": "hedge-stop-eth-july",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "ETH",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-25",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "notes": "Validacao cruzada do hedge stop em ETH (ativo independente). Se o mecanismo so funciona em BTC, e ajuste de curva.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "base-protect",
+        "params": {
+          "entryBudget": 10, "maxEntryBudget": 30, "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9, "maxDistAbs": 40, "maxAsk": 0.94,
+          "tierAskBudgetFactor": 1.5, "tierMinZ": 2.0,
+          "oddsShockEnabled": true, "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55, "oddsShockPartialPct": 0.5
+        }
+      },
+      {
+        "id": "base-hold",
+        "params": {
+          "entryBudget": 10, "maxEntryBudget": 30, "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9, "maxDistAbs": 40, "maxAsk": 0.94,
+          "tierAskBudgetFactor": 1.5, "tierMinZ": 2.0,
+          "oddsShockEnabled": false,
+          "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false
+        }
+      },
+      {
+        "id": "hedge20-hold",
+        "params": {
+          "entryBudget": 10, "maxEntryBudget": 30, "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9, "maxDistAbs": 40, "maxAsk": 0.94,
+          "tierAskBudgetFactor": 1.5, "tierMinZ": 2.0,
+          "oddsShockEnabled": false,
+          "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false,
+          "hedgeStopEnabled": true, "hedgeStopPlaceSec": 20, "hedgeStopMinSec": 4,
+          "hedgeStopLift": 0.20, "hedgeStopBudgetFactor": 1.0
+        }
+      },
+      {
+        "id": "hedge25-hold",
+        "params": {
+          "entryBudget": 10, "maxEntryBudget": 30, "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9, "maxDistAbs": 40, "maxAsk": 0.94,
+          "tierAskBudgetFactor": 1.5, "tierMinZ": 2.0,
+          "oddsShockEnabled": false,
+          "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false,
+          "hedgeStopEnabled": true, "hedgeStopPlaceSec": 20, "hedgeStopMinSec": 4,
+          "hedgeStopLift": 0.25, "hedgeStopBudgetFactor": 1.0
+        }
+      },
+      {
+        "id": "hedge20-protect",
+        "params": {
+          "entryBudget": 10, "maxEntryBudget": 30, "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9, "maxDistAbs": 40, "maxAsk": 0.94,
+          "tierAskBudgetFactor": 1.5, "tierMinZ": 2.0,
+          "oddsShockEnabled": true, "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55, "oddsShockPartialPct": 0.5,
+          "hedgeStopEnabled": true, "hedgeStopPlaceSec": 20, "hedgeStopMinSec": 4,
+          "hedgeStopLift": 0.20, "hedgeStopBudgetFactor": 1.0
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,1692 @@
+{
+  "meta": {
+    "root": "D:\\Projetos\\projeto-goldenlens\\data-robot\\runs\\labs-audit-falhas\\btc",
+    "generatedAt": "2026-07-28T01:47:51.526Z",
+    "files": 4,
+    "note": "Dedup key = asset + marketId; conserva o primeiro settlement. pnlDelta e pre-fee/incompleto e nao equivale a PnL liquido de carteira."
+  },
+  "raw": {
+    "settlements": 179,
+    "pnlDeltaSum": 30.817565,
+    "wins": 148,
+    "losses": 31,
+    "winRatePct": 82.68,
+    "avgWin": 0.574207,
+    "avgLoss": -1.747258,
+    "profitFactor": 1.568957,
+    "worst": -2.745,
+    "p05": -1.875
+  },
+  "unique": {
+    "settlements": 137,
+    "pnlDeltaSum": 23.297565,
+    "wins": 113,
+    "losses": 24,
+    "winRatePct": 82.48,
+    "avgWin": 0.594846,
+    "avgLoss": -1.83,
+    "profitFactor": 1.530455,
+    "worst": -2.745,
+    "p05": -2.085
+  },
+  "duplicateMarkets": 18,
+  "duplicateGroupsWithDifferentPnl": 0,
+  "extraSettlementRecords": 42,
+  "duplicatePnlDeltaOverstatement": 7.52,
+  "perAsset": {
+    "BTC": {
+      "settlements": 137,
+      "pnlDeltaSum": 23.297565,
+      "wins": 113,
+      "losses": 24,
+      "winRatePct": 82.48,
+      "avgWin": 0.594846,
+      "avgLoss": -1.83,
+      "profitFactor": 1.530455,
+      "worst": -2.745,
+      "p05": -2.085
+    }
+  },
+  "engineStarts": [
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1784938937946,
+      "sourceCommit": "61655be1d154e477606b33027f11dd87de09d681",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-25.jsonl",
+      "line": 49
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1784940836056,
+      "sourceCommit": "0ae727e894f4b4bce1d5300d05f5c318e886afc1",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-25.jsonl",
+      "line": 116
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1784945890521,
+      "sourceCommit": "17784610cf23218801b1fcb7ec59e9467bb86b59",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-25.jsonl",
+      "line": 296
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1784947482734,
+      "sourceCommit": "24f07781cfe2b3cbc7b0a8d4af8da463dd3e2c80",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-25.jsonl",
+      "line": 358
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1784949584132,
+      "sourceCommit": "5fe854d72fc79cf234898369aef64227eb34d681",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-25.jsonl",
+      "line": 464
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1784949945904,
+      "sourceCommit": "5fe854d72fc79cf234898369aef64227eb34d681",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-25.jsonl",
+      "line": 484
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1784950622754,
+      "sourceCommit": "232fab66f10c3850475f4b318067c7efec1572a1",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-25.jsonl",
+      "line": 530
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1784963862543,
+      "sourceCommit": "c53b1d7782e78b91692e0ec12eef9c7687e80457",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-25.jsonl",
+      "line": 1503
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1784965238180,
+      "sourceCommit": "814bb0c9af0a9270952813d12f6156de70638987",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-25.jsonl",
+      "line": 1667
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1784985628209,
+      "sourceCommit": "814bb0c9af0a9270952813d12f6156de70638987",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-25.jsonl",
+      "line": 2205
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1784986007892,
+      "sourceCommit": "73b8a135fc5ed3b4b1f2f34bfcdc0ecd47d5188e",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-25.jsonl",
+      "line": 2219
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1784986078211,
+      "sourceCommit": "73b8a135fc5ed3b4b1f2f34bfcdc0ecd47d5188e",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-25.jsonl",
+      "line": 2225
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1784987445318,
+      "sourceCommit": "f0713ea16ed54c14de2336cd6226026f62659f00",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-25.jsonl",
+      "line": 2356
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785004545770,
+      "sourceCommit": "ef86b6d01fec264bac96a73d5ee53bd86d5af3e4",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-25.jsonl",
+      "line": 3465
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785079486964,
+      "sourceCommit": "8a37453bffb7977af9a8bc247e0aac465a5d014b",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-26.jsonl",
+      "line": 3360
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785087198363,
+      "sourceCommit": "cfce06507318e3cfc6a1bd0662f68ac55ee3dd52",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-26.jsonl",
+      "line": 3872
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785087266812,
+      "sourceCommit": "cfce06507318e3cfc6a1bd0662f68ac55ee3dd52",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-26.jsonl",
+      "line": 3876
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785102735705,
+      "sourceCommit": "d2b9ff70298447a0b25a020a3e65e6ea1dc6252a",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-26.jsonl",
+      "line": 3892
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785112691857,
+      "sourceCommit": "d2b9ff70298447a0b25a020a3e65e6ea1dc6252a",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 159
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785114224194,
+      "sourceCommit": "9d6fc559495655caa1c0d81f636a7d12f7b49702",
+      "hardCapUsd": 30,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 188
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785129658505,
+      "sourceCommit": "0eef4cf537ff616d0aff62e4b031faac28265366",
+      "hardCapUsd": 6,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 204
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785129700862,
+      "sourceCommit": "0eef4cf537ff616d0aff62e4b031faac28265366",
+      "hardCapUsd": 6,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 208
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785129790923,
+      "sourceCommit": "0eef4cf537ff616d0aff62e4b031faac28265366",
+      "hardCapUsd": 6,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 212
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785129959655,
+      "sourceCommit": "ee1c280b79b7e1a71d262602582d4adff94951ff",
+      "hardCapUsd": 6,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 216
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785130075583,
+      "sourceCommit": "ee1c280b79b7e1a71d262602582d4adff94951ff",
+      "hardCapUsd": 6,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 220
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785130300851,
+      "sourceCommit": "2bdad2a5fdd8350d8860b74081d8acf2ca97454f",
+      "hardCapUsd": 6,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 246
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785130371155,
+      "sourceCommit": "8f25624ce794a554a03740df26a1d68dd94e2e20",
+      "hardCapUsd": 6,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 250
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785137990391,
+      "sourceCommit": "8f25624ce794a554a03740df26a1d68dd94e2e20",
+      "hardCapUsd": 6,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 421
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785138440855,
+      "sourceCommit": "b6c558559e8e1c03f6ff6b153425a99ccd216fd3",
+      "hardCapUsd": 6,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 423
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785138512286,
+      "sourceCommit": "b6c558559e8e1c03f6ff6b153425a99ccd216fd3",
+      "hardCapUsd": 6,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 427
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785138660084,
+      "sourceCommit": "dfe6ce0d1af6738f3a628a73d4d597dd2505fed9",
+      "hardCapUsd": 6,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 431
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785139376650,
+      "sourceCommit": "fe6ec25b95b75a0c81dd263cfca917937ab28a68",
+      "hardCapUsd": 6,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 435
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785140018511,
+      "sourceCommit": "054dd9d235f09065667765edf9792fca79fc75f9",
+      "hardCapUsd": 6,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 439
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785140405258,
+      "sourceCommit": "ca2c00eed9bf4d419876e4fc5a4efde9b17f927a",
+      "hardCapUsd": 6,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 443
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785140820593,
+      "sourceCommit": "dc0c4cffa9db47b8adb88557d71ec901ee6fce54",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 447
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785140893817,
+      "sourceCommit": "3f5802c4e528bbc6947c00e221772d3971d35f21",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 451
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785141413221,
+      "sourceCommit": "e21914a61190e8bc8b1ba23de25a47b56b64d07e",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 455
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785141798187,
+      "sourceCommit": "b5bc01fc31be11e0ed9ceb4f494f8bbe1aafccb7",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 459
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785148379713,
+      "sourceCommit": "34f340b6aeb0096f028c073722d629f3197b5b06",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 582
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785148451577,
+      "sourceCommit": "4c879632158453f743e35aa41b582b8a75037971",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 586
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785149111619,
+      "sourceCommit": "361ad198b2e1f1542117723b0455a082c09dbff1",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 590
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785171345562,
+      "sourceCommit": "bb919da171b53941ccd940138b99e8058fcbf4ab",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 1146
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785172078184,
+      "sourceCommit": "9ac58d2039799b97e440d722d674fec49be3383c",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 1150
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785172151227,
+      "sourceCommit": "9ac58d2039799b97e440d722d674fec49be3383c",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 1154
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785172347086,
+      "sourceCommit": "8ddc0d68e13b79533145ad765f9fbad6fd971fce",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 1158
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785172416887,
+      "sourceCommit": "8ddc0d68e13b79533145ad765f9fbad6fd971fce",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 1162
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785172733817,
+      "sourceCommit": "08c0439898de7dfd43eff076e95bb6690a19cbc5",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 1166
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785172814347,
+      "sourceCommit": "08c0439898de7dfd43eff076e95bb6690a19cbc5",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 1170
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785173217028,
+      "sourceCommit": "5cae6b8e9f22d9831421c81aad7fe3c52d48027b",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 1174
+    },
+    {
+      "asset": "UNKNOWN",
+      "tsMs": 1785190064236,
+      "sourceCommit": "cee64b8ddf849ce122059942ab88df4e238fe84f",
+      "hardCapUsd": 4,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 1178
+    }
+  ],
+  "worstUnique": [
+    {
+      "asset": "BTC",
+      "marketId": "btc-updown-5m-1785035100",
+      "tsMs": 1785035403173,
+      "pnlDelta": -2.745,
+      "side": "DOWN",
+      "qty": 3,
+      "avgPrice": 0.92,
+      "settlementPrice": 0.005,
+      "file": "engine-2026-07-26.jsonl",
+      "line": 1135
+    },
+    {
+      "asset": "BTC",
+      "marketId": "btc-updown-5m-1784990400",
+      "tsMs": 1784990706537,
+      "pnlDelta": -2.625,
+      "side": "DOWN",
+      "qty": 3,
+      "avgPrice": 0.88,
+      "settlementPrice": 0.005,
+      "file": "engine-2026-07-25.jsonl",
+      "line": 2598
+    },
+    {
+      "asset": "BTC",
+      "marketId": "btc-updown-5m-1785008400",
+      "tsMs": 1785008701748,
+      "pnlDelta": -2.5949999999999998,
+      "side": "UP",
+      "qty": 3,
+      "avgPrice": 0.87,
+      "settlementPrice": 0.005,
+      "file": "engine-2026-07-25.jsonl",
+      "line": 3658
+    },
+    {
+      "asset": "BTC",
+      "marketId": "btc-updown-5m-1784966100",
+      "tsMs": 1784966401583,
+      "pnlDelta": -2.565,
+      "side": "UP",
+      "qty": 3,
+      "avgPrice": 0.86,
+      "settlementPrice": 0.005,
+      "file": "engine-2026-07-25.jsonl",
+      "line": 1821
+    },
+    {
+      "asset": "BTC",
+      "marketId": "btc-updown-5m-1785169200",
+      "tsMs": 1785169503933,
+      "pnlDelta": -2.42,
+      "side": "DOWN",
+      "qty": 4,
+      "avgPrice": 0.61,
+      "settlementPrice": 0.005,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 1139
+    },
+    {
+      "asset": "BTC",
+      "marketId": "btc-updown-5m-1785154500",
+      "tsMs": 1785154804557,
+      "pnlDelta": -2.0849999999999995,
+      "side": "UP",
+      "qty": 3,
+      "avgPrice": 0.6999999999999998,
+      "settlementPrice": 0.005,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 933
+    },
+    {
+      "asset": "BTC",
+      "marketId": "btc-updown-5m-1785162900",
+      "tsMs": 1785163204054,
+      "pnlDelta": -2.0849999999999995,
+      "side": "DOWN",
+      "qty": 3,
+      "avgPrice": 0.6999999999999998,
+      "settlementPrice": 0.005,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 1015
+    },
+    {
+      "asset": "BTC",
+      "marketId": "btc-updown-5m-1785084000",
+      "tsMs": 1785084306015,
+      "pnlDelta": -1.875,
+      "side": "DOWN",
+      "qty": 3,
+      "avgPrice": 0.63,
+      "settlementPrice": 0.005,
+      "file": "engine-2026-07-26.jsonl",
+      "line": 3864
+    },
+    {
+      "asset": "BTC",
+      "marketId": "btc-updown-5m-1785087600",
+      "tsMs": 1785087906954,
+      "pnlDelta": -1.845,
+      "side": "DOWN",
+      "qty": 3,
+      "avgPrice": 0.62,
+      "settlementPrice": 0.005,
+      "file": "engine-2026-07-26.jsonl",
+      "line": 3886
+    },
+    {
+      "asset": "BTC",
+      "marketId": "btc-updown-5m-1784949000",
+      "tsMs": 1784949600765,
+      "pnlDelta": -1.7999999999999998,
+      "side": "UP",
+      "qty": 3,
+      "avgPrice": 0.6,
+      "settlementPrice": 0,
+      "file": "engine-2026-07-25.jsonl",
+      "line": 466
+    },
+    {
+      "asset": "BTC",
+      "marketId": "btc-updown-5m-1785036300",
+      "tsMs": 1785036603832,
+      "pnlDelta": -1.755,
+      "side": "DOWN",
+      "qty": 3,
+      "avgPrice": 0.59,
+      "settlementPrice": 0.005,
+      "file": "engine-2026-07-26.jsonl",
+      "line": 1182
+    },
+    {
+      "asset": "BTC",
+      "marketId": "btc-updown-5m-1785052500",
+      "tsMs": 1785052806992,
+      "pnlDelta": -1.6949999999999998,
+      "side": "DOWN",
+      "qty": 3,
+      "avgPrice": 0.57,
+      "settlementPrice": 0.005,
+      "file": "engine-2026-07-26.jsonl",
+      "line": 2463
+    },
+    {
+      "asset": "BTC",
+      "marketId": "btc-updown-5m-1785084300",
+      "tsMs": 1785084606151,
+      "pnlDelta": -1.665,
+      "side": "UP",
+      "qty": 3,
+      "avgPrice": 0.56,
+      "settlementPrice": 0.005,
+      "file": "engine-2026-07-26.jsonl",
+      "line": 3870
+    },
+    {
+      "asset": "BTC",
+      "marketId": "btc-updown-5m-1785080400",
+      "tsMs": 1785080706750,
+      "pnlDelta": -1.6350000000000002,
+      "side": "DOWN",
+      "qty": 3,
+      "avgPrice": 0.55,
+      "settlementPrice": 0.005,
+      "file": "engine-2026-07-26.jsonl",
+      "line": 3764
+    },
+    {
+      "asset": "BTC",
+      "marketId": "btc-updown-5m-1785112200",
+      "tsMs": 1785112507731,
+      "pnlDelta": -1.6350000000000002,
+      "side": "UP",
+      "qty": 3,
+      "avgPrice": 0.55,
+      "settlementPrice": 0.005,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 157
+    },
+    {
+      "asset": "BTC",
+      "marketId": "btc-updown-5m-1785150900",
+      "tsMs": 1785151203686,
+      "pnlDelta": -1.6199999999999999,
+      "side": "UP",
+      "qty": 4,
+      "avgPrice": 0.41,
+      "settlementPrice": 0.005,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 909
+    },
+    {
+      "asset": "BTC",
+      "marketId": "btc-updown-5m-1784951400",
+      "tsMs": 1784951713910,
+      "pnlDelta": -1.605,
+      "side": "DOWN",
+      "qty": 3,
+      "avgPrice": 0.54,
+      "settlementPrice": 0.005,
+      "file": "engine-2026-07-25.jsonl",
+      "line": 594
+    },
+    {
+      "asset": "BTC",
+      "marketId": "btc-updown-5m-1784955300",
+      "tsMs": 1784955600260,
+      "pnlDelta": -1.47,
+      "side": "DOWN",
+      "qty": 2,
+      "avgPrice": 0.74,
+      "settlementPrice": 0.005,
+      "file": "engine-2026-07-25.jsonl",
+      "line": 972
+    },
+    {
+      "asset": "BTC",
+      "marketId": "btc-updown-5m-1785045600",
+      "tsMs": 1785045903806,
+      "pnlDelta": -1.47,
+      "side": "UP",
+      "qty": 2,
+      "avgPrice": 0.74,
+      "settlementPrice": 0.005,
+      "file": "engine-2026-07-26.jsonl",
+      "line": 1910
+    },
+    {
+      "asset": "BTC",
+      "marketId": "btc-updown-5m-1785111600",
+      "tsMs": 1785111908775,
+      "pnlDelta": -1.43,
+      "side": "DOWN",
+      "qty": 2,
+      "avgPrice": 0.72,
+      "settlementPrice": 0.005,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 14
+    },
+    {
+      "asset": "BTC",
+      "marketId": "btc-updown-5m-1784971800",
+      "tsMs": 1784972114816,
+      "pnlDelta": -1.3699999999999999,
+      "side": "UP",
+      "qty": 2,
+      "avgPrice": 0.69,
+      "settlementPrice": 0.005,
+      "file": "engine-2026-07-25.jsonl",
+      "line": 2152
+    },
+    {
+      "asset": "BTC",
+      "marketId": "btc-updown-5m-1784963700",
+      "tsMs": 1784964014745,
+      "pnlDelta": -1.35,
+      "side": "DOWN",
+      "qty": 2,
+      "avgPrice": 0.68,
+      "settlementPrice": 0.005,
+      "file": "engine-2026-07-25.jsonl",
+      "line": 1548
+    },
+    {
+      "asset": "BTC",
+      "marketId": "btc-updown-5m-1785108000",
+      "tsMs": 1785108308312,
+      "pnlDelta": -1.31,
+      "side": "UP",
+      "qty": 2,
+      "avgPrice": 0.66,
+      "settlementPrice": 0.005,
+      "file": "engine-2026-07-26.jsonl",
+      "line": 4281
+    },
+    {
+      "asset": "BTC",
+      "marketId": "btc-updown-5m-1785145500",
+      "tsMs": 1785145809408,
+      "pnlDelta": -1.27,
+      "side": "DOWN",
+      "qty": 2,
+      "avgPrice": 0.64,
+      "settlementPrice": 0.005,
+      "file": "engine-2026-07-27.jsonl",
+      "line": 502
+    },
+    {
+      "asset": "BTC",
+      "marketId": "btc-updown-5m-1784972100",
+      "tsMs": 1784972401286,
+      "pnlDelta": 0.050000000000000044,
+      "side": "DOWN",
+      "qty": 2,
+      "avgPrice": 0.97,
+      "settlementPrice": 0.995,
+      "file": "engine-2026-07-25.jsonl",
+      "line": 2175
+    }
+  ],
+  "duplicates": [
+    {
+      "key": "BTC:btc-updown-5m-1784954700",
+      "records": 2,
+      "extraRecords": 1,
+      "firstPnlDelta": 0.47,
+      "distinctPnlDelta": [
+        0.47
+      ],
+      "rawPnlDelta": 0.94,
+      "events": [
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784954700",
+          "tsMs": 1784955014201,
+          "pnlDelta": 0.47,
+          "side": "UP",
+          "qty": 2,
+          "avgPrice": 0.76,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 946
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784954700",
+          "tsMs": 1784955015215,
+          "pnlDelta": 0.47,
+          "side": "UP",
+          "qty": 2,
+          "avgPrice": 0.76,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 948
+        }
+      ]
+    },
+    {
+      "key": "BTC:btc-updown-5m-1784958000",
+      "records": 3,
+      "extraRecords": 2,
+      "firstPnlDelta": 0.405,
+      "distinctPnlDelta": [
+        0.405
+      ],
+      "rawPnlDelta": 1.215,
+      "events": [
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784958000",
+          "tsMs": 1784958313864,
+          "pnlDelta": 0.405,
+          "side": "UP",
+          "qty": 3,
+          "avgPrice": 0.86,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1180
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784958000",
+          "tsMs": 1784958316406,
+          "pnlDelta": 0.405,
+          "side": "UP",
+          "qty": 3,
+          "avgPrice": 0.86,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1183
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784958000",
+          "tsMs": 1784958317678,
+          "pnlDelta": 0.405,
+          "side": "UP",
+          "qty": 3,
+          "avgPrice": 0.86,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1185
+        }
+      ]
+    },
+    {
+      "key": "BTC:btc-updown-5m-1784960700",
+      "records": 3,
+      "extraRecords": 2,
+      "firstPnlDelta": 0.225,
+      "distinctPnlDelta": [
+        0.225
+      ],
+      "rawPnlDelta": 0.675,
+      "events": [
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784960700",
+          "tsMs": 1784961014710,
+          "pnlDelta": 0.22499999999999987,
+          "side": "UP",
+          "qty": 3,
+          "avgPrice": 0.92,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1364
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784960700",
+          "tsMs": 1784961016071,
+          "pnlDelta": 0.22499999999999987,
+          "side": "UP",
+          "qty": 3,
+          "avgPrice": 0.92,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1366
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784960700",
+          "tsMs": 1784961017367,
+          "pnlDelta": 0.22499999999999987,
+          "side": "UP",
+          "qty": 3,
+          "avgPrice": 0.92,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1368
+        }
+      ]
+    },
+    {
+      "key": "BTC:btc-updown-5m-1784962800",
+      "records": 3,
+      "extraRecords": 2,
+      "firstPnlDelta": 1.305,
+      "distinctPnlDelta": [
+        1.305
+      ],
+      "rawPnlDelta": 3.915,
+      "events": [
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784962800",
+          "tsMs": 1784963115302,
+          "pnlDelta": 1.3049999999999997,
+          "side": "UP",
+          "qty": 3,
+          "avgPrice": 0.56,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1450
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784962800",
+          "tsMs": 1784963116863,
+          "pnlDelta": 1.3049999999999997,
+          "side": "UP",
+          "qty": 3,
+          "avgPrice": 0.56,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1452
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784962800",
+          "tsMs": 1784963118547,
+          "pnlDelta": 1.3049999999999997,
+          "side": "UP",
+          "qty": 3,
+          "avgPrice": 0.56,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1454
+        }
+      ]
+    },
+    {
+      "key": "BTC:btc-updown-5m-1784963100",
+      "records": 3,
+      "extraRecords": 2,
+      "firstPnlDelta": 0.255,
+      "distinctPnlDelta": [
+        0.255
+      ],
+      "rawPnlDelta": 0.765,
+      "events": [
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784963100",
+          "tsMs": 1784963414053,
+          "pnlDelta": 0.2549999999999999,
+          "side": "DOWN",
+          "qty": 3,
+          "avgPrice": 0.91,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1471
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784963100",
+          "tsMs": 1784963415551,
+          "pnlDelta": 0.2549999999999999,
+          "side": "DOWN",
+          "qty": 3,
+          "avgPrice": 0.91,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1473
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784963100",
+          "tsMs": 1784963417233,
+          "pnlDelta": 0.2549999999999999,
+          "side": "DOWN",
+          "qty": 3,
+          "avgPrice": 0.91,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1475
+        }
+      ]
+    },
+    {
+      "key": "BTC:btc-updown-5m-1784963400",
+      "records": 3,
+      "extraRecords": 2,
+      "firstPnlDelta": 0.45,
+      "distinctPnlDelta": [
+        0.45
+      ],
+      "rawPnlDelta": 1.35,
+      "events": [
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784963400",
+          "tsMs": 1784963714417,
+          "pnlDelta": 0.44999999999999996,
+          "side": "UP",
+          "qty": 2,
+          "avgPrice": 0.77,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1492
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784963400",
+          "tsMs": 1784963716087,
+          "pnlDelta": 0.44999999999999996,
+          "side": "UP",
+          "qty": 2,
+          "avgPrice": 0.77,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1494
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784963400",
+          "tsMs": 1784963717713,
+          "pnlDelta": 0.44999999999999996,
+          "side": "UP",
+          "qty": 2,
+          "avgPrice": 0.77,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1496
+        }
+      ]
+    },
+    {
+      "key": "BTC:btc-updown-5m-1784963700",
+      "records": 4,
+      "extraRecords": 3,
+      "firstPnlDelta": -1.35,
+      "distinctPnlDelta": [
+        -1.35
+      ],
+      "rawPnlDelta": -5.4,
+      "events": [
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784963700",
+          "tsMs": 1784964014745,
+          "pnlDelta": -1.35,
+          "side": "DOWN",
+          "qty": 2,
+          "avgPrice": 0.68,
+          "settlementPrice": 0.005,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1548
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784963700",
+          "tsMs": 1784964016724,
+          "pnlDelta": -1.35,
+          "side": "DOWN",
+          "qty": 2,
+          "avgPrice": 0.68,
+          "settlementPrice": 0.005,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1550
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784963700",
+          "tsMs": 1784964018782,
+          "pnlDelta": -1.35,
+          "side": "DOWN",
+          "qty": 2,
+          "avgPrice": 0.68,
+          "settlementPrice": 0.005,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1552
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784963700",
+          "tsMs": 1784964020742,
+          "pnlDelta": -1.35,
+          "side": "DOWN",
+          "qty": 2,
+          "avgPrice": 0.68,
+          "settlementPrice": 0.005,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1554
+        }
+      ]
+    },
+    {
+      "key": "BTC:btc-updown-5m-1784965200",
+      "records": 13,
+      "extraRecords": 12,
+      "firstPnlDelta": 0.345,
+      "distinctPnlDelta": [
+        0.345
+      ],
+      "rawPnlDelta": 4.485,
+      "events": [
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784965200",
+          "tsMs": 1784965515131,
+          "pnlDelta": 0.345,
+          "side": "DOWN",
+          "qty": 3,
+          "avgPrice": 0.88,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1689
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784965200",
+          "tsMs": 1784965519394,
+          "pnlDelta": 0.345,
+          "side": "DOWN",
+          "qty": 3,
+          "avgPrice": 0.88,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1692
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784965200",
+          "tsMs": 1784965522484,
+          "pnlDelta": 0.345,
+          "side": "DOWN",
+          "qty": 3,
+          "avgPrice": 0.88,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1694
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784965200",
+          "tsMs": 1784965524588,
+          "pnlDelta": 0.345,
+          "side": "DOWN",
+          "qty": 3,
+          "avgPrice": 0.88,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1696
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784965200",
+          "tsMs": 1784965526662,
+          "pnlDelta": 0.345,
+          "side": "DOWN",
+          "qty": 3,
+          "avgPrice": 0.88,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1698
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784965200",
+          "tsMs": 1784965529818,
+          "pnlDelta": 0.345,
+          "side": "DOWN",
+          "qty": 3,
+          "avgPrice": 0.88,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1700
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784965200",
+          "tsMs": 1784965532999,
+          "pnlDelta": 0.345,
+          "side": "DOWN",
+          "qty": 3,
+          "avgPrice": 0.88,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1702
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784965200",
+          "tsMs": 1784965535312,
+          "pnlDelta": 0.345,
+          "side": "DOWN",
+          "qty": 3,
+          "avgPrice": 0.88,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1704
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784965200",
+          "tsMs": 1784965538483,
+          "pnlDelta": 0.345,
+          "side": "DOWN",
+          "qty": 3,
+          "avgPrice": 0.88,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1706
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784965200",
+          "tsMs": 1784965540601,
+          "pnlDelta": 0.345,
+          "side": "DOWN",
+          "qty": 3,
+          "avgPrice": 0.88,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1708
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784965200",
+          "tsMs": 1784965543861,
+          "pnlDelta": 0.345,
+          "side": "DOWN",
+          "qty": 3,
+          "avgPrice": 0.88,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1710
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784965200",
+          "tsMs": 1784965546292,
+          "pnlDelta": 0.345,
+          "side": "DOWN",
+          "qty": 3,
+          "avgPrice": 0.88,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1712
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784965200",
+          "tsMs": 1784965550312,
+          "pnlDelta": 0.345,
+          "side": "DOWN",
+          "qty": 3,
+          "avgPrice": 0.88,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 1715
+        }
+      ]
+    },
+    {
+      "key": "BTC:btc-updown-5m-1784971800",
+      "records": 4,
+      "extraRecords": 3,
+      "firstPnlDelta": -1.37,
+      "distinctPnlDelta": [
+        -1.37
+      ],
+      "rawPnlDelta": -5.48,
+      "events": [
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784971800",
+          "tsMs": 1784972114816,
+          "pnlDelta": -1.3699999999999999,
+          "side": "UP",
+          "qty": 2,
+          "avgPrice": 0.69,
+          "settlementPrice": 0.005,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 2152
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784971800",
+          "tsMs": 1784972117529,
+          "pnlDelta": -1.3699999999999999,
+          "side": "UP",
+          "qty": 2,
+          "avgPrice": 0.69,
+          "settlementPrice": 0.005,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 2154
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784971800",
+          "tsMs": 1784972120108,
+          "pnlDelta": -1.3699999999999999,
+          "side": "UP",
+          "qty": 2,
+          "avgPrice": 0.69,
+          "settlementPrice": 0.005,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 2156
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1784971800",
+          "tsMs": 1784972122833,
+          "pnlDelta": -1.3699999999999999,
+          "side": "UP",
+          "qty": 2,
+          "avgPrice": 0.69,
+          "settlementPrice": 0.005,
+          "file": "engine-2026-07-25.jsonl",
+          "line": 2158
+        }
+      ]
+    },
+    {
+      "key": "BTC:btc-updown-5m-1785039000",
+      "records": 2,
+      "extraRecords": 1,
+      "firstPnlDelta": 0.315,
+      "distinctPnlDelta": [
+        0.315
+      ],
+      "rawPnlDelta": 0.63,
+      "events": [
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1785039000",
+          "tsMs": 1785039304144,
+          "pnlDelta": 0.31499999999999995,
+          "side": "DOWN",
+          "qty": 3,
+          "avgPrice": 0.89,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-26.jsonl",
+          "line": 1447
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1785039000",
+          "tsMs": 1785039305456,
+          "pnlDelta": 0.31499999999999995,
+          "side": "DOWN",
+          "qty": 3,
+          "avgPrice": 0.89,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-26.jsonl",
+          "line": 1449
+        }
+      ]
+    },
+    {
+      "key": "BTC:btc-updown-5m-1785044400",
+      "records": 2,
+      "extraRecords": 1,
+      "firstPnlDelta": 0.495,
+      "distinctPnlDelta": [
+        0.495
+      ],
+      "rawPnlDelta": 0.99,
+      "events": [
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1785044400",
+          "tsMs": 1785044704069,
+          "pnlDelta": 0.4950000000000008,
+          "side": "UP",
+          "qty": 3,
+          "avgPrice": 0.8299999999999997,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-26.jsonl",
+          "line": 1839
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1785044400",
+          "tsMs": 1785044705297,
+          "pnlDelta": 0.4950000000000008,
+          "side": "UP",
+          "qty": 3,
+          "avgPrice": 0.8299999999999997,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-26.jsonl",
+          "line": 1841
+        }
+      ]
+    },
+    {
+      "key": "BTC:btc-updown-5m-1785081300",
+      "records": 2,
+      "extraRecords": 1,
+      "firstPnlDelta": 0.33,
+      "distinctPnlDelta": [
+        0.33
+      ],
+      "rawPnlDelta": 0.66,
+      "events": [
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1785081300",
+          "tsMs": 1785081605642,
+          "pnlDelta": 0.33000000000000007,
+          "side": "UP",
+          "qty": 2,
+          "avgPrice": 0.83,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-26.jsonl",
+          "line": 3783
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1785081300",
+          "tsMs": 1785081605663,
+          "pnlDelta": 0.33000000000000007,
+          "side": "UP",
+          "qty": 2,
+          "avgPrice": 0.83,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-26.jsonl",
+          "line": 3784
+        }
+      ]
+    },
+    {
+      "key": "BTC:btc-updown-5m-1785105900",
+      "records": 2,
+      "extraRecords": 1,
+      "firstPnlDelta": 0.53,
+      "distinctPnlDelta": [
+        0.53
+      ],
+      "rawPnlDelta": 1.06,
+      "events": [
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1785105900",
+          "tsMs": 1785106209068,
+          "pnlDelta": 0.53,
+          "side": "UP",
+          "qty": 2,
+          "avgPrice": 0.73,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-26.jsonl",
+          "line": 4251
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1785105900",
+          "tsMs": 1785106209183,
+          "pnlDelta": 0.53,
+          "side": "UP",
+          "qty": 2,
+          "avgPrice": 0.73,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-26.jsonl",
+          "line": 4252
+        }
+      ]
+    },
+    {
+      "key": "BTC:btc-updown-5m-1785154500",
+      "records": 2,
+      "extraRecords": 1,
+      "firstPnlDelta": -2.085,
+      "distinctPnlDelta": [
+        -2.085
+      ],
+      "rawPnlDelta": -4.17,
+      "events": [
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1785154500",
+          "tsMs": 1785154804557,
+          "pnlDelta": -2.0849999999999995,
+          "side": "UP",
+          "qty": 3,
+          "avgPrice": 0.6999999999999998,
+          "settlementPrice": 0.005,
+          "file": "engine-2026-07-27.jsonl",
+          "line": 933
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1785154500",
+          "tsMs": 1785154805650,
+          "pnlDelta": -2.0849999999999995,
+          "side": "UP",
+          "qty": 3,
+          "avgPrice": 0.6999999999999998,
+          "settlementPrice": 0.005,
+          "file": "engine-2026-07-27.jsonl",
+          "line": 934
+        }
+      ]
+    },
+    {
+      "key": "BTC:btc-updown-5m-1785158700",
+      "records": 2,
+      "extraRecords": 1,
+      "firstPnlDelta": 1.1,
+      "distinctPnlDelta": [
+        1.1
+      ],
+      "rawPnlDelta": 2.2,
+      "events": [
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1785158700",
+          "tsMs": 1785159005907,
+          "pnlDelta": 1.1,
+          "side": "DOWN",
+          "qty": 4,
+          "avgPrice": 0.72,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-27.jsonl",
+          "line": 979
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1785158700",
+          "tsMs": 1785159006902,
+          "pnlDelta": 1.1,
+          "side": "DOWN",
+          "qty": 4,
+          "avgPrice": 0.72,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-27.jsonl",
+          "line": 980
+        }
+      ]
+    },
+    {
+      "key": "BTC:btc-updown-5m-1785193500",
+      "records": 4,
+      "extraRecords": 3,
+      "firstPnlDelta": 0.645,
+      "distinctPnlDelta": [
+        0.645
+      ],
+      "rawPnlDelta": 2.58,
+      "events": [
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1785193500",
+          "tsMs": 1785193808276,
+          "pnlDelta": 0.6450000000000002,
+          "side": "DOWN",
+          "qty": 3,
+          "avgPrice": 0.7799999999999999,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-27.jsonl",
+          "line": 1836
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1785193500",
+          "tsMs": 1785193809262,
+          "pnlDelta": 0.6450000000000002,
+          "side": "DOWN",
+          "qty": 3,
+          "avgPrice": 0.7799999999999999,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-27.jsonl",
+          "line": 1837
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1785193500",
+          "tsMs": 1785193810239,
+          "pnlDelta": 0.6450000000000002,
+          "side": "DOWN",
+          "qty": 3,
+          "avgPrice": 0.7799999999999999,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-27.jsonl",
+          "line": 1838
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1785193500",
+          "tsMs": 1785193811299,
+          "pnlDelta": 0.6450000000000002,
+          "side": "DOWN",
+          "qty": 3,
+          "avgPrice": 0.7799999999999999,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-27.jsonl",
+          "line": 1839
+        }
+      ]
+    },
+    {
+      "key": "BTC:btc-updown-5m-1785195900",
+      "records": 3,
+      "extraRecords": 2,
+      "firstPnlDelta": 0.795,
+      "distinctPnlDelta": [
+        0.795
+      ],
+      "rawPnlDelta": 2.385,
+      "events": [
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1785195900",
+          "tsMs": 1785196206737,
+          "pnlDelta": 0.795,
+          "side": "UP",
+          "qty": 3,
+          "avgPrice": 0.73,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-27.jsonl",
+          "line": 1844
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1785195900",
+          "tsMs": 1785196207749,
+          "pnlDelta": 0.795,
+          "side": "UP",
+          "qty": 3,
+          "avgPrice": 0.73,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-27.jsonl",
+          "line": 1845
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1785195900",
+          "tsMs": 1785196208741,
+          "pnlDelta": 0.795,
+          "side": "UP",
+          "qty": 3,
+          "avgPrice": 0.73,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-27.jsonl",
+          "line": 1846
+        }
+      ]
+    },
+    {
+      "key": "BTC:btc-updown-5m-1785196500",
+      "records": 3,
+      "extraRecords": 2,
+      "firstPnlDelta": 0.79,
+      "distinctPnlDelta": [
+        0.79
+      ],
+      "rawPnlDelta": 2.37,
+      "events": [
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1785196500",
+          "tsMs": 1785196806696,
+          "pnlDelta": 0.79,
+          "side": "DOWN",
+          "qty": 2,
+          "avgPrice": 0.6,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-28.jsonl",
+          "line": 2
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1785196500",
+          "tsMs": 1785196808333,
+          "pnlDelta": 0.79,
+          "side": "DOWN",
+          "qty": 2,
+          "avgPrice": 0.6,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-28.jsonl",
+          "line": 3
+        },
+        {
+          "asset": "BTC",
+          "marketId": "btc-updown-5m-1785196500",
+          "tsMs": 1785196809178,
+          "pnlDelta": 0.79,
+          "side": "DOWN",
+          "qty": 2,
+          "avgPrice": 0.6,
+          "settlementPrice": 0.995,
+          "file": "engine-2026-07-28.jsonl",
+          "line": 4
+        }
+      ]
+    }
+  ]
+}

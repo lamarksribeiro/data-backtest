@@ -1,0 +1,88 @@
+{
+  "name": "tail-budget-btc-july",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-26",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 3,
+  "defaults": "../defaults.json",
+  "notes": "Ablation do sizing live MIDAS Gold: $2.5/$4 versus teto de budget $2 e $1.5. O teto GLS ainda nao e o EventLossLedger completo: nao inclui fee/reserva atomica/reverse total.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "live-2p5-4",
+        "params": {
+          "maxAsk": 0.94,
+          "tierAskThreshold": 0.82,
+          "tierAskBudgetFactor": 1.5,
+          "entryBudget": 2.5,
+          "maxEntryBudget": 4,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5,
+          "maxDistAbs": 40,
+          "maxAdverseSpotChange": 8
+        }
+      },
+      {
+        "id": "budget-cap-2",
+        "params": {
+          "maxAsk": 0.94,
+          "tierAskThreshold": 0.82,
+          "tierAskBudgetFactor": 1.5,
+          "entryBudget": 2,
+          "maxEntryBudget": 2,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5,
+          "maxDistAbs": 40,
+          "maxAdverseSpotChange": 8
+        }
+      },
+      {
+        "id": "budget-cap-1p5",
+        "params": {
+          "maxAsk": 0.94,
+          "tierAskThreshold": 0.82,
+          "tierAskBudgetFactor": 1.5,
+          "entryBudget": 1.5,
+          "maxEntryBudget": 1.5,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "tierMinZ": 2,
+          "oddsShockEnabled": true,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5,
+          "maxDistAbs": 40,
+          "maxAdverseSpotChange": 8
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "id": "pair-path-tight-avgSum",
+  "name": "Pair-Path candidate · tight-avgSum",
+  "role": "shadow-candidate",
+  "source": "ablation series8",
+  "notes": "só hedge se avgSum proj < 0.98",
+  "params": {
+    "openShares": 10,
+    "openAskLo": 0.52,
+    "openAskHi": 0.62,
+    "openCapCents": 1,
+    "openTriggerCents": 55,
+    "avgSumMax": 0.98,
+    "hedgeAskMax": 0.45,
+    "eqAvgSumMax": 0.98,
+    "legChoice": "chase",
+    "feeRate": 0.07
+  }
+}

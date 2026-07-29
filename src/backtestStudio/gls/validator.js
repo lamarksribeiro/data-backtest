@@ -230,6 +230,21 @@ function validateExpr(node, errors, scope) {
       for (const arg of node.args) validateExpr(arg, errors, scope);
       break;
     }
+    case 'ObjectLiteral':
+      for (const prop of node.properties || []) validateExpr(prop.value, errors, scope);
+      break;
+    case 'Call': {
+      const path = callPath(node.callee);
+      if (!path) {
+        pushError(errors, node, 'INVALID_CALL', 'Invalid function call');
+      } else if (!isKnownCall(path)) {
+        pushError(errors, node, 'UNKNOWN_FUNCTION', `${path} does not exist`);
+      } else if (ORDER_FUNCTIONS.has(path)) {
+        validateOrderCall(path, node, errors, scope);
+      }
+      for (const arg of node.args) validateExpr(arg, errors, scope);
+      break;
+    }
     default:
       break;
   }
@@ -239,14 +254,14 @@ function validateOrderCall(name, node, errors, scope) {
   if (name === 'enter' && node.args.length < 2) {
     pushError(errors, node, 'INVALID_ARGS', 'enter(side, { price, budget, reason }) requires side and options');
   }
-  if ((name === 'exit' || name === 'closeOpenPosition') && name === 'exit' && node.args.length < 1) {
+  if ((name === 'exit' || name === 'closeOpenPosition') && node.args.length < 1) {
     pushError(errors, node, 'INVALID_ARGS', 'exit({ price, reason }) requires options object');
   }
 }
 
 function isAllowedIdentifier(name, scope) {
   if (scope.has(name)) return true;
-  return ['params', 'state', 'runState', 'position', 'tick', 'event', 'samples', 'true', 'false', 'null'].includes(name);
+  return ['params', 'state', 'runState', 'position', 'tick', 'event', 'samples', 'true', 'false', 'null', 'return'].includes(name);
 }
 
 function callPath(node) {

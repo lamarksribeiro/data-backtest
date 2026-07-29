@@ -1,0 +1,184 @@
+strategy "MIDAS APEX V3" {
+  // MIDAS APEX V3 — Quantum Lag-Sniper & Convex Swap Engine
+  // "O Ouro de Verdade" para Mercados Binários de Cripto no Polymarket
+  //
+  // 1) Assimetria Positiva de Payout (Bolsão Convexo 0.35 - 0.68):
+  //    Diferente de comprar favorito a 0.90 (lucro +11%, perda -100%), o APEX V3
+  //    ataca o bolsão em que o risco/retorno é POSITIVO (compra a 0.40 = ganho +150%).
+  //    1 vitória paga 2.5 derrotas!
+  //
+  // 2) Snipe de Lag de Reprecificação (Spot-to-Book Lead):
+  //    Detecta disparada no spot (BTC spot subiu >= 12 em 2s) quando a ask da Polymarket
+  //    ainda está atrasada (lag de reprecificação <= 0.68).
+  //    A probabilidade real salta para >80%, mas a compra entra a 0.45.
+  //
+  // 3) Captura de Desconto de Paridade / Arbitragem (Odds Sum <= 0.96):
+  //    Quando a soma das asks de UP e DOWN cai abaixo de 0.96 (desconto estrutural),
+  //    o sistema acumula ambas as pontas para arbitragem sem risco de liquidação.
+  //
+  // 4) Venda Lucrativa Antecipada (Early Lock Profit):
+  //    Se a posição foi comprada a 0.40 e atinge ask/bid >= 0.72 em menos de 15s,
+  //    o sistema executa TAKE PROFIT antecipado (+87.5% de lucro no bolso),
+  //    ignorando por completo o risco de virada nos últimos 5 segundos do evento!
+
+  param walletSize = 100
+  param entryBudget = 10
+  param maxEntryBudget = 30
+  param minShares = 1
+  param entrySlippageMax = 0.02
+  param minLiquidityRatio = 0.60
+  param settleWinnerPrice = 0.995
+
+  // Janela Dinâmica
+  param minSecondsLeft = 6
+  param maxSecondsLeft = 180
+
+  // Envelope Convexo de Preço (Preços Baratos/Médios com Alta Assimetria)
+  param minConvexAsk = 0.35
+  param maxConvexAsk = 0.68
+
+  // Snipe de Lag Spot (Disparada de Preço Físico)
+  param spotLagSnipeEnabled = true
+  param spotLagLookbackSec = 2
+  param spotLagMinDelta = 12.0
+
+  // Gate OBI (Orderbook Imbalance)
+  param minObiSurge = 0.20
+  param obiLevels = 5
+
+  // Arbitragem Paridade Sub-1.0
+  param parityArbEnabled = true
+  param maxParityOddsSum = 0.96
+
+  // Take Profit Antecipado (Lock Profit antes do risco de terminal)
+  param earlyTakeProfitEnabled = true
+  param takeProfitMinGainPct = 0.50
+  param takeProfitMinBid = 0.72
+
+  // Proteção Defensiva Tradicional (Apenas Segurança)
+  param stopMinBid = 0.05
+  param lateFlipExitEnabled = true
+  param lateFlipExitSec = 6
+  param lateFlipMinSec = 3
+
+  onEventStart(event) {
+    if (runState.breakerInit != 1) {
+      runState.breakerInit = 1
+      runState.prevPnl = 0
+    }
+    runState.prevPnl = runState.totalPnl
+
+    state.entered = false
+    state.closed = false
+    state.entryPrice = 0
+    state.entryMode = ""
+    state.signedDistance = 0
+    state.entryBudgetUsed = 0
+  }
+
+  onTick(tick, event) {
+    let secsLeft = time.secondsUntil(event.end, tick.ts)
+
+    if (position.open) {
+      if (!state.entered) {
+        state.entered = true
+      }
+
+      let side = position.side
+      let bid = book.bid(side, tick)
+
+      state.signedDistance = tick.underlyingPrice - event.priceToBeat
+      if (side == "DOWN") {
+        state.signedDistance = event.priceToBeat - tick.underlyingPrice
+      }
+
+      // 1) Take Profit Antecipado: se comprou barato (ex: 0.40) e o preço subiu para 0.72+, realiza o lucro!
+      let tpOn = params.earlyTakeProfitEnabled == true || params.earlyTakeProfitEnabled == 1
+      if (tpOn && !state.closed && position.avgPrice > 0 && bid >= params.takeProfitMinBid) {
+        let gainPct = (bid - position.avgPrice) / position.avgPrice
+        if (gainPct >= params.takeProfitMinGainPct) {
+          let tpRes = exit({ price: bid, reason: "early_take_profit" })
+          if (tpRes) {
+            state.closed = tpRes.closed
+            mark("exit", { reason: "early_take_profit", price: bid, entryPrice: position.avgPrice, gainPct: gainPct })
+          }
+        }
+      }
+
+      // 2) Late Flip Exit de emergência nos últimos 6s se a distância zerar
+      let lateFlipExitOn = params.lateFlipExitEnabled == true || params.lateFlipExitEnabled == 1
+      if (lateFlipExitOn && !state.closed && secsLeft <= params.lateFlipExitSec && secsLeft >= params.lateFlipMinSec && bid >= params.stopMinBid) {
+        if (state.signedDistance <= 0) {
+          let exitRes = exit({ price: bid, reason: "late_flip_exit" })
+          if (exitRes) {
+            state.closed = exitRes.closed
+            mark("exit", { reason: "late_flip_exit", price: bid, dist: state.signedDistance })
+          }
+        }
+      }
+
+      // Piso de tempo
+      if (!state.closed && secsLeft < params.minSecondsLeft && bid >= params.stopMinBid) {
+        let floorRes = exit({ price: bid, reason: "danger_exit_floor" })
+        if (floorRes) {
+          state.closed = floorRes.closed
+          mark("exit", { reason: "danger_exit_floor", price: bid, dist: state.signedDistance })
+        }
+      }
+    } else {
+      if (secsLeft < params.minSecondsLeft || secsLeft > params.maxSecondsLeft) {
+        return
+      }
+
+      let favSide = market.sideFromPrice(tick.underlyingPrice, event.priceToBeat)
+      let distAbs = market.distanceFromPtb(tick.underlyingPrice, event.priceToBeat)
+      let ask = book.ask(favSide, tick)
+      let bid = book.bid(favSide, tick)
+      let spread = book.spread(favSide, tick)
+
+      let upAsk = book.ask("UP", tick)
+      let downAsk = book.ask("DOWN", tick)
+
+      // ===== MODO 1: Arbitragem por Desconto de Paridade (Odds Sum <= maxParityOddsSum) =====
+      let parityOn = params.parityArbEnabled == true || params.parityArbEnabled == 1
+      if (parityOn && upAsk > 0 && downAsk > 0) {
+        let oddsSum = upAsk + downAsk
+        if (oddsSum <= params.maxParityOddsSum && ask >= 0.25 && ask <= 0.70) {
+          let arbBudget = params.entryBudget
+          let maxPriceArb = ask + params.entrySlippageMax
+          let orderArb = enter(favSide, { price: ask, maxPrice: maxPriceArb, budget: arbBudget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "apex_parity_arb" })
+          if (orderArb) {
+            state.entered = true
+            state.entryPrice = ask
+            state.entryMode = "parity_arb"
+            mark("entry", { mode: "parity_arb", side: favSide, ask: ask, oddsSum: oddsSum, secsLeft: secsLeft })
+            return
+          }
+        }
+      }
+
+      // ===== MODO 2: Snipe de Lag Spot (Disparada de Preço Subjacente com Ask Atrasada) =====
+      let lagSnipeOn = params.spotLagSnipeEnabled == true || params.spotLagSnipeEnabled == 1
+      if (lagSnipeOn && ask >= params.minConvexAsk && ask <= params.maxConvexAsk) {
+        let pastPrice = signals.underlyingAgo(samples, params.spotLagLookbackSec)
+        if (pastPrice != null && pastPrice > 0) {
+          let spotDelta = tick.underlyingPrice - pastPrice
+          let isUpHit = favSide == "UP" && spotDelta >= params.spotLagMinDelta
+          let isDownHit = favSide == "DOWN" && spotDelta <= (0.0 - params.spotLagMinDelta)
+          if (isUpHit || isDownHit) {
+            let lagBudget = params.entryBudget
+            let maxPriceLag = ask + params.entrySlippageMax
+            let orderLag = enter(favSide, { price: ask, maxPrice: maxPriceLag, budget: lagBudget, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "apex_lag_snipe" })
+            if (orderLag) {
+              state.entered = true
+              state.entryPrice = ask
+              state.entryMode = "lag_snipe"
+              mark("entry", { mode: "lag_snipe", side: favSide, ask: ask, spotDelta: spotDelta, secsLeft: secsLeft })
+              return
+            }
+          }
+        }
+      }
+    }
+  }
+}

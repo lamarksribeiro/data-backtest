@@ -1,0 +1,100 @@
+{
+  "name": "quantum-optimization-july",
+  "strategyId": "midas-quantum-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-25",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "notes": "Otimização da estratégia MIDAS Quantum V1 para equilibrar o perfil de risco/retorno e eliminar a assimetria de perdas no BTC.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "quantum-risk-eq-v1",
+        "params": {
+          "riskEqualizedSizing": true,
+          "targetRiskUsd": 4.0,
+          "highAskSizeFactor": 0.6,
+          "tierAskThreshold": 0.82,
+          "tierMinZ": 1.5,
+          "tierMinDistAbs": 15.0,
+          "spotVelocityShield": true,
+          "velocityLookbackSecs": 3,
+          "maxAdverseSpotChange": 12.0,
+          "oddsVelGateEnabled": true,
+          "oddsVelLookbackSec": 2,
+          "oddsVelMaxDelta": 0.10,
+          "minAsk": 0.55,
+          "maxAsk": 0.88,
+          "minSecondsLeft": 8
+        }
+      },
+      {
+        "id": "quantum-midask-sweetspot",
+        "params": {
+          "riskEqualizedSizing": true,
+          "targetRiskUsd": 5.0,
+          "highAskSizeFactor": 0.5,
+          "tierAskThreshold": 0.82,
+          "tierMinZ": 2.0,
+          "tierMinDistAbs": 20.0,
+          "spotVelocityShield": true,
+          "velocityLookbackSecs": 5,
+          "maxAdverseSpotChange": 10.0,
+          "oddsVelGateEnabled": true,
+          "oddsVelLookbackSec": 2,
+          "oddsVelMaxDelta": 0.08,
+          "minAsk": 0.60,
+          "maxAsk": 0.85,
+          "minSecondsLeft": 8
+        }
+      },
+      {
+        "id": "quantum-balanced-gold",
+        "params": {
+          "riskEqualizedSizing": true,
+          "targetRiskUsd": 5.0,
+          "highAskSizeFactor": 0.7,
+          "tierAskThreshold": 0.82,
+          "tierMinZ": 1.5,
+          "tierMinDistAbs": 10.0,
+          "spotVelocityShield": false,
+          "oddsVelGateEnabled": true,
+          "oddsVelLookbackSec": 2,
+          "oddsVelMaxDelta": 0.12,
+          "minAsk": 0.55,
+          "maxAsk": 0.90,
+          "minSecondsLeft": 9
+        }
+      },
+      {
+        "id": "quantum-high-winrate",
+        "params": {
+          "riskEqualizedSizing": true,
+          "targetRiskUsd": 3.5,
+          "highAskSizeFactor": 0.5,
+          "tierAskThreshold": 0.82,
+          "tierMinZ": 2.0,
+          "tierMinDistAbs": 15.0,
+          "spotVelocityShield": true,
+          "velocityLookbackSecs": 3,
+          "maxAdverseSpotChange": 15.0,
+          "oddsVelGateEnabled": true,
+          "oddsVelLookbackSec": 2,
+          "oddsVelMaxDelta": 0.10,
+          "minAsk": 0.55,
+          "maxAsk": 0.92,
+          "minSecondsLeft": 9
+        }
+      }
+    ]
+  }
+}

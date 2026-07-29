@@ -1,0 +1,175 @@
+{
+  "name": "band-reallocation-july",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-25",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "notes": "Teste do achado de banda (medicao parquet 2026-07-27): o complexo ask>=0.82 nao tem edge mensuravel em 5 ativos x 3 janelas, ocupa ~50% dos trades e tem razao ganho/perda 0.10. Compara a Gold oficial contra variantes que cortam a banda cara e realocam orcamento. Todas com execucao honesta settle 0.995. Par protect/hold para cada candidata central.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "gold-baseline",
+        "params": {
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "maxDistAbs": 40,
+          "minAsk": 0.55,
+          "maxAsk": 0.94,
+          "tierAskThreshold": 0.82,
+          "tierAskBudgetFactor": 1.5,
+          "tierMinZ": 2.0,
+          "oddsShockEnabled": true,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5
+        }
+      },
+      {
+        "id": "gold-baseline-hold",
+        "params": {
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "maxDistAbs": 40,
+          "minAsk": 0.55,
+          "maxAsk": 0.94,
+          "tierAskThreshold": 0.82,
+          "tierAskBudgetFactor": 1.5,
+          "tierMinZ": 2.0,
+          "oddsShockEnabled": true,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5,
+          "lateFlipExitEnabled": false,
+          "lateFlipReverseEnabled": false,
+          "dangerExitEnabled": false
+        }
+      },
+      {
+        "id": "nohigh-82",
+        "params": {
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "maxDistAbs": 40,
+          "minAsk": 0.55,
+          "maxAsk": 0.8199,
+          "tierAskBudgetFactor": 1.0,
+          "tierMinZ": 0.0,
+          "oddsShockEnabled": true,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5
+        }
+      },
+      {
+        "id": "nohigh-82-hold",
+        "params": {
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "maxDistAbs": 40,
+          "minAsk": 0.55,
+          "maxAsk": 0.8199,
+          "tierAskBudgetFactor": 1.0,
+          "tierMinZ": 0.0,
+          "oddsShockEnabled": true,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5,
+          "lateFlipExitEnabled": false,
+          "lateFlipReverseEnabled": false,
+          "dangerExitEnabled": false
+        }
+      },
+      {
+        "id": "nohigh-82-wide",
+        "params": {
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "maxDistAbs": 40,
+          "minAsk": 0.30,
+          "maxAsk": 0.8199,
+          "tierAskBudgetFactor": 1.0,
+          "tierMinZ": 0.0,
+          "oddsShockEnabled": true,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5
+        }
+      },
+      {
+        "id": "mid-70-82",
+        "params": {
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "maxDistAbs": 40,
+          "minAsk": 0.70,
+          "maxAsk": 0.8199,
+          "tierAskBudgetFactor": 1.0,
+          "tierMinZ": 0.0,
+          "oddsShockEnabled": true,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5
+        }
+      },
+      {
+        "id": "cheap-30-70",
+        "params": {
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "maxDistAbs": 40,
+          "minAsk": 0.30,
+          "maxAsk": 0.6999,
+          "tierAskBudgetFactor": 1.0,
+          "tierMinZ": 0.0,
+          "oddsShockEnabled": true,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5
+        }
+      },
+      {
+        "id": "notier-94",
+        "params": {
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "maxDistAbs": 40,
+          "minAsk": 0.55,
+          "maxAsk": 0.94,
+          "tierAskThreshold": 0.82,
+          "tierAskBudgetFactor": 1.0,
+          "tierMinZ": 2.0,
+          "oddsShockEnabled": true,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5
+        }
+      }
+    ]
+  }
+}

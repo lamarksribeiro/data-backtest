@@ -1,0 +1,35 @@
+{
+  "id": "clip-path-v1-deep4",
+  "name": "Clip-Path V1 · deep4 lab champion",
+  "role": "aggressive-lab",
+  "status": "lab-champion-dry-first",
+  "notes": "c4 42/38/34/30 avgSumMax0.93 + soft escape τ≤20. Highest realistic pnl band (~18.7). Needs ask≤30¢ — dry before live.",
+  "source": "mechanics-sweep.mjs",
+  "params": {
+    "openAskLo": 0.52,
+    "openAskHi": 0.62,
+    "openTriggerCents": 55,
+    "openCapCents": 2,
+    "avgSumMax": 0.93,
+    "eqAvgSumMax": 0.96,
+    "hedgeAskMax": 0.42,
+    "openShares": 25,
+    "feeRate": 0.07,
+    "maxEventNotional": 50,
+    "maxHedgeAttempts": 8,
+    "hedgeLevels": [
+      { "askMax": 0.42, "frac": 0.25 },
+      { "askMax": 0.38, "frac": 0.25 },
+      { "askMax": 0.34, "frac": 0.25 },
+      { "askMax": 0.3, "frac": 0.25 }
+    ],
+    "tauHedgeEscape": 20,
+    "hedgeEscapeAskMax": 0.42,
+    "escapeAvgSumMax": 0.98,
+    "tauHedgeEscape2": 12,
+    "hedgeEscapeAskMax2": 0.45,
+    "escapeAvgSumMax2": 1.0,
+    "openRequireHedgeReady": false,
+    "legChoice": "chase"
+  }
+}

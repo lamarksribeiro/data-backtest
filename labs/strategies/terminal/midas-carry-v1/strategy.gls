@@ -173,6 +173,32 @@ strategy "MIDAS Carry V1" {
   param equityScalePct = 0.10
   param maxEntryBudget = 30
 
+  // Hedge stop — proteção PRÉ-POSICIONADA que não depende de vender.
+  // Motivação (live 24–26/07): 100% dos losses foram hold até settlement porque
+  // a ordem protetora de VENDA não preenche no book fino de 3–8s. Um stop-buy
+  // no lado OPOSTO inverte o problema: é postado antes (book grosso), dispara
+  // sozinho quando o ask do oposto sobe através do gatilho, e compra numa perna
+  // cuja liquidez está CRESCENDO durante a virada, em vez de vender numa que
+  // está colapsando. Também não exige achatar a posição antes (ao contrário do
+  // REVERSE), o que o torna compatível com o ledger R_event por evento.
+  //
+  // Economia: com q shares do favorito a p e h shares do oposto a s,
+  //   pior caso = min(0.995q − pq − sh, 0.995h − pq − sh)
+  // ou seja o hedge converte o wipeout binário em perda limitada.
+  param hedgeStopEnabled = false
+  param hedgeStopPlaceSec = 20
+  param hedgeStopMinSec = 4
+  // gatilho = oppAsk + lift (dispara quando o oposto reprecifica para cima)
+  param hedgeStopLift = 0.10
+  // teto absoluto do gatilho (0 = sem teto); acima disso não vale hedgear
+  param hedgeStopMaxPrice = 0.0
+  // preço máximo que o stop aceita pagar ao ser varrido
+  param hedgeStopCapAsk = 0.95
+  // fração do orçamento da entrada usada no hedge
+  param hedgeStopBudgetFactor = 1.0
+  // só arma se o oposto ainda estiver barato (0 = sem piso)
+  param hedgeStopMaxOppAsk = 0.0
+
   // Circuit breakers de dia (proteção que não depende de fill em book fino):
   // dailyStopLoss > 0: bloqueia novas entradas quando o PnL acumulado do run
   //   (= do dia, em modo chunked/dailyMetrics) cai abaixo de -dailyStopLoss.
@@ -230,6 +256,9 @@ strategy "MIDAS Carry V1" {
     state.oddsVelBlocked = false
     state.oddsVelHit = false
     state.oddsVelSizeMul = 1.0
+    state.hedgeStopArmed = false
+    state.hedgeStopPx = 0
+    state.hedgeStopBudget = 0
   }
 
   onTick(tick, event) {
@@ -246,6 +275,30 @@ strategy "MIDAS Carry V1" {
       state.signedDistance = tick.underlyingPrice - event.priceToBeat
       if (side == "DOWN") {
         state.signedDistance = event.priceToBeat - tick.underlyingPrice
+      }
+
+      // Hedge stop: arma uma única vez, enquanto ainda há book, e depois é
+      // o próprio mercado que dispara. Não vende nada — só compra o oposto.
+      let hedgeStopOn = params.hedgeStopEnabled == true || params.hedgeStopEnabled == 1
+      if (hedgeStopOn && !state.hedgeStopArmed && !state.closed && !state.reversed && secsLeft <= params.hedgeStopPlaceSec && secsLeft >= params.hedgeStopMinSec) {
+        let hsOppSide = prices.oppositeSide(side)
+        let hsOppAsk = book.ask(hsOppSide, tick)
+        state.hedgeStopPx = hsOppAsk + params.hedgeStopLift
+        if (params.hedgeStopMaxPrice > 0 && state.hedgeStopPx > params.hedgeStopMaxPrice) {
+          state.hedgeStopPx = params.hedgeStopMaxPrice
+        }
+        state.hedgeOppOk = params.hedgeStopMaxOppAsk <= 0 || hsOppAsk <= params.hedgeStopMaxOppAsk
+        if (state.hedgeOppOk && hsOppAsk > 0 && state.hedgeStopPx > hsOppAsk && state.hedgeStopPx < params.hedgeStopCapAsk) {
+          state.hedgeStopBudget = params.entryBudget * params.hedgeStopBudgetFactor
+          if (state.entryBudgetUsed > 0) {
+            state.hedgeStopBudget = state.entryBudgetUsed * params.hedgeStopBudgetFactor
+          }
+          let hsArmed = placeBuyStop(hsOppSide, { stopPrice: state.hedgeStopPx, capPrice: params.hedgeStopCapAsk, budget: state.hedgeStopBudget, tick: tick, reason: "hedge_stop" })
+          if (hsArmed) {
+            state.hedgeStopArmed = true
+            mark("hedge_stop_arm", { side: hsOppSide, stop: state.hedgeStopPx, oppAsk: hsOppAsk, budget: state.hedgeStopBudget, secsLeft: secsLeft })
+          }
+        }
       }
 
       // Danger exit contínuo: colchão normalizado z = dist / (sigma_ps * sqrt(tau))

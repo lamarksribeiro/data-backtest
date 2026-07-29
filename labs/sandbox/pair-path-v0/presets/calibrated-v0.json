@@ -1,0 +1,45 @@
+{
+  "id": "pair-path-calibrated-v0",
+  "name": "Pair-Path V0 calibrated (pre size/fee)",
+  "role": "calibrated",
+  "source": "calibrate.mjs train=series8 hold=shadow3 grid=480",
+  "notes": "band_52_62 cap1 avgSumMax=0.97 hedgeAskMax=0.42 tau 40-240; size/fee still fixed 10 / 0.07",
+  "params": {
+    "openShares": 10,
+    "feeRate": 0.07,
+    "maxEventNotional": 25,
+    "maxOpenAttempts": 3,
+    "maxHedgeAttempts": 2,
+    "makerTimeoutSec": 30,
+    "tauHedgeMin": 15,
+    "tauEqMin": 8,
+    "eqAskMax": 0.05,
+    "legChoice": "chase",
+    "hedgeCapCents": 1,
+    "openAskLo": 0.52,
+    "openAskHi": 0.62,
+    "openTriggerCents": 55,
+    "openCapCents": 1,
+    "avgSumMax": 0.97,
+    "eqAvgSumMax": 0.97,
+    "hedgeAskMax": 0.42,
+    "tauOpenMin": 40,
+    "tauOpenMax": 240
+  },
+  "metrics": {
+    "train": {
+      "pnl": 0.74,
+      "structuralNet": 0.742,
+      "worstMin": -0.04,
+      "avgSumMed": 0.94,
+      "done": "4/8"
+    },
+    "holdoutShadow": {
+      "pnl": 0.02,
+      "structuralNet": 0.018,
+      "worstMin": -0.04,
+      "avgSumMed": 0.96,
+      "done": "2/3"
+    }
+  }
+}

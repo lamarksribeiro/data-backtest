@@ -99,10 +99,46 @@ Exit-only / desligar reverse foi **rejeitado**: melhora o dia 02/06 mas custa �
 
 Todas as células vizinhas foram positivas em treino E holdout: ask 0,86/0,90/0,94 · dist 30/40 · tier 1,5/2,0/2,5. Não é otimização em fio de navalha. Extensão para ask 0,97 foi **rejeitada**: +US$ 969 no treino vinham de um único dia (2026-06-11 = 101% do delta).
 
+## Mundo `hold` — a configuração que a conta real executa (2026-07-28)
+
+O live não roda a MIDAS validada; roda a versão **sem proteção**. A prova é o
+perfil de payoff: razão ganho/perda de 0,294 (live 24–25/07) e 0,325 (live BTC
+dedup) contra 0,304 do lab `base-hold` e 0,427 do `base-protect`. Os 8 losses
+live foram todos `exitKind: SETTLEMENT`.
+
+Custo (julho 01–25, $10/$30, settle 0,995): `protect` 1.933,6 / PF 1,577 / pior
+dia −2,04 · `hold` 1.201,0 / PF 1,325 / pior dia −27,45. **A proteção vale 38% do
+PnL e 13× o pior dia.**
+
+Otimizando **para o mundo hold** (só alavancas que não exigem vender numa perna
+colapsando), o vencedor é `cushionDecay` + `oddsVelGate`:
+
+| Janela | Config | PnL | PF | razão G/P | Pior dia |
+|---|---|--:|--:|--:|--:|
+| Jul 01–25 | `hold-os` (o live) | 1.201,0 | 1,325 | 0,358 | −27,45 |
+| Jul 01–25 | **`hold-cushion-oddsvel`** | **1.406,5** | **1,456** | **0,424** | **−13,91** |
+| Jun 01–09 | `hold-os` | 304,1 | 1,231 | 0,385 | −86,42 |
+| Jun 01–09 | **`hold-cushion-oddsvel`** | **373,1** | **1,340** | **0,528** | **−56,09** |
+
+Princípio que unifica o que funciona e o que falhou: **sair cedo e somente
+enquanto o mercado ainda paga** (`bid >= 0,55 × entrada`). O `cushionDecay` é o
+cruzamento do late-flip com janela 20→4s e piso de bid. As proteções que agem
+tarde, ou sem exigir bid, todas falharam.
+
+Preset: `btc-gold-cushion-v1` (Estúdio v17, **candidato**, não campeão).
+Ressalva: `protect-cushion` (1.425,8) < `ceiling-protect` (1.933,6) — o cushion é
+**substituto** da proteção tardia, não complemento. Reavaliar em A/B depois do
+fix GTC per-leg. Relatório: `reports/research/midas-execucao-vs-envelope-2026-07-28.md`.
+
 ## Mecanismos testados e rejeitados (mantidos como params desativados no GLS)
 
 | Mecanismo | Resultado | Por quê |
 |---|---|---|
+| Complete-set lock (comprar o oposto para travar) | −52% do EV | Existe em 84% dos eventos, mas o book é eficiente: fechar cedo paga spread+fee. Ferramenta de variância, não de lucro (2026-07-28) |
+| Entrada maker (`placeLimitBuy` role entry) | Negativo em todas as bandas | Seleção adversa integral: WR cai 6–12pp, preço melhora só ~1,3c (2026-07-28) |
+| Cortar banda `ask >= 0,82` | −13% PnL, pior dia −2,04 → −6,87 | Edge da banda é ~zero em 5 ativos × 3 janelas, mas ela paga seu lugar via proteção, não via carry (2026-07-28) |
+| Envelope barato `ask < 0,55` | Pior dia −54 a −60, DD ~100 | Confirma a rejeição do scoop por caminho novo (2026-07-28) |
+| `hedgeStop` (stop-buy no lado oposto) | Pior dia −35 → −87 | Whipsaw: o oposto dispara, o hedge compra, o favorito vence assim mesmo. Params ficam no GLS desligados (2026-07-28) |
 | Sigma sizing por z (`sigmaSizingEnabled`) | Treino −US$ 550 | Relação z→expectância não é monotônica no cubo (melhor bin é z∈[1,5, 2,5), extremos fracos) |
 | Scoop convexo ask<0,55 (`scoopEnabled`) | Treino +45%, holdout +3% | Regime-dependente (48% do delta em 3 dias de maio); provável alfa de latência (compra o ask defasado durante repricing) que não sobrevive execução real; cubo hold: exp −US$ 3,48 em julho |
 | Danger exit contínuo (`dangerContinuousEnabled`) | −US$ 213 vs V7 | Sai de posições que se recuperariam |

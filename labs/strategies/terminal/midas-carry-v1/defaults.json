@@ -102,5 +102,13 @@
   "dailyStopLoss": 0,
   "lossStreakPauseCount": 0,
   "lossStreakPauseEvents": 3,
-  "lateFlipExitMaxBid": 1.0
+  "lateFlipExitMaxBid": 1.0,
+  "hedgeStopEnabled": false,
+  "hedgeStopPlaceSec": 20,
+  "hedgeStopMinSec": 4,
+  "hedgeStopLift": 0.10,
+  "hedgeStopMaxPrice": 0.0,
+  "hedgeStopCapAsk": 0.95,
+  "hedgeStopBudgetFactor": 1.0,
+  "hedgeStopMaxOppAsk": 0.0
 }

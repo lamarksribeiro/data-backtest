@@ -1,0 +1,27 @@
+{
+  "id": "midas-quantum-v1",
+  "name": "MIDAS Quantum V1",
+  "family": "terminal",
+  "status": "candidate",
+  "kind": "gls",
+  "assets": ["BTC", "ETH", "SOL", "XRP", "DOGE", "HYPE", "BNB"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "labs/strategies/terminal/midas-quantum-v1/strategy.gls"
+  },
+  "promotedToStudio": true,
+  "studioSlug": "midas-quantum-v1",
+  "studio": {
+    "description": "MIDAS Quantum V1 — Nova geração do MIDAS com Sizing de Risco Equalizado, Escudo de Velocidade Spot e Redução de Assimetria.",
+    "tags": ["terminal", "midas", "quantum", "anti-asymmetric", "btc", "eth", "sol", "xrp", "doge", "champion"],
+    "defaultVersion": 1,
+    "defaultGlsSource": "classic",
+    "glsSources": {
+      "classic": "labs/strategies/terminal/midas-quantum-v1/strategy.gls"
+    }
+  },
+  "notes": "Estratégia desenhada para resolver o problema de assimetria de perda do MIDAS tradicional em conta real."
+}

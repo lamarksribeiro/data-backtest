@@ -1,0 +1,444 @@
+{
+  "meta": {
+    "from": "2026-07-01",
+    "to": "2026-07-26",
+    "assets": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "XRP",
+      "DOGE"
+    ],
+    "entryBudget": 2.5,
+    "maxEntryBudget": 4,
+    "generatedAt": "2026-07-28T01:31:21.398Z",
+    "note": "Backtest GLS oficial; cap apenas da primeira entrada, por entryTime. Reverse continua livre. Não é autorização live."
+  },
+  "perAsset": {
+    "BTC": {
+      "trades": 2144,
+      "pnl": 544.5814,
+      "wins": 1717,
+      "losses": 427,
+      "winRatePct": 80.08,
+      "avgWin": 0.7911,
+      "avgLoss": -1.9056,
+      "profitFactor": 1.6693,
+      "maxLoss": -6.497,
+      "p05": -2.3183,
+      "cvar95": -3.0193,
+      "maxDrawdown": 14.6184,
+      "worstSlot": {
+        "slot": "2026-07-19T08:35:00.000Z",
+        "pnl": -6.497
+      },
+      "worstDay": {
+        "day": "2026-07-03",
+        "pnl": 0.7274
+      }
+    },
+    "ETH": {
+      "trades": 1890,
+      "pnl": 279.4162,
+      "wins": 1453,
+      "losses": 437,
+      "winRatePct": 76.88,
+      "avgWin": 0.7471,
+      "avgLoss": -1.8448,
+      "profitFactor": 1.3466,
+      "maxLoss": -4.9924,
+      "p05": -2.4336,
+      "cvar95": -3.1357,
+      "maxDrawdown": 15.0434,
+      "worstSlot": {
+        "slot": "2026-07-10T12:20:00.000Z",
+        "pnl": -4.9924
+      },
+      "worstDay": {
+        "day": "2026-07-08",
+        "pnl": -3.962
+      }
+    },
+    "SOL": {
+      "trades": 1060,
+      "pnl": 141.6564,
+      "wins": 802,
+      "losses": 258,
+      "winRatePct": 75.66,
+      "avgWin": 0.7665,
+      "avgLoss": -1.8337,
+      "profitFactor": 1.2994,
+      "maxLoss": -5.0578,
+      "p05": -2.4672,
+      "cvar95": -3.2718,
+      "maxDrawdown": 18.6998,
+      "worstSlot": {
+        "slot": "2026-07-20T17:15:00.000Z",
+        "pnl": -5.0578
+      },
+      "worstDay": {
+        "day": "2026-07-14",
+        "pnl": -10.0278
+      }
+    },
+    "XRP": {
+      "trades": 788,
+      "pnl": 140.5462,
+      "wins": 600,
+      "losses": 188,
+      "winRatePct": 76.14,
+      "avgWin": 0.8097,
+      "avgLoss": -1.8365,
+      "profitFactor": 1.4071,
+      "maxLoss": -6.1166,
+      "p05": -2.4048,
+      "cvar95": -3.1054,
+      "maxDrawdown": 17.714,
+      "worstSlot": {
+        "slot": "2026-07-21T10:20:00.000Z",
+        "pnl": -6.1166
+      },
+      "worstDay": {
+        "day": "2026-07-06",
+        "pnl": -3.9839
+      }
+    },
+    "DOGE": {
+      "trades": 723,
+      "pnl": 112.506,
+      "wins": 566,
+      "losses": 157,
+      "winRatePct": 78.28,
+      "avgWin": 0.6943,
+      "avgLoss": -1.7865,
+      "profitFactor": 1.4011,
+      "maxLoss": -4.02,
+      "p05": -2.2894,
+      "cvar95": -2.9838,
+      "maxDrawdown": 12.7743,
+      "worstSlot": {
+        "slot": "2026-07-09T23:40:00.000Z",
+        "pnl": -4.02
+      },
+      "worstDay": {
+        "day": "2026-07-13",
+        "pnl": -4.214
+      }
+    }
+  },
+  "baseline": {
+    "trades": 6605,
+    "pnl": 1218.7062,
+    "wins": 5138,
+    "losses": 1467,
+    "winRatePct": 77.79,
+    "avgWin": 0.7663,
+    "avgLoss": -1.8532,
+    "profitFactor": 1.4483,
+    "maxLoss": -6.497,
+    "p05": -2.3882,
+    "cvar95": -3.1072,
+    "maxDrawdown": 29.1977,
+    "worstSlot": {
+      "slot": "2026-07-09T22:00:00.000Z",
+      "pnl": -10.1149
+    },
+    "worstDay": {
+      "day": "2026-07-08",
+      "pnl": 14.6755
+    }
+  },
+  "eventRiskAudit": {
+    "reversedTrades": 982,
+    "initialRiskBreaches": 179,
+    "worstBreaches": [
+      {
+        "asset": "BTC",
+        "slot": "2026-07-19T08:35:00.000Z",
+        "pnl": -6.497,
+        "initialWorstLoss": 3.5496,
+        "allEntryRisk": 7.0233
+      },
+      {
+        "asset": "XRP",
+        "slot": "2026-07-21T10:20:00.000Z",
+        "pnl": -6.1166,
+        "initialWorstLoss": 3.3213,
+        "allEntryRisk": 6.719
+      },
+      {
+        "asset": "BTC",
+        "slot": "2026-07-03T09:00:00.000Z",
+        "pnl": -6.0778,
+        "initialWorstLoss": 3.5117,
+        "allEntryRisk": 6.7948
+      },
+      {
+        "asset": "BTC",
+        "slot": "2026-07-14T17:45:00.000Z",
+        "pnl": -5.711,
+        "initialWorstLoss": 2.8318,
+        "allEntryRisk": 6.1914
+      },
+      {
+        "asset": "BTC",
+        "slot": "2026-07-20T09:50:00.000Z",
+        "pnl": -5.6253,
+        "initialWorstLoss": 3.5874,
+        "allEntryRisk": 7.1609
+      },
+      {
+        "asset": "BTC",
+        "slot": "2026-07-07T16:40:00.000Z",
+        "pnl": -5.4407,
+        "initialWorstLoss": 3.5874,
+        "allEntryRisk": 7.0148
+      },
+      {
+        "asset": "BTC",
+        "slot": "2026-07-06T17:25:00.000Z",
+        "pnl": -5.0578,
+        "initialWorstLoss": 3.3213,
+        "allEntryRisk": 6.651
+      },
+      {
+        "asset": "SOL",
+        "slot": "2026-07-20T17:15:00.000Z",
+        "pnl": -5.0578,
+        "initialWorstLoss": 3.3213,
+        "allEntryRisk": 6.651
+      },
+      {
+        "asset": "ETH",
+        "slot": "2026-07-10T12:20:00.000Z",
+        "pnl": -4.9924,
+        "initialWorstLoss": 3.5117,
+        "allEntryRisk": 7.2881
+      },
+      {
+        "asset": "BTC",
+        "slot": "2026-07-05T07:05:00.000Z",
+        "pnl": -4.8443,
+        "initialWorstLoss": 3.3976,
+        "allEntryRisk": 7.2211
+      },
+      {
+        "asset": "ETH",
+        "slot": "2026-07-25T12:30:00.000Z",
+        "pnl": -4.7919,
+        "initialWorstLoss": 2.7755,
+        "allEntryRisk": 6.1198
+      },
+      {
+        "asset": "SOL",
+        "slot": "2026-07-16T13:30:00.000Z",
+        "pnl": -4.6841,
+        "initialWorstLoss": 3.3976,
+        "allEntryRisk": 7.0575
+      },
+      {
+        "asset": "ETH",
+        "slot": "2026-07-01T21:40:00.000Z",
+        "pnl": -4.272,
+        "initialWorstLoss": 2.4048,
+        "allEntryRisk": 4.8384
+      },
+      {
+        "asset": "ETH",
+        "slot": "2026-07-14T22:40:00.000Z",
+        "pnl": -4.161,
+        "initialWorstLoss": 2.3486,
+        "allEntryRisk": 4.8396
+      },
+      {
+        "asset": "XRP",
+        "slot": "2026-07-01T01:20:00.000Z",
+        "pnl": -4.1569,
+        "initialWorstLoss": 2.4048,
+        "allEntryRisk": 4.7809
+      },
+      {
+        "asset": "ETH",
+        "slot": "2026-07-09T22:00:00.000Z",
+        "pnl": -4.0488,
+        "initialWorstLoss": 2.376,
+        "allEntryRisk": 4.2452
+      },
+      {
+        "asset": "DOGE",
+        "slot": "2026-07-09T23:40:00.000Z",
+        "pnl": -4.02,
+        "initialWorstLoss": 2.3472,
+        "allEntryRisk": 4.2163
+      },
+      {
+        "asset": "BTC",
+        "slot": "2026-07-03T07:35:00.000Z",
+        "pnl": -3.9955,
+        "initialWorstLoss": 2.3882,
+        "allEntryRisk": 4.2573
+      },
+      {
+        "asset": "SOL",
+        "slot": "2026-07-06T19:30:00.000Z",
+        "pnl": -3.933,
+        "initialWorstLoss": 2.2693,
+        "allEntryRisk": 4.1572
+      },
+      {
+        "asset": "ETH",
+        "slot": "2026-07-02T03:30:00.000Z",
+        "pnl": -3.905,
+        "initialWorstLoss": 2.4672,
+        "allEntryRisk": 4.2798
+      }
+    ]
+  },
+  "governors": [
+    {
+      "capUsd": 4.1,
+      "accepted": 4000,
+      "skipped": 2605,
+      "skippedPct": 39.44,
+      "maxReserved": 4.0993,
+      "summary": {
+        "trades": 4000,
+        "pnl": 864.0428,
+        "wins": 3139,
+        "losses": 861,
+        "winRatePct": 78.47,
+        "avgWin": 0.7828,
+        "avgLoss": -1.8503,
+        "profitFactor": 1.5424,
+        "maxLoss": -6.497,
+        "p05": -2.3845,
+        "cvar95": -3.0762,
+        "maxDrawdown": 25.4111,
+        "worstSlot": {
+          "slot": "2026-07-19T08:35:00.000Z",
+          "pnl": -6.497
+        },
+        "worstDay": {
+          "day": "2026-07-09",
+          "pnl": 8.1275
+        }
+      }
+    },
+    {
+      "capUsd": 6.2,
+      "accepted": 5693,
+      "skipped": 912,
+      "skippedPct": 13.81,
+      "maxReserved": 6.1981,
+      "summary": {
+        "trades": 5693,
+        "pnl": 1053.7432,
+        "wins": 4406,
+        "losses": 1287,
+        "winRatePct": 77.39,
+        "avgWin": 0.7785,
+        "avgLoss": -1.8466,
+        "profitFactor": 1.4434,
+        "maxLoss": -6.497,
+        "p05": -2.3882,
+        "cvar95": -3.1045,
+        "maxDrawdown": 26.236,
+        "worstSlot": {
+          "slot": "2026-07-09T22:00:00.000Z",
+          "pnl": -7.8835
+        },
+        "worstDay": {
+          "day": "2026-07-08",
+          "pnl": 12.3601
+        }
+      }
+    },
+    {
+      "capUsd": 8.2,
+      "accepted": 6294,
+      "skipped": 311,
+      "skippedPct": 4.71,
+      "maxReserved": 8.1891,
+      "summary": {
+        "trades": 6294,
+        "pnl": 1170.2034,
+        "wins": 4884,
+        "losses": 1410,
+        "winRatePct": 77.6,
+        "avgWin": 0.772,
+        "avgLoss": -1.8442,
+        "profitFactor": 1.45,
+        "maxLoss": -6.497,
+        "p05": -2.3882,
+        "cvar95": -3.0878,
+        "maxDrawdown": 30.0887,
+        "worstSlot": {
+          "slot": "2026-07-09T22:00:00.000Z",
+          "pnl": -10.1149
+        },
+        "worstDay": {
+          "day": "2026-07-08",
+          "pnl": 19.2207
+        }
+      }
+    },
+    {
+      "capUsd": 12.3,
+      "accepted": 6594,
+      "skipped": 11,
+      "skippedPct": 0.17,
+      "maxReserved": 11.9646,
+      "summary": {
+        "trades": 6594,
+        "pnl": 1218.9652,
+        "wins": 5128,
+        "losses": 1466,
+        "winRatePct": 77.77,
+        "avgWin": 0.7669,
+        "avgLoss": -1.8511,
+        "profitFactor": 1.4492,
+        "maxLoss": -6.497,
+        "p05": -2.3882,
+        "cvar95": -3.1015,
+        "maxDrawdown": 29.1977,
+        "worstSlot": {
+          "slot": "2026-07-09T22:00:00.000Z",
+          "pnl": -10.1149
+        },
+        "worstDay": {
+          "day": "2026-07-08",
+          "pnl": 13.6258
+        }
+      }
+    },
+    {
+      "capUsd": 20.5,
+      "accepted": 6605,
+      "skipped": 0,
+      "skippedPct": 0,
+      "maxReserved": 16.5081,
+      "summary": {
+        "trades": 6605,
+        "pnl": 1218.7062,
+        "wins": 5138,
+        "losses": 1467,
+        "winRatePct": 77.79,
+        "avgWin": 0.7663,
+        "avgLoss": -1.8532,
+        "profitFactor": 1.4483,
+        "maxLoss": -6.497,
+        "p05": -2.3882,
+        "cvar95": -3.1072,
+        "maxDrawdown": 29.1977,
+        "worstSlot": {
+          "slot": "2026-07-09T22:00:00.000Z",
+          "pnl": -10.1149
+        },
+        "worstDay": {
+          "day": "2026-07-08",
+          "pnl": 14.6755
+        }
+      }
+    }
+  ]
+}

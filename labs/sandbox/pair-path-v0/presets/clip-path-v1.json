@@ -1,0 +1,80 @@
+{
+  "id": "clip-path-v1",
+  "name": "Clip-Path V1 · historical calibration fixture",
+  "role": "research",
+  "status": "hold-parity-gap-2026-07-29",
+  "scope": "broad-continuous-automation-preset",
+  "notes": "HOLD. Four real-account complete-sets on 2026-07-28/29 were profitable (gross +3.05, estimated net +1.36). The depth-25 replay ends on 2026-07-26 and rejects only the broad continuous policy applied to 24,502 events: best guarded realized PnL -7777.144 at size 10, best PF 0.618. Recover the real selection filter before any promotion.",
+  "source": "lake-replay.mjs",
+  "promotionDecision": "HOLD_PARITY_REQUIRED",
+  "livePathEvidence": {
+    "status": "VALIDATED_REAL",
+    "pairs": 4,
+    "invested": 46.95,
+    "grossPnl": 3.05,
+    "estimatedNetPnl": 1.36,
+    "dates": "2026-07-28..2026-07-29"
+  },
+  "historicalAbRecommendation": "RECOMMENDED-deep3-as94-e2",
+  "historicalLabChampion": "c4-42-38-34-30-as93-e20 / RECOMMENDED-deep4-as93-e20",
+  "params": {
+    "openAskLo": 0.52,
+    "openAskHi": 0.62,
+    "openTriggerCents": 55,
+    "openCapCents": 2,
+    "avgSumMax": 0.94,
+    "eqAvgSumMax": 0.97,
+    "hedgeAskMax": 0.4,
+    "tauOpenMin": 40,
+    "tauOpenMax": 240,
+    "tauHedgeMin": 15,
+    "tauEqMin": 8,
+    "eqAskMax": 0.05,
+    "legChoice": "chase",
+    "hedgeCapCents": 1,
+    "maxOpenAttempts": 3,
+    "maxHedgeAttempts": 8,
+    "makerTimeoutSec": 30,
+    "openShares": 10,
+    "feeRate": 0.07,
+    "maxEventNotional": 16,
+    "restingFillModel": "none",
+    "confirmationTicks": 2,
+    "maxClipsPerTick": 1,
+    "hedgeLevels": [
+      { "askMax": 0.4, "frac": 0.4 },
+      { "askMax": 0.36, "frac": 0.3 },
+      { "askMax": 0.32, "frac": 0.3 }
+    ],
+    "tauHedgeEscape": 20,
+    "hedgeEscapeAskMax": 0.42,
+    "escapeAvgSumMax": 0.98,
+    "escapeMinLockedPnlPerShare": -0.02,
+    "tauHedgeEscape2": 12,
+    "hedgeEscapeAskMax2": 0.45,
+    "escapeAvgSumMax2": 1.0,
+    "escapeMinLockedPnlPerShare2": -0.04,
+    "openRequireHedgeReady": false
+  },
+  "alternatives": {
+    "historical_lab_max": "c4-42-38-34-30-as93-e20 (14-event in-sample only)",
+    "historical_aggressive_as92": "deep3-as92-e2stage (14-event in-sample only)",
+    "historical_tight": "c2-40-36-as95 (14-event in-sample only)"
+  },
+  "validation": {
+    "dataset": "lake/backtest_ticks BTC 5m depth25",
+    "window": "2026-04-23..2026-07-26",
+    "eligibleEvents": 24502,
+    "executionProfiles": 12,
+    "bestGuardedRealizedPnl": -7777.144,
+    "bestProfitFactor": 0.618,
+    "artifact": ".tmp/pair-path-lake-replay/report.json",
+    "riskStudy": {
+      "variants": 8,
+      "bestGuardedRealizedPnl": -4494.555,
+      "bestProfitFactor": 0.562,
+      "bestImprovedProfitFactor": 0.553,
+      "artifact": ".tmp/pair-path-lake-replay-risk/report.json"
+    }
+  }
+}

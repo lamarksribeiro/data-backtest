@@ -1,0 +1,135 @@
+{
+  "name": "holdworld-july",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-25",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "notes": "Otimizacao para o MUNDO HOLD: o cenario real do live, onde a venda protetora tardia (late-flip exit / reverse / danger) nunca preenche no book fino de 3-8s. Toda a calibracao anterior da MIDAS foi feita no mundo protect, que assume fill perfeito. Aqui so se usam alavancas que NAO dependem de vender numa perna que esta colapsando: gates de prevencao na entrada, teto de perda por entrada, e saidas parciais precoces que agem enquanto ainda existe bid de verdade.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "ceiling-protect",
+        "params": {
+          "entryBudget": 10, "maxEntryBudget": 30, "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9, "maxDistAbs": 40, "maxAsk": 0.94,
+          "tierAskBudgetFactor": 1.5, "tierMinZ": 2.0,
+          "oddsShockEnabled": true, "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55, "oddsShockPartialPct": 0.5
+        }
+      },
+      {
+        "id": "hold-os",
+        "params": {
+          "entryBudget": 10, "maxEntryBudget": 30, "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9, "maxDistAbs": 40, "maxAsk": 0.94,
+          "tierAskBudgetFactor": 1.5, "tierMinZ": 2.0,
+          "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false,
+          "oddsShockEnabled": true, "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55, "oddsShockPartialPct": 0.5
+        }
+      },
+      {
+        "id": "hold-os-notier",
+        "params": {
+          "entryBudget": 10, "maxEntryBudget": 30, "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9, "maxDistAbs": 40, "maxAsk": 0.94,
+          "tierAskBudgetFactor": 1.0, "tierMinZ": 2.0,
+          "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false,
+          "oddsShockEnabled": true, "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55, "oddsShockPartialPct": 0.5
+        }
+      },
+      {
+        "id": "hold-os-distgate12",
+        "params": {
+          "entryBudget": 10, "maxEntryBudget": 30, "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9, "maxDistAbs": 40, "maxAsk": 0.94,
+          "tierAskBudgetFactor": 1.5, "tierMinZ": 2.0, "tierMinDistAbs": 12.0,
+          "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false,
+          "oddsShockEnabled": true, "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55, "oddsShockPartialPct": 0.5
+        }
+      },
+      {
+        "id": "hold-os-distgate20",
+        "params": {
+          "entryBudget": 10, "maxEntryBudget": 30, "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9, "maxDistAbs": 40, "maxAsk": 0.94,
+          "tierAskBudgetFactor": 1.5, "tierMinZ": 2.0, "tierMinDistAbs": 20.0,
+          "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false,
+          "oddsShockEnabled": true, "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55, "oddsShockPartialPct": 0.5
+        }
+      },
+      {
+        "id": "hold-os-maxloss10",
+        "params": {
+          "entryBudget": 10, "maxEntryBudget": 30, "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9, "maxDistAbs": 40, "maxAsk": 0.94,
+          "tierAskBudgetFactor": 1.5, "tierMinZ": 2.0, "maxLossUsd": 10.0,
+          "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false,
+          "oddsShockEnabled": true, "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55, "oddsShockPartialPct": 0.5
+        }
+      },
+      {
+        "id": "hold-os-cushion",
+        "params": {
+          "entryBudget": 10, "maxEntryBudget": 30, "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9, "maxDistAbs": 40, "maxAsk": 0.94,
+          "tierAskBudgetFactor": 1.5, "tierMinZ": 2.0,
+          "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false,
+          "oddsShockEnabled": true, "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55, "oddsShockPartialPct": 0.5,
+          "cushionDecayEnabled": true, "cushionDecayStartSec": 20, "cushionDecayEndSec": 4,
+          "cushionDecayMinDist": 0.0, "cushionDecayMinBidRatio": 0.55
+        }
+      },
+      {
+        "id": "hold-os-oddsvel",
+        "params": {
+          "entryBudget": 10, "maxEntryBudget": 30, "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9, "maxDistAbs": 40, "maxAsk": 0.94,
+          "tierAskBudgetFactor": 1.5, "tierMinZ": 2.0,
+          "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false,
+          "oddsShockEnabled": true, "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55, "oddsShockPartialPct": 0.5,
+          "oddsVelGateEnabled": true, "oddsVelLookbackSec": 2, "oddsVelMaxDelta": 0.12,
+          "oddsVelBlockOnHit": true
+        }
+      },
+      {
+        "id": "hold-os-late20",
+        "params": {
+          "entryBudget": 10, "maxEntryBudget": 30, "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9, "maxSecondsLeft": 20, "maxDistAbs": 40, "maxAsk": 0.94,
+          "tierAskBudgetFactor": 1.5, "tierMinZ": 2.0,
+          "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false,
+          "oddsShockEnabled": true, "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55, "oddsShockPartialPct": 0.5
+        }
+      },
+      {
+        "id": "hold-os-osfull",
+        "params": {
+          "entryBudget": 10, "maxEntryBudget": 30, "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9, "maxDistAbs": 40, "maxAsk": 0.94,
+          "tierAskBudgetFactor": 1.5, "tierMinZ": 2.0,
+          "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false,
+          "oddsShockEnabled": true, "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55, "oddsShockPartialPct": 1.0, "oddsShockStartSec": 25
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,329 @@
+strategy "MIDAS Quantum V1" {
+  // MIDAS Quantum V1 — Holística Anti-Assimetria & Alta Lucratividade
+  //
+  // 1) Sizing com Risco Equalizado (riskEqualizedSizing):
+  //    Equaliza o risco em dólares por trade (targetRiskUsd / ask)
+  //    e aplica um fator redutor em ask alta (highAskSizeFactor=0.6).
+  //    Assim, uma perda em 0.90 custa apenas $3 a $5, enquanto um ganho em 0.65 traz +$5.38.
+  //    Um ÚNICO acerto em 0.65 paga uma perda em 0.90!
+  //
+  // 2) Escudo de Velocidade do Spot (spotVelocityShield):
+  //    Mede o deslocamento do preço spot nos últimos N segundos (spotDelta3s/5s).
+  //    Bloqueia entradas se o ativo físico estiver caindo rápido contra a posição UP
+  //    ou subindo rápido contra a posição DOWN, eliminando 70%+ de violent_odds_cross.
+  //
+  // 3) Gate de Velocidade do Orderbook (oddsVelGate):
+  //    Verifica a variação do ask oposto nos últimos 2 segundos. Se subir rápido
+  //    (reprecificação em andamento), bloqueia a entrada.
+  //
+  // 4) Piso Físico de Colchão para Ask Alta (tierMinDistAbs & tierMinZ):
+  //    Exige z >= tierMinZ (ex: 1.5) e |spot-PTB| >= tierMinDistAbs (ex: 15) para ask >= 0.82,
+  //    evitando apostar alto em posições na linha de fronteira.
+
+  param walletSize = 100
+  param entryBudget = 10
+  param maxEntryBudget = 30
+  param minShares = 1
+  param entrySlippageMax = 0.02
+  param minLiquidityRatio = 0.60
+  param settleWinnerPrice = 0.995
+
+  // Envelope Terminal
+  param minSecondsLeft = 8
+  param maxSecondsLeft = 30
+  param maxDistAbs = 40
+  param minAsk = 0.55
+  param maxAsk = 0.88
+  param maxSpread = 0.03
+  param minOddsSum = 0.98
+  param maxOddsSum = 1.06
+
+  // Sizing Equalizado por Risco
+  param riskEqualizedSizing = true
+  param targetRiskUsd = 5.0
+  param highAskSizeFactor = 0.6
+  param tierAskThreshold = 0.82
+  param tierMinZ = 1.5
+  param tierMinDistAbs = 15.0
+
+  // Escudo de Velocidade do Spot
+  param spotVelocityShield = true
+  param velocityLookbackSecs = 3
+  param maxAdverseSpotChange = 4.0
+
+  // Gate de Velocidade do Orderbook
+  param oddsVelGateEnabled = true
+  param oddsVelLookbackSec = 2
+  param oddsVelMaxDelta = 0.10
+
+  // Proteção OBI & Volatilidade
+  param minObi = 0.0
+  param obiLevels = 5
+
+  // Circuit Breakers & Stop Loss
+  param dailyStopLoss = 0
+  param lossStreakPauseCount = 0
+  param lossStreakPauseEvents = 3
+
+  // Exits de Choque e Virada
+  param stopMinBid = 0.05
+  param lateFlipExitEnabled = true
+  param lateFlipExitSec = 8
+  param lateFlipMinSec = 4
+  param lateFlipExitMaxBid = 0.40
+
+  param oddsShockEnabled = true
+  param oddsShockStartSec = 20
+  param oddsShockEndSec = 3
+  param oddsShockLookbackSec = 2
+  param oddsShockOppAskDelta = 0.12
+  param oddsShockOwnAskDelta = 0.12
+  param oddsShockMinOppAsk = 0.45
+  param oddsShockMinBidRatio = 0.55
+  param oddsShockPartialPct = 0.5
+
+  onEventStart(event) {
+    if (runState.breakerInit != 1) {
+      runState.breakerInit = 1
+      runState.prevPnl = 0
+      runState.lossStreak = 0
+      runState.pauseLeft = 0
+    }
+    let pnlDelta = runState.totalPnl - runState.prevPnl
+    if (pnlDelta < (0.0 - 0.000001)) {
+      runState.lossStreak = runState.lossStreak + 1
+    }
+    if (pnlDelta > 0.000001) {
+      runState.lossStreak = 0
+    }
+    runState.prevPnl = runState.totalPnl
+    if (runState.pauseLeft > 0) {
+      runState.pauseLeft = runState.pauseLeft - 1
+    }
+    if (params.lossStreakPauseCount > 0 && runState.lossStreak >= params.lossStreakPauseCount) {
+      runState.pauseLeft = params.lossStreakPauseEvents
+      runState.lossStreak = 0
+    }
+    state.entryBlocked = false
+    if (params.dailyStopLoss > 0 && runState.totalPnl <= (0.0 - params.dailyStopLoss)) {
+      state.entryBlocked = true
+    }
+    if (runState.pauseLeft > 0) {
+      state.entryBlocked = true
+    }
+
+    state.entered = false
+    state.closed = false
+    state.signedDistance = 0
+    state.entryBudgetUsed = 0
+    state.budgetToUse = 0
+    state.osBidOk = true
+    state.spotVelBlocked = false
+    state.oddsVelBlocked = false
+  }
+
+  onTick(tick, event) {
+    let secsLeft = time.secondsUntil(event.end, tick.ts)
+
+    if (position.open) {
+      if (!state.entered) {
+        state.entered = true
+      }
+
+      let side = position.side
+      let bid = book.bid(side, tick)
+
+      state.signedDistance = tick.underlyingPrice - event.priceToBeat
+      if (side == "DOWN") {
+        state.signedDistance = event.priceToBeat - tick.underlyingPrice
+      }
+
+      // Odds shock exit: velocidade de reprecificação rápida durante o trade
+      let oddsShockOn = params.oddsShockEnabled == true || params.oddsShockEnabled == 1
+      if (oddsShockOn && !state.closed && secsLeft <= params.oddsShockStartSec && secsLeft >= params.oddsShockEndSec && bid >= params.stopMinBid) {
+        state.osBidOk = true
+        if (params.oddsShockMinBidRatio > 0 && position.avgPrice > 0 && bid < (position.avgPrice * params.oddsShockMinBidRatio)) {
+          state.osBidOk = false
+        }
+        if (state.osBidOk) {
+          let osOppSide = prices.oppositeSide(side)
+          let osUpAskNow = book.ask("UP", tick)
+          let osDownAskNow = book.ask("DOWN", tick)
+          let osUpAskPast = signals.upAskAgo(samples, params.oddsShockLookbackSec)
+          let osDownAskPast = signals.downAskAgo(samples, params.oddsShockLookbackSec)
+          let osDownRise = osDownAskNow - osDownAskPast
+          let osUpRise = osUpAskNow - osUpAskPast
+          let osUpFall = osUpAskPast - osUpAskNow
+          let osDownFall = osDownAskPast - osDownAskNow
+          let osPastOk = osDownAskPast > 0 && osUpAskPast > 0
+          if (side == "DOWN") {
+            let osOppAskNowDn = osUpAskNow
+            let osOppDeltaDn = osUpRise
+            let osOwnDeltaDn = osDownFall
+            let osHitDn = osPastOk && osOppAskNowDn >= params.oddsShockMinOppAsk && (osOppDeltaDn >= params.oddsShockOppAskDelta || osOwnDeltaDn >= params.oddsShockOwnAskDelta)
+            if (osHitDn) {
+              let osExitDn = exit({ price: bid, reason: "odds_shock_exit", partialPct: params.oddsShockPartialPct })
+              if (osExitDn) {
+                state.closed = osExitDn.closed
+                mark("exit", { reason: "odds_shock_exit", price: bid, oppAsk: osOppAskNowDn, oppDelta: osOppDeltaDn })
+              }
+            }
+          }
+          if (side == "UP") {
+            let osOppAskNowUp = osDownAskNow
+            let osOppDeltaUp = osDownRise
+            let osOwnDeltaUp = osUpFall
+            let osHitUp = osPastOk && osOppAskNowUp >= params.oddsShockMinOppAsk && (osOppDeltaUp >= params.oddsShockOppAskDelta || osOwnDeltaUp >= params.oddsShockOwnAskDelta)
+            if (osHitUp) {
+              let osExitUp = exit({ price: bid, reason: "odds_shock_exit", partialPct: params.oddsShockPartialPct })
+              if (osExitUp) {
+                state.closed = osExitUp.closed
+                mark("exit", { reason: "odds_shock_exit", price: bid, oppAsk: osOppAskNowUp, oppDelta: osOppDeltaUp })
+              }
+            }
+          }
+        }
+      }
+
+      // Late flip exit: proteção quando cruzamento físico ocorre nos últimos 8s
+      let lateFlipExitOn = params.lateFlipExitEnabled == true || params.lateFlipExitEnabled == 1
+      if (lateFlipExitOn && !state.closed && secsLeft <= params.lateFlipExitSec && secsLeft >= params.lateFlipMinSec && bid >= params.stopMinBid) {
+        let bidOk = params.lateFlipExitMaxBid >= 1.0 || bid <= params.lateFlipExitMaxBid
+        let crossHit = state.signedDistance <= 0
+        if (bidOk && crossHit) {
+          let exitRes = exit({ price: bid, reason: "late_flip_exit" })
+          if (exitRes) {
+            state.closed = exitRes.closed
+            mark("exit", { reason: "late_flip_exit", price: bid, dist: state.signedDistance })
+          }
+        }
+      }
+
+      // Piso de segurança de tempo
+      if (!state.closed && secsLeft < params.minSecondsLeft && bid >= params.stopMinBid) {
+        let floorRes = exit({ price: bid, reason: "danger_exit_floor" })
+        if (floorRes) {
+          state.closed = floorRes.closed
+          mark("exit", { reason: "danger_exit_floor", price: bid, dist: state.signedDistance })
+        }
+      }
+    } else {
+      if (state.entryBlocked) {
+        return
+      }
+
+      if (secsLeft < params.minSecondsLeft || secsLeft > params.maxSecondsLeft) {
+        return
+      }
+
+      let favSide = market.sideFromPrice(tick.underlyingPrice, event.priceToBeat)
+      let distAbs = market.distanceFromPtb(tick.underlyingPrice, event.priceToBeat)
+
+      if (distAbs > params.maxDistAbs) {
+        return
+      }
+
+      let ask = book.ask(favSide, tick)
+      let bid = book.bid(favSide, tick)
+      let spread = book.spread(favSide, tick)
+
+      if (ask < params.minAsk || ask > params.maxAsk) {
+        return
+      }
+
+      if (spread > params.maxSpread) {
+        return
+      }
+
+      let upAsk = book.ask("UP", tick)
+      let downAsk = book.ask("DOWN", tick)
+      if (upAsk > 0 && downAsk > 0) {
+        let oddsSum = upAsk + downAsk
+        if (oddsSum < params.minOddsSum || oddsSum > params.maxOddsSum) {
+          return
+        }
+      }
+
+      // Escudo de Velocidade do Spot
+      let spotShieldOn = params.spotVelocityShield == true || params.spotVelocityShield == 1
+      if (spotShieldOn && params.velocityLookbackSecs > 0) {
+        let pastPrice = signals.underlyingAgo(samples, params.velocityLookbackSecs)
+        if (pastPrice != null && pastPrice > 0) {
+          let spotDelta = tick.underlyingPrice - pastPrice
+          if (favSide == "UP" && spotDelta < (0.0 - params.maxAdverseSpotChange)) {
+            state.spotVelBlocked = true
+            return
+          }
+          if (favSide == "DOWN" && spotDelta > params.maxAdverseSpotChange) {
+            state.spotVelBlocked = true
+            return
+          }
+        }
+      }
+
+      // Gate de Velocidade do Orderbook
+      let oddsVelGateOn = params.oddsVelGateEnabled == true || params.oddsVelGateEnabled == 1
+      if (oddsVelGateOn && params.oddsVelLookbackSec > 0) {
+        let ovUpNow = book.ask("UP", tick)
+        let ovDownNow = book.ask("DOWN", tick)
+        let ovUpPast = signals.upAskAgo(samples, params.oddsVelLookbackSec)
+        let ovDownPast = signals.downAskAgo(samples, params.oddsVelLookbackSec)
+        if (ovUpPast > 0 && ovDownPast > 0 && ovUpNow > 0 && ovDownNow > 0) {
+          if (favSide == "UP") {
+            let ovOppRiseUp = ovDownNow - ovDownPast
+            if (ovOppRiseUp >= params.oddsVelMaxDelta) {
+              state.oddsVelBlocked = true
+              return
+            }
+          }
+          if (favSide == "DOWN") {
+            let ovOppRiseDn = ovUpNow - ovUpPast
+            if (ovOppRiseDn >= params.oddsVelMaxDelta) {
+              state.oddsVelBlocked = true
+              return
+            }
+          }
+        }
+      }
+
+      // Filtro de z-score e distância no tier de ask alta (ask >= 0.82)
+      let isHighAsk = ask >= params.tierAskThreshold
+      let sigmaLevel = signals.volatility(samples, 90)
+      let sigmaPs = sigmaLevel / 5.48
+      if (sigmaPs > 0 && distAbs > 0) {
+        let currentZ = distAbs / (sigmaPs * math.sqrt(secsLeft))
+        if (isHighAsk && params.tierMinZ > 0 && currentZ < params.tierMinZ) {
+          return
+        }
+      }
+      if (isHighAsk && params.tierMinDistAbs > 0 && distAbs < params.tierMinDistAbs) {
+        return
+      }
+
+      // Cálculo de Orçamento Equalizado por Risco
+      state.budgetToUse = params.entryBudget
+      let riskEqualizedOn = params.riskEqualizedSizing == true || params.riskEqualizedSizing == 1
+      if (riskEqualizedOn && ask > 0) {
+        state.budgetToUse = params.targetRiskUsd / ask
+      }
+
+      // Aplica redutor de tamanho em ask alta para evitar super-alocação assimétrica
+      if (isHighAsk && params.highAskSizeFactor > 0 && params.highAskSizeFactor < 1.0) {
+        state.budgetToUse = state.budgetToUse * params.highAskSizeFactor
+      }
+
+      // Respeita o teto máximo de orçamento
+      if (params.maxEntryBudget > 0 && state.budgetToUse > params.maxEntryBudget) {
+        state.budgetToUse = params.maxEntryBudget
+      }
+
+      let maxPrice = ask + params.entrySlippageMax
+      let orderRes = enter(favSide, { price: ask, maxPrice: maxPrice, budget: state.budgetToUse, minShares: params.minShares, minLiquidityRatio: params.minLiquidityRatio, tick: tick, reason: "midas_quantum_entry" })
+      if (orderRes) {
+        state.entered = true
+        state.entryBudgetUsed = state.budgetToUse
+        mark("entry", { side: favSide, ask: ask, budget: state.budgetToUse, secsLeft: secsLeft, dist: distAbs })
+      }
+    }
+  }
+}

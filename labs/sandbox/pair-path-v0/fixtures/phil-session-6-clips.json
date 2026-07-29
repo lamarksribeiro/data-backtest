@@ -1,0 +1,88 @@
+{
+  "id": "phil-session-6-2026-07-28",
+  "source": "Telegram TXT · SHOTANDGO (simulacao)",
+  "note": "Scorecard canônico da sessão. TXT locais podem estar ausentes; números batem com phil-hopper-sessao-6-eventos canvas.",
+  "sessions": [
+    {
+      "label": "A",
+      "events": [
+        {
+          "slugSuffix": "1785223800",
+          "et": "03:30",
+          "pnl": -50.89,
+          "avgSum": 1.096,
+          "viradas": 7,
+          "equalized": true,
+          "mode": "EQUALIZADO",
+          "regime": "mult_death",
+          "product": false,
+          "notes": "MULT 5–7× · EQ com avgSum>1 · travou prejuízo"
+        }
+      ]
+    },
+    {
+      "label": "B",
+      "pnlGross": 35.13,
+      "events": [
+        {
+          "slugSuffix": "1785225900",
+          "et": "04:05",
+          "pnl": 5.91,
+          "avgSum": 0.947,
+          "viradas": 2,
+          "equalized": true,
+          "mode": "EQUALIZADO",
+          "regime": "clip_2v",
+          "product": true
+        },
+        {
+          "slugSuffix": "1785226200",
+          "et": "04:10",
+          "pnl": 3.28,
+          "avgSum": 0.937,
+          "viradas": 1,
+          "equalized": true,
+          "mode": "EQUALIZADO",
+          "regime": "clip_1v",
+          "product": true
+        },
+        {
+          "slugSuffix": "1785226800",
+          "et": "04:20",
+          "pnl": 4.2,
+          "avgSum": 0.919,
+          "viradas": 1,
+          "equalized": true,
+          "mode": "EQUALIZADO",
+          "regime": "clip_1v",
+          "product": true
+        },
+        {
+          "slugSuffix": "1785227100",
+          "et": "04:25",
+          "pnl": 17.01,
+          "avgSum": 1.031,
+          "viradas": 3,
+          "equalized": false,
+          "mode": "EXPOSTO",
+          "regime": "exposed_luck",
+          "product": false,
+          "notes": "avgSum>1 · ganhou no lado residual · se errasse ≈ −$48"
+        },
+        {
+          "slugSuffix": "1785227400",
+          "et": "04:30",
+          "pnl": 4.73,
+          "avgSum": 0.909,
+          "viradas": 1,
+          "equalized": true,
+          "mode": "EQUALIZADO",
+          "regime": "clip_1v",
+          "product": true
+        }
+      ]
+    }
+  ],
+  "productRegimes": ["clip_1v", "clip_2v"],
+  "cutRegimes": ["mult_death", "exposed_luck"]
+}

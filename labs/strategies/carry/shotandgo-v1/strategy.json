@@ -14,20 +14,21 @@
     "runnerVersion": 1
   },
   "portStatus": "ported",
-  "promotedToStudio": false,
-  "studioSlug": null,
+  "promotedToStudio": true,
+  "studioSlug": "shotandgo-v1",
   "studio": {
-    "description": "Port fiel do Phil_Hopper_Real.py (Escada Dupla / Shotandgo): MULT[], contagio, STOP, PISO, DESC_MODO, EQ-limite, execução honest/optimistic. Research reaberta — post-mortem ascent_hedge não cobre esta variante.",
+    "description": "Port fiel do Phil_Hopper_Real.py (Escada Dupla / Shotandgo): MULT[], contagio, STOP, PISO, DESC_MODO, EQ-limite maker e arbitragem de paridade.",
     "tags": [
       "shotandgo",
       "escada-dupla",
+      "phil-hopper",
       "carry",
       "dual-ladder",
       "martingale",
       "btc",
-      "research",
       "python-parity"
-    ]
+    ],
+    "defaultVersion": 1
   },
   "notes": "Fonte: polymarket-fm/Phil_Hopper_Real.py. Runner: shotandgo-runner@1. Doc: docs/estrategias/nao-implementadas/shotandgo-v1.md"
 }

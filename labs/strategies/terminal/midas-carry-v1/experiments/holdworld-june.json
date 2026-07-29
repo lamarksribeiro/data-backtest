@@ -1,0 +1,109 @@
+{
+  "name": "holdworld-june",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-06-01",
+  "to": "2026-06-09",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "notes": "Janela de stress (junho 01-09) para os finalistas do mundo hold. Julho 01-25 ja foi usado em selecao anterior da MIDAS, entao junho e o teste que importa.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "hold-os",
+        "params": {
+          "entryBudget": 10, "maxEntryBudget": 30, "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9, "maxDistAbs": 40, "maxAsk": 0.94,
+          "tierAskBudgetFactor": 1.5, "tierMinZ": 2.0,
+          "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false,
+          "oddsShockEnabled": true, "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55, "oddsShockPartialPct": 0.5
+        }
+      },
+      {
+        "id": "hold-cushion55",
+        "params": {
+          "entryBudget": 10, "maxEntryBudget": 30, "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9, "maxDistAbs": 40, "maxAsk": 0.94,
+          "tierAskBudgetFactor": 1.5, "tierMinZ": 2.0,
+          "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false,
+          "oddsShockEnabled": true, "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55, "oddsShockPartialPct": 0.5,
+          "cushionDecayEnabled": true, "cushionDecayStartSec": 20, "cushionDecayEndSec": 4,
+          "cushionDecayMinDist": 0.0, "cushionDecayMinBidRatio": 0.55
+        }
+      },
+      {
+        "id": "hold-cushion45",
+        "params": {
+          "entryBudget": 10, "maxEntryBudget": 30, "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9, "maxDistAbs": 40, "maxAsk": 0.94,
+          "tierAskBudgetFactor": 1.5, "tierMinZ": 2.0,
+          "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false,
+          "oddsShockEnabled": true, "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55, "oddsShockPartialPct": 0.5,
+          "cushionDecayEnabled": true, "cushionDecayStartSec": 20, "cushionDecayEndSec": 4,
+          "cushionDecayMinDist": 0.0, "cushionDecayMinBidRatio": 0.45
+        }
+      },
+      {
+        "id": "hold-cushion65",
+        "params": {
+          "entryBudget": 10, "maxEntryBudget": 30, "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9, "maxDistAbs": 40, "maxAsk": 0.94,
+          "tierAskBudgetFactor": 1.5, "tierMinZ": 2.0,
+          "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false,
+          "oddsShockEnabled": true, "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55, "oddsShockPartialPct": 0.5,
+          "cushionDecayEnabled": true, "cushionDecayStartSec": 20, "cushionDecayEndSec": 4,
+          "cushionDecayMinDist": 0.0, "cushionDecayMinBidRatio": 0.65
+        }
+      },
+      {
+        "id": "hold-cushion-oddsvel",
+        "params": {
+          "entryBudget": 10, "maxEntryBudget": 30, "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9, "maxDistAbs": 40, "maxAsk": 0.94,
+          "tierAskBudgetFactor": 1.5, "tierMinZ": 2.0,
+          "lateFlipExitEnabled": false, "lateFlipReverseEnabled": false, "dangerExitEnabled": false,
+          "oddsShockEnabled": true, "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55, "oddsShockPartialPct": 0.5,
+          "cushionDecayEnabled": true, "cushionDecayStartSec": 20, "cushionDecayEndSec": 4,
+          "cushionDecayMinDist": 0.0, "cushionDecayMinBidRatio": 0.55,
+          "oddsVelGateEnabled": true, "oddsVelLookbackSec": 2, "oddsVelMaxDelta": 0.12,
+          "oddsVelBlockOnHit": true
+        }
+      },
+      {
+        "id": "protect-cushion",
+        "params": {
+          "entryBudget": 10, "maxEntryBudget": 30, "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9, "maxDistAbs": 40, "maxAsk": 0.94,
+          "tierAskBudgetFactor": 1.5, "tierMinZ": 2.0,
+          "oddsShockEnabled": true, "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55, "oddsShockPartialPct": 0.5,
+          "cushionDecayEnabled": true, "cushionDecayStartSec": 20, "cushionDecayEndSec": 4,
+          "cushionDecayMinDist": 0.0, "cushionDecayMinBidRatio": 0.55
+        }
+      },
+      {
+        "id": "ceiling-protect",
+        "params": {
+          "entryBudget": 10, "maxEntryBudget": 30, "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9, "maxDistAbs": 40, "maxAsk": 0.94,
+          "tierAskBudgetFactor": 1.5, "tierMinZ": 2.0,
+          "oddsShockEnabled": true, "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55, "oddsShockPartialPct": 0.5
+        }
+      }
+    ]
+  }
+}

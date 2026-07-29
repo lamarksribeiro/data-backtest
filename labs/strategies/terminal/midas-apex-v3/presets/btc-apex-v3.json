@@ -1,0 +1,46 @@
+{
+  "id": "btc-apex-v3",
+  "studioVersion": 1,
+  "name": "MIDAS APEX V3 — BTC High-Conviction Lag-Sniper",
+  "studioSlug": "midas-apex-btc-v3",
+  "studioName": "MIDAS APEX V3 · BTC High-Conviction Lag-Sniper",
+  "role": "champion",
+  "description": "Preset de Alta Convicção do MIDAS APEX V3: exige disparada spot >= $25 no BTC, OBI >= 0.30 e realiza lucro antecipado a +40%.",
+  "tags": [
+    "champion",
+    "depth25",
+    "midas-apex",
+    "honest-exec",
+    "lag-snipe",
+    "btc",
+    "executable"
+  ],
+  "window": {
+    "from": "2026-07-01",
+    "to": "2026-07-07"
+  },
+  "params": {
+    "walletSize": 100,
+    "entryBudget": 10,
+    "maxEntryBudget": 30,
+    "settleWinnerPrice": 0.995,
+    "minSecondsLeft": 8,
+    "maxSecondsLeft": 120,
+    "minConvexAsk": 0.38,
+    "maxConvexAsk": 0.65,
+    "spotLagSnipeEnabled": true,
+    "spotLagLookbackSec": 2,
+    "spotLagMinDelta": 25.0,
+    "minObiSurge": 0.30,
+    "obiLevels": 5,
+    "parityArbEnabled": true,
+    "maxParityOddsSum": 0.95,
+    "earlyTakeProfitEnabled": true,
+    "takeProfitMinGainPct": 0.40,
+    "takeProfitMinBid": 0.70,
+    "stopMinBid": 0.05,
+    "lateFlipExitEnabled": true,
+    "lateFlipExitSec": 6,
+    "lateFlipMinSec": 3
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "id": "midas-apex-v3",
+  "name": "MIDAS APEX V3",
+  "family": "terminal",
+  "status": "candidate",
+  "kind": "gls",
+  "assets": ["BTC", "ETH", "SOL", "XRP", "DOGE", "HYPE", "BNB"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "labs/strategies/terminal/midas-apex-v3/strategy.gls"
+  },
+  "promotedToStudio": true,
+  "studioSlug": "midas-apex-v3",
+  "studio": {
+    "description": "MIDAS APEX V3 — Snipe de Lag de Reprecificação, Bolsão Convexo 0.35-0.68, Arbitragem de Paridade e Take Profit Antecipado.",
+    "tags": ["terminal", "midas", "apex", "lag-snipe", "convex-swap", "early-take-profit", "btc", "eth", "sol", "champion"],
+    "defaultVersion": 1,
+    "defaultGlsSource": "classic",
+    "glsSources": {
+      "classic": "labs/strategies/terminal/midas-apex-v3/strategy.gls"
+    }
+  },
+  "notes": "Estratégia inovadora de alta rentabilidade que explora assimetria positiva de payout, lag de reprecificação spot-book e realização de lucro antecipada."
+}
