@@ -333,6 +333,17 @@ function projectedAvgSum(state, side, price, shares) {
   return nextAvg + otherAvg;
 }
 
+function signedFavorableDist(tick, sideOpen) {
+  if (
+    !Number.isFinite(tick.underlyingPrice) ||
+    !Number.isFinite(tick.priceToBeat)
+  ) {
+    return null;
+  }
+  const raw = tick.underlyingPrice - tick.priceToBeat;
+  return sideOpen === 'UP' ? raw : -raw;
+}
+
 function buildPlan(levels, openShares) {
   if (!Array.isArray(levels) || !levels.length) return null;
   let allocated = 0;
@@ -446,11 +457,17 @@ function scheduleOpen(state, tick, tickIndex) {
     state.openConfirmCount = 0;
     return;
   }
-  const side = tick.upAsk >= tick.downAsk ? 'UP' : 'DOWN';
+  const favorite = tick.upAsk >= tick.downAsk ? 'UP' : 'DOWN';
+  const side =
+    p.legChoice === 'fade'
+      ? favorite === 'UP'
+        ? 'DOWN'
+        : 'UP'
+      : favorite;
   const ask = side === 'UP' ? tick.upAsk : tick.downAsk;
   const sum = tick.upAsk + tick.downAsk;
   const momentum = p.openMomentum;
-  if (momentum) {
+  if (momentum && p.legChoice !== 'fade') {
     const cutoff = tick.tsMs - momentum.lookbackMs;
     let reference = null;
     for (let index = state.recentTicks.length - 1; index >= 0; index -= 1) {
@@ -475,6 +492,33 @@ function scheduleOpen(state, tick, tickIndex) {
       reference == null ||
       referenceSide !== side ||
       ask - referenceAsk < momentum.minFavoriteAskRise - 1e-12
+    ) {
+      state.openConfirmKey = null;
+      state.openConfirmCount = 0;
+      return;
+    }
+  }
+  if (p.openRequireHedgeReady) {
+    const otherAsk = side === 'UP' ? tick.downAsk : tick.upAsk;
+    const slack = (p.openHedgeSlackCents || 0) / 100;
+    const oppMax = p.hedgeAskMax + slack;
+    if (
+      otherAsk > oppMax + 1e-12 ||
+      sum > (p.openPairSumMaxAtOpen ?? p.avgSumMax) + 1e-12
+    ) {
+      state.openConfirmKey = null;
+      state.openConfirmCount = 0;
+      return;
+    }
+  }
+  if (p.openPtbMinLeaveUsd != null || p.openPtbMaxLeaveUsd != null) {
+    const dist = signedFavorableDist(tick, side);
+    if (
+      dist == null ||
+      (p.openPtbMinLeaveUsd != null &&
+        dist < p.openPtbMinLeaveUsd - 1e-12) ||
+      (p.openPtbMaxLeaveUsd != null &&
+        dist > p.openPtbMaxLeaveUsd + 1e-12)
     ) {
       state.openConfirmKey = null;
       state.openConfirmCount = 0;
@@ -866,33 +910,29 @@ function monthOf(day) {
   return day.slice(0, 7);
 }
 
-function listDays() {
+function listDays(from = FROM, to = TO) {
   return fs
     .readdirSync(LAKE, { withFileTypes: true })
     .filter((entry) => entry.isDirectory() && entry.name.startsWith('dt='))
     .map((entry) => entry.name.slice(3))
-    .filter((day) => day >= FROM && day <= TO)
+    .filter((day) => day >= from && day <= to)
     .sort();
 }
 
-async function main() {
-  const days = listDays();
-  if (!days.length) throw new Error(`no lake days in ${FROM}..${TO}`);
-  fs.mkdirSync(OUT_DIR, { recursive: true });
-
-  console.log('=== Pair/Clip-Path depth-25 lake replay ===');
-  console.log(
-    `study=${STUDY} days=${days.length} window=${FROM}..${TO} shares=${PRIMARY_SHARES} variants=${VARIANTS.length}`,
-  );
-  console.log(
-    'model=walk ask25 + taker fee + partial + sequential latency; maker/EQ disabled',
-  );
+export async function runLakeSweep({
+  variants,
+  from = FROM,
+  to = TO,
+  onDayProgress = null,
+}) {
+  const days = listDays(from, to);
+  if (!days.length) throw new Error(`no lake days in ${from}..${to}`);
 
   const db = await DuckDBInstance.create(':memory:');
   const connection = await db.connect();
   await connection.run('SET threads TO 6');
 
-  const results = new Map(VARIANTS.map((variant) => [variant.id, []]));
+  const results = new Map(variants.map((variant) => [variant.id, []]));
   let eligibleEvents = 0;
   let skippedCoverage = 0;
 
@@ -945,7 +985,7 @@ async function main() {
         return;
       }
       eligibleEvents += 1;
-      for (const variant of VARIANTS) {
+      for (const variant of variants) {
         results
           .get(variant.id)
           .push({ day, ...runEvent(buffer, variant, eventKey) });
@@ -961,16 +1001,48 @@ async function main() {
       buffer.push(normalizeTick(row));
     }
     flush();
-    if (
-      dayIndex === 0 ||
-      dayIndex === days.length - 1 ||
-      (dayIndex + 1) % 10 === 0
-    ) {
-      console.log(
-        `[${dayIndex + 1}/${days.length}] ${day} eligible=${eligibleEvents}`,
-      );
+    if (onDayProgress) {
+      onDayProgress({
+        dayIndex,
+        day,
+        daysTotal: days.length,
+        eligibleEvents,
+      });
     }
   }
+
+  return { days, eligibleEvents, skippedCoverage, results };
+}
+
+async function main() {
+  const days = listDays();
+  if (!days.length) throw new Error(`no lake days in ${FROM}..${TO}`);
+  fs.mkdirSync(OUT_DIR, { recursive: true });
+
+  console.log('=== Pair/Clip-Path depth-25 lake replay ===');
+  console.log(
+    `study=${STUDY} days=${days.length} window=${FROM}..${TO} shares=${PRIMARY_SHARES} variants=${VARIANTS.length}`,
+  );
+  console.log(
+    'model=walk ask25 + taker fee + partial + sequential latency; maker/EQ disabled',
+  );
+
+  const { eligibleEvents, skippedCoverage, results } = await runLakeSweep({
+    variants: VARIANTS,
+    from: FROM,
+    to: TO,
+    onDayProgress: ({ dayIndex, day, daysTotal, eligibleEvents: eligible }) => {
+      if (
+        dayIndex === 0 ||
+        dayIndex === daysTotal - 1 ||
+        (dayIndex + 1) % 10 === 0
+      ) {
+        console.log(
+          `[${dayIndex + 1}/${daysTotal}] ${day} eligible=${eligible}`,
+        );
+      }
+    },
+  });
 
   const variants = VARIANTS.map((variant) => {
     const rows = results.get(variant.id);
@@ -1046,7 +1118,26 @@ async function main() {
   console.log('saved', path.join(OUT_DIR, 'report.json'));
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+export {
+  FEE_RATE,
+  OPERATIONAL_BUFFER_PER_PAIR,
+  LAKE,
+  ladder,
+  runEvent,
+  summarize,
+  normalizeTick,
+  levelList,
+  listDays,
+};
+
+const isCli =
+  process.argv[1] &&
+  path.resolve(fileURLToPath(import.meta.url)) ===
+    path.resolve(process.argv[1]);
+
+if (isCli) {
+  main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}

@@ -1,0 +1,34 @@
+{
+  "id": "market-neutral-dual-v1",
+  "name": "Market-Neutral Dual-Side V1 (ATFR & DLSL)",
+  "family": "arbitrage",
+  "status": "candidate",
+  "kind": "library-runner",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 10,
+  "source": {
+    "type": "library-runner",
+    "runnerSlug": "market-neutral-runner",
+    "runnerVersion": 1
+  },
+  "portStatus": "ported",
+  "sourceRepo": "data-backtest",
+  "sourceService": "labs/strategies/arbitrage/market-neutral-dual-v1",
+  "promotedToStudio": true,
+  "studioSlug": "market-neutral-dual-v1",
+  "studio": {
+    "description": "Estratégia Market-Neutral Dual-Side que opera simultaneamente os lados UP e DOWN em mercados binários BTC 5m na Polymarket via Dual-Leg Sequential Lock (DLSL-V1) e Asymmetric Temporal Free-Roll (ATFR-V1).",
+    "tags": [
+      "arbitrage",
+      "market-neutral",
+      "delta-neutral",
+      "dual-side",
+      "btc",
+      "polymarket"
+    ],
+    "defaultVersion": 1
+  },
+  "notes": "Estratégia quantitativa não-direcional aprovada com +$40.405,40 de PnL Líquido, 74,1% de win rate e 3,28 de Profit Factor."
+}

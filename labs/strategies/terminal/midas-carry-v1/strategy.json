@@ -23,5 +23,5 @@
       "classic": "labs/strategies/terminal/midas-carry-v1/strategy.gls"
     }
   },
-  "notes": "Campeão v11 btc-gold-v1. Multi-ativo Gold (mesmo núcleo g3-os $10/$30 tier1.5): ETH v12 · SOL v13 · XRP v14 · DOGE v15 · HYPE v16. BNB rejeitado (jul PnL−95, protect≪hold). Labs: gold-calibrate-*-july + midas-gold-multi-asset-2026-07-26.md."
+  "notes": "Campeão v11 btc-gold-v1. Multi-ativo Gold (mesmo núcleo g3-os $10/$30 tier1.5): ETH v12 · SOL v13 · XRP v14 · DOGE v15 · HYPE v16. Forks RevMin055 v18–v23 (lateFlipReverseMinAsk 0.55; BTC lab −18% PnL vs gold). BNB rejeitado (jul PnL−95, protect≪hold). Labs: gold-calibrate-*-july + midas-gold-multi-asset-2026-07-26.md · reverse-minask-ab 2026-07-31."
 }

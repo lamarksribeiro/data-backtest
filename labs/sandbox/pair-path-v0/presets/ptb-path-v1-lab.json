@@ -1,0 +1,26 @@
+{
+  "name": "ptb-path-v1-lab",
+  "status": "lab-candidate-2026-07-30",
+  "notes": "openLeave 28-30 + clip tight2 + hedge asap; lake week 22-29 asap leave28 +$9.37",
+  "params": {
+    "openShares": 10,
+    "openLeaveUsd": 30,
+    "hedgeMode": "asap",
+    "clip": "ptb",
+    "ptbLeaveUsd": 40,
+    "ptbApproachUsd": 25,
+    "openCapCents": 2,
+    "maxEventNotional": 16,
+    "avgSumMax": 0.95,
+    "hedgeLevels": [
+      { "askMax": 0.4, "frac": 0.5 },
+      { "askMax": 0.36, "frac": 0.5 }
+    ]
+  },
+  "lab": {
+    "runner": "labs/sandbox/pair-path-v0/ptb-protect-ab.mjs",
+    "dry": "data-robot/scripts/pair-path/micro-live.js --clip=ptb --open-leave-usd=30 --hedge-mode=asap",
+    "holdout": "2026-07-22..2026-07-29",
+    "weekAsapLeave28": { "realized": 9.37, "opens": 62, "pf": 1.34 }
+  }
+}

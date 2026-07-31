@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "variant": { "type": "string", "enum": ["dlsl-v1", "dlsl-v2", "atfr-v1", "dsr-v1"] },
+    "maxOrderValue": { "type": "number", "minimum": 1 },
+    "maxSlippage": { "type": "number", "minimum": 0, "maximum": 0.05 },
+    "maxAllowedCombinedCost": { "type": "number", "minimum": 0.8, "maximum": 1.0 },
+    "phase1MinSecondsLeft": { "type": "integer", "minimum": 30, "maximum": 285 },
+    "phase1MaxSecondsLeft": { "type": "integer", "minimum": 30, "maximum": 285 },
+    "phase1MaxAsk": { "type": "number", "minimum": 0.1, "maximum": 0.5 },
+    "applyPolymarketFees": { "type": "boolean" },
+    "feeScenario": { "type": "string", "enum": ["base", "optimistic", "pessimistic"] }
+  }
+}

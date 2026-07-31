@@ -1,0 +1,125 @@
+{
+  "name": "reverse-minask-ab-july",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-01",
+  "to": "2026-07-25",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 4,
+  "defaults": "../defaults.json",
+  "notes": "A/B: lateFlipReverseMinAsk. Live comprou dog @0.08 (minAsk=0). Hipótese: exigir oppAsk>=0.55 (banda de entrada) ou desligar reverse melhora pior dia / PF sem matar PnL do protect.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "base-protect-min0",
+        "params": {
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "maxDistAbs": 40,
+          "maxAsk": 0.94,
+          "tierAskBudgetFactor": 1.5,
+          "tierMinZ": 2.0,
+          "oddsShockEnabled": true,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5,
+          "lateFlipExitEnabled": true,
+          "lateFlipReverseEnabled": true,
+          "lateFlipReverseMinAsk": 0.0,
+          "lateFlipReverseMaxAsk": 0.95,
+          "dangerExitEnabled": true
+        }
+      },
+      {
+        "id": "reverse-min055",
+        "params": {
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "maxDistAbs": 40,
+          "maxAsk": 0.94,
+          "tierAskBudgetFactor": 1.5,
+          "tierMinZ": 2.0,
+          "oddsShockEnabled": true,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5,
+          "lateFlipExitEnabled": true,
+          "lateFlipReverseEnabled": true,
+          "lateFlipReverseMinAsk": 0.55,
+          "lateFlipReverseMaxAsk": 0.95,
+          "dangerExitEnabled": true
+        }
+      },
+      {
+        "id": "reverse-min070",
+        "params": {
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "maxDistAbs": 40,
+          "maxAsk": 0.94,
+          "tierAskBudgetFactor": 1.5,
+          "tierMinZ": 2.0,
+          "oddsShockEnabled": true,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5,
+          "lateFlipExitEnabled": true,
+          "lateFlipReverseEnabled": true,
+          "lateFlipReverseMinAsk": 0.7,
+          "lateFlipReverseMaxAsk": 0.95,
+          "dangerExitEnabled": true
+        }
+      },
+      {
+        "id": "reverse-off-exit-only",
+        "params": {
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "maxDistAbs": 40,
+          "maxAsk": 0.94,
+          "tierAskBudgetFactor": 1.5,
+          "tierMinZ": 2.0,
+          "oddsShockEnabled": true,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5,
+          "lateFlipExitEnabled": true,
+          "lateFlipReverseEnabled": false,
+          "dangerExitEnabled": true
+        }
+      },
+      {
+        "id": "base-hold",
+        "params": {
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "maxDistAbs": 40,
+          "maxAsk": 0.94,
+          "tierAskBudgetFactor": 1.5,
+          "tierMinZ": 2.0,
+          "oddsShockEnabled": false,
+          "lateFlipExitEnabled": false,
+          "lateFlipReverseEnabled": false,
+          "dangerExitEnabled": false
+        }
+      }
+    ]
+  }
+}

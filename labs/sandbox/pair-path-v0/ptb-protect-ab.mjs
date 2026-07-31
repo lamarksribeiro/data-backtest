@@ -9,6 +9,7 @@
  *   node labs/sandbox/pair-path-v0/ptb-protect-ab.mjs
  *   node labs/sandbox/pair-path-v0/ptb-protect-ab.mjs --from=2026-07-01 --to=2026-07-26 --shares=90
  *   node labs/sandbox/pair-path-v0/ptb-protect-ab.mjs --openLeaveUsd=30 --shares=90
+ *   node labs/sandbox/pair-path-v0/ptb-protect-ab.mjs --clip=tight2 --openLeaveUsd=30
  *   node labs/sandbox/pair-path-v0/ptb-protect-ab.mjs --grid=1   # openLeave ∈ {0,20,30,40}
  */
 import fs from 'node:fs';
@@ -41,20 +42,47 @@ const PTB_APPROACH_USD = Math.max(
 );
 const OPEN_LEAVE_USD = Math.max(0, Number(arg('openLeaveUsd', '0')) || 0);
 const RUN_GRID = arg('grid', '0') === '1';
+const CLIP_MODE = arg('clip', 'none');
+const EMERGENCY_FLIP = arg('emergencyFlip', '0') === '1';
 const LATENCY_TICKS = Math.max(0, Number(arg('latencyTicks', '1')) || 0);
 const OPEN_CONFIRM = Math.max(
   1,
   Number(arg('openConfirm', '2')) || 2,
 );
 
+const CLIP_SUFFIX = CLIP_MODE === 'none' ? '' : `-clip-${CLIP_MODE}`;
+const EMERGENCY_SUFFIX = EMERGENCY_FLIP ? '-emflip' : '';
+
 const OUT_DIR = path.join(
   ROOT,
   RUN_GRID
-    ? '.tmp/ptb-protect-ab-grid'
+    ? `.tmp/ptb-protect-ab-grid${CLIP_SUFFIX}${EMERGENCY_SUFFIX}`
     : OPEN_LEAVE_USD > 0
-      ? `.tmp/ptb-protect-ab-openLeave${OPEN_LEAVE_USD}`
-      : '.tmp/ptb-protect-ab',
+      ? `.tmp/ptb-protect-ab-openLeave${OPEN_LEAVE_USD}${CLIP_SUFFIX}${EMERGENCY_SUFFIX}`
+      : `.tmp/ptb-protect-ab${CLIP_SUFFIX}${EMERGENCY_SUFFIX}`,
 );
+
+const CLIP_PRESETS = {
+  tight2: {
+    hedgeAskMax: 0.4,
+    hedgeLevels: [
+      { askMax: 0.4, frac: 0.5 },
+      { askMax: 0.36, frac: 0.5 },
+    ],
+    avgSumMax: 0.95,
+    maxHedgeAttempts: 8,
+  },
+  deep3: {
+    hedgeAskMax: 0.4,
+    hedgeLevels: [
+      { askMax: 0.4, frac: 0.4 },
+      { askMax: 0.36, frac: 0.3 },
+      { askMax: 0.32, frac: 0.3 },
+    ],
+    avgSumMax: 0.94,
+    maxHedgeAttempts: 8,
+  },
+};
 
 const HEDGE_POLICIES = [
   {
@@ -76,6 +104,10 @@ const HEDGE_POLICIES = [
 ];
 
 function buildBaseParams(openLeaveUsd) {
+  const clip =
+    CLIP_MODE !== 'none' && CLIP_PRESETS[CLIP_MODE]
+      ? CLIP_PRESETS[CLIP_MODE]
+      : {};
   return {
     openShares: PRIMARY_SHARES,
     maxEventNotional: Math.max(60, PRIMARY_SHARES * 1.15),
@@ -89,6 +121,7 @@ function buildBaseParams(openLeaveUsd) {
     tauOpenMax: 240,
     maxOpenAttempts: 3,
     maxHedgeAttempts: 8,
+    minimumOrderShares: 5,
     maxSignalGapMs: 1250,
     latencyTicks: LATENCY_TICKS,
     openConfirmationTicks: OPEN_CONFIRM,
@@ -99,6 +132,14 @@ function buildBaseParams(openLeaveUsd) {
     ptbLeaveUsd: PTB_LEAVE_USD,
     ptbApproachUsd: PTB_APPROACH_USD,
     openLeaveUsd,
+    ...clip,
+    emergencyHedge: EMERGENCY_FLIP
+      ? {
+          triggerDistMaxUsd: 0,
+          askMax: 0.55,
+          avgSumMax: 1,
+        }
+      : null,
   };
 }
 
@@ -107,14 +148,17 @@ const OPEN_LEAVE_LEVELS = RUN_GRID
   : [OPEN_LEAVE_USD];
 
 const VARIANTS = OPEN_LEAVE_LEVELS.flatMap((openLeaveUsd) =>
-  HEDGE_POLICIES.map((policy) => ({
-    ...buildBaseParams(openLeaveUsd),
-    ...policy,
-    id:
-      openLeaveUsd > 0
-        ? `${policy.hedgeId}|leave${openLeaveUsd}`
-        : policy.hedgeId,
-  })),
+  HEDGE_POLICIES.map((policy) => {
+    const clipTag = CLIP_MODE !== 'none' ? `|${CLIP_MODE}` : '';
+    return {
+      ...buildBaseParams(openLeaveUsd),
+      ...policy,
+      id:
+        openLeaveUsd > 0
+          ? `${policy.hedgeId}|leave${openLeaveUsd}${clipTag}`
+          : `${policy.hedgeId}${clipTag}`,
+    };
+  }),
 );
 
 function levelList(prefix, field) {
@@ -124,9 +168,9 @@ function levelList(prefix, field) {
   ).join(', ');
 }
 
-function fee(price, shares) {
+function fee(price, shares, feeRate = FEE_RATE) {
   const p = Math.min(0.99, Math.max(0.01, Number(price)));
-  return FEE_RATE * p * (1 - p) * shares;
+  return feeRate * p * (1 - p) * shares;
 }
 
 function levelsAt(tick, side) {
@@ -144,16 +188,24 @@ function levelsAt(tick, side) {
   return levels;
 }
 
-function sweepBuy(tick, side, shares, limitPrice) {
+function sweepBuy(
+  tick,
+  side,
+  shares,
+  limitPrice,
+  depthFraction = 1,
+  feeRate = FEE_RATE,
+) {
   let remaining = shares;
   let notional = 0;
   let fees = 0;
   const fills = [];
   for (const level of levelsAt(tick, side)) {
     if (remaining <= 1e-9 || level.px > limitPrice + 1e-12) break;
-    const taken = Math.min(remaining, level.size);
+    const available = level.size * Math.max(0, Math.min(1, depthFraction));
+    const taken = Math.min(remaining, available);
     if (taken <= 0) continue;
-    const fillFee = fee(level.px, taken);
+    const fillFee = fee(level.px, taken, feeRate);
     fills.push({ px: level.px, shares: taken, fee: fillFee });
     remaining -= taken;
     notional += level.px * taken;
@@ -201,9 +253,17 @@ function residual(state) {
   return Math.abs(state.inv.UP.shares - state.inv.DOWN.shares);
 }
 
+function meetsMinimumOrder(params, shares) {
+  return shares + 1e-9 >= (params.minimumOrderShares ?? 5);
+}
+
 function worstPnl(state) {
   const cost = invested(state) + totalFees(state);
-  return Math.min(state.inv.UP.shares, state.inv.DOWN.shares) - cost;
+  return (
+    Math.min(state.inv.UP.shares, state.inv.DOWN.shares) *
+      (state.params.winnerPayout ?? 1) -
+    cost
+  );
 }
 
 function projectedAvgSum(state, side, price, shares) {
@@ -213,6 +273,28 @@ function projectedAvgSum(state, side, price, shares) {
   if (otherAvg == null || shares <= 0) return null;
   const nextAvg = (leg.cost + price * shares) / (leg.shares + shares);
   return nextAvg + otherAvg;
+}
+
+function buildPlan(levels, openShares) {
+  if (!Array.isArray(levels) || !levels.length) return null;
+  let allocated = 0;
+  return levels.map((level, index) => {
+    const target =
+      index === levels.length - 1
+        ? openShares - allocated
+        : openShares * Number(level.frac);
+    allocated += target;
+    return { askMax: Number(level.askMax), target, filled: 0 };
+  });
+}
+
+function nextClip(state) {
+  if (!state.plan) return null;
+  for (let index = 0; index < state.plan.length; index += 1) {
+    const clip = state.plan[index];
+    if (clip.filled + 1e-9 < clip.target) return { clip, index };
+  }
+  return null;
 }
 
 function signedFavorableDist(tick, sideOpen) {
@@ -253,6 +335,7 @@ function createState(params) {
     mode: 'idle',
     sideOpen: null,
     inv: emptyInventory(),
+    plan: null,
     pending: null,
     openAttempts: 0,
     hedgeAttempts: 0,
@@ -274,7 +357,14 @@ function executePending(state, tick, tickIndex) {
   const order = state.pending;
   if (!order || tickIndex < order.executeAt) return;
   state.pending = null;
-  const result = sweepBuy(tick, order.side, order.shares, order.limitPrice);
+  const result = sweepBuy(
+    tick,
+    order.side,
+    order.shares,
+    order.limitPrice,
+    state.params.depthFraction ?? 1,
+    state.params.feeRate ?? FEE_RATE,
+  );
   if (result.filled <= 1e-9) {
     state.depthMisses += 1;
     return;
@@ -290,6 +380,7 @@ function executePending(state, tick, tickIndex) {
     state.sideOpen = order.side;
     state.mode = 'opened';
     state.firstOpenTau = tick.tau;
+    state.plan = buildPlan(state.params.hedgeLevels, result.filled);
     const dist = signedFavorableDist(tick, order.side);
     if (dist != null) state.maxFavorableDist = Math.max(0, dist);
     // Already far from PTB at fill → arm leave immediately for hedge-ptb.
@@ -298,6 +389,10 @@ function executePending(state, tick, tickIndex) {
       state.ptbArmedTau = tick.tau;
     }
     return;
+  }
+
+  if (order.clipIndex != null && state.plan?.[order.clipIndex]) {
+    state.plan[order.clipIndex].filled += result.filled;
   }
 
   if (residual(state) <= 1e-6) {
@@ -345,6 +440,7 @@ function scheduleOpen(state, tick, tickIndex) {
   state.openConfirmKey = key;
   if (state.openConfirmCount < p.openConfirmationTicks) return;
 
+  if (!meetsMinimumOrder(p, p.openShares)) return;
   state.openAttempts += 1;
   state.pending = {
     kind: 'open',
@@ -388,8 +484,7 @@ function scheduleHedge(state, tick, tickIndex) {
   if (
     state.mode !== 'opened' ||
     state.pending ||
-    state.hedgeAttempts >= p.maxHedgeAttempts ||
-    p.hedgeMode === 'never'
+    state.hedgeAttempts >= p.maxHedgeAttempts
   ) {
     return;
   }
@@ -403,6 +498,48 @@ function scheduleHedge(state, tick, tickIndex) {
     return;
   }
 
+  const emergency = p.emergencyHedge;
+  if (emergency) {
+    const dist = signedFavorableDist(tick, state.sideOpen);
+    const currentOpenAsk =
+      state.sideOpen === 'UP' ? tick.upAsk : tick.downAsk;
+    const openAverage = average(state, state.sideOpen);
+    const distTriggered =
+      emergency.triggerDistMaxUsd != null &&
+      dist != null &&
+      dist <= emergency.triggerDistMaxUsd + 1e-9;
+    const askDropTriggered =
+      emergency.favoriteAskDrop != null &&
+      openAverage != null &&
+      currentOpenAsk <= openAverage - emergency.favoriteAskDrop + 1e-12;
+    if (
+      (distTriggered || askDropTriggered) &&
+      ask <= emergency.askMax + 1e-12 &&
+      meetsMinimumOrder(p, sharesNeeded)
+    ) {
+      const projected = projectedAvgSum(state, side, ask, sharesNeeded);
+      if (
+        projected != null &&
+        projected <= emergency.avgSumMax + 1e-12 &&
+        invested(state) + ask * sharesNeeded <= p.maxEventNotional + 1e-9
+      ) {
+        state.hedgeAttempts += 1;
+        state.pending = {
+          kind: 'emergency_hedge',
+          side,
+          shares: sharesNeeded,
+          limitPrice: ask,
+          signalTau: tick.tau,
+          executeAt: tickIndex + p.latencyTicks,
+          distAtSignal: dist,
+        };
+        return;
+      }
+    }
+  }
+
+  if (p.hedgeMode === 'never') return;
+
   if (!hedgeAllowedByMode(state, tick)) {
     // Still track when price gate would have fired but PTB gate blocked.
     if (
@@ -414,35 +551,65 @@ function scheduleHedge(state, tick, tickIndex) {
     return;
   }
 
-  if (ask > p.hedgeAskMax + 1e-12) return;
-  const projected = projectedAvgSum(state, side, ask, sharesNeeded);
-  if (
-    projected == null ||
-    projected > p.avgSumMax + 1e-12 ||
-    invested(state) + ask * sharesNeeded > p.maxEventNotional + 1e-9
-  ) {
-    return;
+  const next = nextClip(state);
+  if (next && ask <= next.clip.askMax + 1e-12) {
+    const target = Math.min(next.clip.target - next.clip.filled, sharesNeeded);
+    if (!meetsMinimumOrder(p, target)) return;
+    const projected = projectedAvgSum(state, side, ask, target);
+    if (
+      projected != null &&
+      projected <= p.avgSumMax + 1e-12 &&
+      invested(state) + ask * target <= p.maxEventNotional + 1e-9
+    ) {
+      state.hedgeAttempts += 1;
+      state.pending = {
+        kind: 'clip',
+        clipIndex: next.index,
+        side,
+        shares: target,
+        limitPrice: ask,
+        signalTau: tick.tau,
+        executeAt: tickIndex + p.latencyTicks,
+        ptbArmed: state.ptbArmed,
+        maxFavorableDist: state.maxFavorableDist,
+        distAtSignal: signedFavorableDist(tick, state.sideOpen),
+      };
+      return;
+    }
   }
 
-  state.hedgeAttempts += 1;
-  state.pending = {
-    kind: 'hedge',
-    side,
-    shares: sharesNeeded,
-    limitPrice: ask,
-    signalTau: tick.tau,
-    executeAt: tickIndex + p.latencyTicks,
-    ptbArmed: state.ptbArmed,
-    maxFavorableDist: state.maxFavorableDist,
-    distAtSignal: signedFavorableDist(tick, state.sideOpen),
-  };
+  if (!state.plan) {
+    if (ask > p.hedgeAskMax + 1e-12) return;
+    if (!meetsMinimumOrder(p, sharesNeeded)) return;
+    const projected = projectedAvgSum(state, side, ask, sharesNeeded);
+    if (
+      projected == null ||
+      projected > p.avgSumMax + 1e-12 ||
+      invested(state) + ask * sharesNeeded > p.maxEventNotional + 1e-9
+    ) {
+      return;
+    }
+
+    state.hedgeAttempts += 1;
+    state.pending = {
+      kind: 'hedge',
+      side,
+      shares: sharesNeeded,
+      limitPrice: ask,
+      signalTau: tick.tau,
+      executeAt: tickIndex + p.latencyTicks,
+      ptbArmed: state.ptbArmed,
+      maxFavorableDist: state.maxFavorableDist,
+      distAtSignal: signedFavorableDist(tick, state.sideOpen),
+    };
+  }
 }
 
 /**
  * Market path after open — walks the FULL tick series (ignore early equalize exit).
  * Uses leave/approach thresholds from CLI so arms share the same buckets.
  */
-function classifyPath(ticks, sideOpen, openTau) {
+function classifyPath(ticks, sideOpen, openTau, params) {
   if (!sideOpen) {
     return {
       leftFar: false,
@@ -460,16 +627,16 @@ function classifyPath(ticks, sideOpen, openTau) {
     const dist = signedFavorableDist(tick, sideOpen);
     if (dist == null) continue;
     if (dist > maxFav) maxFav = dist;
-    if (dist >= PTB_LEAVE_USD - 1e-9) sawLeave = true;
+    if (dist >= params.ptbLeaveUsd - 1e-9) sawLeave = true;
     if (sawLeave && dist < minFavorableAfterLeave) {
       minFavorableAfterLeave = dist;
     }
   }
-  const leftFar = maxFav >= PTB_LEAVE_USD - 1e-9;
+  const leftFar = maxFav >= params.ptbLeaveUsd - 1e-9;
   const approached =
     leftFar &&
     Number.isFinite(minFavorableAfterLeave) &&
-    minFavorableAfterLeave <= PTB_APPROACH_USD + 1e-9;
+    minFavorableAfterLeave <= params.ptbApproachUsd + 1e-9;
   const last = ticks[ticks.length - 1];
   const finalDist = signedFavorableDist(last, sideOpen);
   const flippedVsOpen = finalDist != null ? finalDist < 0 : false;
@@ -513,7 +680,9 @@ function runEvent(ticks, params, eventKey) {
   const balanced = Math.min(state.inv.UP.shares, state.inv.DOWN.shares);
   const avgSum = averageSum(state);
   const worst = worstPnl(state);
-  const buffer = balanced * OPERATIONAL_BUFFER_PER_PAIR;
+  const buffer =
+    balanced *
+    (params.operationalBufferPerPair ?? OPERATIONAL_BUFFER_PER_PAIR);
   const last = ticks[ticks.length - 1];
   const spotWinner =
     last.underlyingPrice > last.priceToBeat
@@ -527,13 +696,25 @@ function runEvent(ticks, params, eventKey) {
       : last.downAsk > last.upAsk
         ? 'DOWN'
         : null;
-  const winner =
+  const proxyWinner =
     spotWinner != null && spotWinner === bookWinner ? spotWinner : null;
+  const canonicalWinner = params.canonicalWinners?.[eventKey] ?? null;
+  const winner =
+    canonicalWinner === 'UP' || canonicalWinner === 'DOWN'
+      ? canonicalWinner
+      : proxyWinner;
   const realizedPnl =
     winner != null
-      ? state.inv[winner].shares - invested(state) - totalFees(state)
+      ? state.inv[winner].shares * (params.winnerPayout ?? 1) -
+        invested(state) -
+        totalFees(state)
       : null;
-  const path = classifyPath(ticks, state.sideOpen, state.firstOpenTau);
+  const path = classifyPath(
+    ticks,
+    state.sideOpen,
+    state.firstOpenTau,
+    params,
+  );
   const openSideWon =
     state.sideOpen != null && winner != null
       ? state.sideOpen === winner
@@ -557,6 +738,8 @@ function runEvent(ticks, params, eventKey) {
     worstPnl: worst,
     guardedWorstPnl: worst - buffer,
     winner,
+    winnerSource: canonicalWinner ? 'canonical_override' : 'spot_book_proxy',
+    proxyWinner,
     spotWinner,
     bookWinner,
     openSideWon,
@@ -564,7 +747,7 @@ function runEvent(ticks, params, eventKey) {
     guardedRealizedPnl:
       realizedPnl != null ? realizedPnl - buffer : null,
     fills: state.fills.length,
-    hedgeFills: state.fills.filter((fill) => fill.kind === 'hedge').length,
+    hedgeFills: state.fills.filter((fill) => fill.kind !== 'open').length,
     partialOrders: state.partialOrders,
     depthMisses: state.depthMisses,
     firstOpenTau: state.firstOpenTau,
@@ -577,6 +760,7 @@ function runEvent(ticks, params, eventKey) {
     ptbArmed: state.ptbArmed,
     ptbArmedTau: state.ptbArmedTau,
     hedgeGateBlocked: state.hedgeGateBlocked,
+    fillDetails: state.fills,
     ...path,
   };
 }
@@ -706,12 +890,12 @@ function summarize(rows) {
   };
 }
 
-function listDays() {
+function listDays(from = FROM, to = TO) {
   return fs
     .readdirSync(LAKE, { withFileTypes: true })
     .filter((entry) => entry.isDirectory() && entry.name.startsWith('dt='))
     .map((entry) => entry.name.slice(3))
-    .filter((day) => day >= FROM && day <= TO)
+    .filter((day) => day >= from && day <= to)
     .sort();
 }
 
@@ -724,28 +908,18 @@ function fmt(n, digits = 2) {
   return Number(n).toFixed(digits);
 }
 
-async function main() {
-  const days = listDays();
+async function runPtbSweep({
+  variants = VARIANTS,
+  from = FROM,
+  to = TO,
+  onDayProgress = null,
+}) {
+  const days = listDays(from, to);
   if (!days.length) {
     throw new Error(
-      `no lake days in ${FROM}..${TO} under ${LAKE}. Run: npm run lake:update-btc-5m`,
+      `no lake days in ${from}..${to} under ${LAKE}. Run: npm run lake:update-btc-5m`,
     );
   }
-  fs.mkdirSync(OUT_DIR, { recursive: true });
-
-  const variants = VARIANTS;
-
-  console.log('=== PTB-protect A/B (depth-25 lake) ===');
-  console.log(
-    `window=${FROM}..${TO} days=${days.length} shares=${PRIMARY_SHARES}` +
-      ` armLeave=$${PTB_LEAVE_USD} approach=$${PTB_APPROACH_USD}` +
-      ` openLeave=[${OPEN_LEAVE_LEVELS.join(',')}]` +
-      ` hedgeAskMax=0.42 avgSumMax=0.96 variants=${variants.length}`,
-  );
-  console.log(
-    'arms=open-only | hedge-asap | hedge-ptb · fee=0.07 · no maker/EQ/escape',
-  );
-
   const db = await DuckDBInstance.create(':memory:');
   const connection = await db.connect();
   await connection.run('SET threads TO 6');
@@ -819,16 +993,59 @@ async function main() {
       buffer.push(normalizeTick(row));
     }
     flush();
-    if (
-      dayIndex === 0 ||
-      dayIndex === days.length - 1 ||
-      (dayIndex + 1) % 5 === 0
-    ) {
-      console.log(
-        `[${dayIndex + 1}/${days.length}] ${day} eligible=${eligibleEvents}`,
-      );
+    if (onDayProgress) {
+      onDayProgress({
+        dayIndex,
+        day,
+        daysTotal: days.length,
+        eligibleEvents,
+      });
     }
   }
+
+  return { days, eligibleEvents, skippedCoverage, results };
+}
+
+async function main() {
+  const days = listDays();
+  if (!days.length) {
+    throw new Error(
+      `no lake days in ${FROM}..${TO} under ${LAKE}. Run: npm run lake:update-btc-5m`,
+    );
+  }
+  fs.mkdirSync(OUT_DIR, { recursive: true });
+
+  const variants = VARIANTS;
+
+  console.log('=== PTB-protect A/B (depth-25 lake) ===');
+  console.log(
+    `window=${FROM}..${TO} days=${days.length} shares=${PRIMARY_SHARES}` +
+      ` armLeave=$${PTB_LEAVE_USD} approach=$${PTB_APPROACH_USD}` +
+      ` openLeave=[${OPEN_LEAVE_LEVELS.join(',')}]` +
+      ` hedgeAskMax=0.42 avgSumMax=0.96 variants=${variants.length}`,
+  );
+  console.log(
+    'arms=open-only | hedge-asap | hedge-ptb · fee=0.07 · no maker/EQ/escape',
+  );
+
+  const {
+    eligibleEvents,
+    skippedCoverage,
+    results,
+  } = await runPtbSweep({
+    variants,
+    from: FROM,
+    to: TO,
+    onDayProgress: ({ dayIndex, day, daysTotal, eligibleEvents: eligible }) => {
+      if (
+        dayIndex === 0 ||
+        dayIndex === daysTotal - 1 ||
+        (dayIndex + 1) % 5 === 0
+      ) {
+        console.log(`[${dayIndex + 1}/${daysTotal}] ${day} eligible=${eligible}`);
+      }
+    },
+  });
 
   const reportVariants = variants.map((variant) => {
     const rows = results.get(variant.id);
@@ -846,6 +1063,10 @@ async function main() {
         ptbApproachUsd: variant.ptbApproachUsd,
         latencyTicks: variant.latencyTicks,
         openConfirmationTicks: variant.openConfirmationTicks,
+        hedgeLevels: variant.hedgeLevels ?? null,
+        emergencyHedge: variant.emergencyHedge ?? null,
+        minimumOrderShares: variant.minimumOrderShares ?? 5,
+        clipMode: CLIP_MODE,
       },
       summary: summarize(rows),
     };
@@ -855,6 +1076,7 @@ async function main() {
     generatedAt: new Date().toISOString(),
     window: { from: FROM, to: TO, days: days.length },
     dataset: 'backtest_ticks BTC 5m depth25',
+    clipMode: CLIP_MODE,
     feeRate: FEE_RATE,
     operationalBufferPerPair: OPERATIONAL_BUFFER_PER_PAIR,
     eligibleEvents,
@@ -958,7 +1180,29 @@ async function main() {
   console.log('saved', path.join(OUT_DIR, 'report.json'));
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+export {
+  FEE_RATE,
+  OPERATIONAL_BUFFER_PER_PAIR,
+  LAKE,
+  CLIP_PRESETS,
+  HEDGE_POLICIES,
+  buildBaseParams,
+  classifyPath,
+  listDays,
+  normalizeTick,
+  runEvent,
+  runPtbSweep,
+  summarize,
+};
+
+const isCli =
+  process.argv[1] &&
+  path.resolve(fileURLToPath(import.meta.url)) ===
+    path.resolve(process.argv[1]);
+
+if (isCli) {
+  main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}

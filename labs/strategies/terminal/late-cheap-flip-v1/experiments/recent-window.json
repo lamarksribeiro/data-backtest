@@ -1,0 +1,54 @@
+{
+  "name": "late-cheap-flip-recent-window",
+  "strategyId": "late-cheap-flip-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-07-14",
+  "to": "2026-07-30",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "m3-ask35",
+        "params": {
+          "entryMode": 3,
+          "minSecondsLeft": 3,
+          "maxSecondsLeft": 15,
+          "minDistAbs": 8,
+          "maxAsk": 0.35,
+          "minEdge": 0.12
+        }
+      },
+      {
+        "id": "m2-midlate",
+        "params": {
+          "entryMode": 2,
+          "minSecondsLeft": 25,
+          "maxSecondsLeft": 90,
+          "maxAsk": 0.52,
+          "minEdge": 0.08,
+          "minDistAbs": 12
+        }
+      },
+      {
+        "id": "m3-edge18",
+        "params": {
+          "entryMode": 3,
+          "minSecondsLeft": 3,
+          "maxSecondsLeft": 12,
+          "minDistAbs": 6,
+          "maxAsk": 0.42,
+          "minEdge": 0.18
+        }
+      }
+    ]
+  },
+  "notes": "Fase 0c: revalidar edge pós-holdout (14/07–30/07) antes do dry run."
+}

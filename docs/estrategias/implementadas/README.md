@@ -49,6 +49,12 @@ Teorias portadas ao `data-backtest` (runners no Studio ou biblioteca). Origem pr
 | [fusion-five-v1.md](fusion-five-v1.md) | `fusion-five-v1` |
 | [omni-edge-v1.md](omni-edge-v1.md) | `omni-edge-v1` |
 
+## Labs market-neutral (research)
+
+| Documento | Comando | Notas |
+|---|---|---|
+| [pair-floor-invariant-v1.md](pair-floor-invariant-v1.md) | `npm run lab:pair-floor-invariant` | Dual-side atomic floor pós-fee; **não GO size** |
+
 ## Estudos de suporte
 
 | Documento | Relação |

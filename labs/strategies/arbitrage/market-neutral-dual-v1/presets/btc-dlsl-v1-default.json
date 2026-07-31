@@ -1,0 +1,19 @@
+{
+  "id": "btc-dlsl-v1-default",
+  "presetId": "btc-dlsl-v1-default",
+  "strategyId": "market-neutral-dual-v1",
+  "studioVersion": 1,
+  "name": "BTC Market-Neutral DLSL-V1 Default",
+  "description": "Preset padrão aprovado de Dual-Leg Sequential Lock para mercado de BTC 5m.",
+  "params": {
+    "variant": "dlsl-v1",
+    "maxOrderValue": 10.0,
+    "maxSlippage": 0.01,
+    "maxAllowedCombinedCost": 0.94,
+    "phase1MinSecondsLeft": 120,
+    "phase1MaxSecondsLeft": 240,
+    "phase1MaxAsk": 0.44,
+    "applyPolymarketFees": true,
+    "feeScenario": "base"
+  }
+}

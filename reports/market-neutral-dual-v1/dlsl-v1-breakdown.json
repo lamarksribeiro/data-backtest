@@ -1,0 +1,207 @@
+{
+  "generatedAt": "2026-07-31T08:16:40.455Z",
+  "ticks": 5267246,
+  "events": 8801,
+  "maxSlippage": 0.01,
+  "metrics": {
+    "variant": "dlsl-v1",
+    "trades": 8749,
+    "winRate": "54.9%",
+    "pnlGross": -18153.54,
+    "pnlNet": -19753.72,
+    "pf": 0.35,
+    "maxDD": 19758.3,
+    "expectancy": -2.26,
+    "expectancyPerDollar": "-11.56%",
+    "totalFees": 1600.18,
+    "feeDragPct": "8.8%",
+    "worstCaseAvg": -2.39,
+    "bestCaseAvg": 7.72,
+    "tieFreq": "0.3%",
+    "nearTieFreq": "1.2%",
+    "freeRollFreq": "0.0%",
+    "profitLockFreq": "71.0%"
+  },
+  "locked": {
+    "name": "locked",
+    "n": 6211,
+    "pct": 71,
+    "pnl": 2456.74,
+    "wr": 76.5,
+    "pf": 1.34,
+    "avgPnl": 0.4,
+    "avgCost": 23.75,
+    "avgFees": 0.22,
+    "avgWorst": 0.4,
+    "avgBest": 0.4,
+    "negFloorPct": 23.5
+  },
+  "orphan": {
+    "name": "orphan",
+    "n": 2538,
+    "pct": 29,
+    "pnl": -22210.46,
+    "wr": 1.8,
+    "pf": 0.03,
+    "avgPnl": -8.75,
+    "avgCost": 9.22,
+    "avgFees": 0.08,
+    "avgWorst": -9.22,
+    "avgBest": 25.64,
+    "negFloorPct": 100
+  },
+  "lockedUnitCostDist": [
+    {
+      "label": "<0.94",
+      "n": 3933,
+      "pnl": 8571.58,
+      "avgUnit": 0.9195
+    },
+    {
+      "label": "0.94–0.98",
+      "n": 781,
+      "pnl": 1200.5,
+      "avgUnit": 0.9507
+    },
+    {
+      "label": "0.98–1.00",
+      "n": 40,
+      "pnl": 11.19,
+      "avgUnit": 0.9902
+    },
+    {
+      "label": "1.00–1.05",
+      "n": 133,
+      "pnl": -71.77,
+      "avgUnit": 1.0227
+    },
+    {
+      "label": ">=1.05",
+      "n": 1324,
+      "pnl": -7254.77,
+      "avgUnit": 4.0211
+    }
+  ],
+  "lockedNegFloor": 1457,
+  "lockedPosFloor": 4754,
+  "orphanWinPnl": 777.81,
+  "orphanLossPnl": -22988.26,
+  "orphanAvgWin": 17.28,
+  "orphanAvgLoss": -9.22,
+  "sampleLockedNeg": [
+    {
+      "unit": 5.5494,
+      "cost": 11.15,
+      "qty": 2.01,
+      "pnl": -9.14,
+      "fees": 0.11
+    },
+    {
+      "unit": 1.6626,
+      "cost": 15.16,
+      "qty": 9.12,
+      "pnl": -6.04,
+      "fees": 0.15
+    },
+    {
+      "unit": 1.3177,
+      "cost": 20.1,
+      "qty": 15.25,
+      "pnl": -4.85,
+      "fees": 0.18
+    },
+    {
+      "unit": 1.5469,
+      "cost": 14.85,
+      "qty": 9.6,
+      "pnl": -5.25,
+      "fees": 0.15
+    },
+    {
+      "unit": 1.0157,
+      "cost": 22.28,
+      "qty": 21.94,
+      "pnl": -0.34,
+      "fees": 0.22
+    },
+    {
+      "unit": 2.1937,
+      "cost": 14.3,
+      "qty": 6.52,
+      "pnl": -7.78,
+      "fees": 0.13
+    },
+    {
+      "unit": 1.0566,
+      "cost": 22.65,
+      "qty": 21.44,
+      "pnl": -1.21,
+      "fees": 0.22
+    },
+    {
+      "unit": 3.863,
+      "cost": 11.94,
+      "qty": 3.09,
+      "pnl": -8.85,
+      "fees": 0.11
+    }
+  ],
+  "sampleLockedPos": [
+    {
+      "unit": 0.8786,
+      "cost": 19.97,
+      "qty": 22.73,
+      "pnl": 2.76,
+      "fees": 0.2
+    },
+    {
+      "unit": 0.9291,
+      "cost": 23.82,
+      "qty": 25.64,
+      "pnl": 1.82,
+      "fees": 0.23
+    },
+    {
+      "unit": 0.9483,
+      "cost": 3.96,
+      "qty": 4.18,
+      "pnl": 0.22,
+      "fees": 0.03
+    },
+    {
+      "unit": 0.9388,
+      "cost": 32.37,
+      "qty": 34.48,
+      "pnl": 2.11,
+      "fees": 0.3
+    },
+    {
+      "unit": 0.9493,
+      "cost": 23.15,
+      "qty": 24.39,
+      "pnl": 1.24,
+      "fees": 0.23
+    },
+    {
+      "unit": 0.9388,
+      "cost": 32.37,
+      "qty": 34.48,
+      "pnl": 2.11,
+      "fees": 0.3
+    },
+    {
+      "unit": 0.9492,
+      "cost": 26.37,
+      "qty": 27.78,
+      "pnl": 1.41,
+      "fees": 0.26
+    },
+    {
+      "unit": 0.9486,
+      "cost": 37.94,
+      "qty": 40,
+      "pnl": 2.06,
+      "fees": 0.34
+    }
+  ]
+}
