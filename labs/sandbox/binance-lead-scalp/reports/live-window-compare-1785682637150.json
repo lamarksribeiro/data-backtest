@@ -1,0 +1,131 @@
+{
+  "generatedAt": "2026-08-02T14:57:17.150Z",
+  "window": {
+    "from": "2026-08-02T14:25:00.000Z",
+    "to": "2026-08-02T14:50:00.000Z"
+  },
+  "sources": {
+    "ticks": "data-colector PG (Brutus vgiav63…)",
+    "binance": "api.binance.com klines 1s",
+    "note": "Vision zip do dia ainda não disponível; REST 1s ≈ grain do lab"
+  },
+  "config": {
+    "leadSec": 2,
+    "impulseUsd": 12,
+    "minAsk": 0.15,
+    "maxAsk": 0.7,
+    "maxSpread": 0.04,
+    "staleMidMoveMax": 0.02,
+    "budget": 10,
+    "stopLoss": 0.05,
+    "timeoutSec": 20,
+    "cooldownSec": 3,
+    "maxTradesPerEvent": 5,
+    "minTau": 20,
+    "maxTau": 280,
+    "feeRate": 0.07,
+    "exitMode": "maker-ladder",
+    "ladderOffsets": [
+      0.08,
+      0.14
+    ]
+  },
+  "dryObserved": {
+    "note": "Giovanna dry scalp-e (honest) — eventos concluídos no overlap",
+    "events": [
+      {
+        "slugStart": 1785680700,
+        "trades": 0
+      },
+      {
+        "slugStart": 1785681000,
+        "trades": 0
+      },
+      {
+        "slugStart": 1785681300,
+        "trades": 1,
+        "pnl": 1.7465,
+        "reason": "ladder_full",
+        "side": "UP",
+        "entry": 0.53
+      },
+      {
+        "slugStart": 1785681600,
+        "trades": 0
+      },
+      {
+        "slugStart": 1785681900,
+        "trades": 0
+      }
+    ],
+    "totalTrades": 1
+  },
+  "replay": {
+    "events": 5,
+    "totalTrades": 1,
+    "totalPnl": 1.969,
+    "perEvent": [
+      {
+        "condition_id": "0x4482771e878b…",
+        "eventStartSec": 1785680700,
+        "eventStartIso": "2026-08-02T14:25:00.000Z",
+        "ticks": 600,
+        "trades": 0,
+        "pnl": 0,
+        "details": []
+      },
+      {
+        "condition_id": "0x5f561c6b3949…",
+        "eventStartSec": 1785681000,
+        "eventStartIso": "2026-08-02T14:30:00.000Z",
+        "ticks": 600,
+        "trades": 0,
+        "pnl": 0,
+        "details": []
+      },
+      {
+        "condition_id": "0x13b803f73923…",
+        "eventStartSec": 1785681300,
+        "eventStartIso": "2026-08-02T14:35:00.000Z",
+        "ticks": 600,
+        "trades": 1,
+        "pnl": 1.969,
+        "details": [
+          {
+            "side": "DOWN",
+            "entryAsk": 0.47,
+            "exitPx": 0.58,
+            "pnl": 1.9694,
+            "reason": "ladder_full",
+            "holdSec": 17.5,
+            "binRet": -23.99,
+            "tauAtEntry": 217
+          }
+        ]
+      },
+      {
+        "condition_id": "0xe213e704c61f…",
+        "eventStartSec": 1785681600,
+        "eventStartIso": "2026-08-02T14:40:00.000Z",
+        "ticks": 600,
+        "trades": 0,
+        "pnl": 0,
+        "details": []
+      },
+      {
+        "condition_id": "0xd667d3a8a6a5…",
+        "eventStartSec": 1785681900,
+        "eventStartIso": "2026-08-02T14:45:00.000Z",
+        "ticks": 600,
+        "trades": 0,
+        "pnl": 0,
+        "details": []
+      }
+    ]
+  },
+  "match": {
+    "sameTradeCount": true,
+    "deltaTrades": 0,
+    "verdict": "MATCH — mesmo nº de trades no período"
+  }
+}

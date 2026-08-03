@@ -1,0 +1,27 @@
+{
+  "id": "spot-book-disagree-v1",
+  "name": "Spot Book Disagree V1",
+  "family": "terminal",
+  "status": "experimental",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "labs/strategies/terminal/spot-book-disagree-v1/strategy.gls"
+  },
+  "promotedToStudio": false,
+  "studioSlug": "spot-book-disagree-v1",
+  "studio": {
+    "description": "SBD: spotLeader≠bookFavorite no fim. Campeã sonda = follow-spot-cheap (comprar líder do spot barato). Hold to settlement.",
+    "tags": ["terminal", "btc", "sbd", "disagreement", "experimental", "lab-strategy"],
+    "defaultVersion": 1,
+    "defaultGlsSource": "classic",
+    "glsSources": {
+      "classic": "labs/strategies/terminal/spot-book-disagree-v1/strategy.gls"
+    }
+  },
+  "notes": "Sonda labs/sandbox/spot-book-disagree: follow-book NO-GO (PF~0.8); follow-spot-cheap GO holdout PF 1.25."
+}

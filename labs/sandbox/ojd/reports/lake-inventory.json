@@ -1,0 +1,7136 @@
+{
+  "generated_at": "2026-08-02T05:46:30.716Z",
+  "lake_root": "D:\\Projetos\\projeto-goldenlens\\data-backtest\\lake",
+  "backtest_ticks": [
+    {
+      "dataset": "backtest_ticks",
+      "asset": "BNB",
+      "interval": "5m",
+      "book_depth": 25,
+      "days": 63,
+      "from": "2026-05-24",
+      "to": "2026-07-25",
+      "calendar_span_days": 63,
+      "coverage_pct": 100,
+      "parquet_files": 63,
+      "size_mb": 961.7,
+      "gaps": [],
+      "sample_day": "2026-06-15"
+    },
+    {
+      "dataset": "backtest_ticks",
+      "asset": "BTC",
+      "interval": "5m",
+      "book_depth": 10,
+      "days": 1,
+      "from": "2026-05-29",
+      "to": "2026-05-29",
+      "calendar_span_days": 1,
+      "coverage_pct": 100,
+      "parquet_files": 1,
+      "size_mb": 0.7,
+      "gaps": [],
+      "sample_day": "2026-05-29"
+    },
+    {
+      "dataset": "backtest_ticks",
+      "asset": "BTC",
+      "interval": "5m",
+      "book_depth": 25,
+      "days": 100,
+      "from": "2026-04-23",
+      "to": "2026-07-31",
+      "calendar_span_days": 100,
+      "coverage_pct": 100,
+      "parquet_files": 103,
+      "size_mb": 4033.2,
+      "gaps": [],
+      "sample_day": "2026-06-15"
+    },
+    {
+      "dataset": "backtest_ticks",
+      "asset": "DOGE",
+      "interval": "5m",
+      "book_depth": 25,
+      "days": 63,
+      "from": "2026-05-24",
+      "to": "2026-07-25",
+      "calendar_span_days": 63,
+      "coverage_pct": 100,
+      "parquet_files": 63,
+      "size_mb": 1268.9,
+      "gaps": [],
+      "sample_day": "2026-06-15"
+    },
+    {
+      "dataset": "backtest_ticks",
+      "asset": "ETH",
+      "interval": "5m",
+      "book_depth": 25,
+      "days": 64,
+      "from": "2026-05-24",
+      "to": "2026-07-26",
+      "calendar_span_days": 64,
+      "coverage_pct": 100,
+      "parquet_files": 64,
+      "size_mb": 2049.4,
+      "gaps": [],
+      "sample_day": "2026-06-15"
+    },
+    {
+      "dataset": "backtest_ticks",
+      "asset": "HYPE",
+      "interval": "5m",
+      "book_depth": 25,
+      "days": 63,
+      "from": "2026-05-24",
+      "to": "2026-07-25",
+      "calendar_span_days": 63,
+      "coverage_pct": 100,
+      "parquet_files": 63,
+      "size_mb": 1097.2,
+      "gaps": [],
+      "sample_day": "2026-06-15"
+    },
+    {
+      "dataset": "backtest_ticks",
+      "asset": "SOL",
+      "interval": "5m",
+      "book_depth": 25,
+      "days": 63,
+      "from": "2026-05-24",
+      "to": "2026-07-25",
+      "calendar_span_days": 63,
+      "coverage_pct": 100,
+      "parquet_files": 63,
+      "size_mb": 1757.3,
+      "gaps": [],
+      "sample_day": "2026-06-15"
+    },
+    {
+      "dataset": "backtest_ticks",
+      "asset": "XRP",
+      "interval": "5m",
+      "book_depth": 25,
+      "days": 63,
+      "from": "2026-05-24",
+      "to": "2026-07-25",
+      "calendar_span_days": 63,
+      "coverage_pct": 100,
+      "parquet_files": 63,
+      "size_mb": 1316.2,
+      "gaps": [],
+      "sample_day": "2026-06-15"
+    }
+  ],
+  "backtest_ticks_lite": [
+    {
+      "dataset": "backtest_ticks_lite",
+      "asset": "BTC",
+      "interval": "5m",
+      "days": 66,
+      "from": "2026-04-23",
+      "to": "2026-06-27",
+      "parquet_files": 66,
+      "size_mb": 84,
+      "gaps": [],
+      "sample_day": "2026-06-15"
+    }
+  ],
+  "empty_roots": [
+    {
+      "dataset": "books",
+      "parquet_files": 0,
+      "size_mb": 0,
+      "status": "EMPTY_LOCAL"
+    },
+    {
+      "dataset": "features",
+      "parquet_files": 0,
+      "size_mb": 0,
+      "status": "EMPTY_LOCAL"
+    },
+    {
+      "dataset": "manifests",
+      "parquet_files": 0,
+      "size_mb": 0,
+      "status": "EMPTY_LOCAL"
+    },
+    {
+      "dataset": "ohlc",
+      "parquet_files": 0,
+      "size_mb": 0,
+      "status": "EMPTY_LOCAL"
+    },
+    {
+      "dataset": "scalars",
+      "parquet_files": 0,
+      "size_mb": 0,
+      "status": "EMPTY_LOCAL"
+    }
+  ],
+  "cube": {
+    "path": "labs\\mining\\cube",
+    "files": 82,
+    "from": "2026-04-23",
+    "to": "2026-07-13",
+    "approx_rows": 1141280,
+    "size_mb": 441.4,
+    "columns": [
+      "dt",
+      "condition_id",
+      "ts_ms",
+      "tau",
+      "spot",
+      "ptb",
+      "dist",
+      "dist_abs",
+      "fav",
+      "ask_fav",
+      "bid_fav",
+      "spread_fav",
+      "ask_up",
+      "ask_down",
+      "odds_sum",
+      "d_spot_5",
+      "d_spot_10",
+      "d_spot_15",
+      "d_spot_20",
+      "d_spot_30",
+      "d_spot_60",
+      "sigma_ps_90",
+      "flips_60",
+      "secs_since_flip",
+      "pin45",
+      "d_askfav_10",
+      "d_askfav_15",
+      "d_askfav_30",
+      "sigma_askfav_15",
+      "depth5_ask_fav",
+      "depth5_bid_fav",
+      "obi5",
+      "ladder_fav",
+      "fill_px_fav",
+      "fill_sh_fav",
+      "fill_px_non",
+      "fill_sh_non",
+      "p_phys",
+      "edge_phys",
+      "coverage",
+      "degraded",
+      "mkt_agree",
+      "winner",
+      "fav_won",
+      "pnl_fav",
+      "pnl_non"
+    ]
+  },
+  "samples": [
+    {
+      "label": "backtest_ticks BNB d25 2026-06-15",
+      "file": "lake/backtest_ticks/underlying=BNB/interval=5m/book_depth=25/dt=2026-06-15/part-backtest-ticks-20260622101015-eaa8d5f4.parquet",
+      "columns": [
+        {
+          "name": "market_id",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "underlying",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "interval",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "condition_id",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "event_start",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "event_end",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "ts",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "underlying_price",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "price_to_beat",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_price",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_price",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_best_bid",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_best_ask",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_best_bid",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_best_ask",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "coverage",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "degraded",
+          "type": "BOOLEAN"
+        },
+        {
+          "name": "book_depth",
+          "type": "BIGINT"
+        },
+        {
+          "name": "up_ask_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "dt",
+          "type": "DATE"
+        }
+      ],
+      "stats": {
+        "ticks": 172800,
+        "events": 288,
+        "min_ts": "2026-06-15T00:00:00.235Z",
+        "max_ts": "2026-06-15T23:59:59.788Z",
+        "avg_coverage": 1,
+        "degraded_ticks": 0,
+        "avg_up_ask": 0.5296836997919182,
+        "avg_abs_dist": 0.36688598126066435,
+        "null_book_l1": 8976,
+        "null_book_l25": 64156
+      }
+    },
+    {
+      "label": "backtest_ticks BTC d10 2026-05-29",
+      "file": "lake/backtest_ticks/underlying=BTC/interval=5m/book_depth=10/dt=2026-05-29/part-backtest-ticks-20260531211319-79144d1d.parquet",
+      "columns": [
+        {
+          "name": "market_id",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "underlying",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "interval",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "condition_id",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "event_start",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "event_end",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "ts",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "underlying_price",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "price_to_beat",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_price",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_price",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_best_bid",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_best_ask",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_best_bid",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_best_ask",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "coverage",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "degraded",
+          "type": "BOOLEAN"
+        },
+        {
+          "name": "book_depth",
+          "type": "BIGINT"
+        },
+        {
+          "name": "up_ask_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "dt",
+          "type": "DATE"
+        }
+      ],
+      "stats": {
+        "ticks": 5729,
+        "events": 11,
+        "min_ts": "2026-05-29T19:12:19.454Z",
+        "max_ts": "2026-05-29T22:09:59.848Z",
+        "avg_coverage": 1,
+        "degraded_ticks": 0,
+        "avg_up_ask": 0.49957137858641654,
+        "avg_abs_dist": 23.993475428052136,
+        "null_book_l1": 67,
+        "null_book_l25": null
+      }
+    },
+    {
+      "label": "backtest_ticks BTC d25 2026-06-15",
+      "file": "lake/backtest_ticks/underlying=BTC/interval=5m/book_depth=25/dt=2026-06-15/part-backtest-ticks-20260616060045-d2c7dd58.parquet",
+      "columns": [
+        {
+          "name": "market_id",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "underlying",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "interval",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "condition_id",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "event_start",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "event_end",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "ts",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "underlying_price",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "price_to_beat",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_price",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_price",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_best_bid",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_best_ask",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_best_bid",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_best_ask",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "coverage",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "degraded",
+          "type": "BOOLEAN"
+        },
+        {
+          "name": "book_depth",
+          "type": "BIGINT"
+        },
+        {
+          "name": "up_ask_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "dt",
+          "type": "DATE"
+        }
+      ],
+      "stats": {
+        "ticks": 172800,
+        "events": 288,
+        "min_ts": "2026-06-15T00:00:00.010Z",
+        "max_ts": "2026-06-15T23:59:59.530Z",
+        "avg_coverage": 1,
+        "degraded_ticks": 0,
+        "avg_up_ask": 0.5099878836083367,
+        "avg_abs_dist": 34.94779481638412,
+        "null_book_l1": 8911,
+        "null_book_l25": 42704
+      }
+    },
+    {
+      "label": "backtest_ticks DOGE d25 2026-06-15",
+      "file": "lake/backtest_ticks/underlying=DOGE/interval=5m/book_depth=25/dt=2026-06-15/part-backtest-ticks-20260622103428-94bcd0ec.parquet",
+      "columns": [
+        {
+          "name": "market_id",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "underlying",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "interval",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "condition_id",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "event_start",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "event_end",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "ts",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "underlying_price",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "price_to_beat",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_price",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_price",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_best_bid",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_best_ask",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_best_bid",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_best_ask",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "coverage",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "degraded",
+          "type": "BOOLEAN"
+        },
+        {
+          "name": "book_depth",
+          "type": "BIGINT"
+        },
+        {
+          "name": "up_ask_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "dt",
+          "type": "DATE"
+        }
+      ],
+      "stats": {
+        "ticks": 172800,
+        "events": 288,
+        "min_ts": "2026-06-15T00:00:00.196Z",
+        "max_ts": "2026-06-15T23:59:59.751Z",
+        "avg_coverage": 1,
+        "degraded_ticks": 0,
+        "avg_up_ask": 0.5171639102887671,
+        "avg_abs_dist": 0.00007185547310650209,
+        "null_book_l1": 9762,
+        "null_book_l25": 52054
+      }
+    },
+    {
+      "label": "backtest_ticks ETH d25 2026-06-15",
+      "file": "lake/backtest_ticks/underlying=ETH/interval=5m/book_depth=25/dt=2026-06-15/part-backtest-ticks-20260616061042-b3b1e0c1.parquet",
+      "columns": [
+        {
+          "name": "market_id",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "underlying",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "interval",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "condition_id",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "event_start",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "event_end",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "ts",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "underlying_price",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "price_to_beat",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_price",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_price",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_best_bid",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_best_ask",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_best_bid",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_best_ask",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "coverage",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "degraded",
+          "type": "BOOLEAN"
+        },
+        {
+          "name": "book_depth",
+          "type": "BIGINT"
+        },
+        {
+          "name": "up_ask_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "dt",
+          "type": "DATE"
+        }
+      ],
+      "stats": {
+        "ticks": 172800,
+        "events": 288,
+        "min_ts": "2026-06-15T00:00:00.104Z",
+        "max_ts": "2026-06-15T23:59:59.615Z",
+        "avg_coverage": 1,
+        "degraded_ticks": 0,
+        "avg_up_ask": 0.5075238109041994,
+        "avg_abs_dist": 1.368351930963385,
+        "null_book_l1": 10763,
+        "null_book_l25": 41664
+      }
+    },
+    {
+      "label": "backtest_ticks HYPE d25 2026-06-15",
+      "file": "lake/backtest_ticks/underlying=HYPE/interval=5m/book_depth=25/dt=2026-06-15/part-backtest-ticks-20260622105832-6aad6752.parquet",
+      "columns": [
+        {
+          "name": "market_id",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "underlying",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "interval",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "condition_id",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "event_start",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "event_end",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "ts",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "underlying_price",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "price_to_beat",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_price",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_price",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_best_bid",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_best_ask",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_best_bid",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_best_ask",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "coverage",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "degraded",
+          "type": "BOOLEAN"
+        },
+        {
+          "name": "book_depth",
+          "type": "BIGINT"
+        },
+        {
+          "name": "up_ask_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "dt",
+          "type": "DATE"
+        }
+      ],
+      "stats": {
+        "ticks": 172800,
+        "events": 288,
+        "min_ts": "2026-06-15T00:00:00.215Z",
+        "max_ts": "2026-06-15T23:59:59.771Z",
+        "avg_coverage": 1,
+        "degraded_ticks": 0,
+        "avg_up_ask": 0.5619348030236174,
+        "avg_abs_dist": 0.09594775084298773,
+        "null_book_l1": 11246,
+        "null_book_l25": 82025
+      }
+    },
+    {
+      "label": "backtest_ticks SOL d25 2026-06-15",
+      "file": "lake/backtest_ticks/underlying=SOL/interval=5m/book_depth=25/dt=2026-06-15/part-backtest-ticks-20260616062038-d5575a03.parquet",
+      "columns": [
+        {
+          "name": "market_id",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "underlying",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "interval",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "condition_id",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "event_start",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "event_end",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "ts",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "underlying_price",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "price_to_beat",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_price",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_price",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_best_bid",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_best_ask",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_best_bid",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_best_ask",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "coverage",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "degraded",
+          "type": "BOOLEAN"
+        },
+        {
+          "name": "book_depth",
+          "type": "BIGINT"
+        },
+        {
+          "name": "up_ask_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "dt",
+          "type": "DATE"
+        }
+      ],
+      "stats": {
+        "ticks": 172800,
+        "events": 288,
+        "min_ts": "2026-06-15T00:00:00.160Z",
+        "max_ts": "2026-06-15T23:59:59.690Z",
+        "avg_coverage": 1,
+        "degraded_ticks": 0,
+        "avg_up_ask": 0.5158235658968854,
+        "avg_abs_dist": 0.07501849734968323,
+        "null_book_l1": 10701,
+        "null_book_l25": 48623
+      }
+    },
+    {
+      "label": "backtest_ticks XRP d25 2026-06-15",
+      "file": "lake/backtest_ticks/underlying=XRP/interval=5m/book_depth=25/dt=2026-06-15/part-backtest-ticks-20260616063039-3ad16527.parquet",
+      "columns": [
+        {
+          "name": "market_id",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "underlying",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "interval",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "condition_id",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "event_start",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "event_end",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "ts",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "underlying_price",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "price_to_beat",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_price",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_price",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_best_bid",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_best_ask",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_best_bid",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_best_ask",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "coverage",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "degraded",
+          "type": "BOOLEAN"
+        },
+        {
+          "name": "book_depth",
+          "type": "BIGINT"
+        },
+        {
+          "name": "up_ask_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_ask_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_bid_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_ask_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_1",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_2",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_3",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_4",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_5",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_6",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_7",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_8",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_9",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_10",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_11",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_12",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_13",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_14",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_15",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_16",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_17",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_18",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_19",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_20",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_21",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_22",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_23",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_24",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_px_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_bid_sz_25",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "dt",
+          "type": "DATE"
+        }
+      ],
+      "stats": {
+        "ticks": 172800,
+        "events": 288,
+        "min_ts": "2026-06-15T00:00:00.185Z",
+        "max_ts": "2026-06-15T23:59:59.724Z",
+        "avg_coverage": 1,
+        "degraded_ticks": 0,
+        "avg_up_ask": 0.5127515013448535,
+        "avg_abs_dist": 0.0014651942567630216,
+        "null_book_l1": 12177,
+        "null_book_l25": 51925
+      }
+    },
+    {
+      "label": "backtest_ticks_lite BTC 2026-06-15",
+      "file": "lake/backtest_ticks_lite/underlying=BTC/interval=5m/dt=2026-06-15/part-lite-1782974270748.parquet",
+      "columns": [
+        {
+          "name": "market_id",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "underlying",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "interval",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "condition_id",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "event_start",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "event_end",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "ts",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "underlying_price",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "price_to_beat",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_price",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_price",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_best_bid",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "up_best_ask",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_best_bid",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "down_best_ask",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "coverage",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "degraded",
+          "type": "BOOLEAN"
+        },
+        {
+          "name": "book_depth",
+          "type": "BIGINT"
+        },
+        {
+          "name": "dt",
+          "type": "DATE"
+        }
+      ],
+      "stats": {
+        "ticks": 172800,
+        "events": 288,
+        "min_ts": "2026-06-15T00:00:00.010Z",
+        "max_ts": "2026-06-15T23:59:59.530Z",
+        "avg_coverage": 1,
+        "degraded_ticks": 0,
+        "avg_up_ask": 0.5099878836083367,
+        "avg_abs_dist": 34.94779481638412,
+        "null_book_l1": null,
+        "null_book_l25": null
+      }
+    }
+  ],
+  "hypothesis_surfaces": [
+    {
+      "id": "S1_barrier_digital_path",
+      "title": "Caminho barreira (spot vs PTB) + odds + settlement",
+      "needs": [
+        "underlying_price",
+        "price_to_beat",
+        "up_best_ask",
+        "down_best_ask",
+        "event_end",
+        "condition_id"
+      ],
+      "present_in": [
+        "backtest_ticks",
+        "backtest_ticks_lite",
+        "mining_cube"
+      ],
+      "theories": [
+        "OJD/vol-jumps",
+        "Terminal convexity",
+        "Brownian bridge / digital",
+        "Pivot C odds-path consistency"
+      ],
+      "note": "Superfície principal já usada. BTC depth25 é a mais rica em range."
+    },
+    {
+      "id": "S2_l2_book_microstructure",
+      "title": "Livro L2 depth 25 (UP/DOWN asks+bids px/sz)",
+      "needs": [
+        "up_ask_px_1..25",
+        "up_bid_*",
+        "down_*"
+      ],
+      "present_in": [
+        "backtest_ticks (depth=25)"
+      ],
+      "absent_in": [
+        "backtest_ticks_lite",
+        "mining_cube (só depth5 agregados)"
+      ],
+      "theories": [
+        "OBI / toxicidade",
+        "ladder / pair-path",
+        "maker feasibility",
+        "liquidity reconstitution"
+      ],
+      "note": "~14GB multi-asset. Melhor para microestrutura; I/O pesado."
+    },
+    {
+      "id": "S3_cross_asset",
+      "title": "Mesma janela multi-asset (ETH/SOL/BNB/XRP/DOGE/HYPE)",
+      "needs": [
+        "mesmo schema em N underlyings"
+      ],
+      "present_in": [
+        "backtest_ticks depth25 ~2026-05-24→07-25"
+      ],
+      "theories": [
+        "lead-lag cross-asset",
+        "regime comum de vol",
+        "transfer de edge BTC→alt",
+        "portfolio correlation de losses"
+      ],
+      "note": "Sobreposição multi-asset ~63 dias. Anomalias que só existem em alts são caça fértil e pouco explorada vs BTC."
+    },
+    {
+      "id": "S4_cube_features_fast",
+      "title": "Cubo de features pré-computado (CSV) para mining rápido",
+      "needs": [
+        "sigma, flips, obi5, p_phys, winner, pnl proxies"
+      ],
+      "present_in": [
+        "labs/mining/cube"
+      ],
+      "theories": [
+        "screening de hipóteses barato",
+        "calibragem p_phys vs mkt",
+        "flips/pinning"
+      ],
+      "note": "~1.1M linhas, 46 cols, Apr23–Jul13. Ideal para mapear anomalias ANTES de voltar ao parquet."
+    },
+    {
+      "id": "S5_empty_planned_datasets",
+      "title": "Datasets planejados mas vazios localmente",
+      "needs": [
+        "ohlc",
+        "scalars",
+        "books",
+        "features",
+        "manifests"
+      ],
+      "present_in": [],
+      "theories": [
+        "OHLC multi-timeframe",
+        "features offline",
+        "books isolados"
+      ],
+      "note": "EMPTY no lake local — se existirem no Brutus, lake:pull amplia o mapa."
+    },
+    {
+      "id": "S6_external_binance_1s",
+      "title": "Lead Binance 1s (scripts, não lake padrão)",
+      "needs": [
+        "scripts/download-binance-1s.js + labs hyperion"
+      ],
+      "present_in": [
+        "scripts only — verificar se dados baixados fora do lake"
+      ],
+      "theories": [
+        "spot lead / latency arb",
+        "Hyperion lead lab"
+      ],
+      "note": "Complementar ao lake Polymarket; não misturar sem join temporal explícito."
+    },
+    {
+      "id": "PRIORITY_NEXT",
+      "title": "Prioridade sugerida para novas hipóteses",
+      "items": [
+        "1) Screening em mining/cube (rápido) por residual do book condicionado a flips, sigma, tau, dist",
+        "2) Cross-asset: mesma hipótese OJD/Pivot C em ETH/SOL no range sobreposto — se só BTC morre, pode ser artifact",
+        "3) Pivot C (odds-path) em backtest_ticks BTC depth25 (maio–julho, não só 22 dias)",
+        "4) Não gastar ciclos em ohlc/scalars locais (vazios) até pull",
+        "5) BTC depth25: 2026-04-23→2026-07-31 (100d, 4033.2MB) — eixo principal",
+        "6) Alts depth25: BNB, DOGE, ETH, HYPE, SOL, XRP ~2026-05-24→2026-07-25"
+      ]
+    }
+  ],
+  "totals": {
+    "backtest_ticks_mb": 12484.6,
+    "lite_mb": 84,
+    "assets_depth25": [
+      "BNB",
+      "BTC",
+      "DOGE",
+      "ETH",
+      "HYPE",
+      "SOL",
+      "XRP"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "id": "bnb-hyperion-scalper-v9",
+  "underlying": "BNB",
+  "interval": "5m",
+  "bookDepth": 25,
+  "strategyId": "hyperion-scalper-maker-v9",
+  "name": "BNB · Hyperion Scalper Maker V9",
+  "role": "champion",
+  "description": "Estratégia de Scalpe por Impulso Lead-Lag da Binance + Saídas Limitadas Maker de Taxa Zero calibrada para Binance Coin (BNB 5m Binary Options).",
+  "tags": ["bnb", "scalper", "maker", "zero-fee", "lead-lag", "binance", "v9"],
+  "params": {
+    "walletSize": 100,
+    "maxOrderValue": 30,
+    "minShares": 5,
+    "entryWindowStart": 295,
+    "entryWindowEnd": 20,
+    "maxTradesPerEvent": 4,
+    "cooldownSec": 8,
+    "minSpikeAbs": 0.35,
+    "minAsk": 0.15,
+    "maxAsk": 0.70,
+    "targetLimit1Cents": 0.08,
+    "targetLimit2Cents": 0.14,
+    "maxHoldTimeSec": 20,
+    "stopLossPct": 0.15,
+    "maxSpread": 0.05,
+    "entrySlippageMax": 0.02,
+    "minLiquidityRatio": 0.75
+  }
+}

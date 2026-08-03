@@ -1,0 +1,23 @@
+{
+  "id": "hyperion-v1",
+  "name": "Hyperion V1 (QJD-CELSM)",
+  "family": "edge",
+  "status": "candidate",
+  "kind": "gls",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "file",
+    "path": "src/backtestStudio/gls/strategies/hyperionV1.gls"
+  },
+  "promotedToStudio": true,
+  "studioSlug": "hyperion-v1",
+  "studio": {
+    "description": "Nova estratégia inédita Hyperion V1 com Salto-Difusão de Merton, Lead-Lag Binance, OBI, Acoplamento Inter-Eventos e Realismo de Execução Walk.",
+    "tags": ["btc", "merton", "jump-diffusion", "lead-lag", "obi", "cross-event", "depth25", "champion"],
+    "defaultVersion": 1
+  },
+  "notes": "Desenvolvida em agosto de 2026 como a estratégia de maior rentabilidade e realismo para BTC 5m na Polymarket."
+}

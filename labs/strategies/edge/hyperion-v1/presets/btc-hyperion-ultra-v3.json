@@ -1,0 +1,33 @@
+{
+  "id": "btc-hyperion-ultra-v3",
+  "underlying": "BTC",
+  "glsSource": "hyperionV1.gls",
+  "studioVersion": 3,
+  "name": "BTC · Hyperion Ultra-Snipe V3",
+  "studioSlug": "hyperion-v1-btc-ultra",
+  "studioName": "Hyperion V3 (Ultra-Sniper Merton Jump) · BTC",
+  "role": "champion",
+  "description": "Variante Ultra-Sniper cirúrgica da Hyperion: minEdge = 0.28, tau <= 90s, maxAsk = 0.52. Altíssima seletividade para Profit Factor > 2.0.",
+  "tags": ["btc", "merton", "jump-diffusion", "ultra-sniper", "depth25", "v3"],
+  "params": {
+    "walletSize": 100,
+    "maxOrderValue": 15,
+    "minShares": 5,
+    "entryWindowStart": 90,
+    "entryWindowEnd": 15,
+    "minAsk": 0.15,
+    "maxAsk": 0.52,
+    "minEdge": 0.28,
+    "minJumpIntensity": 0.50,
+    "jumpSigma": 45.0,
+    "obiLevels": 5,
+    "obiThreshold": 0.35,
+    "enableCrossEventCoupling": true,
+    "crossEventWindowStartSec": 20,
+    "crossEventWindowEndSec": 2,
+    "crossEventDistanceMin": 35,
+    "maxSpread": 0.04,
+    "entrySlippageMax": 0.02,
+    "minLiquidityRatio": 0.75
+  }
+}

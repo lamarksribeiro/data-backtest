@@ -1,0 +1,185 @@
+{
+  "generated_at": "2026-08-02T05:52:38.360Z",
+  "results": [
+    {
+      "underlying": "BTC",
+      "decision": "KILL Pivot C (this formulation): odds-path elasticity does not yield stable residual vs market.",
+      "gates": {
+        "all": {
+          "pass": false,
+          "split": "all",
+          "residGap_inel_vs_matched": 0.00038946879024175096,
+          "inel_resid_m": -0.0078172607201013,
+          "match_resid_m": -0.00820672951034305,
+          "inel_brier_m": 0.1885049373982288,
+          "inel_brier_path": 0.19362971055991146,
+          "path_beats_mkt_inel": false,
+          "hyper_resid_m": -0.005402243884495117,
+          "corr_pathGap_residM_inel": -0.021016273173891438,
+          "reason": "no material residual or calibragem gap in inelastic regime"
+        },
+        "train": {
+          "pass": false,
+          "split": "train",
+          "residGap_inel_vs_matched": 0.0033101206614137907,
+          "inel_resid_m": -0.005116118077324954,
+          "match_resid_m": -0.008426238738738745,
+          "inel_brier_m": 0.18903260540752437,
+          "inel_brier_path": 0.1937404995554687,
+          "path_beats_mkt_inel": false,
+          "hyper_resid_m": -0.005901858152316141,
+          "corr_pathGap_residM_inel": -0.0232300467469456,
+          "reason": "no material residual or calibragem gap in inelastic regime"
+        },
+        "valid": {
+          "pass": false,
+          "split": "valid",
+          "residGap_inel_vs_matched": 0.0062027454397672295,
+          "inel_resid_m": -0.013903178340200125,
+          "match_resid_m": -0.007700432900432896,
+          "inel_brier_m": 0.18731605385520889,
+          "inel_brier_path": 0.19338009297604203,
+          "path_beats_mkt_inel": false,
+          "hyper_resid_m": -0.004220915841584166,
+          "corr_pathGap_residM_inel": -0.01607153569692733,
+          "reason": "no material residual or calibragem gap in inelastic regime"
+        }
+      },
+      "global": {
+        "n": 72986,
+        "up_rate": 0.4834351793494643,
+        "brier_m": 0.14183661692651178,
+        "brier_phys": 0.1687608955690577,
+        "brier_path": 0.14299708150785267,
+        "brier_blend": 0.14664606140085032,
+        "resid_m": -0.0036400542569807823,
+        "corr_pathGap_residM": -0.014769782817685564,
+        "corr_elast_residM": -0.0009439416967458429,
+        "corr_edgePhys_residM": 0.05435103770792315,
+        "mean_elast": 0.9005517692289857,
+        "pct_meaningful": 0.4778587674348505
+      },
+      "n": 72986
+    },
+    {
+      "underlying": "ETH",
+      "decision": "KILL Pivot C (this formulation): odds-path elasticity does not yield stable residual vs market.",
+      "gates": {
+        "all": {
+          "pass": false,
+          "split": "all",
+          "residGap_inel_vs_matched": 0.007876717579413344,
+          "inel_resid_m": 0.0013893728222996418,
+          "match_resid_m": -0.006487344757113702,
+          "inel_brier_m": 0.17937765679442635,
+          "inel_brier_path": 0.1849433025779766,
+          "path_beats_mkt_inel": false,
+          "hyper_resid_m": 0.0032177589852008426,
+          "corr_pathGap_residM_inel": -0.02149867062683228,
+          "reason": "no material residual or calibragem gap in inelastic regime"
+        },
+        "train": {
+          "pass": false,
+          "split": "train",
+          "residGap_inel_vs_matched": 0.006805284008649184,
+          "inel_resid_m": -0.006392288479550446,
+          "match_resid_m": -0.01319757248819963,
+          "inel_brier_m": 0.1798592667811424,
+          "inel_brier_path": 0.18592485215955917,
+          "path_beats_mkt_inel": false,
+          "hyper_resid_m": 0.0012219730941704057,
+          "corr_pathGap_residM_inel": -0.014854666074808325,
+          "reason": "no material residual or calibragem gap in inelastic regime"
+        },
+        "valid": {
+          "pass": false,
+          "split": "valid",
+          "residGap_inel_vs_matched": 0.010207124266878743,
+          "inel_resid_m": 0.019333693304535646,
+          "match_resid_m": 0.009126569037656903,
+          "inel_brier_m": 0.1782670759539242,
+          "inel_brier_path": 0.18267987326925653,
+          "path_beats_mkt_inel": false,
+          "hyper_resid_m": 0.008037906137184117,
+          "corr_pathGap_residM_inel": -0.03832505521969214,
+          "reason": "no material residual or calibragem gap in inelastic regime"
+        }
+      },
+      "global": {
+        "n": 49954,
+        "up_rate": 0.48606718180726266,
+        "brier_m": 0.1372239699723704,
+        "brier_phys": 0.14757534370827313,
+        "brier_path": 0.1388060865672632,
+        "brier_blend": 0.1383981818207233,
+        "resid_m": -0.000470673019177639,
+        "corr_pathGap_residM": -0.003346876485517895,
+        "corr_elast_residM": -0.006977105351362029,
+        "corr_edgePhys_residM": 0.06035776843228869,
+        "mean_elast": 0.8280723907475892,
+        "pct_meaningful": 0.5719061536613684
+      },
+      "n": 49954
+    },
+    {
+      "underlying": "SOL",
+      "decision": "KILL Pivot C (this formulation): odds-path elasticity does not yield stable residual vs market.",
+      "gates": {
+        "all": {
+          "pass": false,
+          "split": "all",
+          "residGap_inel_vs_matched": 0.001704990416467862,
+          "inel_resid_m": -0.008384697017934841,
+          "match_resid_m": -0.006679706601466979,
+          "inel_brier_m": 0.17680782139446138,
+          "inel_brier_path": 0.18138819727716857,
+          "path_beats_mkt_inel": false,
+          "hyper_resid_m": -0.006091330820527683,
+          "corr_pathGap_residM_inel": -0.021314967663569558,
+          "reason": "no material residual or calibragem gap in inelastic regime"
+        },
+        "train": {
+          "pass": false,
+          "split": "train",
+          "residGap_inel_vs_matched": 0.0018744494791334762,
+          "inel_resid_m": -0.010976008397061034,
+          "match_resid_m": -0.009101558917927558,
+          "inel_brier_m": 0.17551932838506573,
+          "inel_brier_path": 0.18017053714363662,
+          "path_beats_mkt_inel": false,
+          "hyper_resid_m": -0.003785801713586289,
+          "corr_pathGap_residM_inel": -0.022421564050740177,
+          "reason": "no material residual or calibragem gap in inelastic regime"
+        },
+        "valid": {
+          "pass": false,
+          "split": "valid",
+          "residGap_inel_vs_matched": 0.001388282479752576,
+          "inel_resid_m": -0.0021096586782861347,
+          "match_resid_m": -0.0007213761985335585,
+          "inel_brier_m": 0.17992799564270184,
+          "inel_brier_path": 0.18433684485542376,
+          "path_beats_mkt_inel": false,
+          "hyper_resid_m": -0.011753507014028048,
+          "corr_pathGap_residM_inel": -0.018848207266783264,
+          "reason": "no material residual or calibragem gap in inelastic regime"
+        }
+      },
+      "global": {
+        "n": 50697,
+        "up_rate": 0.48026510444404996,
+        "brier_m": 0.1330514130816375,
+        "brier_phys": 0.14367502142333965,
+        "brier_path": 0.1342769297398555,
+        "brier_blend": 0.13418869682324258,
+        "resid_m": -0.005984949799790859,
+        "corr_pathGap_residM": -0.00809867466216738,
+        "corr_elast_residM": -0.0011106364404700883,
+        "corr_edgePhys_residM": 0.06336019126116361,
+        "mean_elast": 0.7652172620660647,
+        "pct_meaningful": 0.5497958459080419
+      },
+      "n": 50697
+    }
+  ]
+}

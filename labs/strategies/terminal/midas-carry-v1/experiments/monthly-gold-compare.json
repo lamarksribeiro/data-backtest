@@ -1,0 +1,54 @@
+{
+  "name": "monthly-gold-compare",
+  "strategyId": "midas-carry-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-05-01",
+  "to": "2026-07-31",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "variantWorkers": 1,
+  "defaults": "../defaults.json",
+  "notes": "PnL mensal btc-gold-v1 ($10/$30 tier 1.5) para comparar com scalp e-adapt.",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "btc-gold-v1",
+        "params": {
+          "walletSize": 100,
+          "entryBudget": 10,
+          "maxEntryBudget": 30,
+          "settleWinnerPrice": 0.995,
+          "minSecondsLeft": 9,
+          "maxSecondsLeft": 30,
+          "maxDistAbs": 40,
+          "minAsk": 0.55,
+          "maxAsk": 0.94,
+          "maxSpread": 0.03,
+          "tierAskThreshold": 0.82,
+          "tierAskBudgetFactor": 1.5,
+          "tierMinZ": 2.0,
+          "oddsShockEnabled": true,
+          "oddsShockStartSec": 20,
+          "oddsShockEndSec": 3,
+          "oddsShockLookbackSec": 2,
+          "oddsShockOppAskDelta": 0.15,
+          "oddsShockOwnAskDelta": 0.15,
+          "oddsShockMinOppAsk": 0.5,
+          "oddsShockOnlyIfLosing": false,
+          "oddsShockMinBidRatio": 0.55,
+          "oddsShockPartialPct": 0.5,
+          "oddsShockReverseEnabled": false,
+          "lateFlipExitEnabled": true,
+          "lateFlipReverseEnabled": true,
+          "dangerExitEnabled": true
+        }
+      }
+    ]
+  }
+}

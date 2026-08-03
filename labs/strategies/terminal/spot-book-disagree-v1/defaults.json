@@ -1,0 +1,19 @@
+{
+  "walletSize": 100,
+  "entryBudget": 10,
+  "minShares": 1,
+  "entryMode": 3,
+  "minSecondsLeft": 10,
+  "maxSecondsLeft": 40,
+  "maxDistAbs": 15,
+  "minBookEdge": 0.05,
+  "minAsk": 0.05,
+  "maxAsk": 0.99,
+  "maxSpotAsk": 0.40,
+  "minBookFavAsk": 0.60,
+  "maxSpread": 0.04,
+  "minOddsSum": 0.96,
+  "maxOddsSum": 1.06,
+  "entrySlippageMax": 0.02,
+  "minLiquidityRatio": 0.60
+}

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "walletSize": { "type": "number", "minimum": 1 },
+    "entryBudget": { "type": "number", "minimum": 1 },
+    "minShares": { "type": "number", "minimum": 1 },
+    "entryMode": { "type": "number", "enum": [1, 2, 3] },
+    "minSecondsLeft": { "type": "number", "minimum": 1 },
+    "maxSecondsLeft": { "type": "number", "minimum": 1 },
+    "maxDistAbs": { "type": "number", "minimum": 1 },
+    "minBookEdge": { "type": "number", "minimum": 0 },
+    "minAsk": { "type": "number", "minimum": 0 },
+    "maxAsk": { "type": "number", "minimum": 0 },
+    "maxSpotAsk": { "type": "number", "minimum": 0 },
+    "minBookFavAsk": { "type": "number", "minimum": 0 },
+    "maxSpread": { "type": "number", "minimum": 0 },
+    "minOddsSum": { "type": "number" },
+    "maxOddsSum": { "type": "number" },
+    "entrySlippageMax": { "type": "number", "minimum": 0 },
+    "minLiquidityRatio": { "type": "number", "minimum": 0, "maximum": 1 }
+  },
+  "additionalProperties": true
+}

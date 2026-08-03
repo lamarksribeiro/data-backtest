@@ -1,0 +1,30 @@
+{
+  "id": "eth-hyperion-scalper-v5",
+  "underlying": "ETH",
+  "interval": "5m",
+  "bookDepth": 25,
+  "strategyId": "hyperion-scalper-maker-v5",
+  "name": "ETH · Hyperion Scalper Maker V5",
+  "role": "champion",
+  "description": "Estratégia de Scalpe por Impulso Lead-Lag da Binance + Saídas Limitadas Maker de Taxa Zero calibrada para Ethereum (ETH 5m Binary Options).",
+  "tags": ["eth", "scalper", "maker", "zero-fee", "lead-lag", "binance", "v5"],
+  "params": {
+    "walletSize": 100,
+    "maxOrderValue": 30,
+    "minShares": 5,
+    "entryWindowStart": 295,
+    "entryWindowEnd": 20,
+    "maxTradesPerEvent": 4,
+    "cooldownSec": 8,
+    "minSpikeAbs": 1.80,
+    "minAsk": 0.15,
+    "maxAsk": 0.70,
+    "targetLimit1Cents": 0.08,
+    "targetLimit2Cents": 0.14,
+    "maxHoldTimeSec": 20,
+    "stopLossPct": 0.15,
+    "maxSpread": 0.05,
+    "entrySlippageMax": 0.02,
+    "minLiquidityRatio": 0.75
+  }
+}

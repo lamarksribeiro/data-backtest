@@ -1,0 +1,60 @@
+# Binance-lead scalp lab (maker-ladder-0p08-0p14)
+
+Range **2026-05-04→2026-06-14** · Binance grain **1s** (conservative)
+
+## Summary
+
+| Metric | Value |
+|---|---:|
+| Exit mode | maker-ladder-0p08-0p14 |
+| Events | 11696 |
+| Trades | 37037 |
+| Win rate | 63.6% |
+| PnL | 20917.18 |
+| Profit factor | 1.824 |
+| Fees (entry/exit) | 21104 (14414.8/6689.21) |
+| Maker exit % | 49.5% |
+| Fee drag | 0.294 |
+| Avg hold (s) | 12.56 |
+| Trades/event | 3.167 |
+| Max DD | 590.68 |
+| GO preliminar | YES |
+
+### Exit reasons
+
+- ladder_full: 14320
+- ladder_stop: 10109
+- ladder_timeout: 4928
+- ladder_timeout_partial: 7679
+- ladder_eod: 1
+
+### Config
+
+```json
+{
+  "from": "2026-05-04",
+  "to": "2026-06-14",
+  "leadSec": 2,
+  "impulseUsd": 6,
+  "minAsk": 0.15,
+  "maxAsk": 0.7,
+  "maxSpread": 0.04,
+  "staleMidMoveMax": 0.03,
+  "budget": 10,
+  "takeProfit": 0.03,
+  "stopLoss": 0.05,
+  "stopPct": 0,
+  "timeoutSec": 20,
+  "cooldownSec": 3,
+  "maxTradesPerEvent": 5,
+  "minTau": 20,
+  "maxTau": 280,
+  "feeRate": 0.07,
+  "exitMode": "maker-ladder",
+  "ladderOffsets": [
+    0.08,
+    0.14
+  ],
+  "tag": "maijun-i6-s03"
+}
+```

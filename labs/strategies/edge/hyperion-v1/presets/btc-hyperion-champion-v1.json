@@ -1,0 +1,33 @@
+{
+  "id": "btc-hyperion-champion-v1",
+  "underlying": "BTC",
+  "glsSource": "hyperionV1.gls",
+  "studioVersion": 1,
+  "name": "BTC · Hyperion Champion V1",
+  "studioSlug": "hyperion-v1-btc-champion",
+  "studioName": "Hyperion V1 (QJD-CELSM) · BTC Champion",
+  "role": "champion",
+  "description": "Preset campeão inédito Hyperion V1: modelo Merton Jump-Diffusion, OBI Skew, Lead-Lag Binance e acoplamento inter-eventos com zero fee drag de saída e execução walk realista.",
+  "tags": ["btc", "merton", "jump-diffusion", "lead-lag", "obi", "cross-event", "depth25", "champion"],
+  "params": {
+    "walletSize": 100,
+    "maxOrderValue": 15,
+    "minShares": 5,
+    "entryWindowStart": 280,
+    "entryWindowEnd": 5,
+    "minAsk": 0.12,
+    "maxAsk": 0.82,
+    "minEdge": 0.08,
+    "minJumpIntensity": 0.25,
+    "jumpSigma": 45.0,
+    "obiLevels": 5,
+    "obiThreshold": 0.30,
+    "enableCrossEventCoupling": true,
+    "crossEventWindowStartSec": 20,
+    "crossEventWindowEndSec": 2,
+    "crossEventDistanceMin": 35,
+    "maxSpread": 0.06,
+    "entrySlippageMax": 0.02,
+    "minLiquidityRatio": 0.75
+  }
+}

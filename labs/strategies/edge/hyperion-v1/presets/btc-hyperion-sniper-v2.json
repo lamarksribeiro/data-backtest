@@ -1,0 +1,33 @@
+{
+  "id": "btc-hyperion-sniper-v2",
+  "underlying": "BTC",
+  "glsSource": "hyperionV1.gls",
+  "studioVersion": 2,
+  "name": "BTC · Hyperion Snipe V2",
+  "studioSlug": "hyperion-v1-btc-sniper",
+  "studioName": "Hyperion V2 (Sniper Merton Jump) · BTC",
+  "role": "champion",
+  "description": "Variante Sniper cirúrgica da Hyperion V1: restringe a janela de entrada para tau <= 120s, eleva o minEdge para 0.18 e filtra apenas assimetrias de alta probabilidade.",
+  "tags": ["btc", "merton", "jump-diffusion", "sniper", "depth25", "v2"],
+  "params": {
+    "walletSize": 100,
+    "maxOrderValue": 15,
+    "minShares": 5,
+    "entryWindowStart": 120,
+    "entryWindowEnd": 15,
+    "minAsk": 0.15,
+    "maxAsk": 0.65,
+    "minEdge": 0.18,
+    "minJumpIntensity": 0.50,
+    "jumpSigma": 45.0,
+    "obiLevels": 5,
+    "obiThreshold": 0.35,
+    "enableCrossEventCoupling": true,
+    "crossEventWindowStartSec": 20,
+    "crossEventWindowEndSec": 2,
+    "crossEventDistanceMin": 35,
+    "maxSpread": 0.05,
+    "entrySlippageMax": 0.02,
+    "minLiquidityRatio": 0.75
+  }
+}

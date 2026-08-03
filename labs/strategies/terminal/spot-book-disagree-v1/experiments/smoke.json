@@ -1,0 +1,43 @@
+{
+  "name": "spot-book-disagree-smoke",
+  "strategyId": "spot-book-disagree-v1",
+  "strategyFamily": "terminal",
+  "dataset": "backtest_ticks",
+  "underlying": "BTC",
+  "interval": "5m",
+  "bookDepth": 25,
+  "from": "2026-06-01",
+  "to": "2026-06-07",
+  "engine": "soa",
+  "glsExecution": "compiled-soa",
+  "fastRun": true,
+  "dailyMetrics": true,
+  "defaults": "../defaults.json",
+  "searchSpace": {
+    "variants": [
+      {
+        "id": "follow-book-hold",
+        "params": {
+          "entryMode": 1,
+          "entryBudget": 10
+        }
+      },
+      {
+        "id": "follow-spot-hold",
+        "params": {
+          "entryMode": 2,
+          "entryBudget": 10
+        }
+      },
+      {
+        "id": "follow-spot-cheap",
+        "params": {
+          "entryMode": 3,
+          "maxSpotAsk": 0.4,
+          "minBookFavAsk": 0.6,
+          "entryBudget": 10
+        }
+      }
+    ]
+  }
+}

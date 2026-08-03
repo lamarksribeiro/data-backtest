@@ -1,0 +1,179 @@
+{
+  "generatedAt": "2026-08-03T04:20:45.343Z",
+  "from": "2026-05-01",
+  "to": "2026-07-31",
+  "strategy": "full-adapt-rescue-ds15",
+  "note": "Official run-scalp-lab.mjs; timeout 20s; stale 0.03; budget $10; sharesCapAsk 0.50",
+  "rows": [
+    {
+      "id": "baseline",
+      "tag": "full-adapt-rescue-ds15",
+      "trades": 52030,
+      "winRate": 74.55,
+      "pnl": 50687.65,
+      "pf": 3.062,
+      "avgPnl": 0.9742,
+      "avgWin": 1.9406,
+      "avgLoss": -1.8562,
+      "maxDD": 126.85,
+      "fees": 21448.05,
+      "exitReasons": {
+        "rescue_full": 19352,
+        "ladder_full": 26412,
+        "rescue_stop": 6069,
+        "rescue_eod": 197
+      },
+      "rescueStopN": 6069,
+      "rescueStopPnl": -23495.05,
+      "rescueStopAvg": -3.871,
+      "ladderFullPnl": 66203.77,
+      "rescueFullPnl": 8147.1,
+      "byMonth": {
+        "2026-05": {
+          "trades": 17817,
+          "wins": 13406,
+          "pnl": 17794.03,
+          "fees": 7211.8,
+          "winRate": 75.2
+        },
+        "2026-06": {
+          "trades": 20084,
+          "wins": 14440,
+          "pnl": 16599.28,
+          "fees": 8447.18,
+          "winRate": 71.9
+        },
+        "2026-07": {
+          "trades": 14129,
+          "wins": 10941,
+          "pnl": 16294.35,
+          "fees": 5789.07,
+          "winRate": 77.4
+        }
+      },
+      "sizingMode": "none",
+      "deltaVsBaseline": null
+    },
+    {
+      "id": "sharesCap@0.50",
+      "tag": "full-adapt-rescue-ds15-cap50",
+      "trades": 53218,
+      "winRate": 74.69,
+      "pnl": 36954.53,
+      "pf": 3.121,
+      "avgPnl": 0.6944,
+      "avgWin": 1.368,
+      "avgLoss": -1.2936,
+      "maxDD": 88.75,
+      "fees": 16332.36,
+      "exitReasons": {
+        "rescue_full": 19784,
+        "ladder_full": 27039,
+        "rescue_stop": 6168,
+        "rescue_eod": 227
+      },
+      "rescueStopN": 6168,
+      "rescueStopPnl": -16608.72,
+      "rescueStopAvg": -2.693,
+      "ladderFullPnl": 47929.93,
+      "rescueFullPnl": 5705.23,
+      "byMonth": {
+        "2026-05": {
+          "trades": 18205,
+          "wins": 13713,
+          "pnl": 13159.81,
+          "fees": 5582.16,
+          "winRate": 75.3
+        },
+        "2026-06": {
+          "trades": 20490,
+          "wins": 14768,
+          "pnl": 12107.64,
+          "fees": 6323.27,
+          "winRate": 72.1
+        },
+        "2026-07": {
+          "trades": 14523,
+          "wins": 11268,
+          "pnl": 11687.08,
+          "fees": 4426.93,
+          "winRate": 77.6
+        }
+      },
+      "sizingMode": "sharesCap",
+      "sharesCapAsk": 0.5,
+      "deltaVsBaseline": {
+        "pnl": -13733.12,
+        "pnlPct": -27.09,
+        "pf": 0.059,
+        "trades": 1188,
+        "maxDD": -38.1,
+        "winRatePp": 0.14,
+        "rescueStopN": 99,
+        "rescueStopPnl": 6886.33,
+        "rescueStopPnlPct": 29.31
+      }
+    },
+    {
+      "id": "dynamicBudget@0.50",
+      "tag": "full-adapt-rescue-ds15-dyn50",
+      "trades": 53208,
+      "winRate": 74.69,
+      "pnl": 36938.37,
+      "pf": 3.12,
+      "avgPnl": 0.6942,
+      "avgWin": 1.368,
+      "avgLoss": -1.2938,
+      "maxDD": 88.75,
+      "fees": 16329.22,
+      "exitReasons": {
+        "rescue_full": 19779,
+        "ladder_full": 27033,
+        "rescue_stop": 6169,
+        "rescue_eod": 227
+      },
+      "rescueStopN": 6169,
+      "rescueStopPnl": -16612.32,
+      "rescueStopAvg": -2.693,
+      "ladderFullPnl": 47919.47,
+      "rescueFullPnl": 5703.13,
+      "byMonth": {
+        "2026-05": {
+          "trades": 18204,
+          "wins": 13712,
+          "pnl": 13156.58,
+          "fees": 5581.75,
+          "winRate": 75.3
+        },
+        "2026-06": {
+          "trades": 20485,
+          "wins": 14763,
+          "pnl": 12098.2,
+          "fees": 6321.95,
+          "winRate": 72.1
+        },
+        "2026-07": {
+          "trades": 14519,
+          "wins": 11264,
+          "pnl": 11683.58,
+          "fees": 4425.53,
+          "winRate": 77.6
+        }
+      },
+      "sizingMode": "dynamicBudget",
+      "sharesCapAsk": 0.5,
+      "deltaVsBaseline": {
+        "pnl": -13749.28,
+        "pnlPct": -27.13,
+        "pf": 0.058,
+        "trades": 1178,
+        "maxDD": -38.1,
+        "winRatePp": 0.14,
+        "rescueStopN": 100,
+        "rescueStopPnl": 6882.73,
+        "rescueStopPnlPct": 29.29
+      }
+    }
+  ],
+  "verdict": "KEEP baseline (none). Nenhum sizing supera/empata (~≤2% PnL) o GO ds15 — não promover ao live."
+}

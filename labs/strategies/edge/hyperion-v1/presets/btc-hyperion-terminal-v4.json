@@ -1,0 +1,33 @@
+{
+  "id": "btc-hyperion-terminal-v4",
+  "underlying": "BTC",
+  "glsSource": "hyperionV1.gls",
+  "studioVersion": 4,
+  "name": "BTC · Hyperion Terminal V4",
+  "studioSlug": "hyperion-v1-btc-terminal",
+  "studioName": "Hyperion V4 (Terminal Merton Jump) · BTC",
+  "role": "champion",
+  "description": "Variante Terminal da Hyperion: atua estritamente nos últimos 60 segundos da vela (tau <= 60s e tau >= 5s), capturando o favorito terminal com modelo Salto-Difusão de Merton e zero ruído de início de vela.",
+  "tags": ["btc", "merton", "jump-diffusion", "terminal", "depth25", "v4"],
+  "params": {
+    "walletSize": 100,
+    "maxOrderValue": 15,
+    "minShares": 5,
+    "entryWindowStart": 60,
+    "entryWindowEnd": 5,
+    "minAsk": 0.50,
+    "maxAsk": 0.82,
+    "minEdge": 0.10,
+    "minJumpIntensity": 0.50,
+    "jumpSigma": 45.0,
+    "obiLevels": 5,
+    "obiThreshold": 0.30,
+    "enableCrossEventCoupling": true,
+    "crossEventWindowStartSec": 20,
+    "crossEventWindowEndSec": 2,
+    "crossEventDistanceMin": 35,
+    "maxSpread": 0.05,
+    "entrySlippageMax": 0.02,
+    "minLiquidityRatio": 0.75
+  }
+}

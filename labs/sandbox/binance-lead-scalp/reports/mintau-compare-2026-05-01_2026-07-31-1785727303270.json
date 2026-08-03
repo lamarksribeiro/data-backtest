@@ -1,0 +1,204 @@
+{
+  "generatedAt": "2026-08-03T03:21:43.270Z",
+  "from": "2026-05-01",
+  "to": "2026-07-31",
+  "baselineTag": "full-adapt-rescue-ds15",
+  "rows": [
+    {
+      "minTau": 20,
+      "tag": "full-adapt-rescue-ds15",
+      "trades": 52030,
+      "winRate": 7454.74,
+      "pnl": 50687.65,
+      "pf": 3.062,
+      "avgPnl": 0.9742,
+      "maxDD": 126.85,
+      "fees": 21448.05,
+      "makerPct": 89.4,
+      "exitReasons": {
+        "rescue_full": 19352,
+        "ladder_full": 26412,
+        "rescue_stop": 6069,
+        "rescue_eod": 197
+      },
+      "pnlByReason": {
+        "rescue_full": {
+          "n": 19352,
+          "sum": 8147.1,
+          "avg": 0.421
+        },
+        "ladder_full": {
+          "n": 26412,
+          "sum": 66203.77,
+          "avg": 2.507
+        },
+        "rescue_stop": {
+          "n": 6069,
+          "sum": -23495.05,
+          "avg": -3.871
+        },
+        "rescue_eod": {
+          "n": 197,
+          "sum": -168.16,
+          "avg": -0.854
+        }
+      },
+      "byMonth": {
+        "2026-05": {
+          "trades": 17817,
+          "pnl": 17794.03,
+          "wr": 75.2
+        },
+        "2026-06": {
+          "trades": 20084,
+          "pnl": 16599.28,
+          "wr": 71.9
+        },
+        "2026-07": {
+          "trades": 14129,
+          "pnl": 16294.35,
+          "wr": 77.4
+        }
+      },
+      "configMinTau": 20
+    },
+    {
+      "minTau": 45,
+      "tag": "full-adapt-rescue-ds15-tau45",
+      "trades": 51040,
+      "winRate": 7434.76,
+      "pnl": 48602.83,
+      "pf": 3.003,
+      "avgPnl": 0.9522,
+      "maxDD": 135.17,
+      "fees": 21017.13,
+      "makerPct": 89.3,
+      "exitReasons": {
+        "rescue_full": 19238,
+        "ladder_full": 25617,
+        "rescue_stop": 5998,
+        "rescue_eod": 187
+      },
+      "pnlByReason": {
+        "rescue_full": {
+          "n": 19238,
+          "sum": 8121.56,
+          "avg": 0.422
+        },
+        "ladder_full": {
+          "n": 25617,
+          "sum": 63839.89,
+          "avg": 2.492
+        },
+        "rescue_stop": {
+          "n": 5998,
+          "sum": -23197.29,
+          "avg": -3.868
+        },
+        "rescue_eod": {
+          "n": 187,
+          "sum": -161.34,
+          "avg": -0.863
+        }
+      },
+      "byMonth": {
+        "2026-05": {
+          "trades": 17436,
+          "pnl": 17085.22,
+          "wr": 75.1
+        },
+        "2026-06": {
+          "trades": 19754,
+          "pnl": 15840.85,
+          "wr": 71.7
+        },
+        "2026-07": {
+          "trades": 13850,
+          "pnl": 15676.76,
+          "wr": 77.3
+        }
+      },
+      "configMinTau": 45,
+      "deltaVsBaseline": {
+        "pnl": -2084.82,
+        "pnlPct": -4.11,
+        "pf": -0.059,
+        "trades": -990,
+        "tradesPct": -1.9,
+        "maxDD": 8.32,
+        "winRatePp": -19.98,
+        "rescueStopN": -71,
+        "rescueStopPnl": 297.76
+      }
+    },
+    {
+      "minTau": 60,
+      "tag": "full-adapt-rescue-ds15-tau60",
+      "trades": 49913,
+      "winRate": 7403.28,
+      "pnl": 46210.28,
+      "pf": 2.937,
+      "avgPnl": 0.9258,
+      "maxDD": 136,
+      "fees": 20526.09,
+      "makerPct": 89.2,
+      "exitReasons": {
+        "rescue_full": 19132,
+        "ladder_full": 24686,
+        "rescue_stop": 5918,
+        "rescue_eod": 177
+      },
+      "pnlByReason": {
+        "rescue_full": {
+          "n": 19132,
+          "sum": 8072.87,
+          "avg": 0.422
+        },
+        "ladder_full": {
+          "n": 24686,
+          "sum": 61101.83,
+          "avg": 2.475
+        },
+        "rescue_stop": {
+          "n": 5918,
+          "sum": -22808.09,
+          "avg": -3.854
+        },
+        "rescue_eod": {
+          "n": 177,
+          "sum": -156.32,
+          "avg": -0.883
+        }
+      },
+      "byMonth": {
+        "2026-05": {
+          "trades": 17010,
+          "pnl": 16258.3,
+          "wr": 74.8
+        },
+        "2026-06": {
+          "trades": 19378,
+          "pnl": 15019.7,
+          "wr": 71.3
+        },
+        "2026-07": {
+          "trades": 13525,
+          "pnl": 14932.29,
+          "wr": 77
+        }
+      },
+      "configMinTau": 60,
+      "deltaVsBaseline": {
+        "pnl": -4477.37,
+        "pnlPct": -8.83,
+        "pf": -0.125,
+        "trades": -2117,
+        "tradesPct": -4.07,
+        "maxDD": 9.15,
+        "winRatePp": -51.46,
+        "rescueStopN": -151,
+        "rescueStopPnl": 686.96
+      }
+    }
+  ]
+}

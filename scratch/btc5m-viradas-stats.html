@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Viradas BTC 5m — estatísticas do lake</title>
+<style>
+  :root {
+    --bg: #f7f6f3;
+    --fg: #1a1a1a;
+    --muted: #5c5c5c;
+    --line: #d9d6cf;
+    --card: #ffffff;
+    --accent: #1f4e79;
+    --warn: #8a5a00;
+    --ok: #1f6b3a;
+    --bar: #2a6f97;
+    --bar2: #c45c26;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.45;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 32px 20px 64px; }
+  h1 { font-size: 1.75rem; margin: 0 0 6px; letter-spacing: -0.02em; }
+  h2 { font-size: 1.2rem; margin: 28px 0 10px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+  h3 { font-size: 1rem; margin: 0 0 8px; }
+  p, li { color: var(--muted); }
+  .sub { color: var(--muted); font-size: 0.95rem; margin: 0 0 16px; }
+  .toolbar {
+    display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 20px;
+  }
+  button {
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--fg);
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font: inherit;
+  }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  button:hover { filter: brightness(0.97); }
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 18px; }
+  .pill {
+    display: inline-block;
+    border: 1px solid var(--line);
+    background: var(--card);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+  }
+  .pill.warn { border-color: #e0c48a; color: var(--warn); }
+  .pill.info { border-color: #a8c4df; color: var(--accent); }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin: 14px 0;
+  }
+  .stat {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .stat .v { font-size: 1.45rem; font-weight: 650; letter-spacing: -0.02em; }
+  .stat .l { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+  .callout {
+    background: #fff8e8;
+    border: 1px solid #e8d4a8;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin: 14px 0;
+  }
+  .callout strong { color: var(--warn); }
+  .grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    font-size: 0.9rem;
+  }
+  th, td {
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--line);
+  }
+  th { background: #efeee9; font-weight: 600; font-size: 0.8rem; }
+  tr:last-child td { border-bottom: 0; }
+  tr.hi td { background: #fff4e0; }
+  tr.lo td { background: #eef7f0; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .chart {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 12px 8px;
+    margin: 10px 0 16px;
+  }
+  .chart svg { width: 100%; height: auto; display: block; }
+  .caption { font-size: 0.8rem; color: var(--muted); margin-top: 6px; }
+  .mono { font-family: ui-monospace, Consolas, monospace; }
+  footer {
+    margin-top: 32px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  @media (max-width: 720px) {
+    .stats, .grid2 { grid-template-columns: 1fr 1fr; }
+  }
+  @media print {
+    body { background: #fff; }
+    .toolbar { display: none !important; }
+    .wrap { max-width: none; padding: 0; }
+    .chart, .card, .stat, table, .callout { break-inside: avoid; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Viradas BTC 5m — estatísticas do lake</h1>
+    <p class="sub">
+      Favorito físico = spot vs PTB (U se spot &gt; PTB). Virada = mudança de lado entre ticks consecutivos.
+      Fonte: <span class="mono">backtest_ticks</span> · BTC · 5m · book depth 25 ·
+      2026-04-23 → 2026-07-31 · <strong>25.822 eventos</strong> · 100 dias · 137.143 viradas.
+    </p>
+
+    <div class="toolbar">
+      <button class="primary" onclick="window.print()">Salvar / imprimir PDF</button>
+      <button onclick="copyPath()">Copiar caminho deste arquivo</button>
+    </div>
+
+    <div class="pills">
+      <span class="pill info">média 5,31 viradas/evento</span>
+      <span class="pill">mediana 4</span>
+      <span class="pill warn">45% das viradas nos primeiros 30s</span>
+      <span class="pill">U→D ≈ D→U (50/50)</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="v">5,31</div><div class="l">Média de viradas</div></div>
+      <div class="stat"><div class="v">4</div><div class="l">Mediana (p50)</div></div>
+      <div class="stat"><div class="v">3,1%</div><div class="l">Eventos com 0 viradas</div></div>
+      <div class="stat"><div class="v">28,9%</div><div class="l">Com &lt; 3 viradas</div></div>
+    </div>
+
+    <div class="callout">
+      <strong>Concentração no open.</strong>
+      Os primeiros 10s concentram <strong>32%</strong> de todas as viradas (0–30s = 45%).
+      Mediana da 1ª virada = <strong>2,2s</strong> — whipsaw inicial com spot perto do PTB.
+      Depois de 60s a taxa cai ~6× vs o 1º minuto. Depois de ~150s a densidade fica baixa e estável;
+      há leve uptick só nos últimos ~10s.
+    </div>
+
+    <h2>1. Onde ocorrem no tempo</h2>
+    <p class="sub">% do total de viradas por fatia de 30s desde o início do evento (300s).</p>
+
+    <div class="chart" id="chart30"></div>
+    <p class="caption">Barras = % das viradas · linha pontilhada = média uniforme (10% por fatia de 30s)</p>
+
+    <div class="chart" id="chart10"></div>
+    <p class="caption">Densidade em bins de 10s · eixo X = segundos desde o início</p>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>Mais viradas</h3>
+        <p><strong>0–30s → 45,2%</strong> do total</p>
+        <p>0–10s sozinho: 32,1% · taxa 4,8 viradas/min/evento</p>
+        <p>1º minuto: 55,9% · ~6,3× mais que o último minuto</p>
+      </div>
+      <div class="card">
+        <h3>Menos viradas</h3>
+        <p><strong>A partir de ~150s</strong> a taxa estabiliza baixa</p>
+        <p>Após 50s restam &lt;50% · após 150s restam ~23%</p>
+        <p>Vale: 240–290s (~1,3%/bin 10s). Uptick terminal 290–300s (1,98%)</p>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Janela</th>
+          <th class="num">% viradas</th>
+          <th class="num">Média / evento</th>
+          <th class="num">Taxa / min / evento</th>
+          <th class="num">vs uniforme</th>
+        </tr>
+      </thead>
+      <tbody id="tbl30"></tbody>
+    </table>
+
+    <h2>2. Quantas viradas por evento</h2>
+    <div class="stats">
+      <div class="stat"><div class="v">14,0%</div><div class="l">&lt; 2 viradas</div></div>
+      <div class="stat"><div class="v">28,9%</div><div class="l">&lt; 3 viradas</div></div>
+      <div class="stat"><div class="v">42,8%</div><div class="l">≤ 3 viradas</div></div>
+      <div class="stat"><div class="v">54,5%</div><div class="l">&lt; 5 viradas</div></div>
+    </div>
+
+    <div class="chart" id="chartHist"></div>
+    <p class="caption">Histograma do nº de viradas por evento · p90=10 · p99=20 · max=1023 (cauda patológica)</p>
+
+    <table>
+      <thead>
+        <tr><th>Limite</th><th class="num">Eventos</th><th class="num">%</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>= 0</td><td class="num">802</td><td class="num">3,11%</td></tr>
+        <tr><td>≤ 1</td><td class="num">3.613</td><td class="num">13,99%</td></tr>
+        <tr><td>≤ 2</td><td class="num">7.472</td><td class="num">28,94%</td></tr>
+        <tr><td>≤ 3</td><td class="num">11.062</td><td class="num">42,84%</td></tr>
+        <tr><td>≤ 4</td><td class="num">14.061</td><td class="num">54,45%</td></tr>
+        <tr><td>≤ 5</td><td class="num">16.661</td><td class="num">64,52%</td></tr>
+        <tr><td>≤ 6</td><td class="num">18.731</td><td class="num">72,54%</td></tr>
+        <tr><td>≤ 8</td><td class="num">21.648</td><td class="num">83,84%</td></tr>
+        <tr><td>≤ 10</td><td class="num">23.405</td><td class="num">90,64%</td></tr>
+        <tr><td>≥ 10</td><td class="num">3.189</td><td class="num">12,35%</td></tr>
+        <tr><td>≥ 15</td><td class="num">850</td><td class="num">3,29%</td></tr>
+      </tbody>
+    </table>
+
+    <h2>3. Direção e sequências</h2>
+    <div class="stats">
+      <div class="stat"><div class="v">2,65</div><div class="l">Média U→D / evento</div></div>
+      <div class="stat"><div class="v">2,66</div><div class="l">Média D→U / evento</div></div>
+      <div class="stat"><div class="v">50,0%</div><div class="l">Share U→D do total</div></div>
+      <div class="stat"><div class="v">50,0%</div><div class="l">Share D→U do total</div></div>
+    </div>
+    <p class="sub">Direções simétricas. Sequências mais frequentes = zig-zags curtos (2–5 viradas).</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Sequência</th>
+          <th class="num">Eventos</th>
+          <th class="num">%</th>
+          <th class="num">Viradas</th>
+        </tr>
+      </thead>
+      <tbody id="tblSeq"></tbody>
+    </table>
+
+    <h2>4. Outros achados</h2>
+    <div class="grid2">
+      <div class="card">
+        <h3>Início vs winner</h3>
+        <p>1º favorito = winner final em só <strong>49,6%</strong> (coin flip)</p>
+        <p>Hold começando U: 49,3% · começando D: 50,0%</p>
+        <p>Winner final U/D ≈ 49,7% / 50,3%</p>
+      </div>
+      <div class="card">
+        <h3>Viradas tardias</h3>
+        <p>≥1 virada nos últimos 60s: <strong>21,5%</strong> dos eventos</p>
+        <p>≥1 virada nos últimos 30s: <strong>14,2%</strong></p>
+        <p>96,4% das 1ªs viradas (quando há) ocorrem no 1º minuto</p>
+      </div>
+    </div>
+
+    <h2>5. Distribuição resumida</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Métrica</th>
+          <th class="num">mean</th>
+          <th class="num">p25</th>
+          <th class="num">p50</th>
+          <th class="num">p75</th>
+          <th class="num">p90</th>
+          <th class="num">p99</th>
+          <th class="num">max</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Viradas totais</td>
+          <td class="num">5,31</td><td class="num">2</td><td class="num">4</td><td class="num">7</td>
+          <td class="num">10</td><td class="num">20</td><td class="num">1023</td>
+        </tr>
+        <tr>
+          <td>U→D</td>
+          <td class="num">2,65</td><td class="num">1</td><td class="num">2</td><td class="num">3</td>
+          <td class="num">5</td><td class="num">10</td><td class="num">511</td>
+        </tr>
+        <tr>
+          <td>D→U</td>
+          <td class="num">2,66</td><td class="num">1</td><td class="num">2</td><td class="num">3</td>
+          <td class="num">5</td><td class="num">10</td><td class="num">512</td>
+        </tr>
+        <tr>
+          <td>1ª virada (s)</td>
+          <td class="num">8,9</td><td class="num">1,5</td><td class="num">2,2</td><td class="num">3,2</td>
+          <td class="num">9,3</td><td class="num">182</td><td class="num">300</td>
+        </tr>
+        <tr>
+          <td>Última virada (s)</td>
+          <td class="num">125</td><td class="num">18</td><td class="num">104</td><td class="num">226</td>
+          <td class="num">285</td><td class="num">299</td><td class="num">300</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout" style="margin-top:20px">
+      <strong>Leitura prática.</strong>
+      O chicote concentra-se cedo, enquanto |spot−PTB| é pequeno. Depois de ~2–2,5 min a densidade
+      fica baixa; o late game é raro em contagem, mas cada virada decide settlement.
+      Estratégias sensíveis a viradas (pair/clip/shot&amp;go) sofrem o bulk do risco no open.
+    </div>
+
+    <footer>
+      Gerado em 2026-08-02 a partir de <span class="mono">scratch/btc5m-viradas-stats.json</span>.
+      Filtros: ptb&gt;1000, coverage≥0,85, ≥80 ticks, cobertura até ≥250s.
+      Para PDF: use o botão acima ou Ctrl+P → “Salvar como PDF”.
+    </footer>
+  </div>
+
+<script>
+const bins30 = [
+  { label: "0-30s", pct: 45.19, perEv: 2.400, rate: 4.800 },
+  { label: "30-60s", pct: 10.72, perEv: 0.569, rate: 1.139 },
+  { label: "60-90s", pct: 8.42, perEv: 0.447, rate: 0.894 },
+  { label: "90-120s", pct: 6.36, perEv: 0.338, rate: 0.676 },
+  { label: "120-150s", pct: 5.95, perEv: 0.316, rate: 0.632 },
+  { label: "150-180s", pct: 5.11, perEv: 0.271, rate: 0.542 },
+  { label: "180-210s", pct: 5.07, perEv: 0.269, rate: 0.539 },
+  { label: "210-240s", pct: 4.33, perEv: 0.230, rate: 0.460 },
+  { label: "240-270s", pct: 4.21, perEv: 0.224, rate: 0.447 },
+  { label: "270-300s", pct: 4.64, perEv: 0.246, rate: 0.493 },
+];
+
+const bins10 = [
+  32.067, 7.901, 5.222, 4.140, 3.446, 3.135, 3.120, 2.767, 2.532, 2.384,
+  2.059, 1.921, 2.173, 1.996, 1.777, 1.819, 1.719, 1.568, 1.875, 1.641,
+  1.555, 1.504, 1.474, 1.350, 1.483, 1.391, 1.339, 1.345, 1.320, 1.976,
+];
+
+const hist = [
+  ["0", 802], ["1", 2811], ["2", 3859], ["3", 3590], ["4", 2999],
+  ["5", 2600], ["6", 2070], ["7", 1642], ["8", 1275], ["9", 985],
+  ["10", 772], ["11", 598], ["12", 416], ["13", 304], ["14", 249], ["15+", 952],
+];
+
+const seq = [
+  ["D-U-D", 2009, 7.78, 2],
+  ["U-D-U", 1850, 7.16, 2],
+  ["U-D-U-D", 1830, 7.09, 3],
+  ["D-U-D-U", 1760, 6.82, 3],
+  ["D-U", 1611, 6.24, 1],
+  ["U-D-U-D-U", 1595, 6.18, 4],
+  ["D-U-D-U-D", 1404, 5.44, 4],
+  ["U-D-U-D-U-D", 1324, 5.13, 5],
+  ["D-U-D-U-D-U", 1276, 4.94, 5],
+  ["U-D", 1200, 4.65, 1],
+  ["U-D-U-D-U-D-U", 1056, 4.09, 6],
+  ["D-U-D-U-D-U-D", 1014, 3.93, 6],
+  ["U-D-U-D-U-D-U-D", 853, 3.30, 7],
+  ["D-U-D-U-D-U-D-U", 789, 3.06, 7],
+  ["U-D-U-D-U-D-U-D-U", 672, 2.60, 8],
+];
+
+function barChart(el, labels, values, opts = {}) {
+  const W = 900, H = 220, padL = 36, padR = 12, padT = 16, padB = 36;
+  const max = Math.max(...values, opts.ref || 0) * 1.08;
+  const bw = (W - padL - padR) / values.length;
+  const bars = values.map((v, i) => {
+    const h = (v / max) * (H - padT - padB);
+    const x = padL + i * bw + bw * 0.15;
+    const y = H - padB - h;
+    const highlight = opts.highlight?.(i);
+    const fill = highlight === "hi" ? "#c45c26" : highlight === "lo" ? "#1f6b3a" : "#2a6f97";
+    return `<rect x="${x}" y="${y}" width="${bw * 0.7}" height="${h}" fill="${fill}" rx="2"/>
+      <text x="${x + bw * 0.35}" y="${H - 12}" text-anchor="middle" font-size="10" fill="#5c5c5c">${labels[i]}</text>`;
+  }).join("");
+  let ref = "";
+  if (opts.ref != null) {
+    const y = H - padB - (opts.ref / max) * (H - padT - padB);
+    ref = `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#8a5a00" stroke-dasharray="4 3" stroke-width="1.2"/>
+      <text x="${W - padR}" y="${y - 4}" text-anchor="end" font-size="10" fill="#8a5a00">${opts.refLabel || opts.ref}</text>`;
+  }
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${opts.title || "chart"}">${ref}${bars}</svg>`;
+}
+
+function lineChart(el, values) {
+  const W = 900, H = 200, padL = 36, padR = 12, padT = 16, padB = 28;
+  const max = Math.max(...values) * 1.05;
+  const step = (W - padL - padR) / (values.length - 1);
+  const pts = values.map((v, i) => {
+    const x = padL + i * step;
+    const y = H - padB - (v / max) * (H - padT - padB);
+    return [x, y];
+  });
+  const d = pts.map((p, i) => `${i ? "L" : "M"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
+  const ticks = [0, 60, 120, 180, 240, 290].map((s) => {
+    const i = s / 10;
+    const x = padL + i * step;
+    return `<text x="${x}" y="${H - 8}" text-anchor="middle" font-size="10" fill="#5c5c5c">${s}s</text>
+      <line x1="${x}" y1="${padT}" x2="${x}" y2="${H - padB}" stroke="#eee" />`;
+  }).join("");
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="densidade 10s">
+    ${ticks}
+    <path d="${d}" fill="none" stroke="#c45c26" stroke-width="2.2"/>
+    ${pts.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.2" fill="#c45c26"/>`).join("")}
+  </svg>`;
+}
+
+// table 30s
+document.getElementById("tbl30").innerHTML = bins30.map((b, i) => {
+  const cls = i === 0 ? "hi" : (i === 8 ? "lo" : "");
+  return `<tr class="${cls}">
+    <td>${b.label}</td>
+    <td class="num">${b.pct.toFixed(2).replace(".", ",")}%</td>
+    <td class="num">${b.perEv.toFixed(3).replace(".", ",")}</td>
+    <td class="num">${b.rate.toFixed(3).replace(".", ",")}</td>
+    <td class="num">${(b.pct / 10).toFixed(2).replace(".", ",")}×</td>
+  </tr>`;
+}).join("");
+
+document.getElementById("tblSeq").innerHTML = seq.map(([s, n, p, f]) =>
+  `<tr>
+    <td class="mono">${s}</td>
+    <td class="num">${n.toLocaleString("pt-BR")}</td>
+    <td class="num">${p.toFixed(2).replace(".", ",")}%</td>
+    <td class="num">${f}</td>
+  </tr>`
+).join("");
+
+barChart(document.getElementById("chart30"),
+  bins30.map((b) => b.label.replace("s", "")),
+  bins30.map((b) => b.pct),
+  {
+    title: "% viradas por 30s",
+    ref: 10,
+    refLabel: "uniforme 10%",
+    highlight: (i) => (i === 0 ? "hi" : i === 8 ? "lo" : null),
+  }
+);
+
+lineChart(document.getElementById("chart10"), bins10);
+
+barChart(document.getElementById("chartHist"),
+  hist.map((h) => h[0]),
+  hist.map((h) => h[1]),
+  { title: "histograma viradas" }
+);
+
+function copyPath() {
+  const p = decodeURIComponent(location.pathname.replace(/^\//, "").replace(/\//g, "\\"));
+  navigator.clipboard?.writeText(location.href).then(() => {
+    alert("URL copiada. Para PDF: Ctrl+P → Salvar como PDF.");
+  }).catch(() => alert("Abra este arquivo no browser e use Ctrl+P → Salvar como PDF."));
+}
+</script>
+</body>
+</html>

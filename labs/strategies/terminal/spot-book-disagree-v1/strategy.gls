@@ -1,0 +1,180 @@
+strategy "Spot Book Disagree V1" {
+  // SBD: spotLeader !== bookFavorite perto do fim.
+  // entryMode: 1=follow-book | 2=follow-spot | 3=follow-spot-cheap (campeã da sonda)
+  // Hold to settlement — sem exits. compiled-soa: sem reassign de locals.
+
+  param walletSize = 100
+  param entryBudget = 10
+  param minShares = 1
+  param entryMode = 3
+
+  param minSecondsLeft = 10
+  param maxSecondsLeft = 40
+  param maxDistAbs = 15
+  param minBookEdge = 0.05
+
+  param minAsk = 0.05
+  param maxAsk = 0.99
+  param maxSpotAsk = 0.40
+  param minBookFavAsk = 0.60
+  param maxSpread = 0.04
+  param minOddsSum = 0.96
+  param maxOddsSum = 1.06
+
+  param entrySlippageMax = 0.02
+  param minLiquidityRatio = 0.60
+
+  onEventStart(event) {
+    state.entered = false
+  }
+
+  onTick(tick, event) {
+    if (!state.entered) {
+      let secsLeft = time.secondsUntil(event.end, tick.ts)
+      if (secsLeft >= params.minSecondsLeft && secsLeft <= params.maxSecondsLeft) {
+        let btc = tick.underlyingPrice
+        let ptb = event.priceToBeat
+        let dist = math.abs(btc - ptb)
+        if (dist > 0 && dist <= params.maxDistAbs) {
+          let spotLeader = market.sideFromPrice(btc, ptb)
+          let upAsk = book.ask("UP", tick)
+          let downAsk = book.ask("DOWN", tick)
+          let oddsSum = upAsk + downAsk
+          if (oddsSum >= params.minOddsSum && oddsSum <= params.maxOddsSum) {
+            let budget = math.min(params.entryBudget, params.walletSize + runState.totalPnl)
+
+            // bookFavorite = UP (upAsk >= downAsk), spotLeader = DOWN → desacordo
+            if (upAsk >= downAsk && spotLeader == "DOWN") {
+              let bookFavAsk = upAsk
+              let spotAsk = downAsk
+              let bookEdge = bookFavAsk - spotAsk
+              if (bookEdge >= params.minBookEdge) {
+                if (params.entryMode == 1) {
+                  let bid = book.bid("UP", tick)
+                  if (bookFavAsk >= params.minAsk && bookFavAsk <= params.maxAsk && bookFavAsk - bid <= params.maxSpread) {
+                    let bought = enter("UP", {
+                      price: bookFavAsk,
+                      maxPrice: bookFavAsk + params.entrySlippageMax,
+                      budget: budget,
+                      minShares: params.minShares,
+                      minLiquidityRatio: params.minLiquidityRatio,
+                      tick: tick,
+                      reason: "sbd_follow_book"
+                    })
+                    if (bought) {
+                      state.entered = true
+                      mark("sbd_entry", { mode: 1, side: "UP", ask: bookFavAsk, dist: dist, secsLeft: secsLeft })
+                    }
+                  }
+                }
+                if (params.entryMode == 2) {
+                  let bid = book.bid("DOWN", tick)
+                  if (spotAsk >= params.minAsk && spotAsk <= params.maxAsk && spotAsk - bid <= params.maxSpread) {
+                    let bought = enter("DOWN", {
+                      price: spotAsk,
+                      maxPrice: spotAsk + params.entrySlippageMax,
+                      budget: budget,
+                      minShares: params.minShares,
+                      minLiquidityRatio: params.minLiquidityRatio,
+                      tick: tick,
+                      reason: "sbd_follow_spot"
+                    })
+                    if (bought) {
+                      state.entered = true
+                      mark("sbd_entry", { mode: 2, side: "DOWN", ask: spotAsk, dist: dist, secsLeft: secsLeft })
+                    }
+                  }
+                }
+                if (params.entryMode == 3) {
+                  if (spotAsk <= params.maxSpotAsk && bookFavAsk >= params.minBookFavAsk) {
+                    let bid = book.bid("DOWN", tick)
+                    if (spotAsk >= params.minAsk && spotAsk - bid <= params.maxSpread) {
+                      let bought = enter("DOWN", {
+                        price: spotAsk,
+                        maxPrice: spotAsk + params.entrySlippageMax,
+                        budget: budget,
+                        minShares: params.minShares,
+                        minLiquidityRatio: params.minLiquidityRatio,
+                        tick: tick,
+                        reason: "sbd_spot_cheap"
+                      })
+                      if (bought) {
+                        state.entered = true
+                        mark("sbd_entry", { mode: 3, side: "DOWN", ask: spotAsk, dist: dist, secsLeft: secsLeft })
+                      }
+                    }
+                  }
+                }
+              }
+            }
+
+            // bookFavorite = DOWN (downAsk > upAsk), spotLeader = UP → desacordo
+            if (downAsk > upAsk && spotLeader == "UP") {
+              let bookFavAsk = downAsk
+              let spotAsk = upAsk
+              let bookEdge = bookFavAsk - spotAsk
+              if (bookEdge >= params.minBookEdge) {
+                if (params.entryMode == 1) {
+                  let bid = book.bid("DOWN", tick)
+                  if (bookFavAsk >= params.minAsk && bookFavAsk <= params.maxAsk && bookFavAsk - bid <= params.maxSpread) {
+                    let bought = enter("DOWN", {
+                      price: bookFavAsk,
+                      maxPrice: bookFavAsk + params.entrySlippageMax,
+                      budget: budget,
+                      minShares: params.minShares,
+                      minLiquidityRatio: params.minLiquidityRatio,
+                      tick: tick,
+                      reason: "sbd_follow_book"
+                    })
+                    if (bought) {
+                      state.entered = true
+                      mark("sbd_entry", { mode: 1, side: "DOWN", ask: bookFavAsk, dist: dist, secsLeft: secsLeft })
+                    }
+                  }
+                }
+                if (params.entryMode == 2) {
+                  let bid = book.bid("UP", tick)
+                  if (spotAsk >= params.minAsk && spotAsk <= params.maxAsk && spotAsk - bid <= params.maxSpread) {
+                    let bought = enter("UP", {
+                      price: spotAsk,
+                      maxPrice: spotAsk + params.entrySlippageMax,
+                      budget: budget,
+                      minShares: params.minShares,
+                      minLiquidityRatio: params.minLiquidityRatio,
+                      tick: tick,
+                      reason: "sbd_follow_spot"
+                    })
+                    if (bought) {
+                      state.entered = true
+                      mark("sbd_entry", { mode: 2, side: "UP", ask: spotAsk, dist: dist, secsLeft: secsLeft })
+                    }
+                  }
+                }
+                if (params.entryMode == 3) {
+                  if (spotAsk <= params.maxSpotAsk && bookFavAsk >= params.minBookFavAsk) {
+                    let bid = book.bid("UP", tick)
+                    if (spotAsk >= params.minAsk && spotAsk - bid <= params.maxSpread) {
+                      let bought = enter("UP", {
+                        price: spotAsk,
+                        maxPrice: spotAsk + params.entrySlippageMax,
+                        budget: budget,
+                        minShares: params.minShares,
+                        minLiquidityRatio: params.minLiquidityRatio,
+                        tick: tick,
+                        reason: "sbd_spot_cheap"
+                      })
+                      if (bought) {
+                        state.entered = true
+                        mark("sbd_entry", { mode: 3, side: "UP", ask: spotAsk, dist: dist, secsLeft: secsLeft })
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

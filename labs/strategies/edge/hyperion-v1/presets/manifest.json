@@ -1,0 +1,32 @@
+[
+  {
+    "id": "btc-hyperion-champion-v1",
+    "name": "BTC · Hyperion Champion V1",
+    "role": "candidate",
+    "file": "btc-hyperion-champion-v1.json"
+  },
+  {
+    "id": "btc-hyperion-sniper-v2",
+    "name": "BTC · Hyperion Sniper V2",
+    "role": "candidate",
+    "file": "btc-hyperion-sniper-v2.json"
+  },
+  {
+    "id": "btc-hyperion-ultra-v3",
+    "name": "BTC · Hyperion Ultra-Snipe V3",
+    "role": "candidate",
+    "file": "btc-hyperion-ultra-v3.json"
+  },
+  {
+    "id": "btc-hyperion-terminal-v4",
+    "name": "BTC · Hyperion Terminal V4",
+    "role": "candidate",
+    "file": "btc-hyperion-terminal-v4.json"
+  },
+  {
+    "id": "eth-hyperion-scalper-v5",
+    "name": "ETH · Hyperion Scalper Maker V5",
+    "role": "champion",
+    "file": "eth-hyperion-scalper-v5.json"
+  }
+]

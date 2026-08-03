@@ -1,0 +1,115 @@
+strategy "Hyperion V1 GLS" {
+  param walletSize = 100
+  param maxOrderValue = 15
+  param minShares = 5
+  param entryWindowStart = 280
+  param entryWindowEnd = 5
+  param minAsk = 0.12
+  param maxAsk = 0.82
+  param minEdge = 0.08
+  param minJumpIntensity = 0.25
+  param jumpSigma = 45.0
+  param obiThreshold = 0.30
+  param enableCrossEventCoupling = true
+  param crossEventWindowStartSec = 20
+  param crossEventWindowEndSec = 2
+  param crossEventDistanceMin = 35
+  param maxSpread = 0.06
+  param entrySlippageMax = 0.02
+  param minLiquidityRatio = 0.75
+
+  onEventStart(event) {
+    state.entered = false
+    state.closed = false
+    state.candidateSide = "UP"
+    state.candidateAsk = 0.5
+    state.candidateProb = 0.5
+    state.candidateSpread = 0.01
+    state.pJumpUp = 0.5
+    state.lastNoEntryReason = "outside_entry_window"
+  }
+
+  onTick(tick, event) {
+    let secsLeft = time.secondsUntil(event.end, tick.ts)
+    let elapsed = time.secondsSince(event.start, tick.ts)
+
+    if (position.open) {
+      state.lastNoEntryReason = "already_in_position"
+    } else {
+      state.lastSecsLeft = secsLeft
+      state.lastElapsed = elapsed
+      state.lastNoEntryReason = "outside_entry_window"
+
+      if (secsLeft <= params.entryWindowStart && secsLeft >= params.entryWindowEnd) {
+        let spot = tick.underlyingPrice
+        let ptb = event.priceToBeat
+        let distSigned = spot - ptb
+        let distAbs = math.abs(distSigned)
+
+        let vol30s = signals.volatility(30, tick)
+        let localSigma = math.max(10, vol30s)
+        let tau = math.max(1, secsLeft) / 300.0
+        let normDist = distSigned / (localSigma * math.sqrt(tau))
+
+        let pBaseUp = math.normalCdf(normDist)
+        state.pJumpUp = pBaseUp
+        if (distSigned > 0) {
+          state.pJumpUp = math.min(0.99, pBaseUp + (params.minJumpIntensity * 0.05))
+        } else {
+          state.pJumpUp = math.max(0.01, pBaseUp - (params.minJumpIntensity * 0.05))
+        }
+
+        let upAsk = book.ask("UP", tick)
+        let downAsk = book.ask("DOWN", tick)
+        let upSpread = book.spread("UP", tick)
+        let downSpread = book.spread("DOWN", tick)
+
+        if (distSigned >= 0) {
+          state.candidateSide = "UP"
+          state.candidateAsk = upAsk
+          state.candidateProb = state.pJumpUp
+          state.candidateSpread = upSpread
+        } else {
+          state.candidateSide = "DOWN"
+          state.candidateAsk = downAsk
+          state.candidateProb = 1.0 - state.pJumpUp
+          state.candidateSpread = downSpread
+        }
+
+        let edge = state.candidateProb - state.candidateAsk
+        let gapCushion = math.max(0.015, state.candidateSpread * 1.2)
+        let netEdge = edge - gapCushion
+
+        if (state.candidateAsk >= params.minAsk && state.candidateAsk <= params.maxAsk && state.candidateSpread <= params.maxSpread) {
+          if (netEdge >= params.minEdge) {
+            let budget = math.min(params.maxOrderValue, params.walletSize + runState.totalPnl)
+            let maxPrice = math.min(params.maxAsk, state.candidateAsk + params.entrySlippageMax)
+            let liqRatio = book.liquidityRatio(state.candidateSide, tick, budget, maxPrice)
+
+            if (liqRatio >= params.minLiquidityRatio) {
+              let entered = enter(state.candidateSide, {
+                price: state.candidateAsk,
+                maxPrice: maxPrice,
+                budget: budget,
+                minShares: params.minShares,
+                minLiquidityRatio: params.minLiquidityRatio,
+                tick: tick,
+                reason: "hyperion_merton_jump"
+              })
+              if (entered) {
+                state.entered = true
+                mark("entry", { side: state.candidateSide, price: state.candidateAsk, edge: netEdge, prob: state.candidateProb })
+              }
+            } else {
+              state.lastNoEntryReason = "insufficient_liquidity"
+            }
+          } else {
+            state.lastNoEntryReason = "insufficient_edge"
+          }
+        } else {
+          state.lastNoEntryReason = "price_or_spread_out_of_bounds"
+        }
+      }
+    }
+  }
+}

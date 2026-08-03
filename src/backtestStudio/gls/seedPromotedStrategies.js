@@ -266,6 +266,9 @@ export function seedPromotedStrategy(db, manifest, { jsOnly = true } = {}) {
       notes,
       existingVersions,
     });
+    if (action === 'seeded') {
+      existingVersions.push({ id: 0, version: versionNum, source_code: payload.sourceCode });
+    }
     const lang = jsOnly ? 'js' : 'gls';
     console.log(`[seed] ${slug} v${versionNum} (${preset.id}) ${lang} ${action === 'seeded' ? 'semeada' : 'sincronizada'}.`);
   }

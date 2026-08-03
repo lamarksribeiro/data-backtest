@@ -1,0 +1,30 @@
+{
+  "id": "sol-hyperion-scalper-v6",
+  "underlying": "SOL",
+  "interval": "5m",
+  "bookDepth": 25,
+  "strategyId": "hyperion-scalper-maker-v6",
+  "name": "SOL · Hyperion Scalper Maker V6",
+  "role": "champion",
+  "description": "Estratégia de Scalpe por Impulso Lead-Lag da Binance + Saídas Limitadas Maker de Taxa Zero calibrada para Solana (SOL 5m Binary Options).",
+  "tags": ["sol", "scalper", "maker", "zero-fee", "lead-lag", "binance", "v6"],
+  "params": {
+    "walletSize": 100,
+    "maxOrderValue": 30,
+    "minShares": 5,
+    "entryWindowStart": 295,
+    "entryWindowEnd": 20,
+    "maxTradesPerEvent": 4,
+    "cooldownSec": 8,
+    "minSpikeAbs": 0.18,
+    "minAsk": 0.15,
+    "maxAsk": 0.70,
+    "targetLimit1Cents": 0.08,
+    "targetLimit2Cents": 0.14,
+    "maxHoldTimeSec": 20,
+    "stopLossPct": 0.15,
+    "maxSpread": 0.05,
+    "entrySlippageMax": 0.02,
+    "minLiquidityRatio": 0.75
+  }
+}
