@@ -1,0 +1,36 @@
+{
+  "id": "phil-hopper-relux5",
+  "name": "Phil Hopper Relux5",
+  "family": "carry",
+  "status": "research",
+  "kind": "library-runner",
+  "assets": ["BTC"],
+  "intervals": ["5m"],
+  "requiresBook": true,
+  "defaultBookDepth": 25,
+  "source": {
+    "type": "library-runner",
+    "runnerSlug": "phil-hopper-relux5-runner",
+    "runnerVersion": 1
+  },
+  "portStatus": "ported",
+  "sourceRepo": "polymarket-fm",
+  "sourceService": "Phil_Hopper_Real_Redux_Relux5.py",
+  "promotedToStudio": true,
+  "studioSlug": "phil-hopper-relux5",
+  "studio": {
+    "description": "Port da Relux5 (Phil_Hopper_Real_Redux_Relux5.py): escada 5+5, gerações, TRAVA, MULT_CALC, pausa do líder — NÃO é a ShotandGo V1.",
+    "tags": [
+      "phil-hopper",
+      "relux5",
+      "escada-dupla",
+      "carry",
+      "geracao",
+      "trava",
+      "btc",
+      "python-parity"
+    ],
+    "defaultVersion": 1
+  },
+  "notes": "Fonte: polymarket-fm/Phil_Hopper_Real_Redux_Relux5.py. Runner: phil-hopper-relux5-runner@1. Distinto de shotandgo-v1 (Phil_Hopper_Real.py)."
+}

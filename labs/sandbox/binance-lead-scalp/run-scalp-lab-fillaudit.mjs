@@ -66,6 +66,8 @@ const DEFAULTS = {
   exitMode: 'taker',
   /** offsets em $ do entryAsk para asks maker (realização parcial) */
   ladderOffsets: [0.01, 0.02, 0.03],
+  /** m0 = bid>=limit (baseline do lab) · m3 = fila pelo lado do ask */
+  fillModel: 'm0',
   /**
    * Sizing: none = budget/ask (atual);
    * sharesCap = min(budget/ask, floor(budget/sharesCapAsk));
@@ -150,6 +152,7 @@ function parseArgs(argv) {
     else if (a === '--no-rescue-if-no-fill') out.noRescueIfNoFill = true;
     else if (a === '--rescue-max-hold') out.rescueMaxHoldSec = Number(argv[++i]);
     else if (a === '--dump-trades') out.dumpTrades = true;
+    else if (a === '--fill-model') out.fillModel = String(argv[++i]);
     else if (a === '--ladder') {
       out.ladderOffsets = String(argv[++i])
         .split(',')
@@ -157,6 +160,7 @@ function parseArgs(argv) {
         .filter((x) => Number.isFinite(x) && x > 0);
     }
   }
+  if (!['m0', 'm3', 'none'].includes(out.fillModel)) out.fillModel = DEFAULTS.fillModel;
   if (!out.ladderOffsets?.length) out.ladderOffsets = [...DEFAULTS.ladderOffsets];
   if (!['taker', 'maker-ladder', 'settle'].includes(out.exitMode)) out.exitMode = 'taker';
   if (!['none', 'sharesCap', 'dynamicBudget', 'liqCap'].includes(out.sizingMode)) {
@@ -335,6 +339,35 @@ function feeEst(price, shares, rate) {
   return cryptoTakerFee(shares, p, rate);
 }
 
+/** escada de asks (px, sz) do lado que seguramos — base do modelo de fila */
+function askLadder(tick, side) {
+  const pfx = side === 'UP' ? 'up_ask' : 'down_ask';
+  const out = [];
+  for (let k = 1; k <= 20; k += 1) {
+    const px = Number(tick[`${pfx}_px_${k}`]);
+    const sz = Number(tick[`${pfx}_sz_${k}`]);
+    if (!Number.isFinite(px) || !Number.isFinite(sz) || sz <= 0) continue;
+    out.push({ px, sz });
+  }
+  return out;
+}
+
+/** ask mais fundo visível (limite da janela de 20 níveis) */
+function maxAskPx(tick, side) {
+  let mx = -Infinity;
+  for (const l of askLadder(tick, side)) if (l.px > mx) mx = l.px;
+  return mx;
+}
+
+/** size descansando exatamente em `limitPx` — está na NOSSA FRENTE na fila */
+function sizeAtPrice(tick, side, limitPx) {
+  let total = 0;
+  for (const l of askLadder(tick, side)) {
+    if (Math.abs(l.px - limitPx) < 0.005) total += l.sz;
+  }
+  return total;
+}
+
 function sideBook(tick, side) {
   if (side === 'UP') {
     return {
@@ -424,11 +457,47 @@ function simulateEvent(ticks, binanceBySec, cfg, impulseThr = null, canonicalWin
       if (maker && Number.isFinite(bid) && bid > 0) {
         for (const lvl of pos.ladder) {
           if (lvl.filled || pos.remaining <= 1e-9) continue;
-          if (bid >= lvl.limitPx) {
-            const qty = Math.min(lvl.shares, pos.remaining);
+          let fillQty = 0;
+          if (cfg.fillModel === 'none') {
+            // PISO SEM MODELO: nenhuma ordem maker preenche. Todo o resto da
+            // lógica (stop, resgate, timeout, dump) fica idêntico. Não depende
+            // de nenhuma suposição sobre fila — é limite inferior verdadeiro.
+            fillQty = 0;
+          } else if (cfg.fillModel === 'm0') {
+            // baseline do lab: bid toca o limite => nível inteiro preenchido
+            if (bid >= lvl.limitPx) fillQty = lvl.shares;
+          } else {
+            // m3: nossa ordem é uma VENDA passiva, ela vive na fila do ASK.
+            // Quem a levanta é um comprador agressivo — e nesse instante o bid
+            // segue ABAIXO do nosso preço. Por isso o gatilho é o ask, não o bid.
+            const ask = book.ask;
+            const visible = lvl.limitPx <= maxAskPx(tick, pos.side) + 1e-9;
+            if (ask > lvl.limitPx + 1e-9) {
+              // best ask passou do nosso preço: nosso nível foi varrido
+              fillQty = lvl.shares;
+            } else if (visible && Math.abs(ask - lvl.limitPx) < 0.005) {
+              // no toque: a fila à nossa frente é consumida aos poucos
+              const szNow = sizeAtPrice(tick, pos.side, lvl.limitPx);
+              if (lvl.prevSz != null) {
+                const drop = lvl.prevSz - szNow;
+                if (drop > 0) lvl.consumed += drop;
+              }
+              lvl.prevSz = szNow;
+              const past = lvl.consumed - lvl.queueAhead;
+              if (past > 0) fillQty = Math.min(lvl.shares, past);
+            } else if (visible) {
+              lvl.prevSz = sizeAtPrice(tick, pos.side, lvl.limitPx);
+            }
+            // fora da janela visível: congela (perda de visibilidade != execução)
+          }
+
+          if (fillQty > 1e-9) {
+            const qty = Math.min(fillQty, lvl.shares, pos.remaining);
             pos.fills.push({ px: lvl.limitPx, shares: qty, fee: 0 });
             pos.remaining -= qty;
-            lvl.filled = true;
+            lvl.shares -= qty;
+            // m0 replica a contabilidade do original; m3 precisa de fill parcial
+            if (cfg.fillModel === 'm0' || lvl.shares <= 1e-9) lvl.filled = true;
           }
         }
         if (pos.remaining <= 1e-9) {
@@ -491,11 +560,15 @@ function simulateEvent(ticks, binanceBySec, cfg, impulseThr = null, canonicalWin
           if (!blockRescueHigh && !blockRescueNoFill && dumpReason !== 'rescue_stop') {
             pos.rescue = true;
             pos.ladder = pos.ladder.filter((l) => l.filled);
+            const rescuePx = Math.round((pos.entryAsk + cfg.rescueOffset) * 100) / 100;
             pos.ladder.push({
               offset: cfg.rescueOffset,
-              limitPx: Math.round((pos.entryAsk + cfg.rescueOffset) * 100) / 100,
+              limitPx: rescuePx,
               shares: pos.remaining,
               filled: false,
+              queueAhead: sizeAtPrice(tick, pos.side, rescuePx),
+              consumed: 0,
+              prevSz: sizeAtPrice(tick, pos.side, rescuePx),
             });
             dumpReason = null;
             dumpPx = null;
@@ -563,12 +636,18 @@ function simulateEvent(ticks, binanceBySec, cfg, impulseThr = null, canonicalWin
       remaining: shares,
       fills: [],
       ladder: maker
-        ? cfg.ladderOffsets.map((off) => ({
-            offset: off,
-            limitPx: Math.round((book.ask + off) * 100) / 100,
-            shares: perLvl,
-            filled: false,
-          }))
+        ? cfg.ladderOffsets.map((off) => {
+            const limitPx = Math.round((book.ask + off) * 100) / 100;
+            return {
+              offset: off,
+              limitPx,
+              shares: perLvl,
+              filled: false,
+              queueAhead: sizeAtPrice(tick, side, limitPx),
+              consumed: 0,
+              prevSz: sizeAtPrice(tick, side, limitPx),
+            };
+          })
         : [],
       entryFee,
       entryTsMs: tsMs,
@@ -700,7 +779,7 @@ function summarize(trades, eventsSeen, cfg, meta) {
       (cfg.exitMode === 'settle'
         ? 'hold até rótulo resolvido Gamma; sem fill maker/fee de saída'
         : cfg.exitMode === 'maker-ladder'
-          ? 'maker fill proxy = bid>=limit (sem fila/prints)'
+          ? `fillModel=${cfg.fillModel}${cfg.fillModel === 'm3' ? ' (fila pelo ask, depth25)' : ' (bid>=limit, sem fila)'}`
           : 'entrada e saída taker no book observado'),
     config: cfg,
     meta,
@@ -794,7 +873,26 @@ async function main() {
         CAST(epoch_ms(try_cast(event_end AS TIMESTAMP)) AS BIGINT) AS event_end_ms,
         underlying_price, price_to_beat,
         up_best_ask, up_best_bid, down_best_ask, down_best_bid,
-        up_ask_sz_1, down_ask_sz_1
+        up_ask_px_1, up_ask_sz_1, down_ask_px_1, down_ask_sz_1,
+        up_ask_px_2, up_ask_sz_2, down_ask_px_2, down_ask_sz_2,
+        up_ask_px_3, up_ask_sz_3, down_ask_px_3, down_ask_sz_3,
+        up_ask_px_4, up_ask_sz_4, down_ask_px_4, down_ask_sz_4,
+        up_ask_px_5, up_ask_sz_5, down_ask_px_5, down_ask_sz_5,
+        up_ask_px_6, up_ask_sz_6, down_ask_px_6, down_ask_sz_6,
+        up_ask_px_7, up_ask_sz_7, down_ask_px_7, down_ask_sz_7,
+        up_ask_px_8, up_ask_sz_8, down_ask_px_8, down_ask_sz_8,
+        up_ask_px_9, up_ask_sz_9, down_ask_px_9, down_ask_sz_9,
+        up_ask_px_10, up_ask_sz_10, down_ask_px_10, down_ask_sz_10,
+        up_ask_px_11, up_ask_sz_11, down_ask_px_11, down_ask_sz_11,
+        up_ask_px_12, up_ask_sz_12, down_ask_px_12, down_ask_sz_12,
+        up_ask_px_13, up_ask_sz_13, down_ask_px_13, down_ask_sz_13,
+        up_ask_px_14, up_ask_sz_14, down_ask_px_14, down_ask_sz_14,
+        up_ask_px_15, up_ask_sz_15, down_ask_px_15, down_ask_sz_15,
+        up_ask_px_16, up_ask_sz_16, down_ask_px_16, down_ask_sz_16,
+        up_ask_px_17, up_ask_sz_17, down_ask_px_17, down_ask_sz_17,
+        up_ask_px_18, up_ask_sz_18, down_ask_px_18, down_ask_sz_18,
+        up_ask_px_19, up_ask_sz_19, down_ask_px_19, down_ask_sz_19,
+        up_ask_px_20, up_ask_sz_20, down_ask_px_20, down_ask_sz_20
       FROM read_parquet(${pql})
       WHERE up_best_ask IS NOT NULL AND down_best_ask IS NOT NULL
         AND coverage >= 0.99

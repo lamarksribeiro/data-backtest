@@ -1,0 +1,41 @@
+export default strategy({
+  name: "Phil Hopper Relux5",
+
+  dependencies: {
+    runner: strategyLibrary("phil-hopper-relux5-runner", 1),
+  },
+
+  params: {
+    walletSize: 210,
+    sizeScale: 1,
+    mult: [1.1, 1.4, 1.7, 1.9, 2.2, 2.5, 2.8, 3.1, 3.4, 3.6, 7, 13, 14, 15, 3, 3, 3, 3, 3, 3],
+    multDesc: [1.1, 1.2, 1.3, 1.4, 1.5],
+    multDescAtivo: true,
+    contagio: "off",
+    equalizar: true,
+    eqPreco: 0.05,
+    eqEncerra: true,
+    eqExigeLucro: true,
+    eqLucroMinUsd: 0,
+    eqLimiteAtivo: true,
+    geracaoAtiva: true,
+    viradaSoAtras: true,
+    travaAtiva: true,
+    pausaLiderAtiva: true,
+    tetoInvestAtivo: true,
+    multCalcAtivo: true,
+    esperaAtiva: true,
+    maxViradas: 4,
+    descModo: "comprar",
+    fokAtivo: true,
+    executionMode: "honest",
+    takerPriceMode: "taker_limit",
+    maxEventNotional: 10000,
+    applyPolymarketFees: true,
+    polymarketFeeCategory: "crypto",
+  },
+
+  onEventStart() {},
+  onTick() {},
+  onEventEnd() {},
+});

@@ -10,10 +10,10 @@ dist/
 /state/
 /.tmp/
 /data/binance-1s/
-/scratch/canonical-outcomes-v1.csv
-/scratch/canonical-outcomes-v1.jsonl
+/scratch/
 /reports/labs/
 /reports/bench/
+labs/sandbox/binance-lead-scalp/reports/
 /agent-tools/
 /terminals/
 /mcps/

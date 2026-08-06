@@ -211,7 +211,7 @@
       "usesStopReverse": false,
       "tier": "A",
       "promotedToStudio": true,
-      "sourceDoc": "polymarket-fm/hopper-3-explicacao.md"
+      "sourceDoc": "docs/estrategias/hopper-3-maker-realista.md"
     },
     {
       "id": "hopper-4-v1",
@@ -224,7 +224,7 @@
       "usesStopReverse": true,
       "tier": "A",
       "promotedToStudio": true,
-      "sourceDoc": "polymarket-fm/Hopper4.py"
+      "sourceDoc": "docs/estrategias/hopper-4-otimizacao-risco-2026-07-14.md"
     },
     {
       "id": "escada-dupla-v1",
@@ -251,6 +251,20 @@
       "tier": "A",
       "promotedToStudio": false,
       "sourceDoc": "docs/estrategias/nao-implementadas/shotandgo-v1.md"
+    },
+    {
+      "id": "phil-hopper-relux5",
+      "family": "carry",
+      "name": "Phil Hopper Relux5",
+      "sourceFile": "phil-hopper-relux5-runner.js",
+      "createFn": "createBacktestRunner",
+      "runnerSlug": "phil-hopper-relux5-runner",
+      "strategyLabel": "PHIL_HOPPER_RELUX5",
+      "usesStopReverse": false,
+      "tier": "A",
+      "promotedToStudio": false,
+      "sourceDoc": "docs/estrategias/nao-implementadas/phil-hopper-relux5.md",
+      "notes": "Fonte Phil_Hopper_Real_Redux_Relux5.py — distinto de shotandgo-v1"
     },
     {
       "id": "pair-ladder-complete-set-v1",

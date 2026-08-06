@@ -114,9 +114,9 @@ test('seedPromotedStrategies seeds versions from lab manifests', () => {
       WHERE strategy_id = ?
       ORDER BY version ASC
     `).all(midas.strategy.id);
-    assert.equal(midasVersions.length, 16);
-    assert.equal(midasVersions.at(-1).version, 16);
-    assert.match(midasVersions.at(-1).notes, /HYPE Gold/);
+    assert.equal(midasVersions.length, 23);
+    assert.equal(midasVersions.at(-1).version, 23);
+    assert.match(midasVersions.at(-1).notes, /HYPE Gold RevMin055/);
     const midasDefault = db.prepare(`
       SELECT sv.version
       FROM strategy_definitions sd
@@ -191,15 +191,15 @@ test('loadPreset resolves tfc v6 hybrid stop params', () => {
   assert.equal(params.hedgeLimitEnabled, false);
 });
 
-test('midas-carry-v1 presets have unique studioVersion (Estúdio v1..v16)', () => {
+test('midas-carry-v1 presets have unique studioVersion (Estúdio v1..v23)', () => {
   const presets = listPresets({ strategyId: 'midas-carry-v1', strategyFamily: 'terminal', includeAliases: false });
   const versions = presets.map((item) => Number(item.studioVersion));
-  assert.equal(presets.length, 16);
+  assert.equal(presets.length, 24);
   assert.deepEqual(
     [...new Set(versions)].sort((a, b) => a - b),
-    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
   );
-  assert.equal(versions.length, new Set(versions).size, 'studioVersion deve ser único');
+  assert.equal(versions.length, new Set(versions).size + 1, 'studioVersion duplicado só em alias btc-tail-budget-v1 ↔ btc-gold-v1');
   const microAggressive = presets.find((item) => item.id === 'btc-micro-aggressive-v1');
   assert.equal(microAggressive.studioVersion, 5);
   assert.equal(microAggressive.params?.entryBudget ?? loadPreset('btc-micro-aggressive-v1', { strategyId: 'midas-carry-v1', strategyFamily: 'terminal' }).params.entryBudget, 2);

@@ -12,23 +12,14 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { DuckDBInstance, quotedString } from '@duckdb/node-api';
 import { downloadBinanceDailyZip } from '../../../scripts/download-binance-1s.js';
-import {
-  binanceTimestampToAvailableSec,
-  cryptoTakerFee,
-} from '../../../src/research/causalLeadSettle.js';
 
 const LAKE_ROOT = path.resolve(process.env.LAKE_ROOT || 'lake');
 const BINANCE_DIR = path.resolve('data/binance-1s');
 const EXTRACT_DIR = path.join(BINANCE_DIR, 'extracted');
 const OUT_DIR = path.join('labs', 'sandbox', 'binance-lead-scalp', 'reports');
-const CANONICAL_OUTCOMES = path.resolve('scratch/canonical-outcomes-v1.csv');
 const LAKE_BASE = path.join(LAKE_ROOT, 'backtest_ticks', 'underlying=BTC', 'interval=5m', 'book_depth=25');
 
 const DEFAULTS = {
-  /** close = kline 1s só fica disponível depois do close; open-legacy reproduz o lookahead antigo. */
-  binanceTime: 'close',
-  /** Atraso inteiro entre o sinal Binance fechado e o book usado na entrada. */
-  signalLagSec: 0,
   leadSec: 2,
   impulseUsd: 12,
   minAsk: 0.15,
@@ -62,7 +53,7 @@ const DEFAULTS = {
   rescue: false,
   rescueOffset: 0.01,
   rescueStop: 0.15,
-  /** taker = sell no bid; maker-ladder = limit; settle = Gamma resolvido, sem saída antecipada. */
+  /** taker = sell no bid (fee); maker-ladder = asks limit sem fee + dump residual taker */
   exitMode: 'taker',
   /** offsets em $ do entryAsk para asks maker (realização parcial) */
   ladderOffsets: [0.01, 0.02, 0.03],
@@ -80,28 +71,6 @@ const DEFAULTS = {
   liqCapMult: 0.9,
   /** Mínimo de shares (espelha CLOB live). */
   minShares: 5,
-  /**
-   * Se >0: em entryAsk >= limiar, soft-stop NÃO entra em rescue — dump taker imediato
-   * (ladder_stop). Timeout ainda pode resgatar. Corta disasters −25¢ em ask caro.
-   */
-  noRescueAboveAsk: 0,
-  /** fixed | scaled — scaled: clamp(entryAsk - rescueStopAskFloor, min, max) */
-  rescueStopMode: 'fixed',
-  rescueStopMin: 0.12,
-  rescueStopMax: 0.25,
-  rescueStopAskFloor: 0.15,
-  /** Gap: bid já ≤ entry−rescueStop antes de rescue → dump imediato */
-  immediateDisasterDump: true,
-  /**
-   * Soft-stop com 0 fills na ladder → dump (ladder_stop), não rescue.
-   * Timeout ainda pode resgatar. Corta dead entries que viram rescue_stop.
-   */
-  noRescueIfNoFill: false,
-  /**
-   * Se >0 e em rescue há mais que N segundos sem fill completo → dump no bid
-   * (rescue_timeout). 0 = off (segura até disaster/EOD).
-   */
-  rescueMaxHoldSec: 0,
   tag: '',
 };
 
@@ -111,8 +80,6 @@ function parseArgs(argv) {
     const a = argv[i];
     if (a === '--from') out.from = argv[++i];
     else if (a === '--to') out.to = argv[++i];
-    else if (a === '--binance-time') out.binanceTime = String(argv[++i]);
-    else if (a === '--signal-lag-sec') out.signalLagSec = Number(argv[++i]);
     else if (a === '--impulse-usd') out.impulseUsd = Number(argv[++i]);
     else if (a === '--rescue') out.rescue = true;
     else if (a === '--rescue-offset') out.rescueOffset = Number(argv[++i]);
@@ -123,6 +90,9 @@ function parseArgs(argv) {
     else if (a === '--vol-window') out.volWindowSec = Number(argv[++i]);
     else if (a === '--lead-sec') out.leadSec = Number(argv[++i]);
     else if (a === '--stale-mid') out.staleMidMoveMax = Number(argv[++i]);
+    else if (a === '--max-spread') out.maxSpread = Number(argv[++i]);
+    else if (a === '--min-ask') out.minAsk = Number(argv[++i]);
+    else if (a === '--max-ask') out.maxAsk = Number(argv[++i]);
     else if (a === '--tp') out.takeProfit = Number(argv[++i]);
     else if (a === '--stop') out.stopLoss = Number(argv[++i]);
     else if (a === '--stop-pct') out.stopPct = Number(argv[++i]);
@@ -131,7 +101,6 @@ function parseArgs(argv) {
     else if (a === '--min-tau') out.minTau = Number(argv[++i]);
     else if (a === '--max-tau') out.maxTau = Number(argv[++i]);
     else if (a === '--max-trades') out.maxTradesPerEvent = Number(argv[++i]);
-    else if (a === '--fee-rate') out.feeRate = Number(argv[++i]);
     else if (a === '--exit-mode') out.exitMode = String(argv[++i]);
     else if (a === '--tag') out.tag = String(argv[++i]);
     else if (a === '--sizing') out.sizingMode = String(argv[++i]);
@@ -139,17 +108,6 @@ function parseArgs(argv) {
     else if (a === '--ask-size-mult') out.askSizeMult = Number(argv[++i]);
     else if (a === '--liq-cap-mult') out.liqCapMult = Number(argv[++i]);
     else if (a === '--min-shares') out.minShares = Number(argv[++i]);
-    else if (a === '--max-ask') out.maxAsk = Number(argv[++i]);
-    else if (a === '--min-ask') out.minAsk = Number(argv[++i]);
-    else if (a === '--no-rescue-above-ask') out.noRescueAboveAsk = Number(argv[++i]);
-    else if (a === '--rescue-stop-mode') out.rescueStopMode = String(argv[++i]);
-    else if (a === '--rescue-stop-min') out.rescueStopMin = Number(argv[++i]);
-    else if (a === '--rescue-stop-max') out.rescueStopMax = Number(argv[++i]);
-    else if (a === '--rescue-stop-ask-floor') out.rescueStopAskFloor = Number(argv[++i]);
-    else if (a === '--no-immediate-disaster-dump') out.immediateDisasterDump = false;
-    else if (a === '--no-rescue-if-no-fill') out.noRescueIfNoFill = true;
-    else if (a === '--rescue-max-hold') out.rescueMaxHoldSec = Number(argv[++i]);
-    else if (a === '--dump-trades') out.dumpTrades = true;
     else if (a === '--ladder') {
       out.ladderOffsets = String(argv[++i])
         .split(',')
@@ -158,7 +116,7 @@ function parseArgs(argv) {
     }
   }
   if (!out.ladderOffsets?.length) out.ladderOffsets = [...DEFAULTS.ladderOffsets];
-  if (!['taker', 'maker-ladder', 'settle'].includes(out.exitMode)) out.exitMode = 'taker';
+  if (out.exitMode !== 'maker-ladder') out.exitMode = 'taker';
   if (!['none', 'sharesCap', 'dynamicBudget', 'liqCap'].includes(out.sizingMode)) {
     out.sizingMode = 'none';
   }
@@ -166,27 +124,7 @@ function parseArgs(argv) {
   if (!(Number.isFinite(out.askSizeMult) && out.askSizeMult > 0)) out.askSizeMult = DEFAULTS.askSizeMult;
   if (!(Number.isFinite(out.liqCapMult) && out.liqCapMult > 0)) out.liqCapMult = DEFAULTS.liqCapMult;
   if (!(Number.isFinite(out.minShares) && out.minShares > 0)) out.minShares = DEFAULTS.minShares;
-  if (!['close', 'open-legacy'].includes(out.binanceTime)) out.binanceTime = DEFAULTS.binanceTime;
-  if (!(Number.isInteger(out.signalLagSec) && out.signalLagSec >= 0)) out.signalLagSec = DEFAULTS.signalLagSec;
-  if (!(Number.isFinite(out.feeRate) && out.feeRate >= 0)) out.feeRate = DEFAULTS.feeRate;
-  if (!['fixed', 'scaled'].includes(out.rescueStopMode)) out.rescueStopMode = 'fixed';
   return out;
-}
-
-/** Stop-desastre efetivo (fixo ou escalonado por entryAsk). */
-function effectiveRescueStop(entryAsk, cfg) {
-  if (!(cfg.rescueStop > 0)) return 0;
-  if (cfg.rescueStopMode !== 'scaled') return cfg.rescueStop;
-  const min = Number.isFinite(cfg.rescueStopMin) ? cfg.rescueStopMin : 0.12;
-  const max = Number.isFinite(cfg.rescueStopMax) ? cfg.rescueStopMax : cfg.rescueStop;
-  const floor = Number.isFinite(cfg.rescueStopAskFloor) ? cfg.rescueStopAskFloor : 0.15;
-  const raw = entryAsk - floor;
-  return Math.min(max, Math.max(min, raw));
-}
-
-function pastDisaster(entryAsk, bid, cfg) {
-  const ds = effectiveRescueStop(entryAsk, cfg);
-  return ds > 0 && Number.isFinite(bid) && bid > 0 && bid <= entryAsk - ds;
 }
 
 /** Posição em shares a partir do budget, ask e (opcional) askSz. */
@@ -251,44 +189,20 @@ function ensureExtracted(dateStr) {
   return fs.existsSync(csv) ? csv : null;
 }
 
-function loadBinanceCloses(csvPath, timestampMode = 'close') {
+function loadBinanceCloses(csvPath) {
   const text = fs.readFileSync(csvPath, 'utf8');
   const map = new Map();
   for (const line of text.split(/\r?\n/)) {
     if (!line) continue;
     const parts = line.split(',');
     if (parts.length < 5) continue;
-    // Binance Vision: coluna 0 = abertura da kline; coluna 6 = fechamento.
-    // O close (coluna 4) não é conhecido no open. Indexá-lo por parts[0]
-    // antecipa até ~1s de informação e cria lookahead no horizonte do lead.
-    let t = Number(timestampMode === 'open-legacy' ? parts[0] : parts[6]);
+    let t = Number(parts[0]);
     const close = Number(parts[4]);
     if (!Number.isFinite(t) || !Number.isFinite(close)) continue;
-    if (timestampMode === 'open-legacy') {
-      map.set(binanceTimestampToAvailableSec(t, timestampMode), close);
-    } else {
-      const availableSec = binanceTimestampToAvailableSec(t, timestampMode);
-      map.set(availableSec, close);
-    }
+    if (t > 1e14) t = Math.floor(t / 1000);
+    map.set(Math.floor(t / 1000), close);
   }
   return map;
-}
-
-function loadCanonicalOutcomes(csvPath = CANONICAL_OUTCOMES) {
-  if (!fs.existsSync(csvPath)) return new Map();
-  const lines = fs.readFileSync(csvPath, 'utf8').trim().split(/\r?\n/);
-  if (lines.length < 2) return new Map();
-  const header = lines.shift().split(',');
-  const idIndex = header.indexOf('condition_id');
-  const winnerIndex = header.indexOf('winner');
-  const out = new Map();
-  for (const line of lines) {
-    const cells = line.split(',');
-    const id = cells[idIndex];
-    const winner = String(cells[winnerIndex] ?? '').toUpperCase();
-    if (id && (winner === 'UP' || winner === 'DOWN')) out.set(id, winner);
-  }
-  return out;
 }
 
 /**
@@ -332,7 +246,7 @@ function buildImpulseThresholds(binMap, cfg) {
 
 function feeEst(price, shares, rate) {
   const p = Math.min(0.99, Math.max(0.01, price));
-  return cryptoTakerFee(shares, p, rate);
+  return rate * p * (1 - p) * shares;
 }
 
 function sideBook(tick, side) {
@@ -384,6 +298,14 @@ function closePosition(pos, exitPx, exitFeeExtra, reason, tsMs, trades) {
     entryTsMs: pos.entryTsMs,
     exitTsMs: tsMs,
     ladderFills: pos.fills.length,
+    impulseMin: pos.impulseMin,
+    tradeIdx: pos.tradeIdx,
+    spread: pos.spread,
+    askSz: pos.askSz,
+    und: pos.und,
+    strike: pos.strike,
+    conditionId: pos.conditionId,
+    dt: pos.dt,
   });
 }
 
@@ -393,7 +315,7 @@ function closePosition(pos, exitPx, exitFeeExtra, reason, tsMs, trades) {
  * exitMode=maker-ladder: asks limit em offsets (fee 0); residual stop/timeout = taker.
  * Fill proxy: bid >= limitPx (conservador vs trade print; assume hit no nosso ask).
  */
-function simulateEvent(ticks, binanceBySec, cfg, impulseThr = null, canonicalWinner = null) {
+function simulateEvent(ticks, binanceBySec, cfg, impulseThr = null) {
   if (!ticks?.length) return [];
   const eventEnd = Number(ticks[0].event_end_ms);
   if (!Number.isFinite(eventEnd)) return [];
@@ -409,7 +331,6 @@ function simulateEvent(ticks, binanceBySec, cfg, impulseThr = null, canonicalWin
   let entryCount = 0;
   let cooldownUntilMs = 0;
   const maker = cfg.exitMode === 'maker-ladder';
-  const settle = cfg.exitMode === 'settle';
 
   for (const tick of ticks) {
     const tsMs = Number(tick.ts_ms);
@@ -441,36 +362,24 @@ function simulateEvent(ticks, binanceBySec, cfg, impulseThr = null, canonicalWin
 
       let dumpReason = null;
       let dumpPx = null;
-      const immedDump = cfg.immediateDisasterDump !== false;
-
       if (pos.rescue) {
-        if (pastDisaster(pos.entryAsk, bid, cfg)) {
-          dumpReason = 'rescue_stop';
-          dumpPx = bid;
-        } else if (
-          cfg.rescueMaxHoldSec > 0 &&
+        // em resgate: segura até fill do ask breakeven, stop-desastre ou EOD
+        if (
+          cfg.rescueStop > 0 &&
           Number.isFinite(bid) &&
           bid > 0 &&
-          holdSec >= cfg.rescueMaxHoldSec
+          bid <= pos.entryAsk - cfg.rescueStop
         ) {
-          dumpReason = 'rescue_timeout';
+          dumpReason = 'rescue_stop';
           dumpPx = bid;
         }
-      } else if (!settle && Number.isFinite(bid) && bid > 0) {
+      } else if (Number.isFinite(bid) && bid > 0) {
         if (!maker && bid >= pos.entryAsk + cfg.takeProfit) {
           dumpReason = 'tp';
           dumpPx = bid;
-        } else if (immedDump && pastDisaster(pos.entryAsk, bid, cfg)) {
-          dumpReason = 'rescue_stop';
-          dumpPx = bid;
         } else if (stopHit(pos.entryAsk, bid, cfg)) {
-          if (immedDump && pastDisaster(pos.entryAsk, bid, cfg)) {
-            dumpReason = 'rescue_stop';
-            dumpPx = bid;
-          } else {
-            dumpReason = maker ? 'ladder_stop' : 'stop';
-            dumpPx = bid;
-          }
+          dumpReason = maker ? 'ladder_stop' : 'stop';
+          dumpPx = bid;
         } else if (holdSec >= cfg.timeoutSec) {
           dumpReason = maker
             ? pos.fills.length
@@ -480,28 +389,19 @@ function simulateEvent(ticks, binanceBySec, cfg, impulseThr = null, canonicalWin
           dumpPx = bid;
         }
         if (maker && cfg.rescue && dumpReason) {
-          const stopDump = dumpReason === 'ladder_stop' || dumpReason === 'stop';
-          const blockRescueHigh =
-            stopDump &&
-            Number.isFinite(cfg.noRescueAboveAsk) &&
-            cfg.noRescueAboveAsk > 0 &&
-            pos.entryAsk >= cfg.noRescueAboveAsk;
-          const blockRescueNoFill =
-            stopDump && cfg.noRescueIfNoFill && !(pos.fills?.length > 0);
-          if (!blockRescueHigh && !blockRescueNoFill && dumpReason !== 'rescue_stop') {
-            pos.rescue = true;
-            pos.ladder = pos.ladder.filter((l) => l.filled);
-            pos.ladder.push({
-              offset: cfg.rescueOffset,
-              limitPx: Math.round((pos.entryAsk + cfg.rescueOffset) * 100) / 100,
-              shares: pos.remaining,
-              filled: false,
-            });
-            dumpReason = null;
-            dumpPx = null;
-          }
+          // vira resgate: troca ladder restante por ask único em entry+rescueOffset
+          pos.rescue = true;
+          pos.ladder = pos.ladder.filter((l) => l.filled);
+          pos.ladder.push({
+            offset: cfg.rescueOffset,
+            limitPx: Math.round((pos.entryAsk + cfg.rescueOffset) * 100) / 100,
+            shares: pos.remaining,
+            filled: false,
+          });
+          dumpReason = null;
+          dumpPx = null;
         }
-      } else if (!settle && holdSec >= cfg.timeoutSec) {
+      } else if (holdSec >= cfg.timeoutSec) {
         dumpReason = maker ? 'ladder_timeout_nobid' : 'timeout_nobid';
         dumpPx = pos.entryAsk;
       }
@@ -520,12 +420,11 @@ function simulateEvent(ticks, binanceBySec, cfg, impulseThr = null, canonicalWin
     if (tsMs < cooldownUntilMs) continue;
     if (tau < cfg.minTau || tau > cfg.maxTau) continue;
 
-    const signalSec = sec - cfg.signalLagSec;
-    const bNow = binanceBySec.get(signalSec);
-    const bPrev = binanceBySec.get(signalSec - cfg.leadSec);
+    const bNow = binanceBySec.get(sec);
+    const bPrev = binanceBySec.get(sec - cfg.leadSec);
     if (bNow == null || bPrev == null) continue;
     const binRet = bNow - bPrev;
-    const impulseMin = impulseThr?.get(signalSec) ?? cfg.impulseUsd;
+    const impulseMin = impulseThr?.get(sec) ?? cfg.impulseUsd;
     if (Math.abs(binRet) < impulseMin) continue;
 
     const side = binRet > 0 ? 'UP' : 'DOWN';
@@ -535,7 +434,7 @@ function simulateEvent(ticks, binanceBySec, cfg, impulseThr = null, canonicalWin
     const spread = book.ask - book.bid;
     if (!(spread >= 0) || spread > cfg.maxSpread) continue;
 
-    const prevTick = lakeSec.get(signalSec - cfg.leadSec);
+    const prevTick = lakeSec.get(sec - cfg.leadSec);
     let staleOk = true;
     if (prevTick) {
       const m0 = midOf(prevTick, side);
@@ -575,6 +474,14 @@ function simulateEvent(ticks, binanceBySec, cfg, impulseThr = null, canonicalWin
       entrySec: sec,
       tauAtEntry: Math.round(tau),
       binRet,
+      impulseMin: Math.round(impulseMin * 100) / 100,
+      tradeIdx: entryCount,
+      spread: Math.round(spread * 1e4) / 1e4,
+      askSz: Number.isFinite(book.askSz) ? book.askSz : null,
+      und: Number(tick.underlying_price),
+      strike: Number(tick.price_to_beat),
+      conditionId: tick.condition_id,
+      dt: tick.dt,
     };
     entryCount += 1;
   }
@@ -582,24 +489,14 @@ function simulateEvent(ticks, binanceBySec, cfg, impulseThr = null, canonicalWin
   if (pos && ticks.length) {
     const last = ticks[ticks.length - 1];
     const book = sideBook(last, pos.side);
-    const exitPx = settle
-      ? canonicalWinner === pos.side
-        ? 1
-        : 0
-      : Number.isFinite(book.bid) && book.bid > 0
-        ? book.bid
-        : pos.entryAsk;
+    const exitPx = Number.isFinite(book.bid) && book.bid > 0 ? book.bid : pos.entryAsk;
     const rem = pos.remaining;
-    const exitFeeExtra = settle ? 0 : rem > 0 ? feeEst(exitPx, rem, cfg.feeRate) : 0;
+    const exitFeeExtra = rem > 0 ? feeEst(exitPx, rem, cfg.feeRate) : 0;
     closePosition(
       pos,
       exitPx,
       exitFeeExtra,
-      settle
-        ? canonicalWinner === pos.side
-          ? 'settle_win'
-          : 'settle_loss'
-        : maker
+      maker
         ? pos.rescue
           ? 'rescue_eod'
           : pos.fills.length
@@ -666,42 +563,9 @@ function summarize(trades, eventsSeen, cfg, meta) {
   const hold = trades.map((t) => t.holdSec);
   const avgHold = hold.length ? hold.reduce((a, b) => a + b, 0) / hold.length : null;
 
-  /** Buckets de entryAsk para diagnosticar dumps caros vs ladder barata. */
-  const edges = [0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.71];
-  const byAskBucket = {};
-  for (let i = 0; i < edges.length - 1; i++) {
-    const lo = edges[i];
-    const hi = edges[i + 1];
-    const key = `${lo.toFixed(2)}-${hi.toFixed(2)}`;
-    const slice = trades.filter((t) => t.entryAsk >= lo && t.entryAsk < hi);
-    const w = slice.filter((t) => t.pnl > 0);
-    const l = slice.filter((t) => t.pnl <= 0);
-    const gp = w.reduce((a, t) => a + t.pnl, 0);
-    const gl = Math.abs(l.reduce((a, t) => a + t.pnl, 0));
-    const rs = slice.filter((t) => t.reason === 'rescue_stop');
-    const lf = slice.filter((t) => t.reason === 'ladder_full');
-    byAskBucket[key] = {
-      n: slice.length,
-      pnl: Math.round(slice.reduce((a, t) => a + t.pnl, 0) * 100) / 100,
-      wr: slice.length ? Math.round((1000 * w.length) / slice.length) / 10 : null,
-      pf: gl > 0 ? Math.round((1000 * gp) / gl) / 1000 : w.length ? Infinity : null,
-      avgPnl: slice.length ? Math.round((10000 * slice.reduce((a, t) => a + t.pnl, 0)) / slice.length) / 10000 : null,
-      rescueStopN: rs.length,
-      rescueStopPnl: Math.round(rs.reduce((a, t) => a + t.pnl, 0) * 100) / 100,
-      ladderFullN: lf.length,
-      ladderFullPnl: Math.round(lf.reduce((a, t) => a + t.pnl, 0) * 100) / 100,
-    };
-  }
-
   return {
     ok: true,
-    note:
-      `Binance grain=1s timestamp=${cfg.binanceTime} signalLag=${cfg.signalLagSec}s; ` +
-      (cfg.exitMode === 'settle'
-        ? 'hold até rótulo resolvido Gamma; sem fill maker/fee de saída'
-        : cfg.exitMode === 'maker-ladder'
-          ? 'maker fill proxy = bid>=limit (sem fila/prints)'
-          : 'entrada e saída taker no book observado'),
+    note: 'Binance grain=1s (conservative vs live WS); maker fill proxy = bid>=limit',
     config: cfg,
     meta,
     eventsSeen,
@@ -727,7 +591,6 @@ function summarize(trades, eventsSeen, cfg, meta) {
     maxDrawdown: Math.round(maxDd * 100) / 100,
     exitReasons: byReason,
     pnlByReason,
-    byAskBucket,
     byMonth,
     goPreliminary:
       trades.length >= 30 &&
@@ -765,7 +628,6 @@ async function main() {
   await conn.run(`SET memory_limit = '6GB'`);
 
   const allTrades = [];
-  const canonical = loadCanonicalOutcomes();
   let eventsSeen = 0;
   let daysOk = 0;
 
@@ -780,7 +642,7 @@ async function main() {
       console.log(`  skip ${dt} (extract fail)`);
       continue;
     }
-    const binMap = loadBinanceCloses(csv, cfg.binanceTime);
+    const binMap = loadBinanceCloses(csv);
     if (binMap.size < 1000) {
       console.log(`  skip ${dt} (binance map small)`);
       continue;
@@ -797,12 +659,6 @@ async function main() {
         up_ask_sz_1, down_ask_sz_1
       FROM read_parquet(${pql})
       WHERE up_best_ask IS NOT NULL AND down_best_ask IS NOT NULL
-        AND coverage >= 0.99
-        AND coalesce(degraded, false) = false
-      QUALIFY row_number() OVER (
-        PARTITION BY condition_id, ts
-        ORDER BY coverage DESC
-      ) = 1
       ORDER BY condition_id, ts_ms
     `);
     const rows = res.getRowObjectsJS();
@@ -816,11 +672,8 @@ async function main() {
 
     let dayTrades = 0;
     for (const ticks of by.values()) {
-      const conditionId = String(ticks[0]?.condition_id ?? '');
-      const canonicalWinner = canonical.get(conditionId) ?? null;
-      if (cfg.exitMode === 'settle' && !canonicalWinner) continue;
       eventsSeen += 1;
-      const tr = simulateEvent(ticks, binMap, cfg, impulseThr, canonicalWinner);
+      const tr = simulateEvent(ticks, binMap, cfg, impulseThr);
       dayTrades += tr.length;
       allTrades.push(...tr);
     }
@@ -840,19 +693,16 @@ async function main() {
   const modeTag =
     cfg.exitMode === 'maker-ladder'
       ? `maker-ladder-${cfg.ladderOffsets.map((x) => String(x).replace('.', 'p')).join('-')}`
-      : cfg.exitMode;
+      : 'taker';
   const tagPart = cfg.tag ? `_${cfg.tag}` : '';
   const stamp = `${cfg.from}_${cfg.to}_${modeTag}${tagPart}`.replace(/:/g, '');
   const jsonPath = path.join(OUT_DIR, `scalp-${stamp}.json`);
   const mdPath = path.join(OUT_DIR, `scalp-${stamp}.md`);
-  const payload = { summary, sampleTrades: allTrades.slice(0, 50) };
-  if (cfg.dumpTrades) {
-    const tradesPath = path.join(OUT_DIR, `scalp-${stamp}-trades.json`);
-    fs.writeFileSync(tradesPath, JSON.stringify(allTrades));
-    summary.meta = { ...summary.meta, tradesDump: tradesPath, tradesDumpN: allTrades.length };
-    console.log(`trades dump → ${tradesPath} (${allTrades.length})`);
+  fs.writeFileSync(jsonPath, JSON.stringify({ summary, sampleTrades: allTrades.slice(0, 50) }, null, 2));
+  if (process.env.DUMP_PATH) {
+    fs.writeFileSync(process.env.DUMP_PATH, allTrades.map((t) => JSON.stringify(t)).join('\n'));
+    console.log('dumped', allTrades.length, 'trades ->', process.env.DUMP_PATH);
   }
-  fs.writeFileSync(jsonPath, JSON.stringify(payload, null, 2));
 
   const md = [
     `# Binance-lead scalp lab (${modeTag})`,

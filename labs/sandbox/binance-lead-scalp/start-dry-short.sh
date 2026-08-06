@@ -1,17 +1,16 @@
 #!/bin/bash
-# Start e-golden V2 dry in background ON THE CONTAINER (log inside for dashboard).
-# Usage: bash start-dry-bg.sh [max_events=48] [fill=cruel] [budget=5]
+# Restart short dry (watch critical cases). Log inside container for dashboard.
 set -euo pipefail
-MAX_EVENTS="${1:-48}"
+MAX_EVENTS="${1:-10}"
 FILL="${2:-cruel}"
 BUDGET="${3:-5}"
 C=pair-path-micro
 LOG=/tmp/scalp-e-golden-v2-dry.log
 
 docker exec "$C" sh -c 'pkill -f "binance-lead-scalp/scalp-dry" 2>/dev/null || true' || true
-sleep 1
+sleep 2
+docker exec "$C" sh -c "rm -f $LOG; : > $LOG"
 
-# Log MUST live inside the container so scalp-dashboard.js can docker-exec tail it.
 docker exec -d "$C" sh -c "node scripts/binance-lead-scalp/scalp-dry.js \
   --variant=e-golden \
   --max-events=${MAX_EVENTS} \
@@ -25,6 +24,6 @@ docker exec -d "$C" sh -c "node scripts/binance-lead-scalp/scalp-dry.js \
   --warm-sec=6 \
   > ${LOG} 2>&1"
 
-echo "STARTED container=$C log=${LOG} events=$MAX_EVENTS fill=$FILL budget=$BUDGET"
+echo "STARTED short dry events=$MAX_EVENTS fill=$FILL budget=$BUDGET log=$LOG"
 sleep 4
-docker exec "$C" tail -n 40 "$LOG" || true
+docker exec "$C" head -n 20 "$LOG" || true

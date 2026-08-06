@@ -26,6 +26,9 @@ Inclui as 16 teorias transferidas do polymarket-test, mais:
 - [`implementadas/pair-path-v0.md`](implementadas/pair-path-v0.md) — Pair-Path V0 (library-runner, Studio; research/HOLD)
 - [`implementadas/clip-path-v1.md`](implementadas/clip-path-v1.md) — Clip-Path V1 (mesmo runner; hedgeLevels; HOLD/parity gap)
 - [`nao-implementadas/shotandgo-v1.md`](nao-implementadas/shotandgo-v1.md) — Shotandgo / Phil Escada Dupla (research reaberta; lab `shotandgo-v1`)
+- [`nao-implementadas/phil-hopper-relux5.md`](nao-implementadas/phil-hopper-relux5.md) — Phil Hopper Relux5 (lab `phil-hopper-relux5`; **não** misturar com shotandgo-v1)
+- [`nao-implementadas/early-favorite-rush-v0.md`](nao-implementadas/early-favorite-rush-v0.md) — Early Favorite Rush (**REJEITADA após auditoria causal/canônica**)
+- [`nao-implementadas/causal-lead-settlement-v1.md`](nao-implementadas/causal-lead-settlement-v1.md) — CLS-v1 (**CANDIDATE / HOLD**; sinal Binance causal + entrada taker + settlement Gamma; sem autorização live)
 
 Estudo de suporte: [`../analise-quantitativa/estudo-correlacao-binance-polymarket.md`](../analise-quantitativa/estudo-correlacao-binance-polymarket.md).
 
@@ -38,6 +41,7 @@ Prioridade e `sourceDoc` no catálogo de port:
 | Prioridade | Documento | ID |
 |---:|---|---|
 | 0 | [`nao-implementadas/shotandgo-v1.md`](nao-implementadas/shotandgo-v1.md) | Shotandgo / Phil Escada Dupla — **lab research** (`labs/strategies/carry/shotandgo-v1/`); post-mortem ascent_hedge não cobre |
+| 0 | [`nao-implementadas/phil-hopper-relux5.md`](nao-implementadas/phil-hopper-relux5.md) | Phil Hopper Relux5 — **lab research** (`labs/strategies/carry/phil-hopper-relux5/`); fonte `Phil_Hopper_Real_Redux_Relux5.py`; distinto de shotandgo-v1 |
 | 0 | [`nao-implementadas/pair-ladder-complete-set-v1.md`](nao-implementadas/pair-ladder-complete-set-v1.md) | Pair Ladder Complete-Set — **lab research** (`labs/strategies/carry/pair-ladder-complete-set-v1/`); smoke ainda negativo; proibido Studio |
 | 0 | [`nao-implementadas/doggy-momentum-pair-ladder-canonico.md`](nao-implementadas/doggy-momentum-pair-ladder-canonico.md) | **Doggy canônico** — passo a passo + configs + desempenho (RE 2026-07-26); proibido conta real |
 | 1 | `strike-boundary-repricing-inelasticity-v1.md` | SBRI (teoria; **lab GLS em `implementadas/sbri-tight-v1.md`**) |
