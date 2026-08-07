@@ -201,10 +201,15 @@ export async function getScalarTicksForEvents(pool, partition, conditionIds) {
       t.down_best_bid,
       t.down_best_ask,
       eq.coverage,
-      eq.degraded
+      eq.degraded,
+      es.winning_side,
+      es.settlement_source,
+      es.gamma_final_price,
+      t.binance_price
     FROM ticks t
     JOIN events e ON e.market_id = t.market_id AND e.condition_id = t.condition_id
     JOIN event_quality eq ON eq.market_id = t.market_id AND eq.condition_id = t.condition_id
+    LEFT JOIN event_settlements es ON es.condition_id = t.condition_id
     WHERE t.market_id = $1
       AND t.condition_id = ANY($4::text[])
       AND t.event_start >= ($5::date::timestamp AT TIME ZONE 'UTC')
@@ -249,10 +254,15 @@ export async function getTicksWithBooksForEvents(pool, partition, conditionIds) 
       t.down_book_asks,
       t.down_book_bids,
       eq.coverage,
-      eq.degraded
+      eq.degraded,
+      es.winning_side,
+      es.settlement_source,
+      es.gamma_final_price,
+      t.binance_price
     FROM ticks t
     JOIN events e ON e.market_id = t.market_id AND e.condition_id = t.condition_id
     JOIN event_quality eq ON eq.market_id = t.market_id AND eq.condition_id = t.condition_id
+    LEFT JOIN event_settlements es ON es.condition_id = t.condition_id
     WHERE t.market_id = $1
       AND t.condition_id = ANY($4::text[])
       AND t.event_start >= ($5::date::timestamp AT TIME ZONE 'UTC')
@@ -407,6 +417,10 @@ function rowToScalarTick(row) {
     downBestAsk: numberOrNull(row.down_best_ask),
     coverage: numberOrNull(row.coverage),
     degraded: Boolean(row.degraded),
+    winningSide: row.winning_side ?? null,
+    settlementSource: row.settlement_source ?? null,
+    gammaFinalPrice: numberOrNull(row.gamma_final_price),
+    binancePrice: numberOrNull(row.binance_price),
   };
 }
 

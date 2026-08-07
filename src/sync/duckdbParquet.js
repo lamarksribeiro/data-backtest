@@ -27,7 +27,11 @@ CREATE TABLE scalars (
   down_best_bid DOUBLE,
   down_best_ask DOUBLE,
   coverage DOUBLE,
-  degraded BOOLEAN
+  degraded BOOLEAN,
+  winning_side VARCHAR,
+  settlement_source VARCHAR,
+  gamma_final_price DOUBLE,
+  binance_price DOUBLE
 )
 `;
 
@@ -266,6 +270,11 @@ function appendNullableDouble(appender, value) {
   else appender.appendDouble(value);
 }
 
+function appendNullableVarchar(appender, value) {
+  if (value == null) appender.appendNull();
+  else appender.appendVarchar(String(value));
+}
+
 function appendScalarRow(appender, row) {
   appender.appendVarchar(row.marketId);
   appender.appendVarchar(row.underlying);
@@ -284,6 +293,10 @@ function appendScalarRow(appender, row) {
   appendNullableDouble(appender, row.downBestAsk);
   appendNullableDouble(appender, row.coverage);
   appender.appendBoolean(row.degraded);
+  appendNullableVarchar(appender, row.winningSide);
+  appendNullableVarchar(appender, row.settlementSource);
+  appendNullableDouble(appender, row.gammaFinalPrice);
+  appendNullableDouble(appender, row.binancePrice);
   appender.endRow();
 }
 
@@ -330,6 +343,10 @@ function buildBacktestTicksTableSql(bookDepth) {
       down_best_ask DOUBLE,
       coverage DOUBLE,
       degraded BOOLEAN,
+      winning_side VARCHAR,
+      settlement_source VARCHAR,
+      gamma_final_price DOUBLE,
+      binance_price DOUBLE,
       book_depth INTEGER,
       ${bookColumns.join(',\n      ')}
     )
@@ -431,4 +448,8 @@ function appendScalarColumns(appender, row) {
   appendNullableDouble(appender, row.downBestAsk);
   appendNullableDouble(appender, row.coverage);
   appender.appendBoolean(row.degraded);
+  appendNullableVarchar(appender, row.winningSide);
+  appendNullableVarchar(appender, row.settlementSource);
+  appendNullableDouble(appender, row.gammaFinalPrice);
+  appendNullableDouble(appender, row.binancePrice);
 }

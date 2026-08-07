@@ -128,6 +128,26 @@ test('settleEventPnl resolves an exact tie as UP (market rule: >=)', () => {
   assert.equal(tie.primaryLotPnl, 4);
 });
 
+test('settleEventPnl prefers canonical winnerSide over proxy', () => {
+  const simulator = createOrderSimulator();
+  simulator.enter('UP', {
+    ts: '2026-06-01T00:00:01.000Z',
+    price: 0.6,
+    maxPrice: 0.6,
+    budget: 6,
+    minShares: 1,
+    tick: tickWithAsks('UP', [{ price: 0.6, size: 20 }]),
+  });
+  const canonical = settleEventPnl(
+    simulator,
+    { underlyingPrice: 101000, price_to_beat: 100000, winning_side: 'DOWN' },
+    { priceToBeat: 100000 },
+    { winnerSide: 'DOWN' },
+  );
+  assert.equal(canonical.winnerSide, 'DOWN');
+  assert.equal(canonical.primaryLotPnl, -6);
+});
+
 test('settleEventPnl applies winnerPayout haircut only to winning lots', () => {
   const simulator = createOrderSimulator();
   simulator.enter('UP', {

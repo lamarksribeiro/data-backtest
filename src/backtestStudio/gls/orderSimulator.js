@@ -526,14 +526,23 @@ export function settleEventPnl(simulator, tick, event, options = {}) {
     return { finalPnl: snap.realizedPnl, reason: snap.orders.length ? 'closed' : 'no_entry', expirationResult: null };
   }
 
-  // Regra oficial do mercado: UP se o preço final for MAIOR OU IGUAL ao preço inicial
-  // (empate resolve UP). underlying/ptb aqui vêm do último tick do lake (spot/RTDS),
-  // que é um proxy — a fonte canônica de resolução da Polymarket é o stream
-  // BTC/USD da Chainlink, que o lake não persiste hoje. Ver
-  // RELATORIO-REVISAO-INDEPENDENTE-DATA-ROBOT-VS-DATA-BACKTEST.md §7.
-  const underlying = Number(tick?.btc_price ?? tick?.underlyingPrice);
+  // Preferir julgamento canônico (lake/PG event_settlements). Fallback: proxy spot×PTB.
+  const canonicalWinner = options.winnerSide
+    ?? tick?.winning_side
+    ?? tick?.winningSide
+    ?? event?.winningSide
+    ?? null;
+  const underlying = Number(tick?.btc_price ?? tick?.underlyingPrice ?? tick?.underlying_price);
   const ptb = Number(event?.priceToBeat ?? tick?.price_to_beat);
-  const winnerSide = underlying >= ptb ? 'UP' : 'DOWN';
+  const proxyWinner = Number.isFinite(underlying) && Number.isFinite(ptb)
+    ? (underlying >= ptb ? 'UP' : 'DOWN')
+    : null;
+  const winnerSide = canonicalWinner === 'UP' || canonicalWinner === 'DOWN'
+    ? canonicalWinner
+    : proxyWinner;
+  if (!winnerSide) {
+    return { finalPnl: snap.realizedPnl, reason: 'no_winner', expirationResult: null };
+  }
 
   const effectiveLots = { UP: null, DOWN: null };
   for (const side of ['UP', 'DOWN']) {

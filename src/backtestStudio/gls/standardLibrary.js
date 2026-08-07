@@ -367,5 +367,7 @@ export function buildEventFromTick(tick) {
     eventStart: tick.event_start,
     eventEnd: tick.event_end,
     priceToBeat: Number(tick.price_to_beat ?? tick.priceToBeat),
+    winningSide: tick.winning_side ?? tick.winningSide ?? null,
+    settlementSource: tick.settlement_source ?? tick.settlementSource ?? null,
   };
 }
